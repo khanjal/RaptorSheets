@@ -1,4 +1,3 @@
-using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
 
 namespace GigRaptorLib.Utilities.Extensions
@@ -11,11 +10,6 @@ namespace GigRaptorLib.Utilities.Extensions
             header.Column = column;
             header.Index = headers.Count;
             headers.Add(header);
-        }
-
-        public static SheetCellModel GetHeader(this List<SheetCellModel> headers, HeaderEnum header)
-        {
-            return headers.FirstOrDefault(x => x.Name == HeaderEnum.TYPE.DisplayName());
         }
     }
 }
