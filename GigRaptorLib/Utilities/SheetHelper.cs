@@ -1,3 +1,4 @@
+using GigRaptorLib.Constants;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
 using GigRaptorLib.Models;
@@ -26,10 +27,11 @@ namespace GigRaptorLib.Utilities
 
         public static List<SheetModel> GetSheets()
         {
-            var sheets = new List<SheetModel>();
-
-            sheets.Add(ShiftMapper.GetSheet());
-            sheets.Add(TripMapper.GetSheet());
+            var sheets = new List<SheetModel>
+            {
+                ShiftMapper.GetSheet(),
+                TripMapper.GetSheet()
+            };
 
             return sheets;
         }
@@ -151,35 +153,18 @@ namespace GigRaptorLib.Utilities
         {
             var cellFormat = new CellFormat();
 
-            switch (format)
+            cellFormat.NumberFormat = format switch
             {
-                case FormatEnum.ACCOUNTING:
-                    cellFormat.NumberFormat = new NumberFormat { Type = "NUMBER", Pattern = "_(\"$\"* #,##0.00_);_(\"$\"* \\(#,##0.00\\);_(\"$\"* \"-\"??_);_(@_)" };
-                    break;
-                case FormatEnum.DATE:
-                    cellFormat.NumberFormat = new NumberFormat { Type = "DATE", Pattern = "yyyy-mm-dd" };
-                    break;
-                case FormatEnum.DISTANCE:
-                    cellFormat.NumberFormat = new NumberFormat { Type = "NUMBER", Pattern = "#,##0.0" };
-                    break;
-                case FormatEnum.DURATION:
-                    cellFormat.NumberFormat = new NumberFormat { Type = "DATE", Pattern = "[h]:mm" };
-                    break;
-                case FormatEnum.NUMBER:
-                    cellFormat.NumberFormat = new NumberFormat { Type = "NUMBER", Pattern = "#,##0" };
-                    break;
-                case FormatEnum.TEXT:
-                    cellFormat.NumberFormat = new NumberFormat { Type = "TEXT" };
-                    break;
-                case FormatEnum.TIME:
-                    cellFormat.NumberFormat = new NumberFormat { Type = "DATE", Pattern = "hh:mm:ss am/pm" };
-                    break;
-                case FormatEnum.WEEKDAY:
-                    cellFormat.NumberFormat = new NumberFormat { Type = "DATE", Pattern = "ddd" };
-                    break;
-                default:
-                    break;
-            }
+                FormatEnum.ACCOUNTING => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Accounting },
+                FormatEnum.DATE => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Date },
+                FormatEnum.DISTANCE => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Distance },
+                FormatEnum.DURATION => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Duration },
+                FormatEnum.NUMBER => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Number },
+                FormatEnum.TEXT => new NumberFormat { Type = "TEXT" },
+                FormatEnum.TIME => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Time },
+                FormatEnum.WEEKDAY => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Weekday },
+                _ => new NumberFormat { Type = "TEXT" }
+            };
 
             return cellFormat;
         }
@@ -227,7 +212,7 @@ namespace GigRaptorLib.Utilities
         {
             var sheet = new SheetModel
             {
-                Headers = new List<SheetCellModel>()
+                Headers = []
             };
             var sheetKeyRange = shiftSheet.GetRange(keyEnum);
 

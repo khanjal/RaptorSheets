@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace GigRaptorLib.Utilities
@@ -15,8 +12,6 @@ namespace GigRaptorLib.Utilities
             {
                 headerValues.Add(item.index, item.value.ToString().Trim());
             }
-
-            // Console.Write(JsonSerializer.Serialize(headerValues));
 
             return headerValues;
         }
