@@ -1,3 +1,4 @@
+using GigRaptorLib.Constants;
 using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
@@ -142,12 +143,7 @@ namespace GigRaptorLib.Mappers
 
         public static SheetModel GetSheet()
         {
-            var sheet = new SheetModel();
-            sheet.Name = SheetEnum.SHIFTS.DisplayName();
-            sheet.TabColor = ColorEnum.RED;
-            sheet.CellColor = ColorEnum.LIGHT_RED;
-            sheet.FreezeColumnCount = 1;
-            sheet.FreezeRowCount = 1;
+            var sheet = SheetsConfig.ShiftSheet;
 
             var tripSheet = TripMapper.GetSheet();
             var sheetTripsName = SheetEnum.TRIPS.DisplayName();

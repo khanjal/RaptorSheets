@@ -1,3 +1,4 @@
+using GigRaptorLib.Constants;
 using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
@@ -56,15 +57,7 @@ namespace GigRaptorLib.Mappers
 
         public static SheetModel GetSheet()
         {
-            var sheet = new SheetModel
-            {
-                Name = SheetEnum.WEEKDAYS.DisplayName(),
-                TabColor = ColorEnum.LIGHT_GREEN,
-                CellColor = ColorEnum.LIGHT_GRAY,
-                FreezeColumnCount = 1,
-                FreezeRowCount = 1,
-                ProtectSheet = true
-            };
+            var sheet = SheetsConfig.WeekdaySheet;
 
             var dailySheet = DailyMapper.GetSheet();
 
