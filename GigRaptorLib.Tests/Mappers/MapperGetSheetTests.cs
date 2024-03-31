@@ -21,6 +21,7 @@ namespace GigRaptorLib.Tests.Mappers
             [TypeMapper.GetSheet(), SheetsConfig.TypeSheet],
             [WeekdayMapper.GetSheet(), SheetsConfig.WeekdaySheet],
             [WeeklyMapper.GetSheet(), SheetsConfig.WeeklySheet],
+            [YearlyMapper.GetSheet(), SheetsConfig.YearlySheet],
         ];
 
         [Theory]

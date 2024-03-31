@@ -1,8 +1,10 @@
 ﻿using Google.Apis.Sheets.v4.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GigRaptorLib.Constants
 {
     // https://www.rapidtables.com/convert/color/hex-to-rgb.html
+    [ExcludeFromCodeCoverage]
     public static class Colors
     {
         public static Color Black => new() { Red = 0, Green = 0, Blue = 0 };

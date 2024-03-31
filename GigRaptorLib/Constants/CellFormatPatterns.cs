@@ -1,5 +1,8 @@
-﻿namespace GigRaptorLib.Constants
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace GigRaptorLib.Constants
 {
+    [ExcludeFromCodeCoverage]
     public static class CellFormatPatterns
     {
         public static string Accounting => "_(\"$\"* #,##0.00_);_(\"$\"* \\(#,##0.00\\);_(\"$\"* \"-\"??_);_(@_)";

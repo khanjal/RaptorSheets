@@ -1,5 +1,8 @@
-﻿namespace GigRaptorLib.Constants
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace GigRaptorLib.Constants
 {
+    [ExcludeFromCodeCoverage]
     public static class HeaderFormulas
     {
         public static string ArrayFormulaCountIf => "=ARRAYFORMULA(IFS(ROW($A:$A)=1,\"{0}\",ISBLANK($A:$A), \"\",true,COUNTIF({1},$A:$A)))";
