@@ -59,28 +59,53 @@ namespace GigRaptorLib.Tests.Utilities.Google
             foreach (var sheet in _sheets)
             {
                 var result = GenerateSheets.Generate([sheet]);
-                var index = 1;
                 var sheetId = result.Requests[0].AddSheet.Properties.SheetId;
 
                 // Check on if it had to expand the number of rows (headers > 26)
                 if (sheet.Headers.Count > 26)
                 {
-                    result.Requests[index].AppendDimension.Should().NotBeNull();
-                    
-                    var appendDimension = result.Requests[index].AppendDimension;
+                    var appendDimension = result.Requests.First(x => x.AppendDimension != null).AppendDimension;
                     appendDimension.Dimension.Should().Be("COLUMNS");
                     appendDimension.Length.Should().Be(sheet.Headers.Count - 26);
                     appendDimension.SheetId.Should().Be(sheetId);
-                    index++;
                 }
 
-                result.Requests[index].AppendCells.Should().NotBeNull();
-
-                var appendCells = result.Requests[index].AppendCells;
+                var appendCells = result.Requests.First(x => x.AppendCells != null).AppendCells;
                 appendCells.SheetId.Should().Be(sheetId);
                 appendCells.Rows.Should().HaveCount(1);
                 appendCells.Rows[0].Values.Should().HaveCount(sheet.Headers.Count);
             }
         }
+
+        [Fact]
+        public void GivenSheet_ThenReturnSheetBanding()
+        {
+            foreach (var sheet in _sheets)
+            {
+                Console.WriteLine(sheet.Name);
+                var result = GenerateSheets.Generate([sheet]);
+                var index = 2;
+                var sheetId = result.Requests[0].AddSheet.Properties.SheetId;
+
+                // Check on if it had to expand the number of rows (headers > 26)
+                if (sheet.Headers.Count > 26)
+                {
+                    //index++;
+                }
+
+                var bandedRange = result.Requests.First(x => x.AddBanding != null).AddBanding.BandedRange;
+                bandedRange.Range.SheetId.Should().Be(sheetId);
+                bandedRange.RowProperties.HeaderColor.Should().BeEquivalentTo(SheetHelper.GetColor(sheet.TabColor));
+                bandedRange.RowProperties.SecondBandColor.Should().BeEquivalentTo(SheetHelper.GetColor(sheet.CellColor));
+            }
+        }
+
+        // Protected range request (if sheet isn't protected)
+
+        // RepeatCellRequest Test format column cells?
+
+        // Banding request (alternating colors)
+
+        // Sheet protected request (if true)
     }
 }

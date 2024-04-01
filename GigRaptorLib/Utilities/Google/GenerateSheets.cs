@@ -84,10 +84,12 @@ namespace GigRaptorLib.Utilities.Google
                     range.StartRowIndex = 1;
                     range.EndRowIndex = null;
 
-                    var repeatCellRequest = new RepeatCellRequest();
-                    repeatCellRequest.Fields = "*";
-                    repeatCellRequest.Range = range;
-                    repeatCellRequest.Cell = new CellData();
+                    var repeatCellRequest = new RepeatCellRequest
+                    {
+                        Fields = "*",
+                        Range = range,
+                        Cell = new CellData()
+                    };
 
                     if (header.Format != null)
                     {
