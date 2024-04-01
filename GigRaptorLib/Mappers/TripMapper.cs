@@ -172,7 +172,7 @@ namespace GigRaptorLib.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.DATE.DisplayName(),
-                Note = "Format: YYYY-MM-DD",
+                Note = ColumnNotes.DateFormat,
                 Format = FormatEnum.DATE
             });
             var dateRange = sheet.GetLocalRange(HeaderEnum.DATE);
@@ -186,34 +186,34 @@ namespace GigRaptorLib.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.NUMBER.DisplayName(),
-                Note = "Shift Number 1-9 Leave blank if there is only shift for that service for that day."
+                Note = ColumnNotes.ShiftNumber
             });
             // X
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.EXCLUDE.DisplayName(),
-                Note = "Exclude this trip from being included in shift.",
+                Note = ColumnNotes.Exclude,
                 Validation = ValidationEnum.BOOLEAN
             });
             // Type
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.TYPE.DisplayName(),
-                Note = "Pickup, Shop, Order, Curbside, Canceled",
+                Note = ColumnNotes.Types,
                 Validation = ValidationEnum.RANGE_TYPE
             });
             // Place
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.PLACE.DisplayName(),
-                Note = "Location of pickup (delivery).",
+                Note = ColumnNotes.Place,
                 Validation = ValidationEnum.RANGE_PLACE
             });
             // Pickup
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.PICKUP.DisplayName(),
-                Note = "Time when request/ride picked up."
+                Note = ColumnNotes.Pickup
             });
             // Dropoff
             sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.DROPOFF.DisplayName() });
@@ -221,7 +221,7 @@ namespace GigRaptorLib.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.DURATION.DisplayName(),
-                Note = "Hours/Minutes task took to complete.",
+                Note = ColumnNotes.Duration,
                 Format = FormatEnum.DURATION
             });
             // Pay
@@ -263,7 +263,7 @@ namespace GigRaptorLib.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.DISTANCE.DisplayName(),
-                Note = "How many miles/km the request took."
+                Note = ColumnNotes.TripDistance
             });
             // Name
             sheet.Headers.AddColumn(new SheetCellModel
@@ -287,7 +287,7 @@ namespace GigRaptorLib.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.UNIT_END.DisplayName(),
-                Note = "Apartment, Unit, Room, Suite"
+                Note = ColumnNotes.UnitTypes
             });
             // Order Number
             sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.ORDER_NUMBER.DisplayName() });
@@ -304,7 +304,7 @@ namespace GigRaptorLib.Mappers
             {
                 Name = HeaderEnum.KEY.DisplayName(),
                 Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.KEY.DisplayName()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.SERVICE)}), \"\",true,IF({sheet.GetLocalRange(HeaderEnum.EXCLUDE)},{dateRange} & \"-X-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)},IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.NUMBER)}), {dateRange} & \"-0-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)}, {dateRange} & \"-\" & {sheet.GetLocalRange(HeaderEnum.NUMBER)} & \"-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)}))))",
-                Note = "Used to connect trips to shifts."
+                Note = ColumnNotes.TripKey
             });
             // Day
             sheet.Headers.AddColumn(new SheetCellModel

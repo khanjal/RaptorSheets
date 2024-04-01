@@ -155,7 +155,7 @@ namespace GigRaptorLib.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.DATE.DisplayName(),
-                Note = ColumnNotes.DateNote,
+                Note = ColumnNotes.DateFormat,
                 Format = FormatEnum.DATE
             });
             var dateRange = sheet.GetLocalRange(HeaderEnum.DATE);
