@@ -1,4 +1,5 @@
-﻿using GigRaptorLib.Enums;
+﻿using GigRaptorLib.Constants;
+using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
 using Google.Apis.Sheets.v4.Data;
 
@@ -68,7 +69,7 @@ namespace GigRaptorLib.Utilities.Google
                     {
                         var addProtectedRangeRequest = new AddProtectedRangeRequest
                         {
-                            ProtectedRange = new ProtectedRange { Description = "Editing this column will cause a #REF error.", Range = range, WarningOnly = true }
+                            ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.ColumnWarning, Range = range, WarningOnly = true }
                         };
                         // protectCellRequests.Add(addProtectedRangeRequest);
                         batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
@@ -121,7 +122,7 @@ namespace GigRaptorLib.Utilities.Google
                 {
                     addProtectedRangeRequest = new AddProtectedRangeRequest
                     {
-                        ProtectedRange = new ProtectedRange { Description = "Editing this sheet will cause a #REF error.", Range = new GridRange { SheetId = sheetId }, WarningOnly = true }
+                        ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.SheetWarning, Range = new GridRange { SheetId = sheetId }, WarningOnly = true }
                     };
                     batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
                 }
@@ -137,7 +138,7 @@ namespace GigRaptorLib.Utilities.Google
                         EndRowIndex = 1
                     };
 
-                    addProtectedRangeRequest.ProtectedRange = new ProtectedRange { Description = "Editing the header could cause a #REF error or break sheet references.", Range = range, WarningOnly = true };
+                    addProtectedRangeRequest.ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.HeaderWarning, Range = range, WarningOnly = true };
                     batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
                 }
 

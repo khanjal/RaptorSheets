@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using GigRaptorLib.Constants;
 using GigRaptorLib.Mappers;
 using GigRaptorLib.Models;
 using GigRaptorLib.Utilities;
@@ -10,12 +11,12 @@ namespace GigRaptorLib.Tests.Utilities.Google
 {
     public class GenerateSheetsTests
     {
-        private List<SheetModel> _sheets;
+        private List<SheetModel> _sheetConfigs;
         private BatchUpdateSpreadsheetRequest _request;
 
         public GenerateSheetsTests()
         {
-            _sheets =
+            _sheetConfigs =
             [
                 AddressMapper.GetSheet(),
                 DailyMapper.GetSheet(),
@@ -32,16 +33,16 @@ namespace GigRaptorLib.Tests.Utilities.Google
                 YearlyMapper.GetSheet()
             ];
 
-            _request = GenerateSheets.Generate(_sheets);
+            _request = GenerateSheets.Generate(_sheetConfigs);
         }
 
         [Fact]
         public void GivenSheet_ThenReturnSheetRequest()
         {
-            foreach (var sheet in _sheets)
+            foreach (var sheet in _sheetConfigs)
             {
                 var result = GenerateSheets.Generate([sheet]);
-                var index = 0;
+                var index = 0; // AddSheet should be first request
 
                 result.Requests[index].AddSheet.Should().NotBeNull();
 
@@ -56,10 +57,10 @@ namespace GigRaptorLib.Tests.Utilities.Google
         [Fact]
         public void GivenSheet_ThenReturnSheetHeaders()
         {
-            foreach (var sheet in _sheets)
+            foreach (var sheet in _sheetConfigs)
             {
                 var result = GenerateSheets.Generate([sheet]);
-                var sheetId = result.Requests[0].AddSheet.Properties.SheetId;
+                var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
 
                 // Check on if it had to expand the number of rows (headers > 26)
                 if (sheet.Headers.Count > 26)
@@ -80,18 +81,10 @@ namespace GigRaptorLib.Tests.Utilities.Google
         [Fact]
         public void GivenSheet_ThenReturnSheetBanding()
         {
-            foreach (var sheet in _sheets)
+            foreach (var sheet in _sheetConfigs)
             {
-                Console.WriteLine(sheet.Name);
                 var result = GenerateSheets.Generate([sheet]);
-                var index = 2;
-                var sheetId = result.Requests[0].AddSheet.Properties.SheetId;
-
-                // Check on if it had to expand the number of rows (headers > 26)
-                if (sheet.Headers.Count > 26)
-                {
-                    //index++;
-                }
+                var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
 
                 var bandedRange = result.Requests.First(x => x.AddBanding != null).AddBanding.BandedRange;
                 bandedRange.Range.SheetId.Should().Be(sheetId);
@@ -100,6 +93,29 @@ namespace GigRaptorLib.Tests.Utilities.Google
             }
         }
 
+        [Fact]
+        public void GivenSheet_ThenReturnProtectRequest()
+        {
+            foreach (var sheet in _sheetConfigs)
+            {
+                var result = GenerateSheets.Generate([sheet]);
+                var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
+                var protectRange = result.Requests.First(x => x.AddProtectedRange != null).AddProtectedRange.ProtectedRange;
+
+                if (sheet.ProtectSheet)
+                {
+                    protectRange.Range.SheetId.Should().Be(sheetId);
+                    protectRange.Description.Should().Be(ProtectionWarnings.SheetWarning);
+                    protectRange.WarningOnly.Should().BeTrue();
+                }
+                else
+                {
+                    protectRange.Range.SheetId.Should().Be(sheetId);
+                    protectRange.Description.Should().Be(ProtectionWarnings.ColumnWarning);
+                    protectRange.WarningOnly.Should().BeTrue();
+                }
+            }
+        }
         // Protected range request (if sheet isn't protected)
 
         // RepeatCellRequest Test format column cells?
