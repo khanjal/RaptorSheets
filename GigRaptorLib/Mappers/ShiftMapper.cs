@@ -155,7 +155,7 @@ namespace GigRaptorLib.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.DATE.DisplayName(),
-                Note = "Format: YYYY-MM-DD",
+                Note = ColumnNotes.DateNote,
                 Format = FormatEnum.DATE
             });
             var dateRange = sheet.GetLocalRange(HeaderEnum.DATE);
@@ -173,34 +173,34 @@ namespace GigRaptorLib.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.NUMBER.DisplayName(),
-                Note = $"Shift Number 1-9{(char)10}{(char)10}Leave blank if there is only shift for that service for that day."
+                Note = ColumnNotes.ShiftNumber
             });
             // Active Time
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.TIME_ACTIVE.DisplayName(),
-                Note = "Time with a delivery.{(char)10}{(char)10}Can be filled out on requests sheet if you have that info.",
+                Note = ColumnNotes.ActiveTime,
                 Format = FormatEnum.DURATION
             });
             // Total Time
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.TIME_TOTAL.DisplayName(),
-                Note = "Total time",
+                Note = ColumnNotes.TotalTime,
                 Format = FormatEnum.DURATION
             });
             // Omit
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.TIME_OMIT.DisplayName(),
-                Note = $"Omit time from non service specific totals. Mainly useful if you multi app so you can get a more accurate $/hour calculation.{(char)10}{(char)10}Active time is still counted for the day from omitted shifts.{(char)10}{(char)10}IE: Omit Uber if you have it also running during DoorDash.",
+                Note = ColumnNotes.TimeOmit,
                 Validation = ValidationEnum.BOOLEAN
             });
             // Trips
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.TRIPS.DisplayName(),
-                Note = $"Requests/Deliveries/Trips{(char)10}{(char)10}Use this column if you don't track requests or need to increase the number."
+                Note = ColumnNotes.ShiftTrips
             });
             // Pay
             sheet.Headers.AddColumn(new SheetCellModel
@@ -231,7 +231,7 @@ namespace GigRaptorLib.Mappers
             {
                 Name = HeaderEnum.DISTANCE.DisplayName(),
                 Format = FormatEnum.DISTANCE,
-                Note = "Distance not accounted for on the Requests sheet."
+                Note = ColumnNotes.ShiftDistance
             });
             // Region
             sheet.Headers.AddColumn(new SheetCellModel
@@ -246,7 +246,7 @@ namespace GigRaptorLib.Mappers
             {
                 Name = HeaderEnum.KEY.DisplayName(),
                 Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.KEY.DisplayName()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.SERVICE)}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.NUMBER)}), {dateRange} & \"-0-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)}, {dateRange} & \"-\" & {sheet.GetLocalRange(HeaderEnum.NUMBER)} & \"-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)})))",
-                Note = "Used to connect requests to shifts."
+                Note = ColumnNotes.ShiftKey
             });
 
             var keyRange = sheet.GetLocalRange(HeaderEnum.KEY);
@@ -256,7 +256,7 @@ namespace GigRaptorLib.Mappers
             {
                 Name = HeaderEnum.TOTAL_TIME_ACTIVE.DisplayName(),
                 Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TIME_ACTIVE.DisplayName()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TIME_ACTIVE)}),SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.DURATION)}),{sheet.GetLocalRange(HeaderEnum.TIME_ACTIVE)})))",
-                Note = "Total Active time from Requests and Shifts sheets.",
+                Note = ColumnNotes.TotalTimeActive,
                 Format = FormatEnum.DURATION
             });
             // T Time
@@ -271,7 +271,7 @@ namespace GigRaptorLib.Mappers
             {
                 Name = HeaderEnum.TOTAL_TRIPS.DisplayName(),
                 Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TRIPS.DisplayName()}\",ISBLANK({dateRange}), \"\",true, {sheet.GetLocalRange(HeaderEnum.TRIPS)} + COUNTIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange})))",
-                Note = "Number of requests during a shift.",
+                Note = ColumnNotes.TotalTrips,
                 Format = FormatEnum.NUMBER
             });
             // T Pay
@@ -328,7 +328,7 @@ namespace GigRaptorLib.Mappers
             {
                 Name = HeaderEnum.TOTAL_DISTANCE.DisplayName(),
                 Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_DISTANCE.DisplayName()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.DISTANCE)} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.DISTANCE)})))",
-                Note = "Total Miles/Kilometers from Requests and Shifts",
+                Note = ColumnNotes.TotalDistance,
                 Format = FormatEnum.DISTANCE
             });
             // Amt/Dist

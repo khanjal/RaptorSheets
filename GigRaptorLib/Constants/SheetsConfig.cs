@@ -1,9 +1,11 @@
 ﻿using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
 using GigRaptorLib.Utilities.Extensions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GigRaptorLib.Constants
 {
+    [ExcludeFromCodeCoverage]
     public static class SheetsConfig
     {
         public static SheetModel AddressSheet => new()

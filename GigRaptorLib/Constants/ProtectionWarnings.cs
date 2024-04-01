@@ -1,5 +1,8 @@
-﻿namespace GigRaptorLib.Constants
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace GigRaptorLib.Constants
 {
+    [ExcludeFromCodeCoverage]
     public static class ProtectionWarnings
     {
         public static string ColumnWarning => "Editing this column will cause a #REF error.";
