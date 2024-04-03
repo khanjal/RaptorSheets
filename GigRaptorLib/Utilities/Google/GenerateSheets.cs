@@ -8,13 +8,14 @@ namespace GigRaptorLib.Utilities.Google
     public static class GenerateSheets
     {
         private static int? _sheetId;
+        private static BatchUpdateSpreadsheetRequest? _batchUpdateSpreadsheetRequest;
         
         public static BatchUpdateSpreadsheetRequest Generate(List<SheetModel> sheets)
         {
             // var sheets = SheetHelper.GetSheets();
 
-            var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
-            batchUpdateSpreadsheetRequest.Requests = [];
+            _batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
+            _batchUpdateSpreadsheetRequest.Requests = [];
             var repeatCellRequests = new List<RepeatCellRequest>();
             var protectCellRequests = new List<AddProtectedRangeRequest>();
 
@@ -35,7 +36,7 @@ namespace GigRaptorLib.Utilities.Google
                 sheetRequest.Properties.TabColor = SheetHelper.GetColor(sheet.TabColor);
                 sheetRequest.Properties.GridProperties = new GridProperties { FrozenColumnCount = sheet.FreezeColumnCount, FrozenRowCount = sheet.FreezeRowCount };
 
-                batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddSheet = sheetRequest });
+                _batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddSheet = sheetRequest });
 
                 // Append more columns if the default amount isn't enough
                 var defaultColumns = 26;
@@ -45,7 +46,7 @@ namespace GigRaptorLib.Utilities.Google
                     appendDimensionRequest.Dimension = "COLUMNS";
                     appendDimensionRequest.Length = sheet.Headers.Count - defaultColumns;
                     appendDimensionRequest.SheetId = _sheetId;
-                    batchUpdateSpreadsheetRequest.Requests.Add(new Request { AppendDimension = appendDimensionRequest });
+                    _batchUpdateSpreadsheetRequest.Requests.Add(new Request { AppendDimension = appendDimensionRequest });
                 }
 
                 // Create Sheet Headers
@@ -54,7 +55,7 @@ namespace GigRaptorLib.Utilities.Google
                 appendCellsRequest.Rows = SheetHelper.HeadersToRowData(sheet);
                 appendCellsRequest.SheetId = _sheetId;
 
-                batchUpdateSpreadsheetRequest.Requests.Add(new Request { AppendCells = appendCellsRequest });
+                _batchUpdateSpreadsheetRequest.Requests.Add(new Request { AppendCells = appendCellsRequest });
 
                 // Format/Protect Column Cells
                 sheet.Headers.ForEach(header => {
@@ -74,7 +75,7 @@ namespace GigRaptorLib.Utilities.Google
                             ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.ColumnWarning, Range = range, WarningOnly = true }
                         };
                         // protectCellRequests.Add(addProtectedRangeRequest);
-                        batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
+                        _batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
                     }
 
                     // If there's no format or validation then go to next header
@@ -116,7 +117,7 @@ namespace GigRaptorLib.Utilities.Google
                     Range = new GridRange { SheetId = _sheetId },
                     RowProperties = new BandingProperties { HeaderColor = SheetHelper.GetColor(sheet.TabColor), FirstBandColor = SheetHelper.GetColor(ColorEnum.WHITE), SecondBandColor = SheetHelper.GetColor(sheet.CellColor) }
                 };
-                batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddBanding = addBandingRequest });
+                _batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddBanding = addBandingRequest });
 
                 // Protect sheet or header
                 var addProtectedRangeRequest = new AddProtectedRangeRequest();
@@ -126,7 +127,7 @@ namespace GigRaptorLib.Utilities.Google
                     {
                         ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.SheetWarning, Range = new GridRange { SheetId = _sheetId }, WarningOnly = true }
                     };
-                    batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
+                    _batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
                 }
                 else
                 {
@@ -141,21 +142,21 @@ namespace GigRaptorLib.Utilities.Google
                     };
 
                     addProtectedRangeRequest.ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.HeaderWarning, Range = range, WarningOnly = true };
-                    batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
+                    _batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
                 }
 
                 // _sheet.Messages.Add($"Sheet [{sheet.Name}]: Added");
             });
 
             repeatCellRequests.ForEach(request => {
-                batchUpdateSpreadsheetRequest.Requests.Add(new Request { RepeatCell = request });
+                _batchUpdateSpreadsheetRequest.Requests.Add(new Request { RepeatCell = request });
             });
 
             protectCellRequests.ForEach(request => {
-                batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = request });
+                _batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = request });
             });
 
-            return batchUpdateSpreadsheetRequest;
+            return _batchUpdateSpreadsheetRequest;
             // Console.WriteLine(JsonSerializer.Serialize(batchUpdateSpreadsheetRequest.Requests));
             //var batchUpdateRequest = _googleSheetService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, _spreadsheetId);
             //batchUpdateRequest.Execute();

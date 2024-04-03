@@ -37,7 +37,7 @@ namespace GigRaptorLib.Tests.Utilities.Google
         }
 
         [Fact]
-        public void GivenSheet_ThenReturnSheetRequest()
+        public void GivenSheetConfig_ThenReturnSheetRequest()
         {
             foreach (var sheet in _sheetConfigs)
             {
@@ -55,7 +55,7 @@ namespace GigRaptorLib.Tests.Utilities.Google
         }
 
         [Fact]
-        public void GivenSheet_ThenReturnSheetHeaders()
+        public void GivenSheetHeaders_ThenReturnSheetHeaders()
         {
             foreach (var sheet in _sheetConfigs)
             {
@@ -79,7 +79,7 @@ namespace GigRaptorLib.Tests.Utilities.Google
         }
 
         [Fact]
-        public void GivenSheet_ThenReturnSheetBanding()
+        public void GivenSheetColors_ThenReturnSheetBanding()
         {
             foreach (var sheet in _sheetConfigs)
             {
@@ -94,34 +94,75 @@ namespace GigRaptorLib.Tests.Utilities.Google
         }
 
         [Fact]
-        public void GivenSheet_ThenReturnProtectRequest()
+        public void GivenSheetProtected_ThenReturnProtectRequest()
         {
             foreach (var sheet in _sheetConfigs)
             {
                 var result = GenerateSheets.Generate([sheet]);
                 var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
-                var protectRange = result.Requests.First(x => x.AddProtectedRange != null).AddProtectedRange.ProtectedRange;
+                var protectRange = result.Requests.Where(x => x.AddProtectedRange != null).ToList();
+
+                if (!sheet.ProtectSheet)
+                {
+                    continue;
+                }
+
+                protectRange.Should().HaveCount(1);
+                var sheetProtection = protectRange.First().AddProtectedRange.ProtectedRange;
+                sheetProtection.Range.SheetId.Should().Be(sheetId);
+                sheetProtection.Description.Should().Be(ProtectionWarnings.SheetWarning);
+                sheetProtection.WarningOnly.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public void GivenSheetNotProtected_ThenReturnProtectRequests()
+        {
+            foreach (var sheet in _sheetConfigs)
+            {
+                var result = GenerateSheets.Generate([sheet]);
+                var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
+                var protectRange = result.Requests.Where(x => x.AddProtectedRange != null).ToList();
 
                 if (sheet.ProtectSheet)
                 {
-                    protectRange.Range.SheetId.Should().Be(sheetId);
-                    protectRange.Description.Should().Be(ProtectionWarnings.SheetWarning);
-                    protectRange.WarningOnly.Should().BeTrue();
+                    continue;
                 }
-                else
+
+                var columnProtections = sheet.Headers.Where(x => x.Formula != null).ToList();
+
+                protectRange.Should().HaveCount(columnProtections.Count + 1); // +1 for header protection
+
+                for (var i = 0; i < protectRange.Count; i++)
                 {
-                    protectRange.Range.SheetId.Should().Be(sheetId);
-                    protectRange.Description.Should().Be(ProtectionWarnings.ColumnWarning);
-                    protectRange.WarningOnly.Should().BeTrue();
+                    var protectedRange = protectRange[i].AddProtectedRange.ProtectedRange;
+                    protectedRange.Range.SheetId.Should().Be(sheetId);
+                    protectedRange.WarningOnly.Should().BeTrue();
+
+                    if (i == protectRange.Count - 1) // Header protection (last) 
+                    {
+                        protectedRange.Description.Should().Be(ProtectionWarnings.HeaderWarning);
+                    }
+                    else
+                    {
+                        protectedRange.Description.Should().Be(ProtectionWarnings.ColumnWarning);
+                    }
                 }
             }
         }
-        // Protected range request (if sheet isn't protected)
 
-        // RepeatCellRequest Test format column cells?
+        [Fact]
+        public void GivenSheetHeaderFormatOrValidation_ThenReturnRepeatCellsRequest()
+        {
+            foreach (var sheet in _sheetConfigs)
+            {
+                var result = GenerateSheets.Generate([sheet]);
+                var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
+                var repeatCells = result.Requests.Where(x => x.RepeatCell != null).ToList();
+                var repeatHeaders = sheet.Headers.Where(x => x.Format != null || x.Validation != null).ToList();
 
-        // Banding request (alternating colors)
-
-        // Sheet protected request (if true)
+                repeatCells.Should().HaveCount(repeatHeaders.Count);
+            }
+        }
     }
 }
