@@ -7,6 +7,8 @@ namespace GigRaptorLib.Utilities.Google
 {
     public static class GenerateSheets
     {
+        private static int? _sheetId;
+        
         public static BatchUpdateSpreadsheetRequest Generate(List<SheetModel> sheets)
         {
             // var sheets = SheetHelper.GetSheets();
@@ -19,7 +21,7 @@ namespace GigRaptorLib.Utilities.Google
             sheets.ForEach(sheet => {
                 var random = new Random();
                 // var sheetId = (int?)(DateTimeOffset.Now.ToUnixTimeMilliseconds() % 1000000000);
-                var sheetId = random.Next();
+                _sheetId = random.Next();
 
                 var sheetRequest = new AddSheetRequest();
                 sheetRequest.Properties = new SheetProperties();
@@ -27,7 +29,7 @@ namespace GigRaptorLib.Utilities.Google
                 // TODO: Make request helper to build these requests.
 
                 // Create Sheet With Properties
-                sheetRequest.Properties.SheetId = sheetId;
+                sheetRequest.Properties.SheetId = _sheetId;
                 // sheetRequest.Properties.Title = $"{sheet.Name} {sheetId}";
                 sheetRequest.Properties.Title = sheet.Name;
                 sheetRequest.Properties.TabColor = SheetHelper.GetColor(sheet.TabColor);
@@ -42,7 +44,7 @@ namespace GigRaptorLib.Utilities.Google
                     var appendDimensionRequest = new AppendDimensionRequest();
                     appendDimensionRequest.Dimension = "COLUMNS";
                     appendDimensionRequest.Length = sheet.Headers.Count - defaultColumns;
-                    appendDimensionRequest.SheetId = sheetId;
+                    appendDimensionRequest.SheetId = _sheetId;
                     batchUpdateSpreadsheetRequest.Requests.Add(new Request { AppendDimension = appendDimensionRequest });
                 }
 
@@ -50,7 +52,7 @@ namespace GigRaptorLib.Utilities.Google
                 var appendCellsRequest = new AppendCellsRequest();
                 appendCellsRequest.Fields = "*";
                 appendCellsRequest.Rows = SheetHelper.HeadersToRowData(sheet);
-                appendCellsRequest.SheetId = sheetId;
+                appendCellsRequest.SheetId = _sheetId;
 
                 batchUpdateSpreadsheetRequest.Requests.Add(new Request { AppendCells = appendCellsRequest });
 
@@ -58,7 +60,7 @@ namespace GigRaptorLib.Utilities.Google
                 sheet.Headers.ForEach(header => {
                     var range = new GridRange
                     {
-                        SheetId = sheetId,
+                        SheetId = _sheetId,
                         StartColumnIndex = header.Index,
                         EndColumnIndex = header.Index + 1,
                         StartRowIndex = 1,
@@ -110,8 +112,8 @@ namespace GigRaptorLib.Utilities.Google
                 var addBandingRequest = new AddBandingRequest();
                 addBandingRequest.BandedRange = new BandedRange
                 {
-                    BandedRangeId = sheetId,
-                    Range = new GridRange { SheetId = sheetId },
+                    BandedRangeId = _sheetId,
+                    Range = new GridRange { SheetId = _sheetId },
                     RowProperties = new BandingProperties { HeaderColor = SheetHelper.GetColor(sheet.TabColor), FirstBandColor = SheetHelper.GetColor(ColorEnum.WHITE), SecondBandColor = SheetHelper.GetColor(sheet.CellColor) }
                 };
                 batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddBanding = addBandingRequest });
@@ -122,7 +124,7 @@ namespace GigRaptorLib.Utilities.Google
                 {
                     addProtectedRangeRequest = new AddProtectedRangeRequest
                     {
-                        ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.SheetWarning, Range = new GridRange { SheetId = sheetId }, WarningOnly = true }
+                        ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.SheetWarning, Range = new GridRange { SheetId = _sheetId }, WarningOnly = true }
                     };
                     batchUpdateSpreadsheetRequest.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
                 }
@@ -131,7 +133,7 @@ namespace GigRaptorLib.Utilities.Google
                     // Protect full header if sheet isn't protected.
                     var range = new GridRange
                     {
-                        SheetId = sheetId,
+                        SheetId = _sheetId,
                         StartColumnIndex = 0,
                         EndColumnIndex = sheet.Headers.Count,
                         StartRowIndex = 0,

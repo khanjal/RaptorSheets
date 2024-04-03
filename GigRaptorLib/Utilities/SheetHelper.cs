@@ -41,23 +41,23 @@ namespace GigRaptorLib.Utilities
         {
             return colorEnum switch
             {
-                ColorEnum.BLACK => new Color { Red = 0, Green = 0, Blue = 0 },
-                ColorEnum.BLUE => new Color { Red = 0, Green = 0, Blue = 1 },
-                ColorEnum.CYAN => new Color { Red = (float?)0.3, Green = (float?)0.8, Blue = (float?)0.9 },
-                ColorEnum.DARK_YELLOW => new Color { Red = (float?)0.9686274509803922, Green = (float?)0.796078431372549, Blue = (float?)0.30196078431372547 },
-                ColorEnum.GREEN => new Color { Red = 0, Green = (float?)0.5, Blue = 0 },
-                ColorEnum.LIGHT_CYAN => new Color { Red = (float?)0.9, Green = (float?)1, Blue = (float?)1 },
-                ColorEnum.LIGHT_GRAY => new Color { Red = (float?)0.9058823529411765, Green = (float?)0.9764705882352941, Blue = (float?)0.9372549019607843 },
-                ColorEnum.LIGHT_GREEN => new Color { Red = (float?)0.38823529411764707, Green = (float?)0.8235294117647058, Blue = (float?)0.592156862745098 },
-                ColorEnum.LIGHT_RED => new Color { Red = (float?)1, Green = (float?)0.9, Blue = (float?)0.85 },
-                ColorEnum.LIGHT_YELLOW => new Color { Red = (float?)0.996078431372549, Green = (float?)0.9725490196078431, Blue = (float?)0.8901960784313725 },
-                ColorEnum.LIME => new Color { Red = 0, Green = 1, Blue = 0 },
-                ColorEnum.ORANGE => new Color { Red = 1, Green = (float?)0.6, Blue = 0 },
-                ColorEnum.MAGENTA or ColorEnum.PINK => new Color { Red = 1, Green = 0, Blue = 1 },
-                ColorEnum.PURPLE => new Color { Red = (float?)0.5, Green = 0, Blue = (float?)0.5 },
-                ColorEnum.RED => new Color { Red = 1, Green = 0, Blue = 0 },
-                ColorEnum.WHITE => new Color { Red = 1, Green = 1, Blue = 1 },
-                ColorEnum.YELLOW => new Color { Red = 1, Green = 1, Blue = 0 },
+                ColorEnum.BLACK => Colors.Black,
+                ColorEnum.BLUE => Colors.Blue,
+                ColorEnum.CYAN => Colors.Cyan,
+                ColorEnum.DARK_YELLOW => Colors.DarkYellow,
+                ColorEnum.GREEN => Colors.Green,
+                ColorEnum.LIGHT_CYAN => Colors.LightCyan,
+                ColorEnum.LIGHT_GRAY => Colors.LightGray,
+                ColorEnum.LIGHT_GREEN => Colors.LightGreen,
+                ColorEnum.LIGHT_RED => Colors.LightRed,
+                ColorEnum.LIGHT_YELLOW => Colors.LightYellow,
+                ColorEnum.LIME => Colors.Lime,
+                ColorEnum.ORANGE => Colors.Orange,
+                ColorEnum.MAGENTA or ColorEnum.PINK => Colors.Magenta,
+                ColorEnum.PURPLE => Colors.Purple,
+                ColorEnum.RED => Colors.Red,
+                ColorEnum.WHITE => Colors.White,
+                ColorEnum.YELLOW => Colors.Yellow,
                 _ => null,
             };
         }
@@ -151,19 +151,20 @@ namespace GigRaptorLib.Utilities
         // https://developers.google.com/sheets/api/guides/formats
         public static CellFormat GetCellFormat(FormatEnum format)
         {
-            var cellFormat = new CellFormat();
-
-            cellFormat.NumberFormat = format switch
+            var cellFormat = new CellFormat
             {
-                FormatEnum.ACCOUNTING => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Accounting },
-                FormatEnum.DATE => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Date },
-                FormatEnum.DISTANCE => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Distance },
-                FormatEnum.DURATION => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Duration },
-                FormatEnum.NUMBER => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Number },
-                FormatEnum.TEXT => new NumberFormat { Type = "TEXT" },
-                FormatEnum.TIME => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Time },
-                FormatEnum.WEEKDAY => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Weekday },
-                _ => new NumberFormat { Type = "TEXT" }
+                NumberFormat = format switch
+                {
+                    FormatEnum.ACCOUNTING => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Accounting },
+                    FormatEnum.DATE => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Date },
+                    FormatEnum.DISTANCE => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Distance },
+                    FormatEnum.DURATION => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Duration },
+                    FormatEnum.NUMBER => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Number },
+                    FormatEnum.TEXT => new NumberFormat { Type = "TEXT" },
+                    FormatEnum.TIME => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Time },
+                    FormatEnum.WEEKDAY => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Weekday },
+                    _ => new NumberFormat { Type = "TEXT" }
+                }
             };
 
             return cellFormat;
