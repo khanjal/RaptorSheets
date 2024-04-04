@@ -5,164 +5,137 @@ using GigRaptorLib.Models;
 using GigRaptorLib.Utilities;
 using GigRaptorLib.Utilities.Google;
 using Google.Apis.Sheets.v4.Data;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 
 namespace GigRaptorLib.Tests.Utilities.Google
 {
     public class GenerateSheetsTests
     {
-        private List<SheetModel> _sheetConfigs;
-        private BatchUpdateSpreadsheetRequest _request;
+        public static IEnumerable<object[]> Sheets =>
+        [
+            [AddressMapper.GetSheet(), GenerateSheets.Generate([AddressMapper.GetSheet()])],
+            [DailyMapper.GetSheet(), GenerateSheets.Generate([DailyMapper.GetSheet()])],
+            [MonthlyMapper.GetSheet(), GenerateSheets.Generate([MonthlyMapper.GetSheet()])],
+            [NameMapper.GetSheet(), GenerateSheets.Generate([NameMapper.GetSheet()])],
+            [PlaceMapper.GetSheet(), GenerateSheets.Generate([PlaceMapper.GetSheet()])],
+            [RegionMapper.GetSheet(), GenerateSheets.Generate([RegionMapper.GetSheet()])],
+            [ServiceMapper.GetSheet(), GenerateSheets.Generate([ServiceMapper.GetSheet()])],
+            [ShiftMapper.GetSheet(), GenerateSheets.Generate([ShiftMapper.GetSheet()])],
+            [TripMapper.GetSheet(), GenerateSheets.Generate([TripMapper.GetSheet()])],
+            [TypeMapper.GetSheet(), GenerateSheets.Generate([TypeMapper.GetSheet()])],
+            [WeekdayMapper.GetSheet(), GenerateSheets.Generate([WeekdayMapper.GetSheet()])],
+            [WeeklyMapper.GetSheet(), GenerateSheets.Generate([WeeklyMapper.GetSheet()])],
+            [YearlyMapper.GetSheet(), GenerateSheets.Generate([YearlyMapper.GetSheet()])],
+        ];
 
-        public GenerateSheetsTests()
+        [Theory]
+        [MemberData(nameof(Sheets))]
+        public void GivenSheetConfig_ThenReturnSheetRequest(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
         {
-            _sheetConfigs =
-            [
-                AddressMapper.GetSheet(),
-                DailyMapper.GetSheet(),
-                MonthlyMapper.GetSheet(),
-                NameMapper.GetSheet(),
-                PlaceMapper.GetSheet(),
-                RegionMapper.GetSheet(),
-                ServiceMapper.GetSheet(),
-                ShiftMapper.GetSheet(),
-                TripMapper.GetSheet(),
-                TypeMapper.GetSheet(),
-                WeekdayMapper.GetSheet(),
-                WeeklyMapper.GetSheet(),
-                YearlyMapper.GetSheet()
-            ];
+            var index = 0; // AddSheet should be first request
 
-            _request = GenerateSheets.Generate(_sheetConfigs);
+            batchRequest.Requests[index].AddSheet.Should().NotBeNull();
+
+            var sheetRequest = batchRequest.Requests[index].AddSheet;
+            sheetRequest.Properties.Title.Should().Be(config.Name);
+            sheetRequest.Properties.TabColor.Should().BeEquivalentTo(SheetHelper.GetColor(config.TabColor));
+            sheetRequest.Properties.GridProperties.FrozenColumnCount.Should().Be(config.FreezeColumnCount);
+            sheetRequest.Properties.GridProperties.FrozenRowCount.Should().Be(config.FreezeRowCount);
         }
 
-        [Fact]
-        public void GivenSheetConfig_ThenReturnSheetRequest()
+        [Theory]
+        [MemberData(nameof(Sheets))]
+        public void GivenSheetHeaders_ThenReturnSheetHeaders(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
         {
-            foreach (var sheet in _sheetConfigs)
+            var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
+
+            // Check on if it had to expand the number of rows (headers > 26)
+            if (config.Headers.Count > 26)
             {
-                var result = GenerateSheets.Generate([sheet]);
-                var index = 0; // AddSheet should be first request
-
-                result.Requests[index].AddSheet.Should().NotBeNull();
-
-                var sheetRequest = result.Requests[index].AddSheet;
-                sheetRequest.Properties.Title.Should().Be(sheet.Name);
-                sheetRequest.Properties.TabColor.Should().BeEquivalentTo(SheetHelper.GetColor(sheet.TabColor));
-                sheetRequest.Properties.GridProperties.FrozenColumnCount.Should().Be(sheet.FreezeColumnCount);
-                sheetRequest.Properties.GridProperties.FrozenRowCount.Should().Be(sheet.FreezeRowCount);
+                var appendDimension = batchRequest.Requests.First(x => x.AppendDimension != null).AppendDimension;
+                appendDimension.Dimension.Should().Be("COLUMNS");
+                appendDimension.Length.Should().Be(config.Headers.Count - 26);
+                appendDimension.SheetId.Should().Be(sheetId);
             }
+
+            var appendCells = batchRequest.Requests.First(x => x.AppendCells != null).AppendCells;
+            appendCells.SheetId.Should().Be(sheetId);
+            appendCells.Rows.Should().HaveCount(1);
+            appendCells.Rows[0].Values.Should().HaveCount(config.Headers.Count);
         }
 
-        [Fact]
-        public void GivenSheetHeaders_ThenReturnSheetHeaders()
+        [Theory]
+        [MemberData(nameof(Sheets))]
+        public void GivenSheetColors_ThenReturnSheetBanding(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
         {
-            foreach (var sheet in _sheetConfigs)
-            {
-                var result = GenerateSheets.Generate([sheet]);
-                var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
+            var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
 
-                // Check on if it had to expand the number of rows (headers > 26)
-                if (sheet.Headers.Count > 26)
+            var bandedRange = batchRequest.Requests.First(x => x.AddBanding != null).AddBanding.BandedRange;
+            bandedRange.Range.SheetId.Should().Be(sheetId);
+            bandedRange.RowProperties.HeaderColor.Should().BeEquivalentTo(SheetHelper.GetColor(config.TabColor));
+            bandedRange.RowProperties.SecondBandColor.Should().BeEquivalentTo(SheetHelper.GetColor(config.CellColor));
+        }
+
+        [Theory]
+        [MemberData(nameof(Sheets))]
+        public void GivenSheetProtected_ThenReturnProtectRequest(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
+        {
+            var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
+            var protectRange = batchRequest.Requests.Where(x => x.AddProtectedRange != null).ToList();
+
+            if (!config.ProtectSheet)
+            {
+                return;
+            }
+
+            protectRange.Should().HaveCount(1);
+            var sheetProtection = protectRange.First().AddProtectedRange.ProtectedRange;
+            sheetProtection.Range.SheetId.Should().Be(sheetId);
+            sheetProtection.Description.Should().Be(ProtectionWarnings.SheetWarning);
+            sheetProtection.WarningOnly.Should().BeTrue();
+        }
+
+        [Theory]
+        [MemberData(nameof(Sheets))]
+        public void GivenSheetNotProtected_ThenReturnProtectRequests(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
+        {
+            var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
+            var protectRange = batchRequest.Requests.Where(x => x.AddProtectedRange != null).ToList();
+
+            if (config.ProtectSheet)
+            {
+                return;
+            }
+
+            var columnProtections = config.Headers.Where(x => x.Formula != null).ToList();
+
+            protectRange.Should().HaveCount(columnProtections.Count + 1); // +1 for header protection
+
+            for (var i = 0; i < protectRange.Count; i++)
+            {
+                var protectedRange = protectRange[i].AddProtectedRange.ProtectedRange;
+                protectedRange.Range.SheetId.Should().Be(sheetId);
+                protectedRange.WarningOnly.Should().BeTrue();
+
+                if (i == protectRange.Count - 1) // Header protection (last) 
                 {
-                    var appendDimension = result.Requests.First(x => x.AppendDimension != null).AppendDimension;
-                    appendDimension.Dimension.Should().Be("COLUMNS");
-                    appendDimension.Length.Should().Be(sheet.Headers.Count - 26);
-                    appendDimension.SheetId.Should().Be(sheetId);
+                    protectedRange.Description.Should().Be(ProtectionWarnings.HeaderWarning);
                 }
-
-                var appendCells = result.Requests.First(x => x.AppendCells != null).AppendCells;
-                appendCells.SheetId.Should().Be(sheetId);
-                appendCells.Rows.Should().HaveCount(1);
-                appendCells.Rows[0].Values.Should().HaveCount(sheet.Headers.Count);
-            }
-        }
-
-        [Fact]
-        public void GivenSheetColors_ThenReturnSheetBanding()
-        {
-            foreach (var sheet in _sheetConfigs)
-            {
-                var result = GenerateSheets.Generate([sheet]);
-                var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
-
-                var bandedRange = result.Requests.First(x => x.AddBanding != null).AddBanding.BandedRange;
-                bandedRange.Range.SheetId.Should().Be(sheetId);
-                bandedRange.RowProperties.HeaderColor.Should().BeEquivalentTo(SheetHelper.GetColor(sheet.TabColor));
-                bandedRange.RowProperties.SecondBandColor.Should().BeEquivalentTo(SheetHelper.GetColor(sheet.CellColor));
-            }
-        }
-
-        [Fact]
-        public void GivenSheetProtected_ThenReturnProtectRequest()
-        {
-            foreach (var sheet in _sheetConfigs)
-            {
-                var result = GenerateSheets.Generate([sheet]);
-                var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
-                var protectRange = result.Requests.Where(x => x.AddProtectedRange != null).ToList();
-
-                if (!sheet.ProtectSheet)
+                else
                 {
-                    continue;
-                }
-
-                protectRange.Should().HaveCount(1);
-                var sheetProtection = protectRange.First().AddProtectedRange.ProtectedRange;
-                sheetProtection.Range.SheetId.Should().Be(sheetId);
-                sheetProtection.Description.Should().Be(ProtectionWarnings.SheetWarning);
-                sheetProtection.WarningOnly.Should().BeTrue();
-            }
-        }
-
-        [Fact]
-        public void GivenSheetNotProtected_ThenReturnProtectRequests()
-        {
-            foreach (var sheet in _sheetConfigs)
-            {
-                var result = GenerateSheets.Generate([sheet]);
-                var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
-                var protectRange = result.Requests.Where(x => x.AddProtectedRange != null).ToList();
-
-                if (sheet.ProtectSheet)
-                {
-                    continue;
-                }
-
-                var columnProtections = sheet.Headers.Where(x => x.Formula != null).ToList();
-
-                protectRange.Should().HaveCount(columnProtections.Count + 1); // +1 for header protection
-
-                for (var i = 0; i < protectRange.Count; i++)
-                {
-                    var protectedRange = protectRange[i].AddProtectedRange.ProtectedRange;
-                    protectedRange.Range.SheetId.Should().Be(sheetId);
-                    protectedRange.WarningOnly.Should().BeTrue();
-
-                    if (i == protectRange.Count - 1) // Header protection (last) 
-                    {
-                        protectedRange.Description.Should().Be(ProtectionWarnings.HeaderWarning);
-                    }
-                    else
-                    {
-                        protectedRange.Description.Should().Be(ProtectionWarnings.ColumnWarning);
-                    }
+                    protectedRange.Description.Should().Be(ProtectionWarnings.ColumnWarning);
                 }
             }
         }
 
-        [Fact]
-        public void GivenSheetHeaderFormatOrValidation_ThenReturnRepeatCellsRequest()
+        [Theory]
+        [MemberData(nameof(Sheets))]
+        public void GivenSheetHeaderFormatOrValidation_ThenReturnRepeatCellsRequest(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
         {
-            foreach (var sheet in _sheetConfigs)
-            {
-                var result = GenerateSheets.Generate([sheet]);
-                var sheetId = result.Requests.First().AddSheet.Properties.SheetId;
-                var repeatCells = result.Requests.Where(x => x.RepeatCell != null).ToList();
-                var repeatHeaders = sheet.Headers.Where(x => x.Format != null || x.Validation != null).ToList();
+            var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
+            var repeatCells = batchRequest.Requests.Where(x => x.RepeatCell != null).ToList();
+            var repeatHeaders = config.Headers.Where(x => x.Format != null || x.Validation != null).ToList();
 
-                repeatCells.Should().HaveCount(repeatHeaders.Count);
-            }
+            repeatCells.Should().HaveCount(repeatHeaders.Count);
         }
     }
 }

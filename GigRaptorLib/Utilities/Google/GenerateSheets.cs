@@ -22,7 +22,6 @@ namespace GigRaptorLib.Utilities.Google
             {
                 _sheet = sheet;
                 var random = new Random();
-                // var sheetId = (int?)(DateTimeOffset.Now.ToUnixTimeMilliseconds() % 1000000000);
                 _sheetId = random.Next();
 
                 GenerateSheetPropertes();
