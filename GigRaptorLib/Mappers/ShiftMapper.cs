@@ -77,7 +77,7 @@ namespace GigRaptorLib.Mappers
 
                 foreach (var header in shiftHeaders)
                 {
-                    var headerEnum = header.ToString().Trim().GetValueFromName<HeaderEnum>();
+                    var headerEnum = header!.ToString()!.Trim().GetValueFromName<HeaderEnum>();
                     // Console.WriteLine($"Header: {headerEnum}");
 
                     switch (headerEnum)
@@ -147,7 +147,7 @@ namespace GigRaptorLib.Mappers
 
             var tripSheet = TripMapper.GetSheet();
             var sheetTripsName = SheetEnum.TRIPS.DisplayName();
-            var sheetTripsTypeRange = tripSheet.Headers.FirstOrDefault(x => x.Name == HeaderEnum.TYPE.DisplayName()).Range;
+            var sheetTripsTypeRange = tripSheet.Headers.First(x => x.Name == HeaderEnum.TYPE.DisplayName()).Range;
 
             sheet.Headers = new List<SheetCellModel>();
 
