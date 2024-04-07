@@ -13,9 +13,6 @@ namespace GigRaptorLib.Entities
         [JsonPropertyName("visits")]
         public int Visits { get; set; }
 
-        [JsonPropertyName("trips")]
-        public int Trips { get; set; }
-
         [JsonPropertyName("distance")]
         public decimal Distance { get; set; }
     }

@@ -15,7 +15,7 @@ namespace GigRaptorLib.Mappers
             var headers = new Dictionary<int, string>();
             var id = 0;
 
-            foreach (var value in values)
+            foreach (List<object> value in values)
             {
                 id++;
                 if (id == 1)
@@ -28,6 +28,11 @@ namespace GigRaptorLib.Mappers
                 {
                     continue;
                 }
+
+                if (value.Count < headers.Count)
+                {
+                    value.AddItems(headers.Count - value.Count);
+                };
 
                 NameEntity name = new()
                 {
