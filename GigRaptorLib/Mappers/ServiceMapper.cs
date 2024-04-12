@@ -13,6 +13,7 @@ namespace GigRaptorLib.Mappers
         {
             var services = new List<ServiceEntity>();
             var headers = new Dictionary<int, string>();
+            values = values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
             var id = 0;
 
             foreach (var value in values)

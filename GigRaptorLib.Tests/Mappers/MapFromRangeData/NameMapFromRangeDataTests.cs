@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using GigRaptorLib.Entities;
 using GigRaptorLib.Mappers;
 using GigRaptorLib.Tests.Data.Helpers;
 
@@ -6,17 +7,22 @@ namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 
 public class NameMapFromRangeDataTests
 {
+    private static IList<IList<object>>? _values;
+    private static List<NameEntity>? _entities;
+
+    public NameMapFromRangeDataTests()
+    {
+        _values = JsonHelpers.LoadJson("Name");
+        _entities = NameMapper.MapFromRangeData(_values!);
+    }
+
     [Fact]
     public void GivenNameSheetData_ThenReturnRangeData()
     {
-        var values = JsonHelpers.LoadJson("Name");
-        values.Should().NotBeNull();
+        var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
+        _entities.Should().HaveCount(nonEmptyValues.Count - 1);
 
-        var entities = NameMapper.MapFromRangeData(values!);
-        var nonEmptyValues = values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList(); // First column should not be empty
-        entities.Should().HaveCount(nonEmptyValues.Count - 1);
-
-        foreach (var entity in entities)
+        foreach (var entity in _entities!)
         {
             entity.Id.Should().NotBe(0);
             entity.Name.Should().NotBeNullOrEmpty();
@@ -33,11 +39,8 @@ public class NameMapFromRangeDataTests
     [Fact]
     public void GivenNameSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
     {
-        var values = JsonHelpers.LoadJson("Name");
-        var entities = NameMapper.MapFromRangeData(values!);
-
-        var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, values![0].Count - 1)]).ToArray();
-        var randomValues = RandomHelpers.RandomizeValues(values, sheetOrder);
+        var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
+        var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 
         var randomEntities = NameMapper.MapFromRangeData(randomValues);
         var nonEmptyRandomValues = randomValues!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
@@ -45,7 +48,7 @@ public class NameMapFromRangeDataTests
 
         for (int i = 0; i < randomEntities.Count; i++)
         {
-            var entity = entities[i];
+            var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
             entity.Id.Should().Be(randomEntity.Id);

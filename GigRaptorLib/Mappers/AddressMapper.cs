@@ -13,6 +13,7 @@ public static class AddressMapper
     {
         var addresses = new List<AddressEntity>();
         var headers = new Dictionary<int, string>();
+        values = values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         var id = 0;
 
         foreach (List<object> value in values)
@@ -21,11 +22,6 @@ public static class AddressMapper
             if (id == 1)
             {
                 headers = HeaderParser.ParserHeader(value);
-                continue;
-            }
-
-            if (value[0].ToString() == "")
-            {
                 continue;
             }
 
