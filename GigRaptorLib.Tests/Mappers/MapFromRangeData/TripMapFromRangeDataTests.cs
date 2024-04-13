@@ -17,7 +17,7 @@ public class TripMapFromRangeDataTests
     }
 
     [Fact]
-    public void GivenShiftSheetData_ThenReturnRangeData()
+    public void GivenTripSheetData_ThenReturnRangeData()
     {
         var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         _entities.Should().HaveCount(nonEmptyValues.Count - 1);
@@ -55,7 +55,7 @@ public class TripMapFromRangeDataTests
     }
 
     [Fact]
-    public void GivenShiftSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
+    public void GivenTripSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
     {
         var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);

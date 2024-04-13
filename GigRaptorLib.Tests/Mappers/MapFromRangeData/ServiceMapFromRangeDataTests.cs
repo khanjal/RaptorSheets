@@ -17,7 +17,7 @@ public class ServiceMapFromRangeDataTests
     }
 
     [Fact]
-    public void GivenPlaceSheetData_ThenReturnRangeData()
+    public void GivenServiceSheetData_ThenReturnRangeData()
     {
         var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         _entities.Should().HaveCount(nonEmptyValues.Count - 1);
@@ -37,7 +37,7 @@ public class ServiceMapFromRangeDataTests
     }
 
     [Fact]
-    public void GivenPlaceSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
+    public void GivenServiceSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
     {
         var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
