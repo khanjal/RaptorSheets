@@ -12,7 +12,7 @@ public class NameMapFromRangeDataTests
 
     public NameMapFromRangeDataTests()
     {
-        _values = JsonHelpers.LoadJson("Name");
+        _values = JsonHelpers.LoadJsonSheetData("Name");
         _entities = NameMapper.MapFromRangeData(_values!);
     }
 

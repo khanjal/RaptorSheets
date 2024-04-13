@@ -12,7 +12,7 @@ public class ServiceMapFromRangeDataTests
 
     public ServiceMapFromRangeDataTests()
     {
-        _values = JsonHelpers.LoadJson("Service");
+        _values = JsonHelpers.LoadJsonSheetData("Service");
         _entities = ServiceMapper.MapFromRangeData(_values!);
     }
 

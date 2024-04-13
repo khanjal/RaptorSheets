@@ -12,7 +12,7 @@ public class AddressMapFromRangeDataTests
 
     public AddressMapFromRangeDataTests()
     {
-        _values = JsonHelpers.LoadJson("Address");
+        _values = JsonHelpers.LoadJsonSheetData("Address");
         _entities = AddressMapper.MapFromRangeData(_values!);
     }
 

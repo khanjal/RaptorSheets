@@ -12,7 +12,7 @@ public class PlaceMapFromRangeDataTests
 
     public PlaceMapFromRangeDataTests()
     {
-        _values = JsonHelpers.LoadJson("Place");
+        _values = JsonHelpers.LoadJsonSheetData("Place");
         _entities = PlaceMapper.MapFromRangeData(_values!);
     }
 
