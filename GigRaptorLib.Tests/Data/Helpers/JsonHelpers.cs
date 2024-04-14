@@ -1,10 +1,20 @@
-﻿using GigRaptorLib.Models;
+﻿using GigRaptorLib.Entities;
+using GigRaptorLib.Models;
 using Newtonsoft.Json;
 
 namespace GigRaptorLib.Tests.Data.Helpers;
 
 internal class JsonHelpers
 {
+    internal static SheetEntity? LoadSheetJson()
+    {
+        using StreamReader reader = new($"./Data/Json/ShiftWithTrips.json");
+        var json = reader.ReadToEnd();
+        var sheetData = JsonConvert.DeserializeObject<SheetEntity>(json);
+
+        return sheetData;
+    }
+
     internal static IList<IList<object>>? LoadJsonData(string filename)
     {
         var path = $"./Data/Json/{filename}.json";
