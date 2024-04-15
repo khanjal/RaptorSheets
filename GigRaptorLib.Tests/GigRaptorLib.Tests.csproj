@@ -10,6 +10,55 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Data\Json\DemoSheet.json" />
+    <None Remove="Data\Json\Headers.json" />
+    <None Remove="Data\Json\Sheets\AddressSheet.json" />
+    <None Remove="Data\Json\Sheets\NameSheet.json" />
+    <None Remove="Data\Json\Sheets\PlaceSheet.json" />
+    <None Remove="Data\Json\Sheets\ServiceSheet.json" />
+    <None Remove="Data\Json\Sheets\ShiftSheet.json" />
+    <None Remove="Data\Json\Sheets\TripSheet.json" />
+    <None Remove="Data\Json\Sheets\WeekdaySheet.json" />
+    <None Remove="Data\Json\ShiftWithTrips.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Data\Json\DemoSheet.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\Headers.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\Sheets\AddressSheet.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\Sheets\NameSheet.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\Sheets\PlaceSheet.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Data\Json\Sheets\ServiceSheet.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\Sheets\ShiftSheet.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\Sheets\TripSheet.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\Sheets\WeekdaySheet.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\ShiftWithTrips.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
@@ -25,6 +74,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GigRaptorLib\GigRaptorLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Mappers\MapFromRangeData\TripMapFromRangeDataTests.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
 
 </Project>

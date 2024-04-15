@@ -1,0 +1,1508 @@
+{
+	"spreadsheetId": "1JwzjAqs_fZhnR1XbARY__2OnWdrqUoxIBa1mtVQwHMU",
+	"properties": {
+		"title": "Demo Raptor Gig Sheet",
+		"locale": "en_US",
+		"autoRecalc": "ON_CHANGE",
+		"timeZone": "America/New_York",
+		"defaultFormat": {
+			"backgroundColor": {
+				"red": 1,
+				"green": 1,
+				"blue": 1
+			},
+			"padding": {
+				"top": 2,
+				"right": 3,
+				"bottom": 2,
+				"left": 3
+			},
+			"verticalAlignment": "BOTTOM",
+			"wrapStrategy": "OVERFLOW_CELL",
+			"textFormat": {
+				"foregroundColor": {},
+				"fontFamily": "arial,sans,sans-serif",
+				"fontSize": 10,
+				"bold": false,
+				"italic": false,
+				"strikethrough": false,
+				"underline": false,
+				"foregroundColorStyle": {
+					"rgbColor": {}
+				}
+			},
+			"backgroundColorStyle": {
+				"rgbColor": {
+					"red": 1,
+					"green": 1,
+					"blue": 1
+				}
+			}
+		},
+		"spreadsheetTheme": {
+			"primaryFontFamily": "Arial",
+			"themeColors": [
+				{
+					"colorType": "TEXT",
+					"color": {
+						"rgbColor": {}
+					}
+				},
+				{
+					"colorType": "BACKGROUND",
+					"color": {
+						"rgbColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						}
+					}
+				},
+				{
+					"colorType": "ACCENT1",
+					"color": {
+						"rgbColor": {
+							"red": 0.25882354,
+							"green": 0.52156866,
+							"blue": 0.95686275
+						}
+					}
+				},
+				{
+					"colorType": "ACCENT2",
+					"color": {
+						"rgbColor": {
+							"red": 0.91764706,
+							"green": 0.2627451,
+							"blue": 0.20784314
+						}
+					}
+				},
+				{
+					"colorType": "ACCENT3",
+					"color": {
+						"rgbColor": {
+							"red": 0.9843137,
+							"green": 0.7372549,
+							"blue": 0.015686275
+						}
+					}
+				},
+				{
+					"colorType": "ACCENT4",
+					"color": {
+						"rgbColor": {
+							"red": 0.20392157,
+							"green": 0.65882355,
+							"blue": 0.3254902
+						}
+					}
+				},
+				{
+					"colorType": "ACCENT5",
+					"color": {
+						"rgbColor": {
+							"red": 1,
+							"green": 0.42745098,
+							"blue": 0.003921569
+						}
+					}
+				},
+				{
+					"colorType": "ACCENT6",
+					"color": {
+						"rgbColor": {
+							"red": 0.27450982,
+							"green": 0.7411765,
+							"blue": 0.7764706
+						}
+					}
+				},
+				{
+					"colorType": "LINK",
+					"color": {
+						"rgbColor": {
+							"red": 0.06666667,
+							"green": 0.33333334,
+							"blue": 0.8
+						}
+					}
+				}
+			]
+		}
+	},
+	"sheets": [
+		{
+			"properties": {
+				"sheetId": 1392620892,
+				"title": "Trips",
+				"index": 0,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 30,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.96862745,
+					"green": 0.79607844,
+					"blue": 0.3019608
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.96862745,
+						"green": 0.79607844,
+						"blue": 0.3019608
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 1049655800,
+					"range": {
+						"sheetId": 1392620892,
+						"startRowIndex": 1,
+						"startColumnIndex": 12,
+						"endColumnIndex": 13
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 1412036169,
+					"range": {
+						"sheetId": 1392620892,
+						"startRowIndex": 1,
+						"startColumnIndex": 26,
+						"endColumnIndex": 27
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 1517747696,
+					"range": {
+						"sheetId": 1392620892,
+						"startRowIndex": 1,
+						"startColumnIndex": 28,
+						"endColumnIndex": 29
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 1842405392,
+					"range": {
+						"sheetId": 1392620892,
+						"startRowIndex": 1,
+						"startColumnIndex": 24,
+						"endColumnIndex": 25
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 1846905942,
+					"range": {
+						"sheetId": 1392620892,
+						"startRowIndex": 0,
+						"endRowIndex": 1,
+						"startColumnIndex": 0,
+						"endColumnIndex": 30
+					},
+					"description": "Editing the header could cause a #REF error or break sheet references.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 717712720,
+					"range": {
+						"sheetId": 1392620892,
+						"startRowIndex": 1,
+						"startColumnIndex": 27,
+						"endColumnIndex": 28
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 817235363,
+					"range": {
+						"sheetId": 1392620892,
+						"startRowIndex": 1,
+						"startColumnIndex": 25,
+						"endColumnIndex": 26
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 1392620892,
+					"range": {
+						"sheetId": 1392620892,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 30
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.96862745,
+							"green": 0.79607844,
+							"blue": 0.3019608
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.99607843,
+							"green": 0.972549,
+							"blue": 0.8901961
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.96862745,
+								"green": 0.79607844,
+								"blue": 0.3019608
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.99607843,
+								"green": 0.972549,
+								"blue": 0.8901961
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 222633670,
+				"title": "Shifts",
+				"index": 1,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 33,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 1
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 1
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 1307104300,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 32,
+						"endColumnIndex": 33
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 1859192327,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 31,
+						"endColumnIndex": 32
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 1106958467,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 25,
+						"endColumnIndex": 26
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 1130981728,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 29,
+						"endColumnIndex": 30
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 1233427977,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 18,
+						"endColumnIndex": 19
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 138336876,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 22,
+						"endColumnIndex": 23
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 159316498,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 23,
+						"endColumnIndex": 24
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 1640578514,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 17,
+						"endColumnIndex": 18
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 1852226913,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 24,
+						"endColumnIndex": 25
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 966490774,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 28,
+						"endColumnIndex": 29
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 22006030,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 19,
+						"endColumnIndex": 20
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 92342656,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 16,
+						"endColumnIndex": 17
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 396529368,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 27,
+						"endColumnIndex": 28
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 470748855,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 26,
+						"endColumnIndex": 27
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 631284984,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 0,
+						"endRowIndex": 1,
+						"startColumnIndex": 0,
+						"endColumnIndex": 33
+					},
+					"description": "Editing the header could cause a #REF error or break sheet references.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 635956904,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 30,
+						"endColumnIndex": 31
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 804983174,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 21,
+						"endColumnIndex": 22
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				},
+				{
+					"protectedRangeId": 807687794,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 1,
+						"startColumnIndex": 20,
+						"endColumnIndex": 21
+					},
+					"description": "Editing this column will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 222633670,
+					"range": {
+						"sheetId": 222633670,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 33
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 1
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 1,
+							"green": 0.8980392,
+							"blue": 0.84705883
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 1
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 0.8980392,
+								"blue": 0.84705883
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 211794974,
+				"title": "Addresses",
+				"index": 2,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.29803923,
+					"green": 0.8,
+					"blue": 0.8980392
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.29803923,
+						"green": 0.8,
+						"blue": 0.8980392
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 918818732,
+					"range": {
+						"sheetId": 211794974
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 211794974,
+					"range": {
+						"sheetId": 211794974,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.29803923,
+							"green": 0.8,
+							"blue": 0.8980392
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.8980392,
+							"green": 1,
+							"blue": 1
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.29803923,
+								"green": 0.8,
+								"blue": 0.8980392
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.8980392,
+								"green": 1,
+								"blue": 1
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 593819223,
+				"title": "Names",
+				"index": 3,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.29803923,
+					"green": 0.8,
+					"blue": 0.8980392
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.29803923,
+						"green": 0.8,
+						"blue": 0.8980392
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 1592616234,
+					"range": {
+						"sheetId": 593819223
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 593819223,
+					"range": {
+						"sheetId": 593819223,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.29803923,
+							"green": 0.8,
+							"blue": 0.8980392
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.8980392,
+							"green": 1,
+							"blue": 1
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.29803923,
+								"green": 0.8,
+								"blue": 0.8980392
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.8980392,
+								"green": 1,
+								"blue": 1
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 1536530974,
+				"title": "Places",
+				"index": 4,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.29803923,
+					"green": 0.8,
+					"blue": 0.8980392
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.29803923,
+						"green": 0.8,
+						"blue": 0.8980392
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 1297357755,
+					"range": {
+						"sheetId": 1536530974
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 1536530974,
+					"range": {
+						"sheetId": 1536530974,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.29803923,
+							"green": 0.8,
+							"blue": 0.8980392
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.8980392,
+							"green": 1,
+							"blue": 1
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.29803923,
+								"green": 0.8,
+								"blue": 0.8980392
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.8980392,
+								"green": 1,
+								"blue": 1
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 401468272,
+				"title": "Regions",
+				"index": 5,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.29803923,
+					"green": 0.8,
+					"blue": 0.8980392
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.29803923,
+						"green": 0.8,
+						"blue": 0.8980392
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 262279186,
+					"range": {
+						"sheetId": 401468272
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 401468272,
+					"range": {
+						"sheetId": 401468272,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.29803923,
+							"green": 0.8,
+							"blue": 0.8980392
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.8980392,
+							"green": 1,
+							"blue": 1
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.29803923,
+								"green": 0.8,
+								"blue": 0.8980392
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.8980392,
+								"green": 1,
+								"blue": 1
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 1498763319,
+				"title": "Services",
+				"index": 6,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.29803923,
+					"green": 0.8,
+					"blue": 0.8980392
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.29803923,
+						"green": 0.8,
+						"blue": 0.8980392
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 1653189921,
+					"range": {
+						"sheetId": 1498763319
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 1498763319,
+					"range": {
+						"sheetId": 1498763319,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.29803923,
+							"green": 0.8,
+							"blue": 0.8980392
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.8980392,
+							"green": 1,
+							"blue": 1
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.29803923,
+								"green": 0.8,
+								"blue": 0.8980392
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.8980392,
+								"green": 1,
+								"blue": 1
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 923740086,
+				"title": "Types",
+				"index": 7,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.29803923,
+					"green": 0.8,
+					"blue": 0.8980392
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.29803923,
+						"green": 0.8,
+						"blue": 0.8980392
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 29177103,
+					"range": {
+						"sheetId": 923740086
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 923740086,
+					"range": {
+						"sheetId": 923740086,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.29803923,
+							"green": 0.8,
+							"blue": 0.8980392
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.8980392,
+							"green": 1,
+							"blue": 1
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.29803923,
+								"green": 0.8,
+								"blue": 0.8980392
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.8980392,
+								"green": 1,
+								"blue": 1
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 1829902888,
+				"title": "Daily",
+				"index": 8,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.3882353,
+					"green": 0.8235294,
+					"blue": 0.5921569
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.3882353,
+						"green": 0.8235294,
+						"blue": 0.5921569
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 28669340,
+					"range": {
+						"sheetId": 1829902888
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 1829902888,
+					"range": {
+						"sheetId": 1829902888,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.3882353,
+							"green": 0.8235294,
+							"blue": 0.5921569
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.90588236,
+							"green": 0.9764706,
+							"blue": 0.9372549
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.3882353,
+								"green": 0.8235294,
+								"blue": 0.5921569
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.90588236,
+								"green": 0.9764706,
+								"blue": 0.9372549
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 932491388,
+				"title": "Weekdays",
+				"index": 9,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.3882353,
+					"green": 0.8235294,
+					"blue": 0.5921569
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.3882353,
+						"green": 0.8235294,
+						"blue": 0.5921569
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 149321216,
+					"range": {
+						"sheetId": 932491388
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 932491388,
+					"range": {
+						"sheetId": 932491388,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.3882353,
+							"green": 0.8235294,
+							"blue": 0.5921569
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.90588236,
+							"green": 0.9764706,
+							"blue": 0.9372549
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.3882353,
+								"green": 0.8235294,
+								"blue": 0.5921569
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.90588236,
+								"green": 0.9764706,
+								"blue": 0.9372549
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 1921632173,
+				"title": "Weekly",
+				"index": 10,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.3882353,
+					"green": 0.8235294,
+					"blue": 0.5921569
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.3882353,
+						"green": 0.8235294,
+						"blue": 0.5921569
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 1133163632,
+					"range": {
+						"sheetId": 1921632173
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 1921632173,
+					"range": {
+						"sheetId": 1921632173,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.3882353,
+							"green": 0.8235294,
+							"blue": 0.5921569
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.90588236,
+							"green": 0.9764706,
+							"blue": 0.9372549
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.3882353,
+								"green": 0.8235294,
+								"blue": 0.5921569
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.90588236,
+								"green": 0.9764706,
+								"blue": 0.9372549
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 535124260,
+				"title": "Monthly",
+				"index": 11,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.3882353,
+					"green": 0.8235294,
+					"blue": 0.5921569
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.3882353,
+						"green": 0.8235294,
+						"blue": 0.5921569
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 1122503131,
+					"range": {
+						"sheetId": 535124260
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 535124260,
+					"range": {
+						"sheetId": 535124260,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.3882353,
+							"green": 0.8235294,
+							"blue": 0.5921569
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.90588236,
+							"green": 0.9764706,
+							"blue": 0.9372549
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.3882353,
+								"green": 0.8235294,
+								"blue": 0.5921569
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.90588236,
+								"green": 0.9764706,
+								"blue": 0.9372549
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"properties": {
+				"sheetId": 1332281642,
+				"title": "Yearly",
+				"index": 12,
+				"sheetType": "GRID",
+				"gridProperties": {
+					"rowCount": 1000,
+					"columnCount": 26,
+					"frozenRowCount": 1,
+					"frozenColumnCount": 1
+				},
+				"tabColor": {
+					"red": 0.3882353,
+					"green": 0.8235294,
+					"blue": 0.5921569
+				},
+				"tabColorStyle": {
+					"rgbColor": {
+						"red": 0.3882353,
+						"green": 0.8235294,
+						"blue": 0.5921569
+					}
+				}
+			},
+			"protectedRanges": [
+				{
+					"protectedRangeId": 2009360763,
+					"range": {
+						"sheetId": 1332281642
+					},
+					"description": "Editing this sheet will cause a #REF error.",
+					"warningOnly": true
+				}
+			],
+			"bandedRanges": [
+				{
+					"bandedRangeId": 1332281642,
+					"range": {
+						"sheetId": 1332281642,
+						"startRowIndex": 0,
+						"endRowIndex": 1000,
+						"startColumnIndex": 0,
+						"endColumnIndex": 26
+					},
+					"rowProperties": {
+						"headerColor": {
+							"red": 0.3882353,
+							"green": 0.8235294,
+							"blue": 0.5921569
+						},
+						"firstBandColor": {
+							"red": 1,
+							"green": 1,
+							"blue": 1
+						},
+						"secondBandColor": {
+							"red": 0.90588236,
+							"green": 0.9764706,
+							"blue": 0.9372549
+						},
+						"headerColorStyle": {
+							"rgbColor": {
+								"red": 0.3882353,
+								"green": 0.8235294,
+								"blue": 0.5921569
+							}
+						},
+						"firstBandColorStyle": {
+							"rgbColor": {
+								"red": 1,
+								"green": 1,
+								"blue": 1
+							}
+						},
+						"secondBandColorStyle": {
+							"rgbColor": {
+								"red": 0.90588236,
+								"green": 0.9764706,
+								"blue": 0.9372549
+							}
+						}
+					}
+				}
+			]
+		}
+	],
+	"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1JwzjAqs_fZhnR1XbARY__2OnWdrqUoxIBa1mtVQwHMU/edit"
+}

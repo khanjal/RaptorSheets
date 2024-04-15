@@ -45,4 +45,12 @@ public class MapperGetSheetTests
                 resultHeader.Formula.Should().NotBeNullOrWhiteSpace();
         }
     }
+
+    //GetDataValidation
+
+    //GetSheetForRange
+
+    //GetCommonShiftGroupSheetHeaders
+
+    //GetCommonTripGroupSheetHeaders
 }
