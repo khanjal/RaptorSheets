@@ -20,7 +20,7 @@ public static class HeaderParser
     {
         var columnId = GetHeaderKey(headers, columnName);
 
-        if (columnId > values.Count || columnId < 0)
+        if (columnId > values.Count || columnId < 0 || values[columnId] == null)
         {
             return false;
         }
@@ -44,7 +44,7 @@ public static class HeaderParser
     {
         var columnId = GetHeaderKey(headers, columnName);
 
-        if (columnId > values.Count || columnId < 0)
+        if (columnId > values.Count || columnId < 0 || values[columnId] == null)
         {
             return "";
         }
@@ -56,7 +56,7 @@ public static class HeaderParser
     {
         var columnId = GetHeaderKey(headers, columnName);
 
-        if (columnId > values.Count || columnId < 0)
+        if (columnId > values.Count || columnId < 0 || values[columnId] == null)
         {
             return 0;
         }
@@ -77,7 +77,7 @@ public static class HeaderParser
     {
         var columnId = GetHeaderKey(headers, columnName);
 
-        if (columnId > values.Count || columnId < 0)
+        if (columnId > values.Count || columnId < 0 || values[columnId] == null)
         {
             return 0;
         }

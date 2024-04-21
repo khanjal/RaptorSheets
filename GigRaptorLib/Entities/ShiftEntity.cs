@@ -23,7 +23,7 @@ namespace GigRaptorLib.Entities
         public string Service { get; set; }
 
         [JsonPropertyName("number")]
-        public int Number { get; set; }
+        public int? Number { get; set; }
 
         [JsonPropertyName("active")]
         public string Active { get; set; }
@@ -38,7 +38,7 @@ namespace GigRaptorLib.Entities
         public string Time { get; set; }
 
         [JsonPropertyName("omit")]
-        public bool Omit { get; set; }
+        public bool? Omit { get; set; }
 
         [JsonPropertyName("region")]
         public string Region { get; set; }

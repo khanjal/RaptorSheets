@@ -77,7 +77,7 @@ namespace GigRaptorLib.Mappers
 
                 foreach (var header in tripHeaders)
                 {
-                    var headerEnum = header.ToString().Trim().GetValueFromName<HeaderEnum>();
+                    var headerEnum = header.ToString()!.Trim().GetValueFromName<HeaderEnum>();
 
                     switch (headerEnum)
                     {
@@ -109,25 +109,25 @@ namespace GigRaptorLib.Mappers
                             objectList.Add(trip.Duration);
                             break;
                         case HeaderEnum.PAY:
-                            objectList.Add(trip.Pay);
+                            objectList.Add(trip.Pay!);
                             break;
                         case HeaderEnum.TIPS:
-                            objectList.Add(trip.Tip);
+                            objectList.Add(trip.Tip!);
                             break;
                         case HeaderEnum.BONUS:
-                            objectList.Add(trip.Bonus);
+                            objectList.Add(trip.Bonus!);
                             break;
                         case HeaderEnum.CASH:
-                            objectList.Add(trip.Cash);
+                            objectList.Add(trip.Cash!);
                             break;
                         case HeaderEnum.ODOMETER_START:
-                            objectList.Add(trip.OdometerStart);
+                            objectList.Add(trip.OdometerStart!);
                             break;
                         case HeaderEnum.ODOMETER_END:
-                            objectList.Add(trip.OdometerEnd);
+                            objectList.Add(trip.OdometerEnd!);
                             break;
                         case HeaderEnum.DISTANCE:
-                            objectList.Add(trip.Distance);
+                            objectList.Add(trip.Distance!);
                             break;
                         case HeaderEnum.NAME:
                             objectList.Add(trip.Name);
@@ -151,7 +151,7 @@ namespace GigRaptorLib.Mappers
                             objectList.Add(trip.Note);
                             break;
                         default:
-                            objectList.Add(null);
+                            objectList.Add(new object());
                             break;
                     }
                 }

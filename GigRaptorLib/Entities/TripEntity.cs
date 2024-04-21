@@ -17,7 +17,7 @@ namespace GigRaptorLib.Entities
         public string Service { get; set; }
 
         [JsonPropertyName("number")]
-        public int Number { get; set; }
+        public int? Number { get; set; }
 
         [JsonPropertyName("exclude")]
         public bool Exclude { get; set; }
