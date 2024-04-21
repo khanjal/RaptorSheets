@@ -1,5 +1,6 @@
 ﻿using GigRaptorLib.Entities;
 using GigRaptorLib.Models;
+using Google.Apis.Sheets.v4.Data;
 using Newtonsoft.Json;
 
 namespace GigRaptorLib.Tests.Data.Helpers;
@@ -11,6 +12,15 @@ internal class JsonHelpers
         using StreamReader reader = new($"./Data/Json/ShiftWithTrips.json");
         var json = reader.ReadToEnd();
         var sheetData = JsonConvert.DeserializeObject<SheetEntity>(json);
+
+        return sheetData;
+    }
+
+    internal static Spreadsheet? LoadDemoSpreadsheet()
+    {
+        using StreamReader reader = new($"./Data/Json/DemoSheet.json");
+        var json = reader.ReadToEnd();
+        var sheetData = JsonConvert.DeserializeObject<Spreadsheet>(json);
 
         return sheetData;
     }

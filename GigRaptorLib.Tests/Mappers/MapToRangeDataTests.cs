@@ -68,7 +68,7 @@ public class MapToRangeDataTests
         var headers = HeaderParser.ParserHeader(tripHeaders);
 
         Assert.NotNull(trips);
-        trips.Count.Should().Be(3);
+        trips.Count.Should().Be(4);
 
         for (int i = 0; i < trips.Count; i++)
         {

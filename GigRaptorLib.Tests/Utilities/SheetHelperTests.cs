@@ -1,7 +1,10 @@
 using FluentAssertions;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
+using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities;
+using Newtonsoft.Json.Linq;
+using System;
 
 namespace GigRaptorLib.Tests.Utilities;
 
@@ -98,5 +101,19 @@ public class SheetHelperTests
         {
             cellFormat.NumberFormat.Pattern.Should().Be(null);
         }
+    }
+
+    [Fact]
+    public void GivenSpreadsheet_ThenReturnProperties()
+    {
+        var spreadsheet = JsonHelpers.LoadDemoSpreadsheet();
+
+        var spreadsheetTitle = SheetHelper.GetSpreadsheetTitle(spreadsheet!);
+        spreadsheetTitle.Should().NotBeNull();
+        spreadsheetTitle.Should().BeEquivalentTo("Demo Raptor Gig Sheet");
+
+        var spreadsheetSheets = SheetHelper.GetSpreadsheetSheets(spreadsheet!);
+        spreadsheetSheets.Should().NotBeNull();
+        spreadsheetSheets.Count.Should().Be(Enum.GetNames(typeof(SheetEnum)).Length);
     }
 }

@@ -103,6 +103,28 @@
       "Tip": "5",
       "Bonus": "1",
       "Cash": ""
+    },
+    {
+      "Date": "6/1/2023",
+      "Service": "Uber",
+      "Number": "",
+      "Place": "",
+      "Pickup": "",
+      "Dropoff": "",
+      "Duration": "",
+      "StartOdometer": "1023.5",
+      "EndOdometer": "1027.1",
+      "Distance": "",
+      "Name": "",
+      "StartAddress": "",
+      "EndAddress": "",
+      "EndUnit": "",
+      "OrderNumber": "",
+      "Note": "",
+      "Pay": "",
+      "Tip": "",
+      "Bonus": "",
+      "Cash": ""
     }
   ]
 }

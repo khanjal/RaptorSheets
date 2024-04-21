@@ -36,6 +36,16 @@ namespace GigRaptorLib.Utilities
             return sheets;
         }
 
+        public static string GetSpreadsheetTitle(Spreadsheet sheet)
+        {
+            return sheet.Properties.Title;
+        }
+
+        public static List<string> GetSpreadsheetSheets(Spreadsheet sheet)
+        {
+            return sheet.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
+        }
+
         // https://www.rapidtables.com/convert/color/hex-to-rgb.html
         public static Color? GetColor(ColorEnum colorEnum)
         {
