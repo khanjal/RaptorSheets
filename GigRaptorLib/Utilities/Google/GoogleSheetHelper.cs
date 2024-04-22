@@ -12,16 +12,14 @@ namespace GigRaptorLib.Utilities.Google;
 public class GoogleSheetHelper
 {
     private SheetsService _sheetsService;
-    private readonly string? _spreadsheetId;
     private readonly IConfiguration _configuration;
+    private readonly string _range = "A1:Z1000";
 
     public GoogleSheetHelper()
     {
         _configuration = new ConfigurationBuilder()
             .AddUserSecrets(Assembly.GetExecutingAssembly(), true)
             .Build();
-
-        _spreadsheetId = _configuration.GetSection("spreadsheet_id").Value;
 
         var jsonCredential = new JsonCredentialParameters
         {
@@ -42,7 +40,7 @@ public class GoogleSheetHelper
             ApplicationName = "GigLogger"
         });
     }
-    public async Task GetAllData()
+    public async Task<IList<MatchedValueRange>> GetAllData(string spreadsheetId)
     {
         var body = new BatchGetValuesByDataFilterRequest
         {
@@ -58,8 +56,65 @@ public class GoogleSheetHelper
             body.DataFilters.Add(filter);
         }
 
-        var batchGetRequest = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(body, _spreadsheetId);
+        var batchGetRequest = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(body, spreadsheetId);
         var batchResponse = await batchGetRequest.ExecuteAsync();
         var values = batchResponse.ValueRanges;
+
+        return values;
+    }
+
+    public async Task<IList<IList<object>>> GetSheetData(string spreadsheetId, SheetEnum sheetEnum)
+    {
+        var getRequest = _sheetsService.Spreadsheets.Values.Get(spreadsheetId, $"{sheetEnum.DisplayName()}!{_range}");
+
+        var getResponse = await getRequest.ExecuteAsync();
+        IList<IList<Object>> values = getResponse.Values;
+
+        return values;
+
+        //switch (sheetEnum)
+        //{
+        //    case SheetEnum.ADDRESSES:
+        //        sheetEntity.Addresses = AddressMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.DAILY:
+        //        sheetEntity.Daily = DailyMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.MONTHLY:
+        //        sheetEntity.Monthly = MonthlyMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.NAMES:
+        //        sheetEntity.Names = NameMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.PLACES:
+        //        sheetEntity.Places = PlaceMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.REGIONS:
+        //        sheetEntity.Regions = RegionMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.SERVICES:
+        //        sheetEntity.Services = ServiceMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.SHIFTS:
+        //        sheetEntity.Shifts = ShiftMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.TRIPS:
+        //        sheetEntity.Trips = TripMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.TYPES:
+        //        sheetEntity.Types = TypeMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.WEEKDAYS:
+        //        sheetEntity.Weekdays = WeekdayMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.WEEKLY:
+        //        sheetEntity.Weekly = WeeklyMapper.MapFromRangeData(values);
+        //        break;
+        //    case SheetEnum.YEARLY:
+        //        sheetEntity.Yearly = YearlyMapper.MapFromRangeData(values);
+        //        break;
+        //    default:
+        //        break;
+        //}
     }
 }
