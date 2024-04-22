@@ -55,4 +55,13 @@ public class GoogleSheetHelperTests
 
         // Look into replacing individual json sheet tests.
     }
+
+    [Fact]
+    public async void GivenGetSheetProperties_ThenReturnInfo()
+    {
+        var result = await _googleSheetHelper.GetSheetProperties(_spreadsheetId);
+        result.Should().NotBeNull();
+
+        result.Title.Should().Be("Demo Raptor Gig Sheet");
+    }
 }

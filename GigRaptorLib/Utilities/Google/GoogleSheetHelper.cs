@@ -117,4 +117,14 @@ public class GoogleSheetHelper
         //        break;
         //}
     }
+
+    public async Task<SpreadsheetProperties> GetSheetProperties(string spreadsheetId)
+    {
+        var getRequest = _sheetsService.Spreadsheets.Get(spreadsheetId);
+
+        var getResponse = await getRequest.ExecuteAsync();
+        var properties = getResponse.Properties;
+
+        return properties;
+    }
 }
