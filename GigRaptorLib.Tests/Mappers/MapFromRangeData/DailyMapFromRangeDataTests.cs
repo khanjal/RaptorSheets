@@ -1,25 +1,25 @@
-﻿using FluentAssertions;
-using GigRaptorLib.Entities;
+﻿using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
-using GigRaptorLib.Tests.Data;
 using GigRaptorLib.Tests.Data.Helpers;
+using GigRaptorLib.Tests.Data;
 using GigRaptorLib.Utilities.Extensions;
+using FluentAssertions;
 
 namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 
 [Collection("Google Data collection")]
-public class WeekdayMapFromRangeDataTests
+public class DailyMapFromRangeDataTests
 {
     readonly GoogleDataFixture fixture;
     private static IList<IList<object>>? _values;
-    private static List<WeekdayEntity>? _entities;
+    private static List<DailyEntity>? _entities;
 
-    public WeekdayMapFromRangeDataTests(GoogleDataFixture fixture)
+    public DailyMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges.Where(x => x.DataFilters[0].A1Range == SheetEnum.WEEKDAYS.DisplayName()).First().ValueRange.Values;
-        _entities = WeekdayMapper.MapFromRangeData(_values!);
+        _values = this.fixture.valueRanges.Where(x => x.DataFilters[0].A1Range == SheetEnum.DAILY.DisplayName()).First().ValueRange.Values;
+        _entities = DailyMapper.MapFromRangeData(_values!);
     }
 
     [Fact]
@@ -31,10 +31,8 @@ public class WeekdayMapFromRangeDataTests
         foreach (var entity in _entities!)
         {
             entity.Id.Should().NotBe(0);
-            entity.Day.Should().BeGreaterThanOrEqualTo(0);
-            entity.Weekday.Should().NotBeNull();
+            entity.Date.Should().NotBeNullOrEmpty();
             entity.Trips.Should().BeGreaterThanOrEqualTo(0);
-            entity.Days.Should().BeGreaterThanOrEqualTo(0);
             entity.Pay.Should().NotBeNull();
             entity.Tip.Should().NotBeNull();
             entity.Bonus.Should().NotBeNull();
@@ -42,10 +40,12 @@ public class WeekdayMapFromRangeDataTests
             entity.Cash.Should().NotBeNull();
             entity.Distance.Should().BeGreaterThanOrEqualTo(0);
             entity.Time.Should().NotBeNull();
-            entity.CurrentAmount.Should().BeGreaterThanOrEqualTo(0);
-            entity.PreviousAmount.Should().BeGreaterThanOrEqualTo(0);
-            entity.DailyAverage.Should().BeGreaterThanOrEqualTo(0);
-            entity.PreviousDailyAverage.Should().BeGreaterThanOrEqualTo(0);
+            entity.AmountPerTrip.Should().BeGreaterThanOrEqualTo(0);
+            entity.AmountPerDistance.Should().BeGreaterThanOrEqualTo(0);
+            entity.AmountPerTime.Should().BeGreaterThanOrEqualTo(0);
+            entity.Day.Should().NotBeNullOrEmpty();
+            entity.Week.Should().NotBeNullOrEmpty();
+            entity.Month.Should().NotBeNullOrEmpty();
         }
     }
 
@@ -55,7 +55,7 @@ public class WeekdayMapFromRangeDataTests
         var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 
-        var randomEntities = WeekdayMapper.MapFromRangeData(randomValues);
+        var randomEntities = DailyMapper.MapFromRangeData(randomValues);
         var nonEmptyRandomValues = randomValues!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         randomEntities.Should().HaveCount(nonEmptyRandomValues.Count - 1);
 
@@ -65,10 +65,8 @@ public class WeekdayMapFromRangeDataTests
             var randomEntity = randomEntities[i];
 
             entity.Id.Should().Be(randomEntity.Id);
-            entity.Day.Should().Be(randomEntity.Day);
-            entity.Weekday.Should().BeEquivalentTo(randomEntity.Weekday);
+            entity.Date.Should().Be(randomEntity.Date);
             entity.Trips.Should().Be(randomEntity.Trips);
-            entity.Days.Should().Be(randomEntity.Days);
             entity.Pay.Should().Be(randomEntity.Pay);
             entity.Tip.Should().Be(randomEntity.Tip);
             entity.Bonus.Should().Be(randomEntity.Bonus);
@@ -76,10 +74,12 @@ public class WeekdayMapFromRangeDataTests
             entity.Cash.Should().Be(randomEntity.Cash);
             entity.Distance.Should().Be(randomEntity.Distance);
             entity.Time.Should().BeEquivalentTo(randomEntity.Time);
-            entity.CurrentAmount.Should().Be(randomEntity.CurrentAmount);
-            entity.PreviousAmount.Should().Be(randomEntity.PreviousAmount);
-            entity.DailyAverage.Should().Be(randomEntity.DailyAverage);
-            entity.PreviousDailyAverage.Should().Be(randomEntity.PreviousDailyAverage);
+            entity.AmountPerTrip.Should().Be(randomEntity.AmountPerTrip);
+            entity.AmountPerDistance.Should().Be(randomEntity.AmountPerDistance);
+            entity.AmountPerTime.Should().Be(randomEntity.AmountPerTime);
+            entity.Day.Should().Be(randomEntity.Day);
+            entity.Week.Should().Be(randomEntity.Week);
+            entity.Month.Should().Be(randomEntity.Month);
         }
     }
 }
