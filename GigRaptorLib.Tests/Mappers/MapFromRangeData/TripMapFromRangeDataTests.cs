@@ -1,18 +1,27 @@
 ﻿using FluentAssertions;
 using GigRaptorLib.Entities;
+using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
 using GigRaptorLib.Tests.Data.Helpers;
+using GigRaptorLib.Utilities.Google;
 
 namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 
-public class TripMapFromRangeDataTests
+public class TripMapFromRangeDataTests : IAsyncLifetime
 {
     private static IList<IList<object>>? _values;
     private static List<TripEntity>? _entities;
 
-    public TripMapFromRangeDataTests()
+    public async Task InitializeAsync()
     {
-        _values = JsonHelpers.LoadJsonSheetData("Trip");
+        var configuration = TestConfigurationHelper.GetConfiguration();
+        var spreadsheetId = configuration.GetSection("spreadsheet_id").Value;
+
+        var googleSheetHelper = new GoogleSheetHelper();
+        var result = await googleSheetHelper.GetSheetData(spreadsheetId!, SheetEnum.TRIPS);
+
+        //_values = JsonHelpers.LoadJsonSheetData("Trip");
+        _values = result;
         _entities = TripMapper.MapFromRangeData(_values!);
     }
 
@@ -98,5 +107,10 @@ public class TripMapFromRangeDataTests
             entity.AmountPerTime.Should().Be(randomEntity.AmountPerTime);
             entity.AmountPerDistance.Should().Be(randomEntity.AmountPerDistance);
         }
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
     }
 }

@@ -1,18 +1,27 @@
 ﻿using FluentAssertions;
 using GigRaptorLib.Entities;
+using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
 using GigRaptorLib.Tests.Data.Helpers;
+using GigRaptorLib.Utilities.Google;
 
 namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 
-public class WeekdayMapFromRangeDataTests
+public class WeekdayMapFromRangeDataTests : IAsyncLifetime
 {
     private static IList<IList<object>>? _values;
     private static List<WeekdayEntity>? _entities;
 
-    public WeekdayMapFromRangeDataTests()
+    public async Task InitializeAsync()
     {
-        _values = JsonHelpers.LoadJsonSheetData("Weekday");
+        var configuration = TestConfigurationHelper.GetConfiguration();
+        var spreadsheetId = configuration.GetSection("spreadsheet_id").Value;
+
+        var googleSheetHelper = new GoogleSheetHelper();
+        var result = await googleSheetHelper.GetSheetData(spreadsheetId!, SheetEnum.WEEKDAYS);
+
+        //_values = JsonHelpers.LoadJsonSheetData("Weekday");
+        _values = result;
         _entities = WeekdayMapper.MapFromRangeData(_values!);
     }
 
@@ -75,5 +84,10 @@ public class WeekdayMapFromRangeDataTests
             entity.DailyAverage.Should().Be(randomEntity.DailyAverage);
             entity.PreviousDailyAverage.Should().Be(randomEntity.PreviousDailyAverage);
         }
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
     }
 }

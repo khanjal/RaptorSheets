@@ -1,18 +1,27 @@
 ﻿using FluentAssertions;
 using GigRaptorLib.Entities;
+using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
 using GigRaptorLib.Tests.Data.Helpers;
+using GigRaptorLib.Utilities.Google;
 
 namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 
-public class AddressMapFromRangeDataTests
+public class AddressMapFromRangeDataTests : IAsyncLifetime
 {
     private static IList<IList<object>>? _values;
     private static List<AddressEntity>? _entities;
 
-    public AddressMapFromRangeDataTests()
+    public async Task InitializeAsync()
     {
-        _values = JsonHelpers.LoadJsonSheetData("Address");
+        var configuration = TestConfigurationHelper.GetConfiguration();
+        var spreadsheetId = configuration.GetSection("spreadsheet_id").Value;
+
+        var googleSheetHelper = new GoogleSheetHelper();
+        var result = await googleSheetHelper.GetSheetData(spreadsheetId!, SheetEnum.ADDRESSES);
+
+        //_values = JsonHelpers.LoadJsonSheetData("Address");
+        _values = result;
         _entities = AddressMapper.MapFromRangeData(_values!);
     }
 
@@ -61,5 +70,10 @@ public class AddressMapFromRangeDataTests
             entity.Cash.Should().Be(randomEntity.Cash);
             entity.Distance.Should().Be(randomEntity.Distance);
         }
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
     }
 }
