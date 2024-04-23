@@ -2,26 +2,23 @@
 using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
+using GigRaptorLib.Tests.Data;
 using GigRaptorLib.Tests.Data.Helpers;
-using GigRaptorLib.Utilities.Google;
+using GigRaptorLib.Utilities.Extensions;
 
 namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 
-public class ShiftMapFromRangeDataTests : IAsyncLifetime
+[Collection("Google Data collection")]
+public class ShiftMapFromRangeDataTests
 {
+    readonly GoogleDataFixture fixture;
     private static IList<IList<object>>? _values;
     private static List<ShiftEntity>? _entities;
 
-    public async Task InitializeAsync()
+    public ShiftMapFromRangeDataTests(GoogleDataFixture fixture)
     {
-        var configuration = TestConfigurationHelper.GetConfiguration();
-        var spreadsheetId = configuration.GetSection("spreadsheet_id").Value;
-
-        var googleSheetHelper = new GoogleSheetHelper();
-        var result = await googleSheetHelper.GetSheetData(spreadsheetId!, SheetEnum.SHIFTS);
-
-        //_values = JsonHelpers.LoadJsonSheetData("Shift");
-        _values = result;
+        this.fixture = fixture;
+        _values = this.fixture.valueRanges.Where(x => x.DataFilters[0].A1Range == SheetEnum.SHIFTS.DisplayName()).First().ValueRange.Values;
         _entities = ShiftMapper.MapFromRangeData(_values!);
     }
 
@@ -109,10 +106,5 @@ public class ShiftMapFromRangeDataTests : IAsyncLifetime
             entity.AmountPerDistance.Should().Be(randomEntity.AmountPerDistance);
             entity.AmountPerTrip.Should().Be(randomEntity.AmountPerTrip);
         }
-    }
-
-    public Task DisposeAsync()
-    {
-        return Task.CompletedTask;
     }
 }

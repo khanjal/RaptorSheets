@@ -9,21 +9,21 @@ using GigRaptorLib.Utilities.Extensions;
 namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 
 [Collection("Google Data collection")]
-public class AddressMapFromRangeDataTests
+public class TypeMapFromRangeDataTests
 {
     readonly GoogleDataFixture fixture;
     private static IList<IList<object>>? _values;
-    private static List<AddressEntity>? _entities;
+    private static List<TypeEntity>? _entities;
 
-    public AddressMapFromRangeDataTests(GoogleDataFixture fixture)
+    public TypeMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges.Where(x => x.DataFilters[0].A1Range == SheetEnum.ADDRESSES.DisplayName()).First().ValueRange.Values;
-        _entities = AddressMapper.MapFromRangeData(_values!);
+        _values = this.fixture.valueRanges.Where(x => x.DataFilters[0].A1Range == SheetEnum.TYPES.DisplayName()).First().ValueRange.Values;
+        _entities = TypeMapper.MapFromRangeData(_values!);
     }
 
     [Fact]
-    public void GivenAddressSheetData_ThenReturnRangeData()
+    public void GivenTypeSheetData_ThenReturnRangeData()
     {
         var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         _entities.Should().HaveCount(nonEmptyValues.Count - 1);
@@ -31,8 +31,8 @@ public class AddressMapFromRangeDataTests
         foreach (var entity in _entities!)
         {
             entity.Id.Should().NotBe(0);
-            entity.Address.Should().NotBeNullOrEmpty();
-            entity.Visits.Should().BeGreaterThan(0);
+            entity.Type.Should().NotBeNullOrEmpty();
+            entity.Trips.Should().BeGreaterThan(0);
             entity.Pay.Should().NotBeNull();
             entity.Tip.Should().NotBeNull();
             entity.Bonus.Should().NotBeNull();
@@ -43,12 +43,12 @@ public class AddressMapFromRangeDataTests
     }
 
     [Fact]
-    public void GivenAddressSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
+    public void GivenTypeSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
     {
         var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 
-        var randomEntities = AddressMapper.MapFromRangeData(randomValues);
+        var randomEntities = TypeMapper.MapFromRangeData(randomValues);
         var nonEmptyRandomValues = randomValues!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         randomEntities.Should().HaveCount(nonEmptyRandomValues.Count - 1);
 
@@ -58,8 +58,8 @@ public class AddressMapFromRangeDataTests
             var randomEntity = randomEntities[i];
 
             entity.Id.Should().Be(randomEntity.Id);
-            entity.Address.Should().BeEquivalentTo(randomEntity.Address);
-            entity.Visits.Should().Be(randomEntity.Visits);
+            entity.Type.Should().BeEquivalentTo(randomEntity.Type);
+            entity.Trips.Should().Be(randomEntity.Trips);
             entity.Pay.Should().Be(randomEntity.Pay);
             entity.Tip.Should().Be(randomEntity.Tip);
             entity.Bonus.Should().Be(randomEntity.Bonus);
@@ -69,3 +69,4 @@ public class AddressMapFromRangeDataTests
         }
     }
 }
+

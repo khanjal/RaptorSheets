@@ -2,26 +2,23 @@
 using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
+using GigRaptorLib.Tests.Data;
 using GigRaptorLib.Tests.Data.Helpers;
-using GigRaptorLib.Utilities.Google;
+using GigRaptorLib.Utilities.Extensions;
 
 namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 
-public class NameMapFromRangeDataTests : IAsyncLifetime
+[Collection("Google Data collection")]
+public class NameMapFromRangeDataTests
 {
+    readonly GoogleDataFixture fixture;
     private static IList<IList<object>>? _values;
     private static List<NameEntity>? _entities;
 
-    public async Task InitializeAsync()
+    public NameMapFromRangeDataTests(GoogleDataFixture fixture)
     {
-        var configuration = TestConfigurationHelper.GetConfiguration();
-        var spreadsheetId = configuration.GetSection("spreadsheet_id").Value;
-
-        var googleSheetHelper = new GoogleSheetHelper();
-        var result = await googleSheetHelper.GetSheetData(spreadsheetId!, SheetEnum.NAMES);
-
-        //_values = JsonHelpers.LoadJsonSheetData("Name");
-        _values = result;
+        this.fixture = fixture;
+        _values = this.fixture.valueRanges.Where(x => x.DataFilters[0].A1Range == SheetEnum.NAMES.DisplayName()).First().ValueRange.Values;
         _entities = NameMapper.MapFromRangeData(_values!);
     }
 
@@ -70,10 +67,5 @@ public class NameMapFromRangeDataTests : IAsyncLifetime
             entity.Cash.Should().Be(randomEntity.Cash);
             entity.Distance.Should().Be(randomEntity.Distance);
         }
-    }
-
-    public Task DisposeAsync()
-    {
-        return Task.CompletedTask;
     }
 }

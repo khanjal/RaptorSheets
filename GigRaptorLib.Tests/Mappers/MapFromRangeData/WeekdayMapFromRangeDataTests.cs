@@ -2,26 +2,23 @@
 using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
+using GigRaptorLib.Tests.Data;
 using GigRaptorLib.Tests.Data.Helpers;
-using GigRaptorLib.Utilities.Google;
+using GigRaptorLib.Utilities.Extensions;
 
 namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 
-public class WeekdayMapFromRangeDataTests : IAsyncLifetime
+[Collection("Google Data collection")]
+public class WeekdayMapFromRangeDataTests
 {
+    readonly GoogleDataFixture fixture;
     private static IList<IList<object>>? _values;
     private static List<WeekdayEntity>? _entities;
 
-    public async Task InitializeAsync()
+    public WeekdayMapFromRangeDataTests(GoogleDataFixture fixture)
     {
-        var configuration = TestConfigurationHelper.GetConfiguration();
-        var spreadsheetId = configuration.GetSection("spreadsheet_id").Value;
-
-        var googleSheetHelper = new GoogleSheetHelper();
-        var result = await googleSheetHelper.GetSheetData(spreadsheetId!, SheetEnum.WEEKDAYS);
-
-        //_values = JsonHelpers.LoadJsonSheetData("Weekday");
-        _values = result;
+        this.fixture = fixture;
+        _values = this.fixture.valueRanges.Where(x => x.DataFilters[0].A1Range == SheetEnum.WEEKDAYS.DisplayName()).First().ValueRange.Values;
         _entities = WeekdayMapper.MapFromRangeData(_values!);
     }
 
