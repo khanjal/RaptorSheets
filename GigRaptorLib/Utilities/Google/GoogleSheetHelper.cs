@@ -5,7 +5,6 @@ using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Configuration;
-using System.Reflection;
 
 namespace GigRaptorLib.Utilities.Google;
 
@@ -17,9 +16,7 @@ public class GoogleSheetHelper
 
     public GoogleSheetHelper()
     {
-        _configuration = new ConfigurationBuilder()
-            .AddUserSecrets(Assembly.GetExecutingAssembly(), true)
-            .Build();
+        _configuration = ConfigurationHelper.GetConfiguration();
 
         var jsonCredential = new JsonCredentialParameters
         {

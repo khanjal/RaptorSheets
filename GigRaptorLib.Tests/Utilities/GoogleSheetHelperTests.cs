@@ -1,8 +1,8 @@
 ﻿using FluentAssertions;
 using GigRaptorLib.Enums;
+using GigRaptorLib.Tests.Data.Helpers;
+using GigRaptorLib.Utilities;
 using GigRaptorLib.Utilities.Google;
-using Microsoft.Extensions.Configuration;
-using System.Reflection;
 
 namespace GigRaptorLib.Tests.Utilities;
 
@@ -13,9 +13,7 @@ public class GoogleSheetHelperTests
 
     public GoogleSheetHelperTests()
     {
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets(Assembly.GetExecutingAssembly(), true)
-            .Build();
+        var configuration = TestConfigurationHelper.GetConfiguration();
 
         _spreadsheetId = configuration.GetSection("spreadsheet_id").Value;
     }
