@@ -18,7 +18,7 @@ public static class RandomHelpers
         foreach ( var value in values ) {
             var objectValues = new List<object>();
 
-            for (int i = 0; i < value.Count; i++)
+            for (int i = 0; i < valueOrder.Length; i++)
             {
                 if (value.Count > valueOrder[i])
                 {

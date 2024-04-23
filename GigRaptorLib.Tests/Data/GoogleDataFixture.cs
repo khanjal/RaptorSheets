@@ -4,8 +4,7 @@ using Google.Apis.Sheets.v4.Data;
 
 namespace GigRaptorLib.Tests.Data;
 
-
-public class GoogleDataFixture : IAsyncLifetime
+public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared-context
 {
     public async Task InitializeAsync()
     {
