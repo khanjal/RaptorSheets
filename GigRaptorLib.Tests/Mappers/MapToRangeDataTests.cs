@@ -22,7 +22,7 @@ public class MapToRangeDataTests
     {
         var shiftHeaders = JsonHelpers.LoadJsonSheetData("Shift")![0];
         var shifts = ShiftMapper.MapToRangeData(_sheetData!.Shifts, shiftHeaders);
-        var headers = HeaderParser.ParserHeader(shiftHeaders);
+        var headers = HeaderHelper.ParserHeader(shiftHeaders);
 
         Assert.NotNull(shifts);
         shifts.Count.Should().Be(3);
@@ -42,14 +42,14 @@ public class MapToRangeDataTests
             shiftData.Note.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.NOTE.DisplayName())].ToString());
 
             if (shiftData.Number == null)
-                HeaderParser.GetIntValue(HeaderEnum.NUMBER.DisplayName(), shift, headers).Should().Be(0);
+                HeaderHelper.GetIntValue(HeaderEnum.NUMBER.DisplayName(), shift, headers).Should().Be(0);
             else
-                shiftData.Number.Should().Be(HeaderParser.GetIntValue(HeaderEnum.NUMBER.DisplayName(), shift, headers));
+                shiftData.Number.Should().Be(HeaderHelper.GetIntValue(HeaderEnum.NUMBER.DisplayName(), shift, headers));
 
             if (shiftData.Omit == null)
-                HeaderParser.GetBoolValue(HeaderEnum.TIME_OMIT.DisplayName(), shift, headers).Should().Be(false);
+                HeaderHelper.GetBoolValue(HeaderEnum.TIME_OMIT.DisplayName(), shift, headers).Should().Be(false);
             else
-                shiftData.Omit.Should().Be(HeaderParser.GetBoolValue(HeaderEnum.TIME_OMIT.DisplayName(), shift, headers));
+                shiftData.Omit.Should().Be(HeaderHelper.GetBoolValue(HeaderEnum.TIME_OMIT.DisplayName(), shift, headers));
 
             // TODO: Future support of shift only would use this.
             //shiftData.Pay.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.PAY.DisplayName(), shift, headers));
@@ -65,7 +65,7 @@ public class MapToRangeDataTests
     {
         var tripHeaders = JsonHelpers.LoadJsonSheetData("Trip")![0];
         var trips = TripMapper.MapToRangeData(_sheetData!.Trips, tripHeaders);
-        var headers = HeaderParser.ParserHeader(tripHeaders);
+        var headers = HeaderHelper.ParserHeader(tripHeaders);
 
         Assert.NotNull(trips);
         trips.Count.Should().Be(4);
@@ -90,51 +90,51 @@ public class MapToRangeDataTests
 
             // Number
             if (tripData.Number == null)
-                HeaderParser.GetIntValue(HeaderEnum.NUMBER.DisplayName(), trip, headers).Should().Be(0);
+                HeaderHelper.GetIntValue(HeaderEnum.NUMBER.DisplayName(), trip, headers).Should().Be(0);
             else
-                tripData.Number.Should().Be(HeaderParser.GetIntValue(HeaderEnum.NUMBER.DisplayName(), trip, headers));
+                tripData.Number.Should().Be(HeaderHelper.GetIntValue(HeaderEnum.NUMBER.DisplayName(), trip, headers));
 
             // Odometer Start
             if (tripData.OdometerStart == null)
-                HeaderParser.GetDecimalValue(HeaderEnum.ODOMETER_START.DisplayName(), trip, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_START.DisplayName(), trip, headers).Should().Be(0);
             else
-                tripData.OdometerStart.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.ODOMETER_START.DisplayName(), trip, headers));
+                tripData.OdometerStart.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_START.DisplayName(), trip, headers));
 
             // Odoemeter End
             if (tripData.OdometerEnd == null)
-                HeaderParser.GetDecimalValue(HeaderEnum.ODOMETER_END.DisplayName(), trip, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_END.DisplayName(), trip, headers).Should().Be(0);
             else
-                tripData.OdometerEnd.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.ODOMETER_START.DisplayName(), trip, headers));
+                tripData.OdometerEnd.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_START.DisplayName(), trip, headers));
 
             // Distance
             if (tripData.Distance == null)
-                HeaderParser.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), trip, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), trip, headers).Should().Be(0);
             else
-                tripData.Distance.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), trip, headers));
+                tripData.Distance.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), trip, headers));
 
             // Pay
             if (tripData.Pay == null)
-                HeaderParser.GetDecimalValue(HeaderEnum.PAY.DisplayName(), trip, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.PAY.DisplayName(), trip, headers).Should().Be(0);
             else
-                tripData.Pay.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.PAY.DisplayName(), trip, headers));
+                tripData.Pay.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.PAY.DisplayName(), trip, headers));
 
             // Tip
             if (tripData.Tip == null)
-                HeaderParser.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), trip, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), trip, headers).Should().Be(0);
             else
-                tripData.Tip.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), trip, headers));
+                tripData.Tip.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), trip, headers));
 
             // Bonus
             if (tripData.Bonus == null)
-                HeaderParser.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), trip, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), trip, headers).Should().Be(0);
             else
-                tripData.Bonus.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), trip, headers));
+                tripData.Bonus.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), trip, headers));
 
             // Cash
             if (tripData.Cash == null)
-                HeaderParser.GetDecimalValue(HeaderEnum.CASH.DisplayName(), trip, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.CASH.DisplayName(), trip, headers).Should().Be(0);
             else
-                tripData.Cash.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.CASH.DisplayName(), trip, headers));
+                tripData.Cash.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.CASH.DisplayName(), trip, headers));
         }
     }
 }

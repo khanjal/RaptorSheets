@@ -20,7 +20,7 @@ namespace GigRaptorLib.Mappers
                 id++;
                 if (id == 1)
                 {
-                    headers = HeaderParser.ParserHeader(value);
+                    headers = HeaderHelper.ParserHeader(value);
                     continue;
                 }
 
@@ -32,34 +32,34 @@ namespace GigRaptorLib.Mappers
                 ShiftEntity shift = new()
                 {
                     Id = id,
-                    Key = HeaderParser.GetStringValue(HeaderEnum.KEY.DisplayName(), value, headers),
-                    Date = HeaderParser.GetStringValue(HeaderEnum.DATE.DisplayName(), value, headers),
-                    Start = HeaderParser.GetStringValue(HeaderEnum.TIME_START.DisplayName(), value, headers),
-                    Finish = HeaderParser.GetStringValue(HeaderEnum.TIME_END.DisplayName(), value, headers),
-                    Service = HeaderParser.GetStringValue(HeaderEnum.SERVICE.DisplayName(), value, headers),
-                    Number = HeaderParser.GetIntValue(HeaderEnum.NUMBER.DisplayName(), value, headers),
-                    Active = HeaderParser.GetStringValue(HeaderEnum.TIME_ACTIVE.DisplayName(), value, headers),
-                    Time = HeaderParser.GetStringValue(HeaderEnum.TIME_TOTAL.DisplayName(), value, headers),
-                    Trips = HeaderParser.GetIntValue(HeaderEnum.TRIPS.DisplayName(), value, headers),
-                    Distance = HeaderParser.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), value, headers),
-                    Omit = HeaderParser.GetBoolValue(HeaderEnum.TIME_OMIT.DisplayName(), value, headers),
-                    Region = HeaderParser.GetStringValue(HeaderEnum.REGION.DisplayName(), value, headers),
-                    Note = HeaderParser.GetStringValue(HeaderEnum.NOTE.DisplayName(), value, headers),
-                    Pay = HeaderParser.GetDecimalValue(HeaderEnum.PAY.DisplayName(), value, headers),
-                    Tip = HeaderParser.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), value, headers),
-                    Bonus = HeaderParser.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), value, headers),
-                    Total = HeaderParser.GetDecimalValue(HeaderEnum.TOTAL.DisplayName(), value, headers),
-                    Cash = HeaderParser.GetDecimalValue(HeaderEnum.CASH.DisplayName(), value, headers),
-                    TotalTrips = HeaderParser.GetIntValue(HeaderEnum.TOTAL_TRIPS.DisplayName(), value, headers),
-                    TotalDistance = HeaderParser.GetDecimalValue(HeaderEnum.TOTAL_DISTANCE.DisplayName(), value, headers),
-                    TotalPay = HeaderParser.GetDecimalValue(HeaderEnum.TOTAL_PAY.DisplayName(), value, headers),
-                    TotalTips = HeaderParser.GetDecimalValue(HeaderEnum.TOTAL_TIPS.DisplayName(), value, headers),
-                    TotalBonus = HeaderParser.GetDecimalValue(HeaderEnum.TOTAL_BONUS.DisplayName(), value, headers),
-                    GrandTotal = HeaderParser.GetDecimalValue(HeaderEnum.TOTAL_GRAND.DisplayName(), value, headers),
-                    TotalCash = HeaderParser.GetDecimalValue(HeaderEnum.TOTAL_CASH.DisplayName(), value, headers),
-                    AmountPerTime = HeaderParser.GetDecimalValue(HeaderEnum.AMOUNT_PER_TIME.DisplayName(), value, headers),
-                    AmountPerDistance = HeaderParser.GetDecimalValue(HeaderEnum.AMOUNT_PER_DISTANCE.DisplayName(), value, headers),
-                    AmountPerTrip = HeaderParser.GetDecimalValue(HeaderEnum.AMOUNT_PER_TRIP.DisplayName(), value, headers),
+                    Key = HeaderHelper.GetStringValue(HeaderEnum.KEY.DisplayName(), value, headers),
+                    Date = HeaderHelper.GetStringValue(HeaderEnum.DATE.DisplayName(), value, headers),
+                    Start = HeaderHelper.GetStringValue(HeaderEnum.TIME_START.DisplayName(), value, headers),
+                    Finish = HeaderHelper.GetStringValue(HeaderEnum.TIME_END.DisplayName(), value, headers),
+                    Service = HeaderHelper.GetStringValue(HeaderEnum.SERVICE.DisplayName(), value, headers),
+                    Number = HeaderHelper.GetIntValue(HeaderEnum.NUMBER.DisplayName(), value, headers),
+                    Active = HeaderHelper.GetStringValue(HeaderEnum.TIME_ACTIVE.DisplayName(), value, headers),
+                    Time = HeaderHelper.GetStringValue(HeaderEnum.TIME_TOTAL.DisplayName(), value, headers),
+                    Trips = HeaderHelper.GetIntValue(HeaderEnum.TRIPS.DisplayName(), value, headers),
+                    Distance = HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), value, headers),
+                    Omit = HeaderHelper.GetBoolValue(HeaderEnum.TIME_OMIT.DisplayName(), value, headers),
+                    Region = HeaderHelper.GetStringValue(HeaderEnum.REGION.DisplayName(), value, headers),
+                    Note = HeaderHelper.GetStringValue(HeaderEnum.NOTE.DisplayName(), value, headers),
+                    Pay = HeaderHelper.GetDecimalValue(HeaderEnum.PAY.DisplayName(), value, headers),
+                    Tip = HeaderHelper.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), value, headers),
+                    Bonus = HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), value, headers),
+                    Total = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL.DisplayName(), value, headers),
+                    Cash = HeaderHelper.GetDecimalValue(HeaderEnum.CASH.DisplayName(), value, headers),
+                    TotalTrips = HeaderHelper.GetIntValue(HeaderEnum.TOTAL_TRIPS.DisplayName(), value, headers),
+                    TotalDistance = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_DISTANCE.DisplayName(), value, headers),
+                    TotalPay = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_PAY.DisplayName(), value, headers),
+                    TotalTips = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_TIPS.DisplayName(), value, headers),
+                    TotalBonus = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_BONUS.DisplayName(), value, headers),
+                    GrandTotal = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_GRAND.DisplayName(), value, headers),
+                    TotalCash = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_CASH.DisplayName(), value, headers),
+                    AmountPerTime = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_TIME.DisplayName(), value, headers),
+                    AmountPerDistance = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_DISTANCE.DisplayName(), value, headers),
+                    AmountPerTrip = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_TRIP.DisplayName(), value, headers),
                     Saved = true
                 };
 

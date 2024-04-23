@@ -1,8 +1,10 @@
+using GigRaptorLib.Entities;
+using GigRaptorLib.Models;
 using System.Text.RegularExpressions;
 
 namespace GigRaptorLib.Utilities;
 
-public static class HeaderParser
+public static class HeaderHelper
 {
     public static Dictionary<int, string> ParserHeader(IList<object> sheetHeader)
     {
@@ -107,5 +109,34 @@ public static class HeaderParser
             return -1;
         }
 
+    }
+
+    public static List<MessageEntity> CheckSheetHeaders(IList<IList<object>> values, SheetModel sheetModel)
+    {
+        var messages = new List<MessageEntity>();
+        var data = values[0];
+        var headerArray = new string[data.Count];
+        data.CopyTo(headerArray, 0);
+        var index = 0;
+        // Console.Write(JsonSerializer.Serialize(data[0]));
+        foreach (var sheetHeader in sheetModel.Headers)
+        {
+            if (!data.Any(x => x?.ToString()?.Trim() == sheetHeader.Name))
+            {
+                messages.Add(new MessageEntity { Message = $"Sheet [{sheetModel.Name}]: Missing [{sheetHeader.Name}]", Type = Enums.MessageEnum.Error });
+            }
+            else
+            {
+                if (index < headerArray.Count() && sheetHeader.Name != headerArray[index].Trim())
+                {
+                    // Console.Write(JsonSerializer.Serialize(headerArray));
+                    // Console.Write(JsonSerializer.Serialize(sheetModel.Headers));
+                    messages.Add(new MessageEntity { Message = $"Sheet [{sheetModel.Name}]: Expected [{sheetHeader.Name}] but found [{headerArray[index].Trim()}]", Type = Enums.MessageEnum.Warning });
+                }
+            }
+            index++;
+        }
+
+        return messages;
     }
 }

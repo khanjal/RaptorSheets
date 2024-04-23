@@ -20,7 +20,7 @@ namespace GigRaptorLib.Mappers
                 id++;
                 if (id == 1)
                 {
-                    headers = HeaderParser.ParserHeader(value);
+                    headers = HeaderHelper.ParserHeader(value);
                     continue;
                 }
 
@@ -32,21 +32,21 @@ namespace GigRaptorLib.Mappers
                 DailyEntity daily = new()
                 {
                     Id = id,
-                    Date = HeaderParser.GetStringValue(HeaderEnum.DATE.DisplayName(), value, headers),
-                    Trips = HeaderParser.GetIntValue(HeaderEnum.TRIPS.DisplayName(), value, headers),
-                    Pay = HeaderParser.GetDecimalValue(HeaderEnum.PAY.DisplayName(), value, headers),
-                    Tip = HeaderParser.GetDecimalValue(HeaderEnum.TIP.DisplayName(), value, headers),
-                    Bonus = HeaderParser.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), value, headers),
-                    Total = HeaderParser.GetDecimalValue(HeaderEnum.TOTAL.DisplayName(), value, headers),
-                    Cash = HeaderParser.GetDecimalValue(HeaderEnum.CASH.DisplayName(), value, headers),
-                    AmountPerTrip = HeaderParser.GetDecimalValue(HeaderEnum.AMOUNT_PER_TRIP.DisplayName(), value, headers),
-                    Distance = HeaderParser.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), value, headers),
-                    AmountPerDistance = HeaderParser.GetDecimalValue(HeaderEnum.AMOUNT_PER_DISTANCE.DisplayName(), value, headers),
-                    Time = HeaderParser.GetStringValue(HeaderEnum.TIME_TOTAL.DisplayName(), value, headers),
-                    AmountPerTime = HeaderParser.GetDecimalValue(HeaderEnum.AMOUNT_PER_TIME.DisplayName(), value, headers),
-                    Day = HeaderParser.GetStringValue(HeaderEnum.DAY.DisplayName(), value, headers),
-                    Week = HeaderParser.GetStringValue(HeaderEnum.WEEK.DisplayName(), value, headers),
-                    Month = HeaderParser.GetStringValue(HeaderEnum.MONTH.DisplayName(), value, headers),
+                    Date = HeaderHelper.GetStringValue(HeaderEnum.DATE.DisplayName(), value, headers),
+                    Trips = HeaderHelper.GetIntValue(HeaderEnum.TRIPS.DisplayName(), value, headers),
+                    Pay = HeaderHelper.GetDecimalValue(HeaderEnum.PAY.DisplayName(), value, headers),
+                    Tip = HeaderHelper.GetDecimalValue(HeaderEnum.TIP.DisplayName(), value, headers),
+                    Bonus = HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), value, headers),
+                    Total = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL.DisplayName(), value, headers),
+                    Cash = HeaderHelper.GetDecimalValue(HeaderEnum.CASH.DisplayName(), value, headers),
+                    AmountPerTrip = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_TRIP.DisplayName(), value, headers),
+                    Distance = HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), value, headers),
+                    AmountPerDistance = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_DISTANCE.DisplayName(), value, headers),
+                    Time = HeaderHelper.GetStringValue(HeaderEnum.TIME_TOTAL.DisplayName(), value, headers),
+                    AmountPerTime = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_TIME.DisplayName(), value, headers),
+                    Day = HeaderHelper.GetStringValue(HeaderEnum.DAY.DisplayName(), value, headers),
+                    Week = HeaderHelper.GetStringValue(HeaderEnum.WEEK.DisplayName(), value, headers),
+                    Month = HeaderHelper.GetStringValue(HeaderEnum.MONTH.DisplayName(), value, headers),
                 };
 
                 dailyList.Add(daily);
