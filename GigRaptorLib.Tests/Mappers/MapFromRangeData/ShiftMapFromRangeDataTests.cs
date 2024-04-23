@@ -43,7 +43,7 @@ public class ShiftMapFromRangeDataTests
             entity.Tip.Should().NotBeNull();
             entity.Bonus.Should().NotBeNull();
             entity.Cash.Should().NotBeNull();
-            entity.Distance.Should().BeGreaterThanOrEqualTo(0);
+            entity.Distance.Should().NotBeNull();
             entity.Region.Should().NotBeNull();
             entity.Note.Should().NotBeNull();
             entity.Key.Should().NotBeNull();

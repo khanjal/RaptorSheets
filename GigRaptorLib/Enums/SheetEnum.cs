@@ -1,50 +1,49 @@
 using System.ComponentModel;
 
-namespace GigRaptorLib.Enums
+namespace GigRaptorLib.Enums;
+
+public enum SheetEnum
 {
-    public enum SheetEnum
-    {
 
-        // Core
-        [Description("Trips")]
-        TRIPS,
+    // Core
+    [Description("Trips")]
+    TRIPS,
 
-        [Description("Shifts")]
-        SHIFTS,
+    [Description("Shifts")]
+    SHIFTS,
 
-        // Auxillary
-        [Description("Addresses")]
-        ADDRESSES,
+    // Auxillary
+    [Description("Addresses")]
+    ADDRESSES,
 
-        [Description("Names")]
-        NAMES,
+    [Description("Names")]
+    NAMES,
 
-        [Description("Places")]
-        PLACES,
+    [Description("Places")]
+    PLACES,
 
-        [Description("Regions")]
-        REGIONS,
+    [Description("Regions")]
+    REGIONS,
 
-        [Description("Services")]
-        SERVICES,
+    [Description("Services")]
+    SERVICES,
 
-        [Description("Types")]
-        TYPES,
+    [Description("Types")]
+    TYPES,
 
-        // Period stats
-        [Description("Daily")]
-        DAILY,
+    // Period stats
+    [Description("Daily")]
+    DAILY,
 
-        [Description("Weekdays")]
-        WEEKDAYS,
+    [Description("Weekdays")]
+    WEEKDAYS,
 
-        [Description("Weekly")]
-        WEEKLY,
+    [Description("Weekly")]
+    WEEKLY,
 
-        [Description("Monthly")]
-        MONTHLY,
+    [Description("Monthly")]
+    MONTHLY,
 
-        [Description("Yearly")]
-        YEARLY,
-    }
+    [Description("Yearly")]
+    YEARLY,
 }

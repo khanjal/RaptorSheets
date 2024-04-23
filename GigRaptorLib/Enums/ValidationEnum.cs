@@ -1,13 +1,12 @@
-namespace GigRaptorLib.Enums
+namespace GigRaptorLib.Enums;
+
+public enum ValidationEnum
 {
-    public enum ValidationEnum
-    {
-        BOOLEAN,
-        RANGE_ADDRESS,
-        RANGE_NAME,
-        RANGE_PLACE,
-        RANGE_REGION,
-        RANGE_SERVICE,
-        RANGE_TYPE
-    }
+    BOOLEAN,
+    RANGE_ADDRESS,
+    RANGE_NAME,
+    RANGE_PLACE,
+    RANGE_REGION,
+    RANGE_SERVICE,
+    RANGE_TYPE
 }

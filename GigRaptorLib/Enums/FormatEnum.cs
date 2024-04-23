@@ -1,14 +1,13 @@
-namespace GigRaptorLib.Enums
+namespace GigRaptorLib.Enums;
+
+public enum FormatEnum
 {
-    public enum FormatEnum
-    {
-        ACCOUNTING,
-        DATE,
-        DISTANCE,
-        DURATION,
-        NUMBER,
-        TEXT,
-        TIME,
-        WEEKDAY
-    }
+    ACCOUNTING,
+    DATE,
+    DISTANCE,
+    DURATION,
+    NUMBER,
+    TEXT,
+    TIME,
+    WEEKDAY
 }
