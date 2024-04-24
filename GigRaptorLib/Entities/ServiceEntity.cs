@@ -1,19 +1,18 @@
 using System.Text.Json.Serialization;
 
-namespace GigRaptorLib.Entities
+namespace GigRaptorLib.Entities;
+
+public class ServiceEntity : AmountEntity
 {
-    public class ServiceEntity : AmountEntity
-    {
-        [JsonPropertyName("id")]
-        public int Id { get; set; }
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
 
-        [JsonPropertyName("service")]
-        public string Service { get; set; }
+    [JsonPropertyName("service")]
+    public string Service { get; set; }
 
-        [JsonPropertyName("visits")]
-        public int Trips { get; set; }
+    [JsonPropertyName("visits")]
+    public int Trips { get; set; }
 
-        [JsonPropertyName("distance")]
-        public decimal Distance { get; set; }
-    }
+    [JsonPropertyName("distance")]
+    public decimal Distance { get; set; }
 }
