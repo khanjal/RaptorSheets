@@ -118,7 +118,7 @@ public static class HeaderHelper
         var headerArray = new string[data.Count];
         data.CopyTo(headerArray, 0);
         var index = 0;
-        // Console.Write(JsonSerializer.Serialize(data[0]));
+
         foreach (var sheetHeader in sheetModel.Headers)
         {
             if (!data.Any(x => x?.ToString()?.Trim() == sheetHeader.Name))
@@ -129,8 +129,6 @@ public static class HeaderHelper
             {
                 if (index < headerArray.Count() && sheetHeader.Name != headerArray[index].Trim())
                 {
-                    // Console.Write(JsonSerializer.Serialize(headerArray));
-                    // Console.Write(JsonSerializer.Serialize(sheetModel.Headers));
                     messages.Add(new MessageEntity { Message = $"Sheet [{sheetModel.Name}]: Expected [{sheetHeader.Name}] but found [{headerArray[index].Trim()}]", Type = Enums.MessageEnum.Warning });
                 }
             }

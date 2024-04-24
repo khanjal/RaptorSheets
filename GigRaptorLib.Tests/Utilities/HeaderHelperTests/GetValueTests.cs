@@ -1,14 +1,14 @@
 ﻿using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities;
 
-namespace GigRaptorLib.Tests.Utilities;
+namespace GigRaptorLib.Tests.Utilities.HeaderHelperTests;
 
-public class HeaderParserTests
+public class GetValueTests
 {
     private static IList<IList<object>>? _values;
     private static Dictionary<int, string>? _headers;
 
-    public HeaderParserTests()
+    public GetValueTests()
     {
         _values = JsonHelpers.LoadJsonData("Headers");
         _headers = HeaderHelper.ParserHeader(_values![0]);
