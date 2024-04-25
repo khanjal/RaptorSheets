@@ -12,9 +12,9 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
         var spreadsheetId = configuration.GetSection("spreadsheet_id").Value;
 
         var googleSheetHelper = new GoogleSheetHelper();
-        var result = await googleSheetHelper.GetAllData(spreadsheetId!);
+        var result = await googleSheetHelper.GetBatchData(spreadsheetId!);
 
-        valueRanges = result;
+        valueRanges = result?.ValueRanges;
     }
 
     Task IAsyncLifetime.DisposeAsync()
@@ -22,5 +22,5 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
         return Task.CompletedTask;
     }
 
-    public IList<MatchedValueRange> valueRanges { get; private set; }
+    public IList<MatchedValueRange>? valueRanges { get; private set; }
 }

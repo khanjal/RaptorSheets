@@ -20,13 +20,21 @@ public class GoogleSheetHelperTests
     [Fact]
     public async void GivenGetAllDataCall_ThenReturnInfo()
     {
-        var result = await _googleSheetHelper.GetAllData(_spreadsheetId!);
+        var result = await _googleSheetHelper.GetBatchData(_spreadsheetId!);
         result.Should().NotBeNull();
-        result.Should().HaveCount(Enum.GetNames(typeof(SheetEnum)).Length);
+        result!.ValueRanges.Should().NotBeNull();
+        result!.ValueRanges.Should().HaveCount(Enum.GetNames(typeof(SheetEnum)).Length);
 
         // Test all demo data.
 
         // Look into replacing individual json sheet tests.
+    }
+
+    [Fact]
+    public async void GivenGetAllDataCall_WithInvalidSpreadsheetId_ReturnException()
+    {
+        var result = await _googleSheetHelper.GetBatchData("invalid");
+        result.Should().BeNull();
     }
 
     [Theory]
@@ -47,6 +55,7 @@ public class GoogleSheetHelperTests
     {
         var result = await _googleSheetHelper.GetSheetData(_spreadsheetId!, sheetEnum);
         result.Should().NotBeNull();
+        result.Values.Should().NotBeNull();
 
         // Test all demo data.
 
@@ -54,11 +63,19 @@ public class GoogleSheetHelperTests
     }
 
     [Fact]
+    public async void GivenGetSheetDataCall_WithInvalidSpreadsheetId_ReturnException()
+    {
+        var result = await _googleSheetHelper.GetSheetData("invalid", new SheetEnum());
+        result.Should().BeNull();
+    }
+
+    [Fact]
     public async void GivenGetSheetProperties_ThenReturnInfo()
     {
-        var result = await _googleSheetHelper.GetSheetProperties(_spreadsheetId!);
+        var result = await _googleSheetHelper.GetSheetInfo(_spreadsheetId!);
         result.Should().NotBeNull();
+        result!.Properties.Should().NotBeNull();
 
-        result.Title.Should().Be("Demo Raptor Gig Sheet");
+        result!.Properties.Title.Should().Be("Demo Raptor Gig Sheet");
     }
 }

@@ -38,7 +38,7 @@ public class GoogleSheetHelper
             ApplicationName = "GigLogger"
         });
     }
-    public async Task<IList<MatchedValueRange>?> GetAllData(string spreadsheetId)
+    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId)
     {
         var body = new BatchGetValuesByDataFilterRequest
         {
@@ -49,18 +49,19 @@ public class GoogleSheetHelper
 
         foreach (var sheet in sheets)
         {
-            var filter = new DataFilter();
-            filter.A1Range = sheet.DisplayName();
+            var filter = new DataFilter
+            {
+                A1Range = sheet.DisplayName()
+            };
             body.DataFilters.Add(filter);
         }
 
         try
         {
-            var batchGetRequest = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(body, spreadsheetId);
-            var batchResponse = await batchGetRequest.ExecuteAsync();
-            var values = batchResponse.ValueRanges;
+            var request = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(body, spreadsheetId);
+            var response = await request.ExecuteAsync();
 
-            return values;
+            return response;
         }
         catch (Exception ex)
         {
@@ -72,34 +73,31 @@ public class GoogleSheetHelper
         }
     }
 
-    public async Task<IList<IList<object>>?> GetSheetData(string spreadsheetId, SheetEnum sheetEnum)
+    public async Task<ValueRange?> GetSheetData(string spreadsheetId, SheetEnum sheetEnum)
     {
-        var getRequest = _sheetsService.Spreadsheets.Values.Get(spreadsheetId, $"{sheetEnum.DisplayName()}!{_range}");
-
         try
         {
-            var getResponse = await getRequest.ExecuteAsync();
-            IList<IList<Object>> values = getResponse.Values;
+            var request = _sheetsService.Spreadsheets.Values.Get(spreadsheetId, $"{sheetEnum.DisplayName()}!{_range}");
+            var response = await request.ExecuteAsync();
 
-            return values;
+            return response;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // _sheet.Errors.Add($"Failed to find sheet: {sheetRange}");
+            // NotFound (invalid spreadsheetId/range)
+            // BadRequest (invalid sheet name)
             return null;
         }
     }
 
-    public async Task<SpreadsheetProperties?> GetSheetProperties(string spreadsheetId)
+    public async Task<Spreadsheet?> GetSheetInfo(string spreadsheetId)
     {
         try
         {
-            var getRequest = _sheetsService.Spreadsheets.Get(spreadsheetId);
+            var request = _sheetsService.Spreadsheets.Get(spreadsheetId);
+            var response = await request.ExecuteAsync();
 
-            var getResponse = await getRequest.ExecuteAsync();
-            var properties = getResponse.Properties;
-
-            return properties;
+            return response;
         }
         catch (Exception)
         {
@@ -107,17 +105,20 @@ public class GoogleSheetHelper
         }
     }
 
-    public void AppendData(string spreadsheetId, ValueRange valueRange, string range)
+    public async Task<AppendValuesResponse?> AppendData(string spreadsheetId, ValueRange valueRange, string range)
     {
         try
         {
-            var appendRequest = _sheetsService.Spreadsheets.Values.Append(valueRange, spreadsheetId, range);
-            appendRequest.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
-            appendRequest.Execute();
+            var request = _sheetsService.Spreadsheets.Values.Append(valueRange, spreadsheetId, range);
+            request.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
+            var response = await request.ExecuteAsync();
+
+            return response;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log or return an error?
+            return null;
         }
     }
 }
