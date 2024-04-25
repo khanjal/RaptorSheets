@@ -63,12 +63,9 @@ public class GoogleSheetHelper
 
             return response;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine(ex);
-            var message = ex.Message.Split(". ");
             // "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service ..."
-            // _sheet.Errors.Add($"{message.LastOrDefault().Trim()}");
             return null;
         }
     }

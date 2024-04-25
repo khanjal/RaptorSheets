@@ -1,10 +1,10 @@
-﻿using GigRaptorLib.Entities;
+﻿using FluentAssertions;
+using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
-using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Tests.Data;
+using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities.Extensions;
-using FluentAssertions;
 
 namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 

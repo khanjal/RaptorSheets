@@ -11,7 +11,7 @@ public static class GenerateSheets
     private static int? _sheetId;
     private static BatchUpdateSpreadsheetRequest? _batchUpdateSpreadsheetRequest;
     private static List<RepeatCellRequest>? _repeatCellRequests;
-    
+
     public static BatchUpdateSpreadsheetRequest Generate(List<SheetModel> sheets)
     {
         _batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
@@ -34,7 +34,8 @@ public static class GenerateSheets
             // _sheet.Messages.Add($"Sheet [{sheet.Name}]: Added");
         });
 
-        _repeatCellRequests.ForEach(request => {
+        _repeatCellRequests.ForEach(request =>
+        {
             _batchUpdateSpreadsheetRequest.Requests.Add(new Request { RepeatCell = request });
         });
 

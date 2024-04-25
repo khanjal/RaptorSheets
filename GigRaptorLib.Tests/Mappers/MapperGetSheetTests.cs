@@ -40,7 +40,7 @@ public class MapperGetSheetTests
         {
             var resultHeader = result.Headers.First(x => x.Name == configHeader.Name);
             resultHeader.Column.Should().NotBeNullOrWhiteSpace();
-            
+
             if (result.ProtectSheet)
                 resultHeader.Formula.Should().NotBeNullOrWhiteSpace();
         }

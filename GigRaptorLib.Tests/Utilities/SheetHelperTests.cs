@@ -9,7 +9,7 @@ namespace GigRaptorLib.Tests.Utilities;
 public class SheetHelperTests
 {
     [Theory]
-    [InlineData(0,"A")]
+    [InlineData(0, "A")]
     [InlineData(26, "AA")]
     [InlineData(701, "ZZ")]
     public void GivenNumber_ThenReturnColumnLetter(int index, string column)
@@ -52,7 +52,7 @@ public class SheetHelperTests
 
         sheets.Should().NotBeNull();
         sheets.Count.Should().Be(2);
-        sheets[0].Name.Should().BeEquivalentTo("Shifts"); 
+        sheets[0].Name.Should().BeEquivalentTo("Shifts");
         sheets[1].Name.Should().BeEquivalentTo("Trips");
     }
 

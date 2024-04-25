@@ -15,7 +15,8 @@ public static class RandomHelpers
     {
         var objectList = new List<IList<object>>();
 
-        foreach ( var value in values ) {
+        foreach (var value in values)
+        {
             var objectValues = new List<object>();
 
             for (int i = 0; i < valueOrder.Length; i++)
@@ -24,7 +25,8 @@ public static class RandomHelpers
                 {
                     objectValues.Add(value[valueOrder[i]]);
                 }
-                else {
+                else
+                {
                     objectValues.Add(" ");
                 }
             }

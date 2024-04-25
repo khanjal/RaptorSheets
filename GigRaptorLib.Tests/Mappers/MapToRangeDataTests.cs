@@ -74,7 +74,7 @@ public class MapToRangeDataTests
         {
             var trip = trips[i];
             var tripData = _sheetData.Trips[i];
-            
+
             tripData.Date.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.DATE.DisplayName())].ToString());
             tripData.Service.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.SERVICE.DisplayName())].ToString());
             tripData.Place.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.PLACE.DisplayName())].ToString());
