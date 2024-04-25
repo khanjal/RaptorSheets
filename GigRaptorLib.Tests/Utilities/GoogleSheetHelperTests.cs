@@ -20,7 +20,7 @@ public class GoogleSheetHelperTests
     [Fact]
     public async void GivenGetAllDataCall_ThenReturnInfo()
     {
-        var result = await _googleSheetHelper.GetAllData(_spreadsheetId);
+        var result = await _googleSheetHelper.GetAllData(_spreadsheetId!);
         result.Should().NotBeNull();
         result.Should().HaveCount(Enum.GetNames(typeof(SheetEnum)).Length);
 
@@ -45,8 +45,8 @@ public class GoogleSheetHelperTests
     [InlineData(SheetEnum.YEARLY)]
     public async void GivenGetSheetDataCall_ThenReturnInfo(SheetEnum sheetEnum)
     {
-        //var result = await _googleSheetHelper.GetSheetData(_spreadsheetId, sheetEnum);
-        //result.Should().NotBeNull();
+        var result = await _googleSheetHelper.GetSheetData(_spreadsheetId!, sheetEnum);
+        result.Should().NotBeNull();
 
         // Test all demo data.
 
@@ -56,7 +56,7 @@ public class GoogleSheetHelperTests
     [Fact]
     public async void GivenGetSheetProperties_ThenReturnInfo()
     {
-        var result = await _googleSheetHelper.GetSheetProperties(_spreadsheetId);
+        var result = await _googleSheetHelper.GetSheetProperties(_spreadsheetId!);
         result.Should().NotBeNull();
 
         result.Title.Should().Be("Demo Raptor Gig Sheet");

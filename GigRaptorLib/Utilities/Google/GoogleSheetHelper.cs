@@ -5,6 +5,7 @@ using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Configuration;
+using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
 
 namespace GigRaptorLib.Utilities.Google;
 
@@ -37,7 +38,7 @@ public class GoogleSheetHelper
             ApplicationName = "GigLogger"
         });
     }
-    public async Task<IList<MatchedValueRange>> GetAllData(string spreadsheetId)
+    public async Task<IList<MatchedValueRange>?> GetAllData(string spreadsheetId)
     {
         var body = new BatchGetValuesByDataFilterRequest
         {
@@ -53,75 +54,70 @@ public class GoogleSheetHelper
             body.DataFilters.Add(filter);
         }
 
-        var batchGetRequest = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(body, spreadsheetId);
-        var batchResponse = await batchGetRequest.ExecuteAsync();
-        var values = batchResponse.ValueRanges;
+        try
+        {
+            var batchGetRequest = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(body, spreadsheetId);
+            var batchResponse = await batchGetRequest.ExecuteAsync();
+            var values = batchResponse.ValueRanges;
 
-        return values;
+            return values;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            var message = ex.Message.Split(". ");
+            // "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service ..."
+            // _sheet.Errors.Add($"{message.LastOrDefault().Trim()}");
+            return null;
+        }
     }
 
-    public async Task<IList<IList<object>>> GetSheetData(string spreadsheetId, SheetEnum sheetEnum)
+    public async Task<IList<IList<object>>?> GetSheetData(string spreadsheetId, SheetEnum sheetEnum)
     {
         var getRequest = _sheetsService.Spreadsheets.Values.Get(spreadsheetId, $"{sheetEnum.DisplayName()}!{_range}");
 
-        var getResponse = await getRequest.ExecuteAsync();
-        IList<IList<Object>> values = getResponse.Values;
+        try
+        {
+            var getResponse = await getRequest.ExecuteAsync();
+            IList<IList<Object>> values = getResponse.Values;
 
-        return values;
-
-        //switch (sheetEnum)
-        //{
-        //    case SheetEnum.ADDRESSES:
-        //        sheetEntity.Addresses = AddressMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.DAILY:
-        //        sheetEntity.Daily = DailyMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.MONTHLY:
-        //        sheetEntity.Monthly = MonthlyMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.NAMES:
-        //        sheetEntity.Names = NameMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.PLACES:
-        //        sheetEntity.Places = PlaceMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.REGIONS:
-        //        sheetEntity.Regions = RegionMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.SERVICES:
-        //        sheetEntity.Services = ServiceMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.SHIFTS:
-        //        sheetEntity.Shifts = ShiftMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.TRIPS:
-        //        sheetEntity.Trips = TripMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.TYPES:
-        //        sheetEntity.Types = TypeMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.WEEKDAYS:
-        //        sheetEntity.Weekdays = WeekdayMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.WEEKLY:
-        //        sheetEntity.Weekly = WeeklyMapper.MapFromRangeData(values);
-        //        break;
-        //    case SheetEnum.YEARLY:
-        //        sheetEntity.Yearly = YearlyMapper.MapFromRangeData(values);
-        //        break;
-        //    default:
-        //        break;
-        //}
+            return values;
+        }
+        catch (Exception ex)
+        {
+            // _sheet.Errors.Add($"Failed to find sheet: {sheetRange}");
+            return null;
+        }
     }
 
-    public async Task<SpreadsheetProperties> GetSheetProperties(string spreadsheetId)
+    public async Task<SpreadsheetProperties?> GetSheetProperties(string spreadsheetId)
     {
-        var getRequest = _sheetsService.Spreadsheets.Get(spreadsheetId);
+        try
+        {
+            var getRequest = _sheetsService.Spreadsheets.Get(spreadsheetId);
 
-        var getResponse = await getRequest.ExecuteAsync();
-        var properties = getResponse.Properties;
+            var getResponse = await getRequest.ExecuteAsync();
+            var properties = getResponse.Properties;
 
-        return properties;
+            return properties;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public void AppendData(string spreadsheetId, ValueRange valueRange, string range)
+    {
+        try
+        {
+            var appendRequest = _sheetsService.Spreadsheets.Values.Append(valueRange, spreadsheetId, range);
+            appendRequest.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
+            appendRequest.Execute();
+        }
+        catch (Exception ex)
+        {
+            // Log or return an error?
+        }
     }
 }
