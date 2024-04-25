@@ -1,4 +1,5 @@
 ﻿using GigRaptorLib.Enums;
+using GigRaptorLib.Models;
 using GigRaptorLib.Utilities.Extensions;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
@@ -108,6 +109,24 @@ public class GoogleSheetHelper
         {
             var request = _sheetsService.Spreadsheets.Values.Append(valueRange, spreadsheetId, range);
             request.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
+            var response = await request.ExecuteAsync();
+
+            return response;
+        }
+        catch (Exception)
+        {
+            // Log or return an error?
+            return null;
+        }
+    }
+
+    public async Task<BatchUpdateSpreadsheetResponse?> BatchUpdate(string spreadsheetId, List<SheetModel> sheets)
+    {
+        var batchUpdateSpreadsheetRequest = GenerateSheets.Generate(sheets);
+
+        try
+        {
+            var request = _sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadsheetId);
             var response = await request.ExecuteAsync();
 
             return response;

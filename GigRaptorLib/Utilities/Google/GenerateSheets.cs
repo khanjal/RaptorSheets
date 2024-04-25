@@ -16,7 +16,7 @@ public static class GenerateSheets
     {
         _batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
         _batchUpdateSpreadsheetRequest.Requests = [];
-        _repeatCellRequests = new List<RepeatCellRequest>();
+        _repeatCellRequests = [];
 
         sheets.ForEach(sheet =>
         {
@@ -30,8 +30,6 @@ public static class GenerateSheets
             GenerateHeadersFormatAndProtection();
             GenerateBandingRequest();
             GenerateProtectedRangeForHeaderOrSheet();
-
-            // _sheet.Messages.Add($"Sheet [{sheet.Name}]: Added");
         });
 
         _repeatCellRequests.ForEach(request =>
@@ -40,9 +38,6 @@ public static class GenerateSheets
         });
 
         return _batchUpdateSpreadsheetRequest;
-        // Console.WriteLine(JsonSerializer.Serialize(batchUpdateSpreadsheetRequest.Requests));
-        //var batchUpdateRequest = _googleSheetService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, _spreadsheetId);
-        //batchUpdateRequest.Execute();
     }
 
     private static void GenerateAppendCells()
