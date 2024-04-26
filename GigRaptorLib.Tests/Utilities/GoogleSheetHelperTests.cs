@@ -2,7 +2,6 @@
 using GigRaptorLib.Enums;
 using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities.Google;
-using Google.Apis.Auth.OAuth2;
 
 namespace GigRaptorLib.Tests.Utilities;
 

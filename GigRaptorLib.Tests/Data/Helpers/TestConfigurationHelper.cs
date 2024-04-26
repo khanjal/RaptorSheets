@@ -1,8 +1,5 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Configuration;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
-using System.Configuration;
-using System.Reflection;
 
 namespace GigRaptorLib.Tests.Data.Helpers;
 
@@ -12,7 +9,7 @@ public static class TestConfigurationHelper
     public static void GetConfiguration()
     {
         _configuration = new ConfigurationBuilder()
-                            .AddUserSecrets(Assembly.GetExecutingAssembly())
+                            .AddUserSecrets<ConfigurationValues>()
                             .Build();
     }
 
@@ -30,6 +27,8 @@ public static class TestConfigurationHelper
             ClientId = _configuration["google_credentials:client_id"],
             TokenUrl = _configuration["google_credentials:token_url"]
         };
+
+        Console.WriteLine($"Google Credential Type: {_configuration["google_credentials:type"]}");
 
         var credential = GoogleCredential.FromJsonParameters(jsonCredential);
         return credential;
