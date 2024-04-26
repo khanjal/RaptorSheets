@@ -38,6 +38,8 @@ public static class TestConfigurationHelper
     {
         GetConfiguration();
 
+        Console.WriteLine($"Spreadsheet Id: {_configuration["spreadsheet_id"]}");
+
         return _configuration["spreadsheet_id"] ?? string.Empty;
     }
 }
