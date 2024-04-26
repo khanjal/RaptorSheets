@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using System.Configuration;
+using System.Reflection;
 
 namespace GigRaptorLib.Tests.Data.Helpers;
 
@@ -11,7 +12,7 @@ public static class TestConfigurationHelper
     public static void GetConfiguration()
     {
         _configuration = new ConfigurationBuilder()
-                            .AddUserSecrets<ConfigurationValues>()
+                            .AddUserSecrets(Assembly.GetExecutingAssembly())
                             .Build();
     }
 
