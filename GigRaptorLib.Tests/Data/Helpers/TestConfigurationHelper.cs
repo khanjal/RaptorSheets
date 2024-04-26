@@ -9,6 +9,7 @@ public static class TestConfigurationHelper
     public static void GetConfiguration()
     {
         _configuration = new ConfigurationBuilder()
+                            .AddEnvironmentVariables()
                             .AddUserSecrets<ConfigurationValues>()
                             .Build();
     }
