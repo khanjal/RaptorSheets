@@ -12,20 +12,31 @@ namespace GigRaptorLib.Utilities.Google;
 
 public class GoogleSheetHelper
 {
-    private SheetsService _sheetsService;
-    private readonly IConfiguration _configuration;
+    private SheetsService? _sheetsService;
     private readonly string _range = "A1:Z1000";
+
+
+    public GoogleSheetHelper(string accessToken)
+    {
+        var credential = GoogleCredential.FromAccessToken(accessToken);
+
+        InitialzieService(credential);
+    }
 
     public GoogleSheetHelper(GoogleCredential credential)
     {
-        _configuration = ConfigurationHelper.GetConfiguration();
+        InitialzieService(credential);
+    }
 
+    private void InitialzieService(GoogleCredential credential)
+    {
         _sheetsService = new SheetsService(new BaseClientService.Initializer()
         {
             HttpClientInitializer = credential,
             ApplicationName = "GigLogger"
         });
     }
+
     public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId)
     {
         var body = new BatchGetValuesByDataFilterRequest
