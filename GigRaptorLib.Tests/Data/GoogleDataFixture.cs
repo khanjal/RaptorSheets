@@ -23,6 +23,8 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
             TokenUrl = configuration.GetSection("google_credentials:token_url").Value
         };
 
+        Console.WriteLine(jsonCredential.Type); // Checking to make sure git actions is setting this.
+
         var credential = GoogleCredential.FromJsonParameters(jsonCredential);
 
         var googleSheetHelper = new GoogleSheetHelper(credential);
