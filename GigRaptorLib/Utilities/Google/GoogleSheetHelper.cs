@@ -16,22 +16,9 @@ public class GoogleSheetHelper
     private readonly IConfiguration _configuration;
     private readonly string _range = "A1:Z1000";
 
-    public GoogleSheetHelper()
+    public GoogleSheetHelper(GoogleCredential credential)
     {
         _configuration = ConfigurationHelper.GetConfiguration();
-
-        var jsonCredential = new JsonCredentialParameters
-        {
-            Type = _configuration.GetSection("google_credentials:type").Value,
-            ProjectId = _configuration.GetSection("google_credentials:project_id").Value,
-            PrivateKeyId = _configuration.GetSection("google_credentials:private_key_id").Value,
-            PrivateKey = _configuration.GetSection("google_credentials:private_key").Value,
-            ClientEmail = _configuration.GetSection("google_credentials:client_email").Value,
-            ClientId = _configuration.GetSection("google_credentials:client_id").Value,
-            TokenUrl = _configuration.GetSection("google_credentials:token_url").Value
-        };
-
-        var credential = GoogleCredential.FromJsonParameters(jsonCredential);
 
         _sheetsService = new SheetsService(new BaseClientService.Initializer()
         {
@@ -120,7 +107,7 @@ public class GoogleSheetHelper
         }
     }
 
-    public async Task<BatchUpdateSpreadsheetResponse?> BatchUpdate(string spreadsheetId, List<SheetModel> sheets)
+    public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, List<SheetModel> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheets.Generate(sheets);
 

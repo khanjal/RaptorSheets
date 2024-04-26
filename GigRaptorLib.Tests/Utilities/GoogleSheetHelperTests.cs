@@ -2,19 +2,34 @@
 using GigRaptorLib.Enums;
 using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities.Google;
+using Google.Apis.Auth.OAuth2;
 
 namespace GigRaptorLib.Tests.Utilities;
 
 public class GoogleSheetHelperTests
 {
     private readonly string? _spreadsheetId;
-    private GoogleSheetHelper _googleSheetHelper = new GoogleSheetHelper();
+    private GoogleSheetHelper _googleSheetHelper;
 
     public GoogleSheetHelperTests()
     {
         var configuration = TestConfigurationHelper.GetConfiguration();
-
         _spreadsheetId = configuration.GetSection("spreadsheet_id").Value;
+
+        var jsonCredential = new JsonCredentialParameters
+        {
+            Type = configuration.GetSection("google_credentials:type").Value,
+            ProjectId = configuration.GetSection("google_credentials:project_id").Value,
+            PrivateKeyId = configuration.GetSection("google_credentials:private_key_id").Value,
+            PrivateKey = configuration.GetSection("google_credentials:private_key").Value,
+            ClientEmail = configuration.GetSection("google_credentials:client_email").Value,
+            ClientId = configuration.GetSection("google_credentials:client_id").Value,
+            TokenUrl = configuration.GetSection("google_credentials:token_url").Value
+        };
+
+        var credential = GoogleCredential.FromJsonParameters(jsonCredential);
+
+        _googleSheetHelper = new GoogleSheetHelper(credential);
     }
 
     [Fact]
