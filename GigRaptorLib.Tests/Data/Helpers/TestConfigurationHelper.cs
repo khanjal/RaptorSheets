@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Configuration;
+using System.Reflection;
 
 namespace GigRaptorLib.Tests.Data.Helpers;
 
@@ -9,8 +10,8 @@ public static class TestConfigurationHelper
     public static void GetConfiguration()
     {
         _configuration = new ConfigurationBuilder()
-                            .AddEnvironmentVariables()
-                            .AddUserSecrets<ConfigurationValues>()
+                            .AddEnvironmentVariables() // For GitHub Action Secrets
+                            .AddUserSecrets(Assembly.GetExecutingAssembly(), true) // For Local User Secrets
                             .Build();
     }
 
@@ -29,8 +30,6 @@ public static class TestConfigurationHelper
             TokenUrl = _configuration["google_credentials:token_url"]
         };
 
-        Console.WriteLine($"Google Credential Type: {_configuration["google_credentials:type"]}");
-
         var credential = GoogleCredential.FromJsonParameters(jsonCredential);
         return credential;
     }
@@ -38,8 +37,6 @@ public static class TestConfigurationHelper
     public static string GetSpreadsheetId()
     {
         GetConfiguration();
-
-        Console.WriteLine($"Spreadsheet Id: {_configuration["spreadsheet_id"]}");
 
         return _configuration["spreadsheet_id"] ?? string.Empty;
     }
