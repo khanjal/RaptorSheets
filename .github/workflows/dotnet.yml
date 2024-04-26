@@ -27,5 +27,10 @@ jobs:
     - name: Test
       env:
         spreadsheet_id: ${{ secrets.SPREADSHEET_ID }}
-        google_credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+        google_credentials:type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
+        google_credentials:project_id: ${{ secrets.GOOGLE_CREDENTIALS_PROJECT_ID }}
+        google_credentials:private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials:private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials:client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials:client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
       run: dotnet test --no-build --verbosity normal
