@@ -13,21 +13,8 @@ public class GoogleSheetHelperTests
 
     public GoogleSheetHelperTests()
     {
-        var configuration = TestConfigurationHelper.GetConfiguration();
-        _spreadsheetId = configuration.GetSection("spreadsheet_id").Value;
-
-        var jsonCredential = new JsonCredentialParameters
-        {
-            Type = configuration.GetSection("google_credentials:type").Value,
-            ProjectId = configuration.GetSection("google_credentials:project_id").Value,
-            PrivateKeyId = configuration.GetSection("google_credentials:private_key_id").Value,
-            PrivateKey = configuration.GetSection("google_credentials:private_key").Value,
-            ClientEmail = configuration.GetSection("google_credentials:client_email").Value,
-            ClientId = configuration.GetSection("google_credentials:client_id").Value,
-            TokenUrl = configuration.GetSection("google_credentials:token_url").Value
-        };
-
-        var credential = GoogleCredential.FromJsonParameters(jsonCredential);
+        _spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
+        var credential = TestConfigurationHelper.GetJsonCredential();
 
         _googleSheetHelper = new GoogleSheetHelper(credential);
     }
