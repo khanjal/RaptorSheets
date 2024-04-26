@@ -33,4 +33,5 @@ jobs:
         google_credentials:private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
         google_credentials:client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
         google_credentials:client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+        google_credentials:token_url: ${{ secrets.GOOGLE_CREDENTIALS_TOKEN_URL }}
       run: dotnet test --no-build --verbosity normal
