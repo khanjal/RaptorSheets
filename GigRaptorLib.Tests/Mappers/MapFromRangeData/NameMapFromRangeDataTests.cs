@@ -43,7 +43,7 @@ public class NameMapFromRangeDataTests
     }
 
     [Fact]
-    public void GivenNameSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
+    public void GivenNameSheetData_WithColumnOrderRandomized_ThenReturnSameRangeData()
     {
         var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);

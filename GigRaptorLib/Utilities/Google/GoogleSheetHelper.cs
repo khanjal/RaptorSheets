@@ -5,15 +5,14 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
-using Microsoft.Extensions.Configuration;
 using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
 
 namespace GigRaptorLib.Utilities.Google;
 
 public class GoogleSheetHelper
 {
-    private SheetsService? _sheetsService;
-    private readonly string _range = "A1:Z1000";
+    private SheetsService _sheetsService = new();
+    private readonly string _range = "A1:Z1000"; // TODO: Look into making this a constant and full range of entire sheet (greater than Z and 1000)
 
 
     public GoogleSheetHelper(string accessToken)
