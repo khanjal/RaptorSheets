@@ -18,7 +18,7 @@ public class WeekdayMapFromRangeDataTests
     public WeekdayMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges.Where(x => x.DataFilters[0].A1Range == SheetEnum.WEEKDAYS.DisplayName()).First().ValueRange.Values;
+        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.WEEKDAYS.DisplayName()).First().ValueRange.Values;
         _entities = WeekdayMapper.MapFromRangeData(_values!);
     }
 

@@ -67,13 +67,13 @@ namespace GigRaptorLib.Mappers
             }
             return shifts;
         }
-        public static IList<IList<object>> MapToRangeData(List<ShiftEntity> shifts, IList<object> shiftHeaders)
+        public static IList<IList<object?>> MapToRangeData(List<ShiftEntity> shifts, IList<object> shiftHeaders)
         {
-            var rangeData = new List<IList<object>>();
+            var rangeData = new List<IList<object?>>();
 
             foreach (var shift in shifts)
             {
-                var objectList = new List<object>();
+                var objectList = new List<object?>();
 
                 foreach (var header in shiftHeaders)
                 {
@@ -128,8 +128,6 @@ namespace GigRaptorLib.Mappers
                             objectList.Add(null);
                             break;
                     }
-
-
                 }
 
                 // Console.WriteLine("Map Shift");
@@ -149,7 +147,7 @@ namespace GigRaptorLib.Mappers
             var sheetTripsName = SheetEnum.TRIPS.DisplayName();
             var sheetTripsTypeRange = tripSheet.Headers.First(x => x.Name == HeaderEnum.TYPE.DisplayName()).Range;
 
-            sheet.Headers = new List<SheetCellModel>();
+            sheet.Headers = [];
 
             // Date
             sheet.Headers.AddColumn(new SheetCellModel

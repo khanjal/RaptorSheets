@@ -10,7 +10,7 @@ public static class EnumExtensions
 {
     // Note that we never need to expire these cache items, so we just use ConcurrentDictionary rather than MemoryCache
     private static readonly
-        ConcurrentDictionary<string, string> DisplayNameCache = new ConcurrentDictionary<string, string>();
+        ConcurrentDictionary<string, string> DisplayNameCache = new();
 
     public static string DisplayName(this Enum value)
     {
@@ -18,19 +18,19 @@ public static class EnumExtensions
 
         var displayName = DisplayNameCache.GetOrAdd(key, x =>
         {
-            var name = (DescriptionAttribute[])value
-                .GetType()
-                .GetTypeInfo()
-                .GetField(value.ToString())
-                .GetCustomAttributes(typeof(DescriptionAttribute), false);
+            var name = value?
+                .GetType()?
+                .GetTypeInfo()?
+                .GetField(value.ToString())?
+                .GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
 
-            return name.Length > 0 ? name[0].Description : value.ToString();
+            return name?.Length > 0 ? name[0].Description : value!.ToString();
         });
 
         return displayName;
     }
 
-    public static T GetValueFromName<T>(this string name) where T : Enum
+    public static T? GetValueFromName<T>(this string name) where T : Enum
     {
         var type = typeof(T);
 
@@ -40,13 +40,13 @@ public static class EnumExtensions
             {
                 if (attribute.Description == name)
                 {
-                    return (T)field.GetValue(null);
+                    return (T?)field.GetValue(null);
                 }
             }
 
             if (field.Name == name)
             {
-                return (T)field.GetValue(null);
+                return (T?)field.GetValue(null);
             }
         }
 

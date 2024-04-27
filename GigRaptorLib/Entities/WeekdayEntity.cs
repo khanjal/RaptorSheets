@@ -11,7 +11,7 @@ public class WeekdayEntity : AmountEntity
     public int Day { get; set; }
 
     [JsonPropertyName("weekday")]
-    public string Weekday { get; set; }
+    public string Weekday { get; set; } = "";
 
     [JsonPropertyName("trips")]
     public int Trips { get; set; }
@@ -23,7 +23,7 @@ public class WeekdayEntity : AmountEntity
     public int Days { get; set; }
 
     [JsonPropertyName("time")]
-    public string Time { get; set; }
+    public string Time { get; set; } = "";
 
     [JsonPropertyName("dailyAverage")]
     public decimal DailyAverage { get; set; }

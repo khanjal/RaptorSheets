@@ -8,25 +8,25 @@ public class ShiftEntity : AmountEntity
     public int Id { get; set; }
 
     [JsonPropertyName("key")]
-    public string Key { get; set; }
+    public string Key { get; set; } = "";
 
     [JsonPropertyName("date")]
-    public string Date { get; set; }
+    public string Date { get; set; } = "";
 
     [JsonPropertyName("start")]
-    public string Start { get; set; }
+    public string Start { get; set; } = "";
 
     [JsonPropertyName("finish")]
-    public string Finish { get; set; }
+    public string Finish { get; set; } = "";
 
     [JsonPropertyName("service")]
-    public string Service { get; set; }
+    public string Service { get; set; } = "";
 
     [JsonPropertyName("number")]
     public int? Number { get; set; }
 
     [JsonPropertyName("active")]
-    public string Active { get; set; }
+    public string Active { get; set; } = "";
 
     [JsonPropertyName("trips")]
     public int Trips { get; set; }
@@ -35,16 +35,16 @@ public class ShiftEntity : AmountEntity
     public decimal? Distance { get; set; }
 
     [JsonPropertyName("time")]
-    public string Time { get; set; }
+    public string Time { get; set; } = "";
 
     [JsonPropertyName("omit")]
     public bool? Omit { get; set; }
 
     [JsonPropertyName("region")]
-    public string Region { get; set; }
+    public string Region { get; set; } = "";
 
     [JsonPropertyName("note")]
-    public string Note { get; set; }
+    public string Note { get; set; } = "";
 
     [JsonPropertyName("totalTrips")]
     public int TotalTrips { get; set; }

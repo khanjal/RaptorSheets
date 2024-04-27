@@ -6,7 +6,7 @@ namespace GigRaptorLib.Tests.Data.Helpers;
 
 public static class TestConfigurationHelper
 {
-    private static IConfigurationRoot _configuration;
+    private static IConfigurationRoot _configuration = new ConfigurationBuilder().Build(); // TODO: See if there is a better way to handle this.
     public static void GetConfiguration()
     {
         _configuration = new ConfigurationBuilder()

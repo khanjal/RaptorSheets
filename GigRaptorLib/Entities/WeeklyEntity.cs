@@ -8,7 +8,7 @@ public class WeeklyEntity : AmountEntity
     public int Id { get; set; }
 
     [JsonPropertyName("week")]
-    public string Week { get; set; }
+    public string Week { get; set; } = "";
 
     [JsonPropertyName("trips")]
     public int Trips { get; set; }
@@ -26,7 +26,7 @@ public class WeeklyEntity : AmountEntity
     public decimal AmountPerDistance { get; set; }
 
     [JsonPropertyName("time")]
-    public string Time { get; set; }
+    public string Time { get; set; } = "";
 
     [JsonPropertyName("amt/hour")]
     public decimal AmountPerTime { get; set; }
@@ -44,8 +44,8 @@ public class WeeklyEntity : AmountEntity
     public int Year { get; set; }
 
     [JsonPropertyName("begin")]
-    public string Begin { get; set; }
+    public string Begin { get; set; } = "";
 
     [JsonPropertyName("end")]
-    public string End { get; set; }
+    public string End { get; set; } = "";
 }

@@ -8,7 +8,7 @@ public class RegionEntity : AmountEntity
     public int Id { get; set; }
 
     [JsonPropertyName("region")]
-    public string Region { get; set; }
+    public string Region { get; set; } = "";
 
     [JsonPropertyName("visits")]
     public int Trips { get; set; }

@@ -8,7 +8,7 @@ public class DailyEntity : AmountEntity
     public int Id { get; set; }
 
     [JsonPropertyName("date")]
-    public string Date { get; set; }
+    public string Date { get; set; } = "";
 
     [JsonPropertyName("trips")]
     public int Trips { get; set; }
@@ -23,17 +23,17 @@ public class DailyEntity : AmountEntity
     public decimal AmountPerDistance { get; set; }
 
     [JsonPropertyName("time")]
-    public string Time { get; set; }
+    public string Time { get; set; } = "";
 
     [JsonPropertyName("amt/hour")]
     public decimal AmountPerTime { get; set; }
 
     [JsonPropertyName("day")]
-    public string Day { get; set; }
+    public string Day { get; set; } = "";
 
     [JsonPropertyName("week")]
-    public string Week { get; set; }
+    public string Week { get; set; } = "";
 
     [JsonPropertyName("month")]
-    public string Month { get; set; }
+    public string Month { get; set; } = "";
 }

@@ -106,7 +106,7 @@ public class GenerateSheetsTests
             return;
         }
 
-        var columnProtections = config.Headers.Where(x => x.Formula != null).ToList();
+        var columnProtections = config.Headers.Where(x => !string.IsNullOrEmpty(x.Formula)).ToList();
 
         protectRange.Should().HaveCount(columnProtections.Count + 1); // +1 for header protection
 

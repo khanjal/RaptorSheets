@@ -8,7 +8,7 @@ public class NameEntity : AmountEntity
     public int Id { get; set; }
 
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = "";
 
     [JsonPropertyName("visits")]
     public int Visits { get; set; }

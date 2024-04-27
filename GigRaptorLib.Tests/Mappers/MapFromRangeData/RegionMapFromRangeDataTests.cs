@@ -11,14 +11,14 @@ namespace GigRaptorLib.Tests.Mappers.MapFromRangeData;
 [Collection("Google Data collection")]
 public class RegionMapFromRangeDataTests
 {
-    readonly GoogleDataFixture fixture;
+    readonly GoogleDataFixture? fixture;
     private static IList<IList<object>>? _values;
     private static List<RegionEntity>? _entities;
 
     public RegionMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges.Where(x => x.DataFilters[0].A1Range == SheetEnum.REGIONS.DisplayName()).First().ValueRange.Values;
+        _values = this.fixture?.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.REGIONS.DisplayName()).First().ValueRange.Values;
         _entities = RegionMapper.MapFromRangeData(_values!);
     }
 

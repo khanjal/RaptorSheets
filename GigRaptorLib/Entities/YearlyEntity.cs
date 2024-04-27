@@ -26,7 +26,7 @@ public class YearlyEntity : AmountEntity
     public decimal AmountPerDistance { get; set; }
 
     [JsonPropertyName("time")]
-    public string Time { get; set; }
+    public string Time { get; set; } = "";
 
     [JsonPropertyName("amt/hour")]
     public decimal AmountPerTime { get; set; }

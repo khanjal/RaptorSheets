@@ -8,7 +8,7 @@ public class MonthlyEntity : AmountEntity
     public int Id { get; set; }
 
     [JsonPropertyName("month")]
-    public string Month { get; set; }
+    public string Month { get; set; } = "";
 
     [JsonPropertyName("trips")]
     public int Trips { get; set; }
@@ -26,7 +26,7 @@ public class MonthlyEntity : AmountEntity
     public decimal AmountPerDistance { get; set; }
 
     [JsonPropertyName("time")]
-    public string Time { get; set; }
+    public string Time { get; set; } = "";
 
     [JsonPropertyName("amt/hour")]
     public decimal AmountPerTime { get; set; }

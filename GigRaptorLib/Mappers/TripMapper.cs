@@ -67,13 +67,13 @@ namespace GigRaptorLib.Mappers
             }
             return trips;
         }
-        public static IList<IList<object>> MapToRangeData(List<TripEntity> trips, IList<object> tripHeaders)
+        public static IList<IList<object?>> MapToRangeData(List<TripEntity> trips, IList<object> tripHeaders)
         {
-            var rangeData = new List<IList<object>>();
+            var rangeData = new List<IList<object?>>();
 
             foreach (var trip in trips)
             {
-                var objectList = new List<object>();
+                var objectList = new List<object?>();
 
                 foreach (var header in tripHeaders)
                 {
@@ -166,7 +166,7 @@ namespace GigRaptorLib.Mappers
         {
             var sheet = SheetsConfig.TripSheet;
 
-            sheet.Headers = new List<SheetCellModel>();
+            sheet.Headers = [];
 
             // Date
             sheet.Headers.AddColumn(new SheetCellModel

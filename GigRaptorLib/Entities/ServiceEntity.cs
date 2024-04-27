@@ -8,7 +8,7 @@ public class ServiceEntity : AmountEntity
     public int Id { get; set; }
 
     [JsonPropertyName("service")]
-    public string Service { get; set; }
+    public string Service { get; set; } = "";
 
     [JsonPropertyName("visits")]
     public int Trips { get; set; }

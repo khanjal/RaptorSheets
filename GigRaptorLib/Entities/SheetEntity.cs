@@ -5,47 +5,47 @@ namespace GigRaptorLib.Entities;
 public class SheetEntity
 {
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = "";
 
     [JsonPropertyName("addresses")]
-    public List<AddressEntity> Addresses { get; set; } = new List<AddressEntity>();
+    public List<AddressEntity> Addresses { get; set; } = [];
 
     [JsonPropertyName("daily")]
-    public List<DailyEntity> Daily { get; set; } = new List<DailyEntity>();
+    public List<DailyEntity> Daily { get; set; } = [];
 
     [JsonPropertyName("monthly")]
-    public List<MonthlyEntity> Monthly { get; set; } = new List<MonthlyEntity>();
+    public List<MonthlyEntity> Monthly { get; set; } = [];
 
     [JsonPropertyName("names")]
-    public List<NameEntity> Names { get; set; } = new List<NameEntity>();
+    public List<NameEntity> Names { get; set; } = [];
 
     [JsonPropertyName("places")]
-    public List<PlaceEntity> Places { get; set; } = new List<PlaceEntity>();
+    public List<PlaceEntity> Places { get; set; } = [];
 
     [JsonPropertyName("regions")]
-    public List<RegionEntity> Regions { get; set; } = new List<RegionEntity>();
+    public List<RegionEntity> Regions { get; set; } = [];
 
     [JsonPropertyName("services")]
-    public List<ServiceEntity> Services { get; set; } = new List<ServiceEntity>();
+    public List<ServiceEntity> Services { get; set; } = [];
 
     [JsonPropertyName("shifts")]
-    public List<ShiftEntity> Shifts { get; set; } = new List<ShiftEntity>();
+    public List<ShiftEntity> Shifts { get; set; } = [];
 
     [JsonPropertyName("trips")]
-    public List<TripEntity> Trips { get; set; } = new List<TripEntity>();
+    public List<TripEntity> Trips { get; set; } = [];
 
     [JsonPropertyName("types")]
-    public List<TypeEntity> Types { get; set; } = new List<TypeEntity>();
+    public List<TypeEntity> Types { get; set; } = [];
 
     [JsonPropertyName("weekdays")]
-    public List<WeekdayEntity> Weekdays { get; set; } = new List<WeekdayEntity>();
+    public List<WeekdayEntity> Weekdays { get; set; } = [];
 
     [JsonPropertyName("weekly")]
-    public List<WeeklyEntity> Weekly { get; set; } = new List<WeeklyEntity>();
+    public List<WeeklyEntity> Weekly { get; set; } = [];
 
     [JsonPropertyName("yearly")]
-    public List<YearlyEntity> Yearly { get; set; } = new List<YearlyEntity>();
+    public List<YearlyEntity> Yearly { get; set; } = [];
 
     [JsonPropertyName("messages")]
-    public List<MessageEntity> Messages { get; set; } = new List<MessageEntity>();
+    public List<MessageEntity> Messages { get; set; } = [];
 }

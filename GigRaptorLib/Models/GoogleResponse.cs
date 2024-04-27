@@ -5,11 +5,11 @@ namespace GigRaptorLib.Models;
 public class GoogleResponse
 {
     [JsonPropertyName("range")]
-    public string Range { get; set; }
+    public string Range { get; set; } = "";
 
     [JsonPropertyName("majorDimension")]
-    public string MajorDimension { get; set; }
+    public string MajorDimension { get; set; } = "";
 
     [JsonPropertyName("values")]
-    public IList<IList<object>> Values { get; set; }
+    public IList<IList<object>> Values { get; set; } = [];
 }
