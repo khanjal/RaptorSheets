@@ -331,7 +331,7 @@ public static class SheetHelper
                 {
                     Name = HeaderEnum.VISIT_FIRST.DisplayName(),
                     Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_FIRST.DisplayName(), SheetEnum.SHIFTS.DisplayName(), shiftSheet.GetColumn(HeaderEnum.DATE), shiftSheet.GetColumn(keyEnum), true),
-                    Note = "Format: YYYY-MM-DD",
+                    Note = ColumnNotes.DateFormat,
                     Format = FormatEnum.DATE
                 });
                 // L - Last Visit
@@ -339,7 +339,7 @@ public static class SheetHelper
                 {
                     Name = HeaderEnum.VISIT_LAST.DisplayName(),
                     Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_LAST.DisplayName(), SheetEnum.SHIFTS.DisplayName(), shiftSheet.GetColumn(HeaderEnum.DATE), shiftSheet.GetColumn(keyEnum), false),
-                    Note = "Format: YYYY-MM-DD",
+                    Note = ColumnNotes.DateFormat,
                     Format = FormatEnum.DATE
                 });
                 break;
@@ -371,7 +371,7 @@ public static class SheetHelper
             Headers = new List<SheetCellModel>()
         };
         var sheetKeyRange = refSheet.GetRange(keyEnum);
-        var keyRange = "A1:A"; // This should be the default but could cause issues if not the first field.
+        var keyRange = GoogleConfig.KeyRange; // This should be the default but could cause issues if not the first field.
 
         // A - [Key]
         switch (keyEnum)
