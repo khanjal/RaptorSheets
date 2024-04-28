@@ -10,20 +10,31 @@ using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
 
 namespace GigRaptorLib.Utilities.Google;
 
-public class GoogleSheetHelper
+public interface IGoogleSheetService 
+{
+    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId);
+    public Task<ValueRange?> GetSheetData(string spreadsheetId, SheetEnum sheetEnum);
+    public Task<Spreadsheet?> GetSheetInfo(string spreadsheetId);
+    public Task<AppendValuesResponse?> AppendData(string spreadsheetId, ValueRange valueRange, string range);
+    public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, List<SheetModel> sheets);
+
+}
+
+
+public class GoogleSheetService : IGoogleSheetService
 {
     private SheetsService _sheetsService = new();
     private readonly string _range = GoogleConfig.Range;
 
 
-    public GoogleSheetHelper(string accessToken)
+    public GoogleSheetService(string accessToken)
     {
         var credential = GoogleCredential.FromAccessToken(accessToken);
 
         InitialzieService(credential);
     }
 
-    public GoogleSheetHelper(GoogleCredential credential)
+    public GoogleSheetService(GoogleCredential credential)
     {
         InitialzieService(credential);
     }

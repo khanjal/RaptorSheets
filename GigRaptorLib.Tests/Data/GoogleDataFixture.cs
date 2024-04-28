@@ -12,7 +12,7 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
         var spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
         var credential = TestConfigurationHelper.GetJsonCredential();
 
-        var googleSheetHelper = new GoogleSheetHelper(credential);
+        var googleSheetHelper = new GoogleSheetService(credential);
         var result = await googleSheetHelper.GetBatchData(spreadsheetId!);
 
         valueRanges = result?.ValueRanges;

@@ -47,7 +47,7 @@ public static class SheetHelper
     }
 
     // https://www.rapidtables.com/convert/color/hex-to-rgb.html
-    public static Color? GetColor(ColorEnum colorEnum)
+    public static Color GetColor(ColorEnum colorEnum)
     {
         return colorEnum switch
         {
@@ -68,15 +68,14 @@ public static class SheetHelper
             ColorEnum.RED => Colors.Red,
             ColorEnum.WHITE => Colors.White,
             ColorEnum.YELLOW => Colors.Yellow,
-            _ => null,
+            _ => Colors.White,
         };
     }
 
     public static string GetColumnName(int index)
     {
-        const string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-        var value = "";
+        var letters = GoogleConfig.ColumnLetters;
+        var value = string.Empty;
 
         if (index >= letters.Length)
             value += letters[index / letters.Length - 1];
@@ -195,7 +194,7 @@ public static class SheetHelper
             case ValidationEnum.RANGE_REGION:
             case ValidationEnum.RANGE_SERVICE:
             case ValidationEnum.RANGE_TYPE:
-                var values = new List<ConditionValue> { new ConditionValue { UserEnteredValue = $"={GetSheetForRange(validation).DisplayName()}!A2:A" } };
+                var values = new List<ConditionValue> { new ConditionValue { UserEnteredValue = $"={GetSheetForRange(validation)?.DisplayName()}!A2:A" } };
                 dataValidation.Condition = new BooleanCondition { Type = "ONE_OF_RANGE", Values = values };
                 dataValidation.ShowCustomUi = true;
                 dataValidation.Strict = false;
@@ -205,7 +204,7 @@ public static class SheetHelper
         return dataValidation;
     }
 
-    private static SheetEnum GetSheetForRange(ValidationEnum validationEnum)
+    private static SheetEnum? GetSheetForRange(ValidationEnum validationEnum)
     {
         return validationEnum switch
         {
@@ -215,7 +214,7 @@ public static class SheetHelper
             ValidationEnum.RANGE_REGION => SheetEnum.REGIONS,
             ValidationEnum.RANGE_SERVICE => SheetEnum.SERVICES,
             ValidationEnum.RANGE_TYPE => SheetEnum.TYPES,
-            _ => SheetEnum.YEARLY,
+            _ => null
         };
     }
 
