@@ -45,7 +45,7 @@ public static class GenerateSheets
         // Create Sheet Headers
         var appendCellsRequest = new AppendCellsRequest
         {
-            Fields = "*",
+            Fields = GoogleConfig.FieldsUpdate,
             Rows = SheetHelper.HeadersToRowData(_sheet!),
             SheetId = _sheetId
         };
@@ -56,12 +56,12 @@ public static class GenerateSheets
     private static void GenerateAppendDimension()
     {
         // Append more columns if the default amount isn't enough
-        var defaultColumns = 26;
+        var defaultColumns = GoogleConfig.DefaultColumnCount;
         if (_sheet!.Headers.Count > defaultColumns)
         {
             var appendDimensionRequest = new AppendDimensionRequest
             {
-                Dimension = "COLUMNS",
+                Dimension = GoogleConfig.AppendDimensionType,
                 Length = _sheet.Headers.Count - defaultColumns,
                 SheetId = _sheetId
             };
@@ -104,7 +104,6 @@ public static class GenerateSheets
                 {
                     ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.ColumnWarning, Range = range, WarningOnly = true }
                 };
-                // protectCellRequests.Add(addProtectedRangeRequest);
                 _batchUpdateSpreadsheetRequest!.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
             }
 
@@ -120,7 +119,7 @@ public static class GenerateSheets
 
             var repeatCellRequest = new RepeatCellRequest
             {
-                Fields = "*",
+                Fields = GoogleConfig.FieldsUpdate,
                 Range = range,
                 Cell = new CellData()
             };
@@ -136,7 +135,6 @@ public static class GenerateSheets
             }
 
             _repeatCellRequests!.Add(repeatCellRequest);
-            //batchUpdateSpreadsheetRequest.Requests.Add(new Request { RepeatCell = repeatCellRequest });
         });
     }
 
@@ -175,11 +173,8 @@ public static class GenerateSheets
         {
             Properties = new SheetProperties
             {
-                // TODO: Make request helper to build these requests.
-
                 // Create Sheet With Properties
                 SheetId = _sheetId,
-                // sheetRequest.Properties.Title = $"{sheet.Name} {sheetId}";
                 Title = _sheet!.Name,
                 TabColor = SheetHelper.GetColor(_sheet.TabColor),
                 GridProperties = new GridProperties { FrozenColumnCount = _sheet.FreezeColumnCount, FrozenRowCount = _sheet.FreezeRowCount }

@@ -1,4 +1,5 @@
-﻿using GigRaptorLib.Enums;
+﻿using GigRaptorLib.Constants;
+using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
 using GigRaptorLib.Utilities.Extensions;
 using Google.Apis.Auth.OAuth2;
@@ -12,7 +13,7 @@ namespace GigRaptorLib.Utilities.Google;
 public class GoogleSheetHelper
 {
     private SheetsService _sheetsService = new();
-    private readonly string _range = "A1:Z1000"; // TODO: Look into making this a constant and full range of entire sheet (greater than Z and 1000)
+    private readonly string _range = GoogleConfig.Range;
 
 
     public GoogleSheetHelper(string accessToken)
@@ -32,7 +33,7 @@ public class GoogleSheetHelper
         _sheetsService = new SheetsService(new BaseClientService.Initializer()
         {
             HttpClientInitializer = credential,
-            ApplicationName = "GigLogger"
+            ApplicationName = GoogleConfig.AppName
         });
     }
 
@@ -63,7 +64,7 @@ public class GoogleSheetHelper
         }
         catch (Exception)
         {
-            // "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service ..."
+            // TooManyRequests(429) "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service ..."
             return null;
         }
     }
