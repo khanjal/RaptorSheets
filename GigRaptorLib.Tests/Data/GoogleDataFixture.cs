@@ -1,6 +1,5 @@
 ﻿using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities.Google;
-using Google.Apis.Auth.OAuth2;
 using Google.Apis.Sheets.v4.Data;
 
 namespace GigRaptorLib.Tests.Data;

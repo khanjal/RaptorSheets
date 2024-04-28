@@ -3,10 +3,8 @@ using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
 using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities.Google;
-using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Moq;
-using static Google.Apis.Sheets.v4.SpreadsheetsResource;
 
 namespace GigRaptorLib.Tests.Utilities;
 

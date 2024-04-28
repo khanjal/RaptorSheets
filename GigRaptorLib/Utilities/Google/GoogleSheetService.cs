@@ -10,7 +10,7 @@ using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
 
 namespace GigRaptorLib.Utilities.Google;
 
-public interface IGoogleSheetService 
+public interface IGoogleSheetService
 {
     public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId);
     public Task<ValueRange?> GetSheetData(string spreadsheetId, SheetEnum sheetEnum);
