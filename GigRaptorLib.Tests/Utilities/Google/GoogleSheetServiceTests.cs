@@ -2,18 +2,19 @@
 using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
 using GigRaptorLib.Tests.Data.Helpers;
+using GigRaptorLib.Utilities;
 using GigRaptorLib.Utilities.Google;
 using Google.Apis.Sheets.v4.Data;
 using Moq;
 
-namespace GigRaptorLib.Tests.Utilities;
+namespace GigRaptorLib.Tests.Utilities.Google;
 
-public class GoogleSheetHelperTests
+public class GoogleSheetServiceTests
 {
     private readonly string? _spreadsheetId;
     private GoogleSheetService _googleSheetService;
 
-    public GoogleSheetHelperTests()
+    public GoogleSheetServiceTests()
     {
         _spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
         var credential = TestConfigurationHelper.GetJsonCredential();
@@ -28,6 +29,12 @@ public class GoogleSheetHelperTests
         result.Should().NotBeNull();
         result!.ValueRanges.Should().NotBeNull();
         result!.ValueRanges.Should().HaveCount(Enum.GetNames(typeof(SheetEnum)).Length);
+
+        var sheet = SheetHelper.MapData(result!);
+
+        sheet.Should().NotBeNull();
+
+        // TODO: Look into maybe spot checking each entity to ensure there is some data there.
     }
 
     [Fact]

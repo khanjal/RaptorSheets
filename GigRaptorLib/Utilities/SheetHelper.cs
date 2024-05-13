@@ -1,9 +1,11 @@
 using GigRaptorLib.Constants;
+using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
 using GigRaptorLib.Models;
 using GigRaptorLib.Utilities.Extensions;
 using Google.Apis.Sheets.v4.Data;
+using static Google.Apis.Requests.BatchRequest;
 
 namespace GigRaptorLib.Utilities;
 
@@ -597,5 +599,82 @@ public static class SheetHelper
         }
 
         return sheet.Headers;
+    }
+
+    public static SheetEntity? MapData(BatchGetValuesByDataFilterResponse response)
+    {
+        if (response.ValueRanges == null)
+        {
+            return null;
+        }
+        
+        var sheet = new SheetEntity();
+
+        // TODO: Figure out a better way to handle looping with message and entity mapping in the switch.
+        foreach (var matchedValue in response.ValueRanges)
+        {
+            var sheetRange = matchedValue.DataFilters[0].A1Range;
+            var values = matchedValue.ValueRange.Values;
+
+            Enum.TryParse(sheetRange.ToUpper(), out SheetEnum sheetEnum);
+
+            switch (sheetEnum)
+            {
+                case SheetEnum.ADDRESSES:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, AddressMapper.GetSheet()));
+                    sheet.Addresses = AddressMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.DAILY:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, DailyMapper.GetSheet()));
+                    sheet.Daily = DailyMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.MONTHLY:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, MonthlyMapper.GetSheet()));
+                    sheet.Monthly = MonthlyMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.NAMES:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, NameMapper.GetSheet()));
+                    sheet.Names = NameMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.PLACES:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, PlaceMapper.GetSheet()));
+                    sheet.Places = PlaceMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.REGIONS:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, RegionMapper.GetSheet()));
+                    sheet.Regions = RegionMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.SERVICES:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, ServiceMapper.GetSheet()));
+                    sheet.Services = ServiceMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.SHIFTS:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, ShiftMapper.GetSheet()));
+                    sheet.Shifts = ShiftMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.TRIPS:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, TripMapper.GetSheet()));
+                    sheet.Trips = TripMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.TYPES:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, TypeMapper.GetSheet()));
+                    sheet.Types = TypeMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.WEEKDAYS:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, WeekdayMapper.GetSheet()));
+                    sheet.Weekdays = WeekdayMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.WEEKLY:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, WeeklyMapper.GetSheet()));
+                    sheet.Weekly = WeeklyMapper.MapFromRangeData(values);
+                    break;
+                case SheetEnum.YEARLY:
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, YearlyMapper.GetSheet()));
+                    sheet.Yearly = YearlyMapper.MapFromRangeData(values);
+                    break;
+            }
+        }
+
+        return sheet;
     }
 }
