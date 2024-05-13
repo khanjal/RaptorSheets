@@ -1,5 +1,4 @@
-﻿using Google.Apis.Auth.OAuth2;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using System.Reflection;
 
 namespace GigRaptorLib.Tests.Data.Helpers;
@@ -19,15 +18,16 @@ public static class TestConfigurationHelper
     {
         GetConfiguration();
 
-        var parameters = new Dictionary<string, string>();
-
-        parameters.Add("type", _configuration["google_credentials:type"] ?? "");
-        parameters.Add("projectId", _configuration["google_credentials:project_id"] ?? "");
-        parameters.Add("privateKeyId", _configuration["google_credentials:private_key_id"] ?? "");
-        parameters.Add("privateKey", _configuration["google_credentials:private_key"] ?? "");
-        parameters.Add("clientEmail", _configuration["google_credentials:client_email"] ?? "");
-        parameters.Add("clientId", _configuration["google_credentials:client_id"] ?? "");
-        parameters.Add("tokenUrl", _configuration["google_credentials:token_url"] ?? "");
+        var parameters = new Dictionary<string, string>
+        {
+            { "type", _configuration["google_credentials:type"] ?? "" },
+            { "projectId", _configuration["google_credentials:project_id"] ?? "" },
+            { "privateKeyId", _configuration["google_credentials:private_key_id"] ?? "" },
+            { "privateKey", _configuration["google_credentials:private_key"] ?? "" },
+            { "clientEmail", _configuration["google_credentials:client_email"] ?? "" },
+            { "clientId", _configuration["google_credentials:client_id"] ?? "" },
+            { "tokenUrl", _configuration["google_credentials:token_url"] ?? "" }
+        };
 
         return parameters;
     }
