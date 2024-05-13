@@ -31,7 +31,7 @@ public class GoogleSheetService : IGoogleSheetService
     {
         var credential = GoogleCredential.FromAccessToken(accessToken);
 
-        InitialzieService(credential);
+        InitializeService(credential);
     }
 
     public GoogleSheetService(Dictionary<string, string> parameters)
@@ -49,10 +49,10 @@ public class GoogleSheetService : IGoogleSheetService
 
         var credential = GoogleCredential.FromJsonParameters(jsonCredential);
 
-        InitialzieService(credential);
+        InitializeService(credential);
     }
 
-    private void InitialzieService(GoogleCredential credential)
+    private void InitializeService(GoogleCredential credential)
     {
         _sheetsService = new SheetsService(new BaseClientService.Initializer()
         {
