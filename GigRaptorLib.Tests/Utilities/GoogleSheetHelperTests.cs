@@ -22,20 +22,16 @@ public class GoogleSheetHelperTests
     }
 
     [Fact]
-    public async void GivenGetAllData_ThenReturnInfo()
+    public async Task GivenGetAllData_ThenReturnInfo()
     {
         var result = await _googleSheetService.GetBatchData(_spreadsheetId!);
         result.Should().NotBeNull();
         result!.ValueRanges.Should().NotBeNull();
         result!.ValueRanges.Should().HaveCount(Enum.GetNames(typeof(SheetEnum)).Length);
-
-        // Test all demo data.
-
-        // Look into replacing individual json sheet tests.
     }
 
     [Fact]
-    public async void GivenGetAllData_WithInvalidSpreadsheetId_ReturnException()
+    public async Task GivenGetAllData_WithInvalidSpreadsheetId_ReturnException()
     {
         var result = await _googleSheetService.GetBatchData("invalid");
         result.Should().BeNull();
@@ -55,7 +51,7 @@ public class GoogleSheetHelperTests
     [InlineData(SheetEnum.WEEKDAYS)]
     [InlineData(SheetEnum.WEEKLY)]
     [InlineData(SheetEnum.YEARLY)]
-    public async void GivenGetSheetData_WithValidSheetId_ThenReturnInfo(SheetEnum sheetEnum)
+    public async Task GivenGetSheetData_WithValidSheetId_ThenReturnInfo(SheetEnum sheetEnum)
     {
         var result = await _googleSheetService.GetSheetData(_spreadsheetId!, sheetEnum);
         result.Should().NotBeNull();
@@ -66,14 +62,14 @@ public class GoogleSheetHelperTests
     }
 
     [Fact]
-    public async void GivenGetSheetData_WithInvalidSpreadsheetId_ReturnNull()
+    public async Task GivenGetSheetData_WithInvalidSpreadsheetId_ReturnNull()
     {
         var result = await _googleSheetService.GetSheetData("invalid", new SheetEnum());
         result.Should().BeNull();
     }
 
     [Fact]
-    public async void GivenGetSheetInfo_WithSheetId_ThenReturnInfo()
+    public async Task GivenGetSheetInfo_WithSheetId_ThenReturnInfo()
     {
         var result = await _googleSheetService.GetSheetInfo(_spreadsheetId!);
         result.Should().NotBeNull();
@@ -83,7 +79,7 @@ public class GoogleSheetHelperTests
     }
 
     [Fact]
-    public async void GivenGetSheetInfo_WithInvalidSheetId_ThenReturnNull()
+    public async Task GivenGetSheetInfo_WithInvalidSheetId_ThenReturnNull()
     {
         var result = await _googleSheetService.GetSheetInfo("invalid");
         result.Should().BeNull();
@@ -91,7 +87,7 @@ public class GoogleSheetHelperTests
 
 
     [Fact]
-    public async void GivenAppendData_WithValidSheetId_ThenReturnInfo()
+    public async Task GivenAppendData_WithValidSheetId_ThenReturnInfo()
     {
         var googleSheetService = new Mock<IGoogleSheetService>();
         googleSheetService.Setup(x => x.AppendData(_spreadsheetId!, It.IsAny<ValueRange>(), It.IsAny<string>())).ReturnsAsync(new AppendValuesResponse());
@@ -100,14 +96,14 @@ public class GoogleSheetHelperTests
     }
 
     [Fact]
-    public async void GivenAppendData_WithInvalidSheetId_ThenReturnNull()
+    public async Task GivenAppendData_WithInvalidSheetId_ThenReturnNull()
     {
         var result = await _googleSheetService.AppendData("invalid", new ValueRange(), "");
         result.Should().BeNull();
     }
 
     [Fact]
-    public async void GivenCreateSheets_WithValidSheetId_ThenReturnInfo()
+    public async Task GivenCreateSheets_WithValidSheetId_ThenReturnInfo()
     {
         var googleSheetService = new Mock<IGoogleSheetService>();
         googleSheetService.Setup(x => x.CreateSheets(_spreadsheetId!, It.IsAny<List<SheetModel>>())).ReturnsAsync(new BatchUpdateSpreadsheetResponse());
@@ -116,7 +112,7 @@ public class GoogleSheetHelperTests
     }
 
     [Fact]
-    public async void GivenCreateSheets_WithInvalidSheetId_ThenReturnNull()
+    public async Task GivenCreateSheets_WithInvalidSheetId_ThenReturnNull()
     {
         var result = await _googleSheetService.CreateSheets("invalid", []);
         result.Should().BeNull();
