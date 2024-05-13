@@ -15,23 +15,21 @@ public static class TestConfigurationHelper
                             .Build();
     }
 
-    public static GoogleCredential GetJsonCredential()
+    public static Dictionary<string, string> GetJsonCredential()
     {
         GetConfiguration();
 
-        var jsonCredential = new JsonCredentialParameters
-        {
-            Type = _configuration["google_credentials:type"],
-            ProjectId = _configuration["google_credentials:project_id"],
-            PrivateKeyId = _configuration["google_credentials:private_key_id"],
-            PrivateKey = _configuration["google_credentials:private_key"],
-            ClientEmail = _configuration["google_credentials:client_email"],
-            ClientId = _configuration["google_credentials:client_id"],
-            TokenUrl = _configuration["google_credentials:token_url"]
-        };
+        var parameters = new Dictionary<string, string>();
 
-        var credential = GoogleCredential.FromJsonParameters(jsonCredential);
-        return credential;
+        parameters.Add("type", _configuration["google_credentials:type"] ?? "");
+        parameters.Add("projectId", _configuration["google_credentials:project_id"] ?? "");
+        parameters.Add("privateKeyId", _configuration["google_credentials:private_key_id"] ?? "");
+        parameters.Add("privateKey", _configuration["google_credentials:private_key"] ?? "");
+        parameters.Add("clientEmail", _configuration["google_credentials:client_email"] ?? "");
+        parameters.Add("clientId", _configuration["google_credentials:client_id"] ?? "");
+        parameters.Add("tokenUrl", _configuration["google_credentials:token_url"] ?? "");
+
+        return parameters;
     }
 
     public static string GetSpreadsheetId()

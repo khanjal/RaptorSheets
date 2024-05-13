@@ -34,8 +34,21 @@ public class GoogleSheetService : IGoogleSheetService
         InitialzieService(credential);
     }
 
-    public GoogleSheetService(GoogleCredential credential)
+    public GoogleSheetService(Dictionary<string, string> parameters)
     {
+        var jsonCredential = new JsonCredentialParameters
+        {
+            Type = parameters["type"],
+            ProjectId = parameters["projectId"],
+            PrivateKeyId = parameters["privateKeyId"],
+            PrivateKey = parameters["privateKey"],
+            ClientEmail = parameters["clientEmail"],
+            ClientId = parameters["clientId"],
+            TokenUrl = parameters["tokenUrl"]
+        };
+
+        var credential = GoogleCredential.FromJsonParameters(jsonCredential);
+
         InitialzieService(credential);
     }
 
