@@ -123,13 +123,13 @@ public static class HeaderHelper
         {
             if (!data.Any(x => x?.ToString()?.Trim() == sheetHeader.Name))
             {
-                messages.Add(new MessageEntity { Message = $"Sheet [{sheetModel.Name}]: Missing [{sheetHeader.Name}]", Type = Enums.MessageEnum.Error });
+                messages.Add(MessageHelper.CreateErrorMessage($"Sheet [{sheetModel.Name}]: Missing [{sheetHeader.Name}]"));
             }
             else
             {
                 if (index < headerArray.Count() && sheetHeader.Name != headerArray[index].Trim())
                 {
-                    messages.Add(new MessageEntity { Message = $"Sheet [{sheetModel.Name}]: Expected [{sheetHeader.Name}] but found [{headerArray[index].Trim()}]", Type = Enums.MessageEnum.Warning });
+                    messages.Add(MessageHelper.CreateWarningMessage($"Sheet [{sheetModel.Name}]: Expected [{sheetHeader.Name}] but found [{headerArray[index].Trim()}]"));
                 }
             }
             index++;
