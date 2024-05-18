@@ -5,7 +5,6 @@ using GigRaptorLib.Mappers;
 using GigRaptorLib.Models;
 using GigRaptorLib.Utilities.Extensions;
 using Google.Apis.Sheets.v4.Data;
-using static Google.Apis.Requests.BatchRequest;
 
 namespace GigRaptorLib.Utilities;
 
@@ -46,6 +45,71 @@ public static class SheetHelper
     public static List<string> GetSpreadsheetSheets(Spreadsheet sheet)
     {
         return sheet.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
+    }
+
+    public static List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet)
+    {
+        var spreadsheetSheets = spreadsheet.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
+        var sheetData = new List<SheetModel>();
+
+        // Loop through all sheets to see if they exist.
+        foreach (var name in Enum.GetNames<SheetEnum>())
+        {
+            SheetEnum sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), name);
+
+            if (spreadsheetSheets.Contains(name))
+            {
+                continue;
+            }
+            
+            // Get data for each missing sheet.
+            switch (sheetEnum)
+            {
+                case SheetEnum.ADDRESSES:
+                    sheetData.Add(AddressMapper.GetSheet());
+                    break;
+                case SheetEnum.DAILY:
+                    sheetData.Add(DailyMapper.GetSheet());
+                    break;
+                case SheetEnum.MONTHLY:
+                    sheetData.Add(MonthlyMapper.GetSheet());
+                    break;
+                case SheetEnum.NAMES:
+                    sheetData.Add(NameMapper.GetSheet());
+                    break;
+                case SheetEnum.PLACES:
+                    sheetData.Add(PlaceMapper.GetSheet());
+                    break;
+                case SheetEnum.REGIONS:
+                    sheetData.Add(RegionMapper.GetSheet());
+                    break;
+                case SheetEnum.SERVICES:
+                    sheetData.Add(ServiceMapper.GetSheet());
+                    break;
+                case SheetEnum.SHIFTS:
+                    sheetData.Add(ShiftMapper.GetSheet());
+                    break;
+                case SheetEnum.TRIPS:
+                    sheetData.Add(TripMapper.GetSheet());
+                    break;
+                case SheetEnum.TYPES:
+                    sheetData.Add(TypeMapper.GetSheet());
+                    break;
+                case SheetEnum.WEEKDAYS:
+                    sheetData.Add(WeekdayMapper.GetSheet());
+                    break;
+                case SheetEnum.WEEKLY:
+                    sheetData.Add(WeeklyMapper.GetSheet());
+                    break;
+                case SheetEnum.YEARLY:
+                    sheetData.Add(YearlyMapper.GetSheet());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return sheetData;
     }
 
     // https://www.rapidtables.com/convert/color/hex-to-rgb.html

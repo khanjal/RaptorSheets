@@ -86,6 +86,18 @@ public class GoogleSheetServiceTests
     }
 
     [Fact]
+    public async Task GivenGetSheetInfo_WithSheetId_ThenCheckSpreadsheet()
+    {
+        var result = await _googleSheetService.GetSheetInfo(_spreadsheetId!);
+        result.Should().NotBeNull();
+
+        var sheets = SheetHelper.GetMissingSheets(result!);
+        sheets.Should().BeEmpty();
+
+        // TODO: Make a test to remove a sheet and see if it finds the missing one.
+    }
+
+    [Fact]
     public async Task GivenGetSheetInfo_WithInvalidSheetId_ThenReturnNull()
     {
         var result = await _googleSheetService.GetSheetInfo("invalid");
