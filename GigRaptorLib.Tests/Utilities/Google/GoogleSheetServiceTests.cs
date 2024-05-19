@@ -131,6 +131,15 @@ public class GoogleSheetServiceTests
     }
 
     [Fact]
+    public async Task GivenCreateSheets_WithValidSheetIdAndRequest_ThenReturnInfo()
+    {
+        var googleSheetService = new Mock<IGoogleSheetService>();
+        googleSheetService.Setup(x => x.CreateSheets(_spreadsheetId!, It.IsAny<BatchUpdateSpreadsheetRequest>())).ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+        var result = await googleSheetService.Object.CreateSheets(_spreadsheetId!, new BatchUpdateSpreadsheetRequest());
+        result.Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task GivenCreateSheets_WithInvalidSheetId_ThenReturnNull()
     {
         var result = await _googleSheetService.CreateSheets("invalid", []);

@@ -17,6 +17,7 @@ public interface IGoogleSheetService
     public Task<Spreadsheet?> GetSheetInfo(string spreadsheetId);
     public Task<AppendValuesResponse?> AppendData(string spreadsheetId, ValueRange valueRange, string range);
     public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, List<SheetModel> sheets);
+    public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
 
 }
 
@@ -145,7 +146,11 @@ public class GoogleSheetService : IGoogleSheetService
     public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, List<SheetModel> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheets.Generate(sheets);
+        return await CreateSheets(spreadsheetId, batchUpdateSpreadsheetRequest);
+    }
 
+    public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
+    {
         try
         {
             var request = _sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadsheetId);
