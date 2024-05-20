@@ -5,7 +5,7 @@ using Google.Apis.Sheets.v4.Data;
 
 namespace GigRaptorLib.Utilities.Google;
 
-public static class GenerateSheets
+public static class GenerateSheetHelper
 {
     private static SheetModel? _sheet;
     private static int? _sheetId;

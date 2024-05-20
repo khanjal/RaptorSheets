@@ -12,19 +12,19 @@ public class GenerateSheetsTests
 {
     public static IEnumerable<object[]> Sheets =>
     [
-        [AddressMapper.GetSheet(), GenerateSheets.Generate([AddressMapper.GetSheet()])],
-        [DailyMapper.GetSheet(), GenerateSheets.Generate([DailyMapper.GetSheet()])],
-        [MonthlyMapper.GetSheet(), GenerateSheets.Generate([MonthlyMapper.GetSheet()])],
-        [NameMapper.GetSheet(), GenerateSheets.Generate([NameMapper.GetSheet()])],
-        [PlaceMapper.GetSheet(), GenerateSheets.Generate([PlaceMapper.GetSheet()])],
-        [RegionMapper.GetSheet(), GenerateSheets.Generate([RegionMapper.GetSheet()])],
-        [ServiceMapper.GetSheet(), GenerateSheets.Generate([ServiceMapper.GetSheet()])],
-        [ShiftMapper.GetSheet(), GenerateSheets.Generate([ShiftMapper.GetSheet()])],
-        [TripMapper.GetSheet(), GenerateSheets.Generate([TripMapper.GetSheet()])],
-        [TypeMapper.GetSheet(), GenerateSheets.Generate([TypeMapper.GetSheet()])],
-        [WeekdayMapper.GetSheet(), GenerateSheets.Generate([WeekdayMapper.GetSheet()])],
-        [WeeklyMapper.GetSheet(), GenerateSheets.Generate([WeeklyMapper.GetSheet()])],
-        [YearlyMapper.GetSheet(), GenerateSheets.Generate([YearlyMapper.GetSheet()])],
+        [AddressMapper.GetSheet(), GenerateSheetHelper.Generate([AddressMapper.GetSheet()])],
+        [DailyMapper.GetSheet(), GenerateSheetHelper.Generate([DailyMapper.GetSheet()])],
+        [MonthlyMapper.GetSheet(), GenerateSheetHelper.Generate([MonthlyMapper.GetSheet()])],
+        [NameMapper.GetSheet(), GenerateSheetHelper.Generate([NameMapper.GetSheet()])],
+        [PlaceMapper.GetSheet(), GenerateSheetHelper.Generate([PlaceMapper.GetSheet()])],
+        [RegionMapper.GetSheet(), GenerateSheetHelper.Generate([RegionMapper.GetSheet()])],
+        [ServiceMapper.GetSheet(), GenerateSheetHelper.Generate([ServiceMapper.GetSheet()])],
+        [ShiftMapper.GetSheet(), GenerateSheetHelper.Generate([ShiftMapper.GetSheet()])],
+        [TripMapper.GetSheet(), GenerateSheetHelper.Generate([TripMapper.GetSheet()])],
+        [TypeMapper.GetSheet(), GenerateSheetHelper.Generate([TypeMapper.GetSheet()])],
+        [WeekdayMapper.GetSheet(), GenerateSheetHelper.Generate([WeekdayMapper.GetSheet()])],
+        [WeeklyMapper.GetSheet(), GenerateSheetHelper.Generate([WeeklyMapper.GetSheet()])],
+        [YearlyMapper.GetSheet(), GenerateSheetHelper.Generate([YearlyMapper.GetSheet()])],
     ];
 
     [Theory]

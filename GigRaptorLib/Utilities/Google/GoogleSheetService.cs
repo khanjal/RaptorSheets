@@ -12,13 +12,13 @@ namespace GigRaptorLib.Utilities.Google;
 
 public interface IGoogleSheetService
 {
-    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId);
-    public Task<ValueRange?> GetSheetData(string spreadsheetId, SheetEnum sheetEnum);
-    public Task<Spreadsheet?> GetSheetInfo(string spreadsheetId);
     public Task<AppendValuesResponse?> AppendData(string spreadsheetId, ValueRange valueRange, string range);
     public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, List<SheetModel> sheets);
     public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
-
+    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId);
+    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId, List<SheetEnum> sheets);
+    public Task<ValueRange?> GetSheetData(string spreadsheetId, SheetEnum sheetEnum);
+    public Task<Spreadsheet?> GetSheetInfo(string spreadsheetId);
 }
 
 
@@ -62,15 +62,63 @@ public class GoogleSheetService : IGoogleSheetService
         });
     }
 
+    public async Task<AppendValuesResponse?> AppendData(string spreadsheetId, ValueRange valueRange, string range)
+    {
+        try
+        {
+            var request = _sheetsService.Spreadsheets.Values.Append(valueRange, spreadsheetId, range);
+            request.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
+            var response = await request.ExecuteAsync();
+
+            return response;
+        }
+        catch (Exception)
+        {
+            // Log or return an error?
+            return null;
+        }
+    }
+
+    public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, List<SheetModel> sheets)
+    {
+        var batchUpdateSpreadsheetRequest = GenerateSheetHelper.Generate(sheets);
+        return await CreateSheets(spreadsheetId, batchUpdateSpreadsheetRequest);
+    }
+
+    public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
+    {
+        try
+        {
+            var request = _sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadsheetId);
+            var response = await request.ExecuteAsync();
+
+            return response;
+        }
+        catch (Exception)
+        {
+            // Log or return an error?
+            return null;
+        }
+    }
+
     public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId)
     {
+        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+        return await GetBatchData(spreadsheetId, sheets);
+    }
+
+    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId, List<SheetEnum> sheets)
+    {
+        if (sheets == null || sheets.Count < 1)
+        {
+            return null;
+        }
+
         var body = new BatchGetValuesByDataFilterRequest
         {
             DataFilters = []
         };
-
-        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>();
-
+        
         foreach (var sheet in sheets)
         {
             var filter = new DataFilter
@@ -122,45 +170,6 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception)
         {
-            return null;
-        }
-    }
-
-    public async Task<AppendValuesResponse?> AppendData(string spreadsheetId, ValueRange valueRange, string range)
-    {
-        try
-        {
-            var request = _sheetsService.Spreadsheets.Values.Append(valueRange, spreadsheetId, range);
-            request.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
-            var response = await request.ExecuteAsync();
-
-            return response;
-        }
-        catch (Exception)
-        {
-            // Log or return an error?
-            return null;
-        }
-    }
-
-    public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, List<SheetModel> sheets)
-    {
-        var batchUpdateSpreadsheetRequest = GenerateSheets.Generate(sheets);
-        return await CreateSheets(spreadsheetId, batchUpdateSpreadsheetRequest);
-    }
-
-    public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
-    {
-        try
-        {
-            var request = _sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadsheetId);
-            var response = await request.ExecuteAsync();
-
-            return response;
-        }
-        catch (Exception)
-        {
-            // Log or return an error?
             return null;
         }
     }
