@@ -36,8 +36,6 @@ public class GoogleSheetManager : IGoogleSheetManger
 
     public async Task<bool?> AddSheetData(string spreadsheetId, List<SheetEnum> sheets, SheetEntity sheetEntity)
     {
-        IList<object?> values = [];
-
         foreach (var sheet in sheets)
         {
             var headers = (await _googleSheetService.GetSheetData(spreadsheetId, sheet))?.Values[0];
@@ -45,26 +43,27 @@ public class GoogleSheetManager : IGoogleSheetManger
             if (headers == null)
                 continue;
 
+            IList<IList<object?>> values = [];
+
             switch (sheet) {
                 case SheetEnum.SHIFTS:
-                    values.Add(ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers));
+                    values = ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers);
                     break;
 
                 case SheetEnum.TRIPS:
-                    values.Add(TripMapper.MapToRangeData(sheetEntity.Trips, headers));
+                    values = TripMapper.MapToRangeData(sheetEntity.Trips, headers);
+                    break;
+                default:
+                    // Unsupported sheet.
                     break;
             }
-        }
 
-        if (values.Count > 0)
-        {
-            var valueRange = new ValueRange { Values = values };
-            var response = await _googleSheetService.AppendData(spreadsheetId, valueRange, $"{SheetEnum.SHIFTS.DisplayName()}!{GoogleConfig.Range}");
-
-            if (response != null)
-                return true;
-            else
-                return false;
+            if (values.Any())
+            {
+                var valueRange = new ValueRange { Values = values };
+                await _googleSheetService.AppendData(spreadsheetId, valueRange, $"{sheet.DisplayName()}!{GoogleConfig.Range}");
+                // TODO: Handle null from AppendData
+            }
         }
 
         return true;
