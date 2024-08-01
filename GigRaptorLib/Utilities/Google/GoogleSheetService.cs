@@ -1,6 +1,5 @@
 ﻿using GigRaptorLib.Constants;
 using GigRaptorLib.Enums;
-using GigRaptorLib.Models;
 using GigRaptorLib.Utilities.Extensions;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
@@ -13,9 +12,7 @@ namespace GigRaptorLib.Utilities.Google;
 public interface IGoogleSheetService
 {
     public Task<AppendValuesResponse?> AppendData(string spreadsheetId, ValueRange valueRange, string range);
-    public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, List<SheetModel> sheets);
     public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
-    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId);
     public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId, List<SheetEnum> sheets);
     public Task<ValueRange?> GetSheetData(string spreadsheetId, SheetEnum sheetEnum);
     public Task<Spreadsheet?> GetSheetInfo(string spreadsheetId);
@@ -40,12 +37,10 @@ public class GoogleSheetService : IGoogleSheetService
         var jsonCredential = new JsonCredentialParameters
         {
             Type = parameters["type"],
-            ProjectId = parameters["projectId"],
             PrivateKeyId = parameters["privateKeyId"],
             PrivateKey = parameters["privateKey"],
             ClientEmail = parameters["clientEmail"],
             ClientId = parameters["clientId"],
-            TokenUrl = parameters["tokenUrl"]
         };
 
         var credential = GoogleCredential.FromJsonParameters(jsonCredential);
@@ -79,12 +74,6 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, List<SheetModel> sheets)
-    {
-        var batchUpdateSpreadsheetRequest = GenerateSheetHelper.Generate(sheets);
-        return await CreateSheets(spreadsheetId, batchUpdateSpreadsheetRequest);
-    }
-
     public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
     {
         try
@@ -99,12 +88,6 @@ public class GoogleSheetService : IGoogleSheetService
             // Log or return an error?
             return null;
         }
-    }
-
-    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId)
-    {
-        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
-        return await GetBatchData(spreadsheetId, sheets);
     }
 
     public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId, List<SheetEnum> sheets)

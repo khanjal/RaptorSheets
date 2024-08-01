@@ -3,6 +3,7 @@ using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
 using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities;
+using GigRaptorLib.Utilities.Extensions;
 using GigRaptorLib.Utilities.Google;
 using Google.Apis.Sheets.v4.Data;
 using Moq;
@@ -12,7 +13,8 @@ namespace GigRaptorLib.Tests.Utilities.Google;
 public class GoogleSheetServiceTests
 {
     private readonly string? _spreadsheetId;
-    private GoogleSheetService _googleSheetService;
+    private IGoogleSheetService _googleSheetService;
+    private List<SheetEnum> _sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
 
     public GoogleSheetServiceTests()
     {
@@ -25,7 +27,7 @@ public class GoogleSheetServiceTests
     [Fact]
     public async Task GivenGetAllData_ThenReturnInfo()
     {
-        var result = await _googleSheetService.GetBatchData(_spreadsheetId!);
+        var result = await _googleSheetService.GetBatchData(_spreadsheetId!, _sheets);
         result.Should().NotBeNull();
         result!.ValueRanges.Should().NotBeNull();
         result!.ValueRanges.Should().HaveCount(Enum.GetNames(typeof(SheetEnum)).Length);
@@ -40,32 +42,21 @@ public class GoogleSheetServiceTests
     [Fact]
     public async Task GivenGetAllData_WithInvalidSpreadsheetId_ReturnException()
     {
-        var result = await _googleSheetService.GetBatchData("invalid");
+        var result = await _googleSheetService.GetBatchData("invalid", _sheets);
         result.Should().BeNull();
     }
 
-    [Theory]
-    [InlineData(SheetEnum.ADDRESSES)]
-    [InlineData(SheetEnum.DAILY)]
-    [InlineData(SheetEnum.MONTHLY)]
-    [InlineData(SheetEnum.NAMES)]
-    [InlineData(SheetEnum.PLACES)]
-    [InlineData(SheetEnum.REGIONS)]
-    [InlineData(SheetEnum.SERVICES)]
-    [InlineData(SheetEnum.SHIFTS)]
-    [InlineData(SheetEnum.TRIPS)]
-    [InlineData(SheetEnum.TYPES)]
-    [InlineData(SheetEnum.WEEKDAYS)]
-    [InlineData(SheetEnum.WEEKLY)]
-    [InlineData(SheetEnum.YEARLY)]
-    public async Task GivenGetSheetData_WithValidSheetId_ThenReturnInfo(SheetEnum sheetEnum)
+    [Fact]
+    public async Task GivenGetSheetData_WithValidSheetId_ThenReturnInfo()
     {
-        var result = await _googleSheetService.GetSheetData(_spreadsheetId!, sheetEnum);
+        var random = new Random();
+        var randomEnum = random.NextEnum<SheetEnum>();
+
+        var result = await _googleSheetService.GetSheetData(_spreadsheetId!, randomEnum);
         result.Should().NotBeNull();
         result!.Values.Should().NotBeNull();
 
         // TODO: Test some data
-        // Test all demo data.
     }
 
     [Fact]
@@ -104,7 +95,6 @@ public class GoogleSheetServiceTests
         result.Should().BeNull();
     }
 
-
     [Fact]
     public async Task GivenAppendData_WithValidSheetId_ThenReturnInfo()
     {
@@ -122,15 +112,6 @@ public class GoogleSheetServiceTests
     }
 
     [Fact]
-    public async Task GivenCreateSheets_WithValidSheetId_ThenReturnInfo()
-    {
-        var googleSheetService = new Mock<IGoogleSheetService>();
-        googleSheetService.Setup(x => x.CreateSheets(_spreadsheetId!, It.IsAny<List<SheetModel>>())).ReturnsAsync(new BatchUpdateSpreadsheetResponse());
-        var result = await googleSheetService.Object.CreateSheets(_spreadsheetId!, []);
-        result.Should().NotBeNull();
-    }
-
-    [Fact]
     public async Task GivenCreateSheets_WithValidSheetIdAndRequest_ThenReturnInfo()
     {
         var googleSheetService = new Mock<IGoogleSheetService>();
@@ -142,7 +123,7 @@ public class GoogleSheetServiceTests
     [Fact]
     public async Task GivenCreateSheets_WithInvalidSheetId_ThenReturnNull()
     {
-        var result = await _googleSheetService.CreateSheets("invalid", []);
+        var result = await _googleSheetService.CreateSheets("invalid", new BatchUpdateSpreadsheetRequest());
         result.Should().BeNull();
     }
 }

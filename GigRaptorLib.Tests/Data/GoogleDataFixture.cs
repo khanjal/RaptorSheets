@@ -1,4 +1,5 @@
-﻿using GigRaptorLib.Tests.Data.Helpers;
+﻿using GigRaptorLib.Enums;
+using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities.Google;
 using Google.Apis.Sheets.v4.Data;
 
@@ -12,7 +13,8 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
         var credential = TestConfigurationHelper.GetJsonCredential();
 
         var googleSheetHelper = new GoogleSheetService(credential);
-        var result = await googleSheetHelper.GetBatchData(spreadsheetId!);
+        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+        var result = await googleSheetHelper.GetBatchData(spreadsheetId!, sheets);
 
         valueRanges = result?.ValueRanges;
     }

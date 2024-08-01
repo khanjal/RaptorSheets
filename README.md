@@ -21,7 +21,6 @@ Add the following JSON properties to it:
     "private_key": "",
     "client_email": "",
     "client_id": "",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth"
   },
   "spreadsheet_id": ""
 }
