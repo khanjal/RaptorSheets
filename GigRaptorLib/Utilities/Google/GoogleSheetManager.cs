@@ -99,6 +99,7 @@ public class GoogleSheetManager : IGoogleSheetManger
             return null;
 
         var data = SheetHelper.MapData(response);
+        data!.Name = await GetSpreadsheetName(spreadsheetId) ?? spreadsheetId;
         return data;
     }
 
