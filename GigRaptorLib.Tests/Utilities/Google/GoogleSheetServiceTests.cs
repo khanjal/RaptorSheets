@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using GigRaptorLib.Enums;
-using GigRaptorLib.Models;
 using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities;
 using GigRaptorLib.Utilities.Extensions;

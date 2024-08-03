@@ -5,14 +5,11 @@ using GigRaptorLib.Mappers;
 using GigRaptorLib.Models;
 using GigRaptorLib.Utilities.Extensions;
 using Google.Apis.Sheets.v4.Data;
-using Newtonsoft.Json.Linq;
 
 namespace GigRaptorLib.Utilities.Google;
 
 public interface IGoogleSheetManger
 {
-    public Task<bool?> AddShiftData(string spreadsheetId, List<ShiftEntity> entities);
-    public Task<bool?> AddTripData(string spreadsheetId, List<TripEntity> entities);
     public Task<bool?> AddSheetData(string spreadsheetId, List<SheetEnum> sheets, SheetEntity sheetEntity);
     public Task<bool?> CreateSheets(string spreadsheetId, List<SheetModel> sheets);
     public Task<SheetEntity?> GetSheets(string spreadsheetId);
@@ -36,6 +33,8 @@ public class GoogleSheetManager : IGoogleSheetManger
 
     public async Task<bool?> AddSheetData(string spreadsheetId, List<SheetEnum> sheets, SheetEntity sheetEntity)
     {
+        var success = true;
+
         foreach (var sheet in sheets)
         {
             var headers = (await _googleSheetService.GetSheetData(spreadsheetId, sheet))?.Values[0];
@@ -61,62 +60,16 @@ public class GoogleSheetManager : IGoogleSheetManger
             if (values.Any())
             {
                 var valueRange = new ValueRange { Values = values };
-                await _googleSheetService.AppendData(spreadsheetId, valueRange, $"{sheet.DisplayName()}!{GoogleConfig.Range}");
-                // TODO: Handle null from AppendData
+                var result = await _googleSheetService.AppendData(spreadsheetId, valueRange, $"{sheet.DisplayName()}!{GoogleConfig.Range}");
+                
+                if (result == null)
+                {
+                    success = false;
+                }
             }
         }
 
-        return true;
-    }
-
-    public async Task<bool?> AddShiftData(string spreadsheetId, List<ShiftEntity> entities)
-    {
-        var headers = (await _googleSheetService.GetSheetData(spreadsheetId, SheetEnum.SHIFTS))?.Values[0];
-
-        if (headers == null)
-        {
-            return false;
-        }
-
-        var shifts = ShiftMapper.MapToRangeData(entities, headers);
-
-        if (shifts.Count > 0)
-        {
-            var valueRange = new ValueRange { Values = shifts };
-            var response = await _googleSheetService.AppendData(spreadsheetId, valueRange, $"{SheetEnum.SHIFTS.DisplayName()}!{GoogleConfig.Range}");
-            
-            if (response != null)
-                return true;
-            else
-                return false;
-        }
-
-        return false;
-    }
-
-    public async Task<bool?> AddTripData(string spreadsheetId, List<TripEntity> entities)
-    {
-        var headers = (await _googleSheetService.GetSheetData(spreadsheetId, SheetEnum.TRIPS))?.Values[0];
-
-        if (headers == null)
-        {
-            return false;
-        }
-
-        var trips = TripMapper.MapToRangeData(entities, headers);
-
-        if (trips.Count > 0)
-        {
-            var valueRange = new ValueRange { Values = trips };
-            var response = await _googleSheetService.AppendData(spreadsheetId, valueRange, $"{SheetEnum.TRIPS.DisplayName()}!{GoogleConfig.Range}");
-
-            if (response != null)
-                return true;
-            else
-                return false;
-        }
-
-        return false;
+        return success;
     }
 
     public async Task<bool?> CreateSheets(string spreadsheetId, List<SheetModel> sheets)

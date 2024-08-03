@@ -1,8 +1,11 @@
 ﻿using FluentAssertions;
+using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
+using GigRaptorLib.Models;
 using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities.Extensions;
 using GigRaptorLib.Utilities.Google;
+using Moq;
 
 namespace GigRaptorLib.Tests.Utilities.Google;
 
@@ -63,5 +66,23 @@ public class GoogleSheetManagerTests
     {
         var result = await _googleSheetManager.GetSpreadsheetName("invalid");
         result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GivenAddSheetData_WithValidSheetId_ThenReturnTrue()
+    {
+        var googleSheetManager = new Mock<IGoogleSheetManger>();
+        googleSheetManager.Setup(x => x.AddSheetData(_spreadsheetId!, It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>())).ReturnsAsync(true);
+        var result = await googleSheetManager.Object.AddSheetData(_spreadsheetId!, [new SheetEnum()], new SheetEntity());
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GivenCreateSheet_WithValidSheetId_ThenReturnTrue()
+    {
+        var googleSheetManager = new Mock<IGoogleSheetManger>();
+        googleSheetManager.Setup(x => x.CreateSheets(_spreadsheetId!, It.IsAny<List<SheetModel>>())).ReturnsAsync(true);
+        var result = await googleSheetManager.Object.CreateSheets(_spreadsheetId!, [new SheetModel()]);
+        result.Should().BeTrue();
     }
 }
