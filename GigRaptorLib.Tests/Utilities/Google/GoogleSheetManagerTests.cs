@@ -6,6 +6,7 @@ using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities.Extensions;
 using GigRaptorLib.Utilities.Google;
 using Moq;
+using System;
 
 namespace GigRaptorLib.Tests.Utilities.Google;
 
@@ -14,8 +15,15 @@ public class GoogleSheetManagerTests
     private readonly string? _spreadsheetId;
     private IGoogleSheetManger _googleSheetManager;
 
+    private long _currentTime;
+    private SheetEnum _sheetEnum;
+
     public GoogleSheetManagerTests()
     {
+        var random = new Random();
+        _sheetEnum = random.NextEnum<SheetEnum>();
+        _currentTime = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
+
         _spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
         var credential = TestConfigurationHelper.GetJsonCredential();
 
@@ -32,26 +40,32 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenGetSheet_ThenReturnSheetEntity()
     {
-        var random = new Random();
-        var randomEnum = random.NextEnum<SheetEnum>();
-
-        var sheets = new List<SheetEnum> { randomEnum };
-        var result = await _googleSheetManager.GetSheets(_spreadsheetId!, sheets);
+        var result = await _googleSheetManager.GetSheets(_spreadsheetId!, [ _sheetEnum ]);
         result.Should().NotBeNull();
+        result!.Messages.Should().HaveCount(1);
+        result!.Messages[0].Type.Should().Be(MessageEnum.Info.DisplayName());
+        result!.Messages[0].Message.Should().Contain(_sheetEnum.ToString());
+        result!.Messages[0].Time.Should().BeGreaterThanOrEqualTo(_currentTime);
     }
 
     [Fact]
-    public async Task GivenGetSheet_WithInvalidSpreadsheetId_ReturnNull()
+    public async Task GivenGetSheet_WithInvalidSpreadsheetId_ReturnErrorMessages()
     {
         var result = await _googleSheetManager.GetSheets("invalid");
-        result.Should().BeNull();
+        result.Should().NotBeNull();
+        result!.Messages.Should().HaveCount(2);
+
+        result!.Messages.ForEach(x => x.Type.Should().Be(MessageEnum.Error.DisplayName()));
     }
 
     [Fact]
-    public async Task GivenGetSheet_WithInvalidSpreadsheetIdAndSheets_ReturnNull()
+    public async Task GivenGetSheet_WithInvalidSpreadsheetIdAndSheet_ReturnSheetErrorMessage()
     {
-        var result = await _googleSheetManager.GetSheets("invalid", [new SheetEnum()]);
-        result.Should().BeNull();
+        var result = await _googleSheetManager.GetSheets("invalid", [ _sheetEnum ]);
+        result.Should().NotBeNull();
+        result!.Messages.Should().HaveCount(1);
+        result!.Messages[0].Type.Should().Be(MessageEnum.Error.DisplayName());
+        result!.Messages[0].Time.Should().BeGreaterThanOrEqualTo(_currentTime);
     }
 
     [Fact]

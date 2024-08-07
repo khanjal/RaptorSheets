@@ -1,4 +1,5 @@
 ﻿using GigRaptorLib.Entities;
+using GigRaptorLib.Utilities.Extensions;
 
 namespace GigRaptorLib.Utilities;
 
@@ -11,16 +12,16 @@ public static class MessageHelper
     }
     public static MessageEntity CreateErrorMessage(string message)
     {
-        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Error });
+        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Error.DisplayName() });
     }
 
     public static MessageEntity CreateWarningMessage(string message)
     {
-        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Warning });
+        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Warning.DisplayName() });
     }
 
     public static MessageEntity CreateInfoMessage(string message)
     {
-        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Info });
+        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Info.DisplayName() });
     }
 }

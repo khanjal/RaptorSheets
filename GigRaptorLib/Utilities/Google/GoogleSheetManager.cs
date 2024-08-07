@@ -93,13 +93,43 @@ public class GoogleSheetManager : IGoogleSheetManger
 
     public async Task<SheetEntity?> GetSheets(string spreadsheetId, List<SheetEnum> sheets)
     {
+        var data = new SheetEntity();
+        var messages = new List<MessageEntity>();
+        var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
+
         var response = await _googleSheetService.GetBatchData(spreadsheetId, sheets);
 
         if (response == null)
-            return null;
+        {
+            messages.Add(MessageHelper.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}"));
+        }
+        else
+        {
+            messages.Add(MessageHelper.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}"));
+            data = SheetHelper.MapData(response);
+        }
 
-        var data = SheetHelper.MapData(response);
-        data!.Name = await GetSpreadsheetName(spreadsheetId) ?? spreadsheetId;
+        // Only get spreadsheet name when all sheets are requested.
+        if (sheets.Count < Enum.GetNames(typeof(SheetEnum)).Length)
+        {
+            data!.Messages = messages;
+            return data;
+        }
+
+        var spreadsheetName = await GetSpreadsheetName(spreadsheetId);
+
+        if (spreadsheetName == null)
+        {
+            messages.Add(MessageHelper.CreateErrorMessage("Unable to get spreadsheet name"));
+            data!.Name = spreadsheetId;
+        }
+        else
+        {
+            messages.Add(MessageHelper.CreateInfoMessage($"Retrieved spreadsheet name: {spreadsheetName}"));
+            data!.Name = spreadsheetName;
+        }
+
+        data!.Messages = messages;
         return data;
     }
 
