@@ -12,8 +12,8 @@ namespace GigRaptorLib.Tests.Utilities.Google;
 public class GoogleSheetServiceTests
 {
     private readonly string? _spreadsheetId;
-    private IGoogleSheetService _googleSheetService;
-    private List<SheetEnum> _sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+    private readonly GoogleSheetService _googleSheetService;
+    private readonly List<SheetEnum> _sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
 
     public GoogleSheetServiceTests()
     {

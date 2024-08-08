@@ -15,12 +15,12 @@ public interface IGoogleSheetManger
     public Task<SheetEntity> GetSheet(string spreadsheetId, string sheet);
     public Task<SheetEntity> GetSheets(string spreadsheetId);
     public Task<SheetEntity> GetSheets(string spreadsheetId, List<SheetEnum> sheets);
-    public Task<string> GetSpreadsheetName(string spreadsheetId);
+    public Task<string?> GetSpreadsheetName(string spreadsheetId);
 }
 
 public class GoogleSheetManager : IGoogleSheetManger
 {
-    private readonly IGoogleSheetService _googleSheetService;
+    private readonly GoogleSheetService _googleSheetService;
 
     public GoogleSheetManager(string accessToken) 
     {

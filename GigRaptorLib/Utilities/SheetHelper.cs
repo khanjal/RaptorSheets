@@ -181,12 +181,14 @@ public static class SheetHelper
 
         foreach (var header in sheet.Headers)
         {
-            var cell = new CellData();
-            cell.UserEnteredFormat = new CellFormat
+            var cell = new CellData
             {
-                TextFormat = new TextFormat
+                UserEnteredFormat = new CellFormat
                 {
-                    Bold = true
+                    TextFormat = new TextFormat
+                    {
+                        Bold = true
+                    }
                 }
             };
 
@@ -198,8 +200,10 @@ public static class SheetHelper
 
                 if (!sheet.ProtectSheet)
                 {
-                    var border = new Border();
-                    border.Style = BorderStyleEnum.SOLID_THICK.ToString();
+                    var border = new Border
+                    {
+                        Style = BorderStyleEnum.SOLID_THICK.ToString()
+                    };
                     cell.UserEnteredFormat.Borders = new Borders { Bottom = border, Left = border, Right = border, Top = border };
                 }
             }
@@ -260,7 +264,7 @@ public static class SheetHelper
             case ValidationEnum.RANGE_REGION:
             case ValidationEnum.RANGE_SERVICE:
             case ValidationEnum.RANGE_TYPE:
-                var values = new List<ConditionValue> { new ConditionValue { UserEnteredValue = $"={GetSheetForRange(validation)?.DisplayName()}!A2:A" } };
+                var values = new List<ConditionValue> { new() { UserEnteredValue = $"={GetSheetForRange(validation)?.DisplayName()}!A2:A" } };
                 dataValidation.Condition = new BooleanCondition { Type = "ONE_OF_RANGE", Values = values };
                 dataValidation.ShowCustomUi = true;
                 dataValidation.Strict = false;
@@ -434,7 +438,7 @@ public static class SheetHelper
     {
         var sheet = new SheetModel
         {
-            Headers = new List<SheetCellModel>()
+            Headers = []
         };
         var sheetKeyRange = refSheet.GetRange(keyEnum);
         var keyRange = GoogleConfig.KeyRange; // This should be the default but could cause issues if not the first field.

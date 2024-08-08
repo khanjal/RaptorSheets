@@ -6,17 +6,16 @@ using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities.Extensions;
 using GigRaptorLib.Utilities.Google;
 using Moq;
-using System;
 
 namespace GigRaptorLib.Tests.Utilities.Google;
 
 public class GoogleSheetManagerTests
 {
     private readonly string? _spreadsheetId;
-    private IGoogleSheetManger _googleSheetManager;
+    private readonly IGoogleSheetManger _googleSheetManager;
 
-    private long _currentTime;
-    private SheetEnum _sheetEnum;
+    private readonly long _currentTime;
+    private readonly SheetEnum _sheetEnum;
 
     public GoogleSheetManagerTests()
     {
