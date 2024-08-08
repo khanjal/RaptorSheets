@@ -10,11 +10,12 @@ namespace GigRaptorLib.Utilities.Google;
 
 public interface IGoogleSheetManger
 {
-    public Task<bool?> AddSheetData(string spreadsheetId, List<SheetEnum> sheets, SheetEntity sheetEntity);
-    public Task<bool?> CreateSheets(string spreadsheetId, List<SheetModel> sheets);
-    public Task<SheetEntity?> GetSheets(string spreadsheetId);
-    public Task<SheetEntity?> GetSheets(string spreadsheetId, List<SheetEnum> sheets);
-    public Task<string?> GetSpreadsheetName(string spreadsheetId);
+    public Task<bool> AddSheetData(string spreadsheetId, List<SheetEnum> sheets, SheetEntity sheetEntity);
+    public Task<bool> CreateSheets(string spreadsheetId, List<SheetModel> sheets);
+    public Task<SheetEntity> GetSheet(string spreadsheetId, string sheet);
+    public Task<SheetEntity> GetSheets(string spreadsheetId);
+    public Task<SheetEntity> GetSheets(string spreadsheetId, List<SheetEnum> sheets);
+    public Task<string> GetSpreadsheetName(string spreadsheetId);
 }
 
 public class GoogleSheetManager : IGoogleSheetManger
@@ -31,7 +32,7 @@ public class GoogleSheetManager : IGoogleSheetManger
         _googleSheetService = new GoogleSheetService(parameters);
     }
 
-    public async Task<bool?> AddSheetData(string spreadsheetId, List<SheetEnum> sheets, SheetEntity sheetEntity)
+    public async Task<bool> AddSheetData(string spreadsheetId, List<SheetEnum> sheets, SheetEntity sheetEntity)
     {
         var success = true;
 
@@ -72,7 +73,7 @@ public class GoogleSheetManager : IGoogleSheetManger
         return success;
     }
 
-    public async Task<bool?> CreateSheets(string spreadsheetId, List<SheetModel> sheets)
+    public async Task<bool> CreateSheets(string spreadsheetId, List<SheetModel> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetHelper.Generate(sheets);
         var response = await _googleSheetService.CreateSheets(spreadsheetId, batchUpdateSpreadsheetRequest);
@@ -83,15 +84,27 @@ public class GoogleSheetManager : IGoogleSheetManger
             return false;
     }
 
-    public async Task<SheetEntity?> GetSheets(string spreadsheetId)
+    public async Task<SheetEntity> GetSheet(string spreadsheetId, string sheet)
+    {
+        var sheetExists = Enum.TryParse(sheet.ToUpper(), out SheetEnum sheetEnum) && Enum.IsDefined(typeof(SheetEnum), sheetEnum);
+
+        if (!sheetExists)
+        {
+            return new SheetEntity { Messages = [MessageHelper.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist")] };
+        }
+
+        return await GetSheets(spreadsheetId, [sheetEnum]);
+    }
+
+    public async Task<SheetEntity> GetSheets(string spreadsheetId)
     {
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
         var response = await GetSheets(spreadsheetId, sheets);
 
-        return response;
+        return response ?? new SheetEntity();
     }
 
-    public async Task<SheetEntity?> GetSheets(string spreadsheetId, List<SheetEnum> sheets)
+    public async Task<SheetEntity> GetSheets(string spreadsheetId, List<SheetEnum> sheets)
     {
         var data = new SheetEntity();
         var messages = new List<MessageEntity>();
