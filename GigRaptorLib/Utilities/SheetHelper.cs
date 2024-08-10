@@ -10,7 +10,7 @@ namespace GigRaptorLib.Utilities;
 
 public static class SheetHelper
 {
-
+    // TODO Go through all these functions and see if they can be removed
     public static string ArrayFormulaCountIf()
     {
         return "=ARRAYFORMULA(IFS(ROW($A:$A)=1,\"{0}\",ISBLANK($A:$A), \"\",true,COUNTIF({1},$A:$A)))";

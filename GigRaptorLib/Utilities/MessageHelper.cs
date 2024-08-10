@@ -12,16 +12,16 @@ public static class MessageHelper
     }
     public static MessageEntity CreateErrorMessage(string message)
     {
-        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Error.DisplayName() });
+        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Error.UpperName() });
     }
 
     public static MessageEntity CreateWarningMessage(string message)
     {
-        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Warning.DisplayName() });
+        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Warning.UpperName() });
     }
 
     public static MessageEntity CreateInfoMessage(string message)
     {
-        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Info.DisplayName() });
+        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Info.UpperName() });
     }
 }

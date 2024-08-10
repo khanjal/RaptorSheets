@@ -3,9 +3,31 @@
 This project is a library used to handle the interactions between a custom API service and Google Sheets API. It offers the following features:
 
 * Appending Data to Trips and Shifts sheets
-* Creating all sheets in the worksheet.
-* Getting data from all the sheets in the worksheet (individually and batch)
-* Getting worksheet properties
+* Creating, formatting, and styling all sheets in the worksheet.
+* Getting data from all the sheets in the worksheet (individually, group, and batch)
+* Getting worksheet properties like Title
+
+# Using Library
+
+## Auth Modes
+
+To authenticate you can use either an **AccessToken** or **JsonCredentialParameters**
+
+## Simple
+
+Create a new instance of the **GoogleSheetManager**
+
+```csharp
+var googleSheetManager = new GoogleSheetManager(authMode);
+```
+
+You can create all sheets, formats, and layouts in a new worksheet by calling **CreateSheets()**
+
+```csharp
+await googleSheetManager.CreateSheets(googleSheetId);
+```
+
+## Advanced
 
 # Testing
 

@@ -60,7 +60,7 @@ public class CheckSheetHeaderTests
             values![0].ToList().GetRange(0, values[0].Count - 3)
         };
 
-        var errorMessages = HeaderHelper.CheckSheetHeaders(headerValues!, sheet).Where(x => x.Type == MessageEnum.Error.DisplayName());
+        var errorMessages = HeaderHelper.CheckSheetHeaders(headerValues!, sheet).Where(x => x.Type == MessageEnum.Error.UpperName());
 
         errorMessages.Should().NotBeNullOrEmpty();
 
@@ -80,7 +80,7 @@ public class CheckSheetHeaderTests
         var headerOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, headerValues![0].Count - 1)]).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(headerValues, headerOrder);
 
-        var warningMessages = HeaderHelper.CheckSheetHeaders(randomValues!, sheet).Where(x => x.Type == MessageEnum.Warning.DisplayName());
+        var warningMessages = HeaderHelper.CheckSheetHeaders(randomValues!, sheet).Where(x => x.Type == MessageEnum.Warning.UpperName());
 
         warningMessages.Should().NotBeNullOrEmpty();
     }

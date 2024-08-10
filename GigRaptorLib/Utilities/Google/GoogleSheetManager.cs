@@ -2,23 +2,23 @@
 using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
-using GigRaptorLib.Models;
 using GigRaptorLib.Utilities.Extensions;
 using Google.Apis.Sheets.v4.Data;
 
 namespace GigRaptorLib.Utilities.Google;
 
-public interface IGoogleSheetManger
+public interface IGoogleSheetManager
 {
     public Task<bool> AddSheetData(string spreadsheetId, List<SheetEnum> sheets, SheetEntity sheetEntity);
-    public Task<bool> CreateSheets(string spreadsheetId, List<SheetModel> sheets);
+    public Task<bool> CreateSheets(string spreadsheetId);
+    public Task<bool> CreateSheets(string spreadsheetId, List<SheetEnum> sheets);
     public Task<SheetEntity> GetSheet(string spreadsheetId, string sheet);
     public Task<SheetEntity> GetSheets(string spreadsheetId);
     public Task<SheetEntity> GetSheets(string spreadsheetId, List<SheetEnum> sheets);
     public Task<string?> GetSpreadsheetName(string spreadsheetId);
 }
 
-public class GoogleSheetManager : IGoogleSheetManger
+public class GoogleSheetManager : IGoogleSheetManager
 {
     private readonly GoogleSheetService _googleSheetService;
 
@@ -73,7 +73,7 @@ public class GoogleSheetManager : IGoogleSheetManger
         return success;
     }
 
-    public async Task<bool> CreateSheets(string spreadsheetId, List<SheetModel> sheets)
+    public async Task<bool> CreateSheets(string spreadsheetId, List<SheetEnum> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetHelper.Generate(sheets);
         var response = await _googleSheetService.CreateSheets(spreadsheetId, batchUpdateSpreadsheetRequest);
@@ -82,6 +82,12 @@ public class GoogleSheetManager : IGoogleSheetManger
             return true;
         else
             return false;
+    }
+
+    public async Task<bool> CreateSheets(string spreadsheetId)
+    {
+        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+        return await CreateSheets(spreadsheetId, sheets);
     }
 
     public async Task<SheetEntity> GetSheet(string spreadsheetId, string sheet)

@@ -1,5 +1,6 @@
 ﻿using GigRaptorLib.Constants;
 using GigRaptorLib.Enums;
+using GigRaptorLib.Mappers;
 using GigRaptorLib.Models;
 using Google.Apis.Sheets.v4.Data;
 
@@ -12,7 +13,7 @@ public static class GenerateSheetHelper
     private static BatchUpdateSpreadsheetRequest? _batchUpdateSpreadsheetRequest;
     private static List<RepeatCellRequest>? _repeatCellRequests;
 
-    public static BatchUpdateSpreadsheetRequest Generate(List<SheetModel> sheets)
+    public static BatchUpdateSpreadsheetRequest Generate(List<SheetEnum> sheets)
     {
         _batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
         _batchUpdateSpreadsheetRequest.Requests = [];
@@ -20,7 +21,7 @@ public static class GenerateSheetHelper
 
         sheets.ForEach(sheet =>
         {
-            _sheet = sheet;
+            _sheet = GetSheetModel(sheet);
             var random = new Random();
             _sheetId = random.Next();
 
@@ -38,6 +39,27 @@ public static class GenerateSheetHelper
         });
 
         return _batchUpdateSpreadsheetRequest;
+    }
+
+    private static SheetModel GetSheetModel(SheetEnum sheetEnum)
+    {
+        return sheetEnum switch
+        {
+            SheetEnum.ADDRESSES => AddressMapper.GetSheet(),
+            SheetEnum.DAILY => DailyMapper.GetSheet(),
+            SheetEnum.MONTHLY => MonthlyMapper.GetSheet(),
+            SheetEnum.NAMES => NameMapper.GetSheet(),
+            SheetEnum.PLACES => PlaceMapper.GetSheet(),
+            SheetEnum.REGIONS => RegionMapper.GetSheet(),
+            SheetEnum.SERVICES => ServiceMapper.GetSheet(),
+            SheetEnum.SHIFTS => ShiftMapper.GetSheet(),
+            SheetEnum.TRIPS => TripMapper.GetSheet(),
+            SheetEnum.TYPES => TypeMapper.GetSheet(),
+            SheetEnum.WEEKDAYS => WeekdayMapper.GetSheet(),
+            SheetEnum.WEEKLY => WeeklyMapper.GetSheet(),
+            SheetEnum.YEARLY => YearlyMapper.GetSheet(),
+            _ => throw new NotImplementedException(),
+        };
     }
 
     private static void GenerateAppendCells()

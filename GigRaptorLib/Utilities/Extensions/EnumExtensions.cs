@@ -30,6 +30,11 @@ public static class EnumExtensions
         return displayName;
     }
 
+    public static string UpperName(this Enum value)
+    {
+        return DisplayName(value).ToUpper();
+    }
+
     public static T? GetValueFromName<T>(this string name) where T : Enum
     {
         var type = typeof(T);
