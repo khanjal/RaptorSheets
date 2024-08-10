@@ -31,7 +31,22 @@ await googleSheetManager.CreateSheets(googleSheetId);
 
 # Testing
 
-Add google credentials by right clicking on **GigRaptorLib.tests** and selecting **Manage User Secrets** (secrets.json)
+## Create Service Account
+
+You'll need to create your own service account and use the credentials to access your Google Sheet:
+
+* [Google Cloud Console](https://console.cloud.google.com/)
+* [Create New Project](https://console.cloud.google.com/projectcreate) or use existing one
+* [Visit API Library](https://console.cloud.google.com/apis/library) and enable [Google Sheets API](https://console.cloud.google.com/apis/library/sheets.googleapis.com)
+* [APIs & Services](https://console.cloud.google.com/apis/) -> [Create Credentials](https://console.cloud.google.com/apis/api/sheets.googleapis.com/credentials) -> Service Accounts
+* Give the service account a **name** and **id**
+* Once created select the service account and go to the **Keys** tab
+* Add/Create a new key and select type **JSON**
+* The key will download to your computer where you will have access to the values needed for the properties below.
+
+## Local Setup
+
+Add **Google JSON Credentials** by right clicking on **GigRaptorLib.tests** and selecting **Manage User Secrets** (secrets.json)
 
 Add the following JSON properties to it:
 
@@ -48,8 +63,8 @@ Add the following JSON properties to it:
 }
 ```
 
-You'll need to create your own service account under **Google Cloud console -> APIs & Services -> Credentials -> Service Accounts**
+Create a new spreadsheet and add the service account/client email to it.
 
-Add the service account email to your spreadsheet so it can read from it. (May need generated before testing)
+Update the user secrets with the spreadsheeet id.
 
 Once that is completed you'll be able to run all tests including integration tests.
