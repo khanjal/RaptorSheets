@@ -104,6 +104,8 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<SheetEntity> GetSheets(string spreadsheetId)
     {
+        // TODO Add check sheets here where it can add missing sheets.
+
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
         var response = await GetSheets(spreadsheetId, sheets);
 

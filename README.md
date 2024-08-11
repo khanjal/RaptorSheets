@@ -15,6 +15,8 @@ To authenticate you can use either an **AccessToken** or **JsonCredentialParamet
 
 ## Simple
 
+Using the **GoogleSheetManager** allows you to skip referencing **Google.Apis.Sheets.v4** package and just call the functions and receive data with common objects.
+
 Create a new instance of the **GoogleSheetManager**
 
 ```csharp
@@ -27,7 +29,22 @@ You can create all sheets, formats, and layouts in a new worksheet by calling **
 await googleSheetManager.CreateSheets(googleSheetId);
 ```
 
+You can get all sheets and information by calling **GetSheets()**
+
+```csharp
+var data = await googleSheetManager.GetSheets(googleSheetId);
+```
+
+You can retrieve specific sheets and information by calling **GetSheets()** and passing in the sheet enums you want.
+
+```csharp
+var sheets = [SheetEnum.Trips, SheetEnum.Shifts]
+var data = await googleSheetManager.GetSheets(googleSheetId, sheets);
+```
+
 ## Advanced
+
+Using the **GoogleSheetService** allows you to change format, colors, and other options by referencing the **Google.Apis.Sheets.v4** package.
 
 # Testing
 

@@ -32,7 +32,7 @@ public static class EnumExtensions
 
     public static string UpperName(this Enum value)
     {
-        return DisplayName(value).ToUpper();
+        return value.DisplayName().ToUpper();
     }
 
     public static T? GetValueFromName<T>(this string name) where T : Enum
