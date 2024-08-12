@@ -9,36 +9,36 @@ namespace GigRaptorLib.Utilities.Google;
 
 public interface IGoogleSheetManager
 {
-    public Task<bool> AddSheetData(string spreadsheetId, List<SheetEnum> sheets, SheetEntity sheetEntity);
-    public Task<bool> CreateSheets(string spreadsheetId);
-    public Task<bool> CreateSheets(string spreadsheetId, List<SheetEnum> sheets);
-    public Task<SheetEntity> GetSheet(string spreadsheetId, string sheet);
-    public Task<SheetEntity> GetSheets(string spreadsheetId);
-    public Task<SheetEntity> GetSheets(string spreadsheetId, List<SheetEnum> sheets);
-    public Task<string?> GetSpreadsheetName(string spreadsheetId);
+    public Task<bool> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
+    public Task<bool> CreateSheets();
+    public Task<bool> CreateSheets(List<SheetEnum> sheets);
+    public Task<SheetEntity> GetSheet(string sheet);
+    public Task<SheetEntity> GetSheets();
+    public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
+    public Task<string?> GetSpreadsheetName();
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
 {
     private readonly GoogleSheetService _googleSheetService;
 
-    public GoogleSheetManager(string accessToken) 
+    public GoogleSheetManager(string accessToken, string spreadsheetId) 
     {
-        _googleSheetService = new GoogleSheetService(accessToken);
+        _googleSheetService = new GoogleSheetService(accessToken, spreadsheetId);
     }
 
-    public GoogleSheetManager(Dictionary<string, string> parameters)
+    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId)
     {
-        _googleSheetService = new GoogleSheetService(parameters);
+        _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
     }
 
-    public async Task<bool> AddSheetData(string spreadsheetId, List<SheetEnum> sheets, SheetEntity sheetEntity)
+    public async Task<bool> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity)
     {
         var success = true;
 
         foreach (var sheet in sheets)
         {
-            var headers = (await _googleSheetService.GetSheetData(spreadsheetId, sheet))?.Values[0];
+            var headers = (await _googleSheetService.GetSheetData(sheet))?.Values[0];
 
             if (headers == null)
                 continue;
@@ -61,7 +61,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             if (values.Any())
             {
                 var valueRange = new ValueRange { Values = values };
-                var result = await _googleSheetService.AppendData(spreadsheetId, valueRange, $"{sheet.DisplayName()}!{GoogleConfig.Range}");
+                var result = await _googleSheetService.AppendData(valueRange, $"{sheet.DisplayName()}!{GoogleConfig.Range}");
                 
                 if (result == null)
                 {
@@ -73,10 +73,10 @@ public class GoogleSheetManager : IGoogleSheetManager
         return success;
     }
 
-    public async Task<bool> CreateSheets(string spreadsheetId, List<SheetEnum> sheets)
+    public async Task<bool> CreateSheets(List<SheetEnum> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetHelper.Generate(sheets);
-        var response = await _googleSheetService.CreateSheets(spreadsheetId, batchUpdateSpreadsheetRequest);
+        var response = await _googleSheetService.CreateSheets(batchUpdateSpreadsheetRequest);
 
         if (response != null)
             return true;
@@ -84,13 +84,13 @@ public class GoogleSheetManager : IGoogleSheetManager
             return false;
     }
 
-    public async Task<bool> CreateSheets(string spreadsheetId)
+    public async Task<bool> CreateSheets()
     {
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
-        return await CreateSheets(spreadsheetId, sheets);
+        return await CreateSheets(sheets);
     }
 
-    public async Task<SheetEntity> GetSheet(string spreadsheetId, string sheet)
+    public async Task<SheetEntity> GetSheet(string sheet)
     {
         var sheetExists = Enum.TryParse(sheet.ToUpper(), out SheetEnum sheetEnum) && Enum.IsDefined(typeof(SheetEnum), sheetEnum);
 
@@ -99,26 +99,26 @@ public class GoogleSheetManager : IGoogleSheetManager
             return new SheetEntity { Messages = [MessageHelper.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist")] };
         }
 
-        return await GetSheets(spreadsheetId, [sheetEnum]);
+        return await GetSheets([sheetEnum]);
     }
 
-    public async Task<SheetEntity> GetSheets(string spreadsheetId)
+    public async Task<SheetEntity> GetSheets()
     {
         // TODO Add check sheets here where it can add missing sheets.
 
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
-        var response = await GetSheets(spreadsheetId, sheets);
+        var response = await GetSheets(sheets);
 
         return response ?? new SheetEntity();
     }
 
-    public async Task<SheetEntity> GetSheets(string spreadsheetId, List<SheetEnum> sheets)
+    public async Task<SheetEntity> GetSheets(List<SheetEnum> sheets)
     {
         var data = new SheetEntity();
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
 
-        var response = await _googleSheetService.GetBatchData(spreadsheetId, sheets);
+        var response = await _googleSheetService.GetBatchData(sheets);
 
         if (response == null)
         {
@@ -137,12 +137,12 @@ public class GoogleSheetManager : IGoogleSheetManager
             return data;
         }
 
-        var spreadsheetName = await GetSpreadsheetName(spreadsheetId);
+        var spreadsheetName = await GetSpreadsheetName();
 
         if (spreadsheetName == null)
         {
             messages.Add(MessageHelper.CreateErrorMessage("Unable to get spreadsheet name"));
-            data!.Name = spreadsheetId;
+            // data!.Name = spreadsheetId;
         }
         else
         {
@@ -154,9 +154,9 @@ public class GoogleSheetManager : IGoogleSheetManager
         return data;
     }
 
-    public async Task<string?> GetSpreadsheetName(string spreadsheetId)
+    public async Task<string?> GetSpreadsheetName()
     {
-        var response = await _googleSheetService.GetSheetInfo(spreadsheetId);
+        var response = await _googleSheetService.GetSheetInfo();
 
         if (response == null)
             return null;

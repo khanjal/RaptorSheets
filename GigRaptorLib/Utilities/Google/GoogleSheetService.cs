@@ -11,28 +11,29 @@ namespace GigRaptorLib.Utilities.Google;
 
 public interface IGoogleSheetService
 {
-    public Task<AppendValuesResponse?> AppendData(string spreadsheetId, ValueRange valueRange, string range);
-    public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
-    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId, List<SheetEnum> sheets);
-    public Task<ValueRange?> GetSheetData(string spreadsheetId, SheetEnum sheetEnum);
-    public Task<Spreadsheet?> GetSheetInfo(string spreadsheetId);
+    public Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range);
+    public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
+    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<SheetEnum> sheets);
+    public Task<ValueRange?> GetSheetData(SheetEnum sheetEnum);
+    public Task<Spreadsheet?> GetSheetInfo();
 }
 
 
 public class GoogleSheetService : IGoogleSheetService
 {
     private SheetsService _sheetsService = new();
+    private string _spreadsheetId = "";
     private readonly string _range = GoogleConfig.Range;
 
 
-    public GoogleSheetService(string accessToken)
+    public GoogleSheetService(string accessToken, string spreadsheetId)
     {
         var credential = GoogleCredential.FromAccessToken(accessToken);
 
-        InitializeService(credential);
+        InitializeService(credential, spreadsheetId);
     }
 
-    public GoogleSheetService(Dictionary<string, string> parameters)
+    public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId)
     {
         var jsonCredential = new JsonCredentialParameters
         {
@@ -45,11 +46,12 @@ public class GoogleSheetService : IGoogleSheetService
 
         var credential = GoogleCredential.FromJsonParameters(jsonCredential);
 
-        InitializeService(credential);
+        InitializeService(credential, spreadsheetId);
     }
 
-    private void InitializeService(GoogleCredential credential)
+    private void InitializeService(GoogleCredential credential, string spreadsheetId)
     {
+        _spreadsheetId = spreadsheetId;
         _sheetsService = new SheetsService(new BaseClientService.Initializer()
         {
             HttpClientInitializer = credential,
@@ -57,11 +59,11 @@ public class GoogleSheetService : IGoogleSheetService
         });
     }
 
-    public async Task<AppendValuesResponse?> AppendData(string spreadsheetId, ValueRange valueRange, string range)
+    public async Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range)
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.Values.Append(valueRange, spreadsheetId, range);
+            var request = _sheetsService.Spreadsheets.Values.Append(valueRange, _spreadsheetId, range);
             request.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
             var response = await request.ExecuteAsync();
 
@@ -74,11 +76,11 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(string spreadsheetId, BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
+    public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadsheetId);
+            var request = _sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, _spreadsheetId);
             var response = await request.ExecuteAsync();
 
             return response;
@@ -90,7 +92,7 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(string spreadsheetId, List<SheetEnum> sheets)
+    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<SheetEnum> sheets)
     {
         if (sheets == null || sheets.Count < 1)
         {
@@ -113,7 +115,7 @@ public class GoogleSheetService : IGoogleSheetService
 
         try
         {
-            var request = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(body, spreadsheetId);
+            var request = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(body, _spreadsheetId);
             var response = await request.ExecuteAsync();
 
             return response;
@@ -125,11 +127,11 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<ValueRange?> GetSheetData(string spreadsheetId, SheetEnum sheetEnum)
+    public async Task<ValueRange?> GetSheetData(SheetEnum sheetEnum)
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.Values.Get(spreadsheetId, $"{sheetEnum.DisplayName()}!{_range}");
+            var request = _sheetsService.Spreadsheets.Values.Get(_spreadsheetId, $"{sheetEnum.DisplayName()}!{_range}");
             var response = await request.ExecuteAsync();
 
             return response;
@@ -142,11 +144,11 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<Spreadsheet?> GetSheetInfo(string spreadsheetId)
+    public async Task<Spreadsheet?> GetSheetInfo()
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.Get(spreadsheetId);
+            var request = _sheetsService.Spreadsheets.Get(_spreadsheetId);
             var response = await request.ExecuteAsync();
 
             return response;

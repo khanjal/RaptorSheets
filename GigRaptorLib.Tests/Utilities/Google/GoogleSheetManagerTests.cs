@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
 using GigRaptorLib.Entities;
 using GigRaptorLib.Enums;
-using GigRaptorLib.Models;
 using GigRaptorLib.Tests.Data.Helpers;
 using GigRaptorLib.Utilities.Extensions;
 using GigRaptorLib.Utilities.Google;
@@ -16,6 +15,7 @@ public class GoogleSheetManagerTests
 
     private readonly long _currentTime;
     private readonly SheetEnum _sheetEnum;
+    private readonly Dictionary<string, string> _credential;
 
     public GoogleSheetManagerTests()
     {
@@ -24,22 +24,22 @@ public class GoogleSheetManagerTests
         _currentTime = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
 
         _spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
-        var credential = TestConfigurationHelper.GetJsonCredential();
+        _credential = TestConfigurationHelper.GetJsonCredential();
 
-        _googleSheetManager = new GoogleSheetManager(credential);
+        _googleSheetManager = new GoogleSheetManager(_credential, _spreadsheetId);
     }
 
     [Fact]
     public async Task GivenGetSheets_ThenReturnSheetEntity()
     {
-        var result = await _googleSheetManager.GetSheets(_spreadsheetId!);
+        var result = await _googleSheetManager.GetSheets();
         result.Should().NotBeNull();
     }
 
     [Fact]
     public async Task GivenGetSheet_ThenReturnSheetEntity()
     {
-        var result = await _googleSheetManager.GetSheets(_spreadsheetId!, [ _sheetEnum ]);
+        var result = await _googleSheetManager.GetSheets([ _sheetEnum ]);
         result.Should().NotBeNull();
         result!.Messages.Should().HaveCount(1);
         result!.Messages[0].Type.Should().Be(MessageEnum.Info.UpperName());
@@ -50,7 +50,8 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenGetSheet_WithInvalidSpreadsheetId_ReturnErrorMessages()
     {
-        var result = await _googleSheetManager.GetSheets("invalid");
+        var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
+        var result = await googleSheetManager.GetSheets();
         result.Should().NotBeNull();
         result!.Messages.Should().HaveCount(2);
 
@@ -60,7 +61,8 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenGetSheet_WithInvalidSpreadsheetIdAndSheet_ReturnSheetErrorMessage()
     {
-        var result = await _googleSheetManager.GetSheets("invalid", [ _sheetEnum ]);
+        var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
+        var result = await googleSheetManager.GetSheets([ _sheetEnum ]);
         result.Should().NotBeNull();
         result!.Messages.Should().HaveCount(1);
         result!.Messages[0].Type.Should().Be(MessageEnum.Error.UpperName());
@@ -70,14 +72,15 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenGetSpreadsheetName_WithValidSpreadsheetId_ReturnTitle()
     {
-        var result = await _googleSheetManager.GetSpreadsheetName(_spreadsheetId!);
+        var result = await _googleSheetManager.GetSpreadsheetName();
         result.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
     public async Task GivenGetSpreadsheetName_WithInvalidSpreadsheetId_ReturnNull()
     {
-        var result = await _googleSheetManager.GetSpreadsheetName("invalid");
+        var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
+        var result = await googleSheetManager.GetSpreadsheetName();
         result.Should().BeNull();
     }
 
@@ -85,8 +88,8 @@ public class GoogleSheetManagerTests
     public async Task GivenAddSheetData_WithValidSheetId_ThenReturnTrue()
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
-        googleSheetManager.Setup(x => x.AddSheetData(_spreadsheetId!, It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>())).ReturnsAsync(true);
-        var result = await googleSheetManager.Object.AddSheetData(_spreadsheetId!, [new SheetEnum()], new SheetEntity());
+        googleSheetManager.Setup(x => x.AddSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>())).ReturnsAsync(true);
+        var result = await googleSheetManager.Object.AddSheetData([new SheetEnum()], new SheetEntity());
         result.Should().BeTrue();
     }
 
@@ -94,8 +97,8 @@ public class GoogleSheetManagerTests
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnTrue()
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
-        googleSheetManager.Setup(x => x.CreateSheets(_spreadsheetId!, It.IsAny<List<SheetEnum>>())).ReturnsAsync(true);
-        var result = await googleSheetManager.Object.CreateSheets(_spreadsheetId!, [new SheetEnum()]);
+        googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<SheetEnum>>())).ReturnsAsync(true);
+        var result = await googleSheetManager.Object.CreateSheets([new SheetEnum()]);
         result.Should().BeTrue();
     }
 }
