@@ -20,7 +20,7 @@ public interface IGoogleSheetService
 
 public class GoogleSheetService : IGoogleSheetService
 {
-    private readonly SheetsService _sheetsService = new();
+    private SheetsService _sheetsService = new();
     private readonly string _spreadsheetId = "";
     private readonly string _range = GoogleConfig.Range;
 
