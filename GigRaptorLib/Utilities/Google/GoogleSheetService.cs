@@ -18,23 +18,24 @@ public interface IGoogleSheetService
     public Task<Spreadsheet?> GetSheetInfo();
 }
 
-
 public class GoogleSheetService : IGoogleSheetService
 {
-    private SheetsService _sheetsService = new();
-    private string _spreadsheetId = "";
+    private readonly SheetsService _sheetsService = new();
+    private readonly string _spreadsheetId = "";
     private readonly string _range = GoogleConfig.Range;
 
 
     public GoogleSheetService(string accessToken, string spreadsheetId)
     {
+        _spreadsheetId = spreadsheetId;
         var credential = GoogleCredential.FromAccessToken(accessToken);
 
-        InitializeService(credential, spreadsheetId);
+        InitializeService(credential);
     }
 
     public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId)
     {
+        _spreadsheetId = spreadsheetId;
         var jsonCredential = new JsonCredentialParameters
         {
             Type = parameters["type"],
@@ -46,12 +47,11 @@ public class GoogleSheetService : IGoogleSheetService
 
         var credential = GoogleCredential.FromJsonParameters(jsonCredential);
 
-        InitializeService(credential, spreadsheetId);
+        InitializeService(credential);
     }
 
-    private void InitializeService(GoogleCredential credential, string spreadsheetId)
+    private void InitializeService(GoogleCredential credential)
     {
-        _spreadsheetId = spreadsheetId;
         _sheetsService = new SheetsService(new BaseClientService.Initializer()
         {
             HttpClientInitializer = credential,
