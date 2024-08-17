@@ -10,8 +10,8 @@ namespace GigRaptorLib.Utilities.Google;
 public interface IGoogleSheetManager
 {
     public Task<bool> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
-    public Task<bool> CreateSheets();
-    public Task<bool> CreateSheets(List<SheetEnum> sheets);
+    public Task<SheetEntity> CreateSheets();
+    public Task<SheetEntity> CreateSheets(List<SheetEnum> sheets);
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetSheets();
     public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
@@ -73,21 +73,38 @@ public class GoogleSheetManager : IGoogleSheetManager
         return success;
     }
 
-    public async Task<bool> CreateSheets(List<SheetEnum> sheets)
+    public async Task<SheetEntity> CreateSheets()
+    {
+        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+        return await CreateSheets(sheets);
+    }
+
+    public async Task<SheetEntity> CreateSheets(List<SheetEnum> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetHelper.Generate(sheets);
         var response = await _googleSheetService.CreateSheets(batchUpdateSpreadsheetRequest);
 
-        if (response != null)
-            return true;
-        else
-            return false;
-    }
+        var sheetEntity = new SheetEntity();
 
-    public async Task<bool> CreateSheets()
-    {
-        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
-        return await CreateSheets(sheets);
+        // No sheets created if null.
+        if (response == null)
+        {
+            foreach (var sheet in sheets)
+            {
+                sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"{sheet.UpperName()} not created"));
+            }
+
+            return sheetEntity;
+        }
+
+        var sheetTitles = response.Replies.Where(x => x.AddSheet != null).Select(x => x.AddSheet.Properties.Title).ToList();
+
+        foreach (var sheetTitle in sheetTitles)
+        {
+            sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"{sheetTitle.GetValueFromName<SheetEnum>()} created"));
+        }
+
+        return sheetEntity;
     }
 
     public async Task<SheetEntity> GetSheet(string sheet)
