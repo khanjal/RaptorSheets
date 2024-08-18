@@ -9,7 +9,7 @@ namespace GigRaptorLib.Utilities.Google;
 
 public interface IGoogleSheetManager
 {
-    public Task<bool> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
+    public Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
     public Task<SheetEntity> CreateSheets();
     public Task<SheetEntity> CreateSheets(List<SheetEnum> sheets);
     public Task<SheetEntity> GetSheet(string sheet);
@@ -32,10 +32,8 @@ public class GoogleSheetManager : IGoogleSheetManager
         _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
     }
 
-    public async Task<bool> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity)
+    public async Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity)
     {
-        var success = true;
-
         foreach (var sheet in sheets)
         {
             var headers = (await _googleSheetService.GetSheetData(sheet))?.Values[0];
@@ -65,12 +63,12 @@ public class GoogleSheetManager : IGoogleSheetManager
                 
                 if (result == null)
                 {
-                    success = false;
+                    //success = false;
                 }
             }
         }
 
-        return success;
+        return new SheetEntity();
     }
 
     public async Task<SheetEntity> CreateSheets()

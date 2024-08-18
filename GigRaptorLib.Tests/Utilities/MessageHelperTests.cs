@@ -13,7 +13,7 @@ public class MessageHelperTests
         var messageText = "This is an error message.";
         var message = MessageHelper.CreateErrorMessage(messageText);
 
-        message.Type.Should().Be(MessageEnum.Error.UpperName());
+        message.Level.Should().Be(MessageLevelEnum.Error.UpperName());
         message.Message.Should().Be(messageText);
         message.Time.Should().BeGreaterThan(0);
     }
@@ -24,7 +24,7 @@ public class MessageHelperTests
         var messageText = "This is a warning message.";
         var message = MessageHelper.CreateWarningMessage(messageText);
 
-        message.Type.Should().Be(MessageEnum.Warning.UpperName());
+        message.Level.Should().Be(MessageLevelEnum.Warning.UpperName());
         message.Message.Should().Be(messageText);
         message.Time.Should().BeGreaterThan(0);
     }
@@ -35,7 +35,7 @@ public class MessageHelperTests
         var messageText = "This is an info message.";
         var message = MessageHelper.CreateInfoMessage(messageText);
 
-        message.Type.Should().Be(MessageEnum.Info.UpperName());
+        message.Level.Should().Be(MessageLevelEnum.Info.UpperName());
         message.Message.Should().Be(messageText);
         message.Time.Should().BeGreaterThan(0);
     }

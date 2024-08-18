@@ -1,4 +1,5 @@
 ﻿using GigRaptorLib.Entities;
+using GigRaptorLib.Enums;
 using GigRaptorLib.Utilities.Extensions;
 
 namespace GigRaptorLib.Utilities;
@@ -7,21 +8,26 @@ public static class MessageHelper
 {
     public static MessageEntity CreateMessage(MessageEntity message)
     {
+        if (string.IsNullOrEmpty(message.Type))
+        {
+            message.Type = MessageTypeEnum.General.DisplayName();
+        }
+
         message.Time = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
         return message;
     }
-    public static MessageEntity CreateErrorMessage(string message)
+    public static MessageEntity CreateErrorMessage(string message, string type = "")
     {
-        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Error.UpperName() });
+        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Error.UpperName(), Type = type });
     }
 
-    public static MessageEntity CreateWarningMessage(string message)
+    public static MessageEntity CreateWarningMessage(string message, string type = "")
     {
-        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Warning.UpperName() });
+        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Warning.UpperName(), Type = type });
     }
 
-    public static MessageEntity CreateInfoMessage(string message)
+    public static MessageEntity CreateInfoMessage(string message, string type = "")
     {
-        return CreateMessage(new MessageEntity { Message = message, Type = Enums.MessageEnum.Info.UpperName() });
+        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Info.UpperName(), Type = type });
     }
 }

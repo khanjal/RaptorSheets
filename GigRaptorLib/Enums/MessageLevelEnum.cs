@@ -1,6 +1,6 @@
 ﻿namespace GigRaptorLib.Enums;
 
-public enum MessageEnum
+public enum MessageLevelEnum
 {
     Info,
     Warning,
