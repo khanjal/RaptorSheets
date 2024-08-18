@@ -46,13 +46,16 @@ public class GoogleSheetManager : IGoogleSheetManager
             switch (sheet) {
                 case SheetEnum.SHIFTS:
                     values = ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers);
+                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Adding data to {sheet.UpperName()}"));
                     break;
 
                 case SheetEnum.TRIPS:
                     values = TripMapper.MapToRangeData(sheetEntity.Trips, headers);
+                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Adding data to {sheet.UpperName()}"));
                     break;
                 default:
                     // Unsupported sheet.
+                    sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Adding data to {sheet.UpperName()} not supported"));
                     break;
             }
 
@@ -62,13 +65,17 @@ public class GoogleSheetManager : IGoogleSheetManager
                 var result = await _googleSheetService.AppendData(valueRange, $"{sheet.DisplayName()}!{GoogleConfig.Range}");
                 
                 if (result == null)
-                {
-                    //success = false;
-                }
+                    sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Unable to add data to {sheet.UpperName()}"));
+                else
+                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Added data to {sheet.UpperName()}"));
+            }
+            else
+            {
+                sheetEntity.Messages.Add(MessageHelper.CreateWarningMessage($"No data to add to {sheet.UpperName()}"));
             }
         }
 
-        return new SheetEntity();
+        return sheetEntity;
     }
 
     public async Task<SheetEntity> CreateSheets()
