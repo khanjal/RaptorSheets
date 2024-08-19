@@ -99,8 +99,13 @@ public class GoogleSheetManagerTests
     {
         var result = await _googleSheetManager.AddSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], GenerateShift());
         result.Should().NotBeNull();
-        //result.Messages.Count.Should().Be(1);
-        //result.Messages[0].Type.Should().Be(MessageEnum.Error.UpperName());
+        result.Messages.Count.Should().Be(4);
+
+        foreach (var message in result.Messages)
+        {
+            message.Level.Should().Be(MessageLevelEnum.Info.UpperName());
+            message.Type.Should().Be(MessageTypeEnum.AddData.DisplayName());
+        }
     }
 
     [Fact]
@@ -148,11 +153,13 @@ public class GoogleSheetManagerTests
     private static TripEntity GenerateTrip() {
         var random = new Random();
         var pay = Math.Round(random.Next(1, 10) + new decimal(random.NextDouble()), 2);
+        var distance = Math.Round(random.Next(0, 20) + new decimal(random.NextDouble()), 1);
         var tip = random.Next(1, 5);
+        var place = $"Test Place {random.Next(1, 25)}";
         var name = $"Test Name {random.Next(1, 25)}";
         var startAddress = $"Start Address {random.Next(1, 25)}";
         var endAddress = $"End Address {random.Next(1, 25)}";
 
-        return new TripEntity { Type = "Pickup", Pay = pay, Tip = tip, Name = name, StartAddress = startAddress, EndAddress = endAddress };
+        return new TripEntity { Type = "Pickup", Place = place, Pay = pay, Tip = tip, Distance = distance, Name = name, StartAddress = startAddress, EndAddress = endAddress };
     }
 }
