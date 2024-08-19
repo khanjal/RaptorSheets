@@ -151,7 +151,7 @@ namespace GigRaptorLib.Mappers
                             objectList.Add(trip.Note);
                             break;
                         default:
-                            objectList.Add(null);
+                            objectList.Add(new object());
                             break;
                     }
                 }

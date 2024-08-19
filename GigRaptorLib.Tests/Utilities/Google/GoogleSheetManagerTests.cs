@@ -97,22 +97,7 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenAddSheetData_WithData_ThenReturnData()
     {
-        // Create shift/trips
-        var date = DateTime.Now.ToString("yyyy-MM-dd");
-        var random = new Random();
-        var number = random.Next();
-        var service = $"Test {number}";
-
-        var sheetEntity = new SheetEntity();
-        sheetEntity.Shifts.Add(new ShiftEntity { Date = date, Number = 1, Service = service });
-
-        // Loop randomly
-        for (int i = 0; i < random.Next(1,5); i++)
-        {
-            sheetEntity.Trips.Add(new TripEntity { Date = date, Number = 1, Service = service, Type = "Pickup", Pay = Math.Round(random.Next(1, 10) + new decimal(random.NextDouble()),2), Tip = random.Next(1, 5), Distance = Math.Round(random.Next(1, 10) + new decimal(random.NextDouble()),2), Name = "Test Name", StartAddress = "Start Address", EndAddress = "End Address" });
-        }
-
-        var result = await _googleSheetManager.AddSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], sheetEntity);
+        var result = await _googleSheetManager.AddSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], GenerateShift());
         result.Should().NotBeNull();
         //result.Messages.Count.Should().Be(1);
         //result.Messages[0].Type.Should().Be(MessageEnum.Error.UpperName());
@@ -134,5 +119,40 @@ public class GoogleSheetManagerTests
         result.Should().NotBeNull();
         result.Messages.Count.Should().Be(1);
         result.Messages[0].Level.Should().Be(MessageLevelEnum.Error.UpperName());
+    }
+
+    private static SheetEntity GenerateShift()
+    {
+        // Create shift/trips
+        var date = DateTime.Now.ToString("yyyy-MM-dd");
+        var random = new Random();
+        var number = random.Next();
+        var service = $"Test {number}";
+
+        var sheetEntity = new SheetEntity();
+        sheetEntity.Shifts.Add(new ShiftEntity { Date = date, Number = 1, Service = service });
+
+        // Add random amount of trips
+        for (int i = 0; i < random.Next(1, 5); i++)
+        {
+            var tripEntity = GenerateTrip();
+            tripEntity.Date = date;
+            tripEntity.Number = 1;
+            tripEntity.Service = service;
+            sheetEntity.Trips.Add(tripEntity);
+        }
+
+        return sheetEntity;
+    }
+
+    private static TripEntity GenerateTrip() {
+        var random = new Random();
+        var pay = Math.Round(random.Next(1, 10) + new decimal(random.NextDouble()), 2);
+        var tip = random.Next(1, 5);
+        var name = $"Test Name {random.Next(1, 25)}";
+        var startAddress = $"Start Address {random.Next(1, 25)}";
+        var endAddress = $"End Address {random.Next(1, 25)}";
+
+        return new TripEntity { Type = "Pickup", Pay = pay, Tip = tip, Name = name, StartAddress = startAddress, EndAddress = endAddress };
     }
 }

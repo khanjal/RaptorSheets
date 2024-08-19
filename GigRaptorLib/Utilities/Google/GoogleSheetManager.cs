@@ -46,16 +46,16 @@ public class GoogleSheetManager : IGoogleSheetManager
             switch (sheet) {
                 case SheetEnum.SHIFTS:
                     values = ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers);
-                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Adding data to {sheet.UpperName()}"));
+                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.AddData.DisplayName()));
                     break;
 
                 case SheetEnum.TRIPS:
                     values = TripMapper.MapToRangeData(sheetEntity.Trips, headers);
-                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Adding data to {sheet.UpperName()}"));
+                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.AddData.DisplayName()));
                     break;
                 default:
                     // Unsupported sheet.
-                    sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Adding data to {sheet.UpperName()} not supported"));
+                    sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Adding data to {sheet.UpperName()} not supported", MessageTypeEnum.AddData.DisplayName()));
                     break;
             }
 
@@ -65,13 +65,13 @@ public class GoogleSheetManager : IGoogleSheetManager
                 var result = await _googleSheetService.AppendData(valueRange, $"{sheet.DisplayName()}!{GoogleConfig.Range}");
                 
                 if (result == null)
-                    sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Unable to add data to {sheet.UpperName()}"));
+                    sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Unable to add data to {sheet.UpperName()}", MessageTypeEnum.AddData.DisplayName()));
                 else
-                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Added data to {sheet.UpperName()}"));
+                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Added data to {sheet.UpperName()}", MessageTypeEnum.AddData.DisplayName()));
             }
             else
             {
-                sheetEntity.Messages.Add(MessageHelper.CreateWarningMessage($"No data to add to {sheet.UpperName()}"));
+                sheetEntity.Messages.Add(MessageHelper.CreateWarningMessage($"No data to add to {sheet.UpperName()}", MessageTypeEnum.AddData.DisplayName()));
             }
         }
 
@@ -96,7 +96,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             foreach (var sheet in sheets)
             {
-                sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"{sheet.UpperName()} not created"));
+                sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"{sheet.UpperName()} not created", MessageTypeEnum.CreateSheet.DisplayName()));
             }
 
             return sheetEntity;
@@ -106,7 +106,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         foreach (var sheetTitle in sheetTitles)
         {
-            sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"{sheetTitle.GetValueFromName<SheetEnum>()} created"));
+            sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"{sheetTitle.GetValueFromName<SheetEnum>()} created", MessageTypeEnum.CreateSheet.DisplayName()));
         }
 
         return sheetEntity;
@@ -118,7 +118,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         if (!sheetExists)
         {
-            return new SheetEntity { Messages = [MessageHelper.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist")] };
+            return new SheetEntity { Messages = [MessageHelper.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageTypeEnum.GetSheets.DisplayName())] };
         }
 
         return await GetSheets([sheetEnum]);
@@ -144,11 +144,11 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         if (response == null)
         {
-            messages.Add(MessageHelper.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}"));
+            messages.Add(MessageHelper.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GetSheets.DisplayName()));
         }
         else
         {
-            messages.Add(MessageHelper.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}"));
+            messages.Add(MessageHelper.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GetSheets.DisplayName()));
             data = SheetHelper.MapData(response);
         }
 
