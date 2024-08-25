@@ -169,7 +169,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         else
         {
             messages.Add(MessageHelper.CreateInfoMessage($"Retrieved spreadsheet name: {spreadsheetName}"));
-            data!.Name = spreadsheetName;
+            data!.Properties.Name = spreadsheetName;
         }
 
         data!.Messages = messages;

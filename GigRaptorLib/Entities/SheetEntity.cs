@@ -4,8 +4,8 @@ namespace GigRaptorLib.Entities;
 
 public class SheetEntity
 {
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = "";
+    [JsonPropertyName("properties")]
+    public PropertyEntity Properties { get; set; } = new();
 
     [JsonPropertyName("addresses")]
     public List<AddressEntity> Addresses { get; set; } = [];
