@@ -1,4 +1,5 @@
 using GigRaptorLib.Entities;
+using GigRaptorLib.Enums;
 using GigRaptorLib.Models;
 using System.Text.RegularExpressions;
 
@@ -123,13 +124,13 @@ public static class HeaderHelper
         {
             if (!data.Any(x => x?.ToString()?.Trim() == sheetHeader.Name))
             {
-                messages.Add(MessageHelper.CreateErrorMessage($"Sheet [{sheetModel.Name}]: Missing [{sheetHeader.Name}]"));
+                messages.Add(MessageHelper.CreateErrorMessage($"Sheet [{sheetModel.Name}]: Missing [{sheetHeader.Name}]", MessageTypeEnum.CheckSheet));
             }
             else
             {
                 if (index < headerArray.Count() && sheetHeader.Name != headerArray[index].Trim())
                 {
-                    messages.Add(MessageHelper.CreateWarningMessage($"Sheet [{sheetModel.Name}]: Expected [{sheetHeader.Name}] but found [{headerArray[index].Trim()}]"));
+                    messages.Add(MessageHelper.CreateWarningMessage($"Sheet [{sheetModel.Name}]: Expected [{sheetHeader.Name}] but found [{headerArray[index].Trim()}]", MessageTypeEnum.CheckSheet));
                 }
             }
             index++;

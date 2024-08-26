@@ -11,7 +11,7 @@ public class MessageHelperTests
     public void GivenCreateError_ThenReturnErrorMessage()
     {
         var messageText = "This is an error message.";
-        var message = MessageHelper.CreateErrorMessage(messageText);
+        var message = MessageHelper.CreateErrorMessage(messageText, MessageTypeEnum.General);
 
         message.Level.Should().Be(MessageLevelEnum.Error.UpperName());
         message.Message.Should().Be(messageText);
@@ -22,7 +22,7 @@ public class MessageHelperTests
     public void GivenCreateWarning_ThenReturnWarningMessage()
     {
         var messageText = "This is a warning message.";
-        var message = MessageHelper.CreateWarningMessage(messageText);
+        var message = MessageHelper.CreateWarningMessage(messageText, MessageTypeEnum.General);
 
         message.Level.Should().Be(MessageLevelEnum.Warning.UpperName());
         message.Message.Should().Be(messageText);
@@ -33,7 +33,7 @@ public class MessageHelperTests
     public void GivenCreateInfo_ThenReturnInfoMessage()
     {
         var messageText = "This is an info message.";
-        var message = MessageHelper.CreateInfoMessage(messageText);
+        var message = MessageHelper.CreateInfoMessage(messageText, MessageTypeEnum.General);
 
         message.Level.Should().Be(MessageLevelEnum.Info.UpperName());
         message.Message.Should().Be(messageText);

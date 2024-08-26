@@ -16,18 +16,18 @@ public static class MessageHelper
         message.Time = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
         return message;
     }
-    public static MessageEntity CreateErrorMessage(string message, string type = "")
+    public static MessageEntity CreateErrorMessage(string message, MessageTypeEnum type)
     {
-        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Error.UpperName(), Type = type });
+        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Error.UpperName(), Type = type.DisplayName() });
     }
 
-    public static MessageEntity CreateWarningMessage(string message, string type = "")
+    public static MessageEntity CreateWarningMessage(string message, MessageTypeEnum type)
     {
-        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Warning.UpperName(), Type = type });
+        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Warning.UpperName(), Type = type.DisplayName() });
     }
 
-    public static MessageEntity CreateInfoMessage(string message, string type = "")
+    public static MessageEntity CreateInfoMessage(string message, MessageTypeEnum type)
     {
-        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Info.UpperName(), Type = type });
+        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Info.UpperName(), Type = type.DisplayName() });
     }
 }
