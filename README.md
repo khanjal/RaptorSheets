@@ -2,8 +2,11 @@
 
 ## Badge Statuses
 
-| Latest Build Status | ![build status](https://github.com/khanjal/GigRaptorLibrary/actions/workflows/dotnet.yml/badge.svg) |
+| Badge Name | Badge Status |
 | ---------- | :------------: |
+| Latest Build Status | ![build status](https://github.com/khanjal/GigRaptorLibrary/actions/workflows/dotnet.yml/badge.svg) |
+| Current Nuget Version | [![Nuget](https://img.shields.io/nuget/v/GigRaptorLib)](https://www.nuget.org/packages/GigRaptorLib/) |
+
 
 # Project Description
 
