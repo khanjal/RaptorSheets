@@ -13,7 +13,7 @@ public interface IGoogleSheetService
 {
     public Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range);
     public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
-    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<SheetEnum> sheets);
+    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<SheetEnum> sheets, string? range);
     public Task<ValueRange?> GetSheetData(SheetEnum sheetEnum);
     public Task<Spreadsheet?> GetSheetInfo();
 }
@@ -69,7 +69,7 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // Log or return an error?
             return null;
@@ -92,7 +92,7 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<SheetEnum> sheets)
+    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<SheetEnum> sheets, string? range = "")
     {
         if (sheets == null || sheets.Count < 1)
         {
@@ -108,7 +108,7 @@ public class GoogleSheetService : IGoogleSheetService
         {
             var filter = new DataFilter
             {
-                A1Range = sheet.DisplayName()
+                A1Range = !string.IsNullOrWhiteSpace(range) ? $"{sheet.DisplayName()}!{range}" : sheet.DisplayName()
             };
             body.DataFilters.Add(filter);
         }
@@ -120,7 +120,7 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // TooManyRequests(429) "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service ..."
             return null;

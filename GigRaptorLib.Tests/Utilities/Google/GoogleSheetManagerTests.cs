@@ -126,6 +126,22 @@ public class GoogleSheetManagerTests
         result.Messages[0].Level.Should().Be(MessageLevelEnum.Error.UpperName());
     }
 
+    [Fact]
+    public async Task GivenCheckSheets_WithNoHeaderCheck_ThenReturnData()
+    {
+        var result = await _googleSheetManager.CheckSheets();
+        result.Should().NotBeNull();
+        result.Messages.Count.Should().Be(Enum.GetNames(typeof(SheetEnum)).Length);
+    }
+
+    [Fact]
+    public async Task GivenCheckSheets_WithHeaderCheck_ThenReturnData()
+    {
+        var result = await _googleSheetManager.CheckSheets(true);
+        result.Should().NotBeNull();
+        result.Messages.Count.Should().Be(Enum.GetNames(typeof(SheetEnum)).Length+1);
+    }
+
     private static SheetEntity GenerateShift()
     {
         // Create shift/trips

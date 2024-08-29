@@ -4,12 +4,15 @@ using GigRaptorLib.Enums;
 using GigRaptorLib.Mappers;
 using GigRaptorLib.Utilities.Extensions;
 using Google.Apis.Sheets.v4.Data;
+using System.Xml.Linq;
 
 namespace GigRaptorLib.Utilities.Google;
 
 public interface IGoogleSheetManager
 {
     public Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
+    public Task<SheetEntity> CheckSheets();
+    public Task<SheetEntity> CheckSheets(bool checkHeaders);
     public Task<SheetEntity> CreateSheets();
     public Task<SheetEntity> CreateSheets(List<SheetEnum> sheets);
     public Task<SheetEntity> GetSheet(string sheet);
@@ -73,6 +76,124 @@ public class GoogleSheetManager : IGoogleSheetManager
             {
                 sheetEntity.Messages.Add(MessageHelper.CreateWarningMessage($"No data to add to {sheet.UpperName()}", MessageTypeEnum.AddData));
             }
+        }
+
+        return sheetEntity;
+    }
+
+    public async Task<SheetEntity> CheckSheets()
+    {
+        return await CheckSheets(false);
+    }
+
+    public async Task<SheetEntity> CheckSheets(bool checkHeaders)
+    {
+        var sheetEntity = new SheetEntity();
+        var sheetInfoResponse = await _googleSheetService.GetSheetInfo();
+
+        if (sheetInfoResponse == null)
+        {
+            sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Unable to find spreadsheet", MessageTypeEnum.CheckSheet));
+            return sheetEntity;
+        }
+
+        var spreadsheetSheets = sheetInfoResponse.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
+        var sheets = new List<SheetEnum>();
+
+        // Loop through all sheets to see if they exist. TODO: Maybe make found sheet a single message instead of one for each sheet.
+        foreach (var name in Enum.GetNames<SheetEnum>())
+        {
+            SheetEnum sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), name);
+
+            if (!spreadsheetSheets.Contains(name))
+            {
+                sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Unable to find sheet { name }", MessageTypeEnum.CheckSheet));
+                continue;
+            }
+
+            sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Found sheet { name }", MessageTypeEnum.CheckSheet));
+
+            sheets.Add(sheetEnum);
+        }
+
+        if (!checkHeaders)
+            return sheetEntity;
+
+        // TODO: Look into breaking sheet headers check into it's own function.
+
+        // Get sheet headers
+        var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
+        var batchDataResponse = await _googleSheetService.GetBatchData(sheets, GoogleConfig.HeaderRange);
+
+        if (batchDataResponse == null)
+        {
+            sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Unable to retrieve sheet(s): { stringSheetList }", MessageTypeEnum.GetSheets));
+            return sheetEntity;
+        }
+
+        var headerMessages = new List<MessageEntity>();
+        // Loop through sheets to check headers.
+        foreach (var valueRange in batchDataResponse.ValueRanges)
+        {
+            var sheetRange = valueRange.ValueRange.Range;
+            var sheet = sheetRange.Split("!")[0];
+            var sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), sheet.ToUpper());
+
+            var sheetHeader = valueRange.ValueRange.Values;
+            switch (sheetEnum)
+            {
+                case SheetEnum.ADDRESSES:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
+                    break;
+                case SheetEnum.DAILY:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
+                    break;
+                case SheetEnum.MONTHLY:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
+                    break;
+                case SheetEnum.NAMES:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
+                    break;
+                case SheetEnum.PLACES:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
+                    break;
+                case SheetEnum.REGIONS:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
+                    break;
+                case SheetEnum.SERVICES:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
+                    break;
+                case SheetEnum.SHIFTS:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
+                    break;
+                case SheetEnum.TRIPS:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
+                    break;
+                case SheetEnum.TYPES:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
+                    break;
+                case SheetEnum.WEEKDAYS:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
+                    break;
+                case SheetEnum.WEEKLY:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
+                    break;
+                case SheetEnum.YEARLY:
+                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (headerMessages.Count > 0)
+        {
+            sheetEntity.Messages.Add(MessageHelper.CreateWarningMessage($"Found sheet header issue(s)", MessageTypeEnum.CheckSheet));
+            sheetEntity.Messages.AddRange(headerMessages);
+        }
+        else
+        {
+            sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"No sheet header issues found", MessageTypeEnum.CheckSheet));
         }
 
         return sheetEntity;
@@ -164,7 +285,6 @@ public class GoogleSheetManager : IGoogleSheetManager
         if (spreadsheetName == null)
         {
             messages.Add(MessageHelper.CreateErrorMessage("Unable to get spreadsheet name", MessageTypeEnum.General));
-            // data!.Name = spreadsheetId;
         }
         else
         {

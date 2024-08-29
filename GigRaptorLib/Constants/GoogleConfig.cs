@@ -12,4 +12,5 @@ public static class GoogleConfig
     public static string FieldsUpdate => "*";
     public static string KeyRange => "A1:A";
     public static string Range => "A1:ZZZ10000000";
+    public static string HeaderRange => "1:1";
 }
