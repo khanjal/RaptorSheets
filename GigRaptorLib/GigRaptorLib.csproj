@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <PackageId>GigRaptorLib</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageVersion>1.0.4</PackageVersion>
+    <PackageVersion>1.0.5</PackageVersion>
     <PackageAuthors>Iron Raptor Digital</PackageAuthors>
     <PackageDescription>A library used to handle the interactions between a custom API service and Google Sheets API.</PackageDescription>
     <RepositoryUrl>https://github.com/khanjal/GigRaptorLibrary</RepositoryUrl>
