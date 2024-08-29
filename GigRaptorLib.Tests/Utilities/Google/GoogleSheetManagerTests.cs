@@ -131,7 +131,7 @@ public class GoogleSheetManagerTests
     {
         var result = await _googleSheetManager.CheckSheets();
         result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(Enum.GetNames(typeof(SheetEnum)).Length);
+        result.Count.Should().Be(1);
     }
 
     [Fact]
@@ -139,7 +139,7 @@ public class GoogleSheetManagerTests
     {
         var result = await _googleSheetManager.CheckSheets(true);
         result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(Enum.GetNames(typeof(SheetEnum)).Length+1);
+        result.Count.Should().Be(2);
     }
 
     private static SheetEntity GenerateShift()

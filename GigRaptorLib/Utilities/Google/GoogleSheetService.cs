@@ -69,7 +69,7 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log or return an error?
             return null;
@@ -120,7 +120,7 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // TooManyRequests(429) "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service ..."
             return null;
