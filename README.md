@@ -10,10 +10,10 @@
 
 This project is a library used to handle the interactions between a custom API service and Google Sheets API. It offers the following features:
 
-* Appending Data to Trips and Shifts sheets
+* Appending data to trips and shifts sheets
 * Creating, formatting, and styling all sheets in the worksheet.
 * Getting data from all the sheets in the worksheet (individually, group, and batch)
-* Getting worksheet properties like Title
+* Getting worksheet properties like title and sheet tab names
 
 # Using Library
 
