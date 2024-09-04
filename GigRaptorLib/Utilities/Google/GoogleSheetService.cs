@@ -28,7 +28,7 @@ public class GoogleSheetService : IGoogleSheetService
     public GoogleSheetService(string accessToken, string spreadsheetId)
     {
         _spreadsheetId = spreadsheetId;
-        var credential = GoogleCredential.FromAccessToken(accessToken);
+        var credential = GoogleCredential.FromAccessToken(accessToken.Trim());
 
         InitializeService(credential);
     }
@@ -38,11 +38,11 @@ public class GoogleSheetService : IGoogleSheetService
         _spreadsheetId = spreadsheetId;
         var jsonCredential = new JsonCredentialParameters
         {
-            Type = parameters["type"],
-            PrivateKeyId = parameters["privateKeyId"],
-            PrivateKey = parameters["privateKey"],
-            ClientEmail = parameters["clientEmail"],
-            ClientId = parameters["clientId"],
+            Type = parameters["type"].Trim(),
+            PrivateKeyId = parameters["privateKeyId"].Trim(),
+            PrivateKey = parameters["privateKey"].Trim(),
+            ClientEmail = parameters["clientEmail"].Trim(),
+            ClientId = parameters["clientId"].Trim(),
         };
 
         var credential = GoogleCredential.FromJsonParameters(jsonCredential);
