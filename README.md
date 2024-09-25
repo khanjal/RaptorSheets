@@ -1,9 +1,9 @@
-# GigRaptorLib
+# RaptorLoggerEngine
 
 | Badge Name | Status |
 | ---------- | :------------: |
-| Latest Build Status | ![build status](https://github.com/khanjal/GigRaptorLibrary/actions/workflows/dotnet.yml/badge.svg) |
-| Current Nuget Version | [![Nuget](https://img.shields.io/nuget/v/GigRaptorLib)](https://www.nuget.org/packages/GigRaptorLib/) |
+| Latest Build Status | ![build status](https://github.com/khanjal/RaptorLoggerEnginerary/actions/workflows/dotnet.yml/badge.svg) |
+| Current Nuget Version | [![Nuget](https://img.shields.io/nuget/v/RaptorLoggerEngine)](https://www.nuget.org/packages/RaptorLoggerEngine/) |
 
 
 # Project Description
@@ -73,7 +73,7 @@ You'll need to create your own service account and use the credentials to access
 
 ## Local Setup
 
-Add ````Google JSON Credentials```` by right clicking on ````GigRaptorLib.tests```` and selecting ````Manage User Secrets```` (secrets.json)
+Add ````Google JSON Credentials```` by right clicking on ````RaptorLoggerEngine.tests```` and selecting ````Manage User Secrets```` (secrets.json)
 
 Add the following JSON properties to it:
 
