@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Gig.Tests", "RLE.Gig.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Core", "RLE.Core\RLE.Core.csproj", "{0511900F-2BD5-4CAD-9E4F-10C7C1A353BA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gig", "Gig", "{01D76762-C403-4DC6-AF39-463ACBCDBABB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RLE.Gig", "RLE.Gig", "{01D76762-C403-4DC6-AF39-463ACBCDBABB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
