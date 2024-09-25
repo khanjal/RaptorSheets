@@ -1,7 +1,7 @@
-﻿using RaptorLoggerEngine.Models;
-using Google.Apis.Sheets.v4.Data;
+﻿using Google.Apis.Sheets.v4.Data;
 using Newtonsoft.Json;
 using RLE.Core.Entities;
+using RLE.Core.Models.Google;
 
 namespace RaptorLoggerEngine.Tests.Data.Helpers;
 

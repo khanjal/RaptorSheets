@@ -1,9 +1,9 @@
 using FluentAssertions;
 using RaptorLoggerEngine.Enums;
-using RaptorLoggerEngine.Models;
 using RaptorLoggerEngine.Tests.Data.Helpers;
 using RaptorLoggerEngine.Utilities;
 using RLE.Core.Enums;
+using RLE.Core.Models.Google;
 
 namespace RaptorLoggerEngine.Tests.Utilities;
 

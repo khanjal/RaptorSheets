@@ -2,10 +2,10 @@
 using RaptorLoggerEngine.Constants;
 using RaptorLoggerEngine.Enums;
 using RaptorLoggerEngine.Mappers;
-using RaptorLoggerEngine.Models;
 using RaptorLoggerEngine.Utilities;
 using RaptorLoggerEngine.Utilities.Google;
 using Google.Apis.Sheets.v4.Data;
+using RLE.Core.Models.Google;
 
 namespace RaptorLoggerEngine.Tests.Utilities.Google;
 

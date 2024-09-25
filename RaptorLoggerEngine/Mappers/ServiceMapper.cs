@@ -1,9 +1,9 @@
 using RaptorLoggerEngine.Constants;
 using RaptorLoggerEngine.Enums;
-using RaptorLoggerEngine.Models;
 using RaptorLoggerEngine.Utilities;
 using RaptorLoggerEngine.Utilities.Extensions;
 using RLE.Core.Entities;
+using RLE.Core.Models.Google;
 
 namespace RaptorLoggerEngine.Mappers;
 

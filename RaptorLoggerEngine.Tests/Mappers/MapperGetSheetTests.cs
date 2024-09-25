@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using RaptorLoggerEngine.Constants;
 using RaptorLoggerEngine.Mappers;
-using RaptorLoggerEngine.Models;
+using RLE.Core.Models.Google;
 
 namespace RaptorLoggerEngine.Tests.Mappers;
 

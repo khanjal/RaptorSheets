@@ -1,5 +1,5 @@
 using RaptorLoggerEngine.Enums;
-using RaptorLoggerEngine.Models;
+using RLE.Core.Models.Google;
 
 namespace RaptorLoggerEngine.Utilities.Extensions;
 

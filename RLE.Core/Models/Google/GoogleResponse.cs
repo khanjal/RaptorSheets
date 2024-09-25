@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace RaptorLoggerEngine.Models;
+namespace RLE.Core.Models.Google;
 
 public class GoogleResponse
 {

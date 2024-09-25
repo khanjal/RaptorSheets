@@ -1,7 +1,7 @@
 using RaptorLoggerEngine.Enums;
 using RLE.Core.Enums;
 
-namespace RaptorLoggerEngine.Models;
+namespace RLE.Core.Models.Google;
 
 public class SheetCellModel
 {
