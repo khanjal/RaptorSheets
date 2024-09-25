@@ -3,8 +3,8 @@ using RaptorLoggerEngine.Enums;
 using RaptorLoggerEngine.Mappers;
 using RaptorLoggerEngine.Tests.Data;
 using RaptorLoggerEngine.Tests.Data.Helpers;
-using RaptorLoggerEngine.Utilities.Extensions;
 using RLE.Core.Entities;
+using RLE.Core.Utilities.Extensions;
 
 namespace RaptorLoggerEngine.Tests.Mappers.MapFromRangeData;
 

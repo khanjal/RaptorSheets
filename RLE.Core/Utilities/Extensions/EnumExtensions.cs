@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Reflection;
 
-namespace RaptorLoggerEngine.Utilities.Extensions;
+namespace RLE.Core.Utilities.Extensions;
 
 public static class EnumExtensions
 {

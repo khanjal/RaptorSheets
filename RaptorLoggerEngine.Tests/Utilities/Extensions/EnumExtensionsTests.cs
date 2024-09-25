@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using RaptorLoggerEngine.Utilities.Extensions;
+using RLE.Core.Utilities.Extensions;
 using System.ComponentModel;
 
 namespace RaptorLoggerEngine.Tests.Utilities.Extensions;

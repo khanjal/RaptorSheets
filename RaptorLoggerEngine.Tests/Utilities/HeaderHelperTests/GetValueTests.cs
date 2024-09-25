@@ -1,5 +1,5 @@
 ﻿using RaptorLoggerEngine.Tests.Data.Helpers;
-using RaptorLoggerEngine.Utilities;
+using RLE.Core.Utilities;
 
 namespace RaptorLoggerEngine.Tests.Utilities.HeaderHelperTests;
 

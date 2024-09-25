@@ -1,7 +1,7 @@
 ﻿using RaptorLoggerEngine.Enums;
-using RaptorLoggerEngine.Utilities.Extensions;
 using RLE.Core.Enums;
 using RLE.Core.Models.Google;
+using RLE.Core.Utilities.Extensions;
 using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorLoggerEngine.Constants;

@@ -1,4 +1,4 @@
-﻿namespace RaptorLoggerEngine.Utilities.Extensions;
+﻿namespace RLE.Core.Utilities.Extensions;
 
 public static class RandomExtensions
 {

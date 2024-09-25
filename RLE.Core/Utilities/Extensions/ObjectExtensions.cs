@@ -1,7 +1,7 @@
-using RaptorLoggerEngine.Enums;
+using RLE.Core.Enums;
 using RLE.Core.Models.Google;
 
-namespace RaptorLoggerEngine.Utilities.Extensions;
+namespace RLE.Core.Utilities.Extensions;
 
 public static class ObjectExtensions
 {

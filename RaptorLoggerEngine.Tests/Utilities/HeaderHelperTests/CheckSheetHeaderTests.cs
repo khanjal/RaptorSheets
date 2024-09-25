@@ -3,11 +3,11 @@ using RaptorLoggerEngine.Enums;
 using RaptorLoggerEngine.Mappers;
 using RaptorLoggerEngine.Tests.Data;
 using RaptorLoggerEngine.Tests.Data.Helpers;
-using RaptorLoggerEngine.Utilities;
-using RaptorLoggerEngine.Utilities.Extensions;
 using Google.Apis.Sheets.v4.Data;
 using RLE.Core.Enums;
 using RLE.Core.Models.Google;
+using RLE.Core.Utilities.Extensions;
+using RLE.Core.Utilities;
 
 namespace RaptorLoggerEngine.Tests.Utilities.HeaderHelperTests;
 

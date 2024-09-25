@@ -1,8 +1,8 @@
-﻿using RaptorLoggerEngine.Utilities.Extensions;
-using RLE.Core.Entities;
+﻿using RLE.Core.Entities;
 using RLE.Core.Enums;
+using RLE.Core.Utilities.Extensions;
 
-namespace RaptorLoggerEngine.Utilities;
+namespace RLE.Core.Utilities;
 
 public static class MessageHelper
 {

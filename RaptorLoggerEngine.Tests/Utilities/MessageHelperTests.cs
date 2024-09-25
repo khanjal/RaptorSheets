@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
-using RaptorLoggerEngine.Utilities;
-using RaptorLoggerEngine.Utilities.Extensions;
 using RLE.Core.Enums;
+using RLE.Core.Utilities;
+using RLE.Core.Utilities.Extensions;
 
 namespace RaptorLoggerEngine.Tests.Utilities;
 

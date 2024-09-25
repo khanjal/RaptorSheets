@@ -1,8 +1,8 @@
 ﻿using FluentAssertions;
-using RaptorLoggerEngine.Enums;
 using RaptorLoggerEngine.Tests.Data;
-using RaptorLoggerEngine.Utilities.Extensions;
+using RLE.Core.Enums;
 using RLE.Core.Models.Google;
+using RLE.Core.Utilities.Extensions;
 
 namespace RaptorLoggerEngine.Tests.Utilities.Extensions;
 

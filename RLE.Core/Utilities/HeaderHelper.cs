@@ -3,7 +3,7 @@ using RLE.Core.Enums;
 using RLE.Core.Models.Google;
 using System.Text.RegularExpressions;
 
-namespace RaptorLoggerEngine.Utilities;
+namespace RLE.Core.Utilities;
 
 public static class HeaderHelper
 {
