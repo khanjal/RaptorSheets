@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
-using RaptorLoggerEngine.Entities;
 using RaptorLoggerEngine.Enums;
 using RaptorLoggerEngine.Mappers;
 using RaptorLoggerEngine.Tests.Data.Helpers;
 using RaptorLoggerEngine.Utilities;
 using RaptorLoggerEngine.Utilities.Extensions;
+using RLE.Core.Entities;
 
 namespace RaptorLoggerEngine.Tests.Mappers;
 

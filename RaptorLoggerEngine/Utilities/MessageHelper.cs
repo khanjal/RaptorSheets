@@ -1,6 +1,6 @@
-﻿using RaptorLoggerEngine.Entities;
-using RaptorLoggerEngine.Enums;
+﻿using RaptorLoggerEngine.Enums;
 using RaptorLoggerEngine.Utilities.Extensions;
+using RLE.Core.Entities;
 
 namespace RaptorLoggerEngine.Utilities;
 

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace RaptorLoggerEngine.Entities;
+namespace RLE.Core.Entities;
 
 public class TypeEntity : AmountEntity
 {

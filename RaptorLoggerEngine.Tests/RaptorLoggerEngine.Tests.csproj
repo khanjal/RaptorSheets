@@ -79,6 +79,7 @@
   <ItemGroup>
     <ProjectReference Include="..\GigRaptorLib\RaptorLoggerEngine.csproj" />
     <ProjectReference Include="..\RaptorLoggerEngine\RaptorLoggerEngine.csproj" />
+    <ProjectReference Include="..\RLE.Core\RLE.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

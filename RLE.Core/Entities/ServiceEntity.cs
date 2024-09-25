@@ -1,14 +1,14 @@
 using System.Text.Json.Serialization;
 
-namespace RaptorLoggerEngine.Entities;
+namespace RLE.Core.Entities;
 
-public class PlaceEntity : AmountEntity
+public class ServiceEntity : AmountEntity
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }
 
-    [JsonPropertyName("place")]
-    public string Place { get; set; } = "";
+    [JsonPropertyName("service")]
+    public string Service { get; set; } = "";
 
     [JsonPropertyName("visits")]
     public int Trips { get; set; }

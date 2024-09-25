@@ -1,11 +1,10 @@
 ﻿using FluentAssertions;
-using RaptorLoggerEngine.Entities;
 using RaptorLoggerEngine.Enums;
 using RaptorLoggerEngine.Tests.Data.Helpers;
 using RaptorLoggerEngine.Utilities.Extensions;
 using RaptorLoggerEngine.Utilities.Google;
 using Moq;
-using System;
+using RLE.Core.Entities;
 
 namespace RaptorLoggerEngine.Tests.Utilities.Google;
 

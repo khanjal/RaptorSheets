@@ -1,4 +1,4 @@
-﻿namespace RaptorLoggerEngine.Entities
+﻿namespace RLE.Core.Entities
 {
     public class PropertyEntity
     {

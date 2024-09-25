@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorLoggerEngine", "Rapto
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorLoggerEngine.Tests", "RaptorLoggerEngine.Tests\RaptorLoggerEngine.Tests.csproj", "{172159EA-DE12-485D-A805-B488FDE24F8F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RLE.Core", "RLE.Core\RLE.Core.csproj", "{0511900F-2BD5-4CAD-9E4F-10C7C1A353BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{172159EA-DE12-485D-A805-B488FDE24F8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{172159EA-DE12-485D-A805-B488FDE24F8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{172159EA-DE12-485D-A805-B488FDE24F8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0511900F-2BD5-4CAD-9E4F-10C7C1A353BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0511900F-2BD5-4CAD-9E4F-10C7C1A353BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0511900F-2BD5-4CAD-9E4F-10C7C1A353BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0511900F-2BD5-4CAD-9E4F-10C7C1A353BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

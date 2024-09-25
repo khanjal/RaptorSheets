@@ -1,14 +1,14 @@
 using System.Text.Json.Serialization;
 
-namespace RaptorLoggerEngine.Entities;
+namespace RLE.Core.Entities;
 
-public class MonthlyEntity : AmountEntity
+public class WeeklyEntity : AmountEntity
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }
 
-    [JsonPropertyName("month")]
-    public string Month { get; set; } = "";
+    [JsonPropertyName("week")]
+    public string Week { get; set; } = "";
 
     [JsonPropertyName("trips")]
     public int Trips { get; set; }
@@ -42,4 +42,10 @@ public class MonthlyEntity : AmountEntity
 
     [JsonPropertyName("year")]
     public int Year { get; set; }
+
+    [JsonPropertyName("begin")]
+    public string Begin { get; set; } = "";
+
+    [JsonPropertyName("end")]
+    public string End { get; set; } = "";
 }
