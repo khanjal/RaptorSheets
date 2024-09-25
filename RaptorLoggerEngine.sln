@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorLoggerEngine", "RaptorLoggerEngine\RaptorLoggerEngine.csproj", "{8B484E92-30EF-4757-9F16-3D2442C0D992}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Gig", "RLE.Gig\RLE.Gig.csproj", "{8B484E92-30EF-4757-9F16-3D2442C0D992}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorLoggerEngine.Tests", "RaptorLoggerEngine.Tests\RaptorLoggerEngine.Tests.csproj", "{172159EA-DE12-485D-A805-B488FDE24F8F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Gig.Tests", "RLE.Gig.Tests\RLE.Gig.Tests.csproj", "{172159EA-DE12-485D-A805-B488FDE24F8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RLE.Core", "RLE.Core\RLE.Core.csproj", "{0511900F-2BD5-4CAD-9E4F-10C7C1A353BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Core", "RLE.Core\RLE.Core.csproj", "{0511900F-2BD5-4CAD-9E4F-10C7C1A353BA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gig", "Gig", "{01D76762-C403-4DC6-AF39-463ACBCDBABB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +32,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8B484E92-30EF-4757-9F16-3D2442C0D992} = {01D76762-C403-4DC6-AF39-463ACBCDBABB}
+		{172159EA-DE12-485D-A805-B488FDE24F8F} = {01D76762-C403-4DC6-AF39-463ACBCDBABB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD2DC591-46C2-4EFD-9540-F30EC806703F}
