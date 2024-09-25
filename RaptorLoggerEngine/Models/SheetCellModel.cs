@@ -1,4 +1,5 @@
 using RaptorLoggerEngine.Enums;
+using RLE.Core.Enums;
 
 namespace RaptorLoggerEngine.Models;
 

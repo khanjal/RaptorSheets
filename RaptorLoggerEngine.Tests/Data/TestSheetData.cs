@@ -1,6 +1,7 @@
 ﻿using RaptorLoggerEngine.Enums;
 using RaptorLoggerEngine.Models;
 using RaptorLoggerEngine.Utilities.Extensions;
+using RLE.Core.Enums;
 
 namespace RaptorLoggerEngine.Tests.Data;
 

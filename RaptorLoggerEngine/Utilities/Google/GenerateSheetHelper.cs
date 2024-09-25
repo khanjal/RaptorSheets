@@ -3,6 +3,7 @@ using RaptorLoggerEngine.Enums;
 using RaptorLoggerEngine.Mappers;
 using RaptorLoggerEngine.Models;
 using Google.Apis.Sheets.v4.Data;
+using RLE.Core.Enums;
 
 namespace RaptorLoggerEngine.Utilities.Google;
 

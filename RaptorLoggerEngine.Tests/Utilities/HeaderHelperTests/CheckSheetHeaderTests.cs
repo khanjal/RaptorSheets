@@ -7,6 +7,7 @@ using RaptorLoggerEngine.Tests.Data.Helpers;
 using RaptorLoggerEngine.Utilities;
 using RaptorLoggerEngine.Utilities.Extensions;
 using Google.Apis.Sheets.v4.Data;
+using RLE.Core.Enums;
 
 namespace RaptorLoggerEngine.Tests.Utilities.HeaderHelperTests;
 

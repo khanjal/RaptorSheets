@@ -4,6 +4,7 @@ using RaptorLoggerEngine.Models;
 using RaptorLoggerEngine.Utilities;
 using RaptorLoggerEngine.Utilities.Extensions;
 using RLE.Core.Entities;
+using RLE.Core.Enums;
 
 namespace RaptorLoggerEngine.Mappers
 {

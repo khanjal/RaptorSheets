@@ -5,6 +5,7 @@ using RaptorLoggerEngine.Models;
 using RaptorLoggerEngine.Utilities.Extensions;
 using Google.Apis.Sheets.v4.Data;
 using RLE.Core.Entities;
+using RLE.Core.Enums;
 
 namespace RaptorLoggerEngine.Utilities;
 

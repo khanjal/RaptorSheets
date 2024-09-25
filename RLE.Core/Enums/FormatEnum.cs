@@ -1,4 +1,4 @@
-namespace RaptorLoggerEngine.Enums;
+namespace RLE.Core.Enums;
 
 public enum FormatEnum
 {

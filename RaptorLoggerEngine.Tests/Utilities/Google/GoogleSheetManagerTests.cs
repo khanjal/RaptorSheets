@@ -5,6 +5,7 @@ using RaptorLoggerEngine.Utilities.Extensions;
 using RaptorLoggerEngine.Utilities.Google;
 using Moq;
 using RLE.Core.Entities;
+using RLE.Core.Enums;
 
 namespace RaptorLoggerEngine.Tests.Utilities.Google;
 
