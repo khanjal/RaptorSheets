@@ -15,7 +15,7 @@ public static class GenerateSheetHelper
     private static BatchUpdateSpreadsheetRequest? _batchUpdateSpreadsheetRequest;
     private static List<RepeatCellRequest>? _repeatCellRequests;
 
-    public static BatchUpdateSpreadsheetRequest Generate(List<SheetEnum> sheets)
+    public static BatchUpdateSpreadsheetRequest Generate(List<GigSheetEnum> sheets)
     {
         _batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
         _batchUpdateSpreadsheetRequest.Requests = [];
@@ -43,23 +43,23 @@ public static class GenerateSheetHelper
         return _batchUpdateSpreadsheetRequest;
     }
 
-    private static SheetModel GetSheetModel(SheetEnum sheetEnum)
+    private static SheetModel GetSheetModel(GigSheetEnum sheetEnum)
     {
         return sheetEnum switch
         {
-            SheetEnum.ADDRESSES => AddressMapper.GetSheet(),
-            SheetEnum.DAILY => DailyMapper.GetSheet(),
-            SheetEnum.MONTHLY => MonthlyMapper.GetSheet(),
-            SheetEnum.NAMES => NameMapper.GetSheet(),
-            SheetEnum.PLACES => PlaceMapper.GetSheet(),
-            SheetEnum.REGIONS => RegionMapper.GetSheet(),
-            SheetEnum.SERVICES => ServiceMapper.GetSheet(),
-            SheetEnum.SHIFTS => ShiftMapper.GetSheet(),
-            SheetEnum.TRIPS => TripMapper.GetSheet(),
-            SheetEnum.TYPES => TypeMapper.GetSheet(),
-            SheetEnum.WEEKDAYS => WeekdayMapper.GetSheet(),
-            SheetEnum.WEEKLY => WeeklyMapper.GetSheet(),
-            SheetEnum.YEARLY => YearlyMapper.GetSheet(),
+            GigSheetEnum.ADDRESSES => AddressMapper.GetSheet(),
+            GigSheetEnum.DAILY => DailyMapper.GetSheet(),
+            GigSheetEnum.MONTHLY => MonthlyMapper.GetSheet(),
+            GigSheetEnum.NAMES => NameMapper.GetSheet(),
+            GigSheetEnum.PLACES => PlaceMapper.GetSheet(),
+            GigSheetEnum.REGIONS => RegionMapper.GetSheet(),
+            GigSheetEnum.SERVICES => ServiceMapper.GetSheet(),
+            GigSheetEnum.SHIFTS => ShiftMapper.GetSheet(),
+            GigSheetEnum.TRIPS => TripMapper.GetSheet(),
+            GigSheetEnum.TYPES => TypeMapper.GetSheet(),
+            GigSheetEnum.WEEKDAYS => WeekdayMapper.GetSheet(),
+            GigSheetEnum.WEEKLY => WeeklyMapper.GetSheet(),
+            GigSheetEnum.YEARLY => YearlyMapper.GetSheet(),
             _ => throw new NotImplementedException(),
         };
     }

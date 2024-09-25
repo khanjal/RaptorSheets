@@ -33,34 +33,34 @@ namespace RLE.Gig.Mappers
                 ShiftEntity shift = new()
                 {
                     Id = id,
-                    Key = HeaderHelper.GetStringValue(HeaderEnum.KEY.DisplayName(), value, headers),
-                    Date = HeaderHelper.GetStringValue(HeaderEnum.DATE.DisplayName(), value, headers),
-                    Start = HeaderHelper.GetStringValue(HeaderEnum.TIME_START.DisplayName(), value, headers),
-                    Finish = HeaderHelper.GetStringValue(HeaderEnum.TIME_END.DisplayName(), value, headers),
-                    Service = HeaderHelper.GetStringValue(HeaderEnum.SERVICE.DisplayName(), value, headers),
-                    Number = HeaderHelper.GetIntValue(HeaderEnum.NUMBER.DisplayName(), value, headers),
-                    Active = HeaderHelper.GetStringValue(HeaderEnum.TIME_ACTIVE.DisplayName(), value, headers),
-                    Time = HeaderHelper.GetStringValue(HeaderEnum.TIME_TOTAL.DisplayName(), value, headers),
-                    Trips = HeaderHelper.GetIntValue(HeaderEnum.TRIPS.DisplayName(), value, headers),
-                    Distance = HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), value, headers),
-                    Omit = HeaderHelper.GetBoolValue(HeaderEnum.TIME_OMIT.DisplayName(), value, headers),
-                    Region = HeaderHelper.GetStringValue(HeaderEnum.REGION.DisplayName(), value, headers),
-                    Note = HeaderHelper.GetStringValue(HeaderEnum.NOTE.DisplayName(), value, headers),
-                    Pay = HeaderHelper.GetDecimalValue(HeaderEnum.PAY.DisplayName(), value, headers),
-                    Tip = HeaderHelper.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), value, headers),
-                    Bonus = HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), value, headers),
-                    Total = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL.DisplayName(), value, headers),
-                    Cash = HeaderHelper.GetDecimalValue(HeaderEnum.CASH.DisplayName(), value, headers),
-                    TotalTrips = HeaderHelper.GetIntValue(HeaderEnum.TOTAL_TRIPS.DisplayName(), value, headers),
-                    TotalDistance = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_DISTANCE.DisplayName(), value, headers),
-                    TotalPay = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_PAY.DisplayName(), value, headers),
-                    TotalTips = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_TIPS.DisplayName(), value, headers),
-                    TotalBonus = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_BONUS.DisplayName(), value, headers),
-                    GrandTotal = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_GRAND.DisplayName(), value, headers),
-                    TotalCash = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_CASH.DisplayName(), value, headers),
-                    AmountPerTime = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_TIME.DisplayName(), value, headers),
-                    AmountPerDistance = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_DISTANCE.DisplayName(), value, headers),
-                    AmountPerTrip = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_TRIP.DisplayName(), value, headers),
+                    Key = HeaderHelper.GetStringValue(HeaderEnum.KEY.GetDescription(), value, headers),
+                    Date = HeaderHelper.GetStringValue(HeaderEnum.DATE.GetDescription(), value, headers),
+                    Start = HeaderHelper.GetStringValue(HeaderEnum.TIME_START.GetDescription(), value, headers),
+                    Finish = HeaderHelper.GetStringValue(HeaderEnum.TIME_END.GetDescription(), value, headers),
+                    Service = HeaderHelper.GetStringValue(HeaderEnum.SERVICE.GetDescription(), value, headers),
+                    Number = HeaderHelper.GetIntValue(HeaderEnum.NUMBER.GetDescription(), value, headers),
+                    Active = HeaderHelper.GetStringValue(HeaderEnum.TIME_ACTIVE.GetDescription(), value, headers),
+                    Time = HeaderHelper.GetStringValue(HeaderEnum.TIME_TOTAL.GetDescription(), value, headers),
+                    Trips = HeaderHelper.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
+                    Distance = HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
+                    Omit = HeaderHelper.GetBoolValue(HeaderEnum.TIME_OMIT.GetDescription(), value, headers),
+                    Region = HeaderHelper.GetStringValue(HeaderEnum.REGION.GetDescription(), value, headers),
+                    Note = HeaderHelper.GetStringValue(HeaderEnum.NOTE.GetDescription(), value, headers),
+                    Pay = HeaderHelper.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
+                    Tip = HeaderHelper.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), value, headers),
+                    Bonus = HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
+                    Total = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
+                    Cash = HeaderHelper.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
+                    TotalTrips = HeaderHelper.GetIntValue(HeaderEnum.TOTAL_TRIPS.GetDescription(), value, headers),
+                    TotalDistance = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_DISTANCE.GetDescription(), value, headers),
+                    TotalPay = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_PAY.GetDescription(), value, headers),
+                    TotalTips = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_TIPS.GetDescription(), value, headers),
+                    TotalBonus = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_BONUS.GetDescription(), value, headers),
+                    GrandTotal = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_GRAND.GetDescription(), value, headers),
+                    TotalCash = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL_CASH.GetDescription(), value, headers),
+                    AmountPerTime = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_TIME.GetDescription(), value, headers),
+                    AmountPerDistance = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), value, headers),
+                    AmountPerTrip = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_TRIP.GetDescription(), value, headers),
                     Saved = true
                 };
 
@@ -145,106 +145,106 @@ namespace RLE.Gig.Mappers
             var sheet = SheetsConfig.ShiftSheet;
 
             var tripSheet = TripMapper.GetSheet();
-            var sheetTripsName = SheetEnum.TRIPS.DisplayName();
-            var sheetTripsTypeRange = tripSheet.Headers.First(x => x.Name == HeaderEnum.TYPE.DisplayName()).Range;
+            var sheetTripsName = GigSheetEnum.TRIPS.GetDescription();
+            var sheetTripsTypeRange = tripSheet.Headers.First(x => x.Name == HeaderEnum.TYPE.GetDescription()).Range;
 
             sheet.Headers = [];
 
             // Date
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.DATE.DisplayName(),
+                Name = HeaderEnum.DATE.GetDescription(),
                 Note = ColumnNotes.DateFormat,
                 Format = FormatEnum.DATE
             });
             var dateRange = sheet.GetLocalRange(HeaderEnum.DATE);
             // Start Time        
-            sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.TIME_START.DisplayName() });
+            sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.TIME_START.GetDescription() });
             // End Time
-            sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.TIME_END.DisplayName() });
+            sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.TIME_END.GetDescription() });
             // Service
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.SERVICE.DisplayName(),
+                Name = HeaderEnum.SERVICE.GetDescription(),
                 Validation = ValidationEnum.RANGE_SERVICE
             });
             // #
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.NUMBER.DisplayName(),
+                Name = HeaderEnum.NUMBER.GetDescription(),
                 Note = ColumnNotes.ShiftNumber
             });
             // Active Time
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TIME_ACTIVE.DisplayName(),
+                Name = HeaderEnum.TIME_ACTIVE.GetDescription(),
                 Note = ColumnNotes.ActiveTime,
                 Format = FormatEnum.DURATION
             });
             // Total Time
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TIME_TOTAL.DisplayName(),
+                Name = HeaderEnum.TIME_TOTAL.GetDescription(),
                 Note = ColumnNotes.TotalTime,
                 Format = FormatEnum.DURATION
             });
             // Omit
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TIME_OMIT.DisplayName(),
+                Name = HeaderEnum.TIME_OMIT.GetDescription(),
                 Note = ColumnNotes.TimeOmit,
                 Validation = ValidationEnum.BOOLEAN
             });
             // Trips
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TRIPS.DisplayName(),
+                Name = HeaderEnum.TRIPS.GetDescription(),
                 Note = ColumnNotes.ShiftTrips
             });
             // Pay
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.PAY.DisplayName(),
+                Name = HeaderEnum.PAY.GetDescription(),
                 Format = FormatEnum.ACCOUNTING
             });
             // Tips
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TIPS.DisplayName(),
+                Name = HeaderEnum.TIPS.GetDescription(),
                 Format = FormatEnum.ACCOUNTING
             });
             // Bonus
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.BONUS.DisplayName(),
+                Name = HeaderEnum.BONUS.GetDescription(),
                 Format = FormatEnum.ACCOUNTING
             });
             // Cash
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.CASH.DisplayName(),
+                Name = HeaderEnum.CASH.GetDescription(),
                 Format = FormatEnum.ACCOUNTING
             });
             // Distance
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.DISTANCE.DisplayName(),
+                Name = HeaderEnum.DISTANCE.GetDescription(),
                 Format = FormatEnum.DISTANCE,
                 Note = ColumnNotes.ShiftDistance
             });
             // Region
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.REGION.DisplayName(),
+                Name = HeaderEnum.REGION.GetDescription(),
                 Validation = ValidationEnum.RANGE_REGION
             });
             // Note
-            sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.NOTE.DisplayName() });
+            sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.NOTE.GetDescription() });
             // Key
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.KEY.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.KEY.DisplayName()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.SERVICE)}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.NUMBER)}), {dateRange} & \"-0-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)}, {dateRange} & \"-\" & {sheet.GetLocalRange(HeaderEnum.NUMBER)} & \"-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)})))",
+                Name = HeaderEnum.KEY.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.KEY.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.SERVICE)}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.NUMBER)}), {dateRange} & \"-0-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)}, {dateRange} & \"-\" & {sheet.GetLocalRange(HeaderEnum.NUMBER)} & \"-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)})))",
                 Note = ColumnNotes.ShiftKey
             });
 
@@ -253,114 +253,114 @@ namespace RLE.Gig.Mappers
             // T Active
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TOTAL_TIME_ACTIVE.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TIME_ACTIVE.DisplayName()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TIME_ACTIVE)}),SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.DURATION)}),{sheet.GetLocalRange(HeaderEnum.TIME_ACTIVE)})))",
+                Name = HeaderEnum.TOTAL_TIME_ACTIVE.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TIME_ACTIVE.GetDescription()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TIME_ACTIVE)}),SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.DURATION)}),{sheet.GetLocalRange(HeaderEnum.TIME_ACTIVE)})))",
                 Note = ColumnNotes.TotalTimeActive,
                 Format = FormatEnum.DURATION
             });
             // T Time
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TOTAL_TIME.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TIME.DisplayName()}\",ISBLANK({dateRange}), \"\",true,IF({sheet.GetLocalRange(HeaderEnum.TIME_OMIT)}=false,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TIME_TOTAL)}),{sheet.GetLocalRange(HeaderEnum.TOTAL_TIME_ACTIVE)},{sheet.GetLocalRange(HeaderEnum.TIME_TOTAL)}),0)))",
+                Name = HeaderEnum.TOTAL_TIME.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TIME.GetDescription()}\",ISBLANK({dateRange}), \"\",true,IF({sheet.GetLocalRange(HeaderEnum.TIME_OMIT)}=false,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TIME_TOTAL)}),{sheet.GetLocalRange(HeaderEnum.TOTAL_TIME_ACTIVE)},{sheet.GetLocalRange(HeaderEnum.TIME_TOTAL)}),0)))",
                 Format = FormatEnum.DURATION
             });
             // T Trips
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TOTAL_TRIPS.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TRIPS.DisplayName()}\",ISBLANK({dateRange}), \"\",true, {sheet.GetLocalRange(HeaderEnum.TRIPS)} + COUNTIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange})))",
+                Name = HeaderEnum.TOTAL_TRIPS.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TRIPS.GetDescription()}\",ISBLANK({dateRange}), \"\",true, {sheet.GetLocalRange(HeaderEnum.TRIPS)} + COUNTIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange})))",
                 Note = ColumnNotes.TotalTrips,
                 Format = FormatEnum.NUMBER
             });
             // T Pay
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TOTAL_PAY.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_PAY.DisplayName()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.PAY)} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.PAY)})))",
+                Name = HeaderEnum.TOTAL_PAY.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_PAY.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.PAY)} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.PAY)})))",
                 Format = FormatEnum.ACCOUNTING
             });
             // T Tips
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TOTAL_TIPS.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TIPS.DisplayName()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.TIPS)} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.TIPS)})))",
+                Name = HeaderEnum.TOTAL_TIPS.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TIPS.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.TIPS)} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.TIPS)})))",
                 Format = FormatEnum.ACCOUNTING
             });
             // T Bonus
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TOTAL_BONUS.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_BONUS.DisplayName()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.BONUS)} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.BONUS)})))",
+                Name = HeaderEnum.TOTAL_BONUS.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_BONUS.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.BONUS)} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.BONUS)})))",
                 Format = FormatEnum.ACCOUNTING
             });
             // G Total
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TOTAL_GRAND.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_GRAND.DisplayName()}\",ISBLANK({dateRange}), \"\",true, {sheet.GetLocalRange(HeaderEnum.TOTAL_PAY)}+{sheet.GetLocalRange(HeaderEnum.TOTAL_TIPS)}+{sheet.GetLocalRange(HeaderEnum.TOTAL_BONUS)}))",
+                Name = HeaderEnum.TOTAL_GRAND.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_GRAND.GetDescription()}\",ISBLANK({dateRange}), \"\",true, {sheet.GetLocalRange(HeaderEnum.TOTAL_PAY)}+{sheet.GetLocalRange(HeaderEnum.TOTAL_TIPS)}+{sheet.GetLocalRange(HeaderEnum.TOTAL_BONUS)}))",
                 Format = FormatEnum.ACCOUNTING
             });
             // T Cash
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TOTAL_CASH.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_CASH.DisplayName()}\",ISBLANK({dateRange}), \"\",true,SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.CASH)})))",
+                Name = HeaderEnum.TOTAL_CASH.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_CASH.GetDescription()}\",ISBLANK({dateRange}), \"\",true,SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.CASH)})))",
                 Format = FormatEnum.ACCOUNTING
             });
             // Amt/Trip
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.AMOUNT_PER_TRIP.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_TRIP.DisplayName()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS)}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND)}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS)}=0,1,{sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS)}))))",
+                Name = HeaderEnum.AMOUNT_PER_TRIP.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_TRIP.GetDescription()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS)}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND)}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS)}=0,1,{sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS)}))))",
                 Format = FormatEnum.ACCOUNTING
             });
             // Amt/Time
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.AMOUNT_PER_TIME.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_TIME.DisplayName()}\",ISBLANK({dateRange}), \"\", true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND)}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}=0,1,({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}*24)))))",
+                Name = HeaderEnum.AMOUNT_PER_TIME.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_TIME.GetDescription()}\",ISBLANK({dateRange}), \"\", true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND)}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}=0,1,({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}*24)))))",
                 Format = FormatEnum.ACCOUNTING
             });
             // T Dist
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TOTAL_DISTANCE.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_DISTANCE.DisplayName()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.DISTANCE)} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.DISTANCE)})))",
+                Name = HeaderEnum.TOTAL_DISTANCE.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_DISTANCE.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.DISTANCE)} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY)},{keyRange},{tripSheet.GetRange(HeaderEnum.DISTANCE)})))",
                 Note = ColumnNotes.TotalDistance,
                 Format = FormatEnum.DISTANCE
             });
             // Amt/Dist
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.AMOUNT_PER_DISTANCE.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_DISTANCE.DisplayName()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND)}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND)}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_DISTANCE)}=0,1,{sheet.GetLocalRange(HeaderEnum.TOTAL_DISTANCE)}))))",
+                Name = HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND)}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND)}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_DISTANCE)}=0,1,{sheet.GetLocalRange(HeaderEnum.TOTAL_DISTANCE)}))))",
                 Format = FormatEnum.ACCOUNTING
             });
             // Trips/Hour
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.TRIPS_PER_HOUR.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TRIPS_PER_HOUR.DisplayName()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}), \"\", ({sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS)}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}=0,1,({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}*24))))))",
+                Name = HeaderEnum.TRIPS_PER_HOUR.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TRIPS_PER_HOUR.GetDescription()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}), \"\", ({sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS)}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}=0,1,({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME)}*24))))))",
                 Format = FormatEnum.DISTANCE
             });
             // Day
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.DAY.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.DAY.DisplayName()}\",ISBLANK({dateRange}), \"\",true,DAY({dateRange})))"
+                Name = HeaderEnum.DAY.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.DAY.GetDescription()}\",ISBLANK({dateRange}), \"\",true,DAY({dateRange})))"
             });
             // Month
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.MONTH.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.MONTH.DisplayName()}\",ISBLANK({dateRange}), \"\",true,MONTH({dateRange})))"
+                Name = HeaderEnum.MONTH.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.MONTH.GetDescription()}\",ISBLANK({dateRange}), \"\",true,MONTH({dateRange})))"
             });
             // Year
             sheet.Headers.AddColumn(new SheetCellModel
             {
-                Name = HeaderEnum.YEAR.DisplayName(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.YEAR.DisplayName()}\",ISBLANK({dateRange}), \"\",true,YEAR({dateRange})))"
+                Name = HeaderEnum.YEAR.GetDescription(),
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.YEAR.GetDescription()}\",ISBLANK({dateRange}), \"\",true,YEAR({dateRange})))"
             });
 
             return sheet;

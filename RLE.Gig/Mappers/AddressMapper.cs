@@ -34,14 +34,14 @@ public static class AddressMapper
             AddressEntity address = new()
             {
                 Id = id,
-                Address = HeaderHelper.GetStringValue(HeaderEnum.ADDRESS.DisplayName(), value, headers),
-                Visits = HeaderHelper.GetIntValue(HeaderEnum.TRIPS.DisplayName(), value, headers),
-                Pay = HeaderHelper.GetDecimalValue(HeaderEnum.PAY.DisplayName(), value, headers),
-                Tip = HeaderHelper.GetDecimalValue(HeaderEnum.TIP.DisplayName(), value, headers),
-                Bonus = HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), value, headers),
-                Total = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL.DisplayName(), value, headers),
-                Cash = HeaderHelper.GetDecimalValue(HeaderEnum.CASH.DisplayName(), value, headers),
-                Distance = HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), value, headers),
+                Address = HeaderHelper.GetStringValue(HeaderEnum.ADDRESS.GetDescription(), value, headers),
+                Visits = HeaderHelper.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
+                Pay = HeaderHelper.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
+                Tip = HeaderHelper.GetDecimalValue(HeaderEnum.TIP.GetDescription(), value, headers),
+                Bonus = HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
+                Total = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
+                Cash = HeaderHelper.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
+                Distance = HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
             };
 
             addresses.Add(address);

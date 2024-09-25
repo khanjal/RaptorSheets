@@ -12,7 +12,7 @@ public static class EnumExtensions
     private static readonly
         ConcurrentDictionary<string, string> DisplayNameCache = new();
 
-    public static string DisplayName(this Enum value)
+    public static string GetDescription(this Enum value)
     {
         var key = $"{value.GetType().FullName}.{value}";
 
@@ -32,7 +32,7 @@ public static class EnumExtensions
 
     public static string UpperName(this Enum value)
     {
-        return value.DisplayName().ToUpper();
+        return value.GetDescription().ToUpper();
     }
 
     public static T? GetValueFromName<T>(this string name) where T : Enum

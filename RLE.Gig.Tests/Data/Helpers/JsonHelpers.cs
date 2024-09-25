@@ -7,11 +7,11 @@ namespace RLE.Gig.Tests.Data.Helpers;
 
 internal class JsonHelpers
 {
-    internal static SheetEntity? LoadSheetJson()
+    internal static GigSheetEntity? LoadSheetJson()
     {
         using StreamReader reader = new($"./Data/Json/ShiftWithTrips.json");
         var json = reader.ReadToEnd();
-        var sheetData = JsonConvert.DeserializeObject<SheetEntity>(json);
+        var sheetData = JsonConvert.DeserializeObject<GigSheetEntity>(json);
 
         return sheetData;
     }

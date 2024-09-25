@@ -14,7 +14,7 @@ public class GoogleSheetServiceTests
     private readonly string? _spreadsheetId;
     private readonly Dictionary<string, string> _credential;
     private readonly GoogleSheetService _googleSheetService;
-    private readonly List<SheetEnum> _sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+    private readonly List<GigSheetEnum> _sheets = Enum.GetValues(typeof(GigSheetEnum)).Cast<GigSheetEnum>().ToList();
 
     public GoogleSheetServiceTests()
     {
@@ -27,10 +27,10 @@ public class GoogleSheetServiceTests
     [Fact]
     public async Task GivenGetAllData_ThenReturnInfo()
     {
-        var result = await _googleSheetService.GetBatchData(_sheets);
+        var result = await _googleSheetService.GetBatchData(_sheets.Select(x => x.GetDescription()).ToList());
         result.Should().NotBeNull();
         result!.ValueRanges.Should().NotBeNull();
-        result!.ValueRanges.Should().HaveCount(Enum.GetNames(typeof(SheetEnum)).Length);
+        result!.ValueRanges.Should().HaveCount(Enum.GetNames(typeof(GigSheetEnum)).Length);
 
         var sheet = SheetHelper.MapData(result!);
 
@@ -43,7 +43,7 @@ public class GoogleSheetServiceTests
     public async Task GivenGetAllData_WithInvalidSpreadsheetId_ReturnException()
     {
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
-        var result = await googleSheetService.GetBatchData(_sheets);
+        var result = await googleSheetService.GetBatchData(_sheets.Select(x => x.GetDescription()).ToList());
         result.Should().BeNull();
     }
 
@@ -51,9 +51,9 @@ public class GoogleSheetServiceTests
     public async Task GivenGetSheetData_WithValidSheetId_ThenReturnInfo()
     {
         var random = new Random();
-        var randomEnum = random.NextEnum<SheetEnum>();
+        var randomEnum = random.NextEnum<GigSheetEnum>();
 
-        var result = await _googleSheetService.GetSheetData(randomEnum);
+        var result = await _googleSheetService.GetSheetData(randomEnum.GetDescription());
         result.Should().NotBeNull();
         result!.Values.Should().NotBeNull();
 
@@ -64,7 +64,7 @@ public class GoogleSheetServiceTests
     public async Task GivenGetSheetData_WithInvalidSpreadsheetId_ReturnNull()
     {
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
-        var result = await googleSheetService.GetSheetData(new SheetEnum());
+        var result = await googleSheetService.GetSheetData(new GigSheetEnum().GetDescription());
         result.Should().BeNull();
     }
 

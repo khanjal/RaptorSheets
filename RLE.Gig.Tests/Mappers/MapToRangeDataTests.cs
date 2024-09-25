@@ -10,7 +10,7 @@ namespace RLE.Gig.Tests.Mappers;
 
 public class MapToRangeDataTests
 {
-    private static SheetEntity? _sheetData;
+    private static GigSheetEntity? _sheetData;
 
     public MapToRangeDataTests()
     {
@@ -34,25 +34,25 @@ public class MapToRangeDataTests
             var shiftData = _sheetData.Shifts[i];
 
 #pragma warning disable CS8602 // Rethrow to preserve stack details
-            shiftData.Date.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.DATE.DisplayName())].ToString());
-            shiftData.Start.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_START.DisplayName())].ToString());
-            shiftData.Finish.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_END.DisplayName())].ToString());
-            shiftData.Service.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.SERVICE.DisplayName())].ToString());
-            shiftData.Active.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_ACTIVE.DisplayName())].ToString());
-            shiftData.Time.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_TOTAL.DisplayName())].ToString());
-            shiftData.Region.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.REGION.DisplayName())].ToString());
-            shiftData.Note.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.NOTE.DisplayName())].ToString());
+            shiftData.Date.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.DATE.GetDescription())].ToString());
+            shiftData.Start.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_START.GetDescription())].ToString());
+            shiftData.Finish.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_END.GetDescription())].ToString());
+            shiftData.Service.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.SERVICE.GetDescription())].ToString());
+            shiftData.Active.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_ACTIVE.GetDescription())].ToString());
+            shiftData.Time.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_TOTAL.GetDescription())].ToString());
+            shiftData.Region.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.REGION.GetDescription())].ToString());
+            shiftData.Note.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.NOTE.GetDescription())].ToString());
 #pragma warning restore CS8602 // Rethrow to preserve stack details
 
             if (shiftData.Number == null)
-                HeaderHelper.GetIntValue(HeaderEnum.NUMBER.DisplayName(), shift!, headers).Should().Be(0);
+                HeaderHelper.GetIntValue(HeaderEnum.NUMBER.GetDescription(), shift!, headers).Should().Be(0);
             else
-                shiftData.Number.Should().Be(HeaderHelper.GetIntValue(HeaderEnum.NUMBER.DisplayName(), shift!, headers));
+                shiftData.Number.Should().Be(HeaderHelper.GetIntValue(HeaderEnum.NUMBER.GetDescription(), shift!, headers));
 
             if (shiftData.Omit == null)
-                HeaderHelper.GetBoolValue(HeaderEnum.TIME_OMIT.DisplayName(), shift!, headers).Should().Be(false);
+                HeaderHelper.GetBoolValue(HeaderEnum.TIME_OMIT.GetDescription(), shift!, headers).Should().Be(false);
             else
-                shiftData.Omit.Should().Be(HeaderHelper.GetBoolValue(HeaderEnum.TIME_OMIT.DisplayName(), shift!, headers));
+                shiftData.Omit.Should().Be(HeaderHelper.GetBoolValue(HeaderEnum.TIME_OMIT.GetDescription(), shift!, headers));
 
             // TODO: Future support of shift only would use this.
             //shiftData.Pay.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.PAY.DisplayName(), shift, headers));
@@ -80,67 +80,67 @@ public class MapToRangeDataTests
             var tripData = _sheetData.Trips[i];
 
 #pragma warning disable CS8602 // Rethrow to preserve stack details
-            tripData.Date.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.DATE.DisplayName())].ToString());
-            tripData.Service.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.SERVICE.DisplayName())].ToString());
-            tripData.Place.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.PLACE.DisplayName())].ToString());
-            tripData.Pickup.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.PICKUP.DisplayName())].ToString());
-            tripData.Dropoff.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.DROPOFF.DisplayName())].ToString());
-            tripData.Duration.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.DURATION.DisplayName())].ToString());
-            tripData.Name.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.NAME.DisplayName())].ToString());
-            tripData.StartAddress.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.ADDRESS_START.DisplayName())].ToString());
-            tripData.EndAddress.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.ADDRESS_END.DisplayName())].ToString());
-            tripData.EndUnit.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.UNIT_END.DisplayName())].ToString());
-            tripData.OrderNumber.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.ORDER_NUMBER.DisplayName())].ToString());
-            tripData.Note.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.NOTE.DisplayName())].ToString());
+            tripData.Date.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.DATE.GetDescription())].ToString());
+            tripData.Service.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.SERVICE.GetDescription())].ToString());
+            tripData.Place.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.PLACE.GetDescription())].ToString());
+            tripData.Pickup.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.PICKUP.GetDescription())].ToString());
+            tripData.Dropoff.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.DROPOFF.GetDescription())].ToString());
+            tripData.Duration.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.DURATION.GetDescription())].ToString());
+            tripData.Name.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.NAME.GetDescription())].ToString());
+            tripData.StartAddress.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.ADDRESS_START.GetDescription())].ToString());
+            tripData.EndAddress.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.ADDRESS_END.GetDescription())].ToString());
+            tripData.EndUnit.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.UNIT_END.GetDescription())].ToString());
+            tripData.OrderNumber.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.ORDER_NUMBER.GetDescription())].ToString());
+            tripData.Note.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.NOTE.GetDescription())].ToString());
 #pragma warning restore CS8602 // Rethrow to preserve stack details
 
             // Number
             if (tripData.Number == null)
-                HeaderHelper.GetIntValue(HeaderEnum.NUMBER.DisplayName(), trip!, headers).Should().Be(0);
+                HeaderHelper.GetIntValue(HeaderEnum.NUMBER.GetDescription(), trip!, headers).Should().Be(0);
             else
-                tripData.Number.Should().Be(HeaderHelper.GetIntValue(HeaderEnum.NUMBER.DisplayName(), trip!, headers));
+                tripData.Number.Should().Be(HeaderHelper.GetIntValue(HeaderEnum.NUMBER.GetDescription(), trip!, headers));
 
             // Odometer Start
             if (tripData.OdometerStart == null)
-                HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_START.DisplayName(), trip!, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), trip!, headers).Should().Be(0);
             else
-                tripData.OdometerStart.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_START.DisplayName(), trip!, headers));
+                tripData.OdometerStart.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), trip!, headers));
 
             // Odoemeter End
             if (tripData.OdometerEnd == null)
-                HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_END.DisplayName(), trip!, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_END.GetDescription(), trip!, headers).Should().Be(0);
             else
-                tripData.OdometerEnd.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_START.DisplayName(), trip!, headers));
+                tripData.OdometerEnd.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), trip!, headers));
 
             // Distance
             if (tripData.Distance == null)
-                HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), trip!, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), trip!, headers).Should().Be(0);
             else
-                tripData.Distance.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.DisplayName(), trip!, headers));
+                tripData.Distance.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), trip!, headers));
 
             // Pay
             if (tripData.Pay == null)
-                HeaderHelper.GetDecimalValue(HeaderEnum.PAY.DisplayName(), trip!, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.PAY.GetDescription(), trip!, headers).Should().Be(0);
             else
-                tripData.Pay.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.PAY.DisplayName(), trip!, headers));
+                tripData.Pay.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.PAY.GetDescription(), trip!, headers));
 
             // Tip
             if (tripData.Tip == null)
-                HeaderHelper.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), trip!, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), trip!, headers).Should().Be(0);
             else
-                tripData.Tip.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), trip!, headers));
+                tripData.Tip.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), trip!, headers));
 
             // Bonus
             if (tripData.Bonus == null)
-                HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), trip!, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), trip!, headers).Should().Be(0);
             else
-                tripData.Bonus.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), trip!, headers));
+                tripData.Bonus.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), trip!, headers));
 
             // Cash
             if (tripData.Cash == null)
-                HeaderHelper.GetDecimalValue(HeaderEnum.CASH.DisplayName(), trip!, headers).Should().Be(0);
+                HeaderHelper.GetDecimalValue(HeaderEnum.CASH.GetDescription(), trip!, headers).Should().Be(0);
             else
-                tripData.Cash.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.CASH.DisplayName(), trip!, headers));
+                tripData.Cash.Should().Be(HeaderHelper.GetDecimalValue(HeaderEnum.CASH.GetDescription(), trip!, headers));
         }
     }
 }

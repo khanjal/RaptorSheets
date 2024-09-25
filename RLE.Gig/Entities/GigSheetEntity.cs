@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace RLE.Core.Entities;
 
-public class SheetEntity
+public class GigSheetEntity
 {
     [JsonPropertyName("properties")]
     public PropertyEntity Properties { get; set; } = new();

@@ -9,7 +9,7 @@ public class EnumExtensionsTests
     [Fact]
     public void GivenDescriptionEnum_ShouldReturnDescription()
     {
-        string result = TestEnum.TESTING.DisplayName();
+        string result = TestEnum.TESTING.GetDescription();
 
         result.Should().Be("Testing");
     }
@@ -17,7 +17,7 @@ public class EnumExtensionsTests
     [Fact]
     public void GivenNoDescriptionEnum_ShouldReturnValueAsDescription()
     {
-        string result = TestEnum.NO_DESCRIPTION_TEST.DisplayName();
+        string result = TestEnum.NO_DESCRIPTION_TEST.GetDescription();
 
         result.Should().Be("NO_DESCRIPTION_TEST");
     }

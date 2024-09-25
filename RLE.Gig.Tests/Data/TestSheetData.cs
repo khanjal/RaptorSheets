@@ -16,14 +16,14 @@ public class TestSheetData
 
         sheet.Headers.AddColumn(new SheetCellModel
         {
-            Name = HeaderEnum.WEEK.DisplayName(),
+            Name = HeaderEnum.WEEK.GetDescription(),
             Formula = "Formula",
             Format = FormatEnum.TEXT
         });
 
         sheet.Headers.AddColumn(new SheetCellModel
         {
-            Name = HeaderEnum.DATE.DisplayName(),
+            Name = HeaderEnum.DATE.GetDescription(),
             Formula = "None",
             Format = FormatEnum.NUMBER
         });

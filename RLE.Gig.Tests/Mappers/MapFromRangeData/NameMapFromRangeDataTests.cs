@@ -18,7 +18,7 @@ public class NameMapFromRangeDataTests
     public NameMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.NAMES.DisplayName()).First().ValueRange.Values;
+        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == GigSheetEnum.NAMES.GetDescription()).First().ValueRange.Values;
         _entities = NameMapper.MapFromRangeData(_values!);
     }
 

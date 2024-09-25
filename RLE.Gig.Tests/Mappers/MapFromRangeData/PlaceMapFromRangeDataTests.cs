@@ -18,7 +18,7 @@ public class PlaceMapFromRangeDataTests
     public PlaceMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.PLACES.DisplayName()).First().ValueRange.Values;
+        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == GigSheetEnum.PLACES.GetDescription()).First().ValueRange.Values;
         _entities = PlaceMapper.MapFromRangeData(_values!);
     }
 

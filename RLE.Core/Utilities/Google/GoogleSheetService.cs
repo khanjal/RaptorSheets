@@ -4,8 +4,6 @@ using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
-using RLE.Core.Utilities.Extensions;
-using RLE.Gig.Enums;
 
 namespace RLE.Gig.Utilities.Google;
 
@@ -13,8 +11,8 @@ public interface IGoogleSheetService
 {
     public Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range);
     public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
-    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<SheetEnum> sheets, string? range);
-    public Task<ValueRange?> GetSheetData(SheetEnum sheetEnum);
+    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range);
+    public Task<ValueRange?> GetSheetData(string sheet);
     public Task<Spreadsheet?> GetSheetInfo();
 }
 
@@ -92,7 +90,7 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<SheetEnum> sheets, string? range = "")
+    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range = "")
     {
         if (sheets == null || sheets.Count < 1)
         {
@@ -108,7 +106,7 @@ public class GoogleSheetService : IGoogleSheetService
         {
             var filter = new DataFilter
             {
-                A1Range = !string.IsNullOrWhiteSpace(range) ? $"{sheet.DisplayName()}!{range}" : sheet.DisplayName()
+                A1Range = !string.IsNullOrWhiteSpace(range) ? $"{sheet}!{range}" : sheet
             };
             body.DataFilters.Add(filter);
         }
@@ -127,11 +125,11 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<ValueRange?> GetSheetData(SheetEnum sheetEnum)
+    public async Task<ValueRange?> GetSheetData(string sheet)
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.Values.Get(_spreadsheetId, $"{sheetEnum.DisplayName()}!{_range}");
+            var request = _sheetsService.Spreadsheets.Values.Get(_spreadsheetId, $"{sheet}!{_range}");
             var response = await request.ExecuteAsync();
 
             return response;

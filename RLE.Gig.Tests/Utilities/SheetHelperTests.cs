@@ -113,6 +113,6 @@ public class SheetHelperTests
 
         var spreadsheetSheets = SheetHelper.GetSpreadsheetSheets(spreadsheet!);
         spreadsheetSheets.Should().NotBeNull();
-        spreadsheetSheets.Count.Should().Be(Enum.GetNames(typeof(SheetEnum)).Length);
+        spreadsheetSheets.Count.Should().Be(Enum.GetNames(typeof(GigSheetEnum)).Length);
     }
 }
