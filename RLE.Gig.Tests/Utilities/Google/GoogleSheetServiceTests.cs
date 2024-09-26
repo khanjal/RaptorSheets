@@ -3,9 +3,9 @@ using Google.Apis.Sheets.v4.Data;
 using Moq;
 using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Enums;
-using RLE.Gig.Utilities.Google;
 using RLE.Gig.Utilities;
 using RLE.Gig.Tests.Data.Helpers;
+using RLE.Core.Utilities.Google;
 
 namespace RLE.Gig.Tests.Utilities.Google;
 

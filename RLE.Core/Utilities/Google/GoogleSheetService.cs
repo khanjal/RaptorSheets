@@ -1,11 +1,11 @@
-﻿using RaptorLoggerEngine.Constants;
-using Google.Apis.Auth.OAuth2;
+﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
+using RLE.Core.Constants;
 
-namespace RLE.Gig.Utilities.Google;
+namespace RLE.Core.Utilities.Google;
 
 public interface IGoogleSheetService
 {

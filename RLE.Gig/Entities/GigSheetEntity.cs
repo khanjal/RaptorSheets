@@ -1,6 +1,7 @@
+using RLE.Core.Entities;
 using System.Text.Json.Serialization;
 
-namespace RLE.Core.Entities;
+namespace RLE.Gig.Entities;
 
 public class GigSheetEntity
 {

@@ -1,11 +1,11 @@
 ﻿using FluentAssertions;
 using Moq;
-using RLE.Core.Entities;
 using RLE.Core.Enums;
 using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Enums;
 using RLE.Gig.Utilities.Google;
 using RLE.Gig.Tests.Data.Helpers;
+using RLE.Gig.Entities;
 
 namespace RLE.Gig.Tests.Utilities.Google;
 

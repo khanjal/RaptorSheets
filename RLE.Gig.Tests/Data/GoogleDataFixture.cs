@@ -1,8 +1,8 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using RLE.Core.Utilities.Extensions;
+using RLE.Core.Utilities.Google;
 using RLE.Gig.Enums;
 using RLE.Gig.Tests.Data.Helpers;
-using RLE.Gig.Utilities.Google;
 
 namespace RLE.Gig.Tests.Data;
 

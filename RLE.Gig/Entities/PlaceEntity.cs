@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace RLE.Core.Entities;
+namespace RLE.Gig.Entities;
 
 public class PlaceEntity : AmountEntity
 {

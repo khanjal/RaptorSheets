@@ -1,7 +1,7 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using Newtonsoft.Json;
-using RLE.Core.Entities;
 using RLE.Core.Models.Google;
+using RLE.Gig.Entities;
 
 namespace RLE.Gig.Tests.Data.Helpers;
 
