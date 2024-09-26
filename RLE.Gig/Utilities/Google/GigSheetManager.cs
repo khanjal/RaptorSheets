@@ -6,21 +6,18 @@ using RLE.Core.Utilities.Extensions;
 using RLE.Core.Utilities;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
+using RLE.Core.Interfaces;
 
 namespace RLE.Gig.Utilities.Google;
 
-public interface IGigSheetManager
+public interface IGigSheetManager : ISheetManager
 {
     public Task<GigSheetEntity> AddSheetData(List<GigSheetEnum> sheets, GigSheetEntity sheetEntity);
-    public Task<List<MessageEntity>> CheckSheets();
-    public Task<List<MessageEntity>> CheckSheets(bool checkHeaders);
-    public Task<List<MessageEntity>> CheckSheetHeaders(List<GigSheetEnum> sheets);
     public Task<GigSheetEntity> CreateSheets();
     public Task<GigSheetEntity> CreateSheets(List<GigSheetEnum> sheets);
     public Task<GigSheetEntity> GetSheet(string sheet);
     public Task<GigSheetEntity> GetSheets();
     public Task<GigSheetEntity> GetSheets(List<GigSheetEnum> sheets);
-    public Task<string?> GetSpreadsheetName();
 }
 
 public class GigSheetManager : IGigSheetManager
@@ -130,17 +127,17 @@ public class GigSheetManager : IGigSheetManager
         if (!checkHeaders)
             return messages;
 
-        messages.AddRange(await CheckSheetHeaders(sheets));
+        messages.AddRange(await CheckSheetHeaders(sheets.Select(x => x.GetDescription()).ToList()));
 
         return messages;
     }
 
-    public async Task<List<MessageEntity>> CheckSheetHeaders(List<GigSheetEnum> sheets)
+    public async Task<List<MessageEntity>> CheckSheetHeaders(List<string> sheets)
     {
         var messages = new List<MessageEntity>();
         // Get sheet headers
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
-        var batchDataResponse = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList(), GoogleConfig.HeaderRange);
+        var batchDataResponse = await _googleSheetService.GetBatchData(sheets, GoogleConfig.HeaderRange);
 
         if (batchDataResponse == null)
         {
