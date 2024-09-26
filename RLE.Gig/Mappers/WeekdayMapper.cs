@@ -63,7 +63,7 @@ namespace RLE.Gig.Mappers
 
             var dailySheet = DailyMapper.GetSheet();
 
-            sheet.Headers = SheetHelper.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.DAY);
+            sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.DAY);
             var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.DAY);
 
             // Curr Amt

@@ -15,7 +15,7 @@ public class SheetHelperTests
     [InlineData(701, "ZZ")]
     public void GivenNumber_ThenReturnColumnLetter(int index, string column)
     {
-        string result = SheetHelper.GetColumnName(index);
+        string result = SheetHelpers.GetColumnName(index);
 
         result.Should().Be(column);
     }
@@ -41,7 +41,7 @@ public class SheetHelperTests
     [InlineData(ColorEnum.YELLOW)]
     public void GivenColorEnum_ThenReturnColor(ColorEnum color)
     {
-        var result = SheetHelper.GetColor(color);
+        var result = SheetHelpers.GetColor(color);
 
         result.Should().NotBeNull();
     }
@@ -49,7 +49,7 @@ public class SheetHelperTests
     [Fact]
     public void GivenGetSheets_ThenReturnSheets()
     {
-        var sheets = SheetHelper.GetSheets();
+        var sheets = GigSheetHelpers.GetSheets();
 
         sheets.Should().NotBeNull();
         sheets.Count.Should().Be(2);
@@ -68,7 +68,7 @@ public class SheetHelperTests
         var headerName = new SheetCellModel { Name = "Name" };
         headers.Add(headerName);
 
-        var headerList = SheetHelper.HeadersToList(headers);
+        var headerList = SheetHelpers.HeadersToList(headers);
 
         headerList.Should().NotBeNull();
         headerList[0].Count.Should().Be(2);
@@ -87,7 +87,7 @@ public class SheetHelperTests
     [InlineData(FormatEnum.WEEKDAY, "DATE", true)]
     public void GivenFormatHeader_ThenReturnCellFormat(FormatEnum format, string type, bool hasPattern)
     {
-        var cellFormat = SheetHelper.GetCellFormat(format);
+        var cellFormat = SheetHelpers.GetCellFormat(format);
 
         cellFormat.Should().NotBeNull();
         cellFormat.NumberFormat.Type.Should().BeEquivalentTo(type);
@@ -107,11 +107,11 @@ public class SheetHelperTests
     {
         var spreadsheet = JsonHelpers.LoadDemoSpreadsheet();
 
-        var spreadsheetTitle = SheetHelper.GetSpreadsheetTitle(spreadsheet!);
+        var spreadsheetTitle = SheetHelpers.GetSpreadsheetTitle(spreadsheet!);
         spreadsheetTitle.Should().NotBeNull();
         spreadsheetTitle.Should().BeEquivalentTo("Demo Raptor Gig Sheet");
 
-        var spreadsheetSheets = SheetHelper.GetSpreadsheetSheets(spreadsheet!);
+        var spreadsheetSheets = SheetHelpers.GetSpreadsheetSheets(spreadsheet!);
         spreadsheetSheets.Should().NotBeNull();
         spreadsheetSheets.Count.Should().Be(Enum.GetNames(typeof(GigSheetEnum)).Length);
     }

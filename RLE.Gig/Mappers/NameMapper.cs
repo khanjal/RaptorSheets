@@ -55,7 +55,7 @@ public static class NameMapper
 
         var tripSheet = TripMapper.GetSheet();
 
-        sheet.Headers = SheetHelper.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.NAME);
+        sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.NAME);
 
         return sheet;
     }

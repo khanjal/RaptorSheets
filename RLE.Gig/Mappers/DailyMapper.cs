@@ -61,7 +61,7 @@ namespace RLE.Gig.Mappers
 
             var shiftSheet = ShiftMapper.GetSheet();
 
-            sheet.Headers = SheetHelper.GetCommonShiftGroupSheetHeaders(shiftSheet, HeaderEnum.DATE);
+            sheet.Headers = GigSheetHelpers.GetCommonShiftGroupSheetHeaders(shiftSheet, HeaderEnum.DATE);
             var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.DATE);
 
             // Day

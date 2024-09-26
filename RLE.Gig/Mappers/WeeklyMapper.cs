@@ -65,7 +65,7 @@ namespace RLE.Gig.Mappers
 
             var dailySheet = DailyMapper.GetSheet();
 
-            sheet.Headers = SheetHelper.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.WEEK);
+            sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.WEEK);
             var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.WEEK);
 
             // #

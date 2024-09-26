@@ -70,7 +70,7 @@ public static class GenerateSheetHelper
         var appendCellsRequest = new AppendCellsRequest
         {
             Fields = GoogleConfig.FieldsUpdate,
-            Rows = SheetHelper.HeadersToRowData(_sheet!),
+            Rows = SheetHelpers.HeadersToRowData(_sheet!),
             SheetId = _sheetId
         };
 
@@ -102,7 +102,7 @@ public static class GenerateSheetHelper
             {
                 BandedRangeId = _sheetId,
                 Range = new GridRange { SheetId = _sheetId },
-                RowProperties = new BandingProperties { HeaderColor = SheetHelper.GetColor(_sheet!.TabColor), FirstBandColor = SheetHelper.GetColor(ColorEnum.WHITE), SecondBandColor = SheetHelper.GetColor(_sheet!.CellColor) }
+                RowProperties = new BandingProperties { HeaderColor = SheetHelpers.GetColor(_sheet!.TabColor), FirstBandColor = SheetHelpers.GetColor(ColorEnum.WHITE), SecondBandColor = SheetHelpers.GetColor(_sheet!.CellColor) }
             }
         };
         _batchUpdateSpreadsheetRequest!.Requests.Add(new Request { AddBanding = addBandingRequest });
@@ -150,12 +150,12 @@ public static class GenerateSheetHelper
 
             if (header.Format != null)
             {
-                repeatCellRequest.Cell.UserEnteredFormat = SheetHelper.GetCellFormat((FormatEnum)header.Format);
+                repeatCellRequest.Cell.UserEnteredFormat = SheetHelpers.GetCellFormat((FormatEnum)header.Format);
             }
 
             if (header.Validation != null)
             {
-                repeatCellRequest.Cell.DataValidation = SheetHelper.GetDataValidation((ValidationEnum)header.Validation);
+                repeatCellRequest.Cell.DataValidation = GigSheetHelpers.GetDataValidation((ValidationEnum)header.Validation);
             }
 
             _repeatCellRequests!.Add(repeatCellRequest);
@@ -200,7 +200,7 @@ public static class GenerateSheetHelper
                 // Create Sheet With Properties
                 SheetId = _sheetId,
                 Title = _sheet!.Name,
-                TabColor = SheetHelper.GetColor(_sheet.TabColor),
+                TabColor = SheetHelpers.GetColor(_sheet.TabColor),
                 GridProperties = new GridProperties { FrozenColumnCount = _sheet.FreezeColumnCount, FrozenRowCount = _sheet.FreezeRowCount }
             }
         };

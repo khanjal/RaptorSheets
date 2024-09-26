@@ -32,7 +32,7 @@ public class GoogleSheetServiceTests
         result!.ValueRanges.Should().NotBeNull();
         result!.ValueRanges.Should().HaveCount(Enum.GetNames(typeof(GigSheetEnum)).Length);
 
-        var sheet = SheetHelper.MapData(result!);
+        var sheet = GigSheetHelpers.MapData(result!);
 
         sheet.Should().NotBeNull();
 
@@ -84,7 +84,7 @@ public class GoogleSheetServiceTests
         var result = await _googleSheetService.GetSheetInfo();
         result.Should().NotBeNull();
 
-        var sheets = SheetHelper.GetMissingSheets(result!);
+        var sheets = GigSheetHelpers.GetMissingSheets(result!);
         sheets.Should().BeEmpty();
 
         // TODO: Make a test to remove a sheet and see if it finds the missing one.

@@ -55,7 +55,7 @@ public static class ServiceMapper
 
         var shiftSheet = ShiftMapper.GetSheet();
 
-        sheet.Headers = SheetHelper.GetCommonShiftGroupSheetHeaders(shiftSheet, HeaderEnum.SERVICE);
+        sheet.Headers = GigSheetHelpers.GetCommonShiftGroupSheetHeaders(shiftSheet, HeaderEnum.SERVICE);
 
         return sheet;
     }

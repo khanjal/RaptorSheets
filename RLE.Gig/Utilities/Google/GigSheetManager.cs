@@ -286,7 +286,7 @@ public class GigSheetManager : IGigSheetManager
         else
         {
             messages.Add(MessageHelper.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GetSheets));
-            data = SheetHelper.MapData(response);
+            data = GigSheetHelpers.MapData(response);
         }
 
         // Only get spreadsheet name when all sheets are requested.

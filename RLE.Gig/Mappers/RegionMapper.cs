@@ -54,7 +54,7 @@ public static class RegionMapper
 
         var shiftSheet = ShiftMapper.GetSheet();
 
-        sheet.Headers = SheetHelper.GetCommonShiftGroupSheetHeaders(shiftSheet, HeaderEnum.REGION);
+        sheet.Headers = GigSheetHelpers.GetCommonShiftGroupSheetHeaders(shiftSheet, HeaderEnum.REGION);
 
         return sheet;
     }

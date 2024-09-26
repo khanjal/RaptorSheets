@@ -61,7 +61,7 @@ namespace RLE.Gig.Mappers
 
             var monthlySheet = MonthlyMapper.GetSheet();
 
-            sheet.Headers = SheetHelper.GetCommonTripGroupSheetHeaders(monthlySheet, HeaderEnum.YEAR);
+            sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(monthlySheet, HeaderEnum.YEAR);
 
             return sheet;
         }

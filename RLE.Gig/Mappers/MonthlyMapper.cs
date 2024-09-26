@@ -63,7 +63,7 @@ namespace RLE.Gig.Mappers
 
             var dailySheet = DailyMapper.GetSheet();
 
-            sheet.Headers = SheetHelper.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.MONTH);
+            sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.MONTH);
             var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.MONTH);
 
             // #

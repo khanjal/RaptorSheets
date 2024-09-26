@@ -56,7 +56,7 @@ public static class PlaceMapper
 
         var tripSheet = TripMapper.GetSheet();
 
-        sheet.Headers = SheetHelper.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.PLACE);
+        sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.PLACE);
 
         // // Days/Visit
         // sheet.Headers.Add(new SheetCellModel{Name = HeaderEnum.DAYS_PER_VISIT.DisplayName(),

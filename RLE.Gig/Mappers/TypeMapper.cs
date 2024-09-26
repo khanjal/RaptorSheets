@@ -54,7 +54,7 @@ namespace RLE.Gig.Mappers
 
             var tripSheet = TripMapper.GetSheet();
 
-            sheet.Headers = SheetHelper.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.TYPE);
+            sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.TYPE);
 
             return sheet;
         }

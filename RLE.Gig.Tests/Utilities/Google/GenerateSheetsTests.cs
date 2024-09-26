@@ -38,7 +38,7 @@ public class GenerateSheetsTests
 
         var sheetRequest = batchRequest.Requests[index].AddSheet;
         sheetRequest.Properties.Title.Should().Be(config.Name);
-        sheetRequest.Properties.TabColor.Should().BeEquivalentTo(SheetHelper.GetColor(config.TabColor));
+        sheetRequest.Properties.TabColor.Should().BeEquivalentTo(SheetHelpers.GetColor(config.TabColor));
         sheetRequest.Properties.GridProperties.FrozenColumnCount.Should().Be(config.FreezeColumnCount);
         sheetRequest.Properties.GridProperties.FrozenRowCount.Should().Be(config.FreezeRowCount);
     }
@@ -72,8 +72,8 @@ public class GenerateSheetsTests
 
         var bandedRange = batchRequest.Requests.First(x => x.AddBanding != null).AddBanding.BandedRange;
         bandedRange.Range.SheetId.Should().Be(sheetId);
-        bandedRange.RowProperties.HeaderColor.Should().BeEquivalentTo(SheetHelper.GetColor(config.TabColor));
-        bandedRange.RowProperties.SecondBandColor.Should().BeEquivalentTo(SheetHelper.GetColor(config.CellColor));
+        bandedRange.RowProperties.HeaderColor.Should().BeEquivalentTo(SheetHelpers.GetColor(config.TabColor));
+        bandedRange.RowProperties.SecondBandColor.Should().BeEquivalentTo(SheetHelpers.GetColor(config.CellColor));
     }
 
     [Theory]
