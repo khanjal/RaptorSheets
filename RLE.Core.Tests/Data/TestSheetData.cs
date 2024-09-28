@@ -1,7 +1,7 @@
 ﻿using RLE.Core.Enums;
 using RLE.Core.Models.Google;
+using RLE.Core.Tests.Data;
 using RLE.Core.Utilities.Extensions;
-using RLE.Gig.Enums;
 
 namespace RLE.Gig.Tests.Data;
 
@@ -17,14 +17,14 @@ public class TestSheetData
 
         sheet.Headers.AddColumn(new SheetCellModel
         {
-            Name = HeaderEnum.WEEK.GetDescription(),
+            Name = HeaderEnum.FIRST_COLUMN.GetDescription(),
             Formula = "Formula",
             Format = FormatEnum.TEXT
         });
 
         sheet.Headers.AddColumn(new SheetCellModel
         {
-            Name = HeaderEnum.DATE.GetDescription(),
+            Name = HeaderEnum.SECOND_COLUMN.GetDescription(),
             Formula = "None",
             Format = FormatEnum.NUMBER
         });

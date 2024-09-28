@@ -4,6 +4,7 @@ using RLE.Core.Utilities;
 using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Constants;
 using RLE.Gig.Entities;
+using RLE.Gig.Enums;
 using RLE.Gig.Utilities;
 
 namespace RLE.Gig.Mappers
@@ -62,7 +63,7 @@ namespace RLE.Gig.Mappers
             var shiftSheet = ShiftMapper.GetSheet();
 
             sheet.Headers = GigSheetHelpers.GetCommonShiftGroupSheetHeaders(shiftSheet, HeaderEnum.DATE);
-            var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.DATE);
+            var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
 
             // Day
             sheet.Headers.AddColumn(new SheetCellModel

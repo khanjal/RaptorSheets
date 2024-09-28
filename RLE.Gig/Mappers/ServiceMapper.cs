@@ -4,6 +4,7 @@ using RLE.Core.Utilities;
 using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Constants;
 using RLE.Gig.Entities;
+using RLE.Gig.Enums;
 using RLE.Gig.Utilities;
 
 namespace RLE.Gig.Mappers;

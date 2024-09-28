@@ -1,7 +1,8 @@
 ﻿using FluentAssertions;
 using RLE.Gig.Tests.Data;
+using Xunit;
 
-namespace RLE.Gig.Tests.Utilities.Extensions;
+namespace RLE.Core.Tests.Utilities.Extensions;
 
 public class ListExtensionsTests
 {

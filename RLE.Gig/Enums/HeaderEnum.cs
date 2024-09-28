@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace RLE.Core.Enums;
+namespace RLE.Gig.Enums;
 
 public enum HeaderEnum
 {

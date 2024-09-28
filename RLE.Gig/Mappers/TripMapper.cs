@@ -4,6 +4,7 @@ using RLE.Core.Utilities;
 using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Constants;
 using RLE.Gig.Entities;
+using RLE.Gig.Enums;
 
 namespace RLE.Gig.Mappers
 {
@@ -175,7 +176,7 @@ namespace RLE.Gig.Mappers
                 Note = ColumnNotes.DateFormat,
                 Format = FormatEnum.DATE
             });
-            var dateRange = sheet.GetLocalRange(HeaderEnum.DATE);
+            var dateRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
             // Service
             sheet.Headers.AddColumn(new SheetCellModel
             {
@@ -246,7 +247,7 @@ namespace RLE.Gig.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.TOTAL.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.PAY)}+{sheet.GetLocalRange(HeaderEnum.TIPS)}+{sheet.GetLocalRange(HeaderEnum.BONUS)}))",
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.PAY.GetDescription())}+{sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription())}+{sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription())}))",
                 Format = FormatEnum.ACCOUNTING
             });
             // Cash
@@ -303,7 +304,7 @@ namespace RLE.Gig.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.KEY.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.KEY.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.SERVICE)}), \"\",true,IF({sheet.GetLocalRange(HeaderEnum.EXCLUDE)},{dateRange} & \"-X-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)},IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.NUMBER)}), {dateRange} & \"-0-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)}, {dateRange} & \"-\" & {sheet.GetLocalRange(HeaderEnum.NUMBER)} & \"-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE)}))))",
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.KEY.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())}), \"\",true,IF({sheet.GetLocalRange(HeaderEnum.EXCLUDE.GetDescription())},{dateRange} & \"-X-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())},IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())}), {dateRange} & \"-0-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())}, {dateRange} & \"-\" & {sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())} & \"-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())}))))",
                 Note = ColumnNotes.TripKey
             });
             // Day
@@ -328,14 +329,14 @@ namespace RLE.Gig.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.AMOUNT_PER_TIME.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_TIME.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.DURATION)}), \"\", true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.DURATION)}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL)}/IF({sheet.GetLocalRange(HeaderEnum.DURATION)}=0,1,({sheet.GetLocalRange(HeaderEnum.DURATION)}*24)))))",
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_TIME.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription())}), \"\", true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription())}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription())}/IF({sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription())}=0,1,({sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription())}*24)))))",
                 Format = FormatEnum.ACCOUNTING
             });
             // Amt/Dist
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.DISTANCE)}), \"\", true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.DISTANCE)}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL)}/IF({sheet.GetLocalRange(HeaderEnum.DISTANCE)}=0,1,{sheet.GetLocalRange(HeaderEnum.DISTANCE)}))))",
+                Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription())}), \"\", true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription())}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription())}/IF({sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription())}=0,1,{sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription())}))))",
                 Format = FormatEnum.ACCOUNTING
             });
 

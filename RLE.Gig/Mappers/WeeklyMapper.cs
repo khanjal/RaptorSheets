@@ -4,6 +4,7 @@ using RLE.Core.Utilities;
 using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Constants;
 using RLE.Gig.Entities;
+using RLE.Gig.Enums;
 using RLE.Gig.Utilities;
 
 namespace RLE.Gig.Mappers
@@ -66,7 +67,7 @@ namespace RLE.Gig.Mappers
             var dailySheet = DailyMapper.GetSheet();
 
             sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.WEEK);
-            var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.WEEK);
+            var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.WEEK.GetDescription());
 
             // #
             sheet.Headers.AddColumn(new SheetCellModel
@@ -86,7 +87,7 @@ namespace RLE.Gig.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.DATE_BEGIN.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.DATE_BEGIN.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,DATE({sheet.GetLocalRange(HeaderEnum.YEAR)},1,1)+(({sheet.GetLocalRange(HeaderEnum.NUMBER)}-1)*7)-WEEKDAY(DATE({sheet.GetLocalRange(HeaderEnum.YEAR)},1,1),3)))",
+                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.DATE_BEGIN.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,DATE({sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription())},1,1)+(({sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())}-1)*7)-WEEKDAY(DATE({sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription())},1,1),3)))",
                 Format = FormatEnum.DATE
             });
 
@@ -94,7 +95,7 @@ namespace RLE.Gig.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.DATE_END.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.DATE_END.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,DATE({sheet.GetLocalRange(HeaderEnum.YEAR)},1,7)+(({sheet.GetLocalRange(HeaderEnum.NUMBER)}-1)*7)-WEEKDAY(DATE({sheet.GetLocalRange(HeaderEnum.YEAR)},1,1),3)))",
+                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.DATE_END.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,DATE({sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription())},1,7)+(({sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())}-1)*7)-WEEKDAY(DATE({sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription())},1,1),3)))",
                 Format = FormatEnum.DATE
             });
 

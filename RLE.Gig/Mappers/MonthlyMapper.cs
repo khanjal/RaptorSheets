@@ -4,6 +4,7 @@ using RLE.Core.Utilities;
 using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Constants;
 using RLE.Gig.Entities;
+using RLE.Gig.Enums;
 using RLE.Gig.Utilities;
 
 namespace RLE.Gig.Mappers
@@ -64,7 +65,7 @@ namespace RLE.Gig.Mappers
             var dailySheet = DailyMapper.GetSheet();
 
             sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.MONTH);
-            var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.MONTH);
+            var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.MONTH.GetDescription());
 
             // #
             sheet.Headers.AddColumn(new SheetCellModel

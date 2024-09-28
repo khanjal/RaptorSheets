@@ -1,8 +1,9 @@
 ﻿using FluentAssertions;
 using RLE.Core.Utilities.Extensions;
 using System.ComponentModel;
+using Xunit;
 
-namespace RLE.Gig.Tests.Utilities.Extensions;
+namespace RLE.Core.Tests.Utilities.Extensions;
 
 public class EnumExtensionsTests
 {

@@ -2,8 +2,9 @@
 using RLE.Core.Enums;
 using RLE.Core.Utilities;
 using RLE.Core.Utilities.Extensions;
+using Xunit;
 
-namespace RLE.Gig.Tests.Utilities;
+namespace RLE.Core.Tests.Utilities;
 
 public class MessageHelperTests
 {
