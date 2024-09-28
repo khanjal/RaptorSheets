@@ -3,7 +3,7 @@
 | Badge Name | Status |
 | ---------- | :------------: |
 | Latest Build Status | ![build status](https://github.com/khanjal/RaptorLoggerEngine/actions/workflows/dotnet.yml/badge.svg) |
-| Current Nuget Version | [![Nuget](https://img.shields.io/nuget/v/RaptorLoggerEngine)](https://www.nuget.org/packages/RaptorLoggerEngine/) |
+| RLE.Gig Nuget Version | [![Nuget](https://img.shields.io/nuget/v/RaptorLoggerEngine.Gig)](https://www.nuget.org/packages/RaptorLoggerEngine.Gig/) |
 
 
 # Project Description
