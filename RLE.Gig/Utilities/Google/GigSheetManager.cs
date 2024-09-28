@@ -14,12 +14,12 @@ namespace RLE.Gig.Utilities.Google;
 
 public interface IGigSheetManager : ISheetManager
 {
-    public Task<GigSheetEntity> AddSheetData(List<SheetEnum> sheets, GigSheetEntity sheetEntity);
-    public Task<GigSheetEntity> CreateSheets();
-    public Task<GigSheetEntity> CreateSheets(List<SheetEnum> sheets);
-    public Task<GigSheetEntity> GetSheet(string sheet);
-    public Task<GigSheetEntity> GetSheets();
-    public Task<GigSheetEntity> GetSheets(List<SheetEnum> sheets);
+    public Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
+    public Task<SheetEntity> CreateSheets();
+    public Task<SheetEntity> CreateSheets(List<SheetEnum> sheets);
+    public Task<SheetEntity> GetSheet(string sheet);
+    public Task<SheetEntity> GetSheets();
+    public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
 }
 
 public class GigSheetManager : IGigSheetManager
@@ -36,7 +36,7 @@ public class GigSheetManager : IGigSheetManager
         _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
     }
 
-    public async Task<GigSheetEntity> AddSheetData(List<SheetEnum> sheets, GigSheetEntity sheetEntity)
+    public async Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity)
     {
         foreach (var sheet in sheets)
         {
@@ -215,18 +215,18 @@ public class GigSheetManager : IGigSheetManager
         return messages;
     }
 
-    public async Task<GigSheetEntity> CreateSheets()
+    public async Task<SheetEntity> CreateSheets()
     {
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
         return await CreateSheets(sheets);
     }
 
-    public async Task<GigSheetEntity> CreateSheets(List<SheetEnum> sheets)
+    public async Task<SheetEntity> CreateSheets(List<SheetEnum> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetHelper.Generate(sheets);
         var response = await _googleSheetService.CreateSheets(batchUpdateSpreadsheetRequest);
 
-        var sheetEntity = new GigSheetEntity();
+        var sheetEntity = new SheetEntity();
 
         // No sheets created if null.
         if (response == null)
@@ -249,31 +249,31 @@ public class GigSheetManager : IGigSheetManager
         return sheetEntity;
     }
 
-    public async Task<GigSheetEntity> GetSheet(string sheet)
+    public async Task<SheetEntity> GetSheet(string sheet)
     {
         var sheetExists = Enum.TryParse(sheet.ToUpper(), out SheetEnum sheetEnum) && Enum.IsDefined(typeof(SheetEnum), sheetEnum);
 
         if (!sheetExists)
         {
-            return new GigSheetEntity { Messages = [MessageHelper.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageTypeEnum.GetSheets)] };
+            return new SheetEntity { Messages = [MessageHelper.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageTypeEnum.GetSheets)] };
         }
 
         return await GetSheets([sheetEnum]);
     }
 
-    public async Task<GigSheetEntity> GetSheets()
+    public async Task<SheetEntity> GetSheets()
     {
         // TODO Add check sheets here where it can add missing sheets.
 
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
         var response = await GetSheets(sheets);
 
-        return response ?? new GigSheetEntity();
+        return response ?? new SheetEntity();
     }
 
-    public async Task<GigSheetEntity> GetSheets(List<SheetEnum> sheets)
+    public async Task<SheetEntity> GetSheets(List<SheetEnum> sheets)
     {
-        var data = new GigSheetEntity();
+        var data = new SheetEntity();
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
 

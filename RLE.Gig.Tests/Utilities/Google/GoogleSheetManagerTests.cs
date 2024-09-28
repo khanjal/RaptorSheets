@@ -89,8 +89,8 @@ public class GoogleSheetManagerTests
     public async Task GivenAddSheetData_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGigSheetManager>();
-        googleSheetManager.Setup(x => x.AddSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<GigSheetEntity>())).ReturnsAsync(new GigSheetEntity());
-        var result = await googleSheetManager.Object.AddSheetData([new SheetEnum()], new GigSheetEntity());
+        googleSheetManager.Setup(x => x.AddSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>())).ReturnsAsync(new SheetEntity());
+        var result = await googleSheetManager.Object.AddSheetData([new SheetEnum()], new SheetEntity());
         result.Should().NotBeNull();
     }
 
@@ -112,7 +112,7 @@ public class GoogleSheetManagerTests
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGigSheetManager>();
-        googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<SheetEnum>>())).ReturnsAsync(new GigSheetEntity());
+        googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<SheetEnum>>())).ReturnsAsync(new SheetEntity());
         var result = await googleSheetManager.Object.CreateSheets([new SheetEnum()]);
         result.Should().NotBeNull();
     }
@@ -142,7 +142,7 @@ public class GoogleSheetManagerTests
         result.Count.Should().Be(2);
     }
 
-    private static GigSheetEntity GenerateShift()
+    private static SheetEntity GenerateShift()
     {
         // Create shift/trips
         var date = DateTime.Now.ToString("yyyy-MM-dd");
@@ -150,7 +150,7 @@ public class GoogleSheetManagerTests
         var number = random.Next();
         var service = $"Test {number}";
 
-        var sheetEntity = new GigSheetEntity();
+        var sheetEntity = new SheetEntity();
         sheetEntity.Shifts.Add(new ShiftEntity { Date = date, Number = 1, Service = service });
 
         // Add random amount of trips

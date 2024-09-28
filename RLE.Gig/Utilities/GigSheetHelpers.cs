@@ -525,14 +525,14 @@ public static class GigSheetHelpers
         return sheet.Headers;
     }
 
-    public static GigSheetEntity? MapData(BatchGetValuesByDataFilterResponse response)
+    public static SheetEntity? MapData(BatchGetValuesByDataFilterResponse response)
     {
         if (response.ValueRanges == null)
         {
             return null;
         }
 
-        var sheet = new GigSheetEntity();
+        var sheet = new SheetEntity();
 
         // TODO: Figure out a better way to handle looping with message and entity mapping in the switch.
         foreach (var matchedValue in response.ValueRanges)

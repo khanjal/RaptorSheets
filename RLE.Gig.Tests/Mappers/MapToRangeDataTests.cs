@@ -11,7 +11,7 @@ namespace RLE.Gig.Tests.Mappers;
 
 public class MapToRangeDataTests
 {
-    private static GigSheetEntity? _sheetData;
+    private static SheetEntity? _sheetData;
 
     public MapToRangeDataTests()
     {
