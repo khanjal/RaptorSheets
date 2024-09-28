@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace RLE.Gig.Constants;
+namespace RLE.Core.Constants;
 
 [ExcludeFromCodeCoverage]
 public static class ProtectionWarnings

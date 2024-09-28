@@ -77,7 +77,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RaptorLoggerEngine\RLE.Gig.csproj" />
     <ProjectReference Include="..\RLE.Core\RLE.Core.csproj" />
     <ProjectReference Include="..\RLE.Gig\RLE.Gig.csproj" />
   </ItemGroup>

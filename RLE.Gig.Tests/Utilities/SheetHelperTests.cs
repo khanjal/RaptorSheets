@@ -1,6 +1,7 @@
 using FluentAssertions;
 using RLE.Core.Enums;
 using RLE.Core.Models.Google;
+using RLE.Core.Utilities;
 using RLE.Gig.Enums;
 using RLE.Gig.Tests.Data.Helpers;
 using RLE.Gig.Utilities;

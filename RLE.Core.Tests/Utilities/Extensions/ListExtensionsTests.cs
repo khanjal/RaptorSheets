@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using RLE.Gig.Tests.Data;
+using RLE.Core.Tests.Data;
 using Xunit;
 
 namespace RLE.Core.Tests.Utilities.Extensions;

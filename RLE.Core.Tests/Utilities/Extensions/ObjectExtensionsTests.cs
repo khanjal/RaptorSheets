@@ -2,7 +2,6 @@
 using RLE.Core.Models.Google;
 using RLE.Core.Tests.Data;
 using RLE.Core.Utilities.Extensions;
-using RLE.Gig.Tests.Data;
 using Xunit;
 
 namespace RLE.Core.Tests.Utilities.Extensions;

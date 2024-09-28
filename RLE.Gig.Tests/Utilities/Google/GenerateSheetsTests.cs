@@ -4,8 +4,8 @@ using RLE.Core.Models.Google;
 using RLE.Gig.Utilities.Google;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
-using RLE.Gig.Constants;
-using RLE.Gig.Utilities;
+using RLE.Core.Constants;
+using RLE.Core.Utilities;
 
 namespace RLE.Gig.Tests.Utilities.Google;
 

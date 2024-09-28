@@ -2,11 +2,9 @@ using Google.Apis.Sheets.v4.Data;
 using RLE.Core.Enums;
 using RLE.Core.Models.Google;
 using RLE.Core.Utilities.Extensions;
-using RLE.Core.Utilities;
 using RLE.Core.Constants;
-using RLE.Gig.Constants;
 
-namespace RLE.Gig.Utilities;
+namespace RLE.Core.Utilities;
 
 public static class SheetHelpers
 {

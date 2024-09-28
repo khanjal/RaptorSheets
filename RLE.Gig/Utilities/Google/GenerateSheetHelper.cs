@@ -3,8 +3,8 @@ using RLE.Core.Enums;
 using RLE.Core.Models.Google;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
-using RLE.Gig.Constants;
 using RLE.Core.Constants;
+using RLE.Core.Utilities;
 
 namespace RLE.Gig.Utilities.Google;
 

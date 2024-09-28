@@ -1,9 +1,8 @@
 ﻿using RLE.Core.Enums;
 using RLE.Core.Models.Google;
-using RLE.Core.Tests.Data;
 using RLE.Core.Utilities.Extensions;
 
-namespace RLE.Gig.Tests.Data;
+namespace RLE.Core.Tests.Data;
 
 public class TestSheetData
 {
