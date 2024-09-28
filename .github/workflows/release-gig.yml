@@ -25,5 +25,5 @@ jobs:
       run: dotnet test -c Release --no-build
     - name: Pack nugets
       run: dotnet pack /home/runner/work/RaptorLoggerEngine/RaptorLoggerEngine/RLE.Gig/RLE.Gig.csproj -c Release --no-build --output .
-    - name: Push to NuGet - RaptorLoggerEngine.Gig
-      run: dotnet nuget push "*.nupkg" --api-key ${{secrets.nuget_api_key}} --source https://api.nuget.org/v3/index.json
+    # - name: Push to NuGet - RaptorLoggerEngine.Gig
+    #   run: dotnet nuget push "*.nupkg" --api-key ${{secrets.nuget_api_key}} --source https://api.nuget.org/v3/index.json

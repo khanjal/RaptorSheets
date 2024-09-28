@@ -12,7 +12,7 @@ using RLE.Gig.Entities;
 
 namespace RLE.Gig.Utilities.Google;
 
-public interface IGigSheetManager : ISheetManager
+public interface IGoogleSheetManager : ISheetManager
 {
     public Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
     public Task<SheetEntity> CreateSheets();
@@ -22,16 +22,16 @@ public interface IGigSheetManager : ISheetManager
     public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
 }
 
-public class GigSheetManager : IGigSheetManager
+public class GoogleSheetManager : IGoogleSheetManager
 {
     private readonly GoogleSheetService _googleSheetService;
 
-    public GigSheetManager(string accessToken, string spreadsheetId)
+    public GoogleSheetManager(string accessToken, string spreadsheetId)
     {
         _googleSheetService = new GoogleSheetService(accessToken, spreadsheetId);
     }
 
-    public GigSheetManager(Dictionary<string, string> parameters, string spreadsheetId)
+    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId)
     {
         _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
     }
