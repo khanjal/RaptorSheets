@@ -18,7 +18,7 @@ public class ServiceMapFromRangeDataTests
     public ServiceMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == GigSheetEnum.SERVICES.GetDescription()).First().ValueRange.Values;
+        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.SERVICES.GetDescription()).First().ValueRange.Values;
         _entities = ServiceMapper.MapFromRangeData(_values!);
     }
 

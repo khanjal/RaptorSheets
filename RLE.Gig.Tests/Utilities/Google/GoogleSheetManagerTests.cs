@@ -15,13 +15,13 @@ public class GoogleSheetManagerTests
     private readonly IGigSheetManager _googleSheetManager;
 
     private readonly long _currentTime;
-    private readonly GigSheetEnum _sheetEnum;
+    private readonly SheetEnum _sheetEnum;
     private readonly Dictionary<string, string> _credential;
 
     public GoogleSheetManagerTests()
     {
         var random = new Random();
-        _sheetEnum = random.NextEnum<GigSheetEnum>();
+        _sheetEnum = random.NextEnum<SheetEnum>();
         _currentTime = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
 
         _spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
@@ -89,15 +89,15 @@ public class GoogleSheetManagerTests
     public async Task GivenAddSheetData_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGigSheetManager>();
-        googleSheetManager.Setup(x => x.AddSheetData(It.IsAny<List<GigSheetEnum>>(), It.IsAny<GigSheetEntity>())).ReturnsAsync(new GigSheetEntity());
-        var result = await googleSheetManager.Object.AddSheetData([new GigSheetEnum()], new GigSheetEntity());
+        googleSheetManager.Setup(x => x.AddSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<GigSheetEntity>())).ReturnsAsync(new GigSheetEntity());
+        var result = await googleSheetManager.Object.AddSheetData([new SheetEnum()], new GigSheetEntity());
         result.Should().NotBeNull();
     }
 
     [Fact]
     public async Task GivenAddSheetData_WithData_ThenReturnData()
     {
-        var result = await _googleSheetManager.AddSheetData([GigSheetEnum.TRIPS, GigSheetEnum.SHIFTS], GenerateShift());
+        var result = await _googleSheetManager.AddSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], GenerateShift());
         result.Should().NotBeNull();
         result.Messages.Count.Should().Be(4);
 
@@ -112,8 +112,8 @@ public class GoogleSheetManagerTests
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGigSheetManager>();
-        googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<GigSheetEnum>>())).ReturnsAsync(new GigSheetEntity());
-        var result = await googleSheetManager.Object.CreateSheets([new GigSheetEnum()]);
+        googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<SheetEnum>>())).ReturnsAsync(new GigSheetEntity());
+        var result = await googleSheetManager.Object.CreateSheets([new SheetEnum()]);
         result.Should().NotBeNull();
     }
 

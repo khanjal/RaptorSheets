@@ -16,19 +16,19 @@ public class CheckSheetHeaderTests
 {
     public static IEnumerable<object[]> Sheets =>
         [
-            [AddressMapper.GetSheet(), GigSheetEnum.ADDRESSES],
-            [DailyMapper.GetSheet(), GigSheetEnum.DAILY],
-            [MonthlyMapper.GetSheet(), GigSheetEnum.MONTHLY],
-            [NameMapper.GetSheet(), GigSheetEnum.NAMES],
-            [PlaceMapper.GetSheet(), GigSheetEnum.PLACES],
-            [RegionMapper.GetSheet(), GigSheetEnum.REGIONS],
-            [ServiceMapper.GetSheet(), GigSheetEnum.SERVICES],
-            [ShiftMapper.GetSheet(), GigSheetEnum.SHIFTS],
-            [TripMapper.GetSheet(), GigSheetEnum.TRIPS],
-            [TypeMapper.GetSheet(), GigSheetEnum.TYPES],
-            [WeekdayMapper.GetSheet(), GigSheetEnum.WEEKDAYS],
-            [WeeklyMapper.GetSheet(), GigSheetEnum.WEEKLY],
-            [YearlyMapper.GetSheet(), GigSheetEnum.YEARLY],
+            [AddressMapper.GetSheet(), SheetEnum.ADDRESSES],
+            [DailyMapper.GetSheet(), SheetEnum.DAILY],
+            [MonthlyMapper.GetSheet(), SheetEnum.MONTHLY],
+            [NameMapper.GetSheet(), SheetEnum.NAMES],
+            [PlaceMapper.GetSheet(), SheetEnum.PLACES],
+            [RegionMapper.GetSheet(), SheetEnum.REGIONS],
+            [ServiceMapper.GetSheet(), SheetEnum.SERVICES],
+            [ShiftMapper.GetSheet(), SheetEnum.SHIFTS],
+            [TripMapper.GetSheet(), SheetEnum.TRIPS],
+            [TypeMapper.GetSheet(), SheetEnum.TYPES],
+            [WeekdayMapper.GetSheet(), SheetEnum.WEEKDAYS],
+            [WeeklyMapper.GetSheet(), SheetEnum.WEEKLY],
+            [YearlyMapper.GetSheet(), SheetEnum.YEARLY],
         ];
 
     readonly GoogleDataFixture fixture;
@@ -42,7 +42,7 @@ public class CheckSheetHeaderTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenFullHeaders_ThenReturnNoMessages(SheetModel sheet, GigSheetEnum sheetEnum)
+    public void GivenFullHeaders_ThenReturnNoMessages(SheetModel sheet, SheetEnum sheetEnum)
     {
         var values = _matchedValueRanges?.Where(x => x.DataFilters[0].A1Range == sheetEnum.GetDescription()).First().ValueRange.Values.ToList();
         var messages = HeaderHelper.CheckSheetHeaders(values!, sheet);
@@ -52,7 +52,7 @@ public class CheckSheetHeaderTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenMissingHeaders_ThenReturnErrorMessages(SheetModel sheet, GigSheetEnum sheetEnum)
+    public void GivenMissingHeaders_ThenReturnErrorMessages(SheetModel sheet, SheetEnum sheetEnum)
     {
         var values = _matchedValueRanges?.Where(x => x.DataFilters[0].A1Range == sheetEnum.GetDescription()).First().ValueRange.Values;
 
@@ -69,7 +69,7 @@ public class CheckSheetHeaderTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenMisorderedHeaders_ThenReturnWarningMessages(SheetModel sheet, GigSheetEnum sheetEnum)
+    public void GivenMisorderedHeaders_ThenReturnWarningMessages(SheetModel sheet, SheetEnum sheetEnum)
     {
         var values = _matchedValueRanges?.Where(x => x.DataFilters[0].A1Range == sheetEnum.GetDescription()).First().ValueRange.Values;
 

@@ -14,12 +14,12 @@ namespace RLE.Gig.Utilities.Google;
 
 public interface IGigSheetManager : ISheetManager
 {
-    public Task<GigSheetEntity> AddSheetData(List<GigSheetEnum> sheets, GigSheetEntity sheetEntity);
+    public Task<GigSheetEntity> AddSheetData(List<SheetEnum> sheets, GigSheetEntity sheetEntity);
     public Task<GigSheetEntity> CreateSheets();
-    public Task<GigSheetEntity> CreateSheets(List<GigSheetEnum> sheets);
+    public Task<GigSheetEntity> CreateSheets(List<SheetEnum> sheets);
     public Task<GigSheetEntity> GetSheet(string sheet);
     public Task<GigSheetEntity> GetSheets();
-    public Task<GigSheetEntity> GetSheets(List<GigSheetEnum> sheets);
+    public Task<GigSheetEntity> GetSheets(List<SheetEnum> sheets);
 }
 
 public class GigSheetManager : IGigSheetManager
@@ -36,7 +36,7 @@ public class GigSheetManager : IGigSheetManager
         _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
     }
 
-    public async Task<GigSheetEntity> AddSheetData(List<GigSheetEnum> sheets, GigSheetEntity sheetEntity)
+    public async Task<GigSheetEntity> AddSheetData(List<SheetEnum> sheets, GigSheetEntity sheetEntity)
     {
         foreach (var sheet in sheets)
         {
@@ -49,12 +49,12 @@ public class GigSheetManager : IGigSheetManager
 
             switch (sheet)
             {
-                case GigSheetEnum.SHIFTS:
+                case SheetEnum.SHIFTS:
                     values = ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers);
                     sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.AddData));
                     break;
 
-                case GigSheetEnum.TRIPS:
+                case SheetEnum.TRIPS:
                     values = TripMapper.MapToRangeData(sheetEntity.Trips, headers);
                     sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.AddData));
                     break;
@@ -100,13 +100,13 @@ public class GigSheetManager : IGigSheetManager
         }
 
         var spreadsheetSheets = sheetInfoResponse.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
-        var sheets = new List<GigSheetEnum>();
+        var sheets = new List<SheetEnum>();
 
         var missingSheetMessages = new List<MessageEntity>();
         // Loop through all sheets to see if they exist.
-        foreach (var name in Enum.GetNames<GigSheetEnum>())
+        foreach (var name in Enum.GetNames<SheetEnum>())
         {
-            GigSheetEnum sheetEnum = (GigSheetEnum)Enum.Parse(typeof(GigSheetEnum), name);
+            SheetEnum sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), name);
 
             if (!spreadsheetSheets.Contains(name))
             {
@@ -153,48 +153,48 @@ public class GigSheetManager : IGigSheetManager
         {
             var sheetRange = valueRange.ValueRange.Range;
             var sheet = sheetRange.Split("!")[0];
-            var sheetEnum = (GigSheetEnum)Enum.Parse(typeof(GigSheetEnum), sheet.ToUpper());
+            var sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), sheet.ToUpper());
 
             var sheetHeader = valueRange.ValueRange.Values;
             switch (sheetEnum)
             {
-                case GigSheetEnum.ADDRESSES:
+                case SheetEnum.ADDRESSES:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
                     break;
-                case GigSheetEnum.DAILY:
+                case SheetEnum.DAILY:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
-                case GigSheetEnum.MONTHLY:
+                case SheetEnum.MONTHLY:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;
-                case GigSheetEnum.NAMES:
+                case SheetEnum.NAMES:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
                     break;
-                case GigSheetEnum.PLACES:
+                case SheetEnum.PLACES:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
                     break;
-                case GigSheetEnum.REGIONS:
+                case SheetEnum.REGIONS:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
                     break;
-                case GigSheetEnum.SERVICES:
+                case SheetEnum.SERVICES:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
-                case GigSheetEnum.SHIFTS:
+                case SheetEnum.SHIFTS:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
                     break;
-                case GigSheetEnum.TRIPS:
+                case SheetEnum.TRIPS:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
                     break;
-                case GigSheetEnum.TYPES:
+                case SheetEnum.TYPES:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
                     break;
-                case GigSheetEnum.WEEKDAYS:
+                case SheetEnum.WEEKDAYS:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
                     break;
-                case GigSheetEnum.WEEKLY:
+                case SheetEnum.WEEKLY:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
                     break;
-                case GigSheetEnum.YEARLY:
+                case SheetEnum.YEARLY:
                     headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
                     break;
                 default:
@@ -217,11 +217,11 @@ public class GigSheetManager : IGigSheetManager
 
     public async Task<GigSheetEntity> CreateSheets()
     {
-        var sheets = Enum.GetValues(typeof(GigSheetEnum)).Cast<GigSheetEnum>().ToList();
+        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
         return await CreateSheets(sheets);
     }
 
-    public async Task<GigSheetEntity> CreateSheets(List<GigSheetEnum> sheets)
+    public async Task<GigSheetEntity> CreateSheets(List<SheetEnum> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetHelper.Generate(sheets);
         var response = await _googleSheetService.CreateSheets(batchUpdateSpreadsheetRequest);
@@ -243,7 +243,7 @@ public class GigSheetManager : IGigSheetManager
 
         foreach (var sheetTitle in sheetTitles)
         {
-            sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"{sheetTitle.GetValueFromName<GigSheetEnum>()} created", MessageTypeEnum.CreateSheet));
+            sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"{sheetTitle.GetValueFromName<SheetEnum>()} created", MessageTypeEnum.CreateSheet));
         }
 
         return sheetEntity;
@@ -251,7 +251,7 @@ public class GigSheetManager : IGigSheetManager
 
     public async Task<GigSheetEntity> GetSheet(string sheet)
     {
-        var sheetExists = Enum.TryParse(sheet.ToUpper(), out GigSheetEnum sheetEnum) && Enum.IsDefined(typeof(GigSheetEnum), sheetEnum);
+        var sheetExists = Enum.TryParse(sheet.ToUpper(), out SheetEnum sheetEnum) && Enum.IsDefined(typeof(SheetEnum), sheetEnum);
 
         if (!sheetExists)
         {
@@ -265,13 +265,13 @@ public class GigSheetManager : IGigSheetManager
     {
         // TODO Add check sheets here where it can add missing sheets.
 
-        var sheets = Enum.GetValues(typeof(GigSheetEnum)).Cast<GigSheetEnum>().ToList();
+        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
         var response = await GetSheets(sheets);
 
         return response ?? new GigSheetEntity();
     }
 
-    public async Task<GigSheetEntity> GetSheets(List<GigSheetEnum> sheets)
+    public async Task<GigSheetEntity> GetSheets(List<SheetEnum> sheets)
     {
         var data = new GigSheetEntity();
         var messages = new List<MessageEntity>();
@@ -290,7 +290,7 @@ public class GigSheetManager : IGigSheetManager
         }
 
         // Only get spreadsheet name when all sheets are requested.
-        if (sheets.Count < Enum.GetNames(typeof(GigSheetEnum)).Length)
+        if (sheets.Count < Enum.GetNames(typeof(SheetEnum)).Length)
         {
             data!.Messages = messages;
             return data;

@@ -46,9 +46,9 @@ public static class GigSheetHelpers
         var sheetData = new List<SheetModel>();
 
         // Loop through all sheets to see if they exist.
-        foreach (var name in Enum.GetNames<GigSheetEnum>())
+        foreach (var name in Enum.GetNames<SheetEnum>())
         {
-            GigSheetEnum sheetEnum = (GigSheetEnum)Enum.Parse(typeof(GigSheetEnum), name);
+            SheetEnum sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), name);
 
             if (spreadsheetSheets.Contains(name))
             {
@@ -58,43 +58,43 @@ public static class GigSheetHelpers
             // Get data for each missing sheet.
             switch (sheetEnum)
             {
-                case GigSheetEnum.ADDRESSES:
+                case SheetEnum.ADDRESSES:
                     sheetData.Add(AddressMapper.GetSheet());
                     break;
-                case GigSheetEnum.DAILY:
+                case SheetEnum.DAILY:
                     sheetData.Add(DailyMapper.GetSheet());
                     break;
-                case GigSheetEnum.MONTHLY:
+                case SheetEnum.MONTHLY:
                     sheetData.Add(MonthlyMapper.GetSheet());
                     break;
-                case GigSheetEnum.NAMES:
+                case SheetEnum.NAMES:
                     sheetData.Add(NameMapper.GetSheet());
                     break;
-                case GigSheetEnum.PLACES:
+                case SheetEnum.PLACES:
                     sheetData.Add(PlaceMapper.GetSheet());
                     break;
-                case GigSheetEnum.REGIONS:
+                case SheetEnum.REGIONS:
                     sheetData.Add(RegionMapper.GetSheet());
                     break;
-                case GigSheetEnum.SERVICES:
+                case SheetEnum.SERVICES:
                     sheetData.Add(ServiceMapper.GetSheet());
                     break;
-                case GigSheetEnum.SHIFTS:
+                case SheetEnum.SHIFTS:
                     sheetData.Add(ShiftMapper.GetSheet());
                     break;
-                case GigSheetEnum.TRIPS:
+                case SheetEnum.TRIPS:
                     sheetData.Add(TripMapper.GetSheet());
                     break;
-                case GigSheetEnum.TYPES:
+                case SheetEnum.TYPES:
                     sheetData.Add(TypeMapper.GetSheet());
                     break;
-                case GigSheetEnum.WEEKDAYS:
+                case SheetEnum.WEEKDAYS:
                     sheetData.Add(WeekdayMapper.GetSheet());
                     break;
-                case GigSheetEnum.WEEKLY:
+                case SheetEnum.WEEKLY:
                     sheetData.Add(WeeklyMapper.GetSheet());
                     break;
-                case GigSheetEnum.YEARLY:
+                case SheetEnum.YEARLY:
                     sheetData.Add(YearlyMapper.GetSheet());
                     break;
                 default:
@@ -130,16 +130,16 @@ public static class GigSheetHelpers
         return dataValidation;
     }
 
-    private static GigSheetEnum? GetSheetForRange(ValidationEnum validationEnum)
+    private static SheetEnum? GetSheetForRange(ValidationEnum validationEnum)
     {
         return validationEnum switch
         {
-            ValidationEnum.RANGE_ADDRESS => GigSheetEnum.ADDRESSES,
-            ValidationEnum.RANGE_NAME => GigSheetEnum.NAMES,
-            ValidationEnum.RANGE_PLACE => GigSheetEnum.PLACES,
-            ValidationEnum.RANGE_REGION => GigSheetEnum.REGIONS,
-            ValidationEnum.RANGE_SERVICE => GigSheetEnum.SERVICES,
-            ValidationEnum.RANGE_TYPE => GigSheetEnum.TYPES,
+            ValidationEnum.RANGE_ADDRESS => SheetEnum.ADDRESSES,
+            ValidationEnum.RANGE_NAME => SheetEnum.NAMES,
+            ValidationEnum.RANGE_PLACE => SheetEnum.PLACES,
+            ValidationEnum.RANGE_REGION => SheetEnum.REGIONS,
+            ValidationEnum.RANGE_SERVICE => SheetEnum.SERVICES,
+            ValidationEnum.RANGE_TYPE => SheetEnum.TYPES,
             _ => null
         };
     }
@@ -256,7 +256,7 @@ public static class GigSheetHelpers
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.VISIT_FIRST.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), GigSheetEnum.SHIFTS.GetDescription(), shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), shiftSheet.GetColumn(keyEnum.GetDescription()), true),
+                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), SheetEnum.SHIFTS.GetDescription(), shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), shiftSheet.GetColumn(keyEnum.GetDescription()), true),
                     Note = ColumnNotes.DateFormat,
                     Format = FormatEnum.DATE
                 });
@@ -264,7 +264,7 @@ public static class GigSheetHelpers
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.VISIT_LAST.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), GigSheetEnum.SHIFTS.GetDescription(), shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), shiftSheet.GetColumn(keyEnum.GetDescription()), false),
+                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), SheetEnum.SHIFTS.GetDescription(), shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), shiftSheet.GetColumn(keyEnum.GetDescription()), false),
                     Note = ColumnNotes.DateFormat,
                     Format = FormatEnum.DATE
                 });
@@ -470,14 +470,14 @@ public static class GigSheetHelpers
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.VISIT_FIRST.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), GigSheetEnum.TRIPS.GetDescription(), refSheet.GetColumn(HeaderEnum.DATE.GetDescription()), refSheet.GetColumn(keyEnum.GetDescription()), true),
+                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), SheetEnum.TRIPS.GetDescription(), refSheet.GetColumn(HeaderEnum.DATE.GetDescription()), refSheet.GetColumn(keyEnum.GetDescription()), true),
                     Format = FormatEnum.DATE
                 });
                 // L - Last Visit
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.VISIT_LAST.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), GigSheetEnum.TRIPS.GetDescription(), refSheet.GetColumn(HeaderEnum.DATE.GetDescription()), refSheet.GetColumn(keyEnum.GetDescription()), false),
+                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), SheetEnum.TRIPS.GetDescription(), refSheet.GetColumn(HeaderEnum.DATE.GetDescription()), refSheet.GetColumn(keyEnum.GetDescription()), false),
                     Format = FormatEnum.DATE
                 });
                 break;
@@ -540,59 +540,59 @@ public static class GigSheetHelpers
             var sheetRange = matchedValue.DataFilters[0].A1Range;
             var values = matchedValue.ValueRange.Values;
 
-            Enum.TryParse(sheetRange.ToUpper(), out GigSheetEnum sheetEnum);
+            Enum.TryParse(sheetRange.ToUpper(), out SheetEnum sheetEnum);
 
             switch (sheetEnum)
             {
-                case GigSheetEnum.ADDRESSES:
+                case SheetEnum.ADDRESSES:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, AddressMapper.GetSheet()));
                     sheet.Addresses = AddressMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.DAILY:
+                case SheetEnum.DAILY:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, DailyMapper.GetSheet()));
                     sheet.Daily = DailyMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.MONTHLY:
+                case SheetEnum.MONTHLY:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, MonthlyMapper.GetSheet()));
                     sheet.Monthly = MonthlyMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.NAMES:
+                case SheetEnum.NAMES:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, NameMapper.GetSheet()));
                     sheet.Names = NameMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.PLACES:
+                case SheetEnum.PLACES:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, PlaceMapper.GetSheet()));
                     sheet.Places = PlaceMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.REGIONS:
+                case SheetEnum.REGIONS:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, RegionMapper.GetSheet()));
                     sheet.Regions = RegionMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.SERVICES:
+                case SheetEnum.SERVICES:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, ServiceMapper.GetSheet()));
                     sheet.Services = ServiceMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.SHIFTS:
+                case SheetEnum.SHIFTS:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, ShiftMapper.GetSheet()));
                     sheet.Shifts = ShiftMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.TRIPS:
+                case SheetEnum.TRIPS:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, TripMapper.GetSheet()));
                     sheet.Trips = TripMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.TYPES:
+                case SheetEnum.TYPES:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, TypeMapper.GetSheet()));
                     sheet.Types = TypeMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.WEEKDAYS:
+                case SheetEnum.WEEKDAYS:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, WeekdayMapper.GetSheet()));
                     sheet.Weekdays = WeekdayMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.WEEKLY:
+                case SheetEnum.WEEKLY:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, WeeklyMapper.GetSheet()));
                     sheet.Weekly = WeeklyMapper.MapFromRangeData(values);
                     break;
-                case GigSheetEnum.YEARLY:
+                case SheetEnum.YEARLY:
                     sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, YearlyMapper.GetSheet()));
                     sheet.Yearly = YearlyMapper.MapFromRangeData(values);
                     break;

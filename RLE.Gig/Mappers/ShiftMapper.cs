@@ -145,7 +145,7 @@ namespace RLE.Gig.Mappers
             var sheet = SheetsConfig.ShiftSheet;
 
             var tripSheet = TripMapper.GetSheet();
-            var sheetTripsName = GigSheetEnum.TRIPS.GetDescription();
+            var sheetTripsName = SheetEnum.TRIPS.GetDescription();
             var sheetTripsTypeRange = tripSheet.Headers.First(x => x.Name == HeaderEnum.TYPE.GetDescription()).Range;
 
             sheet.Headers = [];

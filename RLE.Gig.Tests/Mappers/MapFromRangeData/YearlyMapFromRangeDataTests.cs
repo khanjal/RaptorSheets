@@ -18,7 +18,7 @@ public class YearlyMapFromRangeDataTests
     public YearlyMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == GigSheetEnum.YEARLY.GetDescription()).First().ValueRange.Values;
+        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.YEARLY.GetDescription()).First().ValueRange.Values;
         _entities = YearlyMapper.MapFromRangeData(_values!);
     }
 

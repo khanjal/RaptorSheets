@@ -11,7 +11,7 @@ public static class SheetsConfig
 {
     public static SheetModel AddressSheet => new()
     {
-        Name = GigSheetEnum.ADDRESSES.GetDescription(),
+        Name = SheetEnum.ADDRESSES.GetDescription(),
         CellColor = ColorEnum.LIGHT_CYAN,
         TabColor = ColorEnum.CYAN,
         FreezeColumnCount = 1,
@@ -25,7 +25,7 @@ public static class SheetsConfig
 
     public static SheetModel DailySheet => new()
     {
-        Name = GigSheetEnum.DAILY.GetDescription(),
+        Name = SheetEnum.DAILY.GetDescription(),
         TabColor = ColorEnum.LIGHT_GREEN,
         CellColor = ColorEnum.LIGHT_GRAY,
         FreezeColumnCount = 1,
@@ -47,7 +47,7 @@ public static class SheetsConfig
 
     public static SheetModel MonthlySheet => new()
     {
-        Name = GigSheetEnum.MONTHLY.GetDescription(),
+        Name = SheetEnum.MONTHLY.GetDescription(),
         TabColor = ColorEnum.LIGHT_GREEN,
         CellColor = ColorEnum.LIGHT_GRAY,
         FreezeColumnCount = 1,
@@ -67,7 +67,7 @@ public static class SheetsConfig
 
     public static SheetModel NameSheet => new()
     {
-        Name = GigSheetEnum.NAMES.GetDescription(),
+        Name = SheetEnum.NAMES.GetDescription(),
         TabColor = ColorEnum.CYAN,
         CellColor = ColorEnum.LIGHT_CYAN,
         FreezeColumnCount = 1,
@@ -81,7 +81,7 @@ public static class SheetsConfig
 
     public static SheetModel PlaceSheet => new()
     {
-        Name = GigSheetEnum.PLACES.GetDescription(),
+        Name = SheetEnum.PLACES.GetDescription(),
         TabColor = ColorEnum.CYAN,
         CellColor = ColorEnum.LIGHT_CYAN,
         FreezeColumnCount = 1,
@@ -95,7 +95,7 @@ public static class SheetsConfig
 
     public static SheetModel RegionSheet => new()
     {
-        Name = GigSheetEnum.REGIONS.GetDescription(),
+        Name = SheetEnum.REGIONS.GetDescription(),
         TabColor = ColorEnum.CYAN,
         CellColor = ColorEnum.LIGHT_CYAN,
         FreezeColumnCount = 1,
@@ -109,7 +109,7 @@ public static class SheetsConfig
 
     public static SheetModel ServiceSheet => new()
     {
-        Name = GigSheetEnum.SERVICES.GetDescription(),
+        Name = SheetEnum.SERVICES.GetDescription(),
         TabColor = ColorEnum.CYAN,
         CellColor = ColorEnum.LIGHT_CYAN,
         FreezeColumnCount = 1,
@@ -123,7 +123,7 @@ public static class SheetsConfig
 
     public static SheetModel ShiftSheet => new()
     {
-        Name = GigSheetEnum.SHIFTS.GetDescription(),
+        Name = SheetEnum.SHIFTS.GetDescription(),
         TabColor = ColorEnum.RED,
         CellColor = ColorEnum.LIGHT_RED,
         FreezeColumnCount = 1,
@@ -167,7 +167,7 @@ public static class SheetsConfig
 
     public static SheetModel TripSheet => new()
     {
-        Name = GigSheetEnum.TRIPS.GetDescription(),
+        Name = SheetEnum.TRIPS.GetDescription(),
         TabColor = ColorEnum.DARK_YELLOW,
         CellColor = ColorEnum.LIGHT_YELLOW,
         FreezeColumnCount = 1,
@@ -204,7 +204,7 @@ public static class SheetsConfig
 
     public static SheetModel TypeSheet => new()
     {
-        Name = GigSheetEnum.TYPES.GetDescription(),
+        Name = SheetEnum.TYPES.GetDescription(),
         TabColor = ColorEnum.CYAN,
         CellColor = ColorEnum.LIGHT_CYAN,
         FreezeColumnCount = 1,
@@ -218,7 +218,7 @@ public static class SheetsConfig
 
     public static SheetModel WeekdaySheet => new()
     {
-        Name = GigSheetEnum.WEEKDAYS.GetDescription(),
+        Name = SheetEnum.WEEKDAYS.GetDescription(),
         TabColor = ColorEnum.LIGHT_GREEN,
         CellColor = ColorEnum.LIGHT_GRAY,
         FreezeColumnCount = 1,
@@ -242,7 +242,7 @@ public static class SheetsConfig
 
     public static SheetModel WeeklySheet => new()
     {
-        Name = GigSheetEnum.WEEKLY.GetDescription(),
+        Name = SheetEnum.WEEKLY.GetDescription(),
         TabColor = ColorEnum.LIGHT_GREEN,
         CellColor = ColorEnum.LIGHT_GRAY,
         FreezeColumnCount = 1,
@@ -264,7 +264,7 @@ public static class SheetsConfig
 
     public static SheetModel YearlySheet => new()
     {
-        Name = GigSheetEnum.YEARLY.GetDescription(),
+        Name = SheetEnum.YEARLY.GetDescription(),
         TabColor = ColorEnum.LIGHT_GREEN,
         CellColor = ColorEnum.LIGHT_GRAY,
         FreezeColumnCount = 1,

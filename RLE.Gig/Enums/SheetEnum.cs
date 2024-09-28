@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace RLE.Gig.Enums;
 
-public enum GigSheetEnum
+public enum SheetEnum
 {
 
     // Core
