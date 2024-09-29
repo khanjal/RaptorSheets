@@ -2,7 +2,7 @@
 
 | Badge Name | Status |
 | ---------- | :------------: |
-| Latest Build Status | ![build status](https://github.com/khanjal/RaptorLoggerEngine/actions/workflows/dotnet.yml/badge.svg) |
+| Latest Build Status | [![build status](https://github.com/khanjal/RaptorLoggerEngine/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorLoggerEngine/actions) |
 | RLE.Gig Nuget Version | [![Nuget](https://img.shields.io/nuget/v/RaptorLoggerEngine.Gig)](https://www.nuget.org/packages/RaptorLoggerEngine.Gig/) |
 
 
@@ -10,10 +10,10 @@
 
 This project is a library used to handle the interactions between a custom API service and Google Sheets API. It offers the following features:
 
-* Appending data to trips and shifts sheets
-* Creating, formatting, and styling all sheets in the worksheet.
-* Getting data from all the sheets in the worksheet (individually, group, and batch)
-* Getting worksheet properties like title and sheet tab names
+* Appending data to defined sheets
+* Creating, formatting, and styling all sheets.
+* Getting data from all the sheets (individually, group, and batch)
+* Getting spreadsheet properties like title and sheet tab names
 
 # Using Library
 
@@ -73,7 +73,7 @@ You'll need to create your own service account and use the credentials to access
 
 ## Local Setup
 
-Add ````Google JSON Credentials```` by right clicking on ````RaptorLoggerEngine.tests```` and selecting ````Manage User Secrets```` (secrets.json)
+Add ````Google JSON Credentials```` by right clicking on ````RaptorLoggerEngine.Gig.Tests```` and selecting ````Manage User Secrets```` (secrets.json)
 
 Add the following JSON properties to it:
 
