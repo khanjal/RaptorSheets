@@ -5,9 +5,9 @@ using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Enums;
 using RLE.Gig.Utilities;
 using RLE.Gig.Tests.Data.Helpers;
-using RLE.Core.Utilities.Google;
+using RLE.Core.Services;
 
-namespace RLE.Gig.Tests.Utilities.Google;
+namespace RLE.Gig.Tests.Services;
 
 public class GoogleSheetServiceTests
 {

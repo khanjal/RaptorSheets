@@ -7,8 +7,8 @@ using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
 using RLE.Core.Interfaces;
 using RLE.Core.Constants;
-using RLE.Core.Utilities.Google;
 using RLE.Gig.Entities;
+using RLE.Core.Services;
 
 namespace RLE.Gig.Utilities.Google;
 

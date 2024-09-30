@@ -5,7 +5,7 @@ using Google.Apis.Sheets.v4.Data;
 using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
 using RLE.Core.Constants;
 
-namespace RLE.Core.Utilities.Google;
+namespace RLE.Core.Services;
 
 public interface IGoogleSheetService
 {
