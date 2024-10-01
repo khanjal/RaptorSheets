@@ -1,11 +1,11 @@
 using RLE.Core.Enums;
+using RLE.Core.Extensions;
 using RLE.Core.Models.Google;
 using RLE.Core.Utilities;
-using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Constants;
 using RLE.Gig.Entities;
 using RLE.Gig.Enums;
-using RLE.Gig.Utilities;
+using RLE.Gig.Helpers;
 
 namespace RLE.Gig.Mappers
 {

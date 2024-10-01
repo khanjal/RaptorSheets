@@ -1,8 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
+using RLE.Core.Constants;
 using RLE.Core.Enums;
 using RLE.Core.Models.Google;
-using RLE.Core.Utilities.Extensions;
-using RLE.Core.Constants;
 
 namespace RLE.Core.Utilities;
 

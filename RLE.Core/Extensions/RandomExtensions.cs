@@ -1,4 +1,4 @@
-﻿namespace RLE.Core.Utilities.Extensions;
+﻿namespace RLE.Core.Extensions;
 
 public static class RandomExtensions
 {

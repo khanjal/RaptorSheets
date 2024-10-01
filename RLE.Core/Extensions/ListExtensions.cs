@@ -1,7 +1,7 @@
 using RLE.Core.Constants;
 using RLE.Core.Models.Google;
 
-namespace RLE.Core.Utilities.Extensions;
+namespace RLE.Core.Extensions;
 
 public static class ListExtensions
 {

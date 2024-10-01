@@ -1,31 +1,31 @@
 ﻿using FluentAssertions;
 using Google.Apis.Sheets.v4.Data;
-using RLE.Core.Models.Google;
-using RLE.Gig.Utilities.Google;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
 using RLE.Core.Constants;
 using RLE.Core.Utilities;
+using RLE.Core.Models.Google;
+using RLE.Gig.Helpers;
 
-namespace RLE.Gig.Tests.Utilities.Google;
+namespace RLE.Gig.Tests.Helpers;
 
-public class GenerateSheetsTests
+public class GoogleSheetHelpersTests
 {
     public static IEnumerable<object[]> Sheets =>
     [
-        [AddressMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.ADDRESSES])],
-        [DailyMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.DAILY])],
-        [MonthlyMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.MONTHLY])],
-        [NameMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.NAMES])],
-        [PlaceMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.PLACES])],
-        [RegionMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.REGIONS])],
-        [ServiceMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.SERVICES])],
-        [ShiftMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.SHIFTS])],
-        [TripMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.TRIPS])],
-        [TypeMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.TYPES])],
-        [WeekdayMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.WEEKDAYS])],
-        [WeeklyMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.WEEKLY])],
-        [YearlyMapper.GetSheet(), GenerateSheetHelper.Generate([SheetEnum.YEARLY])],
+        [AddressMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.ADDRESSES])],
+        [DailyMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.DAILY])],
+        [MonthlyMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.MONTHLY])],
+        [NameMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.NAMES])],
+        [PlaceMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.PLACES])],
+        [RegionMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.REGIONS])],
+        [ServiceMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.SERVICES])],
+        [ShiftMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.SHIFTS])],
+        [TripMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.TRIPS])],
+        [TypeMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.TYPES])],
+        [WeekdayMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.WEEKDAYS])],
+        [WeeklyMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.WEEKLY])],
+        [YearlyMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.YEARLY])],
     ];
 
     [Theory]

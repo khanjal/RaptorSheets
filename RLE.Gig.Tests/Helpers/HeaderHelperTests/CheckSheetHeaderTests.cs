@@ -1,15 +1,15 @@
 ﻿using FluentAssertions;
 using Google.Apis.Sheets.v4.Data;
-using RLE.Core.Enums;
-using RLE.Core.Models.Google;
-using RLE.Core.Utilities.Extensions;
 using RLE.Core.Utilities;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
 using RLE.Gig.Tests.Data.Helpers;
 using RLE.Gig.Tests.Data;
+using RLE.Core.Enums;
+using RLE.Core.Extensions;
+using RLE.Core.Models.Google;
 
-namespace RLE.Gig.Tests.Utilities.HeaderHelperTests;
+namespace RLE.Gig.Tests.Helpers.HeaderHelperTests;
 
 [Collection("Google Data collection")]
 public class CheckSheetHeaderTests

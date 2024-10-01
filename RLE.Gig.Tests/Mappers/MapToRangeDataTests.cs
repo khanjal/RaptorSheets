@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
-using RLE.Core.Enums;
+using RLE.Core.Extensions;
 using RLE.Core.Utilities;
-using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Entities;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;

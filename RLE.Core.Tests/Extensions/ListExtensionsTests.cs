@@ -2,7 +2,7 @@
 using RLE.Core.Tests.Data;
 using Xunit;
 
-namespace RLE.Core.Tests.Utilities.Extensions;
+namespace RLE.Core.Tests.Extensions;
 
 public class ListExtensionsTests
 {

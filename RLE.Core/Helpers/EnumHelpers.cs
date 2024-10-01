@@ -1,4 +1,4 @@
-﻿using RLE.Core.Utilities.Extensions;
+﻿using RLE.Core.Extensions;
 
 namespace RLE.Core.Utilities
 {

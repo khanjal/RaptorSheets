@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Reflection;
 
-namespace RLE.Core.Utilities.Extensions;
+namespace RLE.Core.Extensions;
 
 public static class EnumExtensions
 {

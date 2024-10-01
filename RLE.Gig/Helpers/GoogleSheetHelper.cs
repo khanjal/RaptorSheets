@@ -1,14 +1,14 @@
 ﻿using Google.Apis.Sheets.v4.Data;
-using RLE.Core.Enums;
-using RLE.Core.Models.Google;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
 using RLE.Core.Constants;
 using RLE.Core.Utilities;
+using RLE.Core.Enums;
+using RLE.Core.Models.Google;
 
-namespace RLE.Gig.Utilities.Google;
+namespace RLE.Gig.Helpers;
 
-public static class GenerateSheetHelper
+public static class GoogleSheetHelper
 {
     private static SheetModel? _sheet;
     private static int? _sheetId;

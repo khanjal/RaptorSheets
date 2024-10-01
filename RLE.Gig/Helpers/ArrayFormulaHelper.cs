@@ -1,4 +1,4 @@
-namespace RLE.Gig.Utilities;
+namespace RLE.Gig.Helpers;
 
 public static class ArrayFormulaHelper
 {

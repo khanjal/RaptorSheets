@@ -1,6 +1,6 @@
 ﻿using RLE.Core.Enums;
+using RLE.Core.Extensions;
 using RLE.Core.Models.Google;
-using RLE.Core.Utilities.Extensions;
 
 namespace RLE.Core.Tests.Data;
 

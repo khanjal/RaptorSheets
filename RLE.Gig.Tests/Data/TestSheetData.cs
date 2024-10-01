@@ -1,6 +1,6 @@
 ﻿using RLE.Core.Enums;
+using RLE.Core.Extensions;
 using RLE.Core.Models.Google;
-using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Enums;
 
 namespace RLE.Gig.Tests.Data;

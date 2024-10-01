@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
+using RLE.Core.Extensions;
 using RLE.Core.Models.Google;
 using RLE.Core.Tests.Data;
-using RLE.Core.Utilities.Extensions;
 using Xunit;
 
-namespace RLE.Core.Tests.Utilities.Extensions;
+namespace RLE.Core.Tests.Extensions;
 
 public class ObjectExtensionsTests
 {

@@ -1,7 +1,7 @@
 ﻿using RLE.Core.Utilities;
 using RLE.Gig.Tests.Data.Helpers;
 
-namespace RLE.Gig.Tests.Utilities.HeaderHelperTests;
+namespace RLE.Gig.Tests.Helpers.HeaderHelperTests;
 
 public class GetValueTests
 {

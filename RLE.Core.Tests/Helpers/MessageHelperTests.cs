@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
 using RLE.Core.Enums;
+using RLE.Core.Extensions;
 using RLE.Core.Utilities;
-using RLE.Core.Utilities.Extensions;
 using Xunit;
 
-namespace RLE.Core.Tests.Utilities;
+namespace RLE.Core.Tests.Helpers;
 
 public class MessageHelperTests
 {

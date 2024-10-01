@@ -1,11 +1,11 @@
 ﻿using FluentAssertions;
 using Google.Apis.Sheets.v4.Data;
 using Moq;
-using RLE.Core.Utilities.Extensions;
 using RLE.Gig.Enums;
-using RLE.Gig.Utilities;
 using RLE.Gig.Tests.Data.Helpers;
 using RLE.Core.Services;
+using RLE.Core.Extensions;
+using RLE.Gig.Helpers;
 
 namespace RLE.Gig.Tests.Services;
 

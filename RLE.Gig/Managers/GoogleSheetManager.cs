@@ -1,16 +1,17 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using RLE.Core.Entities;
-using RLE.Core.Enums;
-using RLE.Core.Utilities.Extensions;
 using RLE.Core.Utilities;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
-using RLE.Core.Interfaces;
 using RLE.Core.Constants;
 using RLE.Gig.Entities;
 using RLE.Core.Services;
+using RLE.Core.Enums;
+using RLE.Core.Extensions;
+using RLE.Core.Interfaces;
+using RLE.Gig.Helpers;
 
-namespace RLE.Gig.Utilities.Google;
+namespace RLE.Gig.Managers;
 
 public interface IGoogleSheetManager : ISheetManager
 {
@@ -223,7 +224,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<SheetEntity> CreateSheets(List<SheetEnum> sheets)
     {
-        var batchUpdateSpreadsheetRequest = GenerateSheetHelper.Generate(sheets);
+        var batchUpdateSpreadsheetRequest = GoogleSheetHelper.Generate(sheets);
         var response = await _googleSheetService.CreateSheets(batchUpdateSpreadsheetRequest);
 
         var sheetEntity = new SheetEntity();

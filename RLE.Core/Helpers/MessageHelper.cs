@@ -1,6 +1,6 @@
 ﻿using RLE.Core.Entities;
 using RLE.Core.Enums;
-using RLE.Core.Utilities.Extensions;
+using RLE.Core.Extensions;
 
 namespace RLE.Core.Utilities;
 
