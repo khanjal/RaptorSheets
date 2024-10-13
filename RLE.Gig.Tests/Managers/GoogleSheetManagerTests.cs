@@ -6,6 +6,8 @@ using RLE.Gig.Entities;
 using RLE.Core.Enums;
 using RLE.Core.Extensions;
 using RLE.Gig.Managers;
+using RLE.Core.Services;
+using RLE.Core.Wrappers;
 
 namespace RLE.Gig.Tests.Managers;
 
@@ -27,7 +29,8 @@ public class GoogleSheetManagerTests
         _spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
         _credential = TestConfigurationHelper.GetJsonCredential();
 
-        _googleSheetManager = new GoogleSheetManager(_credential, _spreadsheetId);
+        _googleSheetManager = new GoogleSheetManager(new GoogleSheetService(new SheetServiceWrapper()));
+        _googleSheetManager.
     }
 
     [Fact]
@@ -51,7 +54,9 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenGetSheet_WithInvalidSpreadsheetId_ReturnErrorMessages()
     {
-        var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
+        //var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
+        var googleSheetService = new GoogleSheetService(new SheetServiceWrapper());
+        googleSheetService.InitializeService(_credential, _spreadsheetId);
         var result = await googleSheetManager.GetSheets();
         result.Should().NotBeNull();
         result!.Messages.Should().HaveCount(2);

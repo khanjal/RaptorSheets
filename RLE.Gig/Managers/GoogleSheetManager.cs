@@ -27,14 +27,19 @@ public class GoogleSheetManager : IGoogleSheetManager
 {
     private readonly GoogleSheetService _googleSheetService;
 
-    public GoogleSheetManager(string accessToken, string spreadsheetId)
+    public GoogleSheetManager(GoogleSheetService sheetService)
     {
-        _googleSheetService = new GoogleSheetService(accessToken, spreadsheetId);
+        _googleSheetService = sheetService;
     }
 
-    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId)
+    public void InitializeService(string accessToken, string spreadsheetId)
     {
-        _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
+        _googleSheetService.InitializeService(accessToken, spreadsheetId);
+    }
+
+    public void InitializeService(Dictionary<string, string> parameters, string spreadsheetId)
+    {
+        _googleSheetService.InitializeService(parameters, spreadsheetId);
     }
 
     public async Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity)

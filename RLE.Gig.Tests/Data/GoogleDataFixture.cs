@@ -1,6 +1,7 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using RLE.Core.Extensions;
 using RLE.Core.Services;
+using RLE.Core.Wrappers;
 using RLE.Gig.Enums;
 using RLE.Gig.Tests.Data.Helpers;
 
@@ -13,7 +14,9 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
         var spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
         var credential = TestConfigurationHelper.GetJsonCredential();
 
-        var googleSheetService = new GoogleSheetService(credential, spreadsheetId);
+        var googleSheetService = new GoogleSheetService(new SheetServiceWrapper());
+        googleSheetService.InitializeService(credential, spreadsheetId);
+        //var googleSheetService = new GoogleSheetService(credential, spreadsheetId);
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
         var result = await googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
 

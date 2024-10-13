@@ -6,6 +6,7 @@ using RLE.Gig.Tests.Data.Helpers;
 using RLE.Core.Services;
 using RLE.Core.Extensions;
 using RLE.Gig.Helpers;
+using RLE.Core.Wrappers;
 
 namespace RLE.Gig.Tests.Services;
 
@@ -21,7 +22,8 @@ public class GoogleSheetServiceTests
         _spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
         _credential = TestConfigurationHelper.GetJsonCredential();
 
-        _googleSheetService = new GoogleSheetService(_credential, _spreadsheetId);
+        _googleSheetService = new GoogleSheetService(new SheetServiceWrapper());
+        _googleSheetService.InitializeService(_credential, _spreadsheetId);
     }
 
     [Fact]

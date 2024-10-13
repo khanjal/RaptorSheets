@@ -1,9 +1,6 @@
-﻿using Google.Apis.Auth.OAuth2;
-using Google.Apis.Services;
-using Google.Apis.Sheets.v4;
-using Google.Apis.Sheets.v4.Data;
-using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
+﻿using Google.Apis.Sheets.v4.Data;
 using RLE.Core.Constants;
+using RLE.Core.Wrappers;
 
 namespace RLE.Core.Services;
 
@@ -18,54 +15,29 @@ public interface IGoogleSheetService
 
 public class GoogleSheetService : IGoogleSheetService
 {
-    private SheetsService _sheetsService = new();
-    private readonly string _spreadsheetId = "";
+    private SheetServiceWrapper _sheetService;
     private readonly string _range = GoogleConfig.Range;
 
-
-    public GoogleSheetService(string accessToken, string spreadsheetId)
+    public GoogleSheetService(SheetServiceWrapper sheetService)
     {
-        _spreadsheetId = spreadsheetId;
-        var credential = GoogleCredential.FromAccessToken(accessToken.Trim());
-
-        InitializeService(credential);
+        _sheetService = sheetService;
     }
 
-    public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId)
+    public void InitializeService(string accessToken, string spreadsheetId)
     {
-        _spreadsheetId = spreadsheetId;
-        var jsonCredential = new JsonCredentialParameters
-        {
-            Type = parameters["type"].Trim(),
-            PrivateKeyId = parameters["privateKeyId"].Trim(),
-            PrivateKey = parameters["privateKey"].Trim(),
-            ClientEmail = parameters["clientEmail"].Trim(),
-            ClientId = parameters["clientId"].Trim(),
-        };
-
-        var credential = GoogleCredential.FromJsonParameters(jsonCredential);
-
-        InitializeService(credential);
+        _sheetService.InitializeService(accessToken, spreadsheetId);
     }
 
-    private void InitializeService(GoogleCredential credential)
+    public void InitializeService(Dictionary<string, string> parameters, string spreadsheetId)
     {
-        _sheetsService = new SheetsService(new BaseClientService.Initializer()
-        {
-            HttpClientInitializer = credential,
-            ApplicationName = GoogleConfig.AppName
-        });
+        _sheetService.InitializeService(parameters, spreadsheetId);
     }
 
     public async Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range)
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.Values.Append(valueRange, _spreadsheetId, range);
-            request.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
-            var response = await request.ExecuteAsync();
-
-            return response;
+            return await _sheetService.AppendValues(range, valueRange);
         }
         catch (Exception)
         {
@@ -78,10 +50,7 @@ public class GoogleSheetService : IGoogleSheetService
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, _spreadsheetId);
-            var response = await request.ExecuteAsync();
-
-            return response;
+            return await _sheetService.BatchUpdate(batchUpdateSpreadsheetRequest);
         }
         catch (Exception)
         {
@@ -113,8 +82,7 @@ public class GoogleSheetService : IGoogleSheetService
 
         try
         {
-            var request = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(body, _spreadsheetId);
-            var response = await request.ExecuteAsync();
+            var response = await _sheetService.BatchGetByDataFilter(body);
 
             return response;
         }
@@ -129,10 +97,7 @@ public class GoogleSheetService : IGoogleSheetService
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.Values.Get(_spreadsheetId, $"{sheet}!{_range}");
-            var response = await request.ExecuteAsync();
-
-            return response;
+            return await _sheetService.GetValues($"{sheet}!{_range}");
         }
         catch (Exception)
         {
@@ -146,8 +111,7 @@ public class GoogleSheetService : IGoogleSheetService
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.Get(_spreadsheetId);
-            var response = await request.ExecuteAsync();
+            var response = await _sheetService.GetSpreadsheet();
 
             return response;
         }
