@@ -1,9 +1,6 @@
-﻿using Google.Apis.Auth.OAuth2;
-using Google.Apis.Services;
-using Google.Apis.Sheets.v4;
-using Google.Apis.Sheets.v4.Data;
-using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
+﻿using Google.Apis.Sheets.v4.Data;
 using RLE.Core.Constants;
+using RLE.Core.Wrappers;
 
 namespace RLE.Core.Services;
 
@@ -18,7 +15,7 @@ public interface IGoogleSheetService
 
 public class GoogleSheetService : IGoogleSheetService
 {
-    private SheetsService _sheetsService = new();
+    private SheetServiceWrapper _sheetService;
     private readonly string _spreadsheetId = "";
     private readonly string _range = GoogleConfig.Range;
 
@@ -26,44 +23,20 @@ public class GoogleSheetService : IGoogleSheetService
     public GoogleSheetService(string accessToken, string spreadsheetId)
     {
         _spreadsheetId = spreadsheetId;
-        var credential = GoogleCredential.FromAccessToken(accessToken.Trim());
-
-        InitializeService(credential);
+        _sheetService = new SheetServiceWrapper(accessToken, spreadsheetId);
     }
 
     public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId)
     {
         _spreadsheetId = spreadsheetId;
-        var jsonCredential = new JsonCredentialParameters
-        {
-            Type = parameters["type"].Trim(),
-            PrivateKeyId = parameters["privateKeyId"].Trim(),
-            PrivateKey = parameters["privateKey"].Trim(),
-            ClientEmail = parameters["clientEmail"].Trim(),
-            ClientId = parameters["clientId"].Trim(),
-        };
-
-        var credential = GoogleCredential.FromJsonParameters(jsonCredential);
-
-        InitializeService(credential);
-    }
-
-    private void InitializeService(GoogleCredential credential)
-    {
-        _sheetsService = new SheetsService(new BaseClientService.Initializer()
-        {
-            HttpClientInitializer = credential,
-            ApplicationName = GoogleConfig.AppName
-        });
+        _sheetService = new SheetServiceWrapper(parameters, spreadsheetId);
     }
 
     public async Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range)
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.Values.Append(valueRange, _spreadsheetId, range);
-            request.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
-            var response = await request.ExecuteAsync();
+            var response = await _sheetService.AppendValues(range, valueRange);
 
             return response;
         }
@@ -78,8 +51,7 @@ public class GoogleSheetService : IGoogleSheetService
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, _spreadsheetId);
-            var response = await request.ExecuteAsync();
+            var response = await _sheetService.BatchUpdate(batchUpdateSpreadsheetRequest);
 
             return response;
         }
@@ -113,8 +85,7 @@ public class GoogleSheetService : IGoogleSheetService
 
         try
         {
-            var request = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(body, _spreadsheetId);
-            var response = await request.ExecuteAsync();
+            var response = await _sheetService.BatchGetByDataFilter(body);
 
             return response;
         }
@@ -129,8 +100,7 @@ public class GoogleSheetService : IGoogleSheetService
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.Values.Get(_spreadsheetId, $"{sheet}!{_range}");
-            var response = await request.ExecuteAsync();
+            var response = await _sheetService.GetValues($"{sheet}!{_range}");
 
             return response;
         }
@@ -146,8 +116,7 @@ public class GoogleSheetService : IGoogleSheetService
     {
         try
         {
-            var request = _sheetsService.Spreadsheets.Get(_spreadsheetId);
-            var response = await request.ExecuteAsync();
+            var response = await _sheetService.GetSpreadsheet();
 
             return response;
         }
