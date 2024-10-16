@@ -16,19 +16,16 @@ public interface IGoogleSheetService
 public class GoogleSheetService : IGoogleSheetService
 {
     private SheetServiceWrapper _sheetService;
-    private readonly string _spreadsheetId = "";
     private readonly string _range = GoogleConfig.Range;
 
 
     public GoogleSheetService(string accessToken, string spreadsheetId)
     {
-        _spreadsheetId = spreadsheetId;
         _sheetService = new SheetServiceWrapper(accessToken, spreadsheetId);
     }
 
     public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId)
     {
-        _spreadsheetId = spreadsheetId;
         _sheetService = new SheetServiceWrapper(parameters, spreadsheetId);
     }
 

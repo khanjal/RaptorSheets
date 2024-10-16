@@ -9,4 +9,6 @@ public enum HeaderEnum
 
     [Description("Second Column")]
     SECOND_COLUMN,
+
+    THIRD_COLUMN
 }
