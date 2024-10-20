@@ -9,8 +9,8 @@ public class JsonHelpers
 
     public static Spreadsheet? LoadDemoSpreadsheet()
     {
-        using StreamReader reader = new($"./Data/Json/DemoSheet.json");
-        var json = reader.ReadToEnd();
+        var path = GetDataJsonPath("DemoSheet");
+        var json = ReadJson(path);
         var sheetData = JsonConvert.DeserializeObject<Spreadsheet>(json);
 
         return sheetData;
@@ -18,26 +18,39 @@ public class JsonHelpers
 
     public static IList<IList<object>>? LoadJsonData(string filename)
     {
-        var path = $"./Data/Json/{filename}.json";
-        var values = ReadJson(path);
+        var path = GetDataJsonPath(filename);
+        var json = ReadJson(path);
+        var values = DeserializeJson<GoogleResponse>(json)?.Values;
 
         return values;
     }
 
     public static IList<IList<object>>? LoadJsonSheetData(string sheet)
     {
-        var path = $"./Data/Json/Sheets/{sheet}Sheet.json";
-        var values = ReadJson(path);
+        var path = GetDataJsonPath($"Sheets/{sheet}Sheet");
+        var json = ReadJson(path);
+        var values = DeserializeJson<GoogleResponse>(json)?.Values;
 
         return values;
     }
 
-    private static IList<IList<object>>? ReadJson(string path)
+    public static string GetDataJsonPath(string filename)
+    {
+        return $"./Data/Json/{filename}.json";
+    }
+
+    public static string ReadJson(string path)
     {
         using StreamReader reader = new(path);
         var json = reader.ReadToEnd();
-        var values = JsonConvert.DeserializeObject<GoogleResponse>(json)?.Values;
 
-        return values;
+        return json;
+    }
+
+    public static T DeserializeJson<T>(string json)
+    {
+        var values = JsonConvert.DeserializeObject<T>(json);
+
+        return values ?? default;
     }
 }
