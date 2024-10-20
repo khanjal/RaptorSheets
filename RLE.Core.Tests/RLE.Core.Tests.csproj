@@ -10,11 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Data\JSON\Headers.json" />
+    <None Remove="Data\Json\Headers.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Data\JSON\Headers.json">
+    <EmbeddedResource Include="Data\Json\Headers.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
