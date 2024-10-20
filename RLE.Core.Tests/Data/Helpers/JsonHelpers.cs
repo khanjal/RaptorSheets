@@ -1,22 +1,13 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using Newtonsoft.Json;
 using RLE.Core.Models.Google;
-using RLE.Gig.Entities;
 
-namespace RLE.Gig.Tests.Data.Helpers;
+namespace RLE.Core.Tests.Data.Helpers;
 
-internal class JsonHelpers
+public class JsonHelpers
 {
-    internal static SheetEntity? LoadSheetJson()
-    {
-        using StreamReader reader = new($"./Data/Json/ShiftWithTrips.json");
-        var json = reader.ReadToEnd();
-        var sheetData = JsonConvert.DeserializeObject<SheetEntity>(json);
 
-        return sheetData;
-    }
-
-    internal static Spreadsheet? LoadDemoSpreadsheet()
+    public static Spreadsheet? LoadDemoSpreadsheet()
     {
         using StreamReader reader = new($"./Data/Json/DemoSheet.json");
         var json = reader.ReadToEnd();
@@ -25,7 +16,7 @@ internal class JsonHelpers
         return sheetData;
     }
 
-    internal static IList<IList<object>>? LoadJsonData(string filename)
+    public static IList<IList<object>>? LoadJsonData(string filename)
     {
         var path = $"./Data/Json/{filename}.json";
         var values = ReadJson(path);
@@ -33,7 +24,7 @@ internal class JsonHelpers
         return values;
     }
 
-    internal static IList<IList<object>>? LoadJsonSheetData(string sheet)
+    public static IList<IList<object>>? LoadJsonSheetData(string sheet)
     {
         var path = $"./Data/Json/Sheets/{sheet}Sheet.json";
         var values = ReadJson(path);

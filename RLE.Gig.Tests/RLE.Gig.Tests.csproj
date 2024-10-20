@@ -77,6 +77,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RLE.Core.Tests\RLE.Core.Tests.csproj" />
     <ProjectReference Include="..\RLE.Core\RLE.Core.csproj" />
     <ProjectReference Include="..\RLE.Gig\RLE.Gig.csproj" />
   </ItemGroup>

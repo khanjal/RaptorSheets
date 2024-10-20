@@ -1,7 +1,8 @@
-﻿using RLE.Core.Utilities;
-using RLE.Gig.Tests.Data.Helpers;
+﻿using RLE.Core.Helpers;
+using RLE.Core.Tests.Data.Helpers;
+using Xunit;
 
-namespace RLE.Gig.Tests.Helpers.HeaderHelperTests;
+namespace RLE.Core.Tests.Helpers.HeaderHelperTests;
 
 public class GetValueTests
 {

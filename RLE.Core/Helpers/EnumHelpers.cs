@@ -1,6 +1,6 @@
 ﻿using RLE.Core.Extensions;
 
-namespace RLE.Core.Utilities
+namespace RLE.Core.Helpers
 {
     public static class EnumHelpers
     {

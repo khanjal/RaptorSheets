@@ -1,10 +1,10 @@
 using FluentAssertions;
 using RLE.Core.Enums;
+using RLE.Core.Helpers;
 using RLE.Core.Models.Google;
-using RLE.Core.Utilities;
 using RLE.Gig.Enums;
 using RLE.Gig.Helpers;
-using RLE.Gig.Tests.Data.Helpers;
+using RLE.Core.Tests.Data.Helpers;
 
 namespace RLE.Gig.Tests.Helpers;
 

@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using RLE.Core.Extensions;
+using RLE.Core.Helpers;
 using RLE.Core.Tests.Data;
-using RLE.Core.Utilities;
 using Xunit;
 
 namespace RLE.Core.Tests.Helpers;

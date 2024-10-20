@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using RLE.Core.Extensions;
-using RLE.Core.Utilities;
+using RLE.Core.Helpers;
+using RLE.Core.Tests.Data.Helpers;
 using RLE.Gig.Entities;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
@@ -14,7 +15,7 @@ public class MapToRangeDataTests
 
     public MapToRangeDataTests()
     {
-        _sheetData = JsonHelpers.LoadSheetJson();
+        _sheetData = GigJsonHelpers.LoadSheetJson();
     }
 
     [Fact]

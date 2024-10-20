@@ -2,7 +2,7 @@
 using RLE.Core.Enums;
 using RLE.Core.Extensions;
 
-namespace RLE.Core.Utilities;
+namespace RLE.Core.Helpers;
 
 public static class MessageHelper
 {

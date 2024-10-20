@@ -3,9 +3,9 @@ using Google.Apis.Sheets.v4.Data;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
 using RLE.Core.Constants;
-using RLE.Core.Utilities;
 using RLE.Core.Models.Google;
 using RLE.Gig.Helpers;
+using RLE.Core.Helpers;
 
 namespace RLE.Gig.Tests.Helpers;
 

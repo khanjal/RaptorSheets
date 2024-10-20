@@ -3,7 +3,7 @@ using RLE.Core.Enums;
 using RLE.Core.Models.Google;
 using System.Text.RegularExpressions;
 
-namespace RLE.Core.Utilities;
+namespace RLE.Core.Helpers;
 
 public static class HeaderHelper
 {

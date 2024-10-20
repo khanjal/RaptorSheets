@@ -2,9 +2,9 @@
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
 using RLE.Core.Constants;
-using RLE.Core.Utilities;
 using RLE.Core.Enums;
 using RLE.Core.Models.Google;
+using RLE.Core.Helpers;
 
 namespace RLE.Gig.Helpers;
 

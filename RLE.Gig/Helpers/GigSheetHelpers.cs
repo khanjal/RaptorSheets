@@ -1,5 +1,4 @@
 using Google.Apis.Sheets.v4.Data;
-using RLE.Core.Utilities;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
 using RLE.Gig.Constants;
@@ -8,6 +7,7 @@ using RLE.Gig.Entities;
 using RLE.Core.Enums;
 using RLE.Core.Extensions;
 using RLE.Core.Models.Google;
+using RLE.Core.Helpers;
 
 namespace RLE.Gig.Helpers;
 
