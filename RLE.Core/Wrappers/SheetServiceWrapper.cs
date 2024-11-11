@@ -49,7 +49,7 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
 
     private SheetsService InitializeService(GoogleCredential credential)
     {
-        _sheetsService = new SheetsService(new BaseClientService.Initializer()
+        _sheetsService = new SheetsService(new Initializer()
         {
             HttpClientInitializer = credential,
             ApplicationName = GoogleConfig.AppName
