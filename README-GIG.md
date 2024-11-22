@@ -1,4 +1,4 @@
-# RaptorLoggerEngine
+# RaptorLoggerEngine.Gig
 
 | Badge Name | Status |
 | ---------- | :------------: |
@@ -14,6 +14,26 @@ This project is a library designed to manage interactions between a custom API s
 * Creating, formatting, and styling sheets
 * Retrieving data from all sheets (individually, in groups, or in batches)
 * Retrieving spreadsheet properties, such as the title and sheet tab names
+
+# Sheets
+
+Below is a list of sheets that are automatically generated with ````CreateSheets()```` function.
+
+| # | Sheet Name | Description | Reference Sheets |
+| :------------: | ---------- | ------------ | :------------: |
+| 1 | Trips | This is a list of the trips you have accepted | None |
+| 2 | Shifts | List of shifts you have worked | Trips |
+| 3 | Addresses | List of addresses compiled from pickup and delivery locations | Shifts |
+| 4 | Names | Names compiled from the trips you have accepted | Trips |
+| 5 | Places | Locations compiled from the trips you have accepted | Trips |
+| 6 | Regions | Regions compiled from your trips and shifts | Trips, Shifts |
+| 7 | Services | Services compiled from your trips and shifts | Trips, Shifts |
+| 8 | Types | Types compiled from the trips you have accepted | Trips |
+| 9 | Daily | Daily statistics compiled from your shifts | Shifts |
+| 10 | Weekdays | Weekday statistics compiled from daily data | Daily |
+| 11 | Weekly | Weekly statistics compiled from daily data | Daily |
+| 12 | Monthly | Monthly statistics compiled from daily data | Daily |
+| 13 | Yearly | Yearly statistics compiled from monthly data | Monthly |
 
 # Using Library
 
