@@ -47,9 +47,9 @@ public static class GoogleSheetHelper
     {
         return sheetEnum switch
         {
-            //SheetEnum.ACCOUNTS => AccountMapper.GetSheet(),
+            SheetEnum.ACCOUNTS => AccountMapper.GetSheet(),
             SheetEnum.STOCKS => StockMapper.GetSheet(),
-            //SheetEnum.TICKERS => TickerMapper.GetSheet(),
+            SheetEnum.TICKERS => TickerMapper.GetSheet(),
             _ => throw new NotImplementedException(),
         };
     }

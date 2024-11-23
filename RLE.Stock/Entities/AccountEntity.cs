@@ -11,5 +11,5 @@ public class AccountEntity : CostEntity
     public string Account { get; set; } = "";
 
     [JsonPropertyName("stocks")]
-    public string Stocks { get; set; } = "";
+    public decimal Stocks { get; set; }
 }

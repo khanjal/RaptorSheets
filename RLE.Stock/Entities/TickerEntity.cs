@@ -14,5 +14,5 @@ public class TickerEntity : PriceEntity
     public string Name { get; set; } = "";
 
     [JsonPropertyName("accounts")]
-    public string Accounts { get; set; } = "";
+    public int Accounts { get; set; }
 }

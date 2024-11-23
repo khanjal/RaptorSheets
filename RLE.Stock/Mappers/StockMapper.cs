@@ -1,3 +1,4 @@
+using RLE.Core.Enums;
 using RLE.Core.Extensions;
 using RLE.Core.Helpers;
 using RLE.Core.Models.Google;
@@ -11,7 +12,7 @@ public static class StockMapper
 {
     public static List<StockEntity> MapFromRangeData(IList<IList<object>> values)
     {
-        var addresses = new List<StockEntity>();
+        var entities = new List<StockEntity>();
         var headers = new Dictionary<int, string>();
         values = values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         var id = 0;
@@ -30,7 +31,7 @@ public static class StockMapper
                 value.AddItems(headers.Count - value.Count);
             };
 
-            StockEntity address = new()
+            StockEntity entity = new()
             {
                 Id = id,
                 Account = HeaderHelper.GetStringValue(HeaderEnum.ACCOUNT.GetDescription(), value, headers),
@@ -49,18 +50,167 @@ public static class StockMapper
                 MinLow = HeaderHelper.GetDecimalValue(HeaderEnum.MIN_LOW.GetDescription(), value, headers),
             };
 
-            addresses.Add(address);
+            entities.Add(entity);
         }
-        return addresses;
+        return entities;
+    }
+
+    public static IList<IList<object?>> MapToRangeData(List<StockEntity> entities, IList<object> headers)
+    {
+        var rangeData = new List<IList<object?>>();
+
+        foreach (var entity in entities)
+        {
+            var objectList = new List<object?>();
+
+            foreach (var header in headers)
+            {
+                var headerEnum = header!.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+                // Console.WriteLine($"Header: {headerEnum}");
+
+                switch (headerEnum)
+                {
+                    case HeaderEnum.ACCOUNT:
+                        objectList.Add(entity.Account);
+                        break;
+                    case HeaderEnum.TICKER:
+                        objectList.Add(entity.Ticker);
+                        break;
+                    case HeaderEnum.NAME:
+                        objectList.Add(entity.Name);
+                        break;
+                    case HeaderEnum.SHARES:
+                        objectList.Add(entity.Shares);
+                        break;
+                    case HeaderEnum.AVERAGE_COST:
+                        objectList.Add(entity.AverageCost);
+                        break;
+                    case HeaderEnum.COST_TOTAL:
+                        objectList.Add(entity.CostTotal);
+                        break;
+                    case HeaderEnum.CURRENT_PRICE:
+                        objectList.Add(entity.CurrentPrice);
+                        break;
+                    case HeaderEnum.CURRENT_TOTAL:
+                        objectList.Add(entity.CurrentTotal);
+                        break;
+                    case HeaderEnum.RETURN:
+                        objectList.Add(entity.Return);
+                        break;
+                    case HeaderEnum.PE_RATIO:
+                        objectList.Add(entity.PeRatio);
+                        break;
+                    case HeaderEnum.WEEK_HIGH_52:
+                        objectList.Add(entity.WeekHigh52);
+                        break;
+                    case HeaderEnum.WEEK_LOW_52:
+                        objectList.Add(entity.WeekLow52);
+                        break;
+                    case HeaderEnum.MAX_HIGH:
+                        objectList.Add(entity.MaxHigh);
+                        break;
+                    case HeaderEnum.MIN_LOW:
+                        objectList.Add(entity.MinLow);
+                        break;
+                    default:
+                        objectList.Add(null);
+                        break;
+                }
+            }
+
+            // Console.WriteLine("Map Shift");
+            // Console.WriteLine(JsonSerializer.Serialize(objectList));
+
+            rangeData.Add(objectList);
+        }
+
+        return rangeData;
     }
 
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.StockSheet;
 
-        //var stockSheet = TripMapper.GetSheet();
+        //var tripSheet = TripMapper.GetSheet();
+        //var sheetTripsName = SheetEnum.TRIPS.GetDescription();
+        //var sheetTripsTypeRange = tripSheet.Headers.First(x => x.Name == HeaderEnum.D.GetDescription()).Range;
 
-        // sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.ADDRESS_END);
+        sheet.Headers = [];
+
+        // Account
+        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() });
+        var range = sheet.GetLocalRange(HeaderEnum.ACCOUNT.GetDescription());
+        // Ticker
+        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.TICKER.GetDescription() });
+        // Name
+        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() });
+        // Shares
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.SHARES.GetDescription(),
+            Format = FormatEnum.ACCOUNTING
+        });
+        // Avg Cost
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.AVERAGE_COST.GetDescription(),
+            Note = ColumnNotes.AverageCost,
+            Format = FormatEnum.ACCOUNTING
+        });
+        // Cost Total   
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.COST_TOTAL.GetDescription(),
+            Format = FormatEnum.ACCOUNTING
+        });
+        // Current Price
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.CURRENT_PRICE.GetDescription(),
+            Format = FormatEnum.ACCOUNTING
+        });
+        // Current Total
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.CURRENT_TOTAL.GetDescription(),
+            Format = FormatEnum.ACCOUNTING
+        });
+        // Return
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.RETURN.GetDescription(),
+            Format = FormatEnum.ACCOUNTING
+        });
+        // P/E Ratio
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.PE_RATIO.GetDescription(),
+            Format = FormatEnum.ACCOUNTING
+        });
+        // 52 Week High
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.WEEK_HIGH_52.GetDescription(),
+            Format = FormatEnum.ACCOUNTING
+        });
+        // 52 Week Low
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.WEEK_LOW_52.GetDescription(),
+            Format = FormatEnum.ACCOUNTING
+        });
+        // Max High
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.MAX_HIGH.GetDescription(),
+            Format = FormatEnum.ACCOUNTING
+        });
+        // Min Low
+        sheet.Headers.AddColumn(new SheetCellModel
+        {
+            Name = HeaderEnum.MIN_LOW.GetDescription(),
+            Format = FormatEnum.ACCOUNTING
+        });
 
         return sheet;
     }
