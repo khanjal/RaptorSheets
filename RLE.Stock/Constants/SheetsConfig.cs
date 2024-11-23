@@ -31,7 +31,7 @@ public static class SheetsConfig
         FreezeColumnCount = 2,
         FreezeRowCount = 1,
         Headers = [
-        new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() },
+            new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() },
             new SheetCellModel { Name = HeaderEnum.TICKER.GetDescription() },
             new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
             .. CommonCostSheetHeaders,

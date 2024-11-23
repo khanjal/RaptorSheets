@@ -130,86 +130,56 @@ public static class StockMapper
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.StockSheet;
+        sheet.Headers.UpdateColumns();
 
         //var tripSheet = TripMapper.GetSheet();
         //var sheetTripsName = SheetEnum.TRIPS.GetDescription();
         //var sheetTripsTypeRange = tripSheet.Headers.First(x => x.Name == HeaderEnum.D.GetDescription()).Range;
 
-        sheet.Headers = [];
-
-        // Account
-        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() });
         var range = sheet.GetLocalRange(HeaderEnum.ACCOUNT.GetDescription());
-        // Ticker
-        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.TICKER.GetDescription() });
-        // Name
-        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() });
-        // Shares
-        sheet.Headers.AddColumn(new SheetCellModel
+        sheet.Headers.ForEach(header =>
         {
-            Name = HeaderEnum.SHARES.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Avg Cost
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.AVERAGE_COST.GetDescription(),
-            Note = ColumnNotes.AverageCost,
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Cost Total   
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.COST_TOTAL.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Current Price
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.CURRENT_PRICE.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Current Total
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.CURRENT_TOTAL.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Return
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.RETURN.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // P/E Ratio
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.PE_RATIO.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // 52 Week High
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.WEEK_HIGH_52.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // 52 Week Low
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.WEEK_LOW_52.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Max High
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.MAX_HIGH.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Min Low
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.MIN_LOW.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+
+            switch (headerEnum)
+            {
+                case HeaderEnum.AVERAGE_COST:
+                    header.Note = ColumnNotes.AverageCost;
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.COST_TOTAL:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.CURRENT_PRICE:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.CURRENT_TOTAL:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.MAX_HIGH:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.MIN_LOW:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.PE_RATIO:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.RETURN:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.SHARES:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.WEEK_HIGH_52:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.WEEK_LOW_52:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                default:
+                    break;
+            }
         });
 
         return sheet;
