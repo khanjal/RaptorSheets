@@ -19,6 +19,7 @@ public static class SheetsConfig
         ProtectSheet = true,
         Headers = [
             new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() },
+            new SheetCellModel { Name = HeaderEnum.STOCKS.GetDescription() },
             .. CommonCostSheetHeaders,
         ]
     };

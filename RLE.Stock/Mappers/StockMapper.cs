@@ -133,7 +133,7 @@ public static class StockMapper
         var sheet = SheetsConfig.StockSheet;
         sheet.Headers.UpdateColumns();
 
-        var tickerSheet = TickerMapper.GetSheet();
+        var tickerSheet = SheetsConfig.TickerSheet;
         tickerSheet.Headers.UpdateColumns();
 
         var keyRange = GoogleConfig.KeyRange;

@@ -7,6 +7,7 @@ using RLE.Core.Helpers;
 using RLE.Stock.Enums;
 using RLE.Stock.Mappers;
 using RLE.Stock.Entities;
+using RLE.Stock.Constants;
 
 namespace RLE.Stock.Helpers;
 
@@ -117,16 +118,16 @@ public static class StockSheetHelpers
             switch (sheetEnum)
             {
                 case SheetEnum.ACCOUNTS:
-                    //sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, AccountMapper.GetSheet()));
-                    //sheet.Accounts = AccountMapper.MapFromRangeData(values);
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, SheetsConfig.AccountSheet));
+                    sheet.Accounts = AccountMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.STOCKS:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, StockMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, SheetsConfig.StockSheet));
                     sheet.Stocks = StockMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.TICKERS:
-                    //sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, TickerMapper.GetSheet()));
-                    //sheet.Tickers = MonthlyMapper.MapFromRangeData(values);
+                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, SheetsConfig.TickerSheet));
+                    sheet.Tickers = TickerMapper.MapFromRangeData(values);
                     break;
             }
         }

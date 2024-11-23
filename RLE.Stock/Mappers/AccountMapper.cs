@@ -1,3 +1,5 @@
+using RLE.Core.Constants;
+using RLE.Core.Enums;
 using RLE.Core.Extensions;
 using RLE.Core.Helpers;
 using RLE.Core.Models.Google;
@@ -51,10 +53,63 @@ public static class AccountMapper
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.AccountSheet;
+        sheet.Headers.UpdateColumns();
 
-        //var stockSheet = TripMapper.GetSheet();
+        var stockSheet = SheetsConfig.StockSheet;
+        stockSheet.Headers.UpdateColumns();
 
-        // sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.ADDRESS_END);
+        var keyRange = GoogleConfig.KeyRange;
+        sheet.Headers.ForEach(header =>
+        {
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+
+            switch (headerEnum)
+            {
+                case HeaderEnum.ACCOUNT:
+                    header.Formula = ColumnFormulas.SortUnique(headerEnum.GetDescription(),
+                                                                stockSheet.GetRange(HeaderEnum.ACCOUNT.GetDescription(), 2));
+                    break;
+
+                case HeaderEnum.AVERAGE_COST:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = ColumnFormulas.SumIfDivide(headerEnum.GetDescription(),
+                                                                    keyRange,
+                                                                    stockSheet.GetRange(HeaderEnum.ACCOUNT.GetDescription()),
+                                                                    keyRange,
+                                                                    stockSheet.GetRange(headerEnum.GetDescription()),
+                                                                    sheet.GetRange(HeaderEnum.STOCKS.GetDescription()));
+                    break;
+
+                case HeaderEnum.COST_TOTAL:
+                case HeaderEnum.CURRENT_TOTAL:
+                case HeaderEnum.SHARES:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = ColumnFormulas.SumIf(headerEnum.GetDescription(),
+                                                                    keyRange,
+                                                                    stockSheet.GetRange(HeaderEnum.ACCOUNT.GetDescription()),
+                                                                    keyRange,
+                                                                    stockSheet.GetRange(headerEnum.GetDescription()));
+                    break;
+
+                case HeaderEnum.RETURN:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = ColumnFormulas.SubtractRanges(headerEnum.GetDescription(),
+                                                                    keyRange,
+                                                                    sheet.GetLocalRange(HeaderEnum.CURRENT_TOTAL.GetDescription()),
+                                                                    sheet.GetLocalRange(HeaderEnum.COST_TOTAL.GetDescription()));
+                    break;
+
+                case HeaderEnum.STOCKS:
+                    header.Formula = ColumnFormulas.CountIf(headerEnum.GetDescription(),
+                                                                    keyRange,
+                                                                    stockSheet.GetRange(HeaderEnum.ACCOUNT.GetDescription()),
+                                                                    keyRange);
+                    break;
+
+                default:
+                    break;
+            }
+        });
 
         return sheet;
     }
