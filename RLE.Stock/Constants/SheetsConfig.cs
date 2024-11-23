@@ -28,12 +28,12 @@ public static class SheetsConfig
         Name = SheetEnum.STOCKS.GetDescription(),
         CellColor = ColorEnum.LIGHT_CYAN,
         TabColor = ColorEnum.CYAN,
-        FreezeColumnCount = 2,
+        FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() },
             new SheetCellModel { Name = HeaderEnum.TICKER.GetDescription() },
             new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
+            new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() },
             .. CommonCostSheetHeaders,
             .. CommonPriceSheetHeaders
     ]

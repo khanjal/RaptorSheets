@@ -1,3 +1,4 @@
+using RLE.Core.Constants;
 using RLE.Core.Enums;
 using RLE.Core.Extensions;
 using RLE.Core.Helpers;
@@ -132,11 +133,10 @@ public static class StockMapper
         var sheet = SheetsConfig.StockSheet;
         sheet.Headers.UpdateColumns();
 
-        //var tripSheet = TripMapper.GetSheet();
-        //var sheetTripsName = SheetEnum.TRIPS.GetDescription();
-        //var sheetTripsTypeRange = tripSheet.Headers.First(x => x.Name == HeaderEnum.D.GetDescription()).Range;
+        var tickerSheet = TickerMapper.GetSheet();
+        tickerSheet.Headers.UpdateColumns();
 
-        var range = sheet.GetLocalRange(HeaderEnum.ACCOUNT.GetDescription());
+        var keyRange = GoogleConfig.KeyRange;
         sheet.Headers.ForEach(header =>
         {
             var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
@@ -149,34 +149,49 @@ public static class StockMapper
                     break;
                 case HeaderEnum.COST_TOTAL:
                     header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = ColumnFormulas.MultiplyRanges(headerEnum.GetDescription(), 
+                                                                    keyRange, 
+                                                                    sheet.GetLocalRange(HeaderEnum.SHARES.GetDescription()), 
+                                                                    sheet.GetLocalRange(HeaderEnum.AVERAGE_COST.GetDescription()));
                     break;
                 case HeaderEnum.CURRENT_PRICE:
+                case HeaderEnum.MAX_HIGH:
+                case HeaderEnum.MIN_LOW:
+                case HeaderEnum.WEEK_HIGH_52:
+                case HeaderEnum.WEEK_LOW_52:
                     header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = ColumnFormulas.SumIf(headerEnum.GetDescription(),
+                                                                    keyRange,
+                                                                    tickerSheet.GetRange(HeaderEnum.TICKER.GetDescription()),
+                                                                    keyRange,
+                                                                    tickerSheet.GetRange(headerEnum.GetDescription()));
                     break;
                 case HeaderEnum.CURRENT_TOTAL:
                     header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.MAX_HIGH:
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.MIN_LOW:
-                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = ColumnFormulas.MultiplyRanges(headerEnum.GetDescription(),
+                                                                    keyRange,
+                                                                    sheet.GetLocalRange(HeaderEnum.SHARES.GetDescription()),
+                                                                    sheet.GetLocalRange(HeaderEnum.CURRENT_PRICE.GetDescription()));
                     break;
                 case HeaderEnum.PE_RATIO:
                     header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = ColumnFormulas.SumIfBlank(headerEnum.GetDescription(),
+                                                                    keyRange,
+                                                                    tickerSheet.GetRange(HeaderEnum.TICKER.GetDescription()),
+                                                                    keyRange,
+                                                                    tickerSheet.GetRange(headerEnum.GetDescription()));
                     break;
                 case HeaderEnum.RETURN:
                     header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = ColumnFormulas.SubtractRanges(headerEnum.GetDescription(),
+                                                                    keyRange,
+                                                                    sheet.GetLocalRange(HeaderEnum.CURRENT_TOTAL.GetDescription()),
+                                                                    sheet.GetLocalRange(HeaderEnum.COST_TOTAL.GetDescription()));
                     break;
                 case HeaderEnum.SHARES:
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
-                case HeaderEnum.WEEK_HIGH_52:
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.WEEK_LOW_52:
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
+
                 default:
                     break;
             }
