@@ -24,22 +24,11 @@ public static class ListExtensions
     public static void UpdateColumns(this List<SheetCellModel> headers)
     {
         var sheetHeaders = headers.ToList();
-        var letters = GoogleConfig.ColumnLetters;
-        var value = string.Empty;
 
         headers.Clear();
         foreach (var header in sheetHeaders)
         {
-            value = "";
-
-            if (headers.Count >= letters.Length)
-                value += letters[headers.Count / letters.Length - 1];
-
-            value += letters[headers.Count % letters.Length];
-
-            header.Column = value;
-            header.Index = headers.Count;
-            headers.Add(header);
+            headers.AddColumn(header);
         }
     }
 
