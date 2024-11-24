@@ -1,4 +1,4 @@
-using RLE.Core.Constants;
+using RLE.Core.Helpers;
 using RLE.Core.Models.Google;
 
 namespace RLE.Core.Extensions;
@@ -7,16 +7,7 @@ public static class ListExtensions
 {
     public static void AddColumn(this List<SheetCellModel> headers, SheetCellModel header)
     {
-        var letters = GoogleConfig.ColumnLetters;
-        var value = string.Empty;
-
-        if (headers.Count >= letters.Length)
-            value += letters[headers.Count / letters.Length - 1];
-
-        value += letters[headers.Count % letters.Length];
-
-        // var column = SheetHelper.GetColumnName(headers.Count); // TODO: Split sheet helper for core and gig
-        header.Column = value;
+        header.Column = SheetHelpers.GetColumnName(headers.Count);
         header.Index = headers.Count;
         headers.Add(header);
     }
