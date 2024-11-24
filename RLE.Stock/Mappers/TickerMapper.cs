@@ -6,7 +6,6 @@ using RLE.Core.Models.Google;
 using RLE.Stock.Constants;
 using RLE.Stock.Entities;
 using RLE.Stock.Enums;
-using System.Reflection.Metadata.Ecma335;
 
 namespace RLE.Stock.Mappers;
 
