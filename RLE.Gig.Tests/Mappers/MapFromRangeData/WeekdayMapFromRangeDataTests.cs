@@ -4,7 +4,7 @@ using RLE.Gig.Entities;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
 using RLE.Gig.Tests.Data;
-using RLE.Gig.Tests.Data.Helpers;
+using RLE.Test.Helpers;
 
 namespace RLE.Gig.Tests.Mappers.MapFromRangeData;
 

@@ -15,9 +15,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Core.Tests", "RLE.Core.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Stock", "Stock", "{930D1E94-EE6E-41CB-82A7-474BA7E54C73}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RLE.Stock", "RLE.Stock\RLE.Stock.csproj", "{A209D9EF-AFB7-450C-A7D4-A7003337B0A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Stock", "RLE.Stock\RLE.Stock.csproj", "{A209D9EF-AFB7-450C-A7D4-A7003337B0A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RLE.Stock.Tests", "RLE.Stock.Tests\RLE.Stock.Tests.csproj", "{44184538-9BF7-40CE-A585-0DF442722324}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Stock.Tests", "RLE.Stock.Tests\RLE.Stock.Tests.csproj", "{44184538-9BF7-40CE-A585-0DF442722324}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RLE.Test", "RLE.Test\RLE.Test.csproj", "{1EC60D38-096B-475D-86C3-E751EF8B7786}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +51,10 @@ Global
 		{44184538-9BF7-40CE-A585-0DF442722324}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44184538-9BF7-40CE-A585-0DF442722324}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{44184538-9BF7-40CE-A585-0DF442722324}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EC60D38-096B-475D-86C3-E751EF8B7786}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EC60D38-096B-475D-86C3-E751EF8B7786}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EC60D38-096B-475D-86C3-E751EF8B7786}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EC60D38-096B-475D-86C3-E751EF8B7786}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

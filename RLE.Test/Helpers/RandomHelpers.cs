@@ -1,4 +1,4 @@
-﻿namespace RLE.Gig.Tests.Data.Helpers;
+﻿namespace RLE.Test.Helpers;
 
 public static class RandomHelpers
 {
@@ -11,7 +11,7 @@ public static class RandomHelpers
         return [.. array.OrderBy((item) => rng.NextDouble())];
     }
 
-    internal static IList<IList<object>> RandomizeValues(IList<IList<object>> values, int[] valueOrder)
+    public static IList<IList<object>> RandomizeValues(IList<IList<object>> values, int[] valueOrder)
     {
         var objectList = new List<IList<object>>();
 

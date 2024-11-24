@@ -2,10 +2,10 @@
 using Google.Apis.Sheets.v4.Data;
 using Moq;
 using RLE.Gig.Enums;
-using RLE.Gig.Tests.Data.Helpers;
 using RLE.Core.Services;
 using RLE.Core.Extensions;
 using RLE.Gig.Helpers;
+using RLE.Test.Helpers;
 
 namespace RLE.Gig.Tests.Services;
 
@@ -18,7 +18,7 @@ public class GoogleSheetServiceTests
 
     public GoogleSheetServiceTests()
     {
-        _spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
+        _spreadsheetId = TestConfigurationHelper.GetGigSpreadsheet();
         _credential = TestConfigurationHelper.GetJsonCredential();
 
         _googleSheetService = new GoogleSheetService(_credential, _spreadsheetId);

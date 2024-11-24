@@ -1,11 +1,11 @@
 ﻿using FluentAssertions;
 using Moq;
 using RLE.Gig.Enums;
-using RLE.Gig.Tests.Data.Helpers;
 using RLE.Gig.Entities;
 using RLE.Core.Enums;
 using RLE.Core.Extensions;
 using RLE.Gig.Managers;
+using RLE.Test.Helpers;
 
 namespace RLE.Gig.Tests.Managers;
 
@@ -24,7 +24,7 @@ public class GoogleSheetManagerTests
         _sheetEnum = random.NextEnum<SheetEnum>();
         _currentTime = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
 
-        _spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
+        _spreadsheetId = TestConfigurationHelper.GetGigSpreadsheet();
         _credential = TestConfigurationHelper.GetJsonCredential();
 
         _googleSheetManager = new GoogleSheetManager(_credential, _spreadsheetId);

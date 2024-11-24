@@ -7,7 +7,6 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <UserSecretsId>1c1f5003-92f8-4bd6-b60b-20711296b84e</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,6 +29,11 @@
   <ItemGroup>
     <ProjectReference Include="..\RLE.Core\RLE.Core.csproj" />
     <ProjectReference Include="..\RLE.Stock\RLE.Stock.csproj" />
+    <ProjectReference Include="..\RLE.Test\RLE.Test.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Helpers\" />
   </ItemGroup>
 
 </Project>

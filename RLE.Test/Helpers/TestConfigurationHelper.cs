@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System.Reflection;
 
-namespace RLE.Stock.Tests.Data.Helpers;
+namespace RLE.Test.Helpers;
 
 public static class TestConfigurationHelper
 {
@@ -30,10 +30,17 @@ public static class TestConfigurationHelper
         return parameters;
     }
 
-    public static string GetSpreadsheetId()
+    public static string GetGigSpreadsheet()
     {
         GetConfiguration();
 
-        return _configuration["stock_spreadsheet_id"] ?? string.Empty;
+        return _configuration["spreadsheets:gig"] ?? string.Empty;
+    }
+
+    public static string GetStockSpreadsheet()
+    {
+        GetConfiguration();
+
+        return _configuration["spreadsheets:stock"] ?? string.Empty;
     }
 }

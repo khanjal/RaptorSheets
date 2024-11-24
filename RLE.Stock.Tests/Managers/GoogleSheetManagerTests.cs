@@ -5,8 +5,8 @@ using RLE.Core.Extensions;
 using Xunit;
 using RLE.Stock.Entities;
 using RLE.Stock.Enums;
-using RLE.Stock.Tests.Data.Helpers;
 using RLE.Stock.Managers;
+using RLE.Test.Helpers;
 
 namespace RLE.Stock.Tests.Managers;
 
@@ -25,7 +25,7 @@ public class GoogleSheetManagerTests
         _sheetEnum = random.NextEnum<SheetEnum>();
         _currentTime = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
 
-        _spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
+        _spreadsheetId = TestConfigurationHelper.GetStockSpreadsheet();
         _credential = TestConfigurationHelper.GetJsonCredential();
 
         _googleSheetManager = new GoogleSheetManager(_credential, _spreadsheetId);

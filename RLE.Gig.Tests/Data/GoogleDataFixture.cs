@@ -2,7 +2,7 @@
 using RLE.Core.Extensions;
 using RLE.Core.Services;
 using RLE.Gig.Enums;
-using RLE.Gig.Tests.Data.Helpers;
+using RLE.Test.Helpers;
 
 namespace RLE.Gig.Tests.Data;
 
@@ -10,7 +10,7 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
 {
     public async Task InitializeAsync()
     {
-        var spreadsheetId = TestConfigurationHelper.GetSpreadsheetId();
+        var spreadsheetId = TestConfigurationHelper.GetGigSpreadsheet();
         var credential = TestConfigurationHelper.GetJsonCredential();
 
         var googleSheetService = new GoogleSheetService(credential, spreadsheetId);
