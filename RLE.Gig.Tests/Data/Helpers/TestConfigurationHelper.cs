@@ -34,6 +34,6 @@ public static class TestConfigurationHelper
     {
         GetConfiguration();
 
-        return _configuration["spreadsheet_id"] ?? string.Empty;
+        return _configuration["gig_spreadsheet_id"] ?? string.Empty;
     }
 }
