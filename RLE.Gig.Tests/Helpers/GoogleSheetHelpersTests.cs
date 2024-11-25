@@ -13,19 +13,19 @@ public class GoogleSheetHelpersTests
 {
     public static IEnumerable<object[]> Sheets =>
     [
-        [AddressMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.ADDRESSES])],
-        [DailyMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.DAILY])],
-        [MonthlyMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.MONTHLY])],
-        [NameMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.NAMES])],
-        [PlaceMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.PLACES])],
-        [RegionMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.REGIONS])],
-        [ServiceMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.SERVICES])],
-        [ShiftMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.SHIFTS])],
-        [TripMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.TRIPS])],
-        [TypeMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.TYPES])],
-        [WeekdayMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.WEEKDAYS])],
-        [WeeklyMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.WEEKLY])],
-        [YearlyMapper.GetSheet(), GoogleSheetHelper.Generate([SheetEnum.YEARLY])],
+        [AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.ADDRESSES])],
+        [DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.DAILY])],
+        [MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.MONTHLY])],
+        [NameMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.NAMES])],
+        [PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.PLACES])],
+        [RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.REGIONS])],
+        [ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.SERVICES])],
+        [ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.SHIFTS])],
+        [TripMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.TRIPS])],
+        [TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.TYPES])],
+        [WeekdayMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.WEEKDAYS])],
+        [WeeklyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.WEEKLY])],
+        [YearlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.YEARLY])],
     ];
 
     [Theory]

@@ -224,7 +224,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<SheetEntity> CreateSheets(List<SheetEnum> sheets)
     {
-        var batchUpdateSpreadsheetRequest = GoogleSheetHelper.Generate(sheets);
+        var batchUpdateSpreadsheetRequest = GenerateSheetsHelpers.Generate(sheets);
         var response = await _googleSheetService.CreateSheets(batchUpdateSpreadsheetRequest);
 
         var sheetEntity = new SheetEntity();

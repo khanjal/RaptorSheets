@@ -19,6 +19,7 @@ This project is a library designed to manage interactions between a custom API s
 
 ## Sheet Styling
 * Configure alternating row colors and enable full sheet protection
+* Assign names and colors to sheet tabs
 
 ## Other Features
 * Appending data to specified sheets
