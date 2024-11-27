@@ -52,16 +52,16 @@ public class GoogleSheetManager : IGoogleSheetManager
             {
                 case SheetEnum.SHIFTS:
                     values = ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers);
-                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.AddData));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.AddData));
                     break;
 
                 case SheetEnum.TRIPS:
                     values = TripMapper.MapToRangeData(sheetEntity.Trips, headers);
-                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.AddData));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.AddData));
                     break;
                 default:
                     // Unsupported sheet.
-                    sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Adding data to {sheet.UpperName()} not supported", MessageTypeEnum.AddData));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Adding data to {sheet.UpperName()} not supported", MessageTypeEnum.AddData));
                     break;
             }
 
@@ -71,13 +71,13 @@ public class GoogleSheetManager : IGoogleSheetManager
                 var result = await _googleSheetService.AppendData(valueRange, $"{sheet.GetDescription()}!{GoogleConfig.Range}");
 
                 if (result == null)
-                    sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"Unable to add data to {sheet.UpperName()}", MessageTypeEnum.AddData));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to add data to {sheet.UpperName()}", MessageTypeEnum.AddData));
                 else
-                    sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"Added data to {sheet.UpperName()}", MessageTypeEnum.AddData));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Added data to {sheet.UpperName()}", MessageTypeEnum.AddData));
             }
             else
             {
-                sheetEntity.Messages.Add(MessageHelper.CreateWarningMessage($"No data to add to {sheet.UpperName()}", MessageTypeEnum.AddData));
+                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"No data to add to {sheet.UpperName()}", MessageTypeEnum.AddData));
             }
         }
 
@@ -96,7 +96,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         if (sheetInfoResponse == null)
         {
-            messages.Add(MessageHelper.CreateErrorMessage($"Unable to find spreadsheet", MessageTypeEnum.CheckSheet));
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find spreadsheet", MessageTypeEnum.CheckSheet));
             return messages;
         }
 
@@ -111,7 +111,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
             if (!spreadsheetSheets.Contains(name))
             {
-                missingSheetMessages.Add(MessageHelper.CreateErrorMessage($"Unable to find sheet {name}", MessageTypeEnum.CheckSheet));
+                missingSheetMessages.Add(MessageHelpers.CreateErrorMessage($"Unable to find sheet {name}", MessageTypeEnum.CheckSheet));
                 continue;
             }
 
@@ -124,7 +124,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         }
         else
         {
-            messages.Add(MessageHelper.CreateInfoMessage("All sheets found", MessageTypeEnum.CheckSheet));
+            messages.Add(MessageHelpers.CreateInfoMessage("All sheets found", MessageTypeEnum.CheckSheet));
         }
 
         if (!checkHeaders)
@@ -144,7 +144,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         if (batchDataResponse == null)
         {
-            messages.Add(MessageHelper.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GetSheets));
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GetSheets));
             return messages;
         }
 
@@ -160,43 +160,43 @@ public class GoogleSheetManager : IGoogleSheetManager
             switch (sheetEnum)
             {
                 case SheetEnum.ADDRESSES:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
                     break;
                 case SheetEnum.DAILY:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
                 case SheetEnum.MONTHLY:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;
                 case SheetEnum.NAMES:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
                     break;
                 case SheetEnum.PLACES:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
                     break;
                 case SheetEnum.REGIONS:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
                     break;
                 case SheetEnum.SERVICES:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
                 case SheetEnum.SHIFTS:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
                     break;
                 case SheetEnum.TRIPS:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
                     break;
                 case SheetEnum.TYPES:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
                     break;
                 case SheetEnum.WEEKDAYS:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
                     break;
                 case SheetEnum.WEEKLY:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
                     break;
                 case SheetEnum.YEARLY:
-                    headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
                     break;
                 default:
                     break;
@@ -205,12 +205,12 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         if (headerMessages.Count > 0)
         {
-            messages.Add(MessageHelper.CreateWarningMessage($"Found sheet header issue(s)", MessageTypeEnum.CheckSheet));
+            messages.Add(MessageHelpers.CreateWarningMessage($"Found sheet header issue(s)", MessageTypeEnum.CheckSheet));
             messages.AddRange(headerMessages);
         }
         else
         {
-            messages.Add(MessageHelper.CreateInfoMessage($"No sheet header issues found", MessageTypeEnum.CheckSheet));
+            messages.Add(MessageHelpers.CreateInfoMessage($"No sheet header issues found", MessageTypeEnum.CheckSheet));
         }
 
         return messages;
@@ -234,7 +234,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             foreach (var sheet in sheets)
             {
-                sheetEntity.Messages.Add(MessageHelper.CreateErrorMessage($"{sheet.UpperName()} not created", MessageTypeEnum.CreateSheet));
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{sheet.UpperName()} not created", MessageTypeEnum.CreateSheet));
             }
 
             return sheetEntity;
@@ -244,7 +244,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         foreach (var sheetTitle in sheetTitles)
         {
-            sheetEntity.Messages.Add(MessageHelper.CreateInfoMessage($"{sheetTitle.GetValueFromName<SheetEnum>()} created", MessageTypeEnum.CreateSheet));
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{sheetTitle.GetValueFromName<SheetEnum>()} created", MessageTypeEnum.CreateSheet));
         }
 
         return sheetEntity;
@@ -256,7 +256,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         if (!sheetExists)
         {
-            return new SheetEntity { Messages = [MessageHelper.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageTypeEnum.GetSheets)] };
+            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageTypeEnum.GetSheets)] };
         }
 
         return await GetSheets([sheetEnum]);
@@ -282,11 +282,11 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         if (response == null)
         {
-            messages.Add(MessageHelper.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GetSheets));
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GetSheets));
         }
         else
         {
-            messages.Add(MessageHelper.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GetSheets));
+            messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GetSheets));
             data = GigSheetHelpers.MapData(response);
         }
 
@@ -301,11 +301,11 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         if (spreadsheetName == null)
         {
-            messages.Add(MessageHelper.CreateErrorMessage("Unable to get spreadsheet name", MessageTypeEnum.General));
+            messages.Add(MessageHelpers.CreateErrorMessage("Unable to get spreadsheet name", MessageTypeEnum.General));
         }
         else
         {
-            messages.Add(MessageHelper.CreateInfoMessage($"Retrieved spreadsheet name: {spreadsheetName}", MessageTypeEnum.General));
+            messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved spreadsheet name: {spreadsheetName}", MessageTypeEnum.General));
             data!.Properties.Name = spreadsheetName;
         }
 

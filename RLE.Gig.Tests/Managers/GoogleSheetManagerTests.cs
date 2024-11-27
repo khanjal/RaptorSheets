@@ -24,8 +24,8 @@ public class GoogleSheetManagerTests
         _sheetEnum = random.NextEnum<SheetEnum>();
         _currentTime = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
 
-        _spreadsheetId = TestConfigurationHelper.GetGigSpreadsheet();
-        _credential = TestConfigurationHelper.GetJsonCredential();
+        _spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
+        _credential = TestConfigurationHelpers.GetJsonCredential();
 
         _googleSheetManager = new GoogleSheetManager(_credential, _spreadsheetId);
     }

@@ -21,7 +21,7 @@ namespace RLE.Gig.Mappers
                 id++;
                 if (id == 1)
                 {
-                    headers = HeaderHelper.ParserHeader(value);
+                    headers = HeaderHelpers.ParserHeader(value);
                     continue;
                 }
 
@@ -34,33 +34,33 @@ namespace RLE.Gig.Mappers
                 TripEntity trip = new()
                 {
                     Id = id,
-                    Key = HeaderHelper.GetStringValue(HeaderEnum.KEY.GetDescription(), value, headers),
-                    Date = HeaderHelper.GetStringValue(HeaderEnum.DATE.GetDescription(), value, headers),
-                    Service = HeaderHelper.GetStringValue(HeaderEnum.SERVICE.GetDescription(), value, headers),
-                    Number = HeaderHelper.GetIntValue(HeaderEnum.NUMBER.GetDescription(), value, headers),
-                    Exclude = HeaderHelper.GetBoolValue(HeaderEnum.EXCLUDE.GetDescription(), value, headers),
-                    Type = HeaderHelper.GetStringValue(HeaderEnum.TYPE.GetDescription(), value, headers),
-                    Place = HeaderHelper.GetStringValue(HeaderEnum.PLACE.GetDescription(), value, headers),
-                    Pickup = HeaderHelper.GetStringValue(HeaderEnum.PICKUP.GetDescription(), value, headers),
-                    Dropoff = HeaderHelper.GetStringValue(HeaderEnum.DROPOFF.GetDescription(), value, headers),
-                    Duration = HeaderHelper.GetStringValue(HeaderEnum.DURATION.GetDescription(), value, headers),
-                    Pay = HeaderHelper.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
-                    Tip = HeaderHelper.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), value, headers),
-                    Bonus = HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
-                    Total = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
-                    Cash = HeaderHelper.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
-                    OdometerStart = HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), value, headers),
-                    OdometerEnd = HeaderHelper.GetDecimalValue(HeaderEnum.ODOMETER_END.GetDescription(), value, headers),
-                    Distance = HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
-                    Name = HeaderHelper.GetStringValue(HeaderEnum.NAME.GetDescription(), value, headers),
-                    StartAddress = HeaderHelper.GetStringValue(HeaderEnum.ADDRESS_START.GetDescription(), value, headers),
-                    EndAddress = HeaderHelper.GetStringValue(HeaderEnum.ADDRESS_END.GetDescription(), value, headers),
-                    EndUnit = HeaderHelper.GetStringValue(HeaderEnum.UNIT_END.GetDescription(), value, headers),
-                    OrderNumber = HeaderHelper.GetStringValue(HeaderEnum.ORDER_NUMBER.GetDescription(), value, headers),
-                    Region = HeaderHelper.GetStringValue(HeaderEnum.REGION.GetDescription(), value, headers),
-                    Note = HeaderHelper.GetStringValue(HeaderEnum.NOTE.GetDescription(), value, headers),
-                    AmountPerTime = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_TIME.GetDescription(), value, headers),
-                    AmountPerDistance = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), value, headers),
+                    Key = HeaderHelpers.GetStringValue(HeaderEnum.KEY.GetDescription(), value, headers),
+                    Date = HeaderHelpers.GetStringValue(HeaderEnum.DATE.GetDescription(), value, headers),
+                    Service = HeaderHelpers.GetStringValue(HeaderEnum.SERVICE.GetDescription(), value, headers),
+                    Number = HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), value, headers),
+                    Exclude = HeaderHelpers.GetBoolValue(HeaderEnum.EXCLUDE.GetDescription(), value, headers),
+                    Type = HeaderHelpers.GetStringValue(HeaderEnum.TYPE.GetDescription(), value, headers),
+                    Place = HeaderHelpers.GetStringValue(HeaderEnum.PLACE.GetDescription(), value, headers),
+                    Pickup = HeaderHelpers.GetStringValue(HeaderEnum.PICKUP.GetDescription(), value, headers),
+                    Dropoff = HeaderHelpers.GetStringValue(HeaderEnum.DROPOFF.GetDescription(), value, headers),
+                    Duration = HeaderHelpers.GetStringValue(HeaderEnum.DURATION.GetDescription(), value, headers),
+                    Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
+                    Tip = HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), value, headers),
+                    Bonus = HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
+                    Total = HeaderHelpers.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
+                    Cash = HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
+                    OdometerStart = HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), value, headers),
+                    OdometerEnd = HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_END.GetDescription(), value, headers),
+                    Distance = HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
+                    Name = HeaderHelpers.GetStringValue(HeaderEnum.NAME.GetDescription(), value, headers),
+                    StartAddress = HeaderHelpers.GetStringValue(HeaderEnum.ADDRESS_START.GetDescription(), value, headers),
+                    EndAddress = HeaderHelpers.GetStringValue(HeaderEnum.ADDRESS_END.GetDescription(), value, headers),
+                    EndUnit = HeaderHelpers.GetStringValue(HeaderEnum.UNIT_END.GetDescription(), value, headers),
+                    OrderNumber = HeaderHelpers.GetStringValue(HeaderEnum.ORDER_NUMBER.GetDescription(), value, headers),
+                    Region = HeaderHelpers.GetStringValue(HeaderEnum.REGION.GetDescription(), value, headers),
+                    Note = HeaderHelpers.GetStringValue(HeaderEnum.NOTE.GetDescription(), value, headers),
+                    AmountPerTime = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PER_TIME.GetDescription(), value, headers),
+                    AmountPerDistance = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), value, headers),
                     Saved = true
                 };
 

@@ -22,7 +22,7 @@ public static class AddressMapper
             id++;
             if (id == 1)
             {
-                headers = HeaderHelper.ParserHeader(value);
+                headers = HeaderHelpers.ParserHeader(value);
                 continue;
             }
 
@@ -34,14 +34,14 @@ public static class AddressMapper
             AddressEntity address = new()
             {
                 Id = id,
-                Address = HeaderHelper.GetStringValue(HeaderEnum.ADDRESS.GetDescription(), value, headers),
-                Visits = HeaderHelper.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
-                Pay = HeaderHelper.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
-                Tip = HeaderHelper.GetDecimalValue(HeaderEnum.TIP.GetDescription(), value, headers),
-                Bonus = HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
-                Total = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
-                Cash = HeaderHelper.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
-                Distance = HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
+                Address = HeaderHelpers.GetStringValue(HeaderEnum.ADDRESS.GetDescription(), value, headers),
+                Visits = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
+                Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
+                Tip = HeaderHelpers.GetDecimalValue(HeaderEnum.TIP.GetDescription(), value, headers),
+                Bonus = HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
+                Total = HeaderHelpers.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
+                Cash = HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
+                Distance = HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
             };
 
             addresses.Add(address);

@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace RLE.Test.Helpers;
 
-public static class TestConfigurationHelper
+public static class TestConfigurationHelpers
 {
     private static IConfigurationRoot _configuration = new ConfigurationBuilder().Build(); // TODO: See if there is a better way to handle this.
     public static void GetConfiguration()

@@ -8,7 +8,7 @@ using RLE.Stock.Mappers;
 
 namespace RLE.Stock.Helpers;
 
-public static class GoogleSheetHelper
+public static class GenerateSheetHelpers
 {
     private static SheetModel? _sheet;
     private static int? _sheetId;

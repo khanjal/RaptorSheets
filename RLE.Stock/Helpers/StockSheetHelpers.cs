@@ -117,15 +117,15 @@ public static class StockSheetHelpers
             switch (sheetEnum)
             {
                 case SheetEnum.ACCOUNTS:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, SheetsConfig.AccountSheet));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, SheetsConfig.AccountSheet));
                     sheet.Accounts = AccountMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.STOCKS:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, SheetsConfig.StockSheet));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, SheetsConfig.StockSheet));
                     sheet.Stocks = StockMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.TICKERS:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, SheetsConfig.TickerSheet));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, SheetsConfig.TickerSheet));
                     sheet.Tickers = TickerMapper.MapFromRangeData(values);
                     break;
             }

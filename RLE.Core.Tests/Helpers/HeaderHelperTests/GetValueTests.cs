@@ -12,7 +12,7 @@ public class GetValueTests
     public GetValueTests()
     {
         _values = JsonHelpers.LoadJsonData("Headers");
-        _headers = HeaderHelper.ParserHeader(_values![0]);
+        _headers = HeaderHelpers.ParserHeader(_values![0]);
     }
 
     [Theory]
@@ -21,8 +21,8 @@ public class GetValueTests
     [InlineData("StringInvalid", "")]
     public void GivenStringHeaders_ThenReturnParsedValue(string header, string value)
     {
-        Assert.NotNull(HeaderHelper.GetStringValue(header, _values![1], _headers!));
-        Assert.Equivalent(value, HeaderHelper.GetStringValue(header, _values[1], _headers!));
+        Assert.NotNull(HeaderHelpers.GetStringValue(header, _values![1], _headers!));
+        Assert.Equivalent(value, HeaderHelpers.GetStringValue(header, _values[1], _headers!));
     }
 
     [Theory]
@@ -31,7 +31,7 @@ public class GetValueTests
     [InlineData("IntInvalid", 0)]
     public void GivenIntHeaders_ThenReturnParsedValue(string header, int value)
     {
-        Assert.Equivalent(value, HeaderHelper.GetIntValue(header, _values![1], _headers!));
+        Assert.Equivalent(value, HeaderHelpers.GetIntValue(header, _values![1], _headers!));
     }
 
     [Theory]
@@ -41,7 +41,7 @@ public class GetValueTests
     public void GivenDecimalHeaders_ThenReturnParsedValue(string header, string value)
     {
         var decimalValue = decimal.Parse(value);
-        Assert.Equivalent(decimalValue, HeaderHelper.GetDecimalValue(header, _values![1], _headers!));
+        Assert.Equivalent(decimalValue, HeaderHelpers.GetDecimalValue(header, _values![1], _headers!));
     }
 
     [Theory]
@@ -51,7 +51,7 @@ public class GetValueTests
     [InlineData("BoolInvalid", false)]
     public void GivenBoolHeaders_ThenReturnParsedValue(string header, bool value)
     {
-        Assert.Equivalent(value, HeaderHelper.GetBoolValue(header, _values![1], _headers!));
+        Assert.Equivalent(value, HeaderHelpers.GetBoolValue(header, _values![1], _headers!));
     }
 
     [Theory]
@@ -60,6 +60,6 @@ public class GetValueTests
     [InlineData("DateInvalid", "")]
     public void GivenDateHeaders_ThenReturnParsedValue(string header, string value)
     {
-        Assert.Equivalent(value, HeaderHelper.GetDateValue(header, _values![1], _headers!));
+        Assert.Equivalent(value, HeaderHelpers.GetDateValue(header, _values![1], _headers!));
     }
 }

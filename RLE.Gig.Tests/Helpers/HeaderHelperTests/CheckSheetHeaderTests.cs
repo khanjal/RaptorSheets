@@ -45,7 +45,7 @@ public class CheckSheetHeaderTests
     public void GivenFullHeaders_ThenReturnNoMessages(SheetModel sheet, SheetEnum sheetEnum)
     {
         var values = _matchedValueRanges?.Where(x => x.DataFilters[0].A1Range == sheetEnum.GetDescription()).First().ValueRange.Values.ToList();
-        var messages = HeaderHelper.CheckSheetHeaders(values!, sheet);
+        var messages = HeaderHelpers.CheckSheetHeaders(values!, sheet);
 
         messages.Should().BeEmpty();
     }
@@ -61,7 +61,7 @@ public class CheckSheetHeaderTests
             values![0].ToList().GetRange(0, values[0].Count - 3)
         };
 
-        var errorMessages = HeaderHelper.CheckSheetHeaders(headerValues!, sheet).Where(x => x.Level == MessageLevelEnum.Error.UpperName());
+        var errorMessages = HeaderHelpers.CheckSheetHeaders(headerValues!, sheet).Where(x => x.Level == MessageLevelEnum.Error.UpperName());
 
         errorMessages.Should().NotBeNullOrEmpty();
 
@@ -81,7 +81,7 @@ public class CheckSheetHeaderTests
         var headerOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, headerValues![0].Count - 1)]).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(headerValues, headerOrder);
 
-        var warningMessages = HeaderHelper.CheckSheetHeaders(randomValues!, sheet).Where(x => x.Level == MessageLevelEnum.Warning.UpperName());
+        var warningMessages = HeaderHelpers.CheckSheetHeaders(randomValues!, sheet).Where(x => x.Level == MessageLevelEnum.Warning.UpperName());
 
         warningMessages.Should().NotBeNullOrEmpty();
     }

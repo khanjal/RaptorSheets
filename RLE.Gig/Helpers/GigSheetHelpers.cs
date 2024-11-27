@@ -175,7 +175,7 @@ public static class GigSheetHelpers
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = keyEnum.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayForumlaUnique(shiftSheet.GetRange(keyEnum.GetDescription(), 2), keyEnum.GetDescription())
+                    Formula = ArrayFormulaHelpers.ArrayForumlaUnique(shiftSheet.GetRange(keyEnum.GetDescription(), 2), keyEnum.GetDescription())
                 });
                 break;
         }
@@ -184,42 +184,42 @@ public static class GigSheetHelpers
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.TRIPS.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TRIPS.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TRIPS.GetDescription())),
             Format = FormatEnum.NUMBER
         });
         // C - Pay
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.PAY.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_PAY.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_PAY.GetDescription())),
             Format = FormatEnum.ACCOUNTING
         });
         // D - Tip
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.TIPS.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.TIPS.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TIPS.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.TIPS.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TIPS.GetDescription())),
             Format = FormatEnum.ACCOUNTING
         });
         // E - Bonus
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.BONUS.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_BONUS.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_BONUS.GetDescription())),
             Format = FormatEnum.ACCOUNTING
         });
         // F - Total
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.TOTAL.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaTotal(keyRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaTotal(keyRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription())),
             Format = FormatEnum.ACCOUNTING
         });
         // G - Cash
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.CASH.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_CASH.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_CASH.GetDescription())),
             Format = FormatEnum.ACCOUNTING
         });
         // H - Amt/Trip
@@ -233,7 +233,7 @@ public static class GigSheetHelpers
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.DISTANCE.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_DISTANCE.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_DISTANCE.GetDescription())),
             Format = FormatEnum.DISTANCE
         });
         // J - Amt/Dist
@@ -256,7 +256,7 @@ public static class GigSheetHelpers
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.VISIT_FIRST.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), SheetEnum.SHIFTS.GetDescription(), shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), shiftSheet.GetColumn(keyEnum.GetDescription()), true),
+                    Formula = ArrayFormulaHelpers.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), SheetEnum.SHIFTS.GetDescription(), shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), shiftSheet.GetColumn(keyEnum.GetDescription()), true),
                     Note = ColumnNotes.DateFormat,
                     Format = FormatEnum.DATE
                 });
@@ -264,7 +264,7 @@ public static class GigSheetHelpers
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.VISIT_LAST.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), SheetEnum.SHIFTS.GetDescription(), shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), shiftSheet.GetColumn(keyEnum.GetDescription()), false),
+                    Formula = ArrayFormulaHelpers.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), SheetEnum.SHIFTS.GetDescription(), shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), shiftSheet.GetColumn(keyEnum.GetDescription()), false),
                     Note = ColumnNotes.DateFormat,
                     Format = FormatEnum.DATE
                 });
@@ -274,7 +274,7 @@ public static class GigSheetHelpers
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.TIME_TOTAL.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.TIME_TOTAL.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TIME.GetDescription())),
+                    Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.TIME_TOTAL.GetDescription(), sheetKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TIME.GetDescription())),
                     Format = FormatEnum.DURATION
                 });
                 // L - Amt/Time
@@ -312,7 +312,7 @@ public static class GigSheetHelpers
                     sheet.Headers.AddColumn(new SheetCellModel
                     {
                         Name = keyEnum.GetDescription(),
-                        Formula = ArrayFormulaHelper.ArrayForumlaUniqueFilterSort(refSheet.GetRange(keyEnum.GetDescription(), 2), keyEnum.GetDescription())
+                        Formula = ArrayFormulaHelpers.ArrayForumlaUniqueFilterSort(refSheet.GetRange(keyEnum.GetDescription(), 2), keyEnum.GetDescription())
                     });
                     keyRange = sheet.GetLocalRange(keyEnum.GetDescription());
 
@@ -328,7 +328,7 @@ public static class GigSheetHelpers
                     sheet.Headers.AddColumn(new SheetCellModel
                     {
                         Name = keyEnum.GetDescription(),
-                        Formula = ArrayFormulaHelper.ArrayForumlaUniqueFilter(refSheet.GetRange(keyEnum.GetDescription(), 2), keyEnum.GetDescription())
+                        Formula = ArrayFormulaHelpers.ArrayForumlaUniqueFilter(refSheet.GetRange(keyEnum.GetDescription(), 2), keyEnum.GetDescription())
                     });
                     keyRange = sheet.GetLocalRange(keyEnum.GetDescription());
                 }
@@ -337,7 +337,7 @@ public static class GigSheetHelpers
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.TRIPS.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.TRIPS.GetDescription())),
+                    Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.TRIPS.GetDescription())),
                     Format = FormatEnum.NUMBER
                 });
 
@@ -347,7 +347,7 @@ public static class GigSheetHelpers
                     sheet.Headers.AddColumn(new SheetCellModel
                     {
                         Name = HeaderEnum.DAYS.GetDescription(),
-                        Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.DAYS.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.DAYS.GetDescription())),
+                        Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.DAYS.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.DAYS.GetDescription())),
                         Format = FormatEnum.NUMBER
                     });
                 }
@@ -357,7 +357,7 @@ public static class GigSheetHelpers
                     sheet.Headers.AddColumn(new SheetCellModel
                     {
                         Name = HeaderEnum.DAYS.GetDescription(),
-                        Formula = ArrayFormulaHelper.ArrayFormulaCountIf(keyRange, HeaderEnum.DAYS.GetDescription(), sheetKeyRange),
+                        Formula = ArrayFormulaHelpers.ArrayFormulaCountIf(keyRange, HeaderEnum.DAYS.GetDescription(), sheetKeyRange),
                         Format = FormatEnum.NUMBER
                     });
                 }
@@ -387,14 +387,14 @@ public static class GigSheetHelpers
                     sheet.Headers.AddColumn(new SheetCellModel
                     {
                         Name = keyEnum.GetDescription(),
-                        Formula = ArrayFormulaHelper.ArrayForumlaUnique(refSheet.GetRange(keyEnum.GetDescription(), 2), keyEnum.GetDescription())
+                        Formula = ArrayFormulaHelpers.ArrayForumlaUnique(refSheet.GetRange(keyEnum.GetDescription(), 2), keyEnum.GetDescription())
                     });
                     keyRange = sheet.GetLocalRange(keyEnum.GetDescription());
                     // B - Trips
                     sheet.Headers.AddColumn(new SheetCellModel
                     {
                         Name = HeaderEnum.TRIPS.GetDescription(),
-                        Formula = ArrayFormulaHelper.ArrayFormulaCountIf(keyRange, HeaderEnum.TRIPS.GetDescription(), sheetKeyRange),
+                        Formula = ArrayFormulaHelpers.ArrayFormulaCountIf(keyRange, HeaderEnum.TRIPS.GetDescription(), sheetKeyRange),
                         Format = FormatEnum.NUMBER
                     });
                 }
@@ -405,35 +405,35 @@ public static class GigSheetHelpers
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.PAY.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.PAY.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.PAY.GetDescription())),
             Format = FormatEnum.ACCOUNTING
         });
         // D - Tip
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.TIPS.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.TIPS.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.TIPS.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.TIPS.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.TIPS.GetDescription())),
             Format = FormatEnum.ACCOUNTING
         });
         // E - Bonus
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.BONUS.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.BONUS.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.BONUS.GetDescription())),
             Format = FormatEnum.ACCOUNTING
         });
         // F - Total
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.TOTAL.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaTotal(keyRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaTotal(keyRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription())),
             Format = FormatEnum.ACCOUNTING
         });
         // G - Cash
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.CASH.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.CASH.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.CASH.GetDescription())),
             Format = FormatEnum.ACCOUNTING
         });
         // H - Amt/Trip
@@ -447,7 +447,7 @@ public static class GigSheetHelpers
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.DISTANCE.GetDescription(),
-            Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.DISTANCE.GetDescription())),
+            Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.DISTANCE.GetDescription())),
             Format = FormatEnum.DISTANCE
         });
         // J - Amt/Dist
@@ -470,14 +470,14 @@ public static class GigSheetHelpers
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.VISIT_FIRST.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), SheetEnum.TRIPS.GetDescription(), refSheet.GetColumn(HeaderEnum.DATE.GetDescription()), refSheet.GetColumn(keyEnum.GetDescription()), true),
+                    Formula = ArrayFormulaHelpers.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), SheetEnum.TRIPS.GetDescription(), refSheet.GetColumn(HeaderEnum.DATE.GetDescription()), refSheet.GetColumn(keyEnum.GetDescription()), true),
                     Format = FormatEnum.DATE
                 });
                 // L - Last Visit
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.VISIT_LAST.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), SheetEnum.TRIPS.GetDescription(), refSheet.GetColumn(HeaderEnum.DATE.GetDescription()), refSheet.GetColumn(keyEnum.GetDescription()), false),
+                    Formula = ArrayFormulaHelpers.ArrayFormulaVisit(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), SheetEnum.TRIPS.GetDescription(), refSheet.GetColumn(HeaderEnum.DATE.GetDescription()), refSheet.GetColumn(keyEnum.GetDescription()), false),
                     Format = FormatEnum.DATE
                 });
                 break;
@@ -489,7 +489,7 @@ public static class GigSheetHelpers
                 sheet.Headers.AddColumn(new SheetCellModel
                 {
                     Name = HeaderEnum.TIME_TOTAL.GetDescription(),
-                    Formula = ArrayFormulaHelper.ArrayFormulaSumIf(keyRange, HeaderEnum.TIME_TOTAL.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.TIME_TOTAL.GetDescription())),
+                    Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, HeaderEnum.TIME_TOTAL.GetDescription(), sheetKeyRange, refSheet.GetRange(HeaderEnum.TIME_TOTAL.GetDescription())),
                     Format = FormatEnum.DURATION
                 });
                 // Amt/Time
@@ -545,55 +545,55 @@ public static class GigSheetHelpers
             switch (sheetEnum)
             {
                 case SheetEnum.ADDRESSES:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, AddressMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, AddressMapper.GetSheet()));
                     sheet.Addresses = AddressMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.DAILY:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, DailyMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, DailyMapper.GetSheet()));
                     sheet.Daily = DailyMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.MONTHLY:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, MonthlyMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, MonthlyMapper.GetSheet()));
                     sheet.Monthly = MonthlyMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.NAMES:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, NameMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, NameMapper.GetSheet()));
                     sheet.Names = NameMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.PLACES:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, PlaceMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, PlaceMapper.GetSheet()));
                     sheet.Places = PlaceMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.REGIONS:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, RegionMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, RegionMapper.GetSheet()));
                     sheet.Regions = RegionMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.SERVICES:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, ServiceMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, ServiceMapper.GetSheet()));
                     sheet.Services = ServiceMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.SHIFTS:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, ShiftMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, ShiftMapper.GetSheet()));
                     sheet.Shifts = ShiftMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.TRIPS:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, TripMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, TripMapper.GetSheet()));
                     sheet.Trips = TripMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.TYPES:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, TypeMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, TypeMapper.GetSheet()));
                     sheet.Types = TypeMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.WEEKDAYS:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, WeekdayMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, WeekdayMapper.GetSheet()));
                     sheet.Weekdays = WeekdayMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.WEEKLY:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, WeeklyMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, WeeklyMapper.GetSheet()));
                     sheet.Weekly = WeeklyMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.YEARLY:
-                    sheet.Messages.AddRange(HeaderHelper.CheckSheetHeaders(values, YearlyMapper.GetSheet()));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, YearlyMapper.GetSheet()));
                     sheet.Yearly = YearlyMapper.MapFromRangeData(values);
                     break;
             }

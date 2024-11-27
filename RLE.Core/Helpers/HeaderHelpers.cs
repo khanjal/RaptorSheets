@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace RLE.Core.Helpers;
 
-public static class HeaderHelper
+public static class HeaderHelpers
 {
     public static Dictionary<int, string> ParserHeader(IList<object> sheetHeader)
     {
@@ -124,13 +124,13 @@ public static class HeaderHelper
         {
             if (!data.Any(x => x?.ToString()?.Trim() == sheetHeader.Name))
             {
-                messages.Add(MessageHelper.CreateErrorMessage($"Sheet [{sheetModel.Name}]: Missing column [{sheetHeader.Name}]", MessageTypeEnum.CheckSheet));
+                messages.Add(MessageHelpers.CreateErrorMessage($"Sheet [{sheetModel.Name}]: Missing column [{sheetHeader.Name}]", MessageTypeEnum.CheckSheet));
             }
             else
             {
                 if (index < headerArray.Count() && sheetHeader.Name != headerArray[index].Trim())
                 {
-                    messages.Add(MessageHelper.CreateWarningMessage($"Sheet [{sheetModel.Name}]: Unexpected column [{headerArray[index].Trim()}] should be [{sheetHeader.Name}]", MessageTypeEnum.CheckSheet));
+                    messages.Add(MessageHelpers.CreateWarningMessage($"Sheet [{sheetModel.Name}]: Unexpected column [{headerArray[index].Trim()}] should be [{sheetHeader.Name}]", MessageTypeEnum.CheckSheet));
                 }
             }
             index++;

@@ -22,7 +22,7 @@ public static class WeekdayMapper
             id++;
             if (id == 1)
             {
-                headers = HeaderHelper.ParserHeader(value);
+                headers = HeaderHelpers.ParserHeader(value);
                 continue;
             }
 
@@ -35,21 +35,21 @@ public static class WeekdayMapper
             WeekdayEntity weekday = new()
             {
                 Id = id,
-                Day = HeaderHelper.GetIntValue(HeaderEnum.DAY.GetDescription(), value, headers),
-                Weekday = HeaderHelper.GetStringValue(HeaderEnum.WEEKDAY.GetDescription(), value, headers),
-                Trips = HeaderHelper.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
-                Pay = HeaderHelper.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
-                Tip = HeaderHelper.GetDecimalValue(HeaderEnum.TIP.GetDescription(), value, headers),
-                Bonus = HeaderHelper.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
-                Total = HeaderHelper.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
-                Cash = HeaderHelper.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
-                Distance = HeaderHelper.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
-                Time = HeaderHelper.GetStringValue(HeaderEnum.TIME_TOTAL.GetDescription(), value, headers),
-                Days = HeaderHelper.GetIntValue(HeaderEnum.DAYS.GetDescription(), value, headers),
-                DailyAverage = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_DAY.GetDescription(), value, headers),
-                PreviousDailyAverage = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PER_PREVIOUS_DAY.GetDescription(), value, headers),
-                CurrentAmount = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_CURRENT.GetDescription(), value, headers),
-                PreviousAmount = HeaderHelper.GetDecimalValue(HeaderEnum.AMOUNT_PREVIOUS.GetDescription(), value, headers),
+                Day = HeaderHelpers.GetIntValue(HeaderEnum.DAY.GetDescription(), value, headers),
+                Weekday = HeaderHelpers.GetStringValue(HeaderEnum.WEEKDAY.GetDescription(), value, headers),
+                Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
+                Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
+                Tip = HeaderHelpers.GetDecimalValue(HeaderEnum.TIP.GetDescription(), value, headers),
+                Bonus = HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
+                Total = HeaderHelpers.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
+                Cash = HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
+                Distance = HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
+                Time = HeaderHelpers.GetStringValue(HeaderEnum.TIME_TOTAL.GetDescription(), value, headers),
+                Days = HeaderHelpers.GetIntValue(HeaderEnum.DAYS.GetDescription(), value, headers),
+                DailyAverage = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PER_DAY.GetDescription(), value, headers),
+                PreviousDailyAverage = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PER_PREVIOUS_DAY.GetDescription(), value, headers),
+                CurrentAmount = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_CURRENT.GetDescription(), value, headers),
+                PreviousAmount = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PREVIOUS.GetDescription(), value, headers),
             };
 
             weekdays.Add(weekday);

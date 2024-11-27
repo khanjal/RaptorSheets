@@ -11,7 +11,7 @@ public class GoogleDriveServiceTests
 
     public GoogleDriveServiceTests()
     {
-        _credential = TestConfigurationHelper.GetJsonCredential();
+        _credential = TestConfigurationHelpers.GetJsonCredential();
 
         _googleDriveService = new GoogleDriveService(_credential);
     }

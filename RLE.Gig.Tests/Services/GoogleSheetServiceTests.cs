@@ -18,8 +18,8 @@ public class GoogleSheetServiceTests
 
     public GoogleSheetServiceTests()
     {
-        _spreadsheetId = TestConfigurationHelper.GetGigSpreadsheet();
-        _credential = TestConfigurationHelper.GetJsonCredential();
+        _spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
+        _credential = TestConfigurationHelpers.GetJsonCredential();
 
         _googleSheetService = new GoogleSheetService(_credential, _spreadsheetId);
     }

@@ -4,7 +4,7 @@ using RLE.Core.Extensions;
 
 namespace RLE.Core.Helpers;
 
-public static class MessageHelper
+public static class MessageHelpers
 {
     public static MessageEntity CreateMessage(MessageEntity message)
     {

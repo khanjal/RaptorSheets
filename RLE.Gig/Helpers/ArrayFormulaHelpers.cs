@@ -1,6 +1,6 @@
 namespace RLE.Gig.Helpers;
 
-public static class ArrayFormulaHelper
+public static class ArrayFormulaHelpers
 {
     public static string ArrayFormulaCountIf(string keyRange, string headerText, string countRange)
     {
