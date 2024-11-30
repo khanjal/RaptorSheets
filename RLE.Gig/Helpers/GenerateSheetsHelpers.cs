@@ -79,11 +79,7 @@ public static class GenerateSheetsHelpers
             // If whole sheet isn't protected then protect certain columns
             if (!string.IsNullOrEmpty(header.Formula) && !sheet.ProtectSheet)
             {
-                var addProtectedRangeRequest = new AddProtectedRangeRequest
-                {
-                    ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.ColumnWarning, Range = range, WarningOnly = true }
-                };
-                _batchUpdateSpreadsheetRequest!.Requests.Add(new Request { AddProtectedRange = addProtectedRangeRequest });
+                _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateColumnProtection(range));
             }
 
             // If there's no format or validation then go to next header
@@ -92,28 +88,10 @@ public static class GenerateSheetsHelpers
                 return;
             }
 
-            // Set start/end for formatting
-            range.StartRowIndex = 1;
-            range.EndRowIndex = null;
+            var cellFormat = (header.Format != null ? SheetHelpers.GetCellFormat((FormatEnum)header.Format) : null);
+            var dataValidation = (header.Validation != null ? GigSheetHelpers.GetDataValidation((ValidationEnum)header.Validation) : null);
 
-            var repeatCellRequest = new RepeatCellRequest
-            {
-                Fields = GoogleConfig.FieldsUpdate,
-                Range = range,
-                Cell = new CellData()
-            };
-
-            if (header.Format != null)
-            {
-                repeatCellRequest.Cell.UserEnteredFormat = SheetHelpers.GetCellFormat((FormatEnum)header.Format);
-            }
-
-            if (header.Validation != null)
-            {
-                repeatCellRequest.Cell.DataValidation = GigSheetHelpers.GetDataValidation((ValidationEnum)header.Validation);
-            }
-
-            _repeatCellRequests!.Add(repeatCellRequest);
+            _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(range, cellFormat, dataValidation));
         });
     }  
 }

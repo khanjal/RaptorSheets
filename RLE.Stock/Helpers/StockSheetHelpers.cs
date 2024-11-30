@@ -42,13 +42,13 @@ public static class StockSheetHelpers
             switch (sheetEnum)
             {
                 case SheetEnum.ACCOUNTS:
-                    // sheetData.Add(AddressMapper.GetSheet());
+                    sheetData.Add(AccountMapper.GetSheet());
                     break;
                 case SheetEnum.STOCKS:
                     sheetData.Add(StockMapper.GetSheet());
                     break;
                 case SheetEnum.TICKERS:
-                    //sheetData.Add(TickerMapper.GetSheet());
+                    sheetData.Add(TickerMapper.GetSheet());
                     break;
                 default:
                     break;

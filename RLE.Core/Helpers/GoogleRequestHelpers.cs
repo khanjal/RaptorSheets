@@ -2,6 +2,7 @@
 using RLE.Core.Constants;
 using RLE.Core.Enums;
 using RLE.Core.Models.Google;
+using System;
 
 namespace RLE.Core.Helpers;
 
@@ -81,6 +82,42 @@ public static class GoogleRequestHelpers
         }
 
         return new Request { AddProtectedRange = addProtectedRangeRequest };
+    }
+
+    public static Request GenerateColumnProtection(GridRange range)
+    {
+        var addProtectedRangeRequest = new AddProtectedRangeRequest
+        {
+            ProtectedRange = new ProtectedRange { Description = ProtectionWarnings.ColumnWarning, Range = range, WarningOnly = true }
+        };
+
+        return new Request { AddProtectedRange = addProtectedRangeRequest };
+    }
+
+    public static RepeatCellRequest GenerateRepeatCellRequest(GridRange range, CellFormat? cellFormat, DataValidationRule? dataValidation)
+    {
+        // Set start/end for formatting
+        range.StartRowIndex = 1;
+        range.EndRowIndex = null;
+
+        var repeatCellRequest = new RepeatCellRequest
+        {
+            Fields = GoogleConfig.FieldsUpdate,
+            Range = range,
+            Cell = new CellData()
+        };
+
+        if (cellFormat != null)
+        {
+            repeatCellRequest.Cell.UserEnteredFormat = cellFormat;
+        }
+
+        if (dataValidation != null)
+        {
+            repeatCellRequest.Cell.DataValidation = dataValidation;
+        }
+
+        return repeatCellRequest;
     }
 
     public static Request GenerateSheetPropertes(SheetModel sheet)
