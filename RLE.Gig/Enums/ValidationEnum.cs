@@ -1,4 +1,4 @@
-namespace RLE.Core.Enums;
+namespace RLE.Gig.Enums;
 
 public enum ValidationEnum
 {

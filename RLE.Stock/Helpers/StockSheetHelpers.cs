@@ -1,5 +1,4 @@
 using Google.Apis.Sheets.v4.Data;
-using RLE.Core.Enums;
 using RLE.Core.Extensions;
 using RLE.Core.Models.Google;
 using RLE.Core.Helpers;
@@ -16,8 +15,9 @@ public static class StockSheetHelpers
     {
         var sheets = new List<SheetModel>
         {
-            //AccountMapper.GetSheet(),
-            //TripMapper.GetSheet()
+            AccountMapper.GetSheet(),
+            StockMapper.GetSheet(),
+            TickerMapper.GetSheet()
         };
 
         return sheets;
@@ -67,12 +67,8 @@ public static class StockSheetHelpers
             case ValidationEnum.BOOLEAN:
                 dataValidation.Condition = new BooleanCondition { Type = "BOOLEAN" };
                 break;
-            case ValidationEnum.RANGE_ADDRESS:
-            case ValidationEnum.RANGE_NAME:
-            case ValidationEnum.RANGE_PLACE:
-            case ValidationEnum.RANGE_REGION:
-            case ValidationEnum.RANGE_SERVICE:
-            case ValidationEnum.RANGE_TYPE:
+            case ValidationEnum.RANGE_ACCOUNT:
+            case ValidationEnum.RANGE_TICKER:
                 var values = new List<ConditionValue> { new() { UserEnteredValue = $"={GetSheetForRange(validation)?.GetDescription()}!A2:A" } };
                 dataValidation.Condition = new BooleanCondition { Type = "ONE_OF_RANGE", Values = values };
                 dataValidation.ShowCustomUi = true;
@@ -87,12 +83,8 @@ public static class StockSheetHelpers
     {
         return validationEnum switch
         {
-            //ValidationEnum.RANGE_ADDRESS => SheetEnum.ADDRESSES,
-            //ValidationEnum.RANGE_NAME => SheetEnum.NAMES,
-            //ValidationEnum.RANGE_PLACE => SheetEnum.PLACES,
-            //ValidationEnum.RANGE_REGION => SheetEnum.REGIONS,
-            //ValidationEnum.RANGE_SERVICE => SheetEnum.SERVICES,
-            //ValidationEnum.RANGE_TYPE => SheetEnum.TYPES,
+            ValidationEnum.RANGE_ACCOUNT => SheetEnum.ACCOUNTS,
+            ValidationEnum.RANGE_TICKER => SheetEnum.TICKERS,
             _ => null
         };
     }

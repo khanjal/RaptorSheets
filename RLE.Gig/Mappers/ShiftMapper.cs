@@ -166,7 +166,7 @@ namespace RLE.Gig.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.SERVICE.GetDescription(),
-                Validation = ValidationEnum.RANGE_SERVICE
+                Validation = ValidationEnum.RANGE_SERVICE.GetDescription()
             });
             // #
             sheet.Headers.AddColumn(new SheetCellModel
@@ -193,7 +193,7 @@ namespace RLE.Gig.Mappers
             {
                 Name = HeaderEnum.TIME_OMIT.GetDescription(),
                 Note = ColumnNotes.TimeOmit,
-                Validation = ValidationEnum.BOOLEAN
+                Validation = ValidationEnum.BOOLEAN.GetDescription()
             });
             // Trips
             sheet.Headers.AddColumn(new SheetCellModel
@@ -236,7 +236,7 @@ namespace RLE.Gig.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.REGION.GetDescription(),
-                Validation = ValidationEnum.RANGE_REGION
+                Validation = ValidationEnum.RANGE_REGION.GetDescription()
             });
             // Note
             sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.NOTE.GetDescription() });

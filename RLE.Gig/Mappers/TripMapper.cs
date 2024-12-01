@@ -181,7 +181,7 @@ namespace RLE.Gig.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.SERVICE.GetDescription(),
-                Validation = ValidationEnum.RANGE_SERVICE
+                Validation = ValidationEnum.RANGE_SERVICE.GetDescription()
             });
             // #
             sheet.Headers.AddColumn(new SheetCellModel
@@ -194,21 +194,21 @@ namespace RLE.Gig.Mappers
             {
                 Name = HeaderEnum.EXCLUDE.GetDescription(),
                 Note = ColumnNotes.Exclude,
-                Validation = ValidationEnum.BOOLEAN
+                Validation = ValidationEnum.BOOLEAN.GetDescription()
             });
             // Type
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.TYPE.GetDescription(),
                 Note = ColumnNotes.Types,
-                Validation = ValidationEnum.RANGE_TYPE
+                Validation = ValidationEnum.RANGE_TYPE.GetDescription()
             });
             // Place
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.PLACE.GetDescription(),
                 Note = ColumnNotes.Place,
-                Validation = ValidationEnum.RANGE_PLACE
+                Validation = ValidationEnum.RANGE_PLACE.GetDescription()
             });
             // Pickup
             sheet.Headers.AddColumn(new SheetCellModel
@@ -270,19 +270,19 @@ namespace RLE.Gig.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.NAME.GetDescription(),
-                Validation = ValidationEnum.RANGE_NAME
+                Validation = ValidationEnum.RANGE_NAME.GetDescription()
             });
             // Start Address
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.ADDRESS_START.GetDescription(),
-                Validation = ValidationEnum.RANGE_ADDRESS
+                Validation = ValidationEnum.RANGE_ADDRESS.GetDescription()
             });
             // End Address
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.ADDRESS_END.GetDescription(),
-                Validation = ValidationEnum.RANGE_ADDRESS
+                Validation = ValidationEnum.RANGE_ADDRESS.GetDescription()
             });
             // End Unit
             sheet.Headers.AddColumn(new SheetCellModel
@@ -296,7 +296,7 @@ namespace RLE.Gig.Mappers
             sheet.Headers.AddColumn(new SheetCellModel
             {
                 Name = HeaderEnum.REGION.GetDescription(),
-                Validation = ValidationEnum.RANGE_REGION
+                Validation = ValidationEnum.RANGE_REGION.GetDescription()
             });
             // Note
             sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.NOTE.GetDescription() });

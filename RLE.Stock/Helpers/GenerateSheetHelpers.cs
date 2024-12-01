@@ -5,6 +5,7 @@ using RLE.Core.Models.Google;
 using RLE.Core.Helpers;
 using RLE.Stock.Enums;
 using RLE.Stock.Mappers;
+using RLE.Core.Extensions;
 
 namespace RLE.Stock.Helpers;
 
@@ -145,7 +146,7 @@ public static class GenerateSheetHelpers
 
             if (header.Validation != null)
             {
-                repeatCellRequest.Cell.DataValidation = StockSheetHelpers.GetDataValidation((ValidationEnum)header.Validation);
+                repeatCellRequest.Cell.DataValidation = StockSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>());
             }
 
             _repeatCellRequests!.Add(repeatCellRequest);

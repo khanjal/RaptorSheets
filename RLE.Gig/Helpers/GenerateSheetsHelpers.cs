@@ -89,7 +89,7 @@ public static class GenerateSheetsHelpers
             }
 
             var cellFormat = (header.Format != null ? SheetHelpers.GetCellFormat((FormatEnum)header.Format) : null);
-            var dataValidation = (header.Validation != null ? GigSheetHelpers.GetDataValidation((ValidationEnum)header.Validation) : null);
+            var dataValidation = (header.Validation != null ? GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>()) : null);
 
             _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(range, cellFormat, dataValidation));
         });
