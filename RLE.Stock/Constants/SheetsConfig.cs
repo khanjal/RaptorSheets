@@ -21,6 +21,7 @@ public static class SheetsConfig
             new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() },
             new SheetCellModel { Name = HeaderEnum.STOCKS.GetDescription() },
             .. CommonCostSheetHeaders,
+            .. CommonReturnSheetHeaders
         ]
     };
 
@@ -35,8 +36,8 @@ public static class SheetsConfig
             new SheetCellModel { Name = HeaderEnum.TICKER.GetDescription() },
             new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
             new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() },
-            .. CommonCostSheetHeaders,
-            .. CommonPriceSheetHeaders
+            .. CommonPriceSheetHeaders,
+            .. CommonHistorySheetHeaders
     ]
     };
 
@@ -52,8 +53,8 @@ public static class SheetsConfig
             new SheetCellModel { Name = HeaderEnum.TICKER.GetDescription() },
             new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
             new SheetCellModel { Name = HeaderEnum.ACCOUNTS.GetDescription() },
-            .. CommonCostSheetHeaders,
-            .. CommonPriceSheetHeaders
+            .. CommonPriceSheetHeaders,
+            .. CommonHistorySheetHeaders
         ]
     };
 
@@ -62,12 +63,22 @@ public static class SheetsConfig
         new SheetCellModel { Name = HeaderEnum.SHARES.GetDescription() },
         new SheetCellModel { Name = HeaderEnum.AVERAGE_COST.GetDescription() },
         new SheetCellModel { Name = HeaderEnum.COST_TOTAL.GetDescription() },
+    ];
+
+    private static List<SheetCellModel> CommonPriceSheetHeaders =>
+    [
+        .. CommonCostSheetHeaders,
         new SheetCellModel { Name = HeaderEnum.CURRENT_PRICE.GetDescription() },
+        .. CommonReturnSheetHeaders,
+    ];
+
+    private static List<SheetCellModel> CommonReturnSheetHeaders =>
+    [
         new SheetCellModel { Name = HeaderEnum.CURRENT_TOTAL.GetDescription() },
         new SheetCellModel { Name = HeaderEnum.RETURN.GetDescription() },
     ];
 
-    private static List<SheetCellModel> CommonPriceSheetHeaders =>
+    private static List<SheetCellModel> CommonHistorySheetHeaders =>
     [
         new SheetCellModel { Name = HeaderEnum.PE_RATIO.GetDescription() },
         new SheetCellModel { Name = HeaderEnum.WEEK_HIGH_52.GetDescription() },
