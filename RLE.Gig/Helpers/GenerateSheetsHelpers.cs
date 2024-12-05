@@ -1,7 +1,6 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using RLE.Gig.Enums;
 using RLE.Gig.Mappers;
-using RLE.Core.Constants;
 using RLE.Core.Enums;
 using RLE.Core.Models.Google;
 using RLE.Core.Helpers;
@@ -88,10 +87,14 @@ public static class GenerateSheetsHelpers
                 return;
             }
 
-            var cellFormat = (header.Format != null ? SheetHelpers.GetCellFormat((FormatEnum)header.Format) : null);
-            var dataValidation = (header.Validation != null ? GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>()) : null);
+            var repeatCellModel = new RepeatCellModel
+            {
+                GridRange = range,
+                CellFormat = (header.Format != null ? SheetHelpers.GetCellFormat((FormatEnum)header.Format) : null),
+                DataValidation = (header.Validation != null ? GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>()) : null)
+            };
 
-            _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(range, cellFormat, dataValidation));
+            _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
         });
     }  
 }

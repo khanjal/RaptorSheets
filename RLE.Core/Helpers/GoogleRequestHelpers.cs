@@ -94,27 +94,27 @@ public static class GoogleRequestHelpers
         return new Request { AddProtectedRange = addProtectedRangeRequest };
     }
 
-    public static RepeatCellRequest GenerateRepeatCellRequest(GridRange range, CellFormat? cellFormat, DataValidationRule? dataValidation)
+    public static RepeatCellRequest GenerateRepeatCellRequest(RepeatCellModel repeatCellModel)
     {
         // Set start/end for formatting
-        range.StartRowIndex = 1;
-        range.EndRowIndex = null;
+        repeatCellModel.GridRange.StartRowIndex = 1;
+        repeatCellModel.GridRange.EndRowIndex = null;
 
         var repeatCellRequest = new RepeatCellRequest
         {
             Fields = GoogleConfig.FieldsUpdate,
-            Range = range,
+            Range = repeatCellModel.GridRange,
             Cell = new CellData()
         };
 
-        if (cellFormat != null)
+        if (repeatCellModel.CellFormat != null)
         {
-            repeatCellRequest.Cell.UserEnteredFormat = cellFormat;
+            repeatCellRequest.Cell.UserEnteredFormat = repeatCellModel.CellFormat;
         }
 
-        if (dataValidation != null)
+        if (repeatCellModel.DataValidation != null)
         {
-            repeatCellRequest.Cell.DataValidation = dataValidation;
+            repeatCellRequest.Cell.DataValidation = repeatCellModel.DataValidation;
         }
 
         return repeatCellRequest;
