@@ -37,7 +37,7 @@ public class CheckSheetHeaderTests
     public CheckSheetHeaderTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _matchedValueRanges = this.fixture.valueRanges;
+        _matchedValueRanges = this.fixture.ValueRanges;
     }
 
     [Theory]

@@ -17,7 +17,7 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
         var result = await googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
 
-        valueRanges = result?.ValueRanges;
+        ValueRanges = result?.ValueRanges;
     }
 
     Task IAsyncLifetime.DisposeAsync()
@@ -25,5 +25,5 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
         return Task.CompletedTask;
     }
 
-    public IList<MatchedValueRange>? valueRanges { get; private set; }
+    public IList<MatchedValueRange>? ValueRanges { get; private set; }
 }

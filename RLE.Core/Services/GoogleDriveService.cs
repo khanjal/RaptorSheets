@@ -9,16 +9,11 @@ public interface IGoogleDriveService
 
 public class GoogleDriveService : IGoogleDriveService
 {
-    private DriveServiceWrapper _driveService;
+    private readonly DriveServiceWrapper _driveService;
 
     public GoogleDriveService(string accessToken)
     {
         _driveService = new DriveServiceWrapper(accessToken);
-    }
-
-    public GoogleDriveService(Dictionary<string, string> parameters)
-    {
-        _driveService = new DriveServiceWrapper(parameters);
     }
 
     public async Task<IList<string>> GetSheetFiles()

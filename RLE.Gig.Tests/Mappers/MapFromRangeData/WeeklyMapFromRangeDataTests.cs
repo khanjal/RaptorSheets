@@ -18,7 +18,7 @@ public class WeeklyMapFromRangeDataTests
     public WeeklyMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.WEEKLY.GetDescription()).First().ValueRange.Values;
+        _values = this.fixture.ValueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.WEEKLY.GetDescription()).First().ValueRange.Values;
         _entities = WeeklyMapper.MapFromRangeData(_values!);
     }
 

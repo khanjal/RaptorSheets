@@ -31,6 +31,16 @@ public class GoogleSheetManagerTests
     }
 
     [Fact]
+    public async Task GivenGetSheet_ThenReturnSheetEntity()
+    {
+        var result = await _googleSheetManager.GetSheet(_sheetEnum.GetDescription());
+        result.Should().NotBeNull();
+        result.Messages.Count.Should().Be(1);
+        result!.Messages[0].Level.Should().Be(MessageLevelEnum.Info.UpperName());
+        result!.Messages[0].Type.Should().Be(MessageTypeEnum.GetSheets.GetDescription());
+    }
+
+    [Fact]
     public async Task GivenGetSheets_ThenReturnSheetEntity()
     {
         var result = await _googleSheetManager.GetSheets();
@@ -38,7 +48,7 @@ public class GoogleSheetManagerTests
     }
 
     [Fact]
-    public async Task GivenGetSheet_ThenReturnSheetEntity()
+    public async Task GivenGetSheetsList_ThenReturnSheetEntity()
     {
         var result = await _googleSheetManager.GetSheets([_sheetEnum]);
         result.Should().NotBeNull();

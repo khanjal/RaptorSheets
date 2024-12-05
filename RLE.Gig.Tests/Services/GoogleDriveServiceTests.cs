@@ -13,7 +13,7 @@ public class GoogleDriveServiceTests
     {
         _credential = TestConfigurationHelpers.GetJsonCredential();
 
-        _googleDriveService = new GoogleDriveService(_credential);
+        // _googleDriveService = new GoogleDriveService(_credential);
     }
 
     [Fact(Skip = "Need to look into Drive authentication")]

@@ -18,7 +18,7 @@ public class ShiftMapFromRangeDataTests
     public ShiftMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.SHIFTS.GetDescription()).First().ValueRange.Values;
+        _values = this.fixture.ValueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.SHIFTS.GetDescription()).First().ValueRange.Values;
         _entities = ShiftMapper.MapFromRangeData(_values!);
     }
 

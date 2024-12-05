@@ -18,7 +18,7 @@ public class DailyMapFromRangeDataTests
     public DailyMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.DAILY.GetDescription()).First().ValueRange.Values;
+        _values = this.fixture.ValueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.DAILY.GetDescription()).First().ValueRange.Values;
         _entities = DailyMapper.MapFromRangeData(_values!);
     }
 

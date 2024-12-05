@@ -21,22 +21,6 @@ public class DriveServiceWrapper : DriveService, IDriveServiceWrapper
         InitializeService(credential);
     }
 
-    public DriveServiceWrapper(Dictionary<string, string> parameters)
-    {
-        var jsonCredential = new JsonCredentialParameters
-        {
-            Type = parameters["type"].Trim(),
-            PrivateKeyId = parameters["privateKeyId"].Trim(),
-            PrivateKey = parameters["privateKey"].Trim(),
-            ClientEmail = parameters["clientEmail"].Trim(),
-            ClientId = parameters["clientId"].Trim(),
-        };
-
-        var credential = GoogleCredential.FromJsonParameters(jsonCredential);
-
-        InitializeService(credential);
-    }
-
     private DriveService InitializeService(GoogleCredential credential)
     {
         _driveService = new DriveService(new Initializer()
