@@ -1,9 +1,9 @@
-# RaptorLoggerEngine.Gig
+# RaptorSheets.Gig
 
 | Badge Name | Status |
 | ---------- | :------------: |
-| Latest Build Status | [![build status](https://github.com/khanjal/RaptorLoggerEngine/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorLoggerEngine/actions) |
-| RLE.Gig Nuget Version | [![Nuget](https://img.shields.io/nuget/v/RaptorLoggerEngine.Gig)](https://www.nuget.org/packages/RaptorLoggerEngine.Gig/) |
+| Latest Build Status | [![build status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions) |
+| RaptorSheets.Gig Nuget Version | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) |
 
 
 # Project Description

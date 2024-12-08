@@ -1,9 +1,9 @@
-# RaptorLoggerEngine
+# RaptorSheets
 
 | Badge Name | Status |
 | ---------- | :------------: |
-| Latest Build Status | [![build status](https://github.com/khanjal/RaptorLoggerEngine/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorLoggerEngine/actions) |
-| RLE.Gig Nuget Version | [![Nuget](https://img.shields.io/nuget/v/RaptorLoggerEngine.Gig)](https://www.nuget.org/packages/RaptorLoggerEngine.Gig/) |
+| Latest Build Status | [![build status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions) |
+| RaptorSheets.Gig Nuget Version | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) |
 
 
 # Project Description
@@ -84,7 +84,7 @@ You'll need to create your own service account and use the credentials to access
 
 ## Local Setup
 
-Add ````Google JSON Credentials```` by right clicking on ````RLE.Test```` and selecting ````Manage User Secrets```` (secrets.json)
+Add ````Google JSON Credentials```` by right clicking on ````RaptorSheets.Test```` and selecting ````Manage User Secrets```` (secrets.json)
 
 Add the following JSON properties to it:
 
