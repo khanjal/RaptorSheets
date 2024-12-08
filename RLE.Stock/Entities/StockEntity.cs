@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace RLE.Stock.Entities;
+namespace RaptorSheets.Stock.Entities;
 
 public class StockEntity : PriceEntity
 {

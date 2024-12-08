@@ -1,11 +1,11 @@
 ﻿using Google.Apis.Sheets.v4.Data;
-using RLE.Core.Extensions;
-using RLE.Core.Services;
-using RLE.Stock.Enums;
-using RLE.Test.Helpers;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Services;
+using RaptorSheets.Stock.Enums;
+using RaptorSheets.Test.Helpers;
 using Xunit;
 
-namespace RLE.Stock.Tests.Data;
+namespace RaptorSheets.Stock.Tests.Data;
 
 public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared-context
 {

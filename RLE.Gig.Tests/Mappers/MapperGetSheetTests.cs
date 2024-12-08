@@ -1,9 +1,9 @@
 ﻿using FluentAssertions;
-using RLE.Core.Models.Google;
-using RLE.Gig.Constants;
-using RLE.Gig.Mappers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Mappers;
 
-namespace RLE.Gig.Tests.Mappers;
+namespace RaptorSheets.Gig.Tests.Mappers;
 
 public class MapperGetSheetTests
 {

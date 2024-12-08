@@ -1,17 +1,17 @@
 ﻿using Google.Apis.Sheets.v4.Data;
-using RLE.Core.Entities;
-using RLE.Core.Constants;
-using RLE.Core.Services;
-using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Core.Interfaces;
-using RLE.Core.Helpers;
-using RLE.Stock.Entities;
-using RLE.Stock.Enums;
-using RLE.Stock.Mappers;
-using RLE.Stock.Helpers;
+using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Services;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Interfaces;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Stock.Entities;
+using RaptorSheets.Stock.Enums;
+using RaptorSheets.Stock.Mappers;
+using RaptorSheets.Stock.Helpers;
 
-namespace RLE.Stock.Managers;
+namespace RaptorSheets.Stock.Managers;
 
 public interface IGoogleSheetManager : ISheetManager
 {

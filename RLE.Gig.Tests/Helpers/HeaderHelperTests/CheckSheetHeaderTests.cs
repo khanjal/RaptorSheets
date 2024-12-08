@@ -1,15 +1,15 @@
 ﻿using FluentAssertions;
 using Google.Apis.Sheets.v4.Data;
-using RLE.Gig.Enums;
-using RLE.Gig.Mappers;
-using RLE.Gig.Tests.Data;
-using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Core.Models.Google;
-using RLE.Core.Helpers;
-using RLE.Test.Helpers;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Tests.Data;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Test.Helpers;
 
-namespace RLE.Gig.Tests.Helpers.HeaderHelperTests;
+namespace RaptorSheets.Gig.Tests.Helpers.HeaderHelperTests;
 
 [Collection("Google Data collection")]
 public class CheckSheetHeaderTests

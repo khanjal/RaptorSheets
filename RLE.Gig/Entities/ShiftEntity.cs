@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace RLE.Gig.Entities;
+namespace RaptorSheets.Gig.Entities;
 
 public class ShiftEntity : AmountEntity
 {

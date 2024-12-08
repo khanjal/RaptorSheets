@@ -1,4 +1,4 @@
-﻿namespace RLE.Gig.Tests.Data;
+﻿namespace RaptorSheets.Gig.Tests.Data;
 
 [CollectionDefinition("Google Data collection")]
 public class GoogleDataCollection : ICollectionFixture<GoogleDataFixture>

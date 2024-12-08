@@ -1,15 +1,15 @@
 using Google.Apis.Sheets.v4.Data;
-using RLE.Gig.Enums;
-using RLE.Gig.Mappers;
-using RLE.Gig.Constants;
-using RLE.Core.Constants;
-using RLE.Gig.Entities;
-using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Core.Models.Google;
-using RLE.Core.Helpers;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Core.Constants;
+using RaptorSheets.Gig.Entities;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Core.Helpers;
 
-namespace RLE.Gig.Helpers;
+namespace RaptorSheets.Gig.Helpers;
 
 public static class GigSheetHelpers
 {

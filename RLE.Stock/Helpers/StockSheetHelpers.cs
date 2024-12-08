@@ -1,13 +1,13 @@
 using Google.Apis.Sheets.v4.Data;
-using RLE.Core.Extensions;
-using RLE.Core.Models.Google;
-using RLE.Core.Helpers;
-using RLE.Stock.Enums;
-using RLE.Stock.Mappers;
-using RLE.Stock.Entities;
-using RLE.Stock.Constants;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Stock.Enums;
+using RaptorSheets.Stock.Mappers;
+using RaptorSheets.Stock.Entities;
+using RaptorSheets.Stock.Constants;
 
-namespace RLE.Stock.Helpers;
+namespace RaptorSheets.Stock.Helpers;
 
 public static class StockSheetHelpers
 {

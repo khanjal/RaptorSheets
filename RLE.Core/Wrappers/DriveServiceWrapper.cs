@@ -1,9 +1,9 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
-using RLE.Core.Constants;
+using RaptorSheets.Core.Constants;
 using File = Google.Apis.Drive.v3.Data.File;
 
-namespace RLE.Core.Wrappers;
+namespace RaptorSheets.Core.Wrappers;
 
 public interface IDriveServiceWrapper
 {

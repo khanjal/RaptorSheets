@@ -1,4 +1,4 @@
-namespace RLE.Gig.Enums;
+namespace RaptorSheets.Gig.Enums;
 
 public enum ValidationEnum
 {

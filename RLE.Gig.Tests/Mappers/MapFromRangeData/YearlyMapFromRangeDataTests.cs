@@ -1,12 +1,12 @@
 ﻿using FluentAssertions;
-using RLE.Core.Extensions;
-using RLE.Gig.Entities;
-using RLE.Gig.Enums;
-using RLE.Gig.Mappers;
-using RLE.Gig.Tests.Data;
-using RLE.Test.Helpers;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Tests.Data;
+using RaptorSheets.Test.Helpers;
 
-namespace RLE.Gig.Tests.Mappers.MapFromRangeData;
+namespace RaptorSheets.Gig.Tests.Mappers.MapFromRangeData;
 
 [Collection("Google Data collection")]
 public class YearlyMapFromRangeDataTests

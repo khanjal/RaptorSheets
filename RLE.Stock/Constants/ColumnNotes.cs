@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace RLE.Stock.Constants;
+namespace RaptorSheets.Stock.Constants;
 
 [ExcludeFromCodeCoverage]
 public static class ColumnNotes

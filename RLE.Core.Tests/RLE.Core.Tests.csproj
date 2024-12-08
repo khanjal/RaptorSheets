@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RLE.Core\RLE.Core.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
   </ItemGroup>
 
 </Project>

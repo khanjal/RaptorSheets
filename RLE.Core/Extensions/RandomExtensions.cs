@@ -1,4 +1,4 @@
-﻿namespace RLE.Core.Extensions;
+﻿namespace RaptorSheets.Core.Extensions;
 
 public static class RandomExtensions
 {

@@ -1,4 +1,4 @@
-namespace RLE.Gig.Helpers;
+namespace RaptorSheets.Gig.Helpers;
 
 public static class ArrayFormulaHelpers
 {

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace RLE.Gig.Enums;
+namespace RaptorSheets.Gig.Enums;
 
 public enum HeaderEnum
 {

@@ -27,9 +27,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RLE.Core\RLE.Core.csproj" />
-    <ProjectReference Include="..\RLE.Stock\RLE.Stock.csproj" />
-    <ProjectReference Include="..\RLE.Test\RLE.Test.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Stock\RaptorSheets.Stock.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Test\RaptorSheets.Test.csproj" />
   </ItemGroup>
 
   <ItemGroup>

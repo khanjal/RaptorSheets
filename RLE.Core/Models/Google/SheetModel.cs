@@ -1,6 +1,6 @@
-using RLE.Core.Enums;
+using RaptorSheets.Core.Enums;
 
-namespace RLE.Core.Models.Google;
+namespace RaptorSheets.Core.Models.Google;
 
 public class SheetModel
 {

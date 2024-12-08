@@ -1,4 +1,4 @@
-﻿namespace RLE.Core.Constants;
+﻿namespace RaptorSheets.Core.Constants;
 
 public static class ColumnFormulas
 {

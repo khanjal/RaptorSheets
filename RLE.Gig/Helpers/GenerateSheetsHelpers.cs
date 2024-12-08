@@ -1,12 +1,12 @@
 ﻿using Google.Apis.Sheets.v4.Data;
-using RLE.Gig.Enums;
-using RLE.Gig.Mappers;
-using RLE.Core.Enums;
-using RLE.Core.Models.Google;
-using RLE.Core.Helpers;
-using RLE.Core.Extensions;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Extensions;
 
-namespace RLE.Gig.Helpers;
+namespace RaptorSheets.Gig.Helpers;
 
 public static class GenerateSheetsHelpers
 {

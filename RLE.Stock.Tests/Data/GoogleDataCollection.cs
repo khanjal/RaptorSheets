@@ -1,6 +1,6 @@
 ﻿using Xunit;
 
-namespace RLE.Stock.Tests.Data;
+namespace RaptorSheets.Stock.Tests.Data;
 
 [CollectionDefinition("Google Data collection")]
 public class GoogleDataCollection : ICollectionFixture<GoogleDataFixture>

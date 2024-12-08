@@ -1,7 +1,7 @@
-using RLE.Core.Helpers;
-using RLE.Core.Models.Google;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models.Google;
 
-namespace RLE.Core.Extensions;
+namespace RaptorSheets.Core.Extensions;
 
 public static class ListExtensions
 {

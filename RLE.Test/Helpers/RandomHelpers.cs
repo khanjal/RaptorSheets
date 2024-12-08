@@ -1,4 +1,4 @@
-﻿namespace RLE.Test.Helpers;
+﻿namespace RaptorSheets.Test.Helpers;
 
 public static class RandomHelpers
 {

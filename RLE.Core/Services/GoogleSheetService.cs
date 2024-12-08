@@ -1,8 +1,8 @@
 ﻿using Google.Apis.Sheets.v4.Data;
-using RLE.Core.Constants;
-using RLE.Core.Wrappers;
+using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Wrappers;
 
-namespace RLE.Core.Services;
+namespace RaptorSheets.Core.Services;
 
 public interface IGoogleSheetService
 {

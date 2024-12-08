@@ -1,13 +1,13 @@
-using RLE.Core.Constants;
-using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Core.Helpers;
-using RLE.Core.Models.Google;
-using RLE.Stock.Constants;
-using RLE.Stock.Entities;
-using RLE.Stock.Enums;
+using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Stock.Constants;
+using RaptorSheets.Stock.Entities;
+using RaptorSheets.Stock.Enums;
 
-namespace RLE.Stock.Mappers;
+namespace RaptorSheets.Stock.Mappers;
 
 public static class TickerMapper
 {

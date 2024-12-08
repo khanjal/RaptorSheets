@@ -1,8 +1,8 @@
-﻿using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Core.Models.Google;
+﻿using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Models.Google;
 
-namespace RLE.Core.Tests.Data;
+namespace RaptorSheets.Core.Tests.Data;
 
 public class TestSheetData
 {

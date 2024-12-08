@@ -1,7 +1,7 @@
 ﻿
 using Google.Apis.Sheets.v4.Data;
 
-namespace RLE.Core.Models.Google;
+namespace RaptorSheets.Core.Models.Google;
 
 public class RepeatCellModel
 {

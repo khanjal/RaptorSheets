@@ -1,13 +1,13 @@
 ﻿using FluentAssertions;
 using Google.Apis.Sheets.v4.Data;
-using RLE.Gig.Enums;
-using RLE.Gig.Mappers;
-using RLE.Core.Constants;
-using RLE.Core.Models.Google;
-using RLE.Gig.Helpers;
-using RLE.Core.Helpers;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Helpers;
+using RaptorSheets.Core.Helpers;
 
-namespace RLE.Gig.Tests.Helpers;
+namespace RaptorSheets.Gig.Tests.Helpers;
 
 public class GoogleSheetHelpersTests
 {

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace RLE.Core.Constants;
+namespace RaptorSheets.Core.Constants;
 
 [ExcludeFromCodeCoverage]
 public static class ProtectionWarnings

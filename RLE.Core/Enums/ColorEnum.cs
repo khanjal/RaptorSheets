@@ -1,4 +1,4 @@
-namespace RLE.Core.Enums;
+namespace RaptorSheets.Core.Enums;
 
 public enum ColorEnum
 {

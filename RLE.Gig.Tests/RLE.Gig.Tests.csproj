@@ -76,10 +76,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RLE.Core.Tests\RLE.Core.Tests.csproj" />
-    <ProjectReference Include="..\RLE.Core\RLE.Core.csproj" />
-    <ProjectReference Include="..\RLE.Gig\RLE.Gig.csproj" />
-    <ProjectReference Include="..\RLE.Test\RLE.Test.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Core.Tests\RaptorSheets.Core.Tests.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Gig\RaptorSheets.Gig.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Test\RaptorSheets.Test.csproj" />
   </ItemGroup>
 
   <ItemGroup>

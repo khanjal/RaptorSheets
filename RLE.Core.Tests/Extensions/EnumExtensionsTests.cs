@@ -1,9 +1,9 @@
 ﻿using FluentAssertions;
-using RLE.Core.Extensions;
+using RaptorSheets.Core.Extensions;
 using System.ComponentModel;
 using Xunit;
 
-namespace RLE.Core.Tests.Extensions;
+namespace RaptorSheets.Core.Tests.Extensions;
 
 public class EnumExtensionsTests
 {

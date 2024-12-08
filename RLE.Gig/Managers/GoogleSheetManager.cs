@@ -1,17 +1,17 @@
 ﻿using Google.Apis.Sheets.v4.Data;
-using RLE.Core.Entities;
-using RLE.Gig.Enums;
-using RLE.Gig.Mappers;
-using RLE.Core.Constants;
-using RLE.Gig.Entities;
-using RLE.Core.Services;
-using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Core.Interfaces;
-using RLE.Gig.Helpers;
-using RLE.Core.Helpers;
+using RaptorSheets.Core.Entities;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Core.Constants;
+using RaptorSheets.Gig.Entities;
+using RaptorSheets.Core.Services;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Interfaces;
+using RaptorSheets.Gig.Helpers;
+using RaptorSheets.Core.Helpers;
 
-namespace RLE.Gig.Managers;
+namespace RaptorSheets.Gig.Managers;
 
 public interface IGoogleSheetManager : ISheetManager
 {

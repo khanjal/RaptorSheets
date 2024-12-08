@@ -1,7 +1,7 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using System.Diagnostics.CodeAnalysis;
 
-namespace RLE.Core.Constants;
+namespace RaptorSheets.Core.Constants;
 
 // https://www.rapidtables.com/convert/color/hex-to-rgb.html
 [ExcludeFromCodeCoverage]

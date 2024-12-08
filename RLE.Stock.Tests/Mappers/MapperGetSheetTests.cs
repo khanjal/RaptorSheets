@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
-using RLE.Core.Models.Google;
-using RLE.Stock.Constants;
-using RLE.Stock.Mappers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Stock.Constants;
+using RaptorSheets.Stock.Mappers;
 using Xunit;
 
-namespace RLE.Stock.Tests.Mappers;
+namespace RaptorSheets.Stock.Tests.Mappers;
 
 public class MapperGetSheetTests
 {

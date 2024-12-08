@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace RLE.Core.Tests.Data;
+namespace RaptorSheets.Core.Tests.Data;
 
 public enum HeaderEnum
 {

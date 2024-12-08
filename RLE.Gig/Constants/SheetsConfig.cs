@@ -1,10 +1,10 @@
-﻿using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Core.Models.Google;
-using RLE.Gig.Enums;
+﻿using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Enums;
 using System.Diagnostics.CodeAnalysis;
 
-namespace RLE.Gig.Constants;
+namespace RaptorSheets.Gig.Constants;
 
 [ExcludeFromCodeCoverage]
 public static class SheetsConfig

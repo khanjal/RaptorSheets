@@ -1,8 +1,8 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using Newtonsoft.Json;
-using RLE.Core.Models.Google;
+using RaptorSheets.Core.Models.Google;
 
-namespace RLE.Core.Tests.Data.Helpers;
+namespace RaptorSheets.Core.Tests.Data.Helpers;
 
 public class JsonHelpers
 {

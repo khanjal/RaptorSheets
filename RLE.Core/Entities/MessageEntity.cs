@@ -1,4 +1,4 @@
-﻿namespace RLE.Core.Entities;
+﻿namespace RaptorSheets.Core.Entities;
 
 public class MessageEntity
 {

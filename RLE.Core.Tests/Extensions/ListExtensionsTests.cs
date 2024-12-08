@@ -1,8 +1,8 @@
 ﻿using FluentAssertions;
-using RLE.Core.Tests.Data;
+using RaptorSheets.Core.Tests.Data;
 using Xunit;
 
-namespace RLE.Core.Tests.Extensions;
+namespace RaptorSheets.Core.Tests.Extensions;
 
 public class ListExtensionsTests
 {

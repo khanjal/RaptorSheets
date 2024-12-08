@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
-using RLE.Core.Extensions;
-using RLE.Core.Models.Google;
-using RLE.Core.Tests.Data;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Core.Tests.Data;
 using Xunit;
 
-namespace RLE.Core.Tests.Extensions;
+namespace RaptorSheets.Core.Tests.Extensions;
 
 public class ObjectExtensionsTests
 {

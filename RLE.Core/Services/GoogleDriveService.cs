@@ -1,6 +1,6 @@
-﻿using RLE.Core.Wrappers;
+﻿using RaptorSheets.Core.Wrappers;
 
-namespace RLE.Core.Services;
+namespace RaptorSheets.Core.Services;
 
 public interface IGoogleDriveService
 {

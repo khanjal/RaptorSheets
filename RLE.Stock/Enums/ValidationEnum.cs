@@ -1,4 +1,4 @@
-namespace RLE.Stock.Enums;
+namespace RaptorSheets.Stock.Enums;
 
 public enum ValidationEnum
 {

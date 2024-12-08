@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
-using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Core.Helpers;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
 using Xunit;
 
-namespace RLE.Core.Tests.Helpers;
+namespace RaptorSheets.Core.Tests.Helpers;
 
 public class MessageHelperTests
 {

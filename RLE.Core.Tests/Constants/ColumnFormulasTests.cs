@@ -1,8 +1,8 @@
 ﻿using FluentAssertions;
-using RLE.Core.Constants;
+using RaptorSheets.Core.Constants;
 using Xunit;
 
-namespace RLE.Core.Tests.Constants;
+namespace RaptorSheets.Core.Tests.Constants;
 
 public class ColumnFormulasTests
 {

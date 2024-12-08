@@ -1,6 +1,6 @@
-using RLE.Core.Models.Google;
+using RaptorSheets.Core.Models.Google;
 
-namespace RLE.Core.Extensions;
+namespace RaptorSheets.Core.Extensions;
 
 public static class ObjectExtensions
 {

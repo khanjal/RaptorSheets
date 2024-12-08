@@ -1,12 +1,12 @@
-using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Core.Helpers;
-using RLE.Core.Models.Google;
-using RLE.Gig.Constants;
-using RLE.Gig.Entities;
-using RLE.Gig.Enums;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Enums;
 
-namespace RLE.Gig.Mappers
+namespace RaptorSheets.Gig.Mappers
 {
     public static class ShiftMapper
     {

@@ -1,7 +1,7 @@
-﻿using RLE.Core.Tests.Data.Helpers;
-using RLE.Gig.Entities;
+﻿using RaptorSheets.Core.Tests.Data.Helpers;
+using RaptorSheets.Gig.Entities;
 
-namespace RLE.Gig.Tests.Data.Helpers;
+namespace RaptorSheets.Gig.Tests.Data.Helpers;
 
 internal class GigJsonHelpers
 {

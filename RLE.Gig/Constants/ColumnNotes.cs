@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace RLE.Gig.Constants;
+namespace RaptorSheets.Gig.Constants;
 
 [ExcludeFromCodeCoverage]
 public static class ColumnNotes

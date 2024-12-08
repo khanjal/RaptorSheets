@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace RLE.Core.Constants;
+namespace RaptorSheets.Core.Constants;
 
 public enum GoogleFinanceAttributesEnum
 {

@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Reflection;
 
-namespace RLE.Core.Extensions;
+namespace RaptorSheets.Core.Extensions;
 
 public static class EnumExtensions
 {

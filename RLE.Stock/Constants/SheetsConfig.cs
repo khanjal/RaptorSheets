@@ -1,10 +1,10 @@
-﻿using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Core.Models.Google;
-using RLE.Stock.Enums;
+﻿using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Stock.Enums;
 using System.Diagnostics.CodeAnalysis;
 
-namespace RLE.Stock.Constants;
+namespace RaptorSheets.Stock.Constants;
 
 [ExcludeFromCodeCoverage]
 public static class SheetsConfig

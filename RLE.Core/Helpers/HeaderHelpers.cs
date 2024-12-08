@@ -1,9 +1,9 @@
-using RLE.Core.Entities;
-using RLE.Core.Enums;
-using RLE.Core.Models.Google;
+using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Models.Google;
 using System.Text.RegularExpressions;
 
-namespace RLE.Core.Helpers;
+namespace RaptorSheets.Core.Helpers;
 
 public static class HeaderHelpers
 {

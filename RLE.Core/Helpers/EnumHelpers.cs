@@ -1,6 +1,6 @@
-﻿using RLE.Core.Extensions;
+﻿using RaptorSheets.Core.Extensions;
 
-namespace RLE.Core.Helpers
+namespace RaptorSheets.Core.Helpers
 {
     public static class EnumHelpers
     {

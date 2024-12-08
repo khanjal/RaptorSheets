@@ -1,14 +1,14 @@
 ﻿using FluentAssertions;
 using Moq;
-using RLE.Core.Enums;
-using RLE.Core.Extensions;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
 using Xunit;
-using RLE.Stock.Entities;
-using RLE.Stock.Enums;
-using RLE.Stock.Managers;
-using RLE.Test.Helpers;
+using RaptorSheets.Stock.Entities;
+using RaptorSheets.Stock.Enums;
+using RaptorSheets.Stock.Managers;
+using RaptorSheets.Test.Helpers;
 
-namespace RLE.Stock.Tests.Managers;
+namespace RaptorSheets.Stock.Tests.Managers;
 
 public class GoogleSheetManagerTests
 {

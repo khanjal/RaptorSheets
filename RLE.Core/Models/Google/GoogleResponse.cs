@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace RLE.Core.Models.Google;
+namespace RaptorSheets.Core.Models.Google;
 
 public class GoogleResponse
 {

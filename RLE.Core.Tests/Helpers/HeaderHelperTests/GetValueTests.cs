@@ -1,8 +1,8 @@
-﻿using RLE.Core.Helpers;
-using RLE.Core.Tests.Data.Helpers;
+﻿using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Tests.Data.Helpers;
 using Xunit;
 
-namespace RLE.Core.Tests.Helpers.HeaderHelperTests;
+namespace RaptorSheets.Core.Tests.Helpers.HeaderHelperTests;
 
 public class GetValueTests
 {

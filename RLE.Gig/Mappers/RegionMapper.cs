@@ -1,12 +1,12 @@
-using RLE.Core.Extensions;
-using RLE.Core.Helpers;
-using RLE.Core.Models.Google;
-using RLE.Gig.Constants;
-using RLE.Gig.Entities;
-using RLE.Gig.Enums;
-using RLE.Gig.Helpers;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Helpers;
 
-namespace RLE.Gig.Mappers;
+namespace RaptorSheets.Gig.Mappers;
 
 public static class RegionMapper
 {

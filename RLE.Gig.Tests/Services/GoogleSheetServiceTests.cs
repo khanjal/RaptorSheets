@@ -1,13 +1,13 @@
 ﻿using FluentAssertions;
 using Google.Apis.Sheets.v4.Data;
 using Moq;
-using RLE.Gig.Enums;
-using RLE.Core.Services;
-using RLE.Core.Extensions;
-using RLE.Gig.Helpers;
-using RLE.Test.Helpers;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Core.Services;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Gig.Helpers;
+using RaptorSheets.Test.Helpers;
 
-namespace RLE.Gig.Tests.Services;
+namespace RaptorSheets.Gig.Tests.Services;
 
 public class GoogleSheetServiceTests
 {

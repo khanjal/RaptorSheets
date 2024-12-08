@@ -1,7 +1,7 @@
-using RLE.Core.Entities;
+using RaptorSheets.Core.Entities;
 using System.Text.Json.Serialization;
 
-namespace RLE.Gig.Entities;
+namespace RaptorSheets.Gig.Entities;
 
 public class SheetEntity
 {

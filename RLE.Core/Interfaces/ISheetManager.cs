@@ -1,6 +1,6 @@
-﻿using RLE.Core.Entities;
+﻿using RaptorSheets.Core.Entities;
 
-namespace RLE.Core.Interfaces
+namespace RaptorSheets.Core.Interfaces
 {
     public interface ISheetManager
     {

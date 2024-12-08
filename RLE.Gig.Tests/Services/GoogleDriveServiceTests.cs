@@ -1,8 +1,8 @@
 ﻿using FluentAssertions;
-using RLE.Core.Services;
-using RLE.Test.Helpers;
+using RaptorSheets.Core.Services;
+using RaptorSheets.Test.Helpers;
 
-namespace RLE.Gig.Tests.Services;
+namespace RaptorSheets.Gig.Tests.Services;
 
 public class GoogleDriveServiceTests
 {

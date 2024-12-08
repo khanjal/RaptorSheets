@@ -1,13 +1,13 @@
 ﻿using FluentAssertions;
 using Moq;
-using RLE.Gig.Enums;
-using RLE.Gig.Entities;
-using RLE.Core.Enums;
-using RLE.Core.Extensions;
-using RLE.Gig.Managers;
-using RLE.Test.Helpers;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Entities;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Gig.Managers;
+using RaptorSheets.Test.Helpers;
 
-namespace RLE.Gig.Tests.Managers;
+namespace RaptorSheets.Gig.Tests.Managers;
 
 public class GoogleSheetManagerTests
 {

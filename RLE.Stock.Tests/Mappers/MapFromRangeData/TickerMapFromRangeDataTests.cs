@@ -1,13 +1,13 @@
 ﻿using FluentAssertions;
-using RLE.Core.Extensions;
-using RLE.Stock.Entities;
-using RLE.Stock.Enums;
-using RLE.Stock.Mappers;
-using RLE.Stock.Tests.Data;
-using RLE.Test.Helpers;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Stock.Entities;
+using RaptorSheets.Stock.Enums;
+using RaptorSheets.Stock.Mappers;
+using RaptorSheets.Stock.Tests.Data;
+using RaptorSheets.Test.Helpers;
 using Xunit;
 
-namespace RLE.Stock.Tests.Mappers.MapFromRangeData;
+namespace RaptorSheets.Stock.Tests.Mappers.MapFromRangeData;
 
 [Collection("Google Data collection")]
 public class TickerMapFromRangeDataTests

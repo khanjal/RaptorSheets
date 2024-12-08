@@ -1,12 +1,12 @@
 using FluentAssertions;
-using RLE.Core.Enums;
-using RLE.Core.Helpers;
-using RLE.Core.Models.Google;
-using RLE.Gig.Enums;
-using RLE.Gig.Helpers;
-using RLE.Core.Tests.Data.Helpers;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Helpers;
+using RaptorSheets.Core.Tests.Data.Helpers;
 
-namespace RLE.Gig.Tests.Helpers;
+namespace RaptorSheets.Gig.Tests.Helpers;
 
 public class SheetHelperTests
 {

@@ -1,4 +1,4 @@
-name: Release RLE.Gig to NuGet
+name: Release RaptorSheets.Gig to NuGet
 
 on:
   workflow_dispatch
@@ -24,6 +24,6 @@ jobs:
         google_credentials:client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
       run: dotnet test -c Release --no-build
     - name: Pack nugets
-      run: dotnet pack /home/runner/work/RaptorSheets/RaptorSheets/RLE.Gig/RLE.Gig.csproj -c Release --output .
+      run: dotnet pack /home/runner/work/RaptorSheets/RaptorSheets/RaptorSheets.Gig/RaptorSheets.Gig.csproj -c Release --output .
     - name: Push to NuGet - RaptorSheets.Gig
       run: dotnet nuget push "*.nupkg" --api-key ${{secrets.nuget_api_key}} --source https://api.nuget.org/v3/index.json

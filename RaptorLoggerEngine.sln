@@ -3,23 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Gig", "RLE.Gig\RLE.Gig.csproj", "{8B484E92-30EF-4757-9F16-3D2442C0D992}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorSheets.Gig", "RaptorSheets.Gig\RaptorSheets.Gig.csproj", "{8B484E92-30EF-4757-9F16-3D2442C0D992}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Gig.Tests", "RLE.Gig.Tests\RLE.Gig.Tests.csproj", "{172159EA-DE12-485D-A805-B488FDE24F8F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorSheets.Gig.Tests", "RaptorSheets.Gig.Tests\RaptorSheets.Gig.Tests.csproj", "{172159EA-DE12-485D-A805-B488FDE24F8F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Core", "RLE.Core\RLE.Core.csproj", "{0511900F-2BD5-4CAD-9E4F-10C7C1A353BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorSheets.Core", "RaptorSheets.Core\RaptorSheets.Core.csproj", "{0511900F-2BD5-4CAD-9E4F-10C7C1A353BA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gig", "Gig", "{01D76762-C403-4DC6-AF39-463ACBCDBABB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Core.Tests", "RLE.Core.Tests\RLE.Core.Tests.csproj", "{D8D62270-EE9D-420E-A7D8-117B4A2DB67C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorSheets.Core.Tests", "RaptorSheets.Core.Tests\RaptorSheets.Core.Tests.csproj", "{D8D62270-EE9D-420E-A7D8-117B4A2DB67C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Stock", "Stock", "{930D1E94-EE6E-41CB-82A7-474BA7E54C73}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Stock", "RLE.Stock\RLE.Stock.csproj", "{A209D9EF-AFB7-450C-A7D4-A7003337B0A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorSheets.Stock", "RaptorSheets.Stock\RaptorSheets.Stock.csproj", "{A209D9EF-AFB7-450C-A7D4-A7003337B0A6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLE.Stock.Tests", "RLE.Stock.Tests\RLE.Stock.Tests.csproj", "{44184538-9BF7-40CE-A585-0DF442722324}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorSheets.Stock.Tests", "RaptorSheets.Stock.Tests\RaptorSheets.Stock.Tests.csproj", "{44184538-9BF7-40CE-A585-0DF442722324}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RLE.Test", "RLE.Test\RLE.Test.csproj", "{1EC60D38-096B-475D-86C3-E751EF8B7786}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaptorSheets.Test", "RaptorSheets.Test\RaptorSheets.Test.csproj", "{1EC60D38-096B-475D-86C3-E751EF8B7786}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

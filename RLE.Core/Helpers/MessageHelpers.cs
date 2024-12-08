@@ -1,8 +1,8 @@
-﻿using RLE.Core.Entities;
-using RLE.Core.Enums;
-using RLE.Core.Extensions;
+﻿using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
 
-namespace RLE.Core.Helpers;
+namespace RaptorSheets.Core.Helpers;
 
 public static class MessageHelpers
 {

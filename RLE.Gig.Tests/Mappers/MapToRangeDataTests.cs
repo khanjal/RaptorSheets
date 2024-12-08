@@ -1,13 +1,13 @@
 ﻿using FluentAssertions;
-using RLE.Core.Extensions;
-using RLE.Core.Helpers;
-using RLE.Core.Tests.Data.Helpers;
-using RLE.Gig.Entities;
-using RLE.Gig.Enums;
-using RLE.Gig.Mappers;
-using RLE.Gig.Tests.Data.Helpers;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Tests.Data.Helpers;
+using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Tests.Data.Helpers;
 
-namespace RLE.Gig.Tests.Mappers;
+namespace RaptorSheets.Gig.Tests.Mappers;
 
 public class MapToRangeDataTests
 {
