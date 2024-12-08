@@ -1,9 +1,9 @@
 # RaptorSheets.Gig
 
-| Badge Name | Status |
-| ---------- | :------------: |
-| Latest Build Status | [![build status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions) |
-| RaptorSheets.Gig Nuget Version | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) |
+| Badge Name | Status | Site |
+| ---------- | :------------: | :------------: |
+| Latest Build Status | [![build status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions) | [GitHub Repo](https://github.com/khanjal/RaptorSheets/) |
+| RaptorSheets.Gig Nuget Pkg | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) | [Raptor Sheets - Gig](https://gig.raptorsheets.com) |
 
 
 # Project Description
