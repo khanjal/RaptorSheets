@@ -124,13 +124,13 @@ public static class HeaderHelpers
         {
             if (!data.Any(x => x?.ToString()?.Trim() == sheetHeader.Name))
             {
-                messages.Add(MessageHelpers.CreateErrorMessage($"Sheet [{sheetModel.Name}]: Missing column [{sheetHeader.Name}]", MessageTypeEnum.CheckSheet));
+                messages.Add(MessageHelpers.CreateErrorMessage($"Sheet [{sheetModel.Name}]: Missing column [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
             }
             else
             {
                 if (index < headerArray.Count() && sheetHeader.Name != headerArray[index].Trim())
                 {
-                    messages.Add(MessageHelpers.CreateWarningMessage($"Sheet [{sheetModel.Name}]: Unexpected column [{headerArray[index].Trim()}] should be [{sheetHeader.Name}]", MessageTypeEnum.CheckSheet));
+                    messages.Add(MessageHelpers.CreateWarningMessage($"Sheet [{sheetModel.Name}]: Unexpected column [{headerArray[index].Trim()}] should be [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
                 }
             }
             index++;

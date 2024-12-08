@@ -2,9 +2,9 @@
 
 public enum MessageTypeEnum
 {
-    General,
-    AddData,
-    CheckSheet,
-    CreateSheet,
-    GetSheets
+    GENERAL,
+    ADD_DATA,
+    CHECK_SHEET,
+    CREATE_SHEET,
+    GET_SHEETS
 }

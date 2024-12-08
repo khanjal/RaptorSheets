@@ -47,10 +47,10 @@ public class JsonHelpers
         return json;
     }
 
-    public static T DeserializeJson<T>(string json)
+    public static T? DeserializeJson<T>(string json)
     {
         var values = JsonConvert.DeserializeObject<T>(json);
 
-        return values ?? default;
+        return values;
     }
 }

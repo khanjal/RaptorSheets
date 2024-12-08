@@ -2,7 +2,7 @@
 
 public enum MessageLevelEnum
 {
-    Info,
-    Warning,
-    Error
+    INFO,
+    WARNING,
+    ERROR
 }

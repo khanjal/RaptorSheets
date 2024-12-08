@@ -36,8 +36,8 @@ public class GoogleSheetManagerTests
         var result = await _googleSheetManager.GetSheet(_sheetEnum.GetDescription());
         result.Should().NotBeNull();
         result.Messages.Count.Should().Be(1);
-        result!.Messages[0].Level.Should().Be(MessageLevelEnum.Info.UpperName());
-        result!.Messages[0].Type.Should().Be(MessageTypeEnum.GetSheets.GetDescription());
+        result!.Messages[0].Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
+        result!.Messages[0].Type.Should().Be(MessageTypeEnum.GET_SHEETS.GetDescription());
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class GoogleSheetManagerTests
         var result = await _googleSheetManager.GetSheets([_sheetEnum]);
         result.Should().NotBeNull();
         result!.Messages.Should().HaveCount(1);
-        result!.Messages[0].Level.Should().Be(MessageLevelEnum.Info.UpperName());
+        result!.Messages[0].Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
         result!.Messages[0].Message.Should().Contain(_sheetEnum.ToString());
         result!.Messages[0].Time.Should().BeGreaterThanOrEqualTo(_currentTime);
     }
@@ -66,7 +66,7 @@ public class GoogleSheetManagerTests
         result.Should().NotBeNull();
         result!.Messages.Should().HaveCount(2);
 
-        result!.Messages.ForEach(x => x.Level.Should().Be(MessageLevelEnum.Error.UpperName()));
+        result!.Messages.ForEach(x => x.Level.Should().Be(MessageLevelEnum.ERROR.GetDescription()));
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class GoogleSheetManagerTests
         var result = await googleSheetManager.GetSheets([_sheetEnum]);
         result.Should().NotBeNull();
         result!.Messages.Should().HaveCount(1);
-        result!.Messages[0].Level.Should().Be(MessageLevelEnum.Error.UpperName());
+        result!.Messages[0].Level.Should().Be(MessageLevelEnum.ERROR.GetDescription());
         result!.Messages[0].Time.Should().BeGreaterThanOrEqualTo(_currentTime);
     }
 
@@ -113,8 +113,8 @@ public class GoogleSheetManagerTests
 
         foreach (var message in result.Messages)
         {
-            message.Level.Should().Be(MessageLevelEnum.Info.UpperName());
-            message.Type.Should().Be(MessageTypeEnum.AddData.GetDescription());
+            message.Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
+            message.Type.Should().Be(MessageTypeEnum.ADD_DATA.GetDescription());
         }
     }
 
@@ -133,7 +133,7 @@ public class GoogleSheetManagerTests
         var result = await _googleSheetManager.CreateSheets([_sheetEnum]);
         result.Should().NotBeNull();
         result.Messages.Count.Should().Be(1);
-        result.Messages[0].Level.Should().Be(MessageLevelEnum.Error.UpperName());
+        result.Messages[0].Level.Should().Be(MessageLevelEnum.ERROR.GetDescription());
     }
 
     [Fact]

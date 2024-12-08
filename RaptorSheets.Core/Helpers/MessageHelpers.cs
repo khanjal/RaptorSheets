@@ -10,7 +10,7 @@ public static class MessageHelpers
     {
         if (string.IsNullOrEmpty(message.Type))
         {
-            message.Type = MessageTypeEnum.General.GetDescription();
+            message.Type = MessageTypeEnum.GENERAL.GetDescription();
         }
 
         message.Time = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
@@ -18,16 +18,16 @@ public static class MessageHelpers
     }
     public static MessageEntity CreateErrorMessage(string message, MessageTypeEnum type)
     {
-        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Error.UpperName(), Type = type.GetDescription() });
+        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.ERROR.UpperName(), Type = type.GetDescription() });
     }
 
     public static MessageEntity CreateWarningMessage(string message, MessageTypeEnum type)
     {
-        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Warning.UpperName(), Type = type.GetDescription() });
+        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.WARNING.UpperName(), Type = type.GetDescription() });
     }
 
     public static MessageEntity CreateInfoMessage(string message, MessageTypeEnum type)
     {
-        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.Info.UpperName(), Type = type.GetDescription() });
+        return CreateMessage(new MessageEntity { Message = message, Level = MessageLevelEnum.INFO.UpperName(), Type = type.GetDescription() });
     }
 }

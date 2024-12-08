@@ -5,7 +5,6 @@ namespace RaptorSheets.Core.Constants;
 [ExcludeFromCodeCoverage]
 public static class GoogleConfig
 {
-    public static string AppendDimensionType => "COLUMNS";
     public static string AppName => "Raptor Sheets Engine";
     public static string ColumnLetters => "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     public static int DefaultColumnCount => 26;
