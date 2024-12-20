@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Stock.Enums;
 using RaptorSheets.Test.Helpers;
@@ -13,6 +14,9 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
     {
         var spreadsheetId = TestConfigurationHelpers.GetStockSpreadsheet();
         var credential = TestConfigurationHelpers.GetJsonCredential();
+
+        if (!GoogleCredentialHelpers.IsCredentialFilled(credential))
+            return;
 
         var googleSheetService = new GoogleSheetService(credential, spreadsheetId);
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();

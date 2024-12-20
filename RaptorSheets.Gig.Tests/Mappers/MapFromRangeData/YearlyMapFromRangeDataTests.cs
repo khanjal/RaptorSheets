@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
@@ -14,17 +15,21 @@ public class YearlyMapFromRangeDataTests
     readonly GoogleDataFixture fixture;
     private static IList<IList<object>>? _values;
     private static List<YearlyEntity>? _entities;
+    private readonly bool _runTest = GoogleCredentialHelpers.IsCredentialAndSpreadsheetId(TestConfigurationHelpers.GetJsonCredential(), TestConfigurationHelpers.GetGigSpreadsheet());
 
     public YearlyMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
         _values = this.fixture.ValueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.YEARLY.GetDescription()).First().ValueRange.Values;
-        _entities = YearlyMapper.MapFromRangeData(_values!);
+        _entities = _runTest ? YearlyMapper.MapFromRangeData(_values!) : null;
     }
 
     [Fact]
     public void GivenWeekdaySheetData_ThenReturnRangeData()
     {
+        if (!_runTest)
+            return;
+
         var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         _entities.Should().HaveCount(nonEmptyValues.Count - 1);
 
@@ -52,6 +57,9 @@ public class YearlyMapFromRangeDataTests
     [Fact]
     public void GivenWeekdaySheetDataColumnOrderRandomized_ThenReturnSameRangeData()
     {
+        if (!_runTest)
+            return;
+
         var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 

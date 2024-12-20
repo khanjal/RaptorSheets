@@ -20,7 +20,7 @@ public static class TestConfigurationHelpers
 
         var parameters = new Dictionary<string, string>
         {
-            { "type", _configuration["google_credentials:type"] ?? "" },
+            { "type", _configuration["google_credentials:type"] ?? "service_account" },
             { "privateKeyId", _configuration["google_credentials:private_key_id"] ?? "" },
             { "privateKey", _configuration["google_credentials:private_key"] ?? "" },
             { "clientEmail", _configuration["google_credentials:client_email"] ?? "" },

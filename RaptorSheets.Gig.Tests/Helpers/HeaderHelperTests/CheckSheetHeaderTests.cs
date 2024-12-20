@@ -33,6 +33,7 @@ public class CheckSheetHeaderTests
 
     readonly GoogleDataFixture fixture;
     private static IList<MatchedValueRange>? _matchedValueRanges;
+    private readonly bool _runTest = GoogleCredentialHelpers.IsCredentialAndSpreadsheetId(TestConfigurationHelpers.GetJsonCredential(), TestConfigurationHelpers.GetGigSpreadsheet());
 
     public CheckSheetHeaderTests(GoogleDataFixture fixture)
     {
@@ -44,6 +45,9 @@ public class CheckSheetHeaderTests
     [MemberData(nameof(Sheets))]
     public void GivenFullHeaders_ThenReturnNoMessages(SheetModel sheet, SheetEnum sheetEnum)
     {
+        if (!_runTest)
+            return;
+
         var values = _matchedValueRanges?.Where(x => x.DataFilters[0].A1Range == sheetEnum.GetDescription()).First().ValueRange.Values.ToList();
         var messages = HeaderHelpers.CheckSheetHeaders(values!, sheet);
 
@@ -54,6 +58,9 @@ public class CheckSheetHeaderTests
     [MemberData(nameof(Sheets))]
     public void GivenMissingHeaders_ThenReturnErrorMessages(SheetModel sheet, SheetEnum sheetEnum)
     {
+        if (!_runTest)
+            return;
+
         var values = _matchedValueRanges?.Where(x => x.DataFilters[0].A1Range == sheetEnum.GetDescription()).First().ValueRange.Values;
 
         var headerValues = new List<IList<object>>
@@ -71,6 +78,9 @@ public class CheckSheetHeaderTests
     [MemberData(nameof(Sheets))]
     public void GivenMisorderedHeaders_ThenReturnWarningMessages(SheetModel sheet, SheetEnum sheetEnum)
     {
+        if (!_runTest)
+            return;
+
         var values = _matchedValueRanges?.Where(x => x.DataFilters[0].A1Range == sheetEnum.GetDescription()).First().ValueRange.Values;
 
         var headerValues = new List<IList<object>>

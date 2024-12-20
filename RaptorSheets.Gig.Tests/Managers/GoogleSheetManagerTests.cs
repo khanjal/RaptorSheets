@@ -6,17 +6,18 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Managers;
 using RaptorSheets.Test.Helpers;
+using RaptorSheets.Core.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Managers;
 
 public class GoogleSheetManagerTests
 {
-    private readonly string? _spreadsheetId;
     private readonly IGoogleSheetManager _googleSheetManager;
 
     private readonly long _currentTime;
     private readonly SheetEnum _sheetEnum;
     private readonly Dictionary<string, string> _credential;
+    private readonly bool _runTest = GoogleCredentialHelpers.IsCredentialAndSpreadsheetId(TestConfigurationHelpers.GetJsonCredential(), TestConfigurationHelpers.GetGigSpreadsheet());
 
     public GoogleSheetManagerTests()
     {
@@ -24,15 +25,19 @@ public class GoogleSheetManagerTests
         _sheetEnum = random.NextEnum<SheetEnum>();
         _currentTime = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
 
-        _spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
+        var spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
         _credential = TestConfigurationHelpers.GetJsonCredential();
 
-        _googleSheetManager = new GoogleSheetManager(_credential, _spreadsheetId);
+        if (GoogleCredentialHelpers.IsCredentialFilled(_credential))
+            _googleSheetManager = new GoogleSheetManager(_credential, spreadsheetId);
     }
 
     [Fact]
     public async Task GivenGetSheet_ThenReturnSheetEntity()
     {
+        if (!_runTest)
+            return;
+
         var result = await _googleSheetManager.GetSheet(_sheetEnum.GetDescription());
         result.Should().NotBeNull();
         result.Messages.Count.Should().Be(1);
@@ -43,13 +48,23 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenGetSheets_ThenReturnSheetEntity()
     {
+        if (!_runTest)
+            return;
+
         var result = await _googleSheetManager.GetSheets();
         result.Should().NotBeNull();
+        result.Messages.Should().NotBeNull();
+        var messages = result.Messages.Select(x => x.Level == MessageLevelEnum.ERROR.GetDescription());
+
+        messages.Should().NotContain(true);
     }
 
     [Fact]
     public async Task GivenGetSheetsList_ThenReturnSheetEntity()
     {
+        if (!_runTest)
+            return;
+
         var result = await _googleSheetManager.GetSheets([_sheetEnum]);
         result.Should().NotBeNull();
         result!.Messages.Should().HaveCount(1);
@@ -61,6 +76,9 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenGetSheet_WithInvalidSpreadsheetId_ReturnErrorMessages()
     {
+        if (!_runTest)
+            return;
+
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
         var result = await googleSheetManager.GetSheets();
         result.Should().NotBeNull();
@@ -72,6 +90,9 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenGetSheet_WithInvalidSpreadsheetIdAndSheet_ReturnSheetErrorMessage()
     {
+        if (!_runTest)
+            return;
+
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
         var result = await googleSheetManager.GetSheets([_sheetEnum]);
         result.Should().NotBeNull();
@@ -83,6 +104,9 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenGetSpreadsheetName_WithValidSpreadsheetId_ReturnTitle()
     {
+        if (!_runTest)
+            return;
+
         var result = await _googleSheetManager.GetSpreadsheetName();
         result.Should().NotBeNullOrWhiteSpace();
     }
@@ -90,6 +114,9 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenGetSpreadsheetName_WithInvalidSpreadsheetId_ReturnNull()
     {
+        if (!_runTest)
+            return;
+
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
         var result = await googleSheetManager.GetSpreadsheetName();
         result.Should().BeNull();
@@ -107,6 +134,9 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenAddSheetData_WithData_ThenReturnData()
     {
+        if (!_runTest)
+            return;
+
         var result = await _googleSheetManager.AddSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], GenerateShift());
         result.Should().NotBeNull();
         result.Messages.Count.Should().Be(4);
@@ -130,6 +160,9 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnData()
     {
+        if (!_runTest)
+            return;
+
         var result = await _googleSheetManager.CreateSheets([_sheetEnum]);
         result.Should().NotBeNull();
         result.Messages.Count.Should().Be(1);
@@ -139,6 +172,9 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenCheckSheets_WithNoHeaderCheck_ThenReturnData()
     {
+        if (!_runTest)
+            return;
+
         var result = await _googleSheetManager.CheckSheets();
         result.Should().NotBeNull();
         result.Count.Should().Be(1);
@@ -147,6 +183,9 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GivenCheckSheets_WithHeaderCheck_ThenReturnData()
     {
+        if (!_runTest)
+            return;
+
         var result = await _googleSheetManager.CheckSheets(true);
         result.Should().NotBeNull();
         result.Count.Should().Be(2);

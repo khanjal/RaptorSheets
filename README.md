@@ -59,7 +59,7 @@ var data = await googleSheetManager.GetSheets();
 You can retrieve specific sheets and information by calling ````GetSheets()```` and passing in the sheet enums you want.
 
 ```csharp
-var sheets = [SheetEnum.Trips, SheetEnum.Shifts]
+var sheets = [SheetEnum.Sheet1, SheetEnum.Sheet2]
 var data = await googleSheetManager.GetSheets(sheets);
 ```
 
