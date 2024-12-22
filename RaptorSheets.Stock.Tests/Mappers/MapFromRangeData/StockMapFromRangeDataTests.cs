@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
 using RaptorSheets.Core.Extensions;
-using RaptorSheets.Core.Helpers;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Enums;
 using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Stock.Tests.Data;
+using RaptorSheets.Stock.Tests.Data.Attributes;
 using RaptorSheets.Test.Helpers;
 using Xunit;
 
@@ -16,21 +16,17 @@ public class StockMapFromRangeDataTests
     readonly GoogleDataFixture fixture;
     private static IList<IList<object>>? _values;
     private static List<StockEntity>? _entities;
-    private readonly bool _runTest = GoogleCredentialHelpers.IsCredentialAndSpreadsheetId(TestConfigurationHelpers.GetJsonCredential(), TestConfigurationHelpers.GetStockSpreadsheet());
 
     public StockMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
         _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.STOCKS.GetDescription()).First().ValueRange.Values;
-        _entities = _runTest ? StockMapper.MapFromRangeData(_values!) : null;
+        _entities = StockMapper.MapFromRangeData(_values!);
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public void GivenAccountSheetData_ThenReturnRangeData()
     {
-        if (!_runTest)
-            return;
-
         var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         _entities.Should().HaveCount(nonEmptyValues.Count - 1);
 
@@ -52,12 +48,9 @@ public class StockMapFromRangeDataTests
         }
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public void GivenAccountSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
     {
-        if (!_runTest)
-            return;
-
         var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 

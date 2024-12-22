@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
 using RaptorSheets.Core.Extensions;
-using RaptorSheets.Core.Helpers;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Gig.Tests.Data;
+using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Test.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Mappers.MapFromRangeData;
@@ -15,21 +15,17 @@ public class TripMapFromRangeDataTests
     readonly GoogleDataFixture fixture;
     private static IList<IList<object>>? _values;
     private static List<TripEntity>? _entities;
-    private readonly bool _runTest = GoogleCredentialHelpers.IsCredentialAndSpreadsheetId(TestConfigurationHelpers.GetJsonCredential(), TestConfigurationHelpers.GetGigSpreadsheet());
 
     public TripMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
         _values = this.fixture.ValueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.TRIPS.GetDescription()).First().ValueRange.Values;
-        _entities = _runTest ? TripMapper.MapFromRangeData(_values!) : null;
+        _entities = TripMapper.MapFromRangeData(_values!);
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public void GivenTripSheetData_ThenReturnRangeData()
     {
-        if (!_runTest)
-            return;
-
         var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         _entities.Should().HaveCount(nonEmptyValues.Count - 1);
 
@@ -65,12 +61,9 @@ public class TripMapFromRangeDataTests
         }
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public void GivenTripSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
     {
-        if (!_runTest)
-            return;
-
         var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 

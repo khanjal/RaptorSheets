@@ -1,4 +1,4 @@
-﻿namespace RaptorSheets.Core.Helpers;
+﻿namespace RaptorSheets.Test.Helpers;
 
 public static class GoogleCredentialHelpers
 {
@@ -10,9 +10,9 @@ public static class GoogleCredentialHelpers
         return false;
     }
 
-    public static bool IsCredentialAndSpreadsheetId(Dictionary<string, string> credentials, string spreadsheetId)
+    public static bool IsCredentialAndSpreadsheetId(string spreadsheetId)
     {
-        if (IsCredentialFilled(credentials) && !string.IsNullOrEmpty(spreadsheetId))
+        if (IsCredentialFilled(TestConfigurationHelpers.GetJsonCredential()) && !string.IsNullOrEmpty(spreadsheetId))
             return true;
 
         return false;

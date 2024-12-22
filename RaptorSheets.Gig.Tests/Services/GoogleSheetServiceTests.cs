@@ -6,7 +6,7 @@ using RaptorSheets.Core.Services;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Test.Helpers;
-using RaptorSheets.Core.Helpers;
+using RaptorSheets.Gig.Tests.Data.Attributes;
 
 namespace RaptorSheets.Gig.Tests.Services;
 
@@ -16,7 +16,6 @@ public class GoogleSheetServiceTests
     private readonly Dictionary<string, string> _credential;
     private readonly GoogleSheetService _googleSheetService;
     private readonly List<SheetEnum> _sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
-    private readonly bool _runTest = GoogleCredentialHelpers.IsCredentialAndSpreadsheetId(TestConfigurationHelpers.GetJsonCredential(), TestConfigurationHelpers.GetGigSpreadsheet());
 
     public GoogleSheetServiceTests()
     {
@@ -27,12 +26,9 @@ public class GoogleSheetServiceTests
             _googleSheetService = new GoogleSheetService(_credential, _spreadsheetId);
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GivenGetAllData_ThenReturnInfo()
     {
-        if (!_runTest)
-            return;
-
         var result = await _googleSheetService.GetBatchData(_sheets.Select(x => x.GetDescription()).ToList());
         result.Should().NotBeNull();
         result!.ValueRanges.Should().NotBeNull();
@@ -45,23 +41,17 @@ public class GoogleSheetServiceTests
         // TODO: Look into maybe spot checking each entity to ensure there is some data there.
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GivenGetAllData_WithInvalidSpreadsheetId_ReturnException()
     {
-        if (!_runTest)
-            return;
-
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
         var result = await googleSheetService.GetBatchData(_sheets.Select(x => x.GetDescription()).ToList());
         result.Should().BeNull();
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GivenGetSheetData_WithValidSheetId_ThenReturnInfo()
     {
-        if (!_runTest)
-            return;
-
         var random = new Random();
         var randomEnum = random.NextEnum<SheetEnum>();
 
@@ -72,23 +62,17 @@ public class GoogleSheetServiceTests
         // TODO: Test some data
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GivenGetSheetData_WithInvalidSpreadsheetId_ReturnNull()
     {
-        if (!_runTest)
-            return;
-
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
         var result = await googleSheetService.GetSheetData(new SheetEnum().GetDescription());
         result.Should().BeNull();
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GivenGetSheetInfo_WithSheetId_ThenReturnInfo()
     {
-        if (!_runTest)
-            return;
-
         var result = await _googleSheetService.GetSheetInfo();
         result.Should().NotBeNull();
         result!.Properties.Should().NotBeNull();
@@ -96,12 +80,9 @@ public class GoogleSheetServiceTests
         result!.Properties.Title.Should().NotBeNullOrEmpty();
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GivenGetSheetInfo_WithSheetId_ThenCheckSpreadsheet()
     {
-        if (!_runTest)
-            return;
-
         var result = await _googleSheetService.GetSheetInfo();
         result.Should().NotBeNull();
 
@@ -111,12 +92,9 @@ public class GoogleSheetServiceTests
         // TODO: Make a test to remove a sheet and see if it finds the missing one.
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GivenGetSheetInfo_WithInvalidSheetId_ThenReturnNull()
     {
-        if (!_runTest)
-            return;
-
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
         var result = await googleSheetService.GetSheetInfo();
         result.Should().BeNull();
@@ -131,12 +109,9 @@ public class GoogleSheetServiceTests
         result.Should().NotBeNull();
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GivenAppendData_WithInvalidSheetId_ThenReturnNull()
     {
-        if (!_runTest)
-            return;
-
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
         var result = await googleSheetService.AppendData(new ValueRange(), "");
         result.Should().BeNull();
@@ -151,12 +126,9 @@ public class GoogleSheetServiceTests
         result.Should().NotBeNull();
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GivenCreateSheets_WithInvalidSheetId_ThenReturnNull()
     {
-        if (!_runTest)
-            return;
-
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
         var result = await googleSheetService.CreateSheets(new BatchUpdateSpreadsheetRequest());
         result.Should().BeNull();
