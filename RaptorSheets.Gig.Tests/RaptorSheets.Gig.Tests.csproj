@@ -79,7 +79,7 @@
     <ProjectReference Include="..\RaptorSheets.Core.Tests\RaptorSheets.Core.Tests.csproj" />
     <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
     <ProjectReference Include="..\RaptorSheets.Gig\RaptorSheets.Gig.csproj" />
-    <ProjectReference Include="..\RaptorSheets.Test\RaptorSheets.Test.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Test\RaptorSheets.Test.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

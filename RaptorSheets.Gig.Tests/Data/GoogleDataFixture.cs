@@ -2,7 +2,7 @@
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Gig.Enums;
-using RaptorSheets.Test.Helpers;
+using RaptorSheets.Test.Common.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Data;
 

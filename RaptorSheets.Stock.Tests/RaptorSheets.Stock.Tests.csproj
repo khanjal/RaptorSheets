@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\Helpers\**" />
+    <EmbeddedResource Remove="Data\Helpers\**" />
+    <None Remove="Data\Helpers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -29,11 +35,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
     <ProjectReference Include="..\RaptorSheets.Stock\RaptorSheets.Stock.csproj" />
-    <ProjectReference Include="..\RaptorSheets.Test\RaptorSheets.Test.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\Helpers\" />
+    <ProjectReference Include="..\RaptorSheets.Test\RaptorSheets.Test.Common.csproj" />
   </ItemGroup>
 
 </Project>

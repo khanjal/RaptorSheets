@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RaptorSheets.Test.Constants
+namespace RaptorSheets.Test.Common.Constants
 {
     public static class TestSkipMessages
     {

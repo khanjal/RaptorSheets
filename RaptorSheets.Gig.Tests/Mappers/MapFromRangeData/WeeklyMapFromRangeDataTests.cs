@@ -5,7 +5,7 @@ using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Gig.Tests.Data;
 using RaptorSheets.Gig.Tests.Data.Attributes;
-using RaptorSheets.Test.Helpers;
+using RaptorSheets.Test.Common.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Mappers.MapFromRangeData;
 

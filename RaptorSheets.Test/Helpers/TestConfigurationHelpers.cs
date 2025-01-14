@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System.Reflection;
 
-namespace RaptorSheets.Test.Helpers;
+namespace RaptorSheets.Test.Common.Helpers;
 
 public static class TestConfigurationHelpers
 {

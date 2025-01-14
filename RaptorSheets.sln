@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorSheets.Stock", "Rapto
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorSheets.Stock.Tests", "RaptorSheets.Stock.Tests\RaptorSheets.Stock.Tests.csproj", "{44184538-9BF7-40CE-A585-0DF442722324}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaptorSheets.Test", "RaptorSheets.Test\RaptorSheets.Test.csproj", "{1EC60D38-096B-475D-86C3-E751EF8B7786}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaptorSheets.Test.Common", "RaptorSheets.Test\RaptorSheets.Test.Common.csproj", "{1EC60D38-096B-475D-86C3-E751EF8B7786}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

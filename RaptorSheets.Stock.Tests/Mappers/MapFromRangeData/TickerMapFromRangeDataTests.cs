@@ -5,7 +5,7 @@ using RaptorSheets.Stock.Enums;
 using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Stock.Tests.Data;
 using RaptorSheets.Stock.Tests.Data.Attributes;
-using RaptorSheets.Test.Helpers;
+using RaptorSheets.Test.Common.Helpers;
 using Xunit;
 
 namespace RaptorSheets.Stock.Tests.Mappers.MapFromRangeData;

@@ -6,7 +6,7 @@ using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Enums;
 using RaptorSheets.Stock.Managers;
 using RaptorSheets.Stock.Tests.Data.Attributes;
-using RaptorSheets.Test.Helpers;
+using RaptorSheets.Test.Common.Helpers;
 
 namespace RaptorSheets.Stock.Tests.Managers;
 

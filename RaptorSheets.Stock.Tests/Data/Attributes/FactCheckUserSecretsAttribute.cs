@@ -1,5 +1,5 @@
-﻿using RaptorSheets.Test.Constants;
-using RaptorSheets.Test.Helpers;
+﻿using RaptorSheets.Test.Common.Constants;
+using RaptorSheets.Test.Common.Helpers;
 using Xunit;
 
 namespace RaptorSheets.Stock.Tests.Data.Attributes;
