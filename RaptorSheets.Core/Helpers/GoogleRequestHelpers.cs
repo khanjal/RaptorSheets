@@ -3,7 +3,6 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
-using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
 
 namespace RaptorSheets.Core.Helpers;
 
