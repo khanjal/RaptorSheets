@@ -96,7 +96,7 @@ namespace RaptorSheets.Gig.Mappers
                             objectList.Add(shift.Service);
                             break;
                         case HeaderEnum.NUMBER:
-                            objectList.Add(shift.Number);
+                            objectList.Add(shift.Number?.ToString() ?? "");
                             break;
                         case HeaderEnum.TIME_ACTIVE:
                             objectList.Add(shift.Active);
@@ -105,19 +105,19 @@ namespace RaptorSheets.Gig.Mappers
                             objectList.Add(shift.Time);
                             break;
                         case HeaderEnum.TIME_OMIT:
-                            objectList.Add(shift.Omit);
+                            objectList.Add(shift.Omit?.ToString() ?? "");
                             break;
                         case HeaderEnum.PAY:
-                            objectList.Add(shift.Pay);
+                            objectList.Add(shift.Pay?.ToString() ?? "");
                             break;
                         case HeaderEnum.TIPS:
-                            objectList.Add(shift.Tip);
+                            objectList.Add(shift.Tip?.ToString() ?? "");
                             break;
                         case HeaderEnum.BONUS:
-                            objectList.Add(shift.Bonus);
+                            objectList.Add(shift.Bonus?.ToString() ?? "");
                             break;
                         case HeaderEnum.CASH:
-                            objectList.Add(shift.Cash);
+                            objectList.Add(shift.Cash?.ToString() ?? "");
                             break;
                         case HeaderEnum.REGION:
                             objectList.Add(shift.Region);

@@ -3,6 +3,7 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
+using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
 
 namespace RaptorSheets.Core.Helpers;
 
@@ -55,6 +56,23 @@ public static class GoogleRequestHelpers
         };
         return new Request { AddBanding = addBandingRequest };
     }
+
+    public static Request GenerateDeleteRequest(int sheetId, int rowId)
+    {
+        var deleteDimension = new DeleteDimensionRequest
+        {
+            Range = new DimensionRange
+            {
+                Dimension = DimensionEnum.ROWS.GetDescription(),
+                SheetId = sheetId,
+                StartIndex = rowId,
+                EndIndex = rowId + 1
+            }
+        };
+
+        return new Request { DeleteDimension = deleteDimension };
+    }
+
     public static Request GenerateProtectedRangeForHeaderOrSheet(SheetModel sheet)
     {
         // Protect sheet or header
@@ -136,4 +154,29 @@ public static class GoogleRequestHelpers
 
         return new Request { AddSheet = sheetRequest };
     }
+
+    public static BatchUpdateValuesRequest GenerateUpdateRequest(string sheetName, IDictionary<int, IList<IList<object?>>> rowValues) 
+    {
+        var valueRanges = new List<ValueRange>();
+
+        foreach (var rowValue in rowValues)
+        {
+            var valueRange = new ValueRange
+            {
+                MajorDimension = "ROWS",
+                Range = $"{sheetName}!A{rowValue.Key}",
+                Values = rowValue.Value
+            };
+            valueRanges.Add(valueRange);
+        }
+
+        var batchUpdateValuesRequest = new BatchUpdateValuesRequest
+        {
+            Data = valueRanges,
+            ValueInputOption = ValueInputOptionEnum.USER_ENTERED.GetDescription()
+        };
+
+        return batchUpdateValuesRequest;
+    }
+
 }

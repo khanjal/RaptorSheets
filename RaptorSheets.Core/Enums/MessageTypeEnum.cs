@@ -6,5 +6,7 @@ public enum MessageTypeEnum
     ADD_DATA,
     CHECK_SHEET,
     CREATE_SHEET,
-    GET_SHEETS
+    DELETE_DATA,
+    GET_SHEETS,
+    UPDATE_DATA
 }

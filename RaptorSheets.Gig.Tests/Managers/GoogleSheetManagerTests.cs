@@ -123,6 +123,43 @@ public class GoogleSheetManagerTests
         }
     }
 
+    [Fact]
+    public async Task GivenChangeSheetData_WithValidSheetId_ThenReturnEmpty()
+    {
+        var googleSheetManager = new Mock<IGoogleSheetManager>();
+        googleSheetManager.Setup(x => x.ChangeSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>(), It.IsAny<ActionTypeEnum>())).ReturnsAsync(new SheetEntity());
+        var result = await googleSheetManager.Object.ChangeSheetData([new SheetEnum()], new SheetEntity(), new ActionTypeEnum());
+        result.Should().NotBeNull();
+    }
+
+    [FactCheckUserSecrets]
+    public async Task GivenAppendSheetData_WithData_ThenReturnData()
+    {
+        var result = await _googleSheetManager.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], GenerateShift(), ActionTypeEnum.APPEND);
+        result.Should().NotBeNull();
+        result.Messages.Count.Should().Be(4);
+
+        foreach (var message in result.Messages)
+        {
+            message.Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
+            message.Type.Should().Be(MessageTypeEnum.ADD_DATA.GetDescription());
+        }
+    }
+
+    [FactCheckUserSecrets]
+    public async Task GivenUpdateSheetData_WithData_ThenReturnData()
+    {
+        var result = await _googleSheetManager.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], GenerateShift(), ActionTypeEnum.UPDATE);
+        result.Should().NotBeNull();
+        result.Messages.Count.Should().Be(4);
+
+        foreach (var message in result.Messages)
+        {
+            message.Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
+            message.Type.Should().Be(MessageTypeEnum.UPDATE_DATA.GetDescription());
+        }
+    }
+
     [FactCheckUserSecrets]
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnEmpty()
     {
@@ -166,12 +203,13 @@ public class GoogleSheetManagerTests
         var service = $"Test {number}";
 
         var sheetEntity = new SheetEntity();
-        sheetEntity.Shifts.Add(new ShiftEntity { Date = date, Number = 1, Service = service });
+        sheetEntity.Shifts.Add(new ShiftEntity { Id = 2, Date = date, Number = 1, Service = service });
 
         // Add random amount of trips
         for (int i = 0; i < random.Next(1, 5); i++)
         {
             var tripEntity = GenerateTrip();
+            tripEntity.Id = i+2;
             tripEntity.Date = date;
             tripEntity.Number = 1;
             tripEntity.Service = service;

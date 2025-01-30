@@ -10,17 +10,22 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Interfaces;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
+using Newtonsoft.Json.Linq;
 
 namespace RaptorSheets.Gig.Managers;
 
 public interface IGoogleSheetManager : ISheetManager
 {
     public Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
+    public Task<SheetEntity> AppendSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType);
+    public Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType);
     public Task<SheetEntity> CreateSheets();
     public Task<SheetEntity> CreateSheets(List<SheetEnum> sheets);
+    public Task<SheetEntity> DeleteRows(SheetEntity sheetEntity);
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetSheets();
     public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
+    public Task<SheetEntity> UpdateSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType);
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -78,6 +83,126 @@ public class GoogleSheetManager : IGoogleSheetManager
             else
             {
                 sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"No data to add to {sheet.UpperName()}", MessageTypeEnum.ADD_DATA));
+            }
+        }
+
+        return sheetEntity;
+    }
+
+    public async Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
+    {
+        switch (actionType)
+        {
+            case ActionTypeEnum.APPEND:
+                return await AppendSheetData(sheets, sheetEntity, actionType);
+            case ActionTypeEnum.UPDATE:
+                return await UpdateSheetData(sheets, sheetEntity, actionType);
+            default:
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Action type {actionType} not supported", MessageTypeEnum.GENERAL));
+                return sheetEntity;
+        }
+    }
+
+    public async Task<SheetEntity> AppendSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
+    {
+        var messageType = MessageTypeEnum.ADD_DATA;
+
+        foreach (var sheet in sheets)
+        {
+            var headers = (await _googleSheetService.GetSheetData(sheet.GetDescription()))?.Values[0];
+
+            if (headers == null)
+                continue;
+
+            IList<IList<object?>> values = [];
+
+            switch (sheet)
+            {
+                case SheetEnum.SHIFTS:
+                    values = ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers);
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                    break;
+
+                case SheetEnum.TRIPS:
+                    values = TripMapper.MapToRangeData(sheetEntity.Trips, headers);
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                    break;
+                default:
+                    // Unsupported sheet.
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{actionType} data: {sheet.UpperName()} not supported", messageType));
+                    break;
+            }
+
+            if (values.Any())
+            {
+                var valueRange = new ValueRange { Values = values };
+                var success = (await _googleSheetService.AppendData(valueRange, $"{sheet.GetDescription()}!{GoogleConfig.Range}")) != null;
+
+                if (success)
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                else
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to {actionType} data: {sheet.UpperName()}", messageType));
+            }
+            else
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"No data to {actionType}: {sheet.UpperName()}", messageType));
+            }
+        }
+
+        return sheetEntity;
+    }
+
+    public async Task<SheetEntity> UpdateSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
+    {
+        var messageType = MessageTypeEnum.UPDATE_DATA;
+
+        foreach (var sheet in sheets)
+        {
+            var headers = (await _googleSheetService.GetSheetData(sheet.GetDescription()))?.Values[0];
+
+            if (headers == null)
+                continue;
+
+            IDictionary<int, IList<IList<object?>>> rowValues = new Dictionary<int, IList<IList<object?>>>();
+
+            switch (sheet)
+            {
+                case SheetEnum.SHIFTS:
+                    foreach (var shift in sheetEntity.Shifts)
+                    {
+                        rowValues.Add(shift.Id, ShiftMapper.MapToRangeData([shift], headers));
+                    }
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                    break;
+
+                case SheetEnum.TRIPS:
+                    foreach (var trip in sheetEntity.Trips)
+                    {
+                        rowValues.Add(trip.Id, TripMapper.MapToRangeData([trip], headers));
+                    }
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                    break;
+                default:
+                    // Unsupported sheet.
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{actionType} data: {sheet.UpperName()} not supported", messageType));
+                    break;
+            }
+
+            if (rowValues.Any())
+            {
+                var success = false;
+                var batchRequest = GoogleRequestHelpers.GenerateUpdateRequest(sheet.GetDescription(), rowValues);
+
+                success = (await _googleSheetService.BatchUpdateData(batchRequest)) != null;
+
+                if (success)
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                else
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to {actionType} data: {sheet.UpperName()}", messageType));
+            }
+            else
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"No data to {actionType}: {sheet.UpperName()}", messageType));
             }
         }
 
@@ -225,7 +350,7 @@ public class GoogleSheetManager : IGoogleSheetManager
     public async Task<SheetEntity> CreateSheets(List<SheetEnum> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetsHelpers.Generate(sheets);
-        var response = await _googleSheetService.CreateSheets(batchUpdateSpreadsheetRequest);
+        var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
 
         var sheetEntity = new SheetEntity();
 
@@ -250,6 +375,11 @@ public class GoogleSheetManager : IGoogleSheetManager
         return sheetEntity;
     }
 
+    public Task<SheetEntity> DeleteRows(SheetEntity sheetEntity)
+    {
+        return Task.FromResult(sheetEntity);
+    }
+
     public async Task<SheetEntity> GetSheet(string sheet)
     {
         var sheetExists = Enum.TryParse(sheet.ToUpper(), out SheetEnum sheetEnum) && Enum.IsDefined(typeof(SheetEnum), sheetEnum);
@@ -261,7 +391,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         return await GetSheets([sheetEnum]);
     }
-
+     
     public async Task<SheetEntity> GetSheets()
     {
         // TODO Add check sheets here where it can add missing sheets.
@@ -322,4 +452,5 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         return response.Properties.Title;
     }
+
 }

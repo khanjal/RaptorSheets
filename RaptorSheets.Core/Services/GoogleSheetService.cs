@@ -7,10 +7,12 @@ namespace RaptorSheets.Core.Services;
 public interface IGoogleSheetService
 {
     public Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range);
-    public Task<BatchUpdateSpreadsheetResponse?> CreateSheets(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
+    public Task<BatchUpdateValuesResponse?> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest);
+    public Task<BatchUpdateSpreadsheetResponse?> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
     public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range);
     public Task<ValueRange?> GetSheetData(string sheet);
     public Task<Spreadsheet?> GetSheetInfo();
+    public Task<UpdateValuesResponse?> UpdateData(ValueRange valueRange, string range);
 }
 
 public class GoogleSheetService : IGoogleSheetService
@@ -44,11 +46,26 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<BatchUpdateSpreadsheetResponse?> CreateSheets(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
+    public async Task<BatchUpdateValuesResponse?> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest)
     {
         try
         {
-            var response = await _sheetService.BatchUpdate(batchUpdateSpreadsheetRequest);
+            var response = await _sheetService.BatchUpdateData(batchUpdateValuesRequest);
+
+            return response;
+        }
+        catch (Exception)
+        {
+            // Log or return an error?
+            return null;
+        }
+    }
+
+    public async Task<BatchUpdateSpreadsheetResponse?> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
+    {
+        try
+        {
+            var response = await _sheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
 
             return response;
         }
@@ -119,6 +136,21 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception)
         {
+            return null;
+        }
+    }
+
+    public async Task<UpdateValuesResponse?> UpdateData(ValueRange valueRange, string range)
+    {
+        try
+        {
+            var response = await _sheetService.UpdateValues(range, valueRange);
+
+            return response;
+        }
+        catch (Exception)
+        {
+            // Log or return an error?
             return null;
         }
     }

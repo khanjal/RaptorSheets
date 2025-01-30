@@ -191,7 +191,7 @@ public class GoogleSheetManager : IGoogleSheetManager
     public async Task<SheetEntity> CreateSheets(List<SheetEnum> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetHelpers.Generate(sheets);
-        var response = await _googleSheetService.CreateSheets(batchUpdateSpreadsheetRequest);
+        var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
 
         var sheetEntity = new SheetEntity();
 

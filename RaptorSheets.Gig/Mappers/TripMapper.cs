@@ -89,7 +89,7 @@ namespace RaptorSheets.Gig.Mappers
                             objectList.Add(trip.Service);
                             break;
                         case HeaderEnum.NUMBER:
-                            objectList.Add(trip.Number);
+                            objectList.Add(trip.Number?.ToString() ?? "");
                             break;
                         case HeaderEnum.EXCLUDE:
                             objectList.Add(trip.Exclude);
@@ -110,25 +110,25 @@ namespace RaptorSheets.Gig.Mappers
                             objectList.Add(trip.Duration);
                             break;
                         case HeaderEnum.PAY:
-                            objectList.Add(trip.Pay!);
+                            objectList.Add(trip.Pay?.ToString() ?? "");
                             break;
                         case HeaderEnum.TIPS:
-                            objectList.Add(trip.Tip!);
+                            objectList.Add(trip.Tip?.ToString() ?? "");
                             break;
                         case HeaderEnum.BONUS:
-                            objectList.Add(trip.Bonus!);
+                            objectList.Add(trip.Bonus?.ToString() ?? "");
                             break;
                         case HeaderEnum.CASH:
-                            objectList.Add(trip.Cash!);
+                            objectList.Add(trip.Cash?.ToString() ?? "");
                             break;
                         case HeaderEnum.ODOMETER_START:
-                            objectList.Add(trip.OdometerStart!);
+                            objectList.Add(trip.OdometerStart?.ToString() ?? "");
                             break;
                         case HeaderEnum.ODOMETER_END:
-                            objectList.Add(trip.OdometerEnd!);
+                            objectList.Add(trip.OdometerEnd?.ToString() ?? "");
                             break;
                         case HeaderEnum.DISTANCE:
-                            objectList.Add(trip.Distance!);
+                            objectList.Add(trip.Distance?.ToString() ?? "");
                             break;
                         case HeaderEnum.NAME:
                             objectList.Add(trip.Name);

@@ -10,10 +10,13 @@ public interface ISheetServiceWrapper
 {
     Task<AppendValuesResponse> AppendValues(string range, IList<IList<object>> values);
     Task<AppendValuesResponse> AppendValues(string range, ValueRange valueRange);
-    Task<BatchUpdateSpreadsheetResponse> BatchUpdate(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
+    Task<BatchUpdateValuesResponse> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest);
+    Task<BatchUpdateSpreadsheetResponse> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
     Task<BatchGetValuesByDataFilterResponse> BatchGetByDataFilter(BatchGetValuesByDataFilterRequest batchGetValuesByDataFilterRequest);
     Task<Spreadsheet> GetSpreadsheet();
     Task<ValueRange> GetValues(string range);
+    Task<UpdateValuesResponse> UpdateValues(string range, IList<IList<object>> values);
+    Task<UpdateValuesResponse> UpdateValues(string range, ValueRange valueRange);
 }
 
 public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
@@ -75,8 +78,14 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
         var request = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(batchGetValuesByDataFilterRequest, _spreadsheetId);
         return await request.ExecuteAsync();
     }
+    
+    public async Task<BatchUpdateValuesResponse> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest)
+    {
+        var request = _sheetsService.Spreadsheets.Values.BatchUpdate(batchUpdateValuesRequest, _spreadsheetId);
+        return await request.ExecuteAsync();
+    }
 
-    public async Task<BatchUpdateSpreadsheetResponse> BatchUpdate(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
+    public async Task<BatchUpdateSpreadsheetResponse> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
     {
         var request = _sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, _spreadsheetId);
         return await request.ExecuteAsync();
@@ -92,6 +101,19 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
     public async Task<Spreadsheet> GetSpreadsheet()
     {
         var request = _sheetsService.Spreadsheets.Get(_spreadsheetId);
+        return await request.ExecuteAsync();
+    }
+
+    public async Task<UpdateValuesResponse> UpdateValues(string range, IList<IList<object>> values)
+    {
+        var valueRange = new ValueRange { Values = values };
+        return await UpdateValues(range, valueRange);
+    }
+
+    public async Task<UpdateValuesResponse> UpdateValues(string range, ValueRange valueRange)
+    {
+        var request = _sheetsService.Spreadsheets.Values.Update(valueRange, _spreadsheetId, range);
+        request.ValueInputOption = UpdateRequest.ValueInputOptionEnum.USERENTERED;
         return await request.ExecuteAsync();
     }
 }
