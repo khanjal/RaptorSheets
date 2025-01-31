@@ -1,6 +1,7 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using RaptorSheets.Core.Constants;
+using System.Diagnostics.CodeAnalysis;
 using File = Google.Apis.Drive.v3.Data.File;
 
 namespace RaptorSheets.Core.Wrappers;
@@ -10,6 +11,8 @@ public interface IDriveServiceWrapper
     Task<IList<File>> GetSheetFiles();
     Task<IList<File>> SearchSheetFiles(string name);
 }
+
+[ExcludeFromCodeCoverage]
 public class DriveServiceWrapper : DriveService, IDriveServiceWrapper
 {
     private DriveService _driveService = new();

@@ -10,7 +10,6 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Interfaces;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
-using Newtonsoft.Json.Linq;
 
 namespace RaptorSheets.Gig.Managers;
 

@@ -1,8 +1,7 @@
-﻿namespace RaptorSheets.Core.Entities
+﻿namespace RaptorSheets.Core.Entities;
+
+public class PropertyEntity
 {
-    public class PropertyEntity
-    {
-        public string Id { get; set; } = "";
-        public string Name { get; set; } = "";
-    }
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
 }
