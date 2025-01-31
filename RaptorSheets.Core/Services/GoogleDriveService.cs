@@ -1,4 +1,5 @@
 ﻿using RaptorSheets.Core.Wrappers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Core.Services;
 
@@ -7,6 +8,7 @@ public interface IGoogleDriveService
     public Task<IList<string>> GetSheetFiles();
 }
 
+[ExcludeFromCodeCoverage]
 public class GoogleDriveService : IGoogleDriveService
 {
     private readonly DriveServiceWrapper _driveService;

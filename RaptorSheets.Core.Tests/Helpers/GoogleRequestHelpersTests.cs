@@ -5,7 +5,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using Xunit;
 
-namespace RaptorSheets.Tests.Helpers;
+namespace RaptorSheets.Core.Tests.Helpers;
 
 public class GoogleRequestHelpersTests
 {

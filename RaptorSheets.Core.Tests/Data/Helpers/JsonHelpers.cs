@@ -1,9 +1,11 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using Newtonsoft.Json;
 using RaptorSheets.Core.Models.Google;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Core.Tests.Data.Helpers;
 
+[ExcludeFromCodeCoverage]
 public class JsonHelpers
 {
 

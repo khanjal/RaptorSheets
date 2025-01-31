@@ -1,6 +1,7 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Wrappers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Core.Services;
 
@@ -15,6 +16,7 @@ public interface IGoogleSheetService
     public Task<UpdateValuesResponse?> UpdateData(ValueRange valueRange, string range);
 }
 
+[ExcludeFromCodeCoverage]
 public class GoogleSheetService : IGoogleSheetService
 {
     private SheetServiceWrapper _sheetService;
