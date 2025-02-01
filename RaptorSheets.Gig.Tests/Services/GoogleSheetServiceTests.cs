@@ -14,7 +14,7 @@ public class GoogleSheetServiceTests
 {
     private readonly string? _spreadsheetId;
     private readonly Dictionary<string, string> _credential;
-    private readonly GoogleSheetService _googleSheetService;
+    private readonly GoogleSheetService _googleSheetService = null!;
     private readonly List<SheetEnum> _sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
 
     public GoogleSheetServiceTests()
