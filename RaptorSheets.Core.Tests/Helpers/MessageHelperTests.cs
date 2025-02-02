@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
@@ -9,35 +10,67 @@ namespace RaptorSheets.Core.Tests.Helpers;
 public class MessageHelperTests
 {
     [Fact]
-    public void GivenCreateError_ThenReturnErrorMessage()
+    public void CreateMessage_ShouldSetDefaultType_WhenTypeIsNullOrEmpty()
     {
-        var messageText = "This is an error message.";
-        var message = MessageHelpers.CreateErrorMessage(messageText, MessageTypeEnum.GENERAL);
+        // Arrange
+        var message = new MessageEntity { Message = "Test message", Level = "INFO" };
 
-        message.Level.Should().Be(MessageLevelEnum.ERROR.UpperName());
-        message.Message.Should().Be(messageText);
-        message.Time.Should().BeGreaterThan(0);
+        // Act
+        var result = MessageHelpers.CreateMessage(message);
+
+        // Assert
+        Assert.Equal(MessageTypeEnum.GENERAL.GetDescription(), result.Type);
+        Assert.True(result.Time > 0);
     }
 
     [Fact]
-    public void GivenCreateWarning_ThenReturnWarningMessage()
+    public void CreateErrorMessage_ShouldSetCorrectProperties()
     {
-        var messageText = "This is a warning message.";
-        var message = MessageHelpers.CreateWarningMessage(messageText, MessageTypeEnum.GENERAL);
+        // Arrange
+        var message = "Error occurred";
+        var type = MessageTypeEnum.ADD_DATA;
 
-        message.Level.Should().Be(MessageLevelEnum.WARNING.UpperName());
-        message.Message.Should().Be(messageText);
-        message.Time.Should().BeGreaterThan(0);
+        // Act
+        var result = MessageHelpers.CreateErrorMessage(message, type);
+
+        // Assert
+        Assert.Equal(message, result.Message);
+        Assert.Equal(MessageLevelEnum.ERROR.UpperName(), result.Level);
+        Assert.Equal(type.GetDescription(), result.Type);
+        Assert.True(result.Time > 0);
     }
 
     [Fact]
-    public void GivenCreateInfo_ThenReturnInfoMessage()
+    public void CreateWarningMessage_ShouldSetCorrectProperties()
     {
-        var messageText = "This is an info message.";
-        var message = MessageHelpers.CreateInfoMessage(messageText, MessageTypeEnum.GENERAL);
+        // Arrange
+        var message = "Warning issued";
+        var type = MessageTypeEnum.CHECK_SHEET;
 
-        message.Level.Should().Be(MessageLevelEnum.INFO.UpperName());
-        message.Message.Should().Be(messageText);
-        message.Time.Should().BeGreaterThan(0);
+        // Act
+        var result = MessageHelpers.CreateWarningMessage(message, type);
+
+        // Assert
+        Assert.Equal(message, result.Message);
+        Assert.Equal(MessageLevelEnum.WARNING.UpperName(), result.Level);
+        Assert.Equal(type.GetDescription(), result.Type);
+        Assert.True(result.Time > 0);
+    }
+
+    [Fact]
+    public void CreateInfoMessage_ShouldSetCorrectProperties()
+    {
+        // Arrange
+        var message = "Information message";
+        var type = MessageTypeEnum.GET_SHEETS;
+
+        // Act
+        var result = MessageHelpers.CreateInfoMessage(message, type);
+
+        // Assert
+        Assert.Equal(message, result.Message);
+        Assert.Equal(MessageLevelEnum.INFO.UpperName(), result.Level);
+        Assert.Equal(type.GetDescription(), result.Type);
+        Assert.True(result.Time > 0);
     }
 }
