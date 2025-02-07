@@ -72,17 +72,18 @@ public class GoogleRequestHelpersTests
     {
         // Arrange
         int sheetId = 1;
-        int rowId = 2;
+        int[] rowIds = [2];
+        var rowList = rowIds.ToList();
 
         // Act
-        var result = GoogleRequestHelpers.GenerateDeleteRequest(sheetId, rowId);
+        var result = GoogleRequestHelpers.GenerateBatchDeleteRequest(sheetId, rowList);
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotNull(result.DeleteDimension);
-        Assert.Equal(sheetId, result.DeleteDimension.Range.SheetId);
-        Assert.Equal(rowId, result.DeleteDimension.Range.StartIndex);
-        Assert.Equal(rowId + 1, result.DeleteDimension.Range.EndIndex);
+        Assert.NotNull(result.Requests[0].DeleteDimension);
+        Assert.Equal(sheetId, result.Requests[0].DeleteDimension.Range.SheetId);
+        Assert.Equal(rowIds[0], result.Requests[0].DeleteDimension.Range.StartIndex);
+        Assert.Equal(rowIds[0] + 1, result.Requests[0].DeleteDimension.Range.EndIndex);
     }
 
     [Fact]

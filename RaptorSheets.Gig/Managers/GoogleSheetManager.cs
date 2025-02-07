@@ -151,6 +151,68 @@ public class GoogleSheetManager : IGoogleSheetManager
         return sheetEntity;
     }
 
+    public async Task<SheetEntity> DeleteSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
+    {
+        var messageType = MessageTypeEnum.DELETE_DATA;
+        var sheetInfo = await _googleSheetService.GetSheetInfo();
+
+        foreach (var sheet in sheets)
+        {
+            var headers = (await _googleSheetService.GetSheetData(sheet.GetDescription()))?.Values[0];
+            var sheetId = sheetInfo?.Sheets?.FirstOrDefault(x => x.Properties.Title == sheet.GetDescription())?.Properties.SheetId;
+
+            if (headers == null || sheetId == null)
+                continue;
+
+            List<int> rowIds = [];
+
+            switch (sheet)
+            {
+                case SheetEnum.SHIFTS:
+                    foreach (var shift in sheetEntity.Shifts)
+                    {
+                        rowIds.Add(shift.Id);
+                    }
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                    break;
+
+                case SheetEnum.TRIPS:
+                    foreach (var trip in sheetEntity.Trips)
+                    {
+                        rowIds.Add(trip.Id);
+                    }
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                    break;
+                default:
+                    // Unsupported sheet.
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{actionType} data: {sheet.UpperName()} not supported", messageType));
+                    break;
+            }
+
+            if (rowIds.Any())
+            {
+                var success = false;
+                var batchRequest = new BatchUpdateSpreadsheetRequest
+                {
+                    Requests = GoogleRequestHelpers.GenerateDeleteRequest((int)sheetId, rowIds)
+                };
+
+                success = (await _googleSheetService.BatchUpdateSpreadsheet(batchRequest)) != null;
+
+                if (success)
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                else
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to {actionType} data: {sheet.UpperName()}", messageType));
+            }
+            else
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"No data to {actionType}: {sheet.UpperName()}", messageType));
+            }
+        }
+
+        return sheetEntity;
+    }
+
     public async Task<SheetEntity> UpdateSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
     {
         var messageType = MessageTypeEnum.UPDATE_DATA;

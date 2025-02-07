@@ -56,20 +56,40 @@ public static class GoogleRequestHelpers
         return new Request { AddBanding = addBandingRequest };
     }
 
-    public static Request GenerateDeleteRequest(int sheetId, int rowId)
+    public static BatchUpdateSpreadsheetRequest GenerateBatchDeleteRequest(int sheetId, List<int> rowIds)
     {
-        var deleteDimension = new DeleteDimensionRequest
+        var deleteRequests = GenerateDeleteRequest(sheetId, rowIds);
+
+        var batchUpdateRequest = new BatchUpdateSpreadsheetRequest
         {
-            Range = new DimensionRange
-            {
-                Dimension = DimensionEnum.ROWS.GetDescription(),
-                SheetId = sheetId,
-                StartIndex = rowId,
-                EndIndex = rowId + 1
-            }
+            Requests = deleteRequests.Select(x => new Request { DeleteDimension = x.DeleteDimension }).ToList()
         };
 
-        return new Request { DeleteDimension = deleteDimension };
+        return batchUpdateRequest;
+    }
+
+    public static List<Request> GenerateDeleteRequest(int sheetId, List<int> rowIds)
+    {
+        var requests = new List<Request>();
+
+        foreach (var rowId in rowIds)
+        {
+            var deleteDimension = new DeleteDimensionRequest
+            {
+                Range = new DimensionRange
+                {
+                    Dimension = DimensionEnum.ROWS.GetDescription(),
+                    SheetId = sheetId,
+                    StartIndex = rowId,
+                    EndIndex = rowId + 1
+                }
+            };
+
+            requests.Add(new Request { DeleteDimension = deleteDimension });
+        }
+
+
+        return requests;
     }
 
     public static Request GenerateProtectedRangeForHeaderOrSheet(SheetModel sheet)
