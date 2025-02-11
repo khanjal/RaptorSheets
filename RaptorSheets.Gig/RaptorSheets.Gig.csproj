@@ -8,7 +8,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>RaptorSheets.Gig</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageVersion>1.0.1</PackageVersion>
+    <PackageVersion>1.0.2</PackageVersion>
     <PackageAuthors>Iron Raptor Digital</PackageAuthors>
     <PackageDescription>A library used to handle the interactions between a custom API service and Google Sheets API.</PackageDescription>
     <RepositoryUrl>https://github.com/khanjal/RaptorSheets</RepositoryUrl>
@@ -19,13 +19,11 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.68.0.3568" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.0" />
     <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
