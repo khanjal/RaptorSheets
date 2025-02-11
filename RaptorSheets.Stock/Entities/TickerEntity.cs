@@ -4,8 +4,8 @@ namespace RaptorSheets.Stock.Entities;
 
 public class TickerEntity : PriceEntity
 {
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
+    [JsonPropertyName("rowId")]
+    public int RowId { get; set; }
 
     [JsonPropertyName("ticker")]
     public string Ticker { get; set; } = "";

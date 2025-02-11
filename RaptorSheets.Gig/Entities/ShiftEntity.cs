@@ -4,8 +4,11 @@ namespace RaptorSheets.Gig.Entities;
 
 public class ShiftEntity : AmountEntity
 {
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
+    [JsonPropertyName("rowId")]
+    public int RowId { get; set; }
+
+    [JsonPropertyName("action")]
+    public string Action { get; set; } = "";
 
     [JsonPropertyName("key")]
     public string Key { get; set; } = "";

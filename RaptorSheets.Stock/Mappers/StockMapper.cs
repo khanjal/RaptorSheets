@@ -34,7 +34,7 @@ public static class StockMapper
 
             StockEntity entity = new()
             {
-                Id = id,
+                RowId = id,
                 Account = HeaderHelpers.GetStringValue(HeaderEnum.ACCOUNT.GetDescription(), value, headers),
                 Ticker = HeaderHelpers.GetStringValue(HeaderEnum.TICKER.GetDescription(), value, headers),
                 Name = HeaderHelpers.GetStringValue(HeaderEnum.NAME.GetDescription(), value, headers),

@@ -4,8 +4,8 @@ namespace RaptorSheets.Gig.Entities;
 
 public class DailyEntity : AmountEntity
 {
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
+    [JsonPropertyName("rowId")]
+    public int RowId { get; set; }
 
     [JsonPropertyName("date")]
     public string Date { get; set; } = "";

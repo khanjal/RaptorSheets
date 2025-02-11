@@ -32,7 +32,7 @@ namespace RaptorSheets.Gig.Mappers
 
                 YearlyEntity yearly = new()
                 {
-                    Id = id,
+                    RowId = id,
                     Year = HeaderHelpers.GetIntValue(HeaderEnum.YEAR.GetDescription(), value, headers),
                     Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                     Days = HeaderHelpers.GetIntValue(HeaderEnum.DAYS.GetDescription(), value, headers),

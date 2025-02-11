@@ -203,13 +203,13 @@ public class GoogleSheetManagerTests
         var service = $"Test {number}";
 
         var sheetEntity = new SheetEntity();
-        sheetEntity.Shifts.Add(new ShiftEntity { Id = 2, Date = date, Number = 1, Service = service });
+        sheetEntity.Shifts.Add(new ShiftEntity { RowId = 2, Date = date, Number = 1, Service = service });
 
         // Add random amount of trips
         for (int i = 0; i < random.Next(1, 5); i++)
         {
             var tripEntity = GenerateTrip();
-            tripEntity.Id = i+2;
+            tripEntity.RowId = i+2;
             tripEntity.Date = date;
             tripEntity.Number = 1;
             tripEntity.Service = service;

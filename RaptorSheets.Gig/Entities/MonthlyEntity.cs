@@ -4,8 +4,8 @@ namespace RaptorSheets.Gig.Entities;
 
 public class MonthlyEntity : AmountEntity
 {
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
+    [JsonPropertyName("rowId")]
+    public int RowId { get; set; }
 
     [JsonPropertyName("month")]
     public string Month { get; set; } = "";

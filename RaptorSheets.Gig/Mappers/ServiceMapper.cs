@@ -33,7 +33,7 @@ public static class ServiceMapper
 
             ServiceEntity service = new()
             {
-                Id = id,
+                RowId = id,
                 Service = HeaderHelpers.GetStringValue(HeaderEnum.SERVICE.GetDescription(), value, headers),
                 Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                 Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),

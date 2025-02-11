@@ -32,7 +32,7 @@ public class AddressMapFromRangeDataTests
 
         foreach (var entity in _entities!)
         {
-            entity.Id.Should().NotBe(0);
+            entity.RowId.Should().NotBe(0);
             entity.Account.Should().NotBeNullOrEmpty();
             entity.Stocks.Should().BeGreaterThanOrEqualTo(0);
             entity.Shares.Should().BeGreaterThanOrEqualTo(0);
@@ -57,7 +57,7 @@ public class AddressMapFromRangeDataTests
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.Id.Should().Be(randomEntity.Id);
+            entity.RowId.Should().Be(randomEntity.RowId);
             entity.Account.Should().BeEquivalentTo(randomEntity.Account);
             entity.Stocks.Should().Be(randomEntity.Stocks);
             entity.Shares.Should().Be(randomEntity.Shares);

@@ -4,8 +4,8 @@ namespace RaptorSheets.Gig.Entities;
 
 public class TypeEntity : AmountEntity
 {
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
+    [JsonPropertyName("rowId")]
+    public int RowId { get; set; }
 
     [JsonPropertyName("type")]
     public string Type { get; set; } = "";

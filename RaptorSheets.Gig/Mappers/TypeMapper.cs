@@ -32,7 +32,7 @@ namespace RaptorSheets.Gig.Mappers
 
                 TypeEntity type = new()
                 {
-                    Id = id,
+                    RowId = id,
                     Type = HeaderHelpers.GetStringValue(HeaderEnum.TYPE.GetDescription(), value, headers),
                     Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                     Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),

@@ -32,7 +32,7 @@ public static class ShiftMapper
 
             ShiftEntity shift = new()
             {
-                Id = id,
+                RowId = id,
                 Key = HeaderHelpers.GetStringValue(HeaderEnum.KEY.GetDescription(), value, headers),
                 Date = HeaderHelpers.GetStringValue(HeaderEnum.DATE.GetDescription(), value, headers),
                 Start = HeaderHelpers.GetStringValue(HeaderEnum.TIME_START.GetDescription(), value, headers),

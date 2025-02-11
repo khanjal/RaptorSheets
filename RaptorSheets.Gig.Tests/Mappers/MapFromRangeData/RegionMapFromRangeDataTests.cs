@@ -31,7 +31,7 @@ public class RegionMapFromRangeDataTests
 
         foreach (var entity in _entities!)
         {
-            entity.Id.Should().NotBe(0);
+            entity.RowId.Should().NotBe(0);
             entity.Region.Should().NotBeNullOrEmpty();
             entity.Trips.Should().BeGreaterThanOrEqualTo(0);
             entity.Pay.Should().NotBeNull();
@@ -58,7 +58,7 @@ public class RegionMapFromRangeDataTests
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.Id.Should().Be(randomEntity.Id);
+            entity.RowId.Should().Be(randomEntity.RowId);
             entity.Region.Should().BeEquivalentTo(randomEntity.Region);
             entity.Trips.Should().Be(randomEntity.Trips);
             entity.Pay.Should().Be(randomEntity.Pay);

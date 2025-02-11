@@ -33,7 +33,7 @@ namespace RaptorSheets.Gig.Mappers
 
                 DailyEntity daily = new()
                 {
-                    Id = id,
+                    RowId = id,
                     Date = HeaderHelpers.GetStringValue(HeaderEnum.DATE.GetDescription(), value, headers),
                     Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                     Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),

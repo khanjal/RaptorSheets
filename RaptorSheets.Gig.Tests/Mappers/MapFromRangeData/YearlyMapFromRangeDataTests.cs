@@ -31,7 +31,7 @@ public class YearlyMapFromRangeDataTests
 
         foreach (var entity in _entities!)
         {
-            entity.Id.Should().NotBe(0);
+            entity.RowId.Should().NotBe(0);
             entity.Year.Should().BeGreaterThanOrEqualTo(0);
             entity.Trips.Should().BeGreaterThanOrEqualTo(0);
             entity.Days.Should().BeGreaterThanOrEqualTo(0);
@@ -65,7 +65,7 @@ public class YearlyMapFromRangeDataTests
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.Id.Should().Be(randomEntity.Id);
+            entity.RowId.Should().Be(randomEntity.RowId);
             entity.Year.Should().Be(randomEntity.Year);
             entity.Trips.Should().Be(randomEntity.Trips);
             entity.Days.Should().Be(randomEntity.Days);

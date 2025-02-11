@@ -33,7 +33,7 @@ public static class NameMapper
 
             NameEntity name = new()
             {
-                Id = id,
+                RowId = id,
                 Name = HeaderHelpers.GetStringValue(HeaderEnum.NAME.GetDescription(), value, headers),
                 Visits = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                 Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),

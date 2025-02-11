@@ -32,7 +32,7 @@ public class StockMapFromRangeDataTests
 
         foreach (var entity in _entities!)
         {
-            entity.Id.Should().NotBe(0);
+            entity.RowId.Should().NotBe(0);
             entity.Ticker.Should().NotBeNullOrEmpty();
             entity.Name.Should().NotBeNullOrEmpty();
             entity.Account.Should().NotBeNullOrEmpty();
@@ -63,7 +63,7 @@ public class StockMapFromRangeDataTests
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.Id.Should().Be(randomEntity.Id);
+            entity.RowId.Should().Be(randomEntity.RowId);
             entity.Ticker.Should().BeEquivalentTo(randomEntity.Ticker);
             entity.Name.Should().BeEquivalentTo(randomEntity.Name);
             entity.Account.Should().BeEquivalentTo(randomEntity.Account);

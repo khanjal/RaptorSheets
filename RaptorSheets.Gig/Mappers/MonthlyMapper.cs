@@ -32,7 +32,7 @@ namespace RaptorSheets.Gig.Mappers
 
                 MonthlyEntity monthly = new()
                 {
-                    Id = id,
+                    RowId = id,
                     Month = HeaderHelpers.GetStringValue(HeaderEnum.MONTH.GetDescription(), value, headers),
                     Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                     Days = HeaderHelpers.GetIntValue(HeaderEnum.DAYS.GetDescription(), value, headers),

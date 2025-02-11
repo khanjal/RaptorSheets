@@ -31,7 +31,7 @@ public class MonthlyMapFromRangeDataTests
 
         foreach (var entity in _entities!)
         {
-            entity.Id.Should().NotBe(0);
+            entity.RowId.Should().NotBe(0);
             entity.Month.Should().NotBeNullOrEmpty();
             entity.Trips.Should().BeGreaterThanOrEqualTo(0);
             entity.Days.Should().BeGreaterThanOrEqualTo(0);
@@ -67,7 +67,7 @@ public class MonthlyMapFromRangeDataTests
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.Id.Should().Be(randomEntity.Id);
+            entity.RowId.Should().Be(randomEntity.RowId);
             entity.Month.Should().Be(randomEntity.Month);
             entity.Trips.Should().Be(randomEntity.Trips);
             entity.Days.Should().Be(randomEntity.Days);

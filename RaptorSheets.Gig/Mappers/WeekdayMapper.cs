@@ -34,7 +34,7 @@ public static class WeekdayMapper
             // Console.Write(JsonSerializer.Serialize(value));
             WeekdayEntity weekday = new()
             {
-                Id = id,
+                RowId = id,
                 Day = HeaderHelpers.GetIntValue(HeaderEnum.DAY.GetDescription(), value, headers),
                 Weekday = HeaderHelpers.GetStringValue(HeaderEnum.WEEKDAY.GetDescription(), value, headers),
                 Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),

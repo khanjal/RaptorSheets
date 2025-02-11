@@ -171,7 +171,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case SheetEnum.SHIFTS:
                     foreach (var shift in sheetEntity.Shifts)
                     {
-                        rowIds.Add(shift.Id);
+                        rowIds.Add(shift.RowId);
                     }
                     sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
                     break;
@@ -179,7 +179,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case SheetEnum.TRIPS:
                     foreach (var trip in sheetEntity.Trips)
                     {
-                        rowIds.Add(trip.Id);
+                        rowIds.Add(trip.RowId);
                     }
                     sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
                     break;
@@ -231,7 +231,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case SheetEnum.SHIFTS:
                     foreach (var shift in sheetEntity.Shifts)
                     {
-                        rowValues.Add(shift.Id, ShiftMapper.MapToRangeData([shift], headers));
+                        rowValues.Add(shift.RowId, ShiftMapper.MapToRangeData([shift], headers));
                     }
                     sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
                     break;
@@ -239,7 +239,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case SheetEnum.TRIPS:
                     foreach (var trip in sheetEntity.Trips)
                     {
-                        rowValues.Add(trip.Id, TripMapper.MapToRangeData([trip], headers));
+                        rowValues.Add(trip.RowId, TripMapper.MapToRangeData([trip], headers));
                     }
                     sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
                     break;

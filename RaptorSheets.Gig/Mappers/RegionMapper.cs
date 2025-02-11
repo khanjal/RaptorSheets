@@ -32,7 +32,7 @@ public static class RegionMapper
 
             RegionEntity region = new()
             {
-                Id = id,
+                RowId = id,
                 Region = HeaderHelpers.GetStringValue(HeaderEnum.REGION.GetDescription(), value, headers),
                 Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                 Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),

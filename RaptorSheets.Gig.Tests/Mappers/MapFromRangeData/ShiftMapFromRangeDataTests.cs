@@ -31,7 +31,7 @@ public class ShiftMapFromRangeDataTests
 
         foreach (var entity in _entities!)
         {
-            entity.Id.Should().NotBe(0);
+            entity.RowId.Should().NotBe(0);
             entity.Date.Should().NotBeNullOrEmpty();
             entity.Start.Should().NotBeNull();
             entity.Finish.Should().NotBeNull();
@@ -77,7 +77,7 @@ public class ShiftMapFromRangeDataTests
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.Id.Should().Be(randomEntity.Id);
+            entity.RowId.Should().Be(randomEntity.RowId);
             entity.Date.Should().BeEquivalentTo(randomEntity.Date);
             entity.Start.Should().BeEquivalentTo(randomEntity.Start);
             entity.Finish.Should().BeEquivalentTo(randomEntity.Finish);

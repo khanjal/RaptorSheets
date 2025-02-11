@@ -4,8 +4,8 @@ namespace RaptorSheets.Gig.Entities;
 
 public class WeekdayEntity : AmountEntity
 {
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
+    [JsonPropertyName("rowId")]
+    public int RowId { get; set; }
 
     [JsonPropertyName("day")]
     public int Day { get; set; }

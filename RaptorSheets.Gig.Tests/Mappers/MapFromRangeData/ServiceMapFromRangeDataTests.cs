@@ -31,7 +31,7 @@ public class ServiceMapFromRangeDataTests
 
         foreach (var entity in _entities!)
         {
-            entity.Id.Should().NotBe(0);
+            entity.RowId.Should().NotBe(0);
             entity.Service.Should().NotBeNullOrEmpty();
             entity.Trips.Should().BeGreaterThanOrEqualTo(0);
             entity.Pay.Should().NotBeNull();
@@ -58,7 +58,7 @@ public class ServiceMapFromRangeDataTests
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.Id.Should().Be(randomEntity.Id);
+            entity.RowId.Should().Be(randomEntity.RowId);
             entity.Service.Should().BeEquivalentTo(randomEntity.Service);
             entity.Trips.Should().Be(randomEntity.Trips);
             entity.Pay.Should().Be(randomEntity.Pay);

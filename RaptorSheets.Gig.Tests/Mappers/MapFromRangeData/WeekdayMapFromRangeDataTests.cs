@@ -31,7 +31,7 @@ public class WeekdayMapFromRangeDataTests
 
         foreach (var entity in _entities!)
         {
-            entity.Id.Should().NotBe(0);
+            entity.RowId.Should().NotBe(0);
             entity.Day.Should().BeGreaterThanOrEqualTo(0);
             entity.Weekday.Should().NotBeNull();
             entity.Trips.Should().BeGreaterThanOrEqualTo(0);
@@ -65,7 +65,7 @@ public class WeekdayMapFromRangeDataTests
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.Id.Should().Be(randomEntity.Id);
+            entity.RowId.Should().Be(randomEntity.RowId);
             entity.Day.Should().Be(randomEntity.Day);
             entity.Weekday.Should().BeEquivalentTo(randomEntity.Weekday);
             entity.Trips.Should().Be(randomEntity.Trips);

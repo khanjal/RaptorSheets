@@ -33,7 +33,7 @@ public static class TripMapper
             // Console.Write(JsonSerializer.Serialize(value));
             TripEntity trip = new()
             {
-                Id = id,
+                RowId = id,
                 Key = HeaderHelpers.GetStringValue(HeaderEnum.KEY.GetDescription(), value, headers),
                 Date = HeaderHelpers.GetStringValue(HeaderEnum.DATE.GetDescription(), value, headers),
                 Service = HeaderHelpers.GetStringValue(HeaderEnum.SERVICE.GetDescription(), value, headers),

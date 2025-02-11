@@ -4,8 +4,8 @@ namespace RaptorSheets.Gig.Entities;
 
 public class RegionEntity : AmountEntity
 {
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
+    [JsonPropertyName("rowId")]
+    public int RowId { get; set; }
 
     [JsonPropertyName("region")]
     public string Region { get; set; } = "";

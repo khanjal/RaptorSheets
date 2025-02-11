@@ -31,7 +31,7 @@ public class NameMapFromRangeDataTests
 
         foreach (var entity in _entities!)
         {
-            entity.Id.Should().NotBe(0);
+            entity.RowId.Should().NotBe(0);
             entity.Name.Should().NotBeNullOrEmpty();
             entity.Visits.Should().BeGreaterThan(0);
             entity.Pay.Should().NotBeNull();
@@ -58,7 +58,7 @@ public class NameMapFromRangeDataTests
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.Id.Should().Be(randomEntity.Id);
+            entity.RowId.Should().Be(randomEntity.RowId);
             entity.Name.Should().BeEquivalentTo(randomEntity.Name);
             entity.Visits.Should().Be(randomEntity.Visits);
             entity.Pay.Should().Be(randomEntity.Pay);

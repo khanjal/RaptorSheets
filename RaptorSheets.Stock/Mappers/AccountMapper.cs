@@ -34,7 +34,7 @@ public static class AccountMapper
 
             AccountEntity entity = new()
             {
-                Id = id,
+                RowId = id,
                 Account = HeaderHelpers.GetStringValue(HeaderEnum.ACCOUNT.GetDescription(), value, headers),
                 Stocks = HeaderHelpers.GetDecimalValue(HeaderEnum.STOCKS.GetDescription(), value, headers),
                 Shares = HeaderHelpers.GetDecimalValue(HeaderEnum.SHARES.GetDescription(), value, headers),

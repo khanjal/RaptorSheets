@@ -31,7 +31,7 @@ public class TripMapFromRangeDataTests
 
         foreach (var entity in _entities!)
         {
-            entity.Id.Should().NotBe(0);
+            entity.RowId.Should().NotBe(0);
             entity.Date.Should().NotBeNullOrEmpty();
             entity.Service.Should().NotBeNullOrEmpty();
             entity.Number.Should().BeGreaterThanOrEqualTo(0);
@@ -76,7 +76,7 @@ public class TripMapFromRangeDataTests
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.Id.Should().Be(randomEntity.Id);
+            entity.RowId.Should().Be(randomEntity.RowId);
             entity.Date.Should().BeEquivalentTo(randomEntity.Date);
             entity.Service.Should().BeEquivalentTo(randomEntity.Service);
             entity.Number.Should().Be(randomEntity.Number);

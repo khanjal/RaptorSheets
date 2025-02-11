@@ -33,7 +33,7 @@ public static class AddressMapper
 
             AddressEntity address = new()
             {
-                Id = id,
+                RowId = id,
                 Address = HeaderHelpers.GetStringValue(HeaderEnum.ADDRESS.GetDescription(), value, headers),
                 Visits = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                 Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),

@@ -33,7 +33,7 @@ namespace RaptorSheets.Gig.Mappers
 
                 WeeklyEntity weekly = new()
                 {
-                    Id = id,
+                    RowId = id,
                     Week = HeaderHelpers.GetStringValue(HeaderEnum.WEEK.GetDescription(), value, headers),
                     Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                     Days = HeaderHelpers.GetIntValue(HeaderEnum.DAYS.GetDescription(), value, headers),

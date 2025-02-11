@@ -33,7 +33,7 @@ public static class PlaceMapper
 
             PlaceEntity place = new()
             {
-                Id = id,
+                RowId = id,
                 Place = HeaderHelpers.GetStringValue(HeaderEnum.PLACE.GetDescription(), value, headers),
                 Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                 Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
