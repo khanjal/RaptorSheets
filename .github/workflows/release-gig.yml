@@ -17,5 +17,5 @@ jobs:
       uses: actions/setup-dotnet@v1
     - name: Pack nugets
       run: dotnet pack /home/runner/work/RaptorSheets/RaptorSheets/RaptorSheets.Gig/RaptorSheets.Gig.csproj -c Release --output .
-    # - name: Push to NuGet - RaptorSheets.Gig
-    #   run: dotnet nuget push "*.nupkg" --api-key ${{secrets.nuget_api_key}} --source https://api.nuget.org/v3/index.json
+    - name: Push to NuGet - RaptorSheets.Gig
+      run: dotnet nuget push "*.nupkg" --api-key ${{secrets.nuget_api_key}} --source https://api.nuget.org/v3/index.json
