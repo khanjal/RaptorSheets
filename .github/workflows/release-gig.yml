@@ -7,6 +7,7 @@ jobs:
   tests:
       uses: ./.github/workflows/dotnet.yml  # use the callable tests job to run tests
   build:
+    needs: [tests]  # require tests to pass before deploy runs
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
