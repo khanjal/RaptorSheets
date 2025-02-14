@@ -104,15 +104,15 @@ public class GoogleSheetManagerTests
     public async Task GivenAddSheetData_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
-        googleSheetManager.Setup(x => x.AddSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>())).ReturnsAsync(new SheetEntity());
-        var result = await googleSheetManager.Object.AddSheetData([new SheetEnum()], new SheetEntity());
+        googleSheetManager.Setup(x => x.ChangeSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>(), It.IsAny<ActionTypeEnum>())).ReturnsAsync(new SheetEntity());
+        var result = await googleSheetManager.Object.ChangeSheetData([new SheetEnum()], new SheetEntity(), ActionTypeEnum.APPEND);
         result.Should().NotBeNull();
     }
 
     [FactCheckUserSecrets]
     public async Task GivenAddSheetData_WithData_ThenReturnData()
     {
-        var result = await _googleSheetManager!.AddSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, GenerateShift());
+        var result = await _googleSheetManager!.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], GenerateShift(), ActionTypeEnum.APPEND);
         result.Should().NotBeNull();
         result.Messages.Count.Should().Be(4);
 
@@ -143,6 +143,20 @@ public class GoogleSheetManagerTests
         {
             message.Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
             message.Type.Should().Be(MessageTypeEnum.ADD_DATA.GetDescription());
+        }
+    }
+
+    [FactCheckUserSecrets]
+    public async Task GivenDeleteSheetData_WithData_ThenReturnData()
+    {
+        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, GenerateShift(), ActionTypeEnum.DELETE);
+        result.Should().NotBeNull();
+        result.Messages.Count.Should().Be(4);
+
+        foreach (var message in result.Messages)
+        {
+            message.Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
+            message.Type.Should().Be(MessageTypeEnum.DELETE_DATA.GetDescription());
         }
     }
 

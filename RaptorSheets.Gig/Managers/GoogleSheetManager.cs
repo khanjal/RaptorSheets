@@ -15,16 +15,12 @@ namespace RaptorSheets.Gig.Managers;
 
 public interface IGoogleSheetManager : ISheetManager
 {
-    public Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
-    public Task<SheetEntity> AppendSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType);
     public Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType);
     public Task<SheetEntity> CreateSheets();
     public Task<SheetEntity> CreateSheets(List<SheetEnum> sheets);
-    public Task<SheetEntity> DeleteRows(SheetEntity sheetEntity);
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetSheets();
     public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
-    public Task<SheetEntity> UpdateSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType);
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -41,59 +37,14 @@ public class GoogleSheetManager : IGoogleSheetManager
         _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
     }
 
-    public async Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity)
-    {
-        foreach (var sheet in sheets)
-        {
-            var headers = (await _googleSheetService.GetSheetData(sheet.GetDescription()))?.Values[0];
-
-            if (headers == null)
-                continue;
-
-            IList<IList<object?>> values = [];
-
-            switch (sheet)
-            {
-                case SheetEnum.SHIFTS:
-                    values = ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers);
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.ADD_DATA));
-                    break;
-
-                case SheetEnum.TRIPS:
-                    values = TripMapper.MapToRangeData(sheetEntity.Trips, headers);
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.ADD_DATA));
-                    break;
-                default:
-                    // Unsupported sheet.
-                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Adding data to {sheet.UpperName()} not supported", MessageTypeEnum.ADD_DATA));
-                    break;
-            }
-
-            if (values.Any())
-            {
-                var valueRange = new ValueRange { Values = values };
-                var result = await _googleSheetService.AppendData(valueRange, $"{sheet.GetDescription()}!{GoogleConfig.Range}");
-
-                if (result == null)
-                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to add data to {sheet.UpperName()}", MessageTypeEnum.ADD_DATA));
-                else
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Added data to {sheet.UpperName()}", MessageTypeEnum.ADD_DATA));
-            }
-            else
-            {
-                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"No data to add to {sheet.UpperName()}", MessageTypeEnum.ADD_DATA));
-            }
-        }
-
-        return sheetEntity;
-    }
-
     public async Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
     {
         switch (actionType)
         {
             case ActionTypeEnum.APPEND:
                 return await AppendSheetData(sheets, sheetEntity, actionType);
+            case ActionTypeEnum.DELETE:
+                return await DeleteSheetData(sheets, sheetEntity, actionType);
             case ActionTypeEnum.UPDATE:
                 return await UpdateSheetData(sheets, sheetEntity, actionType);
             default:
@@ -102,7 +53,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         }
     }
 
-    public async Task<SheetEntity> AppendSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
+    private async Task<SheetEntity> AppendSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
     {
         var messageType = MessageTypeEnum.ADD_DATA;
 
@@ -151,7 +102,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         return sheetEntity;
     }
 
-    public async Task<SheetEntity> DeleteSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
+    private async Task<SheetEntity> DeleteSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
     {
         var messageType = MessageTypeEnum.DELETE_DATA;
         var sheetInfo = await _googleSheetService.GetSheetInfo();
@@ -171,7 +122,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case SheetEnum.SHIFTS:
                     foreach (var shift in sheetEntity.Shifts)
                     {
-                        rowIds.Add(shift.RowId);
+                        rowIds.Add(shift.RowId-1);
                     }
                     sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
                     break;
@@ -179,7 +130,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case SheetEnum.TRIPS:
                     foreach (var trip in sheetEntity.Trips)
                     {
-                        rowIds.Add(trip.RowId);
+                        rowIds.Add(trip.RowId-1);
                     }
                     sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
                     break;
@@ -213,7 +164,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         return sheetEntity;
     }
 
-    public async Task<SheetEntity> UpdateSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
+    private async Task<SheetEntity> UpdateSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
     {
         var messageType = MessageTypeEnum.UPDATE_DATA;
 
@@ -434,11 +385,6 @@ public class GoogleSheetManager : IGoogleSheetManager
         }
 
         return sheetEntity;
-    }
-
-    public Task<SheetEntity> DeleteRows(SheetEntity sheetEntity)
-    {
-        return Task.FromResult(sheetEntity);
     }
 
     public async Task<SheetEntity> GetSheet(string sheet)
