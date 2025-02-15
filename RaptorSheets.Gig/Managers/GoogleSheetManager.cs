@@ -122,7 +122,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case SheetEnum.SHIFTS:
                     foreach (var shift in sheetEntity.Shifts)
                     {
-                        rowIds.Add(shift.RowId-1);
+                        rowIds.Add(shift.RowId);
                     }
                     sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
                     break;
@@ -130,7 +130,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case SheetEnum.TRIPS:
                     foreach (var trip in sheetEntity.Trips)
                     {
-                        rowIds.Add(trip.RowId-1);
+                        rowIds.Add(trip.RowId);
                     }
                     sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
                     break;

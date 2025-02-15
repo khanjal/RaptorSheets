@@ -61,34 +61,34 @@ public static class GoogleRequestHelpers
         // Convert rowIds to index ranges
         var indexRanges = new List<Tuple<int, int>>();
 
-        var startId = 0;
-        var endId = 0;
+        var startIndex = 0;
+        var endIndex = 0;
 
         foreach (var rowId in rowIds)
         {
             // Initialize first index range
-            if (startId == 0)
+            if (startIndex == 0)
             {
-                startId = rowId;
-                endId = rowId+1;
+                startIndex = rowId - 1;
+                endIndex = rowId;
                 continue;
             }
 
             // If the rowId is consecutive increment the end index
-            if (rowId == endId)
+            if (rowId == endIndex + 1)
             {
-                endId = rowId+1;
+                endIndex = rowId;
             }
             else // Start a new index range
             {
-                indexRanges.Add(new Tuple<int, int>(startId, endId));
-                startId = rowId;
-                endId = rowId+1;
+                indexRanges.Add(new Tuple<int, int>(startIndex, endIndex));
+                startIndex = rowId - 1;
+                endIndex = rowId;
             }
         }
 
         // Add the last index range
-        indexRanges.Add(new Tuple<int, int>(startId, endId));
+        indexRanges.Add(new Tuple<int, int>(startIndex, endIndex));
         return indexRanges;
     }
 

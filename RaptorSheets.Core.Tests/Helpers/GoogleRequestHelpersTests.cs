@@ -82,8 +82,8 @@ public class GoogleRequestHelpersTests
         Assert.NotNull(result);
         Assert.NotNull(result.Requests[0].DeleteDimension);
         Assert.Equal(sheetId, result.Requests[0].DeleteDimension.Range.SheetId);
-        Assert.Equal(rowIds[0], result.Requests[0].DeleteDimension.Range.StartIndex);
-        Assert.Equal(rowIds[0] + 1, result.Requests[0].DeleteDimension.Range.EndIndex);
+        Assert.Equal(rowIds[0] - 1, result.Requests[0].DeleteDimension.Range.StartIndex);
+        Assert.Equal(rowIds[0], result.Requests[0].DeleteDimension.Range.EndIndex);
     }
 
     [Fact]

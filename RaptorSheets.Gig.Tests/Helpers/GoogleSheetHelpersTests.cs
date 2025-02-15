@@ -154,7 +154,7 @@ public class GoogleSheetHelpersTests
 
         result.Should().NotBeNull();
         result.Should().HaveCount(1);
-        result.First().Item1.Should().Be(startRowId);
-        result.First().Item2.Should().Be(startRowId + count);
+        result.First().Item1.Should().Be(startRowId - 1);
+        result.First().Item2.Should().Be(startRowId + count - 1);
     }
 }

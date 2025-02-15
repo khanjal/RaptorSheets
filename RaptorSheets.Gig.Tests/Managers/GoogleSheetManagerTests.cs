@@ -149,9 +149,10 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenDeleteSheetData_WithData_ThenReturnData()
     {
-        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, GenerateShift(), ActionTypeEnum.DELETE);
+        var data = GenerateShift();
+        var result = await _googleSheetManager!.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], data, ActionTypeEnum.DELETE);
         result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(4);
+        result.Messages.Count.Should().Be(data.Shifts.Count + data.Trips.Count);
 
         foreach (var message in result.Messages)
         {
