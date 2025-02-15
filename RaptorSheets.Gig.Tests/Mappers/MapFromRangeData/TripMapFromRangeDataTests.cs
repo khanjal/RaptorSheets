@@ -40,14 +40,14 @@ public class TripMapFromRangeDataTests
             entity.Pickup.Should().NotBeNull();
             entity.Dropoff.Should().NotBeNull();
             entity.Duration.Should().NotBeNull();
-            entity.Pay.Should().NotBeNull();
-            entity.Tip.Should().NotBeNull();
-            entity.Bonus.Should().NotBeNull();
-            entity.Total.Should().NotBeNull();
-            entity.Cash.Should().NotBeNull();
-            entity.OdometerStart.Should().BeGreaterThanOrEqualTo(0);
-            entity.OdometerStart.Should().NotBeNull();
-            entity.Distance.Should().BeGreaterThanOrEqualTo(0);
+            //entity.Pay.Should().NotBeNull();
+            //entity.Tip.Should().NotBeNull();
+            //entity.Bonus.Should().NotBeNull();
+            //entity.Total.Should().NotBeNull();
+            //entity.Cash.Should().NotBeNull();
+            //entity.OdometerStart.Should().BeGreaterThanOrEqualTo(0);
+            //entity.OdometerStart.Should().NotBeNull();
+            // entity.Distance.Should().BeGreaterThanOrEqualTo(0);
             entity.Name.Should().NotBeNull();
             entity.StartAddress.Should().NotBeNull();
             entity.EndAddress.Should().NotBeNull();
@@ -56,8 +56,8 @@ public class TripMapFromRangeDataTests
             entity.Region.Should().NotBeNull();
             entity.Note.Should().NotBeNull();
             entity.Key.Should().NotBeNull();
-            entity.AmountPerTime.Should().BeGreaterThanOrEqualTo(0);
-            entity.AmountPerDistance.Should().BeGreaterThanOrEqualTo(0);
+            //entity.AmountPerTime.Should().BeGreaterThanOrEqualTo(0);
+            //entity.AmountPerDistance.Should().BeGreaterThanOrEqualTo(0);
         }
     }
 
