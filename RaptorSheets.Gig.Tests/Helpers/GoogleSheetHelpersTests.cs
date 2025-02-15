@@ -6,6 +6,8 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Tests.Extensions;
 
 namespace RaptorSheets.Gig.Tests.Helpers;
 
@@ -137,5 +139,22 @@ public class GoogleSheetHelpersTests
         var repeatHeaders = config.Headers.Where(x => x.Format != null || x.Validation != null).ToList();
 
         repeatCells.Should().HaveCount(repeatHeaders.Count);
+    }
+
+    [Theory]
+    [InlineData(2, 1)]
+    [InlineData(5, 2)]
+    [InlineData(25, 25)]
+    [InlineData(2,100)]
+    public void GivenRowIdRanges_ShouldReturnRangeTuples(int startRowId, int count)
+    {
+        var rowIds = Enumerable.Range(startRowId, count).ToList();
+
+        var result = GoogleRequestHelpers.GenerateIndexRanges(rowIds);
+
+        result.Should().NotBeNull();
+        result.Should().HaveCount(1);
+        result.First().Item1.Should().Be(startRowId);
+        result.First().Item2.Should().Be(startRowId + count);
     }
 }

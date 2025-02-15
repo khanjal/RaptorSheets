@@ -143,11 +143,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             if (rowIds.Any())
             {
                 var success = false;
-                var batchRequest = new BatchUpdateSpreadsheetRequest
-                {
-                    Requests = GoogleRequestHelpers.GenerateDeleteRequest((int)sheetId, rowIds)
-                };
-
+                var batchRequest = GoogleRequestHelpers.GenerateBatchDeleteRequest((int)sheetId, rowIds);
                 success = (await _googleSheetService.BatchUpdateSpreadsheet(batchRequest)) != null;
 
                 if (success)

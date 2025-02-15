@@ -56,9 +56,54 @@ public static class GoogleRequestHelpers
         return new Request { AddBanding = addBandingRequest };
     }
 
+    public static List<Tuple<int, int>> GenerateIndexRanges(List<int> rowIds)
+    {
+        // Convert rowIds to index ranges
+        var indexRanges = new List<Tuple<int, int>>();
+
+        var startId = 0;
+        var endId = 0;
+
+        foreach (var rowId in rowIds)
+        {
+            // Initialize first index range
+            if (startId == 0)
+            {
+                startId = rowId;
+                endId = rowId+1;
+                continue;
+            }
+
+            // If the rowId is consecutive increment the end index
+            if (rowId == endId)
+            {
+                endId = rowId+1;
+            }
+            else // Start a new index range
+            {
+                indexRanges.Add(new Tuple<int, int>(startId, endId));
+                startId = rowId;
+                endId = rowId+1;
+            }
+        }
+
+        // Add the last index range
+        indexRanges.Add(new Tuple<int, int>(startId, endId));
+        return indexRanges;
+    }
+
     public static BatchUpdateSpreadsheetRequest GenerateBatchDeleteRequest(int sheetId, List<int> rowIds)
     {
-        var deleteRequests = GenerateDeleteRequest(sheetId, rowIds);
+        var indexRanges = GenerateIndexRanges(rowIds);
+
+        var batchUpdateRequest = GenerateBatchDeleteRequest(sheetId, indexRanges);
+
+        return batchUpdateRequest;
+    }
+
+    public static BatchUpdateSpreadsheetRequest GenerateBatchDeleteRequest(int sheetId, List<Tuple<int, int>> indexRanges)
+    {
+        var deleteRequests = GenerateDeleteRequest(sheetId, indexRanges);
 
         var batchUpdateRequest = new BatchUpdateSpreadsheetRequest
         {
@@ -68,11 +113,11 @@ public static class GoogleRequestHelpers
         return batchUpdateRequest;
     }
 
-    public static List<Request> GenerateDeleteRequest(int sheetId, List<int> rowIds)
+    public static List<Request> GenerateDeleteRequest(int sheetId, List<Tuple<int, int>> indexRanges)
     {
         var requests = new List<Request>();
 
-        foreach (var rowId in rowIds)
+        foreach (var indexRange in indexRanges)
         {
             var deleteDimension = new DeleteDimensionRequest
             {
@@ -80,8 +125,8 @@ public static class GoogleRequestHelpers
                 {
                     Dimension = DimensionEnum.ROWS.GetDescription(),
                     SheetId = sheetId,
-                    StartIndex = rowId,
-                    EndIndex = rowId + 1
+                    StartIndex = indexRange.Item1,
+                    EndIndex = indexRange.Item2
                 }
             };
 
