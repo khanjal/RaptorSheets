@@ -147,7 +147,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                 success = (await _googleSheetService.BatchUpdateSpreadsheet(batchRequest)) != null;
 
                 if (success)
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType}ED data: {sheet.UpperName()}", messageType));
                 else
                     sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to {actionType} data: {sheet.UpperName()}", messageType));
             }

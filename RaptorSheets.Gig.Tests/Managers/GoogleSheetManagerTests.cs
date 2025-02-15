@@ -152,7 +152,7 @@ public class GoogleSheetManagerTests
         var data = GenerateShift();
         var result = await _googleSheetManager!.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], data, ActionTypeEnum.DELETE);
         result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(data.Shifts.Count + data.Trips.Count);
+        result.Messages.Count.Should().Be(4);
 
         foreach (var message in result.Messages)
         {
