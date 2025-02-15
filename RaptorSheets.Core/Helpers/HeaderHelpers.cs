@@ -75,28 +75,36 @@ public static class HeaderHelpers
 
         return result;
     }
-
     public static decimal GetDecimalValue(string columnName, IList<object> values, Dictionary<int, string> headers)
+    {
+        return GetDecimalValueOrNull(columnName, values, headers) ?? 0;
+    }
+
+
+    public static decimal? GetDecimalValueOrNull(string columnName, IList<object> values, Dictionary<int, string> headers)
     {
         var columnId = GetHeaderKey(headers, columnName);
 
         if (columnId > values.Count || columnId < 0 || values[columnId] == null)
         {
-            return 0;
+            return null;
         }
 
         var value = values[columnId]?.ToString()?.Trim();
         value = Regex.Replace(value!, @"[^\d.-]", ""); // Remove all special currency symbols except for .'s and -'s
         if (value == "-" || value == "")
         {
-            value = "0";  // Make account -'s into 0s.
+            return null;  // Make account -'s into nulls.
         }
-        // Console.WriteLine(columnName);
-        // Console.WriteLine(value);
 
-        decimal.TryParse(value, out decimal result);
-
-        return result;
+        if (decimal.TryParse(value, out decimal result))
+        {
+            return result;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     private static int GetHeaderKey(Dictionary<int, string> header, string value)
