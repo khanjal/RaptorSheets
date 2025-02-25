@@ -1,3 +1,4 @@
+using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
@@ -68,6 +69,72 @@ public static class ShiftMapper
         }
         return shifts;
     }
+
+    public static IList<RowData> MapToRowData(List<ShiftEntity> shiftEntities, IList<object> headers)
+    {
+        var rows = new List<RowData>();
+
+        foreach (ShiftEntity shift in shiftEntities)
+        {
+            var rowData = new RowData();
+            var cells = new List<CellData>();
+            foreach (var header in headers)
+            {
+                var headerEnum = header!.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+                switch (headerEnum)
+                {
+                    case HeaderEnum.DATE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Date } });
+                        break;
+                    case HeaderEnum.TIME_START:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Start } });
+                        break;
+                    case HeaderEnum.TIME_END:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Finish } });
+                        break;
+                    case HeaderEnum.SERVICE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Service } });
+                        break;
+                    case HeaderEnum.NUMBER:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = shift.Number } });
+                        break;
+                    case HeaderEnum.TIME_ACTIVE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Active } });
+                        break;
+                    case HeaderEnum.TIME_TOTAL:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Time } });
+                        break;
+                    case HeaderEnum.TIME_OMIT:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { BoolValue = shift.Omit } });
+                        break;
+                    case HeaderEnum.PAY:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)shift.Pay } });
+                        break;
+                    case HeaderEnum.TIPS:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)shift.Tip } });
+                        break;
+                    case HeaderEnum.BONUS:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)shift.Bonus } });
+                        break;
+                    case HeaderEnum.CASH:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)shift.Cash } });
+                        break;
+                    case HeaderEnum.REGION:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Region } });
+                        break;
+                    case HeaderEnum.NOTE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Note } });
+                        break;
+
+                }
+            }
+            rowData.Values = cells;
+            rows.Add(rowData);
+        }
+
+        return rows;
+    }
+
     public static IList<IList<object?>> MapToRangeData(List<ShiftEntity> shifts, IList<object> shiftHeaders)
     {
         var rangeData = new List<IList<object?>>();

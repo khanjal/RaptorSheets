@@ -14,7 +14,7 @@ public interface ISheetServiceWrapper
     Task<BatchUpdateValuesResponse> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest);
     Task<BatchUpdateSpreadsheetResponse> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
     Task<BatchGetValuesByDataFilterResponse> BatchGetByDataFilter(BatchGetValuesByDataFilterRequest batchGetValuesByDataFilterRequest);
-    Task<Spreadsheet> GetSpreadsheet();
+    Task<Spreadsheet> GetSpreadsheet(List<string>? ranges);
     Task<ValueRange> GetValues(string range);
     Task<UpdateValuesResponse> UpdateValues(string range, IList<IList<object>> values);
     Task<UpdateValuesResponse> UpdateValues(string range, ValueRange valueRange);
@@ -100,9 +100,14 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
         return response;
     }
 
-    public async Task<Spreadsheet> GetSpreadsheet()
+    public async Task<Spreadsheet> GetSpreadsheet(List<string>? ranges = null)
     {
         var request = _sheetsService.Spreadsheets.Get(_spreadsheetId);
+        if (ranges?.Count > 0)
+        {
+            request.IncludeGridData = true;
+            request.Ranges = ranges;
+        }
         return await request.ExecuteAsync();
     }
 

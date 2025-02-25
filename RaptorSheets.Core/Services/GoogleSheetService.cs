@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Wrappers;
 using System.Diagnostics.CodeAnalysis;
 
@@ -12,7 +13,7 @@ public interface IGoogleSheetService
     public Task<BatchUpdateSpreadsheetResponse?> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
     public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range);
     public Task<ValueRange?> GetSheetData(string sheet);
-    public Task<Spreadsheet?> GetSheetInfo();
+    public Task<Spreadsheet?> GetSheetInfo(List<string>? ranges);
     public Task<UpdateValuesResponse?> UpdateData(ValueRange valueRange, string range);
 }
 
@@ -85,23 +86,11 @@ public class GoogleSheetService : IGoogleSheetService
             return null;
         }
 
-        var body = new BatchGetValuesByDataFilterRequest
-        {
-            DataFilters = []
-        };
-
-        foreach (var sheet in sheets)
-        {
-            var filter = new DataFilter
-            {
-                A1Range = !string.IsNullOrWhiteSpace(range) ? $"{sheet}!{range}" : sheet
-            };
-            body.DataFilters.Add(filter);
-        }
+        var request = GoogleRequestHelpers.GenerateBatchGetValuesByDataFilterRequest(sheets, range);
 
         try
         {
-            var response = await _sheetService.BatchGetByDataFilter(body);
+            var response = await _sheetService.BatchGetByDataFilter(request);
 
             return response;
         }
@@ -128,11 +117,11 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<Spreadsheet?> GetSheetInfo()
+    public async Task<Spreadsheet?> GetSheetInfo(List<string>? ranges = null)
     {
         try
         {
-            var response = await _sheetService.GetSpreadsheet();
+            var response = await _sheetService.GetSpreadsheet(ranges);
 
             return response;
         }

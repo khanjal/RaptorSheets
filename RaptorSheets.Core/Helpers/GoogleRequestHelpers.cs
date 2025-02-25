@@ -22,6 +22,18 @@ public static class GoogleRequestHelpers
         return new Request { AppendCells = appendCellsRequest };
     }
 
+    public static Request GenerateAppendCells(int sheetId, IList<RowData> rows)
+    {
+        // Create Sheet Data
+        var appendCellsRequest = new AppendCellsRequest
+        {
+            Fields = GoogleConfig.FieldsUpdate,
+            Rows = rows,
+            SheetId = sheetId
+        };
+        return new Request { AppendCells = appendCellsRequest };
+    }
+
     public static List<Request> GenerateAppendDimension(SheetModel sheet)
     {
         List<Request> requests = [];
@@ -34,6 +46,24 @@ public static class GoogleRequestHelpers
                 Dimension = DimensionEnum.COLUMNS.GetDescription(),
                 Length = sheet.Headers.Count - defaultColumns,
                 SheetId = sheet.Id
+            };
+            requests.Add(new Request { AppendDimension = appendDimensionRequest });
+        }
+
+        return requests;
+    }
+
+    public static List<Request> GenerateAppendDimension(int sheetId, int rows)
+    {
+        List<Request> requests = [];
+        // Append more rows
+        if (rows > 0)
+        {
+            var appendDimensionRequest = new AppendDimensionRequest
+            {
+                Dimension = DimensionEnum.ROWS.GetDescription(),
+                Length = rows,
+                SheetId = sheetId
             };
             requests.Add(new Request { AppendDimension = appendDimensionRequest });
         }
@@ -92,28 +122,16 @@ public static class GoogleRequestHelpers
         return indexRanges;
     }
 
-    public static BatchUpdateSpreadsheetRequest GenerateBatchDeleteRequest(int sheetId, List<int> rowIds)
+    public static List<Request> GenerateDeleteRequests(int sheetId, List<int> rowIds)
     {
         var indexRanges = GenerateIndexRanges(rowIds);
 
-        var batchUpdateRequest = GenerateBatchDeleteRequest(sheetId, indexRanges);
+        var requests = GenerateDeleteRequests(sheetId, indexRanges);
 
-        return batchUpdateRequest;
+        return requests;
     }
 
-    public static BatchUpdateSpreadsheetRequest GenerateBatchDeleteRequest(int sheetId, List<Tuple<int, int>> indexRanges)
-    {
-        var deleteRequests = GenerateDeleteRequest(sheetId, indexRanges);
-
-        var batchUpdateRequest = new BatchUpdateSpreadsheetRequest
-        {
-            Requests = deleteRequests.Select(x => new Request { DeleteDimension = x.DeleteDimension }).ToList()
-        };
-
-        return batchUpdateRequest;
-    }
-
-    public static List<Request> GenerateDeleteRequest(int sheetId, List<Tuple<int, int>> indexRanges)
+    public static List<Request> GenerateDeleteRequests(int sheetId, List<Tuple<int, int>> indexRanges)
     {
         var requests = new List<Request>();
 
@@ -135,6 +153,28 @@ public static class GoogleRequestHelpers
 
 
         return requests;
+    }
+
+    public static BatchGetValuesByDataFilterRequest GenerateBatchGetValuesByDataFilterRequest(List<string> sheets, string? range = "")
+    {
+        if (sheets == null || sheets.Count < 1)
+        {
+            return new BatchGetValuesByDataFilterRequest();
+        }
+
+        var request = new BatchGetValuesByDataFilterRequest
+        {
+            DataFilters = []
+        };
+        foreach (var sheet in sheets)
+        {
+            var filter = new DataFilter
+            {
+                A1Range = !string.IsNullOrWhiteSpace(range) ? $"{sheet}!{range}" : sheet
+            };
+            request.DataFilters.Add(filter);
+        }
+        return request;
     }
 
     public static Request GenerateProtectedRangeForHeaderOrSheet(SheetModel sheet)
@@ -219,7 +259,26 @@ public static class GoogleRequestHelpers
         return new Request { AddSheet = sheetRequest };
     }
 
-    public static BatchUpdateValuesRequest GenerateUpdateRequest(string sheetName, IDictionary<int, IList<IList<object?>>> rowValues) 
+    public static Request GenerateUpdateCellsRequest(int sheetId, int rowId, IList<RowData> rows) 
+    {
+        var range = new GridRange
+        {
+            SheetId = sheetId,
+            StartRowIndex = rowId,
+            EndRowIndex = rowId + 1
+        };
+
+        // Create Sheet Data
+        var updateCellsRequest = new UpdateCellsRequest
+        {
+            Fields = GoogleConfig.FieldsUpdate,
+            Rows = rows,
+            Range = range
+        };
+        return new Request { UpdateCells = updateCellsRequest };
+    }
+
+    public static BatchUpdateValuesRequest GenerateUpdateValueRequest(string sheetName, IDictionary<int, IList<IList<object?>>> rowValues)
     {
         var valueRanges = new List<ValueRange>();
 
@@ -242,5 +301,4 @@ public static class GoogleRequestHelpers
 
         return batchUpdateValuesRequest;
     }
-
 }

@@ -1,3 +1,4 @@
+using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Models.Google;
@@ -7,6 +8,12 @@ namespace RaptorSheets.Core.Helpers;
 
 public static class HeaderHelpers
 {
+    public static IList<object> GetHeadersFromCellData(IList<CellData>? cellData)
+    {
+        var headers = cellData?.Where(x => x.FormattedValue != null).Select(v => v.FormattedValue).ToList() ?? [];
+        return headers.Cast<object>().ToList();
+    }
+
     public static Dictionary<int, string> ParserHeader(IList<object> sheetHeader)
     {
         var headerValues = new Dictionary<int, string>();

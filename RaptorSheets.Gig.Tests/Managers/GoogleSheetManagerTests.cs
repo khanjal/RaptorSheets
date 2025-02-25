@@ -135,9 +135,14 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenAppendSheetData_WithData_ThenReturnData()
     {
-        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, GenerateShift(), ActionTypeEnum.APPEND);
+        var sheetInfo = await _googleSheetManager!.GetSheetProperties(new List<string> { SheetEnum.TRIPS.GetDescription(), SheetEnum.SHIFTS.GetDescription() });
+        var maxShiftId = int.Parse(sheetInfo.FirstOrDefault(x => x.Name == SheetEnum.SHIFTS.GetDescription())!.Attributes!.FirstOrDefault(x => x.Key == PropertyEnum.MAX_ROW_VALUE.GetDescription()).Value);
+        var maxTripId = int.Parse(sheetInfo.FirstOrDefault(x => x.Name == SheetEnum.TRIPS.GetDescription())!.Attributes!.FirstOrDefault(x => x.Key == PropertyEnum.MAX_ROW_VALUE.GetDescription()).Value);
+        var sheetEntity = GenerateShift(maxShiftId +1, maxTripId + 1);
+
+        var result = await _googleSheetManager!.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], sheetEntity, ActionTypeEnum.APPEND);
         result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(4);
+        result.Messages.Count.Should().Be(2);
 
         foreach (var message in result.Messages)
         {
@@ -209,7 +214,47 @@ public class GoogleSheetManagerTests
         result.Count.Should().Be(2);
     }
 
-    private static SheetEntity GenerateShift()
+    [Fact]
+    public async Task GetSheetProperties_ShouldReturnProperties_WhenSheetsExist()
+    {
+        // Arrange
+        var sheets = new List<string> { SheetEnum.TRIPS.GetDescription(), SheetEnum.SHIFTS.GetDescription() };
+
+        // Act
+        var result = await _googleSheetManager!.GetSheetProperties(sheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+        Assert.NotEmpty(result[0].Id);
+        Assert.Equal(SheetEnum.TRIPS.GetDescription(), result[0].Name);
+        Assert.NotEmpty(result[0].Attributes[PropertyEnum.HEADERS.GetDescription()]); // Look into generating headers from sheet object
+        Assert.NotEmpty(result[1].Id);
+        Assert.Equal(SheetEnum.SHIFTS.GetDescription(), result[1].Name);
+        Assert.NotEmpty(result[1].Attributes[PropertyEnum.HEADERS.GetDescription()]); // Look into generating headers from sheet object
+    }
+
+    [Fact]
+    public async Task GetSheetProperties_ShouldReturnEmptyList_WhenNoSheetsExist()
+    {
+        // Arrange
+        var sheets = new List<string> { "Sheet1", "Sheet2" };
+
+        // Act
+        var result = await _googleSheetManager!.GetSheetProperties(sheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+        Assert.Empty(result[0].Id);
+        Assert.Equal("Sheet1", result[0].Name);
+        Assert.Empty(result[0].Attributes[PropertyEnum.HEADERS.GetDescription()]);
+        Assert.Empty(result[1].Id);
+        Assert.Equal("Sheet2", result[1].Name);
+        Assert.Empty(result[1].Attributes[PropertyEnum.HEADERS.GetDescription()]);
+    }
+
+    private static SheetEntity GenerateShift(int shiftStartId = 2, int tripStartId = 2)
     {
         // Create shift/trips
         var date = DateTime.Now.ToString("yyyy-MM-dd");
@@ -218,13 +263,14 @@ public class GoogleSheetManagerTests
         var service = $"Test {number}";
 
         var sheetEntity = new SheetEntity();
-        sheetEntity.Shifts.Add(new ShiftEntity { RowId = 2, Date = date, Number = 1, Service = service });
+        sheetEntity.Shifts.Add(new ShiftEntity { RowId = shiftStartId, Action = ActionTypeEnum.APPEND.GetDescription(), Date = date, Number = 1, Service = service });
 
         // Add random amount of trips
-        for (int i = 0; i < random.Next(1, 5); i++)
+        for (int i = tripStartId; i < random.Next(tripStartId+1, tripStartId+5); i++)
         {
             var tripEntity = GenerateTrip();
-            tripEntity.RowId = i+2;
+            tripEntity.Action = ActionTypeEnum.APPEND.GetDescription();
+            tripEntity.RowId = i;
             tripEntity.Date = date;
             tripEntity.Number = 1;
             tripEntity.Service = service;

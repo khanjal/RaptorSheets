@@ -13,4 +13,5 @@ public static class GoogleConfig
     public static string KeyRange => "A1:A";
     public static string ValidationRange => "A2:A";
     public static string HeaderRange => "1:1";
+    public static string RowRange => "A:A";
 }

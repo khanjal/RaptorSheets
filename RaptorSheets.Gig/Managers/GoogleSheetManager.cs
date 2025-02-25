@@ -15,12 +15,14 @@ namespace RaptorSheets.Gig.Managers;
 
 public interface IGoogleSheetManager : ISheetManager
 {
+    public Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
     public Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType);
     public Task<SheetEntity> CreateSheets();
     public Task<SheetEntity> CreateSheets(List<SheetEnum> sheets);
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetSheets();
     public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
+    public Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -36,6 +38,352 @@ public class GoogleSheetManager : IGoogleSheetManager
     {
         _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
     }
+
+    public async Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity)
+    {
+        var changes = new Dictionary<SheetEnum, object>();
+
+        // Pull out all changes into a single object to iterate through.
+        foreach (var sheet in sheets)
+        {
+            switch (sheet)
+            {
+                case SheetEnum.SHIFTS:
+                    if (sheetEntity.Shifts.Count > 0)
+                        changes.Add(sheet, sheetEntity.Shifts);
+                    break;
+
+                case SheetEnum.TRIPS:
+                    if (sheetEntity.Trips.Count > 0)
+                        changes.Add(sheet, sheetEntity.Trips);
+                    break;
+                default:
+                    // Unsupported sheet.
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.LOOKUP} data: {sheet.UpperName()} not supported", MessageTypeEnum.GENERAL));
+                    break;
+            }
+        }
+
+        if (changes.Count == 0)
+        {
+            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageTypeEnum.GENERAL));
+            return sheetEntity;
+        }
+
+        var sheetInfo = await GetSheetProperties(sheets.Select(t => t.GetDescription()).ToList());
+        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
+        {
+            Requests = []
+        };
+
+        foreach (var change in changes)
+        {
+            switch (change.Key)
+            {
+                case SheetEnum.SHIFTS:
+                    var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key.GetDescription());
+                    batchUpdateSpreadsheetRequest.Requests.AddRange(ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
+                    break;
+                case SheetEnum.TRIPS:
+                    var tripPropertes = sheetInfo.FirstOrDefault(x => x.Name == change.Key.GetDescription());
+                    batchUpdateSpreadsheetRequest.Requests.AddRange(ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripPropertes));
+                    break;
+            }
+        }
+
+        var success = (await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest)) != null;
+
+        return sheetEntity;
+    }
+
+    private List<Request> ChangeShiftSheetData(List<ShiftEntity> shifts, PropertyEntity? sheetProperties)
+    {
+        var requests = new List<Request>();
+
+        // Add requests
+        var addShifts = shifts?.Where(x => x.Action == ActionTypeEnum.APPEND.GetDescription()).ToList() ?? [];
+        requests.AddRange(CreateUpdateCellShiftRequests(addShifts, sheetProperties));
+
+        // Update requests
+        var updateShifts = shifts?.Where(x => x.Action == ActionTypeEnum.UPDATE.GetDescription()).ToList() ?? [];
+        requests.AddRange(CreateUpdateCellShiftRequests(updateShifts, sheetProperties));
+
+        // Delete requests
+        var deleteShifts = shifts?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        requests.AddRange(CreateDeleteShiftRequests(updateShifts, sheetProperties));
+
+        return requests;
+    }
+
+    private IEnumerable<Request> CreateUpdateCellShiftRequests(List<ShiftEntity> shifts, PropertyEntity? sheetProperties)
+    {
+        var headers = sheetProperties?.Attributes[PropertyEnum.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
+        var maxRowValue = int.Parse(sheetProperties?.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()] ?? "0");
+        int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
+
+        if (shifts.Count == 0 || sheetProperties == null || headers?.Count == 0 || sheetId == 0)
+        {
+            return [];
+        }
+
+        var requests = new List<Request>();
+
+        foreach (var shift in shifts)
+        {
+            var rowData = ShiftMapper.MapToRowData([shift], headers!);
+
+            // TODO: Look into making this an add dimension incase the difference is more than one.
+            if (shift.RowId > maxRowValue)
+            {
+                // Create an append dimension to add more rows to sheet
+                requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetId, rowData));
+            }
+            else
+            {
+                requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, shift.RowId, rowData));
+            }
+        }
+
+        return requests;
+    }
+
+    private IEnumerable<Request> CreateDeleteShiftRequests(List<ShiftEntity> shifts, PropertyEntity? sheetProperties)
+    {
+        var rowIds = shifts.Select(x => x.RowId).ToList();
+        int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
+
+        if (shifts.Count == 0 || sheetProperties == null ||  sheetId == 0)        {
+            return [];
+        }
+
+        var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, rowIds);
+
+        return requests;
+    }
+
+    private List<Request> ChangeTripSheetData(List<TripEntity> trips, PropertyEntity? sheetProperties)
+    {
+        var requests = new List<Request>();
+
+        // Add requests
+        var addTrips = trips?.Where(x => x.Action == ActionTypeEnum.APPEND.GetDescription()).ToList() ?? [];
+        requests.AddRange(CreateUpdateCellTripRequests(addTrips, sheetProperties));
+
+        // Update requests
+        var updateTrips = trips?.Where(x => x.Action == ActionTypeEnum.UPDATE.GetDescription()).ToList() ?? [];
+        requests.AddRange(CreateUpdateCellTripRequests(updateTrips, sheetProperties));
+
+        // Delete requests
+        var deleteTrips = trips?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        requests.AddRange(CreateDeleteTripRequests(updateTrips, sheetProperties));
+
+        return requests;
+    }
+
+    private IEnumerable<Request> CreateUpdateCellTripRequests(List<TripEntity> trips, PropertyEntity? sheetProperties)
+    {
+        var headers = sheetProperties?.Attributes[PropertyEnum.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
+        var maxRowValue = int.Parse(sheetProperties?.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()] ?? "0");
+        int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
+
+        if (trips.Count == 0 || sheetProperties == null || headers?.Count == 0 || sheetId == 0)
+        {
+            return [];
+        }
+
+        var requests = new List<Request>();
+
+        foreach (var trip in trips)
+        {
+            var rowData = TripMapper.MapToRowData([trip], headers!);
+
+            // TODO: Look into making this an add dimension incase the difference is more than one.
+            if (trip.RowId > maxRowValue)
+            {
+                // Create an append dimension to add more rows to sheet
+                requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetId, rowData));
+            }
+            else
+            {
+                requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, trip.RowId, rowData));
+            }
+        }
+
+        return requests;
+    }
+
+    private IEnumerable<Request> CreateDeleteTripRequests(List<TripEntity> trips, PropertyEntity? sheetProperties)
+    {
+        var rowIds = trips.Select(x => x.RowId).ToList();
+        int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
+
+        if (trips.Count == 0 || sheetProperties == null || sheetId == 0)
+        {
+            return [];
+        }
+
+        var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, rowIds);
+
+        return requests;
+    }
+
+    //public async Task<SheetEntity> ChangeSheetDataOld(List<SheetEnum> sheets, SheetEntity sheetEntity)
+    //{
+    //    var changes = new Dictionary<SheetEnum, object>();
+
+    //    // Pull out all changes into a single object to iterate through.
+    //    foreach (var sheet in sheets)
+    //    {
+    //        switch (sheet)
+    //        {
+    //            case SheetEnum.SHIFTS:
+    //                if (sheetEntity.Shifts.Count > 0)
+    //                    changes.Add(sheet, sheetEntity.Shifts);
+    //                break;
+
+    //            case SheetEnum.TRIPS:
+    //                if (sheetEntity.Trips.Count > 0)
+    //                    changes.Add(sheet, sheetEntity.Trips);
+    //                break;
+    //            default:
+    //                // Unsupported sheet.
+    //                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.LOOKUP} data: {sheet.UpperName()} not supported", MessageTypeEnum.GENERAL));
+    //                break;
+    //        }
+    //    }
+
+    //    if (changes.Count == 0)
+    //    {
+    //        sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageTypeEnum.GENERAL));
+    //        return sheetEntity;
+    //    }
+
+    //    var sheetInfo = await GetSheetProperties(sheets.Select(t => t.GetDescription()).ToList());
+    //    //var batchRequests = new Dictionary<ActionTypeEnum, IList<IList<object?>>>();
+    //    var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
+    //    {
+    //        Requests = []
+    //    };
+
+    //    foreach (var change in changes)
+    //    {
+    //        switch (change.Key)
+    //        {
+    //            case SheetEnum.SHIFTS:
+
+    //                // TODO: Create a function to return requests.
+    //                var sheetProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key.GetDescription());
+    //                var headers = sheetProperties?.Attributes[PropertyEnum.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
+    //                var maxRow = int.Parse(sheetProperties?.Attributes[PropertyEnum.MAX_ROW.GetDescription()] ?? "0");
+    //                var maxRowValue = int.Parse(sheetProperties?.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()] ?? "0");
+    //                int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
+
+    //                if (sheetProperties == null || headers?.Count == 0 || sheetId == 0)
+    //                {
+    //                    break;
+    //                }
+    //                var rowValues = new Dictionary<int, IList<IList<object?>>>();
+    //                var addShifts = (change.Value as List<ShiftEntity>)?.Where(x => x.Action == ActionTypeEnum.APPEND.GetDescription()).ToList();
+
+    //                // Check to see if more rows need to be added to the sheet.
+    //                if (maxRowValue + addShifts?.Count >= maxRow && addShifts?.Count > 0)
+    //                {
+    //                    batchUpdateSpreadsheetRequest.Requests.AddRange(GoogleRequestHelpers.GenerateAppendDimension(sheetId, addShifts.Count));
+    //                }
+
+    //                foreach (var shift in (List<ShiftEntity>)change.Value)
+    //                {
+    //                    ActionTypeEnum action = shift.Action.GetValueFromName<ActionTypeEnum>();
+    //                    switch (action)
+    //                    {
+    //                        case ActionTypeEnum.APPEND:
+    //                            var rowData = ShiftMapper.MapToRowData([shift], headers!);
+    //                            if (shift.RowId > maxRow)
+    //                            {
+    //                                // Create an append dimension to add more rows to sheet
+    //                            }
+
+
+    //                            rowValues.Add(shift.RowId, rowData);
+    //                            var batchRequest = GoogleRequestHelpers.GenerateUpdateRequest(change.Key.GetDescription(), rowData);
+    //                            var appendCellsRequest = new AppendCellsRequest();
+    //                            appendCellsRequest.SheetId = sheetId;
+    //                            appendCellsRequest.Rows = rowData;
+    //                            appendCellsRequest.Fields = "*";
+    //                            batchUpdateSpreadsheetRequest.Requests.Add(new Request { AppendCells = appendCellsRequest });
+    //                            break;
+    //                        case ActionTypeEnum.UPDATE:
+    //                            var rowValues = new Dictionary<int, IList<IList<object?>>>();
+    //                            rowValues.Add(shift.RowId, ShiftMapper.MapToRangeData([shift], headers));
+    //                            var batchRequest = GoogleRequestHelpers.GenerateUpdateRequest(change.Key.GetDescription(), rowValues);
+    //                            batchUpdateSpreadsheetRequest.Requests.Add(new Request { UpdateCells = batchRequest });
+    //                            break;
+    //                        case ActionTypeEnum.DELETE:
+    //                            var rowIds = [shift.RowId];
+    //                            var deleteRequests = GoogleRequestHelpers.GenerateDeleteRequest((int)sheetId, rowIds);
+    //                            batchUpdateSpreadsheetRequest.Requests.AddRange(deleteRequests);
+    //                            break;
+    //                        default:
+    //                            break;
+    //                    }
+    //                }
+
+    //                var addShifts = (change.Value as List<ShiftEntity>)?.Where(x => x.Action == ActionTypeEnum.APPEND.GetDescription()).ToList();
+    //                if (addShifts?.Count > 0 && headers?.Count > 0)
+    //                {
+    //                    var rowData = ShiftMapper.MapToRowData(addShifts!, headers);
+    //                    //var appendCellRequest = new AppendCellsRequest();
+    //                    //var valueRange = new ValueRange { Values = values };
+    //                    //var request = _googleSheetService.Spreadsheets.Values.Append(valueRange, _spreadsheetId, range);
+    //                    //request.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
+    //                    var appendCellsRequest = new AppendCellsRequest();
+    //                    appendCellsRequest.SheetId = sheetId;
+    //                    // appendCellsRequest.Rows = rowData;
+    //                    appendCellsRequest.Fields = "*";
+    //                    //var batchUpdateRequest = new BatchUpdateValuesRequest();
+    //                    //batchUpdateRequest.Data.Add(valueRange);
+    //                    //batchUpdateRequest.ValueInputOption = "USER_ENTERED";
+    //                    batchUpdateSpreadsheetRequest.Requests.Add(new Request { AppendCells = appendCellsRequest });
+    //                    //batchUpdateSpreadsheetRequest.Requests.Add(AppendRequest(valueRange, $"{change.Key.GetDescription()}!{GoogleConfig.Range}"));
+    //                }
+
+    //                var updateShifts = (change.Value as List<ShiftEntity>)?.Where(x => x.Action == ActionTypeEnum.UPDATE.GetDescription()).ToList();
+
+    //                if (updateShifts?.Count > 0 && headers?.Count > 0)
+    //                {
+    //                    var rowValues = new Dictionary<int, IList<IList<object?>>>();
+    //                    foreach (var shift in updateShifts)
+    //                    {
+    //                        // rowValues.Add(shift.RowId, ShiftMapper.MapToRangeData([shift], headers));
+    //                    }
+    //                    var batchRequest = GoogleRequestHelpers.GenerateUpdateRequest(change.Key.GetDescription(), rowValues);
+    //                    // batchUpdateSpreadsheetRequest.Requests.Add(new Request { UpdateCells = batchRequest });
+    //                    // sheetEntity.Shifts = ShiftMapper.MapToEntities((List<IList<object?>>)change.Value, 
+    //                }
+
+    //                var deleteShifts = (change.Value as List<ShiftEntity>)?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList();
+
+    //                if (deleteShifts?.Count > 0)
+    //                {
+    //                    var rowIds = deleteShifts.Select(x => x.RowId).ToList();
+    //                    var deleteRequests = GoogleRequestHelpers.GenerateDeleteRequest((int)sheetId, rowIds);
+    //                    batchUpdateSpreadsheetRequest.Requests.AddRange(deleteRequests);
+    //                }
+    //                break;
+    //            case SheetEnum.TRIPS:
+    //                // sheetEntity.Trips = TripMapper.MapToEntities((List<IList<object?>>)change.Value);
+    //                break;
+    //            default:
+    //                // Unsupported sheet.
+    //                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.LOOKUP} data: {change.Key.UpperName()} not supported", MessageTypeEnum.GENERAL));
+    //                break;
+    //        }
+    //    }
+
+    //    var success = (await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest)) != null;
+
+    //    return sheetEntity;
+    //}
 
     public async Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
     {
@@ -56,26 +404,27 @@ public class GoogleSheetManager : IGoogleSheetManager
     private async Task<SheetEntity> AppendSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity, ActionTypeEnum actionType)
     {
         var messageType = MessageTypeEnum.ADD_DATA;
+        var valueRange = new ValueRange {  Values = [] };
+        var ranges = sheets.Select(sheet => $"{sheet.GetDescription()}!{GoogleConfig.HeaderRange}").ToList();
+        var sheetInfo = await _googleSheetService.GetSheetInfo(ranges);
 
         foreach (var sheet in sheets)
         {
-            var headers = (await _googleSheetService.GetSheetData(sheet.GetDescription()))?.Values[0];
+            var sheetProperties = sheetInfo?.Sheets.FirstOrDefault(x => x.Properties.Title == sheet.GetDescription());
+            var sheetHeaderValues = sheetProperties?.Data?[0]?.RowData?[0]?.Values;
+            var headers = HeaderHelpers.GetHeadersFromCellData(sheetHeaderValues);
 
-            if (headers == null)
+            if (!headers.Any())
                 continue;
-
-            IList<IList<object?>> values = [];
 
             switch (sheet)
             {
                 case SheetEnum.SHIFTS:
-                    values = ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers);
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                    valueRange.Values.AddRange(ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers));
                     break;
 
                 case SheetEnum.TRIPS:
-                    values = TripMapper.MapToRangeData(sheetEntity.Trips, headers);
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                    valueRange.Values.AddRange(TripMapper.MapToRangeData(sheetEntity.Trips, headers));
                     break;
                 default:
                     // Unsupported sheet.
@@ -83,19 +432,14 @@ public class GoogleSheetManager : IGoogleSheetManager
                     break;
             }
 
-            if (values.Any())
+            if (valueRange.Values.Any())
             {
-                var valueRange = new ValueRange { Values = values };
                 var success = (await _googleSheetService.AppendData(valueRange, $"{sheet.GetDescription()}!{GoogleConfig.Range}")) != null;
-
-                if (success)
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
-                else
-                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to {actionType} data: {sheet.UpperName()}", messageType));
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
             }
             else
             {
-                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"No data to {actionType}: {sheet.UpperName()}", messageType));
+                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"No data to {actionType}", messageType));
             }
         }
 
@@ -140,14 +484,15 @@ public class GoogleSheetManager : IGoogleSheetManager
                     break;
             }
 
-            if (rowIds.Any())
+            if (rowIds.Count != 0)
             {
                 var success = false;
-                var batchRequest = GoogleRequestHelpers.GenerateBatchDeleteRequest((int)sheetId, rowIds);
+                var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = [] };
+                batchRequest.Requests = GoogleRequestHelpers.GenerateDeleteRequests((int)sheetId, rowIds);
                 success = (await _googleSheetService.BatchUpdateSpreadsheet(batchRequest)) != null;
 
                 if (success)
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType}ED data: {sheet.UpperName()}", messageType));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data successful: {sheet.UpperName()}", messageType));
                 else
                     sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to {actionType} data: {sheet.UpperName()}", messageType));
             }
@@ -171,7 +516,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             if (headers == null)
                 continue;
 
-            IDictionary<int, IList<IList<object?>>> rowValues = new Dictionary<int, IList<IList<object?>>>();
+            var rowValues = new Dictionary<int, IList<IList<object?>>>();
 
             switch (sheet)
             {
@@ -199,12 +544,12 @@ public class GoogleSheetManager : IGoogleSheetManager
             if (rowValues.Any())
             {
                 var success = false;
-                var batchRequest = GoogleRequestHelpers.GenerateUpdateRequest(sheet.GetDescription(), rowValues);
+                var batchRequest = GoogleRequestHelpers.GenerateUpdateValueRequest(sheet.GetDescription(), rowValues);
 
                 success = (await _googleSheetService.BatchUpdateData(batchRequest)) != null;
 
                 if (success)
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data: {sheet.UpperName()}", messageType));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{actionType} data successful: {sheet.UpperName()}", messageType));
                 else
                     sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to {actionType} data: {sheet.UpperName()}", messageType));
             }
@@ -314,7 +659,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
                 case SheetEnum.SHIFTS:
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
                     break;
                 case SheetEnum.TRIPS:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
@@ -446,7 +791,39 @@ public class GoogleSheetManager : IGoogleSheetManager
         return data;
     }
 
-    public async Task<string?> GetSpreadsheetName()
+    public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets) // TODO: Look into moving this to a common area
+    {
+        var ranges = new List<string>();
+        var properties = new List<PropertyEntity>();
+
+        sheets.ForEach(sheet => ranges.Add($"{sheet}!{GoogleConfig.HeaderRange}")); // Get headers for each sheet.
+        sheets.ForEach(sheet => ranges.Add($"{sheet}!{GoogleConfig.RowRange}")); // Get max row for each sheet.
+
+        var sheetInfo = await _googleSheetService.GetSheetInfo(ranges);
+
+        foreach (var sheet in sheets)
+        {
+            var property = new PropertyEntity();
+            var sheetProperties = sheetInfo?.Sheets.FirstOrDefault(x => x.Properties.Title == sheet);
+            var sheetHeaderValues = string.Join(",", sheetProperties?.Data?[0]?.RowData?[0]?.Values?.Where(x => x.FormattedValue != null).Select(x => x.FormattedValue).ToList() ?? []);
+            var maxRow = (sheetProperties?.Data?[1]?.RowData ?? []).Count;
+            var maxRowValue = (sheetProperties?.Data?[1]?.RowData.Where(x => x.Values?[0]?.FormattedValue != null).Select(x => x.Values?[0]?.FormattedValue).ToList() ?? []).Count;
+            var sheetId = sheetProperties?.Properties.SheetId.ToString() ?? "";
+
+            property.Id = sheetId;
+            property.Name = sheet;
+
+            property.Attributes.Add(PropertyEnum.HEADERS.GetDescription(),sheetHeaderValues);
+            property.Attributes.Add(PropertyEnum.MAX_ROW.GetDescription(), maxRow.ToString());
+            property.Attributes.Add(PropertyEnum.MAX_ROW_VALUE.GetDescription(), maxRowValue.ToString());
+
+            properties.Add(property);
+        }
+
+        return properties;
+    }
+
+    public async Task<string?> GetSpreadsheetName() // TODO: Look into moving this to a common area
     {
         var response = await _googleSheetService.GetSheetInfo();
 

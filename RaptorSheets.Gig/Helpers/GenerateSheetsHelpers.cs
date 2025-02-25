@@ -52,7 +52,7 @@ public static class GenerateSheetsHelpers
             SheetEnum.PLACES => PlaceMapper.GetSheet(),
             SheetEnum.REGIONS => RegionMapper.GetSheet(),
             SheetEnum.SERVICES => ServiceMapper.GetSheet(),
-            SheetEnum.SHIFTS => ShiftMapper.GetSheet(),
+            SheetEnum.SHIFTS => TripMapper.GetSheet(),
             SheetEnum.TRIPS => TripMapper.GetSheet(),
             SheetEnum.TYPES => TypeMapper.GetSheet(),
             SheetEnum.WEEKDAYS => WeekdayMapper.GetSheet(),

@@ -5,6 +5,7 @@
         APPEND,
         DELETE,
         INSERT,
+        LOOKUP,
         UPDATE
     }
 }

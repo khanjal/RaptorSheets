@@ -76,14 +76,14 @@ public class GoogleRequestHelpersTests
         var rowList = rowIds.ToList();
 
         // Act
-        var result = GoogleRequestHelpers.GenerateBatchDeleteRequest(sheetId, rowList);
+        var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, rowList);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Requests[0].DeleteDimension);
-        Assert.Equal(sheetId, result.Requests[0].DeleteDimension.Range.SheetId);
-        Assert.Equal(rowIds[0] - 1, result.Requests[0].DeleteDimension.Range.StartIndex);
-        Assert.Equal(rowIds[0], result.Requests[0].DeleteDimension.Range.EndIndex);
+        Assert.NotNull(requests);
+        Assert.NotNull(requests[0].DeleteDimension);
+        Assert.Equal(sheetId, requests[0].DeleteDimension.Range.SheetId);
+        Assert.Equal(rowIds[0] - 1, requests[0].DeleteDimension.Range.StartIndex);
+        Assert.Equal(rowIds[0], requests[0].DeleteDimension.Range.EndIndex);
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public class GoogleRequestHelpersTests
         };
 
         // Act
-        var result = GoogleRequestHelpers.GenerateUpdateRequest(sheetName, rowValues);
+        var result = GoogleRequestHelpers.GenerateUpdateValueRequest(sheetName, rowValues);
 
         // Assert
         Assert.NotNull(result);

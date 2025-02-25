@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using RaptorSheets.Core.Entities;
+﻿using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
