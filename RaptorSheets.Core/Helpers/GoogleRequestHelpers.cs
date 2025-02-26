@@ -14,7 +14,7 @@ public static class GoogleRequestHelpers
         // Create Sheet Headers
         var appendCellsRequest = new AppendCellsRequest
         {
-            Fields = GoogleConfig.FieldsUpdate,
+            Fields = GoogleConfig.FieldsFormat,
             Rows = SheetHelpers.HeadersToRowData(sheet!),
             SheetId = sheet!.Id
         };
@@ -27,48 +27,45 @@ public static class GoogleRequestHelpers
         // Create Sheet Data
         var appendCellsRequest = new AppendCellsRequest
         {
-            Fields = GoogleConfig.FieldsUpdate,
+            Fields = GoogleConfig.FieldsFormat,
             Rows = rows,
             SheetId = sheetId
         };
         return new Request { AppendCells = appendCellsRequest };
     }
 
-    public static List<Request> GenerateAppendDimension(SheetModel sheet)
+    public static Request GenerateAppendDimension(SheetModel sheet)
     {
-        List<Request> requests = [];
         // Append more columns if the default amount isn't enough
         var defaultColumns = GoogleConfig.DefaultColumnCount;
-        if (sheet!.Headers.Count > defaultColumns)
+
+        if (sheet!.Headers.Count <= defaultColumns)
         {
-            var appendDimensionRequest = new AppendDimensionRequest
-            {
-                Dimension = DimensionEnum.COLUMNS.GetDescription(),
-                Length = sheet.Headers.Count - defaultColumns,
-                SheetId = sheet.Id
-            };
-            requests.Add(new Request { AppendDimension = appendDimensionRequest });
+            return new Request();
         }
 
-        return requests;
+        var appendDimensionRequest = new AppendDimensionRequest
+        {
+            Dimension = DimensionEnum.COLUMNS.GetDescription(),
+            Length = sheet.Headers.Count - defaultColumns,
+            SheetId = sheet.Id
+        };
+        var request = new Request { AppendDimension = appendDimensionRequest };
+
+        return request;
     }
 
-    public static List<Request> GenerateAppendDimension(int sheetId, int rows)
+    public static Request GenerateAppendDimension(int sheetId, int rows)
     {
-        List<Request> requests = [];
-        // Append more rows
-        if (rows > 0)
+        var appendDimensionRequest = new AppendDimensionRequest
         {
-            var appendDimensionRequest = new AppendDimensionRequest
-            {
-                Dimension = DimensionEnum.ROWS.GetDescription(),
-                Length = rows,
-                SheetId = sheetId
-            };
-            requests.Add(new Request { AppendDimension = appendDimensionRequest });
-        }
+            Dimension = DimensionEnum.ROWS.GetDescription(),
+            Length = rows,
+            SheetId = sheetId
+        };
+        var request = new Request { AppendDimension = appendDimensionRequest };
 
-        return requests;
+        return request;
     }
 
     public static Request GenerateBandingRequest(SheetModel sheet)
@@ -153,6 +150,26 @@ public static class GoogleRequestHelpers
 
 
         return requests;
+    }
+
+    public static Request GenerateInsertDimension(int sheetId, int startIndex, int endIndex)
+    {
+        var insertRequest = new Request
+        {
+            InsertDimension = new InsertDimensionRequest
+            {
+                Range = new DimensionRange
+                {
+                    SheetId = sheetId,
+                    Dimension = "ROWS",
+                    StartIndex = startIndex,
+                    EndIndex = endIndex
+                },
+                InheritFromBefore = true
+            }
+        };
+
+        return insertRequest;
     }
 
     public static BatchGetValuesByDataFilterRequest GenerateBatchGetValuesByDataFilterRequest(List<string> sheets, string? range = "")
@@ -265,15 +282,15 @@ public static class GoogleRequestHelpers
         {
             SheetId = sheetId,
             StartRowIndex = rowId,
-            EndRowIndex = rowId + 1
+            EndRowIndex = rowId + 1,
         };
 
         // Create Sheet Data
         var updateCellsRequest = new UpdateCellsRequest
         {
-            Fields = GoogleConfig.FieldsUpdate,
+            Fields = GoogleConfig.FieldsFormat,
             Rows = rows,
-            Range = range
+            Range = range,
         };
         return new Request { UpdateCells = updateCellsRequest };
     }

@@ -247,6 +247,7 @@ public static class TripMapper
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Note } });
                         break;
                     default:
+                        cells.Add(new CellData());
                         break;
                 }
             }

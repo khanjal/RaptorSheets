@@ -125,7 +125,9 @@ public static class ShiftMapper
                     case HeaderEnum.NOTE:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Note } });
                         break;
-
+                    default:
+                        cells.Add(new CellData());
+                        break;
                 }
             }
             rowData.Values = cells;

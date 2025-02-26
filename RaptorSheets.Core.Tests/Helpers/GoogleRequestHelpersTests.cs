@@ -47,9 +47,8 @@ public class GoogleRequestHelpersTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Single(result);
-        Assert.Equal(sheet.Id, result[0].AppendDimension.SheetId);
-        Assert.Equal(randomNumber, result[0].AppendDimension.Length);
+        Assert.Equal(sheet.Id, result.AppendDimension.SheetId);
+        Assert.Equal(randomNumber, result.AppendDimension.Length);
     }
 
     [Fact]

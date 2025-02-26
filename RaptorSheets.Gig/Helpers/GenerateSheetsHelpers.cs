@@ -26,7 +26,7 @@ public static class GenerateSheetsHelpers
             sheetModel.Id = random.Next();
 
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.AddRange(GoogleRequestHelpers.GenerateAppendDimension(sheetModel));
+            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendDimension(sheetModel));
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
             GenerateHeadersFormatAndProtection(sheetModel);
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
@@ -52,7 +52,7 @@ public static class GenerateSheetsHelpers
             SheetEnum.PLACES => PlaceMapper.GetSheet(),
             SheetEnum.REGIONS => RegionMapper.GetSheet(),
             SheetEnum.SERVICES => ServiceMapper.GetSheet(),
-            SheetEnum.SHIFTS => TripMapper.GetSheet(),
+            SheetEnum.SHIFTS => ShiftMapper.GetSheet(),
             SheetEnum.TRIPS => TripMapper.GetSheet(),
             SheetEnum.TYPES => TypeMapper.GetSheet(),
             SheetEnum.WEEKDAYS => WeekdayMapper.GetSheet(),

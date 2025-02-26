@@ -8,6 +8,7 @@ public static class GoogleConfig
     public static string AppName => "Raptor Sheets Engine";
     public static string ColumnLetters => "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     public static int DefaultColumnCount => 26;
+    public static string FieldsFormat => "userEnteredValue";
     public static string FieldsUpdate => "*";
     public static string Range => "A1:ZZZ10000000";
     public static string KeyRange => "A1:A";
