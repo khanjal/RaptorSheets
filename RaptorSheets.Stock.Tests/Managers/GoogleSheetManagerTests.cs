@@ -34,6 +34,9 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenGetSheets_ThenReturnSheetEntity()
     {
+        if (_googleSheetManager == null)
+            throw new InvalidOperationException("GoogleSheetManager is not initialized.");
+
         var result = await _googleSheetManager.GetSheets();
         result.Should().NotBeNull();
     }
@@ -41,6 +44,9 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenGetSheet_ThenReturnSheetEntity()
     {
+        if (_googleSheetManager == null)
+            throw new InvalidOperationException("GoogleSheetManager is not initialized.");
+
         var result = await _googleSheetManager.GetSheets([_sheetEnum]);
         result.Should().NotBeNull();
         result!.Messages.Should().HaveCount(1);
@@ -74,6 +80,9 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenGetSpreadsheetName_WithValidSpreadsheetId_ReturnTitle()
     {
+        if (_googleSheetManager == null)
+            throw new InvalidOperationException("GoogleSheetManager is not initialized.");
+
         var result = await _googleSheetManager.GetSpreadsheetName();
         result.Should().NotBeNullOrWhiteSpace();
     }
@@ -121,6 +130,9 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnData()
     {
+        if (_googleSheetManager == null)
+            throw new InvalidOperationException("GoogleSheetManager is not initialized.");
+
         var result = await _googleSheetManager.CreateSheets([_sheetEnum]);
         result.Should().NotBeNull();
         result.Messages.Count.Should().Be(1);
@@ -130,6 +142,9 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenCheckSheets_WithNoHeaderCheck_ThenReturnData()
     {
+        if (_googleSheetManager == null)
+            throw new InvalidOperationException("GoogleSheetManager is not initialized.");
+
         var result = await _googleSheetManager.CheckSheets();
         result.Should().NotBeNull();
         result.Count.Should().Be(1);
@@ -138,6 +153,9 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenCheckSheets_WithHeaderCheck_ThenReturnData()
     {
+        if (_googleSheetManager == null)
+            throw new InvalidOperationException("GoogleSheetManager is not initialized.");
+
         var result = await _googleSheetManager.CheckSheets(true);
         result.Should().NotBeNull();
         result.Count.Should().Be(2);
