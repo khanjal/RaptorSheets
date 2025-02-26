@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3601" />
-    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.68.0.3568" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.69.0.3699" />
+    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.69.0.3694" />
     <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
