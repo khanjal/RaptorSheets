@@ -18,7 +18,7 @@ jobs:
       id: check
       run: |
         workflow_path=${{ github.event.inputs.workflow_path }}
-        status=$(gh api repos/${{ github.repository }}/actions/runs | jq -r ".workflow_runs[] | select(.path==\""$workflow_path\"") | .conclusion") | Select-Object -First 1
+        status=$(gh api repos/${{ github.repository }}/actions/runs | jq -r ".workflow_runs[] | select(.path==\""$workflow_path\"") | .conclusion") | head -n 1
         if [ "$status" != "success" ]; then
           echo "Workflow $workflow_path did not succeed."
           exit 1
