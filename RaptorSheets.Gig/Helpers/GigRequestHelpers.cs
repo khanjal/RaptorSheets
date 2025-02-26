@@ -31,13 +31,11 @@ public static class GigRequestHelpers
     {
         var requests = new List<Request>();
 
-        // Add requests
-        var addTrips = trips?.Where(x => x.Action == ActionTypeEnum.APPEND.GetDescription()).ToList() ?? [];
-        requests.AddRange(CreateUpdateCellTripRequests(addTrips, sheetProperties));
+        var request = new Request();
 
-        // Update requests
-        var updateTrips = trips?.Where(x => x.Action == ActionTypeEnum.UPDATE.GetDescription()).ToList() ?? [];
-        requests.AddRange(CreateUpdateCellTripRequests(updateTrips, sheetProperties));
+        // Append/Update requests
+        var saveTrips = trips?.Where(x => x.Action != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        requests.AddRange(CreateUpdateCellTripRequests(saveTrips, sheetProperties));
 
         // Delete requests
         var deleteTrips = trips?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
@@ -60,20 +58,20 @@ public static class GigRequestHelpers
 
         var requests = new List<Request>();
 
-        foreach (var trip in trips)
+        var appendTrips = trips.Where(x => x.RowId > maxRow).ToList();
+        if (appendTrips.Count > 0)
+        {
+            var appendData = TripMapper.MapToRowData(appendTrips, headers!);
+            requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetId, appendData));
+        }
+
+        var updateTrips = trips.Where(x => x.RowId <= maxRow).ToList();
+        foreach (var trip in updateTrips)
         {
             var rowData = TripMapper.MapToRowData([trip], headers!);
             var request = new Request();
 
-            if (trip.RowId > maxRow)
-            {
-                requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetId, rowData));
-                maxRow += trips.Count;
-            }
-            else
-            {
-                requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, trip.RowId, rowData));
-            }
+            requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, trip.RowId, rowData));
         }
 
         return requests;
@@ -84,13 +82,9 @@ public static class GigRequestHelpers
     {
         var requests = new List<Request>();
 
-        // Add requests
-        var addShifts = shifts?.Where(x => x.Action == ActionTypeEnum.APPEND.GetDescription()).ToList() ?? [];
-        requests.AddRange(CreateUpdateCellShiftRequests(addShifts, sheetProperties));
-
-        // Update requests
-        var updateShifts = shifts?.Where(x => x.Action == ActionTypeEnum.UPDATE.GetDescription()).ToList() ?? [];
-        requests.AddRange(CreateUpdateCellShiftRequests(updateShifts, sheetProperties));
+        // AppendUpdate requets
+        var saveShifts = shifts?.Where(x => x.Action != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        requests.AddRange(CreateUpdateCellShiftRequests(saveShifts, sheetProperties));
 
         // Delete requests
         var deleteShifts = shifts?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
@@ -113,15 +107,18 @@ public static class GigRequestHelpers
 
         var requests = new List<Request>();
 
-        foreach (var shift in shifts)
+        var appendShifts = shifts.Where(x => x.RowId > maxRow).ToList();
+        if (appendShifts.Count > 0)
+        {
+            var appendData = ShiftMapper.MapToRowData(appendShifts, headers!);
+            requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetId, appendData));
+        }
+
+        var updateShifts = shifts.Where(x => x.RowId <= maxRow).ToList();
+        foreach (var shift in updateShifts)
         {
             var rowData = ShiftMapper.MapToRowData([shift], headers!);
-
-            if (shift.RowId > maxRow)
-            {
-                requests.Add(GoogleRequestHelpers.GenerateAppendDimension(sheetId, shifts.Count));
-                maxRow += shifts.Count;
-            }
+            var request = new Request();
 
             requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, shift.RowId, rowData));
         }
