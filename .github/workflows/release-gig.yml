@@ -7,6 +7,7 @@ on:
         description: 'The path of the workflow to check'
         required: true
         default: '.github/workflows/dotnet.yml'
+
 jobs:
   check_workflow:
     runs-on: ubuntu-latest
@@ -16,10 +17,10 @@ jobs:
     - name: Check if workflow is successful
       id: check
       run: |
-        workflow_id=${{ github.event.inputs.workflow_path }}
-        status=$(gh api repos/${{ github.repository }}/actions/runs | jq -r ".workflow_runs[] | select(.path==\"$workflow_id\") | .conclusion")
+        workflow_path=${{ github.event.inputs.workflow_path }}
+        status=$(gh api repos/${{ github.repository }}/actions/runs | jq -r ".workflow_runs[] | select(.path==\""$workflow_path\"") | .conclusion")
         if [ "$status" != "success" ]; then
-          echo "Workflow $workflow_id did not succeed."
+          echo "Workflow $workflow_path did not succeed."
           exit 1
         fi
 
