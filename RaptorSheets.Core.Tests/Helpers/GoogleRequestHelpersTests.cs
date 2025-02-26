@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using Xunit;
@@ -13,7 +14,7 @@ public class GoogleRequestHelpersTests
     public void GenerateAppendCells_ShouldReturnValidRequest()
     {
         // Arrange
-        var sheet = new SheetModel { Id = 1, Headers = new List<SheetCellModel> { new SheetCellModel { Name = "Header1" } } };
+        var sheet = new SheetModel { Id = 1, Headers = [new SheetCellModel { Name = "Header1" }] };
 
         // Act
         var result = GoogleRequestHelpers.GenerateAppendCells(sheet);
@@ -21,7 +22,7 @@ public class GoogleRequestHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.AppendCells);
-        Assert.Equal(GoogleConfig.FieldsUpdate, result.AppendCells.Fields);
+        Assert.Equal(FieldEnum.USER_ENTERED_VALUE.GetDescription(), result.AppendCells.Fields);
         Assert.Equal(sheet.Id, result.AppendCells.SheetId);
     }
 
@@ -131,7 +132,7 @@ public class GoogleRequestHelpersTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(GoogleConfig.FieldsUpdate, result.Fields);
+        Assert.Equal(FieldEnum.ALL.GetDescription(), result.Fields);
         Assert.Equal(repeatCellModel.GridRange, result.Range);
         Assert.NotNull(result.Cell.UserEnteredFormat);
         Assert.NotNull(result.Cell.DataValidation);

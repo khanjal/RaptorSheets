@@ -63,14 +63,17 @@ public static class GigRequestHelpers
         foreach (var trip in trips)
         {
             var rowData = TripMapper.MapToRowData([trip], headers!);
+            var request = new Request();
 
             if (trip.RowId > maxRow)
             {
-                requests.Add(GoogleRequestHelpers.GenerateAppendDimension(sheetId, trips.Count));
+                requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetId, rowData));
                 maxRow += trips.Count;
             }
-
-            requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, trip.RowId, rowData));
+            else
+            {
+                requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, trip.RowId, rowData));
+            }
         }
 
         return requests;

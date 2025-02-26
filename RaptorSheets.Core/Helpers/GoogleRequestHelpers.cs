@@ -14,7 +14,7 @@ public static class GoogleRequestHelpers
         // Create Sheet Headers
         var appendCellsRequest = new AppendCellsRequest
         {
-            Fields = GoogleConfig.FieldsFormat,
+            Fields = FieldEnum.USER_ENTERED_VALUE.GetDescription(),
             Rows = SheetHelpers.HeadersToRowData(sheet!),
             SheetId = sheet!.Id
         };
@@ -27,7 +27,7 @@ public static class GoogleRequestHelpers
         // Create Sheet Data
         var appendCellsRequest = new AppendCellsRequest
         {
-            Fields = GoogleConfig.FieldsFormat,
+            Fields = FieldEnum.USER_ENTERED_VALUE.GetDescription(),
             Rows = rows,
             SheetId = sheetId
         };
@@ -241,7 +241,7 @@ public static class GoogleRequestHelpers
 
         var repeatCellRequest = new RepeatCellRequest
         {
-            Fields = GoogleConfig.FieldsUpdate,
+            Fields = FieldEnum.ALL.GetDescription(),
             Range = repeatCellModel.GridRange,
             Cell = new CellData()
         };
@@ -288,7 +288,7 @@ public static class GoogleRequestHelpers
         // Create Sheet Data
         var updateCellsRequest = new UpdateCellsRequest
         {
-            Fields = GoogleConfig.FieldsFormat,
+            Fields = FieldEnum.USER_ENTERED_VALUE.GetDescription(),
             Rows = rows,
             Range = range,
         };

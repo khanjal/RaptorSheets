@@ -181,7 +181,7 @@ public static class TripMapper
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Date } });
                         break;
                     case HeaderEnum.SERVICE:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Service } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Service ?? null } });
                         break;
                     case HeaderEnum.NUMBER:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = trip.Number } });
@@ -190,19 +190,19 @@ public static class TripMapper
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { BoolValue = trip.Exclude } });
                         break;
                     case HeaderEnum.TYPE:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Type } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Type ?? null } });
                         break;
                     case HeaderEnum.PLACE:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Place } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Place ?? null } });
                         break;
                     case HeaderEnum.PICKUP:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Pickup } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Pickup ?? null } });
                         break;
                     case HeaderEnum.DROPOFF:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Dropoff } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Dropoff ?? null } });
                         break;
                     case HeaderEnum.DURATION:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Duration } });
+                        cells.Add(string.IsNullOrEmpty(trip.Duration) ? new CellData() : new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Duration } });
                         break;
                     case HeaderEnum.PAY:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)trip.Pay } });
@@ -226,25 +226,25 @@ public static class TripMapper
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)trip.Distance } });
                         break;
                     case HeaderEnum.NAME:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Name } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Name ?? null } });
                         break;
                     case HeaderEnum.ADDRESS_START:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.StartAddress } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.StartAddress ?? null  } });
                         break;
                     case HeaderEnum.ADDRESS_END:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.EndAddress } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.EndAddress ?? null } });
                         break;
                     case HeaderEnum.UNIT_END:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.EndUnit } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.EndUnit ?? null } });
                         break;
                     case HeaderEnum.ORDER_NUMBER:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.OrderNumber } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.OrderNumber ?? null } });
                         break;
                     case HeaderEnum.REGION:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Region } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Region ?? null } });
                         break;
                     case HeaderEnum.NOTE:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Note } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Note ?? null } });
                         break;
                     default:
                         cells.Add(new CellData());

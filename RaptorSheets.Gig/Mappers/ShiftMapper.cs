@@ -87,22 +87,22 @@ public static class ShiftMapper
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Date } });
                         break;
                     case HeaderEnum.TIME_START:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Start } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Start ?? null } });
                         break;
                     case HeaderEnum.TIME_END:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Finish } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Finish ?? null } });
                         break;
                     case HeaderEnum.SERVICE:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Service } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Service ?? null } });
                         break;
                     case HeaderEnum.NUMBER:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = shift.Number } });
                         break;
                     case HeaderEnum.TIME_ACTIVE:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Active } });
+                        cells.Add(string.IsNullOrEmpty(shift.Active) ? new CellData() : new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Active } });
                         break;
                     case HeaderEnum.TIME_TOTAL:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Time } });
+                        cells.Add(string.IsNullOrEmpty(shift.Time) ? new CellData() : new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Time } });
                         break;
                     case HeaderEnum.TIME_OMIT:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { BoolValue = shift.Omit } });
@@ -120,10 +120,10 @@ public static class ShiftMapper
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)shift.Cash } });
                         break;
                     case HeaderEnum.REGION:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Region } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Region ?? null } });
                         break;
                     case HeaderEnum.NOTE:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Note } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Note ?? null } });
                         break;
                     default:
                         cells.Add(new CellData());
