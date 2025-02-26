@@ -12,7 +12,7 @@ namespace RaptorSheets.Stock.Tests.Managers;
 
 public class GoogleSheetManagerTests
 {
-    private readonly IGoogleSheetManager _googleSheetManager;
+    private readonly GoogleSheetManager? _googleSheetManager;
 
     private readonly long _currentTime;
     private readonly SheetEnum _sheetEnum;
