@@ -3,10 +3,10 @@ name: Release RaptorSheets.Gig to NuGet
 on:
   workflow_dispatch:
     inputs:
-      workflow_id:
-        description: 'The ID of the workflow to check'
+      workflow_path:
+        description: 'The path of the workflow to check'
         required: true
-        default: 'dotnet.yml'
+        default: '.github/workflows/dotnet.yml'
 jobs:
   check_workflow:
     runs-on: ubuntu-latest
@@ -16,8 +16,8 @@ jobs:
     - name: Check if workflow is successful
       id: check
       run: |
-        workflow_id=${{ github.event.inputs.workflow_id }}
-        status=$(gh api repos/${{ github.repository }}/actions/runs | jq -r ".workflow_runs[] | select(.name==\"$workflow_id\") | .conclusion")
+        workflow_id=${{ github.event.inputs.workflow_path }}
+        status=$(gh api repos/${{ github.repository }}/actions/runs | jq -r ".workflow_runs[] | select(.path==\"$workflow_id\") | .conclusion")
         if [ "$status" != "success" ]; then
           echo "Workflow $workflow_id did not succeed."
           exit 1
