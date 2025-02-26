@@ -6,7 +6,7 @@ on:
       workflow_id:
         description: 'The ID of the workflow to check'
         required: true
-        default: './.github/workflows/dotnet.yml'
+        default: 'dotnet.yml'
 jobs:
   check_workflow:
     runs-on: ubuntu-latest
