@@ -8,5 +8,6 @@ public enum MessageTypeEnum
     CREATE_SHEET,
     DELETE_DATA,
     GET_SHEETS,
+    SAVE_DATA,
     UPDATE_DATA
 }

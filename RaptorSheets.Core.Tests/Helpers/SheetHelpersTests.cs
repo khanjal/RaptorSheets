@@ -1,11 +1,9 @@
 using FluentAssertions;
 using Google.Apis.Sheets.v4.Data;
-using Moq;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
-using System.Collections.Generic;
 using Xunit;
 
 namespace RaptorSheets.Core.Tests.Helpers;

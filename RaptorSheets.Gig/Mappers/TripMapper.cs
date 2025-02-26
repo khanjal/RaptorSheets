@@ -1,3 +1,4 @@
+using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
@@ -161,6 +162,100 @@ public static class TripMapper
         }
         // Console.Write(JsonSerializer.Serialize(rangeData));
         return rangeData;
+    }
+
+    public static IList<RowData> MapToRowData(List<TripEntity> tripEntities, IList<object> headers)
+    {
+        var rows = new List<RowData>();
+
+        foreach (TripEntity trip in tripEntities)
+        {
+            var rowData = new RowData();
+            var cells = new List<CellData>();
+            foreach (var header in headers)
+            {
+                var headerEnum = header!.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+                switch (headerEnum)
+                {
+                    case HeaderEnum.DATE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Date } });
+                        break;
+                    case HeaderEnum.SERVICE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Service ?? null } });
+                        break;
+                    case HeaderEnum.NUMBER:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = trip.Number } });
+                        break;
+                    case HeaderEnum.EXCLUDE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { BoolValue = trip.Exclude } });
+                        break;
+                    case HeaderEnum.TYPE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Type ?? null } });
+                        break;
+                    case HeaderEnum.PLACE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Place ?? null } });
+                        break;
+                    case HeaderEnum.PICKUP:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Pickup ?? null } });
+                        break;
+                    case HeaderEnum.DROPOFF:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Dropoff ?? null } });
+                        break;
+                    case HeaderEnum.DURATION:
+                        cells.Add(string.IsNullOrEmpty(trip.Duration) ? new CellData() : new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Duration } });
+                        break;
+                    case HeaderEnum.PAY:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)trip.Pay } });
+                        break;
+                    case HeaderEnum.TIPS:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)trip.Tip } });
+                        break;
+                    case HeaderEnum.BONUS:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)trip.Bonus } });
+                        break;
+                    case HeaderEnum.CASH:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)trip.Cash } });
+                        break;
+                    case HeaderEnum.ODOMETER_START:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)trip.OdometerStart } });
+                        break;
+                    case HeaderEnum.ODOMETER_END:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)trip.OdometerEnd } });
+                        break;
+                    case HeaderEnum.DISTANCE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)trip.Distance } });
+                        break;
+                    case HeaderEnum.NAME:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Name ?? null } });
+                        break;
+                    case HeaderEnum.ADDRESS_START:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.StartAddress ?? null  } });
+                        break;
+                    case HeaderEnum.ADDRESS_END:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.EndAddress ?? null } });
+                        break;
+                    case HeaderEnum.UNIT_END:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.EndUnit ?? null } });
+                        break;
+                    case HeaderEnum.ORDER_NUMBER:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.OrderNumber ?? null } });
+                        break;
+                    case HeaderEnum.REGION:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Region ?? null } });
+                        break;
+                    case HeaderEnum.NOTE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Note ?? null } });
+                        break;
+                    default:
+                        cells.Add(new CellData());
+                        break;
+                }
+            }
+            rowData.Values = cells;
+            rows.Add(rowData);
+        }
+
+        return rows;
     }
 
     public static SheetModel GetSheet()

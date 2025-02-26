@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using Xunit;
@@ -13,7 +14,7 @@ public class GoogleRequestHelpersTests
     public void GenerateAppendCells_ShouldReturnValidRequest()
     {
         // Arrange
-        var sheet = new SheetModel { Id = 1, Headers = new List<SheetCellModel> { new SheetCellModel { Name = "Header1" } } };
+        var sheet = new SheetModel { Id = 1, Headers = [new SheetCellModel { Name = "Header1" }] };
 
         // Act
         var result = GoogleRequestHelpers.GenerateAppendCells(sheet);
@@ -21,7 +22,7 @@ public class GoogleRequestHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.AppendCells);
-        Assert.Equal(GoogleConfig.FieldsUpdate, result.AppendCells.Fields);
+        Assert.Equal(FieldEnum.USER_ENTERED_VALUE.GetDescription(), result.AppendCells.Fields);
         Assert.Equal(sheet.Id, result.AppendCells.SheetId);
     }
 
@@ -47,9 +48,8 @@ public class GoogleRequestHelpersTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Single(result);
-        Assert.Equal(sheet.Id, result[0].AppendDimension.SheetId);
-        Assert.Equal(randomNumber, result[0].AppendDimension.Length);
+        Assert.Equal(sheet.Id, result.AppendDimension.SheetId);
+        Assert.Equal(randomNumber, result.AppendDimension.Length);
     }
 
     [Fact]
@@ -76,14 +76,14 @@ public class GoogleRequestHelpersTests
         var rowList = rowIds.ToList();
 
         // Act
-        var result = GoogleRequestHelpers.GenerateBatchDeleteRequest(sheetId, rowList);
+        var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, rowList);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Requests[0].DeleteDimension);
-        Assert.Equal(sheetId, result.Requests[0].DeleteDimension.Range.SheetId);
-        Assert.Equal(rowIds[0] - 1, result.Requests[0].DeleteDimension.Range.StartIndex);
-        Assert.Equal(rowIds[0], result.Requests[0].DeleteDimension.Range.EndIndex);
+        Assert.NotNull(requests);
+        Assert.NotNull(requests[0].DeleteDimension);
+        Assert.Equal(sheetId, requests[0].DeleteDimension.Range.SheetId);
+        Assert.Equal(rowIds[0] - 1, requests[0].DeleteDimension.Range.StartIndex);
+        Assert.Equal(rowIds[0], requests[0].DeleteDimension.Range.EndIndex);
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class GoogleRequestHelpersTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(GoogleConfig.FieldsUpdate, result.Fields);
+        Assert.Equal(FieldEnum.ALL.GetDescription(), result.Fields);
         Assert.Equal(repeatCellModel.GridRange, result.Range);
         Assert.NotNull(result.Cell.UserEnteredFormat);
         Assert.NotNull(result.Cell.DataValidation);
@@ -165,7 +165,7 @@ public class GoogleRequestHelpersTests
         };
 
         // Act
-        var result = GoogleRequestHelpers.GenerateUpdateRequest(sheetName, rowValues);
+        var result = GoogleRequestHelpers.GenerateUpdateValueRequest(sheetName, rowValues);
 
         // Assert
         Assert.NotNull(result);

@@ -6,8 +6,6 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Extensions;
-using RaptorSheets.Core.Tests.Extensions;
 
 namespace RaptorSheets.Gig.Tests.Helpers;
 

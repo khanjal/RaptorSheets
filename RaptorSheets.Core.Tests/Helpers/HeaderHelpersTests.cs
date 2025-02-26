@@ -1,7 +1,5 @@
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Core.Entities;
-using RaptorSheets.Core.Enums;
 using Xunit;
 
 namespace RaptorSheets.Core.Tests.Helpers;

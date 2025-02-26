@@ -26,7 +26,7 @@ public static class GenerateSheetHelpers
             sheetModel.Id = random.Next();
 
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.AddRange(GoogleRequestHelpers.GenerateAppendDimension(sheetModel));
+            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendDimension(sheetModel));
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
             GenerateHeadersFormatAndProtection(sheetModel);
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
