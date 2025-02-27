@@ -71,7 +71,7 @@ public static class GigRequestHelpers
             var rowData = TripMapper.MapToRowData([trip], headers!);
             var request = new Request();
 
-            requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, trip.RowId, rowData));
+            requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, trip.RowId - 1, rowData));
         }
 
         return requests;
@@ -120,7 +120,7 @@ public static class GigRequestHelpers
             var rowData = ShiftMapper.MapToRowData([shift], headers!);
             var request = new Request();
 
-            requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, shift.RowId, rowData));
+            requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, shift.RowId - 1, rowData));
         }
 
         return requests;

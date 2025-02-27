@@ -276,13 +276,14 @@ public static class GoogleRequestHelpers
         return new Request { AddSheet = sheetRequest };
     }
 
-    public static Request GenerateUpdateCellsRequest(int sheetId, int rowId, IList<RowData> rows) 
+    public static Request GenerateUpdateCellsRequest(int sheetId, int rowIndex, IList<RowData> rows) 
     {
+        // Indexes are 1 less than rowIds
         var range = new GridRange
         {
             SheetId = sheetId,
-            StartRowIndex = rowId,
-            EndRowIndex = rowId + 1,
+            StartRowIndex = rowIndex,
+            EndRowIndex = rowIndex + 1,
         };
 
         // Create Sheet Data
