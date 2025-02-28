@@ -92,7 +92,13 @@ public class GoogleSheetManager : IGoogleSheetManager
             sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {change.Key.UpperName()}", MessageTypeEnum.SAVE_DATA));
         }
 
-        var success = (await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest)) != null;
+        // TODO: Look into returning data from the batch update.
+        //batchUpdateSpreadsheetRequest.IncludeSpreadsheetInResponse = true;
+        //batchUpdateSpreadsheetRequest.ResponseIncludeGridData = true;
+
+        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
+
+        var success = (batchUpdateSpreadsheetResponse) != null;
 
         return sheetEntity;
     }

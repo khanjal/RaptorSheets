@@ -11,7 +11,6 @@
 
   <ItemGroup>
     <None Remove="Data\Json\DemoSheet.json" />
-    <None Remove="Data\Json\Headers.json" />
     <None Remove="Data\Json\Sheets\AddressSheet.json" />
     <None Remove="Data\Json\Sheets\NameSheet.json" />
     <None Remove="Data\Json\Sheets\PlaceSheet.json" />
@@ -24,9 +23,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Data\Json\DemoSheet.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Data\Json\Headers.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Data\Json\Sheets\AddressSheet.json">
@@ -80,12 +76,6 @@
     <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
     <ProjectReference Include="..\RaptorSheets.Gig\RaptorSheets.Gig.csproj" />
     <ProjectReference Include="..\RaptorSheets.Test\RaptorSheets.Test.Common.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Mappers\MapFromRangeData\TripMapFromRangeDataTests.cs">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Compile>
   </ItemGroup>
 
 </Project>
