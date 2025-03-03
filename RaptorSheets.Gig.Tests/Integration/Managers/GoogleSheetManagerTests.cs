@@ -275,6 +275,8 @@ public class GoogleSheetManagerTests
             tripEntity.Number = 1;
             tripEntity.Service = service;
             tripEntity.Pickup = DateTime.Now.ToString("T");
+            tripEntity.Dropoff = DateTime.Now.AddMinutes(10).ToString("T");
+            tripEntity.Duration = "00:10:00.000";
             sheetEntity.Trips.Add(tripEntity);
         }
 

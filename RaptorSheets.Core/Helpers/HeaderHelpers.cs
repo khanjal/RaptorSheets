@@ -92,7 +92,8 @@ public static class HeaderHelpers
     {
         var columnId = GetHeaderKey(headers, columnName);
 
-        if (columnId > values.Count || columnId < 0 || values[columnId] == null)
+        // TODO: Look into this closer. had to change to >= values.count. Does this need to be on other ones?
+        if (columnId >= values.Count || columnId < 0 || values[columnId] == null)
         {
             return null;
         }

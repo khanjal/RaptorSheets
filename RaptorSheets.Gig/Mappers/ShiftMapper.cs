@@ -84,13 +84,13 @@ public static class ShiftMapper
                 switch (headerEnum)
                 {
                     case HeaderEnum.DATE:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Date } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = shift.Date.ToSerialDate()} });
                         break;
                     case HeaderEnum.TIME_START:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Start ?? null } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = shift.Start.ToSerialTime() } });
                         break;
                     case HeaderEnum.TIME_END:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Finish ?? null } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = shift.Finish.ToSerialTime() } });
                         break;
                     case HeaderEnum.SERVICE:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Service ?? null } });
@@ -99,10 +99,10 @@ public static class ShiftMapper
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = shift.Number } });
                         break;
                     case HeaderEnum.TIME_ACTIVE:
-                        cells.Add(string.IsNullOrEmpty(shift.Active) ? new CellData() : new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Active } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = shift.Active.ToSerialDuration() } });
                         break;
                     case HeaderEnum.TIME_TOTAL:
-                        cells.Add(string.IsNullOrEmpty(shift.Time) ? new CellData() : new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Time } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = shift.Time.ToSerialDuration() } });
                         break;
                     case HeaderEnum.TIME_OMIT:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { BoolValue = shift.Omit } });
@@ -136,7 +136,7 @@ public static class ShiftMapper
 
         return rows;
     }
-
+    
     public static IList<IList<object?>> MapToRangeData(List<ShiftEntity> shifts, IList<object> shiftHeaders)
     {
         var rangeData = new List<IList<object?>>();

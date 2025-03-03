@@ -178,7 +178,7 @@ public static class TripMapper
                 switch (headerEnum)
                 {
                     case HeaderEnum.DATE:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Date } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = trip.Date.ToSerialDate() } });
                         break;
                     case HeaderEnum.SERVICE:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Service ?? null } });
@@ -196,13 +196,13 @@ public static class TripMapper
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Place ?? null } });
                         break;
                     case HeaderEnum.PICKUP:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Pickup ?? null } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = trip.Pickup.ToSerialTime() } });
                         break;
                     case HeaderEnum.DROPOFF:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Dropoff ?? null } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = trip.Dropoff.ToSerialTime() } });
                         break;
                     case HeaderEnum.DURATION:
-                        cells.Add(string.IsNullOrEmpty(trip.Duration) ? new CellData() : new CellData { UserEnteredValue = new ExtendedValue { StringValue = trip.Duration } });
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = trip.Duration.ToSerialDuration() } });
                         break;
                     case HeaderEnum.PAY:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)trip.Pay } });
@@ -256,6 +256,50 @@ public static class TripMapper
         }
 
         return rows;
+    }
+
+    // TODO: Revisit this if we want to be able to reapply formats to columns
+    public static RowData MapToRowFormat(IList<object> headers)
+    {
+        var rowData = new RowData();
+        var cells = new List<CellData>();
+        foreach (var header in headers)
+        {
+            var headerEnum = header!.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            switch (headerEnum)
+            {
+                case HeaderEnum.DATE:
+                    cells.Add(new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.DATE) });
+                    break;
+                case HeaderEnum.PICKUP:
+                    cells.Add(new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.TIME) });
+                    break;
+                case HeaderEnum.DROPOFF:
+                    cells.Add(new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.TIME) });
+                    break;
+                case HeaderEnum.DURATION:
+                    cells.Add(new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.DURATION) });
+                    break;
+                case HeaderEnum.PAY:
+                    cells.Add(new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.ACCOUNTING) });
+                    break;
+                case HeaderEnum.TIPS:
+                    cells.Add(new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.ACCOUNTING) });
+                    break;
+                case HeaderEnum.BONUS:
+                    cells.Add(new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.ACCOUNTING) });
+                    break;
+                case HeaderEnum.CASH:
+                    cells.Add(new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.ACCOUNTING) });
+                    break;
+                default:
+                    cells.Add(new CellData());
+                    break;
+            }
+        }
+        rowData.Values = cells;
+
+        return rowData;
     }
 
     public static SheetModel GetSheet()
