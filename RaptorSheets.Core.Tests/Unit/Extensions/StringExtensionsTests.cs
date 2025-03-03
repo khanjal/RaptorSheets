@@ -42,6 +42,7 @@ namespace RaptorSheets.Tests.Extensions
         [InlineData("12:00:00 am", 0.0)]
         [InlineData("00:00:00", 0.0)]
         [InlineData("01:00:00 am", 0.041666666666666664)]
+        [InlineData("06:00:00", 0.25)]
         [InlineData("12:00:00 pm", 0.5)]
         [InlineData("18:00:00", 0.75)]
         [InlineData("24:00:00", null)]
