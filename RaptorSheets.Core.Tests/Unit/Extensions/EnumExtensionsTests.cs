@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using RaptorSheets.Core.Extensions;
+﻿using RaptorSheets.Core.Extensions;
 using System.ComponentModel;
 using Xunit;
 
@@ -12,7 +11,7 @@ public class EnumExtensionsTests
     {
         string result = TestEnum.TESTING.GetDescription();
 
-        result.Should().Be("Testing");
+        Assert.Equal("Testing", result);
     }
 
     [Fact]
@@ -20,7 +19,7 @@ public class EnumExtensionsTests
     {
         string result = TestEnum.NO_DESCRIPTION_TEST.GetDescription();
 
-        result.Should().Be("NO_DESCRIPTION_TEST");
+        Assert.Equal("NO_DESCRIPTION_TEST", result);
     }
 
     [Theory]
@@ -32,7 +31,7 @@ public class EnumExtensionsTests
     {
         var result = text.GetValueFromName<TestEnum>();
 
-        result.Should().Be(enumValue);
+        Assert.Equal(enumValue, result);
     }
 
     [Fact]
@@ -40,7 +39,7 @@ public class EnumExtensionsTests
     {
         var result = "".GetValueFromName<TestEnum>();
 
-        result.Should().Be(TestEnum.TESTING);
+        Assert.Equal(TestEnum.TESTING, result);
     }
 }
 

@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using RaptorSheets.Core.Extensions;
+﻿using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Enums;
 using RaptorSheets.Stock.Mappers;
@@ -28,54 +27,54 @@ public class TickerMapFromRangeDataTests
     public void GivenAccountSheetData_ThenReturnRangeData()
     {
         var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
-        _entities.Should().HaveCount(nonEmptyValues.Count - 1);
+        Assert.Equal(nonEmptyValues.Count - 1, _entities?.Count);
 
         foreach (var entity in _entities!)
         {
-            entity.RowId.Should().NotBe(0);
-            entity.Ticker.Should().NotBeNullOrEmpty();
-            entity.Name.Should().NotBeNullOrEmpty();
-            entity.Shares.Should().BeGreaterThanOrEqualTo(0);
-            entity.AverageCost.Should().BeGreaterThanOrEqualTo(0);
-            entity.CostTotal.Should().BeGreaterThanOrEqualTo(0);
-            entity.CurrentPrice.Should().BeGreaterThanOrEqualTo(0);
-            entity.CurrentTotal.Should().BeGreaterThanOrEqualTo(0);
-            entity.WeekHigh52.Should().BeGreaterThanOrEqualTo(0);
-            entity.WeekLow52.Should().BeGreaterThanOrEqualTo(0);
-            entity.MaxHigh.Should().BeGreaterThanOrEqualTo(0);
-            entity.MinLow.Should().BeGreaterThanOrEqualTo(0);
+            Assert.NotEqual(0, entity.RowId);
+            Assert.False(string.IsNullOrEmpty(entity.Ticker));
+            Assert.False(string.IsNullOrEmpty(entity.Name));
+            Assert.True(entity.Shares >= 0);
+            Assert.True(entity.AverageCost >= 0);
+            Assert.True(entity.CostTotal >= 0);
+            Assert.True(entity.CurrentPrice >= 0);
+            Assert.True(entity.CurrentTotal >= 0);
+            Assert.True(entity.WeekHigh52 >= 0);
+            Assert.True(entity.WeekLow52 >= 0);
+            Assert.True(entity.MaxHigh >= 0);
+            Assert.True(entity.MinLow >= 0);
         }
     }
 
     [FactCheckUserSecrets]
     public void GivenAccountSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
     {
-        var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
+        var sheetOrder = new int[] { 0 }.Concat(RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 
         var randomEntities = TickerMapper.MapFromRangeData(randomValues);
         var nonEmptyRandomValues = randomValues!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
-        randomEntities.Should().HaveCount(nonEmptyRandomValues.Count - 1);
+        Assert.Equal(nonEmptyRandomValues.Count - 1, randomEntities.Count);
 
         for (int i = 0; i < randomEntities.Count; i++)
         {
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.RowId.Should().Be(randomEntity.RowId);
-            entity.Ticker.Should().BeEquivalentTo(randomEntity.Ticker);
-            entity.Name.Should().BeEquivalentTo(randomEntity.Name);
-            entity.Shares.Should().Be(randomEntity.Shares);
-            entity.AverageCost.Should().Be(randomEntity.AverageCost);
-            entity.CostTotal.Should().Be(randomEntity.CostTotal);
-            entity.CurrentPrice.Should().Be(randomEntity.CurrentPrice);
-            entity.CurrentTotal.Should().Be(randomEntity.CurrentTotal);
-            entity.Return.Should().Be(randomEntity.Return);
-            entity.PeRatio.Should().Be(randomEntity.PeRatio);
-            entity.WeekHigh52.Should().Be(randomEntity.WeekHigh52);
-            entity.WeekLow52.Should().Be(randomEntity.WeekLow52);
-            entity.MaxHigh.Should().Be(randomEntity.MaxHigh);
-            entity.MinLow.Should().Be(randomEntity.MinLow);
+            Assert.Equal(entity.RowId, randomEntity.RowId);
+            Assert.Equal(entity.Ticker, randomEntity.Ticker);
+            Assert.Equal(entity.Name, randomEntity.Name);
+            Assert.Equal(entity.Shares, randomEntity.Shares);
+            Assert.Equal(entity.AverageCost, randomEntity.AverageCost);
+            Assert.Equal(entity.CostTotal, randomEntity.CostTotal);
+            Assert.Equal(entity.CurrentPrice, randomEntity.CurrentPrice);
+            Assert.Equal(entity.CurrentTotal, randomEntity.CurrentTotal);
+            Assert.Equal(entity.Return, randomEntity.Return);
+            Assert.Equal(entity.PeRatio, randomEntity.PeRatio);
+            Assert.Equal(entity.WeekHigh52, randomEntity.WeekHigh52);
+            Assert.Equal(entity.WeekLow52, randomEntity.WeekLow52);
+            Assert.Equal(entity.MaxHigh, randomEntity.MaxHigh);
+            Assert.Equal(entity.MinLow, randomEntity.MinLow);
         }
     }
 }

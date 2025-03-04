@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
@@ -52,9 +51,9 @@ public class SheetHelpersTests
     public void GetColor_ShouldReturnCorrectColor()
     {
         // Act & Assert
-        SheetHelpers.GetColor(ColorEnum.BLACK).Should().BeEquivalentTo(Colors.Black);
-        SheetHelpers.GetColor(ColorEnum.BLUE).Should().BeEquivalentTo(Colors.Blue);
-        SheetHelpers.GetColor(ColorEnum.CYAN).Should().BeEquivalentTo(Colors.Cyan);
+        Assert.Equivalent(Colors.Black, SheetHelpers.GetColor(ColorEnum.BLACK));
+        Assert.Equivalent(Colors.Blue, SheetHelpers.GetColor(ColorEnum.BLUE));
+        Assert.Equivalent(Colors.Cyan, SheetHelpers.GetColor(ColorEnum.CYAN));
         // Add more assertions for other colors as needed
     }
 

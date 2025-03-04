@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using Moq;
+﻿using Moq;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Core.Enums;
@@ -35,32 +34,32 @@ public class GoogleSheetManagerTests
     public async Task GivenGetSheet_ThenReturnSheetEntity()
     {
         var result = await _googleSheetManager!.GetSheet(_sheetEnum.GetDescription());
-        result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(1);
-        result!.Messages[0].Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
-        result!.Messages[0].Type.Should().Be(MessageTypeEnum.GET_SHEETS.GetDescription());
+        Assert.NotNull(result);
+        Assert.Single(result.Messages);
+        Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages[0].Level);
+        Assert.Equal(MessageTypeEnum.GET_SHEETS.GetDescription(), result!.Messages[0].Type);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenGetSheets_ThenReturnSheetEntity()
     {
         var result = await _googleSheetManager!.GetSheets();
-        result.Should().NotBeNull();
-        result.Messages.Should().NotBeNull();
+        Assert.NotNull(result);
+        Assert.NotNull(result.Messages);
         var messages = result.Messages.Select(x => x.Level == MessageLevelEnum.ERROR.GetDescription());
 
-        messages.Should().NotContain(true);
+        Assert.DoesNotContain(true, messages);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenGetSheetsList_ThenReturnSheetEntity()
     {
         var result = await _googleSheetManager!.GetSheets(new List<SheetEnum> { _sheetEnum });
-        result.Should().NotBeNull();
-        result!.Messages.Should().HaveCount(1);
-        result!.Messages[0].Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
-        result!.Messages[0].Message.Should().Contain(_sheetEnum.ToString());
-        result!.Messages[0].Time.Should().BeGreaterThanOrEqualTo(_currentTime);
+        Assert.NotNull(result);
+        Assert.Single(result!.Messages);
+        Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages[0].Level);
+        Assert.Contains(_sheetEnum.ToString(), result!.Messages[0].Message);
+        Assert.True(result!.Messages[0].Time >= _currentTime);
     }
 
     [FactCheckUserSecrets]
@@ -68,28 +67,28 @@ public class GoogleSheetManagerTests
     {
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
         var result = await googleSheetManager.GetSheets();
-        result.Should().NotBeNull();
-        result!.Messages.Should().HaveCount(2);
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.Messages.Count);
 
-        result!.Messages.ForEach(x => x.Level.Should().Be(MessageLevelEnum.ERROR.GetDescription()));
+        result!.Messages.ForEach(x => Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), x.Level));
     }
 
     [FactCheckUserSecrets]
     public async Task GivenGetSheet_WithInvalidSpreadsheetIdAndSheet_ReturnSheetErrorMessage()
     {
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
-        var result = await googleSheetManager.GetSheets([_sheetEnum]);
-        result.Should().NotBeNull();
-        result!.Messages.Should().HaveCount(1);
-        result!.Messages[0].Level.Should().Be(MessageLevelEnum.ERROR.GetDescription());
-        result!.Messages[0].Time.Should().BeGreaterThanOrEqualTo(_currentTime);
+        var result = await googleSheetManager.GetSheets(new List<SheetEnum> { _sheetEnum });
+        Assert.NotNull(result);
+        Assert.Single(result!.Messages);
+        Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result!.Messages[0].Level);
+        Assert.True(result!.Messages[0].Time >= _currentTime);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenGetSpreadsheetName_WithValidSpreadsheetId_ReturnTitle()
     {
         var result = await _googleSheetManager!.GetSpreadsheetName();
-        result.Should().NotBeNullOrWhiteSpace();
+        Assert.False(string.IsNullOrWhiteSpace(result));
     }
 
     [FactCheckUserSecrets]
@@ -97,7 +96,7 @@ public class GoogleSheetManagerTests
     {
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
         var result = await googleSheetManager.GetSpreadsheetName();
-        result.Should().BeNull();
+        Assert.Null(result);
     }
 
     [Fact]
@@ -105,21 +104,21 @@ public class GoogleSheetManagerTests
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
         googleSheetManager.Setup(x => x.ChangeSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>())).ReturnsAsync(new SheetEntity());
-        var result = await googleSheetManager.Object.ChangeSheetData([new SheetEnum()], new SheetEntity());
-        result.Should().NotBeNull();
+        var result = await googleSheetManager.Object.ChangeSheetData(new List<SheetEnum>(), new SheetEntity());
+        Assert.NotNull(result);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenAddSheetData_WithData_ThenReturnData()
     {
-        var result = await _googleSheetManager!.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], GenerateShift(ActionTypeEnum.APPEND));
-        result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(2);
+        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, GenerateShift(ActionTypeEnum.APPEND));
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Messages.Count);
 
         foreach (var message in result.Messages)
         {
-            message.Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
-            message.Type.Should().Be(MessageTypeEnum.SAVE_DATA.GetDescription());
+            Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
+            Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), message.Type);
         }
     }
 
@@ -128,26 +127,26 @@ public class GoogleSheetManagerTests
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
         googleSheetManager.Setup(x => x.ChangeSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>())).ReturnsAsync(new SheetEntity());
-        var result = await googleSheetManager.Object.ChangeSheetData([new SheetEnum()], new SheetEntity());
-        result.Should().NotBeNull();
+        var result = await googleSheetManager.Object.ChangeSheetData(new List<SheetEnum>(), new SheetEntity());
+        Assert.NotNull(result);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenAppendSheetData_WithData_ThenReturnData()
     {
-        var sheetInfo = await _googleSheetManager!.GetSheetProperties([SheetEnum.TRIPS.GetDescription(), SheetEnum.SHIFTS.GetDescription()]);
+        var sheetInfo = await _googleSheetManager!.GetSheetProperties(new List<string> { SheetEnum.TRIPS.GetDescription(), SheetEnum.SHIFTS.GetDescription() });
         var maxShiftId = int.Parse(sheetInfo.FirstOrDefault(x => x.Name == SheetEnum.SHIFTS.GetDescription())!.Attributes!.FirstOrDefault(x => x.Key == PropertyEnum.MAX_ROW_VALUE.GetDescription()).Value);
         var maxTripId = int.Parse(sheetInfo.FirstOrDefault(x => x.Name == SheetEnum.TRIPS.GetDescription())!.Attributes!.FirstOrDefault(x => x.Key == PropertyEnum.MAX_ROW_VALUE.GetDescription()).Value);
         var sheetEntity = GenerateShift(ActionTypeEnum.APPEND, maxShiftId + 1, maxTripId + 1);
 
-        var result = await _googleSheetManager!.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], sheetEntity);
-        result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(2);
+        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, sheetEntity);
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Messages.Count);
 
         foreach (var message in result.Messages)
         {
-            message.Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
-            message.Type.Should().Be(MessageTypeEnum.SAVE_DATA.GetDescription());
+            Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
+            Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), message.Type);
         }
     }
 
@@ -155,28 +154,28 @@ public class GoogleSheetManagerTests
     public async Task GivenDeleteSheetData_WithData_ThenReturnData()
     {
         var data = GenerateShift(ActionTypeEnum.DELETE);
-        var result = await _googleSheetManager!.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], data);
-        result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(2);
+        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, data);
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Messages.Count);
 
         foreach (var message in result.Messages)
         {
-            message.Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
-            message.Type.Should().Be(MessageTypeEnum.SAVE_DATA.GetDescription());
+            Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
+            Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), message.Type);
         }
     }
 
     [FactCheckUserSecrets]
     public async Task GivenUpdateSheetData_WithData_ThenReturnData()
     {
-        var result = await _googleSheetManager!.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], GenerateShift(ActionTypeEnum.UPDATE));
-        result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(2);
+        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, GenerateShift(ActionTypeEnum.UPDATE));
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Messages.Count);
 
         foreach (var message in result.Messages)
         {
-            message.Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
-            message.Type.Should().Be(MessageTypeEnum.SAVE_DATA.GetDescription());
+            Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
+            Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), message.Type);
         }
     }
 
@@ -185,36 +184,36 @@ public class GoogleSheetManagerTests
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
         googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<SheetEnum>>())).ReturnsAsync(new SheetEntity());
-        var result = await googleSheetManager.Object.CreateSheets([new SheetEnum()]);
-        result.Should().NotBeNull();
+        var result = await googleSheetManager.Object.CreateSheets(new List<SheetEnum>());
+        Assert.NotNull(result);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnData()
     {
         var result = await _googleSheetManager!.CreateSheets(new List<SheetEnum> { _sheetEnum });
-        result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(1);
-        result.Messages[0].Level.Should().Be(MessageLevelEnum.ERROR.GetDescription());
+        Assert.NotNull(result);
+        Assert.Single(result.Messages);
+        Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result.Messages[0].Level);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenCheckSheets_WithNoHeaderCheck_ThenReturnData()
     {
         var result = await _googleSheetManager!.CheckSheets();
-        result.Should().NotBeNull();
-        result.Count.Should().Be(1);
+        Assert.NotNull(result);
+        Assert.Single(result);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenCheckSheets_WithHeaderCheck_ThenReturnData()
     {
         var result = await _googleSheetManager!.CheckSheets(true);
-        result.Should().NotBeNull();
-        result.Count.Should().Be(2);
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GetSheetProperties_ShouldReturnProperties_WhenSheetsExist()
     {
         // Arrange
@@ -234,7 +233,7 @@ public class GoogleSheetManagerTests
         Assert.NotEmpty(result[1].Attributes[PropertyEnum.HEADERS.GetDescription()]); // Look into generating headers from sheet object
     }
 
-    [Fact]
+    [FactCheckUserSecrets]
     public async Task GetSheetProperties_ShouldReturnEmptyList_WhenNoSheetsExist()
     {
         // Arrange
@@ -297,3 +296,4 @@ public class GoogleSheetManagerTests
         return new TripEntity { Type = "Pickup", Place = place, Pay = pay, Tip = tip, Distance = distance, Name = name, StartAddress = startAddress, EndAddress = endAddress };
     }
 }
+

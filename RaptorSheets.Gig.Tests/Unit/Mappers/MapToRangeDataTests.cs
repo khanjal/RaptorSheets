@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using RaptorSheets.Core.Extensions;
+﻿using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Tests.Data.Helpers;
 using RaptorSheets.Gig.Entities;
@@ -7,6 +6,7 @@ using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Gig.Tests.Data.Helpers;
 using System.ComponentModel;
+using Xunit;
 
 namespace RaptorSheets.Gig.Tests.Unit.Mappers;
 
@@ -28,7 +28,7 @@ public class MapToRangeDataTests
         var headers = HeaderHelpers.ParserHeader(shiftHeaders);
 
         Assert.NotNull(shifts);
-        shifts.Count.Should().Be(3);
+        Assert.Equal(3, shifts.Count);
 
         for (int i = 0; i < shifts.Count; i++)
         {
@@ -37,32 +37,32 @@ public class MapToRangeDataTests
             var shiftData = _sheetData.Shifts[i];
 
 #pragma warning disable CS8602 // Rethrow to preserve stack details
-            shiftData.Date.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.DATE.GetDescription())].ToString());
-            shiftData.Start.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_START.GetDescription())].ToString());
-            shiftData.Finish.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_END.GetDescription())].ToString());
-            shiftData.Service.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.SERVICE.GetDescription())].ToString());
-            shiftData.Active.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_ACTIVE.GetDescription())].ToString());
-            shiftData.Time.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_TOTAL.GetDescription())].ToString());
-            shiftData.Region.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.REGION.GetDescription())].ToString());
-            shiftData.Note.Should().BeEquivalentTo(shift[shiftHeaders.IndexOf(HeaderEnum.NOTE.GetDescription())].ToString());
+            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.DATE.GetDescription())].ToString(), shiftData.Date);
+            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_START.GetDescription())].ToString(), shiftData.Start);
+            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_END.GetDescription())].ToString(), shiftData.Finish);
+            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.SERVICE.GetDescription())].ToString(), shiftData.Service);
+            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_ACTIVE.GetDescription())].ToString(), shiftData.Active);
+            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_TOTAL.GetDescription())].ToString(), shiftData.Time);
+            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.REGION.GetDescription())].ToString(), shiftData.Region);
+            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.NOTE.GetDescription())].ToString(), shiftData.Note);
 #pragma warning restore CS8602 // Rethrow to preserve stack details
 
             if (shiftData.Number == null)
-                HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), shift!, headers).Should().Be(0);
+                Assert.Equal(0, HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), shift!, headers));
             else
-                shiftData.Number.Should().Be(HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), shift!, headers));
+                Assert.Equal(HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), shift!, headers), shiftData.Number);
 
             if (shiftData.Omit == null)
-                HeaderHelpers.GetBoolValue(HeaderEnum.TIME_OMIT.GetDescription(), shift!, headers).Should().Be(false);
+                Assert.False(HeaderHelpers.GetBoolValue(HeaderEnum.TIME_OMIT.GetDescription(), shift!, headers));
             else
-                shiftData.Omit.Should().Be(HeaderHelpers.GetBoolValue(HeaderEnum.TIME_OMIT.GetDescription(), shift!, headers));
+                Assert.Equal(HeaderHelpers.GetBoolValue(HeaderEnum.TIME_OMIT.GetDescription(), shift!, headers), shiftData.Omit);
 
             // TODO: Future support of shift only would use this.
-            //shiftData.Pay.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.PAY.DisplayName(), shift, headers));
-            //shiftData.Tip.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), shift, headers));
-            //shiftData.Bonus.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), shift, headers));
-            //shiftData.Total.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.TOTAL.DisplayName(), shift, headers));
-            //shiftData.Cash.Should().Be(HeaderParser.GetDecimalValue(HeaderEnum.CASH.DisplayName(), shift, headers));
+            // Assert.Equal(HeaderParser.GetDecimalValue(HeaderEnum.PAY.DisplayName(), shift, headers), shiftData.Pay);
+            // Assert.Equal(HeaderParser.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), shift, headers), shiftData.Tip);
+            // Assert.Equal(HeaderParser.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), shift, headers), shiftData.Bonus);
+            // Assert.Equal(HeaderParser.GetDecimalValue(HeaderEnum.TOTAL.DisplayName(), shift, headers), shiftData.Total);
+            // Assert.Equal(HeaderParser.GetDecimalValue(HeaderEnum.CASH.DisplayName(), shift, headers), shiftData.Cash);
         }
     }
 
@@ -74,7 +74,7 @@ public class MapToRangeDataTests
         var headers = HeaderHelpers.ParserHeader(tripHeaders);
 
         Assert.NotNull(trips);
-        trips.Count.Should().Be(4);
+        Assert.Equal(4, trips.Count);
 
         for (int i = 0; i < trips.Count; i++)
         {
@@ -83,67 +83,67 @@ public class MapToRangeDataTests
             var tripData = _sheetData.Trips[i];
 
 #pragma warning disable CS8602 // Rethrow to preserve stack details
-            tripData.Date.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.DATE.GetDescription())].ToString());
-            tripData.Service.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.SERVICE.GetDescription())].ToString());
-            tripData.Place.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.PLACE.GetDescription())].ToString());
-            tripData.Pickup.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.PICKUP.GetDescription())].ToString());
-            tripData.Dropoff.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.DROPOFF.GetDescription())].ToString());
-            tripData.Duration.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.DURATION.GetDescription())].ToString());
-            tripData.Name.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.NAME.GetDescription())].ToString());
-            tripData.StartAddress.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.ADDRESS_START.GetDescription())].ToString());
-            tripData.EndAddress.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.ADDRESS_END.GetDescription())].ToString());
-            tripData.EndUnit.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.UNIT_END.GetDescription())].ToString());
-            tripData.OrderNumber.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.ORDER_NUMBER.GetDescription())].ToString());
-            tripData.Note.Should().BeEquivalentTo(trip[tripHeaders.IndexOf(HeaderEnum.NOTE.GetDescription())].ToString());
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.DATE.GetDescription())].ToString(), tripData.Date);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.SERVICE.GetDescription())].ToString(), tripData.Service);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.PLACE.GetDescription())].ToString(), tripData.Place);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.PICKUP.GetDescription())].ToString(), tripData.Pickup);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.DROPOFF.GetDescription())].ToString(), tripData.Dropoff);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.DURATION.GetDescription())].ToString(), tripData.Duration);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.NAME.GetDescription())].ToString(), tripData.Name);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.ADDRESS_START.GetDescription())].ToString(), tripData.StartAddress);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.ADDRESS_END.GetDescription())].ToString(), tripData.EndAddress);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.UNIT_END.GetDescription())].ToString(), tripData.EndUnit);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.ORDER_NUMBER.GetDescription())].ToString(), tripData.OrderNumber);
+            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.NOTE.GetDescription())].ToString(), tripData.Note);
 #pragma warning restore CS8602 // Rethrow to preserve stack details
 
             // Number
             if (tripData.Number == null)
-                HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), trip!, headers).Should().Be(0);
+                Assert.Equal(0, HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), trip!, headers));
             else
-                tripData.Number.Should().Be(HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), trip!, headers));
+                Assert.Equal(HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), trip!, headers), tripData.Number);
 
             // Odometer Start
             if (tripData.OdometerStart == null)
-                HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), trip!, headers).Should().Be(0);
+                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), trip!, headers));
             else
-                tripData.OdometerStart.Should().Be(HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), trip!, headers));
+                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), trip!, headers), tripData.OdometerStart);
 
-            // Odoemeter End
+            // Odometer End
             if (tripData.OdometerEnd == null)
-                HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_END.GetDescription(), trip!, headers).Should().Be(0);
+                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_END.GetDescription(), trip!, headers));
             else
-                tripData.OdometerEnd.Should().Be(HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), trip!, headers));
+                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_END.GetDescription(), trip!, headers), tripData.OdometerEnd);
 
             // Distance
             if (tripData.Distance == null)
-                HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), trip!, headers).Should().Be(0);
+                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), trip!, headers));
             else
-                tripData.Distance.Should().Be(HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), trip!, headers));
+                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), trip!, headers), tripData.Distance);
 
             // Pay
             if (tripData.Pay == null)
-                HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), trip!, headers).Should().Be(0);
+                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), trip!, headers));
             else
-                tripData.Pay.Should().Be(HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), trip!, headers));
+                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), trip!, headers), tripData.Pay);
 
             // Tip
             if (tripData.Tip == null)
-                HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), trip!, headers).Should().Be(0);
+                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), trip!, headers));
             else
-                tripData.Tip.Should().Be(HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), trip!, headers));
+                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), trip!, headers), tripData.Tip);
 
             // Bonus
             if (tripData.Bonus == null)
-                HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), trip!, headers).Should().Be(0);
+                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), trip!, headers));
             else
-                tripData.Bonus.Should().Be(HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), trip!, headers));
+                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), trip!, headers), tripData.Bonus);
 
             // Cash
             if (tripData.Cash == null)
-                HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), trip!, headers).Should().Be(0);
+                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), trip!, headers));
             else
-                tripData.Cash.Should().Be(HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), trip!, headers));
+                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), trip!, headers), tripData.Cash);
         }
     }
 }

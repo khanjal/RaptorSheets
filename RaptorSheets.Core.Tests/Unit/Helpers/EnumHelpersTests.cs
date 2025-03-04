@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using RaptorSheets.Core.Extensions;
+﻿using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Tests.Data;
 using Xunit;
@@ -13,11 +12,11 @@ public class EnumHelpersTests
     {
         var result = EnumHelpers.GetListOfDescription<HeaderEnum>();
 
-        result.Should().NotBeNull();
-        result.Should().HaveCount(3);
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count);
 
-        result![0].Should().BeEquivalentTo(HeaderEnum.FIRST_COLUMN.GetDescription());
-        result![1].Should().BeEquivalentTo(HeaderEnum.SECOND_COLUMN.GetDescription());
-        result![2].Should().BeEquivalentTo(HeaderEnum.THIRD_COLUMN.GetDescription());
+        Assert.Equal(HeaderEnum.FIRST_COLUMN.GetDescription(), result[0]);
+        Assert.Equal(HeaderEnum.SECOND_COLUMN.GetDescription(), result[1]);
+        Assert.Equal(HeaderEnum.THIRD_COLUMN.GetDescription(), result[2]);
     }
 }
