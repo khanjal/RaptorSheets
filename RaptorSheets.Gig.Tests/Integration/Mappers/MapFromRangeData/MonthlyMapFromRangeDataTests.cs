@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using RaptorSheets.Core.Extensions;
+﻿using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
@@ -7,7 +6,7 @@ using RaptorSheets.Gig.Tests.Data;
 using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
 
-namespace RaptorSheets.Gig.Tests.Unit.Mappers.MapFromRangeData;
+namespace RaptorSheets.Gig.Tests.Integration.Mappers.MapFromRangeData;
 
 [Collection("Google Data collection")]
 public class MonthlyMapFromRangeDataTests
@@ -27,64 +26,64 @@ public class MonthlyMapFromRangeDataTests
     public void GivenWeekdaySheetData_ThenReturnRangeData()
     {
         var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
-        _entities.Should().HaveCount(nonEmptyValues.Count - 1);
+        Assert.Equal(nonEmptyValues.Count - 1, _entities?.Count);
 
         foreach (var entity in _entities!)
         {
-            entity.RowId.Should().NotBe(0);
-            entity.Month.Should().NotBeNullOrEmpty();
-            entity.Trips.Should().BeGreaterThanOrEqualTo(0);
-            entity.Days.Should().BeGreaterThanOrEqualTo(0);
-            entity.Pay.Should().NotBeNull();
-            entity.Tip.Should().NotBeNull();
-            entity.Bonus.Should().NotBeNull();
-            entity.Total.Should().NotBeNull();
-            entity.Cash.Should().NotBeNull();
-            entity.Distance.Should().BeGreaterThanOrEqualTo(0);
-            entity.Time.Should().NotBeNull();
-            entity.AmountPerTrip.Should().BeGreaterThanOrEqualTo(0);
-            entity.AmountPerDistance.Should().BeGreaterThanOrEqualTo(0);
-            entity.AmountPerTime.Should().BeGreaterThanOrEqualTo(0);
-            entity.AmountPerDay.Should().BeGreaterThanOrEqualTo(0);
-            entity.Average.Should().BeGreaterThanOrEqualTo(0);
-            entity.Number.Should().BeGreaterThanOrEqualTo(0);
-            entity.Year.Should().BeGreaterThanOrEqualTo(0);
+            Assert.NotEqual(0, entity.RowId);
+            Assert.False(string.IsNullOrEmpty(entity.Month));
+            Assert.True(entity.Trips >= 0);
+            Assert.True(entity.Days >= 0);
+            Assert.NotNull(entity.Pay);
+            Assert.NotNull(entity.Tip);
+            Assert.NotNull(entity.Bonus);
+            Assert.NotNull(entity.Total);
+            Assert.NotNull(entity.Cash);
+            Assert.True(entity.Distance >= 0);
+            Assert.NotNull(entity.Time);
+            Assert.True(entity.AmountPerTrip >= 0);
+            Assert.True(entity.AmountPerDistance >= 0);
+            Assert.True(entity.AmountPerTime >= 0);
+            Assert.True(entity.AmountPerDay >= 0);
+            Assert.True(entity.Average >= 0);
+            Assert.True(entity.Number >= 0);
+            Assert.True(entity.Year >= 0);
         }
     }
 
     [FactCheckUserSecrets]
     public void GivenWeekdaySheetDataColumnOrderRandomized_ThenReturnSameRangeData()
     {
-        var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
+        var sheetOrder = new int[] { 0 }.Concat(RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 
         var randomEntities = MonthlyMapper.MapFromRangeData(randomValues);
         var nonEmptyRandomValues = randomValues!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
-        randomEntities.Should().HaveCount(nonEmptyRandomValues.Count - 1);
+        Assert.Equal(nonEmptyRandomValues.Count - 1, randomEntities.Count);
 
         for (int i = 0; i < randomEntities.Count; i++)
         {
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.RowId.Should().Be(randomEntity.RowId);
-            entity.Month.Should().Be(randomEntity.Month);
-            entity.Trips.Should().Be(randomEntity.Trips);
-            entity.Days.Should().Be(randomEntity.Days);
-            entity.Pay.Should().Be(randomEntity.Pay);
-            entity.Tip.Should().Be(randomEntity.Tip);
-            entity.Bonus.Should().Be(randomEntity.Bonus);
-            entity.Total.Should().Be(randomEntity.Total);
-            entity.Cash.Should().Be(randomEntity.Cash);
-            entity.Distance.Should().Be(randomEntity.Distance);
-            entity.Time.Should().BeEquivalentTo(randomEntity.Time);
-            entity.AmountPerTrip.Should().Be(randomEntity.AmountPerTrip);
-            entity.AmountPerDistance.Should().Be(randomEntity.AmountPerDistance);
-            entity.AmountPerTime.Should().Be(randomEntity.AmountPerTime);
-            entity.AmountPerDay.Should().Be(randomEntity.AmountPerDay);
-            entity.Average.Should().Be(randomEntity.Average);
-            entity.Number.Should().Be(randomEntity.Number);
-            entity.Year.Should().Be(randomEntity.Year);
+            Assert.Equal(entity.RowId, randomEntity.RowId);
+            Assert.Equal(entity.Month, randomEntity.Month);
+            Assert.Equal(entity.Trips, randomEntity.Trips);
+            Assert.Equal(entity.Days, randomEntity.Days);
+            Assert.Equal(entity.Pay, randomEntity.Pay);
+            Assert.Equal(entity.Tip, randomEntity.Tip);
+            Assert.Equal(entity.Bonus, randomEntity.Bonus);
+            Assert.Equal(entity.Total, randomEntity.Total);
+            Assert.Equal(entity.Cash, randomEntity.Cash);
+            Assert.Equal(entity.Distance, randomEntity.Distance);
+            Assert.Equal(entity.Time, randomEntity.Time);
+            Assert.Equal(entity.AmountPerTrip, randomEntity.AmountPerTrip);
+            Assert.Equal(entity.AmountPerDistance, randomEntity.AmountPerDistance);
+            Assert.Equal(entity.AmountPerTime, randomEntity.AmountPerTime);
+            Assert.Equal(entity.AmountPerDay, randomEntity.AmountPerDay);
+            Assert.Equal(entity.Average, randomEntity.Average);
+            Assert.Equal(entity.Number, randomEntity.Number);
+            Assert.Equal(entity.Year, randomEntity.Year);
         }
     }
 }

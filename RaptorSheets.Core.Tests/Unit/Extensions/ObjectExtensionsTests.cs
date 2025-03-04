@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using RaptorSheets.Core.Extensions;
+﻿using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Tests.Data;
 using Xunit;
@@ -15,7 +14,7 @@ public class ObjectExtensionsTests
     [InlineData(HeaderEnum.SECOND_COLUMN, "B")]
     public void GivenHeaders_ShouldGetColumn(HeaderEnum header, string column)
     {
-        modelData.GetColumn(header.GetDescription()).Should().Be(column);
+        Assert.Equal(column, modelData.GetColumn(header.GetDescription()));
     }
 
     [Theory]
@@ -23,7 +22,7 @@ public class ObjectExtensionsTests
     [InlineData(HeaderEnum.SECOND_COLUMN, "1")]
     public void GivenHeaders_ShouldGetIndex(HeaderEnum header, string index)
     {
-        modelData.GetIndex(header.GetDescription()).Should().Be(index);
+        Assert.Equal(index, modelData.GetIndex(header.GetDescription()));
     }
 
     [Theory]
@@ -31,7 +30,7 @@ public class ObjectExtensionsTests
     [InlineData(HeaderEnum.SECOND_COLUMN, "B1:B")]
     public void GivenHeaders_ShouldGetRange(HeaderEnum header, string range)
     {
-        modelData.GetRange(header.GetDescription()).Should().Be($"{modelData.Name}!{range}");
+        Assert.Equal($"{modelData.Name}!{range}", modelData.GetRange(header.GetDescription()));
     }
 
     [Theory]
@@ -39,6 +38,6 @@ public class ObjectExtensionsTests
     [InlineData(HeaderEnum.SECOND_COLUMN, "B1:B")]
     public void GivenHeaders_ShouldGetLocalRange(HeaderEnum header, string range)
     {
-        modelData.GetLocalRange(header.GetDescription()).Should().Be(range);
+        Assert.Equal(range, modelData.GetLocalRange(header.GetDescription()));
     }
 }

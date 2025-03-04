@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using Moq;
+﻿using Moq;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Entities;
@@ -7,6 +6,7 @@ using RaptorSheets.Stock.Enums;
 using RaptorSheets.Stock.Managers;
 using RaptorSheets.Stock.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
+using Xunit;
 
 namespace RaptorSheets.Stock.Tests.Integration.Managers;
 
@@ -38,7 +38,7 @@ public class GoogleSheetManagerTests
             throw new InvalidOperationException("GoogleSheetManager is not initialized.");
 
         var result = await _googleSheetManager.GetSheets();
-        result.Should().NotBeNull();
+        Assert.NotNull(result);
     }
 
     [FactCheckUserSecrets]
@@ -47,12 +47,12 @@ public class GoogleSheetManagerTests
         if (_googleSheetManager == null)
             throw new InvalidOperationException("GoogleSheetManager is not initialized.");
 
-        var result = await _googleSheetManager.GetSheets([_sheetEnum]);
-        result.Should().NotBeNull();
-        result!.Messages.Should().HaveCount(1);
-        result!.Messages[0].Level.Should().Be(MessageLevelEnum.INFO.GetDescription());
-        result!.Messages[0].Message.Should().Contain(_sheetEnum.ToString());
-        result!.Messages[0].Time.Should().BeGreaterThanOrEqualTo(_currentTime);
+        var result = await _googleSheetManager.GetSheets(new List<SheetEnum> { _sheetEnum });
+        Assert.NotNull(result);
+        Assert.Equal(1, result!.Messages?.Count);
+        Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages?[0].Level);
+        Assert.Contains(_sheetEnum.ToString(), result!.Messages?[0].Message);
+        Assert.True(result!.Messages?[0].Time >= _currentTime);
     }
 
     [FactCheckUserSecrets]
@@ -60,21 +60,21 @@ public class GoogleSheetManagerTests
     {
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
         var result = await googleSheetManager.GetSheets();
-        result.Should().NotBeNull();
-        result!.Messages.Should().HaveCount(2);
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.Messages.Count);
 
-        result!.Messages.ForEach(x => x.Level.Should().Be(MessageLevelEnum.ERROR.GetDescription()));
+        result!.Messages.ForEach(x => Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), x.Level));
     }
 
     [FactCheckUserSecrets]
     public async Task GivenGetSheet_WithInvalidSpreadsheetIdAndSheet_ReturnSheetErrorMessage()
     {
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
-        var result = await googleSheetManager.GetSheets([_sheetEnum]);
-        result.Should().NotBeNull();
-        result!.Messages.Should().HaveCount(1);
-        result!.Messages[0].Level.Should().Be(MessageLevelEnum.ERROR.GetDescription());
-        result!.Messages[0].Time.Should().BeGreaterThanOrEqualTo(_currentTime);
+        var result = await googleSheetManager.GetSheets(new List<SheetEnum> { _sheetEnum });
+        Assert.NotNull(result);
+        Assert.Equal(1, result!.Messages?.Count);
+        Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result!.Messages?[0].Level);
+        Assert.True(result!.Messages?[0].Time >= _currentTime);
     }
 
     [FactCheckUserSecrets]
@@ -84,7 +84,7 @@ public class GoogleSheetManagerTests
             throw new InvalidOperationException("GoogleSheetManager is not initialized.");
 
         var result = await _googleSheetManager.GetSpreadsheetName();
-        result.Should().NotBeNullOrWhiteSpace();
+        Assert.False(string.IsNullOrWhiteSpace(result));
     }
 
     [FactCheckUserSecrets]
@@ -92,7 +92,7 @@ public class GoogleSheetManagerTests
     {
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
         var result = await googleSheetManager.GetSpreadsheetName();
-        result.Should().BeNull();
+        Assert.Null(result);
     }
 
     [FactCheckUserSecrets]
@@ -100,8 +100,8 @@ public class GoogleSheetManagerTests
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
         googleSheetManager.Setup(x => x.AddSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>())).ReturnsAsync(new SheetEntity());
-        var result = await googleSheetManager.Object.AddSheetData([new SheetEnum()], new SheetEntity());
-        result.Should().NotBeNull();
+        var result = await googleSheetManager.Object.AddSheetData(new List<SheetEnum>(), new SheetEntity());
+        Assert.NotNull(result);
     }
 
     //[Fact]
@@ -123,8 +123,8 @@ public class GoogleSheetManagerTests
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
         googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<SheetEnum>>())).ReturnsAsync(new SheetEntity());
-        var result = await googleSheetManager.Object.CreateSheets([new SheetEnum()]);
-        result.Should().NotBeNull();
+        var result = await googleSheetManager.Object.CreateSheets(new List<SheetEnum>());
+        Assert.NotNull(result);
     }
 
     [FactCheckUserSecrets]
@@ -133,10 +133,10 @@ public class GoogleSheetManagerTests
         if (_googleSheetManager == null)
             throw new InvalidOperationException("GoogleSheetManager is not initialized.");
 
-        var result = await _googleSheetManager.CreateSheets([_sheetEnum]);
-        result.Should().NotBeNull();
-        result.Messages.Count.Should().Be(1);
-        result.Messages[0].Level.Should().Be(MessageLevelEnum.ERROR.GetDescription());
+        var result = await _googleSheetManager.CreateSheets(new List<SheetEnum> { _sheetEnum });
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Messages?.Count);
+        Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result.Messages?[0].Level);
     }
 
     [FactCheckUserSecrets]
@@ -146,8 +146,8 @@ public class GoogleSheetManagerTests
             throw new InvalidOperationException("GoogleSheetManager is not initialized.");
 
         var result = await _googleSheetManager.CheckSheets();
-        result.Should().NotBeNull();
-        result.Count.Should().Be(1);
+        Assert.NotNull(result);
+        Assert.Equal(1, result?.Count);
     }
 
     [FactCheckUserSecrets]
@@ -157,8 +157,8 @@ public class GoogleSheetManagerTests
             throw new InvalidOperationException("GoogleSheetManager is not initialized.");
 
         var result = await _googleSheetManager.CheckSheets(true);
-        result.Should().NotBeNull();
-        result.Count.Should().Be(2);
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
     }
 
     //private static SheetEntity GenerateShift()

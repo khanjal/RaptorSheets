@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using Google.Apis.Sheets.v4.Data;
+﻿using Google.Apis.Sheets.v4.Data;
 using Moq;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Core.Services;
@@ -7,6 +6,7 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
+using Xunit;
 
 namespace RaptorSheets.Gig.Tests.Integration.Services;
 
@@ -30,13 +30,13 @@ public class GoogleSheetServiceTests
     public async Task GivenGetAllData_ThenReturnInfo()
     {
         var result = await _googleSheetService.GetBatchData(_sheets.Select(x => x.GetDescription()).ToList());
-        result.Should().NotBeNull();
-        result!.ValueRanges.Should().NotBeNull();
-        result!.ValueRanges.Should().HaveCount(Enum.GetNames(typeof(SheetEnum)).Length);
+        Assert.NotNull(result);
+        Assert.NotNull(result!.ValueRanges);
+        Assert.Equal(Enum.GetNames(typeof(SheetEnum)).Length, result!.ValueRanges.Count);
 
         var sheet = GigSheetHelpers.MapData(result!);
 
-        sheet.Should().NotBeNull();
+        Assert.NotNull(sheet);
 
         // TODO: Look into maybe spot checking each entity to ensure there is some data there.
     }
@@ -46,7 +46,7 @@ public class GoogleSheetServiceTests
     {
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
         var result = await googleSheetService.GetBatchData(_sheets.Select(x => x.GetDescription()).ToList());
-        result.Should().BeNull();
+        Assert.Null(result);
     }
 
     [FactCheckUserSecrets]
@@ -56,8 +56,8 @@ public class GoogleSheetServiceTests
         var randomEnum = random.NextEnum<SheetEnum>();
 
         var result = await _googleSheetService.GetSheetData(randomEnum.GetDescription());
-        result.Should().NotBeNull();
-        result!.Values.Should().NotBeNull();
+        Assert.NotNull(result);
+        Assert.NotNull(result!.Values);
 
         // TODO: Test some data
     }
@@ -67,27 +67,27 @@ public class GoogleSheetServiceTests
     {
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
         var result = await googleSheetService.GetSheetData(new SheetEnum().GetDescription());
-        result.Should().BeNull();
+        Assert.Null(result);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenGetSheetInfo_WithSheetId_ThenReturnInfo()
     {
         var result = await _googleSheetService.GetSheetInfo();
-        result.Should().NotBeNull();
-        result!.Properties.Should().NotBeNull();
+        Assert.NotNull(result);
+        Assert.NotNull(result!.Properties);
 
-        result!.Properties.Title.Should().NotBeNullOrEmpty();
+        Assert.False(string.IsNullOrEmpty(result!.Properties.Title));
     }
 
     [FactCheckUserSecrets]
     public async Task GivenGetSheetInfo_WithSheetId_ThenCheckSpreadsheet()
     {
         var result = await _googleSheetService.GetSheetInfo();
-        result.Should().NotBeNull();
+        Assert.NotNull(result);
 
         var sheets = GigSheetHelpers.GetMissingSheets(result!);
-        sheets.Should().BeEmpty();
+        Assert.Empty(sheets);
 
         // TODO: Make a test to remove a sheet and see if it finds the missing one.
     }
@@ -97,7 +97,7 @@ public class GoogleSheetServiceTests
     {
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
         var result = await googleSheetService.GetSheetInfo();
-        result.Should().BeNull();
+        Assert.Null(result);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public class GoogleSheetServiceTests
         var googleSheetService = new Mock<IGoogleSheetService>();
         googleSheetService.Setup(x => x.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>())).ReturnsAsync(new AppendValuesResponse());
         var result = await googleSheetService.Object.AppendData(new ValueRange(), string.Empty);
-        result.Should().NotBeNull();
+        Assert.NotNull(result);
     }
 
     [FactCheckUserSecrets]
@@ -114,7 +114,7 @@ public class GoogleSheetServiceTests
     {
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
         var result = await googleSheetService.AppendData(new ValueRange(), "");
-        result.Should().BeNull();
+        Assert.Null(result);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class GoogleSheetServiceTests
         var googleSheetService = new Mock<IGoogleSheetService>();
         googleSheetService.Setup(x => x.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>())).ReturnsAsync(new BatchUpdateSpreadsheetResponse());
         var result = await googleSheetService.Object.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest());
-        result.Should().NotBeNull();
+        Assert.NotNull(result);
     }
 
     [FactCheckUserSecrets]
@@ -131,6 +131,6 @@ public class GoogleSheetServiceTests
     {
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
         var result = await googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest());
-        result.Should().BeNull();
+        Assert.Null(result);
     }
 }

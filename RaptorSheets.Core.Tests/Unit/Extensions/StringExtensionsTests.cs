@@ -1,7 +1,7 @@
 using Xunit;
 using RaptorSheets.Core.Extensions;
 
-namespace RaptorSheets.Tests.Extensions
+namespace RaptorSheets.Core.Tests.Unit.Extensions
 {
     public class StringExtensionsTests
     {

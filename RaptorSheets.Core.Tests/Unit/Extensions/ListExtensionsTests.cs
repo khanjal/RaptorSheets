@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using RaptorSheets.Core.Extensions;
+﻿using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Tests.Data;
 using Xunit;
@@ -15,8 +14,8 @@ public class ListExtensionsTests
     {
         var result = TestSheetData.GetModelData();
 
-        result.Headers[index].Column.Should().Be(column);
-        result.Headers[index].Index.Should().Be(index);
+        Assert.Equal(column, result.Headers[index].Column);
+        Assert.Equal(index, result.Headers[index].Index);
     }
 
     [Fact]
@@ -70,3 +69,4 @@ public class ListExtensionsTests
         Assert.All(list, item => Assert.Equal(default, item));
     }
 }
+

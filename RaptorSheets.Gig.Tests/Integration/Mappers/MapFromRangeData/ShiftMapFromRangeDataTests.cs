@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using RaptorSheets.Core.Extensions;
+﻿using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
@@ -7,7 +6,7 @@ using RaptorSheets.Gig.Tests.Data;
 using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
 
-namespace RaptorSheets.Gig.Tests.Unit.Mappers.MapFromRangeData;
+namespace RaptorSheets.Gig.Tests.Integration.Mappers.MapFromRangeData;
 
 [Collection("Google Data collection")]
 public class ShiftMapFromRangeDataTests
@@ -27,85 +26,83 @@ public class ShiftMapFromRangeDataTests
     public void GivenShiftSheetData_ThenReturnRangeData()
     {
         var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
-        _entities.Should().HaveCount(nonEmptyValues.Count - 1);
+        Assert.Equal(nonEmptyValues.Count - 1, _entities?.Count);
 
         foreach (var entity in _entities!)
         {
-            entity.RowId.Should().NotBe(0);
-            entity.Date.Should().NotBeNullOrEmpty();
-            entity.Start.Should().NotBeNull();
-            entity.Finish.Should().NotBeNull();
-            entity.Service.Should().NotBeNullOrEmpty();
-            entity.Number.Should().BeGreaterThanOrEqualTo(0);
-            entity.Active.Should().NotBeNull();
-            entity.Time.Should().NotBeNull();
-            entity.Trips.Should().BeGreaterThanOrEqualTo(0);
-            // entity.Pay.Should().NotBeNull();
-            // entity.Tip.Should().NotBeNull();
-            // entity.Bonus.Should().NotBeNull();
-            // entity.Cash.Should().NotBeNull();
-            // entity.Distance.Should().NotBeNull();
-            entity.Region.Should().NotBeNull();
-            entity.Note.Should().NotBeNull();
-            entity.Key.Should().NotBeNull();
-            entity.TotalTrips.Should().BeGreaterThanOrEqualTo(0);
-            // entity.TotalDistance.Should().BeGreaterThanOrEqualTo(0);
-            // entity.TotalPay.Should().BeGreaterThanOrEqualTo(0);
-            // entity.TotalTips.Should().BeGreaterThanOrEqualTo(0);
-            // entity.TotalBonus.Should().BeGreaterThanOrEqualTo(0);
-            //entity.GrandTotal.Should().BeGreaterThanOrEqualTo(0);
-            //entity.TotalCash.Should().BeGreaterThanOrEqualTo(0);
-            //entity.TotalTrips.Should().BeGreaterThanOrEqualTo(0);
-            //entity.AmountPerTime.Should().BeGreaterThanOrEqualTo(0);
-            //entity.AmountPerDistance.Should().BeGreaterThanOrEqualTo(0);
-            //entity.AmountPerTrip.Should().BeGreaterThanOrEqualTo(0);
+            Assert.NotEqual(0, entity.RowId);
+            Assert.False(string.IsNullOrEmpty(entity.Date));
+            Assert.NotNull(entity.Start);
+            Assert.NotNull(entity.Finish);
+            Assert.False(string.IsNullOrEmpty(entity.Service));
+            Assert.True(entity.Number >= 0);
+            Assert.NotNull(entity.Active);
+            Assert.NotNull(entity.Time);
+            Assert.True(entity.Trips >= 0);
+            // Assert.NotNull(entity.Pay);
+            // Assert.NotNull(entity.Tip);
+            // Assert.NotNull(entity.Bonus);
+            // Assert.NotNull(entity.Cash);
+            // Assert.NotNull(entity.Distance);
+            Assert.NotNull(entity.Region);
+            Assert.NotNull(entity.Note);
+            Assert.NotNull(entity.Key);
+            Assert.True(entity.TotalTrips >= 0);
+            // Assert.True(entity.TotalDistance >= 0);
+            // Assert.True(entity.TotalPay >= 0);
+            // Assert.True(entity.TotalTips >= 0);
+            // Assert.True(entity.TotalBonus >= 0);
+            // Assert.True(entity.GrandTotal >= 0);
+            // Assert.True(entity.TotalCash >= 0);
+            // Assert.True(entity.AmountPerTime >= 0);
+            // Assert.True(entity.AmountPerDistance >= 0);
+            // Assert.True(entity.AmountPerTrip >= 0);
         }
     }
 
     [FactCheckUserSecrets]
     public void GivenShiftSheetDataColumnOrderRandomized_ThenReturnSameRangeData()
     {
-        var sheetOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)]).ToArray();
+        var sheetOrder = new int[] { 0 }.Concat(RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 
         var randomEntities = ShiftMapper.MapFromRangeData(randomValues);
         var nonEmptyRandomValues = randomValues!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
-        randomEntities.Should().HaveCount(nonEmptyRandomValues.Count - 1);
+        Assert.Equal(nonEmptyRandomValues.Count - 1, randomEntities.Count);
 
         for (int i = 0; i < randomEntities.Count; i++)
         {
             var entity = _entities![i];
             var randomEntity = randomEntities[i];
 
-            entity.RowId.Should().Be(randomEntity.RowId);
-            entity.Date.Should().BeEquivalentTo(randomEntity.Date);
-            entity.Start.Should().BeEquivalentTo(randomEntity.Start);
-            entity.Finish.Should().BeEquivalentTo(randomEntity.Finish);
-            entity.Service.Should().BeEquivalentTo(randomEntity.Service);
-            entity.Number.Should().Be(randomEntity.Number);
-            entity.Active.Should().BeEquivalentTo(randomEntity.Active);
-            entity.Time.Should().BeEquivalentTo(randomEntity.Time);
-            entity.Omit.Should().Be(randomEntity.Omit);
-            entity.Trips.Should().Be(randomEntity.Trips);
-            entity.Pay.Should().Be(randomEntity.Pay);
-            entity.Tip.Should().Be(randomEntity.Tip);
-            entity.Bonus.Should().Be(randomEntity.Bonus);
-            entity.Cash.Should().Be(randomEntity.Cash);
-            entity.Distance.Should().Be(randomEntity.Distance);
-            entity.Region.Should().BeEquivalentTo(randomEntity.Region);
-            entity.Note.Should().BeEquivalentTo(randomEntity.Note);
-            entity.Key.Should().BeEquivalentTo(randomEntity.Key);
-            entity.TotalTrips.Should().Be(randomEntity.TotalTrips);
-            entity.TotalTrips.Should().Be(randomEntity.TotalTrips);
-            entity.TotalDistance.Should().Be(randomEntity.TotalDistance);
-            entity.TotalPay.Should().Be(randomEntity.TotalPay);
-            entity.TotalTips.Should().Be(randomEntity.TotalTips);
-            entity.TotalBonus.Should().Be(randomEntity.TotalBonus);
-            entity.GrandTotal.Should().Be(randomEntity.GrandTotal);
-            entity.TotalCash.Should().Be(randomEntity.TotalCash);
-            entity.AmountPerTime.Should().Be(randomEntity.AmountPerTime);
-            entity.AmountPerDistance.Should().Be(randomEntity.AmountPerDistance);
-            entity.AmountPerTrip.Should().Be(randomEntity.AmountPerTrip);
+            Assert.Equal(entity.RowId, randomEntity.RowId);
+            Assert.Equal(entity.Date, randomEntity.Date);
+            Assert.Equal(entity.Start, randomEntity.Start);
+            Assert.Equal(entity.Finish, randomEntity.Finish);
+            Assert.Equal(entity.Service, randomEntity.Service);
+            Assert.Equal(entity.Number, randomEntity.Number);
+            Assert.Equal(entity.Active, randomEntity.Active);
+            Assert.Equal(entity.Time, randomEntity.Time);
+            Assert.Equal(entity.Omit, randomEntity.Omit);
+            Assert.Equal(entity.Trips, randomEntity.Trips);
+            Assert.Equal(entity.Pay, randomEntity.Pay);
+            Assert.Equal(entity.Tip, randomEntity.Tip);
+            Assert.Equal(entity.Bonus, randomEntity.Bonus);
+            Assert.Equal(entity.Cash, randomEntity.Cash);
+            Assert.Equal(entity.Distance, randomEntity.Distance);
+            Assert.Equal(entity.Region, randomEntity.Region);
+            Assert.Equal(entity.Note, randomEntity.Note);
+            Assert.Equal(entity.Key, randomEntity.Key);
+            Assert.Equal(entity.TotalTrips, randomEntity.TotalTrips);
+            Assert.Equal(entity.TotalDistance, randomEntity.TotalDistance);
+            Assert.Equal(entity.TotalPay, randomEntity.TotalPay);
+            Assert.Equal(entity.TotalTips, randomEntity.TotalTips);
+            Assert.Equal(entity.TotalBonus, randomEntity.TotalBonus);
+            Assert.Equal(entity.GrandTotal, randomEntity.GrandTotal);
+            Assert.Equal(entity.TotalCash, randomEntity.TotalCash);
+            Assert.Equal(entity.AmountPerTime, randomEntity.AmountPerTime);
+            Assert.Equal(entity.AmountPerDistance, randomEntity.AmountPerDistance);
+            Assert.Equal(entity.AmountPerTrip, randomEntity.AmountPerTrip);
         }
     }
 }
