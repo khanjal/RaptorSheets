@@ -296,4 +296,3 @@ public class GoogleSheetManagerTests
         return new TripEntity { Type = "Pickup", Place = place, Pay = pay, Tip = tip, Distance = distance, Name = name, StartAddress = startAddress, EndAddress = endAddress };
     }
 }
-

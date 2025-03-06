@@ -69,4 +69,3 @@ public class ListExtensionsTests
         Assert.All(list, item => Assert.Equal(default, item));
     }
 }
-
