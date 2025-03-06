@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using Google.Apis.Sheets.v4.Data;
+﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Gig.Tests.Data;
@@ -16,21 +15,22 @@ namespace RaptorSheets.Gig.Tests.Integration.Helpers.HeaderHelperTests;
 public class CheckSheetHeaderTests
 {
     public static IEnumerable<object[]> Sheets =>
-        [
-            [AddressMapper.GetSheet(), SheetEnum.ADDRESSES],
-            [DailyMapper.GetSheet(), SheetEnum.DAILY],
-            [MonthlyMapper.GetSheet(), SheetEnum.MONTHLY],
-            [NameMapper.GetSheet(), SheetEnum.NAMES],
-            [PlaceMapper.GetSheet(), SheetEnum.PLACES],
-            [RegionMapper.GetSheet(), SheetEnum.REGIONS],
-            [ServiceMapper.GetSheet(), SheetEnum.SERVICES],
-            [ShiftMapper.GetSheet(), SheetEnum.SHIFTS],
-            [TripMapper.GetSheet(), SheetEnum.TRIPS],
-            [TypeMapper.GetSheet(), SheetEnum.TYPES],
-            [WeekdayMapper.GetSheet(), SheetEnum.WEEKDAYS],
-            [WeeklyMapper.GetSheet(), SheetEnum.WEEKLY],
-            [YearlyMapper.GetSheet(), SheetEnum.YEARLY],
-        ];
+        new List<object[]>
+        {
+            new object[] { AddressMapper.GetSheet(), SheetEnum.ADDRESSES },
+            new object[] { DailyMapper.GetSheet(), SheetEnum.DAILY },
+            new object[] { MonthlyMapper.GetSheet(), SheetEnum.MONTHLY },
+            new object[] { NameMapper.GetSheet(), SheetEnum.NAMES },
+            new object[] { PlaceMapper.GetSheet(), SheetEnum.PLACES },
+            new object[] { RegionMapper.GetSheet(), SheetEnum.REGIONS },
+            new object[] { ServiceMapper.GetSheet(), SheetEnum.SERVICES },
+            new object[] { ShiftMapper.GetSheet(), SheetEnum.SHIFTS },
+            new object[] { TripMapper.GetSheet(), SheetEnum.TRIPS },
+            new object[] { TypeMapper.GetSheet(), SheetEnum.TYPES },
+            new object[] { WeekdayMapper.GetSheet(), SheetEnum.WEEKDAYS },
+            new object[] { WeeklyMapper.GetSheet(), SheetEnum.WEEKLY },
+            new object[] { YearlyMapper.GetSheet(), SheetEnum.YEARLY },
+        };
 
     readonly GoogleDataFixture fixture;
     private static IList<MatchedValueRange>? _matchedValueRanges;
@@ -48,7 +48,7 @@ public class CheckSheetHeaderTests
         var values = _matchedValueRanges?.Where(x => x.DataFilters[0].A1Range == sheetEnum.GetDescription()).First().ValueRange.Values.ToList();
         var messages = HeaderHelpers.CheckSheetHeaders(values!, sheet);
 
-        messages.Should().BeEmpty();
+        Assert.Empty(messages);
     }
 
     [TheoryCheckUserSecrets]
@@ -64,8 +64,7 @@ public class CheckSheetHeaderTests
 
         var errorMessages = HeaderHelpers.CheckSheetHeaders(headerValues!, sheet).Where(x => x.Level == MessageLevelEnum.ERROR.UpperName());
 
-        errorMessages.Should().NotBeNullOrEmpty();
-
+        Assert.NotEmpty(errorMessages);
     }
 
     [TheoryCheckUserSecrets]
@@ -79,11 +78,11 @@ public class CheckSheetHeaderTests
             values![0].ToList().GetRange(0, values[0].Count - 1)
         };
 
-        var headerOrder = new int[] { 0 }.Concat([.. RandomHelpers.GetRandomOrder(1, headerValues![0].Count - 1)]).ToArray();
+        var headerOrder = new int[] { 0 }.Concat(RandomHelpers.GetRandomOrder(1, headerValues![0].Count - 1)).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(headerValues, headerOrder);
 
         var warningMessages = HeaderHelpers.CheckSheetHeaders(randomValues!, sheet).Where(x => x.Level == MessageLevelEnum.WARNING.UpperName());
 
-        warningMessages.Should().NotBeNullOrEmpty();
+        Assert.NotEmpty(warningMessages);
     }
 }

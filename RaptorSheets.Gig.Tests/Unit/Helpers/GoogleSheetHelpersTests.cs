@@ -1,32 +1,33 @@
-﻿using FluentAssertions;
-using Google.Apis.Sheets.v4.Data;
+﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
+using Xunit;
 
 namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
 public class GoogleSheetHelpersTests
 {
     public static IEnumerable<object[]> Sheets =>
-    [
-        [AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.ADDRESSES])],
-        [DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.DAILY])],
-        [MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.MONTHLY])],
-        [NameMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.NAMES])],
-        [PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.PLACES])],
-        [RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.REGIONS])],
-        [ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.SERVICES])],
-        [ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.SHIFTS])],
-        [TripMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.TRIPS])],
-        [TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.TYPES])],
-        [WeekdayMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.WEEKDAYS])],
-        [WeeklyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.WEEKLY])],
-        [YearlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.YEARLY])],
-    ];
+    new List<object[]>
+    {
+        new object[] { AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.ADDRESSES }) },
+        new object[] { DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.DAILY }) },
+        new object[] { MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.MONTHLY }) },
+        new object[] { NameMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.NAMES }) },
+        new object[] { PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.PLACES }) },
+        new object[] { RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.REGIONS }) },
+        new object[] { ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.SERVICES }) },
+        new object[] { ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.SHIFTS }) },
+        new object[] { TripMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.TRIPS }) },
+        new object[] { TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.TYPES }) },
+        new object[] { WeekdayMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.WEEKDAYS }) },
+        new object[] { WeeklyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.WEEKLY }) },
+        new object[] { YearlyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.YEARLY }) },
+    };
 
     [Theory]
     [MemberData(nameof(Sheets))]
@@ -34,13 +35,13 @@ public class GoogleSheetHelpersTests
     {
         var index = 0; // AddSheet should be first request
 
-        batchRequest.Requests[index].AddSheet.Should().NotBeNull();
+        Assert.NotNull(batchRequest.Requests[index].AddSheet);
 
         var sheetRequest = batchRequest.Requests[index].AddSheet;
-        sheetRequest.Properties.Title.Should().Be(config.Name);
-        sheetRequest.Properties.TabColor.Should().BeEquivalentTo(SheetHelpers.GetColor(config.TabColor));
-        sheetRequest.Properties.GridProperties.FrozenColumnCount.Should().Be(config.FreezeColumnCount);
-        sheetRequest.Properties.GridProperties.FrozenRowCount.Should().Be(config.FreezeRowCount);
+        Assert.Equal(config.Name, sheetRequest.Properties.Title);
+        Assert.Equivalent(SheetHelpers.GetColor(config.TabColor), sheetRequest.Properties.TabColor);
+        Assert.Equal(config.FreezeColumnCount, sheetRequest.Properties.GridProperties.FrozenColumnCount);
+        Assert.Equal(config.FreezeRowCount, sheetRequest.Properties.GridProperties.FrozenRowCount);
     }
 
     [Theory]
@@ -53,15 +54,15 @@ public class GoogleSheetHelpersTests
         if (config.Headers.Count > 26)
         {
             var appendDimension = batchRequest.Requests.First(x => x.AppendDimension != null).AppendDimension;
-            appendDimension.Dimension.Should().Be("COLUMNS");
-            appendDimension.Length.Should().Be(config.Headers.Count - 26);
-            appendDimension.SheetId.Should().Be(sheetId);
+            Assert.Equal("COLUMNS", appendDimension.Dimension);
+            Assert.Equal(config.Headers.Count - 26, appendDimension.Length);
+            Assert.Equal(sheetId, appendDimension.SheetId);
         }
 
         var appendCells = batchRequest.Requests.First(x => x.AppendCells != null).AppendCells;
-        appendCells.SheetId.Should().Be(sheetId);
-        appendCells.Rows.Should().HaveCount(1);
-        appendCells.Rows[0].Values.Should().HaveCount(config.Headers.Count);
+        Assert.Equal(sheetId, appendCells.SheetId);
+        Assert.Single(appendCells.Rows);
+        Assert.Equal(config.Headers.Count, appendCells.Rows[0].Values.Count);
     }
 
     [Theory]
@@ -71,9 +72,9 @@ public class GoogleSheetHelpersTests
         var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
 
         var bandedRange = batchRequest.Requests.First(x => x.AddBanding != null).AddBanding.BandedRange;
-        bandedRange.Range.SheetId.Should().Be(sheetId);
-        bandedRange.RowProperties.HeaderColor.Should().BeEquivalentTo(SheetHelpers.GetColor(config.TabColor));
-        bandedRange.RowProperties.SecondBandColor.Should().BeEquivalentTo(SheetHelpers.GetColor(config.CellColor));
+        Assert.Equal(sheetId, bandedRange.Range.SheetId);
+        Assert.Equivalent(SheetHelpers.GetColor(config.TabColor), bandedRange.RowProperties.HeaderColor);
+        Assert.Equivalent(SheetHelpers.GetColor(config.CellColor), bandedRange.RowProperties.SecondBandColor);
     }
 
     [Theory]
@@ -88,11 +89,11 @@ public class GoogleSheetHelpersTests
             return;
         }
 
-        protectRange.Should().HaveCount(1);
+        Assert.Single(protectRange);
         var sheetProtection = protectRange.First().AddProtectedRange.ProtectedRange;
-        sheetProtection.Range.SheetId.Should().Be(sheetId);
-        sheetProtection.Description.Should().Be(ProtectionWarnings.SheetWarning);
-        sheetProtection.WarningOnly.Should().BeTrue();
+        Assert.Equal(sheetId, sheetProtection.Range.SheetId);
+        Assert.Equal(ProtectionWarnings.SheetWarning, sheetProtection.Description);
+        Assert.True(sheetProtection.WarningOnly);
     }
 
     [Theory]
@@ -109,21 +110,21 @@ public class GoogleSheetHelpersTests
 
         var columnProtections = config.Headers.Where(x => !string.IsNullOrEmpty(x.Formula)).ToList();
 
-        protectRange.Should().HaveCount(columnProtections.Count + 1); // +1 for header protection
+        Assert.Equal(columnProtections.Count + 1, protectRange.Count); // +1 for header protection
 
         for (var i = 0; i < protectRange.Count; i++)
         {
             var protectedRange = protectRange[i].AddProtectedRange.ProtectedRange;
-            protectedRange.Range.SheetId.Should().Be(sheetId);
-            protectedRange.WarningOnly.Should().BeTrue();
+            Assert.Equal(sheetId, protectedRange.Range.SheetId);
+            Assert.True(protectedRange.WarningOnly);
 
             if (i == protectRange.Count - 1) // Header protection (last) 
             {
-                protectedRange.Description.Should().Be(ProtectionWarnings.HeaderWarning);
+                Assert.Equal(ProtectionWarnings.HeaderWarning, protectedRange.Description);
             }
             else
             {
-                protectedRange.Description.Should().Be(ProtectionWarnings.ColumnWarning);
+                Assert.Equal(ProtectionWarnings.ColumnWarning, protectedRange.Description);
             }
         }
     }
@@ -136,7 +137,7 @@ public class GoogleSheetHelpersTests
         var repeatCells = batchRequest.Requests.Where(x => x.RepeatCell != null).ToList();
         var repeatHeaders = config.Headers.Where(x => x.Format != null || x.Validation != null).ToList();
 
-        repeatCells.Should().HaveCount(repeatHeaders.Count);
+        Assert.Equal(repeatHeaders.Count, repeatCells.Count);
     }
 
     [Theory]
@@ -150,9 +151,9 @@ public class GoogleSheetHelpersTests
 
         var result = GoogleRequestHelpers.GenerateIndexRanges(rowIds);
 
-        result.Should().NotBeNull();
-        result.Should().HaveCount(1);
-        result.First().Item1.Should().Be(startRowId - 1);
-        result.First().Item2.Should().Be(startRowId + count - 1);
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal(startRowId - 1, result.First().Item1);
+        Assert.Equal(startRowId + count - 1, result.First().Item2);
     }
 }

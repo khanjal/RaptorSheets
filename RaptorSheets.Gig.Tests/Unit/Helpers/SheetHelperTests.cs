@@ -1,10 +1,10 @@
-using FluentAssertions;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Tests.Data.Helpers;
+using Xunit;
 
 namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
@@ -18,7 +18,7 @@ public class SheetHelperTests
     {
         string result = SheetHelpers.GetColumnName(index);
 
-        result.Should().Be(column);
+        Assert.Equal(column, result);
     }
 
     [Theory]
@@ -44,7 +44,7 @@ public class SheetHelperTests
     {
         var result = SheetHelpers.GetColor(color);
 
-        result.Should().NotBeNull();
+        Assert.NotNull(result);
     }
 
     [Fact]
@@ -52,10 +52,10 @@ public class SheetHelperTests
     {
         var sheets = GigSheetHelpers.GetSheets();
 
-        sheets.Should().NotBeNull();
-        sheets.Count.Should().Be(2);
-        sheets[0].Name.Should().BeEquivalentTo("Shifts");
-        sheets[1].Name.Should().BeEquivalentTo("Trips");
+        Assert.NotNull(sheets);
+        Assert.Equal(2, sheets.Count);
+        Assert.Equal("Shifts", sheets[0].Name);
+        Assert.Equal("Trips", sheets[1].Name);
     }
 
     [Fact]
@@ -71,10 +71,10 @@ public class SheetHelperTests
 
         var headerList = SheetHelpers.HeadersToList(headers);
 
-        headerList.Should().NotBeNull();
-        headerList[0].Count.Should().Be(2);
-        headerList[0][0].Should().BeEquivalentTo("Formula");
-        headerList[0][1].Should().BeEquivalentTo("Name");
+        Assert.NotNull(headerList);
+        Assert.Equal(2, headerList[0].Count);
+        Assert.Equal("Formula", headerList[0][0]);
+        Assert.Equal("Name", headerList[0][1]);
     }
 
     [Theory]
@@ -90,16 +90,16 @@ public class SheetHelperTests
     {
         var cellFormat = SheetHelpers.GetCellFormat(format);
 
-        cellFormat.Should().NotBeNull();
-        cellFormat.NumberFormat.Type.Should().BeEquivalentTo(type);
+        Assert.NotNull(cellFormat);
+        Assert.Equal(type, cellFormat.NumberFormat.Type);
 
         if (hasPattern)
         {
-            cellFormat.NumberFormat.Pattern.Should().NotBeNull();
+            Assert.NotNull(cellFormat.NumberFormat.Pattern);
         }
         else
         {
-            cellFormat.NumberFormat.Pattern.Should().Be(null);
+            Assert.Null(cellFormat.NumberFormat.Pattern);
         }
     }
 
@@ -109,11 +109,11 @@ public class SheetHelperTests
         var spreadsheet = JsonHelpers.LoadDemoSpreadsheet();
 
         var spreadsheetTitle = SheetHelpers.GetSpreadsheetTitle(spreadsheet!);
-        spreadsheetTitle.Should().NotBeNull();
-        spreadsheetTitle.Should().BeEquivalentTo("Demo Raptor Gig Sheet");
+        Assert.NotNull(spreadsheetTitle);
+        Assert.Equal("Demo Raptor Gig Sheet", spreadsheetTitle);
 
         var spreadsheetSheets = SheetHelpers.GetSpreadsheetSheets(spreadsheet!);
-        spreadsheetSheets.Should().NotBeNull();
-        spreadsheetSheets.Count.Should().Be(Enum.GetNames(typeof(SheetEnum)).Length);
+        Assert.NotNull(spreadsheetSheets);
+        Assert.Equal(Enum.GetNames(typeof(SheetEnum)).Length, spreadsheetSheets.Count);
     }
 }
