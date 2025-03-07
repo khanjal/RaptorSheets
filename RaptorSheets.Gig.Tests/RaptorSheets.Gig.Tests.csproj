@@ -11,6 +11,9 @@
 
   <ItemGroup>
     <None Remove="Data\Json\DemoSheet.json" />
+    <None Remove="Data\Json\names.json" />
+    <None Remove="Data\Json\places.json" />
+    <None Remove="Data\Json\services.json" />
     <None Remove="Data\Json\Sheets\AddressSheet.json" />
     <None Remove="Data\Json\Sheets\NameSheet.json" />
     <None Remove="Data\Json\Sheets\PlaceSheet.json" />
@@ -23,6 +26,15 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Data\Json\DemoSheet.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\names.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\places.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Data\Json\services.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Data\Json\Sheets\AddressSheet.json">

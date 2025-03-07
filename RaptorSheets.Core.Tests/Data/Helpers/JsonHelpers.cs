@@ -8,30 +8,29 @@ namespace RaptorSheets.Core.Tests.Data.Helpers;
 [ExcludeFromCodeCoverage]
 public class JsonHelpers
 {
-
-    public static Spreadsheet? LoadDemoSpreadsheet()
-    {
-        var path = GetDataJsonPath("DemoSheet");
-        var json = ReadJson(path);
-        var sheetData = JsonConvert.DeserializeObject<Spreadsheet>(json);
-
-        return sheetData;
-    }
-
-    public static IList<IList<object>>? LoadJsonData(string filename)
+    public static T? LoadJsonData<T>(string filename)
     {
         var path = GetDataJsonPath(filename);
         var json = ReadJson(path);
-        var values = DeserializeJson<GoogleResponse>(json)?.Values;
+        var values = DeserializeJson<T>(json);
 
         return values;
     }
 
+    public static Spreadsheet? LoadDemoSpreadsheet()
+    {
+        var filename = "DemoSheet";
+        var sheetData = LoadJsonData<Spreadsheet>(filename);
+
+        return sheetData;
+    }
+
+
     public static IList<IList<object>>? LoadJsonSheetData(string sheet)
     {
-        var path = GetDataJsonPath($"Sheets/{sheet}Sheet");
-        var json = ReadJson(path);
-        var values = DeserializeJson<GoogleResponse>(json)?.Values;
+        var filename = $"Sheets/{sheet}Sheet";
+        var json = LoadJsonData<GoogleResponse>(filename);
+        var values = json?.Values;
 
         return values;
     }

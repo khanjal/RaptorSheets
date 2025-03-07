@@ -6,6 +6,7 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
+using RaptorSheets.Core.Tests.Data.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Integration.Managers;
 
@@ -255,6 +256,9 @@ public class GoogleSheetManagerTests
 
     private static SheetEntity GenerateShift(ActionTypeEnum actionType, int shiftStartId = 2, int tripStartId = 2)
     {
+        // Select a service type
+        var services = JsonHelpers.LoadJsonData<List<string>>("services");
+
         // Create shift/trips
         var date = DateTime.Now.ToString("yyyy-MM-dd");
         var random = new Random();

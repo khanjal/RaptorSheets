@@ -1,4 +1,5 @@
 ﻿using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Tests.Data.Helpers;
 using Xunit;
 
@@ -11,7 +12,7 @@ public class GetValueTests
 
     public GetValueTests()
     {
-        _values = JsonHelpers.LoadJsonData("Headers");
+        _values = JsonHelpers.LoadJsonData<GoogleResponse>("Headers")?.Values;
         _headers = HeaderHelpers.ParserHeader(_values![0]);
     }
 
