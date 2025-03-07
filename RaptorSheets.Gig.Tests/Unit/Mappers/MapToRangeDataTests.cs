@@ -6,7 +6,6 @@ using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Gig.Tests.Data.Helpers;
 using System.ComponentModel;
-using Xunit;
 
 namespace RaptorSheets.Gig.Tests.Unit.Mappers;
 
@@ -17,7 +16,7 @@ public class MapToRangeDataTests
 
     public MapToRangeDataTests()
     {
-        _sheetData = GigJsonHelpers.LoadSheetJson();
+        _sheetData = TestGigHelpers.LoadSheetJson();
     }
 
     [Fact]

@@ -5,7 +5,6 @@ using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Gig.Tests.Data;
 using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
-using Xunit;
 
 namespace RaptorSheets.Gig.Tests.Integration.Mappers.MapFromRangeData;
 

@@ -6,7 +6,7 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
-using RaptorSheets.Core.Tests.Data.Helpers;
+using RaptorSheets.Gig.Tests.Data.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Integration.Managers;
 
@@ -112,7 +112,7 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenAddSheetData_WithData_ThenReturnData()
     {
-        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, GenerateShift(ActionTypeEnum.APPEND));
+        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, TestGigHelpers.GenerateShift(ActionTypeEnum.APPEND));
         Assert.NotNull(result);
         Assert.Equal(2, result.Messages.Count);
 
@@ -135,12 +135,12 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenAppendSheetData_WithData_ThenReturnData()
     {
-        var sheetInfo = await _googleSheetManager!.GetSheetProperties(new List<string> { SheetEnum.TRIPS.GetDescription(), SheetEnum.SHIFTS.GetDescription() });
+        var sheetInfo = await _googleSheetManager!.GetSheetProperties([SheetEnum.TRIPS.GetDescription(), SheetEnum.SHIFTS.GetDescription()]);
         var maxShiftId = int.Parse(sheetInfo.FirstOrDefault(x => x.Name == SheetEnum.SHIFTS.GetDescription())!.Attributes!.FirstOrDefault(x => x.Key == PropertyEnum.MAX_ROW_VALUE.GetDescription()).Value);
         var maxTripId = int.Parse(sheetInfo.FirstOrDefault(x => x.Name == SheetEnum.TRIPS.GetDescription())!.Attributes!.FirstOrDefault(x => x.Key == PropertyEnum.MAX_ROW_VALUE.GetDescription()).Value);
-        var sheetEntity = GenerateShift(ActionTypeEnum.APPEND, maxShiftId + 1, maxTripId + 1);
+        var sheetEntity = TestGigHelpers.GenerateShift(ActionTypeEnum.APPEND, maxShiftId + 1, maxTripId + 1);
 
-        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, sheetEntity);
+        var result = await _googleSheetManager!.ChangeSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], sheetEntity);
         Assert.NotNull(result);
         Assert.Equal(2, result.Messages.Count);
 
@@ -154,7 +154,7 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenDeleteSheetData_WithData_ThenReturnData()
     {
-        var data = GenerateShift(ActionTypeEnum.DELETE);
+        var data = TestGigHelpers.GenerateShift(ActionTypeEnum.DELETE);
         var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, data);
         Assert.NotNull(result);
         Assert.Equal(2, result.Messages.Count);
@@ -169,7 +169,7 @@ public class GoogleSheetManagerTests
     [FactCheckUserSecrets]
     public async Task GivenUpdateSheetData_WithData_ThenReturnData()
     {
-        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, GenerateShift(ActionTypeEnum.UPDATE));
+        var result = await _googleSheetManager!.ChangeSheetData(new List<SheetEnum> { SheetEnum.TRIPS, SheetEnum.SHIFTS }, TestGigHelpers.GenerateShift(ActionTypeEnum.UPDATE));
         Assert.NotNull(result);
         Assert.Equal(2, result.Messages.Count);
 
@@ -252,51 +252,5 @@ public class GoogleSheetManagerTests
         Assert.Empty(result[1].Id);
         Assert.Equal("Sheet2", result[1].Name);
         Assert.Empty(result[1].Attributes[PropertyEnum.HEADERS.GetDescription()]);
-    }
-
-    private static SheetEntity GenerateShift(ActionTypeEnum actionType, int shiftStartId = 2, int tripStartId = 2)
-    {
-        // Select a service type
-        var services = JsonHelpers.LoadJsonData<List<string>>("services");
-
-        // Create shift/trips
-        var date = DateTime.Now.ToString("yyyy-MM-dd");
-        var random = new Random();
-        var number = random.Next();
-        var service = $"{actionType.GetDescription()} {number}";
-
-        var sheetEntity = new SheetEntity();
-        sheetEntity.Shifts.Add(new ShiftEntity { RowId = shiftStartId, Action = actionType.GetDescription(), Date = date, Number = 1, Service = service, Start = DateTime.Now.ToString("T") });
-
-        // Add random amount of trips
-        for (int i = tripStartId; i < random.Next(tripStartId + 1, tripStartId + 5); i++)
-        {
-            var tripEntity = GenerateTrip();
-            tripEntity.Action = actionType.GetDescription();
-            tripEntity.RowId = i;
-            tripEntity.Date = date;
-            tripEntity.Number = 1;
-            tripEntity.Service = service;
-            tripEntity.Pickup = DateTime.Now.ToString("T");
-            tripEntity.Dropoff = DateTime.Now.AddMinutes(10).ToString("T");
-            tripEntity.Duration = "00:10:00.000";
-            sheetEntity.Trips.Add(tripEntity);
-        }
-
-        return sheetEntity;
-    }
-
-    private static TripEntity GenerateTrip()
-    {
-        var random = new Random();
-        var pay = Math.Round(random.Next(1, 10) + new decimal(random.NextDouble()), 2);
-        var distance = Math.Round(random.Next(0, 20) + new decimal(random.NextDouble()), 1);
-        var tip = random.Next(1, 5);
-        var place = $"Test Place {random.Next(1, 25)}";
-        var name = $"Test Name {random.Next(1, 25)}";
-        var startAddress = $"Start Address {random.Next(1, 25)}";
-        var endAddress = $"End Address {random.Next(1, 25)}";
-
-        return new TripEntity { Type = "Pickup", Place = place, Pay = pay, Tip = tip, Distance = distance, Name = name, StartAddress = startAddress, EndAddress = endAddress };
     }
 }
