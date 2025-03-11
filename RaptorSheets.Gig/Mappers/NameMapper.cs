@@ -42,6 +42,7 @@ public static class NameMapper
                 Total = HeaderHelpers.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
                 Cash = HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
                 Distance = HeaderHelpers.GetIntValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
+                Saved = true
             };
 
             names.Add(name);

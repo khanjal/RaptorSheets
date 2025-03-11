@@ -15,4 +15,7 @@ public class ServiceEntity : AmountEntity
 
     [JsonPropertyName("distance")]
     public decimal Distance { get; set; }
+
+    [JsonPropertyName("saved")]
+    public bool Saved { get; set; }
 }

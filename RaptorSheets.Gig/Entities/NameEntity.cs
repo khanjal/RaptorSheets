@@ -15,4 +15,7 @@ public class NameEntity : AmountEntity
 
     [JsonPropertyName("distance")]
     public int Distance { get; set; }
+
+    [JsonPropertyName("saved")]
+    public bool Saved { get; set; }
 }
