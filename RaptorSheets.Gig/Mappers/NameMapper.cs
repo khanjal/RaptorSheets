@@ -14,7 +14,7 @@ public static class NameMapper
     {
         var names = new List<NameEntity>();
         var headers = new Dictionary<int, string>();
-        values = values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
+        values = values!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
         var id = 0;
 
         foreach (List<object> value in values)

@@ -25,7 +25,7 @@ public class DailyMapFromRangeDataTests
     [FactCheckUserSecrets]
     public void GivenWeekdaySheetData_ThenReturnRangeData()
     {
-        var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
+        var nonEmptyValues = _values!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
         Assert.Equal(nonEmptyValues.Count - 1, _entities?.Count);
 
         foreach (var entity in _entities!)
@@ -56,7 +56,7 @@ public class DailyMapFromRangeDataTests
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 
         var randomEntities = DailyMapper.MapFromRangeData(randomValues);
-        var nonEmptyRandomValues = randomValues!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
+        var nonEmptyRandomValues = randomValues!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
         Assert.Equal(nonEmptyRandomValues.Count - 1, randomEntities.Count);
 
         for (int i = 0; i < randomEntities.Count; i++)

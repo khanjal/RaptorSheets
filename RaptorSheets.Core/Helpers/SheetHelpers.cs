@@ -17,6 +17,23 @@ public static class SheetHelpers
         return sheet.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
     }
 
+    public static Dictionary<string, IList<IList<object>>> GetSheetValues(Spreadsheet sheet)
+    {
+        var sheetValues = new Dictionary<string, IList<IList<object>>>();
+        foreach (var sheetData in sheet.Sheets)
+        {
+            var values = sheetData.Data[0]?.RowData
+                .Select(x => (IList<object>)x.Values.Select(y => (object)y.FormattedValue).ToList())
+                .ToList() ?? [];
+
+            if (values != null)
+            {
+                sheetValues.Add(sheetData.Properties.Title, values);
+            }
+        }
+        return sheetValues;
+    }
+
     // https://www.rapidtables.com/convert/color/hex-to-rgb.html
     public static Color GetColor(ColorEnum colorEnum)
     {

@@ -95,8 +95,40 @@ public class GoogleSheetManager : IGoogleSheetManager
         // TODO: Look into returning data from the batch update.
         //batchUpdateSpreadsheetRequest.IncludeSpreadsheetInResponse = true;
         //batchUpdateSpreadsheetRequest.ResponseIncludeGridData = true;
+        //batchUpdateSpreadsheetRequest.ResponseRanges = [SheetEnum.ADDRESSES.GetDescription(), SheetEnum.NAMES.GetDescription(), SheetEnum.PLACES.GetDescription(), SheetEnum.REGIONS.GetDescription(), SheetEnum.SERVICES.GetDescription(), SheetEnum.TYPES.GetDescription()];
 
         var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
+
+        //if (batchUpdateSpreadsheetResponse?.UpdatedSpreadsheet?.Sheets.Count > 0) { 
+        //    var sheetData = SheetHelpers.GetSheetValues(batchUpdateSpreadsheetResponse.UpdatedSpreadsheet);
+        //    var test = SheetEnum.ADDRESSES.GetDescription();
+
+        //    foreach (var sheet in sheetData)
+        //    {
+        //        var sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), sheet.Key.ToUpper());
+        //        switch (sheetEnum)
+        //        {
+        //            case SheetEnum.ADDRESSES:
+        //                sheetEntity.Addresses = AddressMapper.MapFromRangeData(sheet.Value);
+        //                break;
+        //            case SheetEnum.NAMES:
+        //                sheetEntity.Names = NameMapper.MapFromRangeData(sheet.Value);
+        //                break;
+        //            case SheetEnum.PLACES:
+        //                sheetEntity.Places = PlaceMapper.MapFromRangeData(sheet.Value);
+        //                break;
+        //            case SheetEnum.REGIONS:
+        //                sheetEntity.Regions = RegionMapper.MapFromRangeData(sheet.Value);
+        //                break;
+        //            case SheetEnum.SERVICES:
+        //                sheetEntity.Services = ServiceMapper.MapFromRangeData(sheet.Value);
+        //                break;
+        //            case SheetEnum.TYPES:
+        //                sheetEntity.Types = TypeMapper.MapFromRangeData(sheet.Value);
+        //                break;
+        //        }
+        //    }
+        //}
 
         var success = (batchUpdateSpreadsheetResponse) != null;
 
@@ -301,7 +333,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         if (response == null)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
+            messages = await CheckSheets(true); 
         }
         else
         {

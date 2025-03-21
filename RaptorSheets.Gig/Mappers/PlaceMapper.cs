@@ -14,7 +14,7 @@ public static class PlaceMapper
     {
         var places = new List<PlaceEntity>();
         var headers = new Dictionary<int, string>();
-        values = values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
+        values = values!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
         var id = 0;
 
         foreach (var value in values)
