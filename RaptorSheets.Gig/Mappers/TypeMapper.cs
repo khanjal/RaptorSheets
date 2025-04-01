@@ -25,7 +25,7 @@ namespace RaptorSheets.Gig.Mappers
                     continue;
                 }
 
-                if (value[0].ToString() == "")
+                if (value == null || value[0] == null || value[0].ToString() == "")
                 {
                     continue;
                 }
@@ -41,6 +41,8 @@ namespace RaptorSheets.Gig.Mappers
                     Total = HeaderHelpers.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
                     Cash = HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
                     Distance = HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
+                    FirstTrip = HeaderHelpers.GetStringValue(HeaderEnum.VISIT_FIRST.GetDescription(), value, headers),
+                    LastTrip = HeaderHelpers.GetStringValue(HeaderEnum.VISIT_LAST.GetDescription(), value, headers),
                     Saved = true
                 };
 

@@ -17,12 +17,17 @@ public static class AddressMapper
         values = values!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
         var id = 0;
 
-        foreach (List<object> value in values)
+        foreach (List<object> value in values.Cast<List<object>>())
         {
             id++;
             if (id == 1)
             {
                 headers = HeaderHelpers.ParserHeader(value);
+                continue;
+            }
+
+            if (value == null || value[0] == null || value[0].ToString() == "")
+            {
                 continue;
             }
 
@@ -35,13 +40,15 @@ public static class AddressMapper
             {
                 RowId = id,
                 Address = HeaderHelpers.GetStringValue(HeaderEnum.ADDRESS.GetDescription(), value, headers),
-                Visits = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
+                Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                 Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
                 Tip = HeaderHelpers.GetDecimalValue(HeaderEnum.TIP.GetDescription(), value, headers),
                 Bonus = HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
                 Total = HeaderHelpers.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
                 Cash = HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
                 Distance = HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
+                FirstTrip = HeaderHelpers.GetStringValue(HeaderEnum.VISIT_FIRST.GetDescription(), value, headers),
+                LastTrip = HeaderHelpers.GetStringValue(HeaderEnum.VISIT_LAST.GetDescription(), value, headers),
                 Saved = true
             };
 

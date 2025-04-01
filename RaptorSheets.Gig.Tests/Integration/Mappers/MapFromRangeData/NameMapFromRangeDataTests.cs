@@ -32,7 +32,7 @@ public class NameMapFromRangeDataTests
         {
             Assert.NotEqual(0, entity.RowId);
             Assert.False(string.IsNullOrEmpty(entity.Name));
-            Assert.True(entity.Visits > 0);
+            Assert.True(entity.Trips > 0);
             Assert.NotNull(entity.Pay);
             Assert.NotNull(entity.Tip);
             Assert.NotNull(entity.Bonus);
@@ -59,7 +59,7 @@ public class NameMapFromRangeDataTests
 
             Assert.Equal(entity.RowId, randomEntity.RowId);
             Assert.Equal(entity.Name, randomEntity.Name);
-            Assert.Equal(entity.Visits, randomEntity.Visits);
+            Assert.Equal(entity.Trips, randomEntity.Trips);
             Assert.Equal(entity.Pay, randomEntity.Pay);
             Assert.Equal(entity.Tip, randomEntity.Tip);
             Assert.Equal(entity.Bonus, randomEntity.Bonus);
