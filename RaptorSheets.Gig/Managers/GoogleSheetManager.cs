@@ -335,7 +335,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
 
-        var ranges = sheets.Select(title => $"{title.GetDescription()}!{GoogleConfig.Range}").ToList();
+        var ranges = sheets.Select(x => $"{x.GetDescription()}!{GoogleConfig.Range}").ToList();
 
         var sheetInfoResponse = await _googleSheetService.GetSheetInfo(ranges);
 

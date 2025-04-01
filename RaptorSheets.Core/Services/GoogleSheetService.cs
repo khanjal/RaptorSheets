@@ -42,9 +42,9 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Log or return an error?
+            Console.WriteLine($"Error: {ex.Message}");
             return null;
         }
     }
@@ -57,9 +57,9 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Log or return an error?
+            Console.WriteLine($"Error: {ex.Message}");
             return null;
         }
     }
@@ -72,9 +72,9 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Log or return an error?
+            Console.WriteLine($"Error: {ex.Message}");
             return null;
         }
     }
@@ -94,9 +94,10 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // TooManyRequests(429) "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service ..."
+            Console.WriteLine($"Error: {ex.Message}");
             return null;
         }
     }
@@ -109,10 +110,11 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // NotFound (invalid spreadsheetId/range)
             // BadRequest (invalid sheet name)
+            Console.WriteLine($"Error: {ex.Message}");
             return null;
         }
     }
@@ -125,8 +127,9 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine($"Error: {ex.Message}");
             return null;
         }
     }
@@ -139,9 +142,9 @@ public class GoogleSheetService : IGoogleSheetService
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Log or return an error?
+            Console.WriteLine($"Error: {ex.Message}");
             return null;
         }
     }

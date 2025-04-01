@@ -53,11 +53,22 @@ public class GoogleSheetManagerTests
     }
 
     [FactCheckUserSecrets]
-    public async Task GivenGetSheetsList_ThenReturnSheetEntity()
+    public async Task GivenGetRandomSheet_ThenReturnSheetEntity()
     {
         var result = await _googleSheetManager!.GetSheets(new List<SheetEnum> { _sheetEnum });
         Assert.NotNull(result);
         Assert.Single(result!.Messages);
+        Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages[0].Level);
+        Assert.Contains(_sheetEnum.ToString(), result!.Messages[0].Message);
+        Assert.True(result!.Messages[0].Time >= _currentTime);
+    }
+
+    [FactCheckUserSecrets]
+    public async Task GivenGetAllSheetsList_ThenReturnSheetEntity()
+    {
+        var result = await _googleSheetManager!.GetSheets();
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.Messages.Count);
         Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages[0].Level);
         Assert.Contains(_sheetEnum.ToString(), result!.Messages[0].Message);
         Assert.True(result!.Messages[0].Time >= _currentTime);
