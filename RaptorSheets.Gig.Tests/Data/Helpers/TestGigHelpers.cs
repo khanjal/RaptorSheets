@@ -21,7 +21,7 @@ internal class TestGigHelpers
         // Get JSON data
         var services = JsonHelpers.LoadJsonData<List<string>>("services");
         var service = services?.GetRandomItem();
-        var places = JsonHelpers.LoadJsonData<List<PlaceJsonEntity>>("places")?.Where(x => x.Services.Contains(service!)).ToList() ?? new List<PlaceJsonEntity>();
+        var places = JsonHelpers.LoadJsonData<List<PlaceJsonEntity>>("places")!.Where(x => x.Services.Contains(service!)).ToList();
         var names = JsonHelpers.LoadJsonData<List<NameJsonEntity>>("names");
 
         // Create shift/trips

@@ -1,7 +1,7 @@
 [
   {
     "name": "McDonald's",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "123 Main St, Springfield, IL, 62701",
@@ -11,7 +11,7 @@
   },
   {
     "name": "Burger King",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "101 Pine St, Springfield, IL, 62701",
@@ -21,7 +21,7 @@
   },
   {
     "name": "Taco Bell",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "111 First St, Springfield, IL, 62701",
@@ -31,7 +31,7 @@
   },
   {
     "name": "Wendy's",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "444 Birch Rd, Springfield, IL, 62701",
@@ -41,7 +41,7 @@
   },
   {
     "name": "KFC",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "777 Maple St, Springfield, IL, 62701",
@@ -51,7 +51,7 @@
   },
   {
     "name": "Subway",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "100 Greenway Rd, Springfield, IL, 62701",
@@ -61,7 +61,7 @@
   },
   {
     "name": "Pizza Hut",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "400 Sunrise Blvd, Springfield, IL, 62701",
@@ -71,7 +71,7 @@
   },
   {
     "name": "Domino's Pizza",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "700 West St, Springfield, IL, 62701",
@@ -81,7 +81,7 @@
   },
   {
     "name": "Chick-fil-A",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "1200 Greenfield Rd, Springfield, IL, 62701",
@@ -91,7 +91,7 @@
   },
   {
     "name": "Jack in the Box",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "1500 Maple Blvd, Springfield, IL, 62701",
@@ -101,7 +101,7 @@
   },
   {
     "name": "Arby's",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "1800 Pine St, Springfield, IL, 62701",
@@ -111,7 +111,7 @@
   },
   {
     "name": "Sonic Drive-In",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "2100 River Rd, Springfield, IL, 62701",
@@ -121,7 +121,7 @@
   },
   {
     "name": "Hardee's",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "2400 Woodlawn Dr, Springfield, IL, 62701",
@@ -131,7 +131,7 @@
   },
   {
     "name": "Carl's Jr.",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "2700 Mountain Rd, Springfield, IL, 62701",
@@ -141,7 +141,7 @@
   },
   {
     "name": "Five Guys",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "3000 Lakeview Dr, Springfield, IL, 62701",
@@ -151,7 +151,7 @@
   },
   {
     "name": "Chipotle Mexican Grill",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "3500 Oakwood Dr, Springfield, IL, 62701",
@@ -161,7 +161,7 @@
   },
   {
     "name": "Panda Express",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "3800 Sunset Blvd, Springfield, IL, 62701",
@@ -171,7 +171,7 @@
   },
   {
     "name": "Buffalo Wild Wings",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "4100 River Rd, Springfield, IL, 62701",
@@ -181,7 +181,7 @@
   },
   {
     "name": "Shake Shack",
-    "services": [ "Doordash", "UberEats", "Grubhub" ],
+    "services": [ "DoorDash", "UberEats", "Grubhub" ],
     "types": [ "Pickup" ],
     "addresses": [
       "4400 Park Dr, Springfield, IL, 62701",
@@ -191,7 +191,7 @@
   },
   {
     "name": "Target",
-    "services": [ "Doordash", "UberEats" ],
+    "services": [ "DoorDash", "UberEats" ],
     "types": [ "Shop", "Curbside" ],
     "addresses": [
       "4700 Central Ave, Springfield, IL, 62701",
@@ -211,7 +211,7 @@
   },
   {
     "name": "Best Buy",
-    "services": [ "Doordash", "UberEats" ],
+    "services": [ "DoorDash", "UberEats" ],
     "types": [ "Shop", "Curbside" ],
     "addresses": [
       "5300 Elm Rd, Springfield, IL, 62701",
@@ -221,7 +221,7 @@
   },
   {
     "name": "Costco",
-    "services": [ "Doordash" ],
+    "services": [ "DoorDash" ],
     "types": [ "Shop", "Curbside" ],
     "addresses": [
       "5600 Greenway Dr, Springfield, IL, 62701",
@@ -231,7 +231,7 @@
   },
   {
     "name": "Home Depot",
-    "services": [ "Doordash", "UberEats" ],
+    "services": [ "DoorDash", "UberEats" ],
     "types": [ "Shop", "Curbside" ],
     "addresses": [
       "5900 Valley Rd, Springfield, IL, 62701",
@@ -241,7 +241,7 @@
   },
   {
     "name": "Lowe's",
-    "services": [ "Doordash", "UberEats" ],
+    "services": [ "DoorDash", "UberEats" ],
     "types": [ "Shop", "Curbside" ],
     "addresses": [
       "6200 Beach Blvd, Springfield, IL, 62701",

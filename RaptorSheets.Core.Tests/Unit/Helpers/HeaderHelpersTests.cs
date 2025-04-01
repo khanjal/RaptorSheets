@@ -109,7 +109,7 @@ public class HeaderHelpersTests
         };
 
         // Act
-        var result = HeaderHelpers.CheckSheetHeaders(values, sheetModel);
+        var result = HeaderHelpers.CheckSheetHeaders(values[0], sheetModel);
 
         // Assert
         Assert.Equal(3, result.Count);

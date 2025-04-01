@@ -103,21 +103,22 @@ public static class StockSheetHelpers
         {
             var sheetRange = matchedValue.DataFilters[0].A1Range;
             var values = matchedValue.ValueRange.Values;
+            var headers = values[0];
 
             Enum.TryParse(sheetRange.ToUpper(), out SheetEnum sheetEnum);
 
             switch (sheetEnum)
             {
                 case SheetEnum.ACCOUNTS:
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, SheetsConfig.AccountSheet));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.AccountSheet));
                     sheet.Accounts = AccountMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.STOCKS:
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, SheetsConfig.StockSheet));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.StockSheet));
                     sheet.Stocks = StockMapper.MapFromRangeData(values);
                     break;
                 case SheetEnum.TICKERS:
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(values, SheetsConfig.TickerSheet));
+                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.TickerSheet));
                     sheet.Tickers = TickerMapper.MapFromRangeData(values);
                     break;
             }

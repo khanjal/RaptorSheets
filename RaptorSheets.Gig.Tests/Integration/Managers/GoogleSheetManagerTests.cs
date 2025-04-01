@@ -69,7 +69,7 @@ public class GoogleSheetManagerTests
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
         var result = await googleSheetManager.GetSheets();
         Assert.NotNull(result);
-        Assert.Equal(2, result!.Messages.Count);
+        Assert.Equal(1, result!.Messages.Count);
 
         result!.Messages.ForEach(x => Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), x.Level));
     }

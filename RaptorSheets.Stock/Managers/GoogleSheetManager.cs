@@ -88,7 +88,11 @@ public class GoogleSheetManager : IGoogleSheetManager
     public async Task<List<MessageEntity>> CheckSheets(bool checkHeaders)
     {
         var messages = new List<MessageEntity>();
-        var sheetInfoResponse = await _googleSheetService.GetSheetInfo();
+
+        var sheetTitles = Enum.GetNames(typeof(SheetEnum)).ToList();
+        var ranges = sheetTitles.Select(title => $"{title}!{GoogleConfig.HeaderRange}").ToList();
+
+        var sheetInfoResponse = await _googleSheetService.GetSheetInfo(ranges);
 
         if (sheetInfoResponse == null)
         {
@@ -126,33 +130,28 @@ public class GoogleSheetManager : IGoogleSheetManager
         if (!checkHeaders)
             return messages;
 
-        messages.AddRange(await CheckSheetHeaders(sheets.Select(x => x.GetDescription()).ToList()));
+        messages.AddRange(CheckSheetHeaders(sheetInfoResponse));
 
         return messages;
     }
 
-    public async Task<List<MessageEntity>> CheckSheetHeaders(List<string> sheets)
+    public List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
         var messages = new List<MessageEntity>();
-        // Get sheet headers
-        var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
-        var batchDataResponse = await _googleSheetService.GetBatchData(sheets, GoogleConfig.HeaderRange);
 
-        if (batchDataResponse == null)
+        if (sheetInfoResponse == null)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
             return messages;
         }
 
         var headerMessages = new List<MessageEntity>();
         // Loop through sheets to check headers.
-        foreach (var valueRange in batchDataResponse.ValueRanges)
+        foreach (var sheet in sheetInfoResponse.Sheets)
         {
-            var sheetRange = valueRange.ValueRange.Range;
-            var sheet = sheetRange.Split("!")[0];
-            var sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), sheet.ToUpper());
+            var sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), sheet.Properties.Title.ToUpper());
+            var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
-            var sheetHeader = valueRange.ValueRange.Values;
             switch (sheetEnum)
             {
                 case SheetEnum.ACCOUNTS:

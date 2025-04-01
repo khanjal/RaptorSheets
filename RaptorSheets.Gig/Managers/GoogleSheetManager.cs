@@ -143,7 +143,11 @@ public class GoogleSheetManager : IGoogleSheetManager
     public async Task<List<MessageEntity>> CheckSheets(bool checkHeaders)
     {
         var messages = new List<MessageEntity>();
-        var sheetInfoResponse = await _googleSheetService.GetSheetInfo();
+
+        var sheetTitles = Enum.GetNames(typeof(SheetEnum)).ToList();
+        var ranges = sheetTitles.Select(title => $"{title}!{GoogleConfig.HeaderRange}").ToList();
+
+        var sheetInfoResponse = await _googleSheetService.GetSheetInfo(ranges);
 
         if (sheetInfoResponse == null)
         {
@@ -151,6 +155,20 @@ public class GoogleSheetManager : IGoogleSheetManager
             return messages;
         }
 
+        messages.AddRange(CheckSheets(sheetInfoResponse));
+
+
+        if (!checkHeaders)
+            return messages;
+
+        messages.AddRange(CheckSheetHeaders(sheetInfoResponse));
+
+        return messages;
+    }
+
+    public List<MessageEntity> CheckSheets(Spreadsheet sheetInfoResponse)
+    {
+        var messages = new List<MessageEntity>();
         var spreadsheetSheets = sheetInfoResponse.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
         var sheets = new List<SheetEnum>();
 
@@ -178,36 +196,26 @@ public class GoogleSheetManager : IGoogleSheetManager
             messages.Add(MessageHelpers.CreateInfoMessage("All sheets found", MessageTypeEnum.CHECK_SHEET));
         }
 
-        if (!checkHeaders)
-            return messages;
-
-        messages.AddRange(await CheckSheetHeaders(sheets.Select(x => x.GetDescription()).ToList()));
-
         return messages;
     }
 
-    public async Task<List<MessageEntity>> CheckSheetHeaders(List<string> sheets)
+    public List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
         var messages = new List<MessageEntity>();
-        // Get sheet headers
-        var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
-        var batchDataResponse = await _googleSheetService.GetBatchData(sheets, GoogleConfig.HeaderRange);
 
-        if (batchDataResponse == null)
+        if (sheetInfoResponse == null)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GENERAL));
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
             return messages;
         }
 
         var headerMessages = new List<MessageEntity>();
         // Loop through sheets to check headers.
-        foreach (var valueRange in batchDataResponse.ValueRanges)
+        foreach (var sheet in sheetInfoResponse.Sheets)
         {
-            var sheetRange = valueRange.ValueRange.Range;
-            var sheet = sheetRange.Split("!")[0];
-            var sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), sheet.ToUpper());
+            var sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), sheet.Properties.Title.ToUpper());
+            var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
-            var sheetHeader = valueRange.ValueRange.Values;
             switch (sheetEnum)
             {
                 case SheetEnum.ADDRESSES:
@@ -315,8 +323,6 @@ public class GoogleSheetManager : IGoogleSheetManager
      
     public async Task<SheetEntity> GetSheets()
     {
-        // TODO Add check sheets here where it can add missing sheets.
-
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
         var response = await GetSheets(sheets);
 
@@ -329,16 +335,20 @@ public class GoogleSheetManager : IGoogleSheetManager
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
 
-        var response = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
+        var ranges = sheets.Select(title => $"{title.GetDescription()}!{GoogleConfig.Range}").ToList();
 
-        if (response == null)
+        var sheetInfoResponse = await _googleSheetService.GetSheetInfo(ranges);
+
+        if (sheetInfoResponse == null)
         {
-            messages = await CheckSheets(true); 
+            messages.Add(MessageHelpers.CreateErrorMessage("Unable to get spreadsheets", MessageTypeEnum.GET_SHEETS));
+            data.Messages.AddRange(messages);
+            return data;
         }
         else
         {
             messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
-            data = GigSheetHelpers.MapData(response);
+            data = GigSheetHelpers.MapData(sheetInfoResponse);
         }
 
         // Only get spreadsheet name when all sheets are requested.

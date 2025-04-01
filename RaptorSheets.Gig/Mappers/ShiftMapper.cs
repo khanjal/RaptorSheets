@@ -26,7 +26,7 @@ public static class ShiftMapper
                 continue;
             }
 
-            if (value[0].ToString() == "")
+            if (value == null || value[0] == null || value[0].ToString() == "")
             {
                 continue;
             }

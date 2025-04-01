@@ -2,6 +2,7 @@ namespace RaptorSheets.Gig.Enums;
 
 public enum ValidationEnum
 {
+    DEFAULT=0,
     BOOLEAN,
     RANGE_ADDRESS,
     RANGE_NAME,

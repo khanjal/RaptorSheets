@@ -27,6 +27,10 @@ public static class ArrayFormulaHelpers
     {
         return $"=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{headerText}\",ISBLANK({keyRange}), \"\", true, IFERROR(VLOOKUP({keyRange},SORT(QUERY({referenceSheet}!{columnStart}:{columnEnd},\"SELECT {columnEnd}, {columnStart}\"),2,{first}),2,0),\"\")))";
     }
+    public static string ArrayFormulaMultipleVisit(string keyRange, string headerText, string referenceSheet, string columnStart, string firstEnd, string secondEnd, bool first)
+    {
+        return $"=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{headerText}\",ISBLANK({keyRange}), \"\", true, IFERROR(VLOOKUP({keyRange},SORT(QUERY({referenceSheet}!{columnStart}:{firstEnd},\"SELECT {firstEnd}, {columnStart}\"),2,{first}),2,0),IFERROR(VLOOKUP({keyRange},SORT(QUERY({referenceSheet}!{columnStart}:{secondEnd},\"SELECT {secondEnd}, {columnStart}\"),2,{first}),2,0),\"\")))";
+    }
 
     public static string ArrayForumlaUnique(string keyRange, string headerText)
     {

@@ -54,7 +54,7 @@ public static class HeaderHelpers
     {
         var columnId = GetHeaderKey(headers, columnName);
 
-        if (columnId > values.Count || columnId < 0 || values[columnId] == null)
+        if (columnId >= values.Count || columnId < 0 || values[columnId] == null)
         {
             return "";
         }
@@ -127,18 +127,17 @@ public static class HeaderHelpers
         }
 
     }
-
-    public static List<MessageEntity> CheckSheetHeaders(IList<IList<object>> values, SheetModel sheetModel)
+    
+    public static List<MessageEntity> CheckSheetHeaders(IList<object> values, SheetModel sheetModel)
     {
         var messages = new List<MessageEntity>();
-        var data = values[0];
-        var headerArray = new string[data.Count];
-        data.CopyTo(headerArray, 0);
+        var headerArray = new string[values.Count];
+        values.CopyTo(headerArray, 0);
         var index = 0;
 
         foreach (var sheetHeader in sheetModel.Headers)
         {
-            if (!data.Any(x => x?.ToString()?.Trim() == sheetHeader.Name))
+            if (!values.Any(x => x?.ToString()?.Trim() == sheetHeader.Name))
             {
                 messages.Add(MessageHelpers.CreateErrorMessage($"Sheet [{sheetModel.Name}]: Missing column [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
             }
