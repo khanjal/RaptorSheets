@@ -350,7 +350,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Only get spreadsheet name when all sheets are requested.
         if (sheets.Count < Enum.GetNames(typeof(SheetEnum)).Length)
         {
-            data!.Messages = messages;
+            data!.Messages.AddRange(messages);
             return data;
         }
 
@@ -366,52 +366,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             data!.Properties.Name = spreadsheetName;
         }
 
-        data!.Messages = messages;
-        return data;
-    }
-
-    public async Task<SheetEntity> GetSheetsByInfo(List<SheetEnum> sheets)
-    {
-        var data = new SheetEntity();
-        var messages = new List<MessageEntity>();
-        var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
-
-        var ranges = sheets.Select(x => $"{x.GetDescription()}!{GoogleConfig.Range}").ToList();
-
-        var sheetInfoResponse = await _googleSheetService.GetSheetInfo(ranges);
-
-        if (sheetInfoResponse == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage("Unable to get spreadsheets", MessageTypeEnum.GET_SHEETS));
-            data.Messages.AddRange(messages);
-            return data;
-        }
-        else
-        {
-            messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
-            data = GigSheetHelpers.MapData(sheetInfoResponse);
-        }
-
-        // Only get spreadsheet name when all sheets are requested.
-        if (sheets.Count < Enum.GetNames(typeof(SheetEnum)).Length)
-        {
-            data!.Messages = messages;
-            return data;
-        }
-
-        var spreadsheetName = sheetInfoResponse.Properties.Title;
-
-        if (spreadsheetName == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage("Unable to get spreadsheet name", MessageTypeEnum.GENERAL));
-        }
-        else
-        {
-            messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved spreadsheet name: {spreadsheetName}", MessageTypeEnum.GENERAL));
-            data!.Properties.Name = spreadsheetName;
-        }
-
-        data!.Messages = messages;
+        data!.Messages.AddRange(messages);
         return data;
     }
 
