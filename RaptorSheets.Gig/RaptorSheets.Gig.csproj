@@ -15,6 +15,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>API Google Sheets Gig</PackageTags>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+    <PackageIcon>assets/icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
