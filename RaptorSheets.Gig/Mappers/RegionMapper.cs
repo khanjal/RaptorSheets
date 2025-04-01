@@ -14,6 +14,7 @@ public static class RegionMapper
     {
         var regions = new List<RegionEntity>();
         var headers = new Dictionary<int, string>();
+        values = values!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
         var id = 0;
 
         foreach (var value in values)
@@ -22,11 +23,6 @@ public static class RegionMapper
             if (id == 1)
             {
                 headers = HeaderHelpers.ParserHeader(value);
-                continue;
-            }
-
-            if (value == null || value[0] == null || value[0].ToString() == "")
-            {
                 continue;
             }
 

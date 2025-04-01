@@ -26,11 +26,6 @@ public static class PlaceMapper
                 continue;
             }
 
-            if (value == null || value[0] == null || value[0].ToString() == "")
-            {
-                continue;
-            }
-
             PlaceEntity place = new()
             {
                 RowId = id,

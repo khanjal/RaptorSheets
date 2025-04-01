@@ -26,11 +26,6 @@ public static class NameMapper
                 continue;
             }
 
-            if (value == null || value[0] == null || value[0].ToString() == "")
-            {
-                continue;
-            }
-
             if (value.Count < headers.Count)
             {
                 value.AddItems(headers.Count - value.Count);
