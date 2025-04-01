@@ -335,6 +335,47 @@ public class GoogleSheetManager : IGoogleSheetManager
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
 
+        var response = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
+
+        if (response == null)
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
+        }
+        else
+        {
+            messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
+            data = GigSheetHelpers.MapData(response);
+        }
+
+        // Only get spreadsheet name when all sheets are requested.
+        if (sheets.Count < Enum.GetNames(typeof(SheetEnum)).Length)
+        {
+            data!.Messages = messages;
+            return data;
+        }
+
+        var spreadsheetName = await GetSpreadsheetName();
+
+        if (spreadsheetName == null)
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage("Unable to get spreadsheet name", MessageTypeEnum.GENERAL));
+        }
+        else
+        {
+            messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved spreadsheet name: {spreadsheetName}", MessageTypeEnum.GENERAL));
+            data!.Properties.Name = spreadsheetName;
+        }
+
+        data!.Messages = messages;
+        return data;
+    }
+
+    public async Task<SheetEntity> GetSheetsByInfo(List<SheetEnum> sheets)
+    {
+        var data = new SheetEntity();
+        var messages = new List<MessageEntity>();
+        var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
+
         var ranges = sheets.Select(x => $"{x.GetDescription()}!{GoogleConfig.Range}").ToList();
 
         var sheetInfoResponse = await _googleSheetService.GetSheetInfo(ranges);
@@ -358,7 +399,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             return data;
         }
 
-        var spreadsheetName = await GetSpreadsheetName();
+        var spreadsheetName = sheetInfoResponse.Properties.Title;
 
         if (spreadsheetName == null)
         {

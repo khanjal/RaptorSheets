@@ -24,6 +24,7 @@ public static class SheetHelpers
         {
             var values = sheetData.Data[0]?.RowData
                 .Select(x => (IList<object>)x.Values.Select(y => (object)y.FormattedValue).ToList())
+                .Where(row => row.Count > 0 && row[0] != null && !string.IsNullOrEmpty(row[0].ToString()))
                 .ToList() ?? [];
 
             if (values != null)
