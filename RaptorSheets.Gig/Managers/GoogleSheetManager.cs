@@ -130,7 +130,17 @@ public class GoogleSheetManager : IGoogleSheetManager
         //    }
         //}
 
-        var success = (batchUpdateSpreadsheetResponse) != null;
+        if (batchUpdateSpreadsheetResponse == null)
+        {
+            // Call sheet properties to check sheets
+            var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+            if (spreadsheetInfo != null)
+            {
+                sheetEntity.Messages.AddRange(CheckSheets(spreadsheetInfo));
+            }
+
+            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageTypeEnum.SAVE_DATA));
+        }
 
         return sheetEntity;
     }
