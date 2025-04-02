@@ -166,40 +166,57 @@ public class GoogleSheetManager : IGoogleSheetManager
         return messages;
     }
 
-    public List<MessageEntity> CheckSheets(Spreadsheet sheetInfoResponse)
+    public async Task<List<MessageEntity>> CheckSheets(List<string> sheets)
     {
         var messages = new List<MessageEntity>();
-        var spreadsheetSheets = sheetInfoResponse.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
-        var sheets = new List<SheetEnum>();
 
-        var missingSheetMessages = new List<MessageEntity>();
-        // Loop through all sheets to see if they exist.
-        foreach (var name in Enum.GetNames<SheetEnum>())
+        if (!sheets.Any())
         {
-            SheetEnum sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), name);
-
-            if (!spreadsheetSheets.Contains(name))
-            {
-                missingSheetMessages.Add(MessageHelpers.CreateErrorMessage($"Unable to find sheet {name}", MessageTypeEnum.CHECK_SHEET));
-                continue;
-            }
-
-            sheets.Add(sheetEnum);
+            sheets = Enum.GetNames(typeof(SheetEnum)).ToList();
         }
 
-        if (missingSheetMessages.Count > 0)
+        var ranges = sheets.Select(title => $"{title}!{GoogleConfig.HeaderRange}").ToList();
+        var sheetInfoResponse = await _googleSheetService.GetSheetInfo(ranges);
+
+        if (sheetInfoResponse == null)
         {
-            messages.AddRange(missingSheetMessages);
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find spreadsheet", MessageTypeEnum.CHECK_SHEET));
+            return messages;
         }
-        else
-        {
-            messages.Add(MessageHelpers.CreateInfoMessage("All sheets found", MessageTypeEnum.CHECK_SHEET));
-        }
+
+        messages.AddRange(CheckSheets(sheetInfoResponse));
+
+        messages.AddRange(CheckSheetHeaders(sheetInfoResponse));
 
         return messages;
     }
 
-    public List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
+    public static List<MessageEntity> CheckSheets(Spreadsheet sheetInfoResponse)
+    {
+        var messages = new List<MessageEntity>();
+        var spreadsheetSheets = sheetInfoResponse.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
+
+        // Loop through all sheets to see if they exist.
+        foreach (var name in Enum.GetNames<SheetEnum>())
+        {
+            if (!spreadsheetSheets.Contains(name))
+            {
+                messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find sheet {name}", MessageTypeEnum.CHECK_SHEET));
+                continue;
+            }
+        }
+
+        if (messages.Count > 0)
+        {
+            return messages;
+        }
+        
+        messages.Add(MessageHelpers.CreateInfoMessage("All sheets found", MessageTypeEnum.CHECK_SHEET));
+
+        return messages;
+    }
+
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
         var messages = new List<MessageEntity>();
 
@@ -213,7 +230,11 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Loop through sheets to check headers.
         foreach (var sheet in sheetInfoResponse.Sheets)
         {
-            var sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), sheet.Properties.Title.ToUpper());
+            if (!Enum.TryParse(sheet.Properties.Title.ToUpper(), out SheetEnum sheetEnum))
+            {
+                messages.Add(MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known enum value", MessageTypeEnum.CHECK_SHEET));
+                continue;
+            }
             var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
             switch (sheetEnum)
@@ -334,39 +355,40 @@ public class GoogleSheetManager : IGoogleSheetManager
         var data = new SheetEntity();
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
+        var sheetsList = sheets.Select(x => x.GetDescription()).ToList();
 
         var response = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
 
         if (response == null)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
+            // Call sheet properties to check sheets
+            var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+            if (spreadsheetInfo != null)
+            {
+                messages.AddRange(CheckSheets(spreadsheetInfo));
+            }
+            else
+            {
+                messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GET_SHEETS));
+            }
+
         }
         else
         {
             messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
-            data = GigSheetHelpers.MapData(response);
+
+            var ranges = sheetsList.Select(sheet => $"{sheet}!{GoogleConfig.HeaderRange}").ToList();
+            var spreadsheetInfo = await _googleSheetService.GetSheetInfo(ranges);
+            if (spreadsheetInfo != null)
+            {
+                data.Messages.AddRange(CheckSheetHeaders(spreadsheetInfo));
+            }
+
+            data = GigSheetHelpers.MapData(response) ?? new SheetEntity();
         }
 
-        // Only get spreadsheet name when all sheets are requested.
-        if (sheets.Count < Enum.GetNames(typeof(SheetEnum)).Length)
-        {
-            data!.Messages.AddRange(messages);
-            return data;
-        }
+        data.Messages.AddRange(messages);
 
-        var spreadsheetName = await GetSpreadsheetName();
-
-        if (spreadsheetName == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage("Unable to get spreadsheet name", MessageTypeEnum.GENERAL));
-        }
-        else
-        {
-            messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved spreadsheet name: {spreadsheetName}", MessageTypeEnum.GENERAL));
-            data!.Properties.Name = spreadsheetName;
-        }
-
-        data!.Messages.AddRange(messages);
         return data;
     }
 

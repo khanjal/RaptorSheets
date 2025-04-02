@@ -7,6 +7,6 @@ public interface ISheetManager
 {
     public Task<List<MessageEntity>> CheckSheets();
     public Task<List<MessageEntity>> CheckSheets(bool checkHeaders);
-    public List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse);
+    public Task<List<MessageEntity>> CheckSheets(List<string> sheets);
     public Task<string?> GetSpreadsheetName();
 }

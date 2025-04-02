@@ -135,7 +135,67 @@ public class GoogleSheetManager : IGoogleSheetManager
         return messages;
     }
 
-    public List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
+    public async Task<List<MessageEntity>> CheckSheets(List<string> sheets)
+    {
+        var messages = new List<MessageEntity>();
+
+        if (!sheets.Any())
+        {
+            sheets = Enum.GetNames(typeof(SheetEnum)).ToList();
+        }
+
+        var ranges = sheets.Select(title => $"{title}!{GoogleConfig.HeaderRange}").ToList();
+        var sheetInfoResponse = await _googleSheetService.GetSheetInfo(ranges);
+
+        if (sheetInfoResponse == null)
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find spreadsheet", MessageTypeEnum.CHECK_SHEET));
+            return messages;
+        }
+
+        messages.AddRange(CheckSheets(sheetInfoResponse));
+
+        messages.AddRange(CheckSheetHeaders(sheetInfoResponse));
+
+        return messages;
+    }
+
+    public static List<MessageEntity> CheckSheets(Spreadsheet sheetInfoResponse)
+    {
+        var messages = new List<MessageEntity>();
+        var spreadsheetSheets = sheetInfoResponse.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
+        var sheets = new List<SheetEnum>();
+
+        var missingSheetMessages = new List<MessageEntity>();
+        // Loop through all sheets to see if they exist.
+        foreach (var name in Enum.GetNames<SheetEnum>())
+        {
+            SheetEnum sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), name);
+
+            if (!spreadsheetSheets.Contains(name))
+            {
+                missingSheetMessages.Add(MessageHelpers.CreateErrorMessage($"Unable to find sheet {name}", MessageTypeEnum.CHECK_SHEET));
+                continue;
+            }
+
+            sheets.Add(sheetEnum);
+        }
+
+        if (missingSheetMessages.Count > 0)
+        {
+            messages.AddRange(missingSheetMessages);
+        }
+        else
+        {
+            messages.Add(MessageHelpers.CreateInfoMessage("All sheets found", MessageTypeEnum.CHECK_SHEET));
+        }
+
+        messages.AddRange(CheckSheetHeaders(sheetInfoResponse));
+
+        return messages;
+    }
+
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
         var messages = new List<MessageEntity>();
 

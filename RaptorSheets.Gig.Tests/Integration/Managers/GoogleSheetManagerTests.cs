@@ -68,7 +68,7 @@ public class GoogleSheetManagerTests
     {
         var result = await _googleSheetManager!.GetSheets();
         Assert.NotNull(result);
-        Assert.Equal(2, result!.Messages.Count);
+        Assert.Single(result!.Messages);
         Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages[0].Level);
         Assert.Contains(_sheetEnum.ToString(), result!.Messages[0].Message);
         Assert.True(result!.Messages[0].Time >= _currentTime);
@@ -80,7 +80,7 @@ public class GoogleSheetManagerTests
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
         var result = await googleSheetManager.GetSheets();
         Assert.NotNull(result);
-        Assert.Equal(2, result!.Messages.Count);
+        Assert.Single(result!.Messages);
 
         result!.Messages.ForEach(x => Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), x.Level));
     }
