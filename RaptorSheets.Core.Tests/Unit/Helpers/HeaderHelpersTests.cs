@@ -114,7 +114,7 @@ public class HeaderHelpersTests
         // Assert
         Assert.Equal(3, result.Count);
         Assert.Contains(result, m => m.Message.Contains("Missing column [Header3]"));
-        Assert.Contains(result, m => m.Message.Contains("Unexpected column [Header2] should be [Header1]"));
-        Assert.Contains(result, m => m.Message.Contains("Unexpected column [Header1] should be [Header2]"));
+        Assert.Contains(result, m => m.Message.Contains("Column [Header2] should be [Header1]"));
+        Assert.Contains(result, m => m.Message.Contains("Column [Header1] should be [Header2]"));
     }
 }
