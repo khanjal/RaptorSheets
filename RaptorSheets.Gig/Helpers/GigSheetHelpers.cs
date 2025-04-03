@@ -462,6 +462,21 @@ public static class GigSheetHelpers
         switch (keyEnum)
         {
             case HeaderEnum.ADDRESS_END:
+                // K - First Visit
+                sheet.Headers.AddColumn(new SheetCellModel
+                {
+                    Name = HeaderEnum.VISIT_FIRST.GetDescription(),
+                    Formula = ArrayFormulaHelpers.ArrayFormulaMultipleVisit(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), SheetEnum.TRIPS.GetDescription(), refSheet.GetColumn(HeaderEnum.DATE.GetDescription()), refSheet.GetColumn(HeaderEnum.ADDRESS_START.GetDescription()), refSheet.GetColumn(keyEnum.GetDescription()), true),
+                    Format = FormatEnum.DATE
+                });
+                // L - Last Visit
+                sheet.Headers.AddColumn(new SheetCellModel
+                {
+                    Name = HeaderEnum.VISIT_LAST.GetDescription(),
+                    Formula = ArrayFormulaHelpers.ArrayFormulaMultipleVisit(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), SheetEnum.TRIPS.GetDescription(), refSheet.GetColumn(HeaderEnum.DATE.GetDescription()), refSheet.GetColumn(HeaderEnum.ADDRESS_START.GetDescription()), refSheet.GetColumn(keyEnum.GetDescription()), false),
+                    Format = FormatEnum.DATE
+                });
+                break;
             case HeaderEnum.NAME:
             case HeaderEnum.PLACE:
             case HeaderEnum.REGION:
