@@ -9,6 +9,7 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
+using System.Collections.Generic;
 
 namespace RaptorSheets.Gig.Managers;
 
@@ -293,11 +294,11 @@ public class GoogleSheetManager : IGoogleSheetManager
         var sheetsList = sheets.Select(x => x.GetDescription()).ToList();
 
         var response = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
+        Spreadsheet? spreadsheetInfo;
 
         if (response == null)
         {
-            // Call sheet properties to check sheets
-            var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+            spreadsheetInfo = await _googleSheetService.GetSheetInfo(sheetsList);
             if (spreadsheetInfo != null)
             {
                 var missingSheets = SheetHelpers.CheckSheets<SheetEnum>(spreadsheetInfo);
@@ -305,8 +306,14 @@ public class GoogleSheetManager : IGoogleSheetManager
                 if (missingSheets.Count != 0)
                 {
                     messages.AddRange(SheetHelpers.CheckSheets(missingSheets));
-                    var createSheets = await CreateSheets(missingSheets);
-                    messages.AddRange(createSheets.Messages);
+                    messages.AddRange((await CreateSheets(missingSheets)).Messages);
+
+                    // Reattempt to get the sheets once after creating them
+                    response = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
+                    if (response == null)
+                    {
+                        messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s) after creation", MessageTypeEnum.GET_SHEETS));
+                    }
                 }
             }
             else
@@ -314,12 +321,14 @@ public class GoogleSheetManager : IGoogleSheetManager
                 messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GET_SHEETS));
             }
         }
-        else
+
+        if (response != null)
         {
             messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
-
+            
             var ranges = sheetsList.Select(sheet => $"{sheet}!{GoogleConfig.HeaderRange}").ToList();
-            var spreadsheetInfo = await _googleSheetService.GetSheetInfo(ranges);
+            spreadsheetInfo = await _googleSheetService.GetSheetInfo(ranges);
+
             if (spreadsheetInfo != null)
             {
                 messages.AddRange(CheckSheetHeaders(spreadsheetInfo));
