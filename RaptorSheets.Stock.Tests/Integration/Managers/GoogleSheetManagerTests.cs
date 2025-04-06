@@ -78,24 +78,6 @@ public class GoogleSheetManagerTests
     }
 
     [FactCheckUserSecrets]
-    public async Task GivenGetSpreadsheetName_WithValidSpreadsheetId_ReturnTitle()
-    {
-        if (_googleSheetManager == null)
-            throw new InvalidOperationException("GoogleSheetManager is not initialized.");
-
-        var result = await _googleSheetManager.GetSpreadsheetName();
-        Assert.False(string.IsNullOrWhiteSpace(result));
-    }
-
-    [FactCheckUserSecrets]
-    public async Task GivenGetSpreadsheetName_WithInvalidSpreadsheetId_ReturnNull()
-    {
-        var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
-        var result = await googleSheetManager.GetSpreadsheetName();
-        Assert.Null(result);
-    }
-
-    [FactCheckUserSecrets]
     public async Task GivenAddSheetData_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
@@ -137,28 +119,6 @@ public class GoogleSheetManagerTests
         Assert.NotNull(result);
         Assert.Equal(1, result.Messages?.Count);
         Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result.Messages?[0].Level);
-    }
-
-    [FactCheckUserSecrets]
-    public async Task GivenCheckSheets_WithNoHeaderCheck_ThenReturnData()
-    {
-        if (_googleSheetManager == null)
-            throw new InvalidOperationException("GoogleSheetManager is not initialized.");
-
-        var result = await _googleSheetManager.CheckSheets();
-        Assert.NotNull(result);
-        Assert.Equal(1, result?.Count);
-    }
-
-    [FactCheckUserSecrets]
-    public async Task GivenCheckSheets_WithHeaderCheck_ThenReturnData()
-    {
-        if (_googleSheetManager == null)
-            throw new InvalidOperationException("GoogleSheetManager is not initialized.");
-
-        var result = await _googleSheetManager.CheckSheets(true);
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count);
     }
 
     //private static SheetEntity GenerateShift()

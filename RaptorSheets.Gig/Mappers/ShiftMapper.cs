@@ -48,6 +48,8 @@ public static class ShiftMapper
                 Bonus = HeaderHelpers.GetDecimalValueOrNull(HeaderEnum.BONUS.GetDescription(), value, headers),
                 Total = HeaderHelpers.GetDecimalValueOrNull(HeaderEnum.TOTAL.GetDescription(), value, headers),
                 Cash = HeaderHelpers.GetDecimalValueOrNull(HeaderEnum.CASH.GetDescription(), value, headers),
+                TotalActive = HeaderHelpers.GetStringValue(HeaderEnum.TOTAL_TIME_ACTIVE.GetDescription(), value, headers),
+                TotalTime = HeaderHelpers.GetStringValue(HeaderEnum.TOTAL_TIME.GetDescription(), value, headers),
                 TotalTrips = HeaderHelpers.GetIntValue(HeaderEnum.TOTAL_TRIPS.GetDescription(), value, headers),
                 TotalDistance = HeaderHelpers.GetDecimalValueOrNull(HeaderEnum.TOTAL_DISTANCE.GetDescription(), value, headers),
                 TotalPay = HeaderHelpers.GetDecimalValueOrNull(HeaderEnum.TOTAL_PAY.GetDescription(), value, headers),

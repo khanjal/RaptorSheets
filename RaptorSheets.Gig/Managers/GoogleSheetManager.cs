@@ -7,13 +7,12 @@ using RaptorSheets.Gig.Entities;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
-using RaptorSheets.Core.Interfaces;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
 
 namespace RaptorSheets.Gig.Managers;
 
-public interface IGoogleSheetManager : ISheetManager
+public interface IGoogleSheetManager
 {
     public Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
     public Task<SheetEntity> CreateSheets();
@@ -21,6 +20,7 @@ public interface IGoogleSheetManager : ISheetManager
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetSheets();
     public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
+    public Task<List<PropertyEntity>> GetSheetProperties();
     public Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
 }
 
@@ -136,94 +136,13 @@ public class GoogleSheetManager : IGoogleSheetManager
             var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
             if (spreadsheetInfo != null)
             {
-                sheetEntity.Messages.AddRange(CheckSheets(spreadsheetInfo));
+                sheetEntity.Messages.AddRange(SheetHelpers.CheckSheets(SheetHelpers.CheckSheets<SheetEnum>(spreadsheetInfo)));
             }
 
             sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageTypeEnum.SAVE_DATA));
         }
 
         return sheetEntity;
-    }
-
-    public async Task<List<MessageEntity>> CheckSheets()
-    {
-        return await CheckSheets(false);
-    }
-
-    public async Task<List<MessageEntity>> CheckSheets(bool checkHeaders)
-    {
-        var messages = new List<MessageEntity>();
-
-        var sheetTitles = Enum.GetNames(typeof(SheetEnum)).ToList();
-        var ranges = sheetTitles.Select(title => $"{title}!{GoogleConfig.HeaderRange}").ToList();
-
-        var sheetInfoResponse = await _googleSheetService.GetSheetInfo(ranges);
-
-        if (sheetInfoResponse == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find spreadsheet", MessageTypeEnum.CHECK_SHEET));
-            return messages;
-        }
-
-        messages.AddRange(CheckSheets(sheetInfoResponse));
-
-
-        if (!checkHeaders)
-            return messages;
-
-        messages.AddRange(CheckSheetHeaders(sheetInfoResponse));
-
-        return messages;
-    }
-
-    public async Task<List<MessageEntity>> CheckSheets(List<string> sheets)
-    {
-        var messages = new List<MessageEntity>();
-
-        if (!sheets.Any())
-        {
-            sheets = Enum.GetNames(typeof(SheetEnum)).ToList();
-        }
-
-        var ranges = sheets.Select(title => $"{title}!{GoogleConfig.HeaderRange}").ToList();
-        var sheetInfoResponse = await _googleSheetService.GetSheetInfo(ranges);
-
-        if (sheetInfoResponse == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find spreadsheet", MessageTypeEnum.CHECK_SHEET));
-            return messages;
-        }
-
-        messages.AddRange(CheckSheets(sheetInfoResponse));
-
-        messages.AddRange(CheckSheetHeaders(sheetInfoResponse));
-
-        return messages;
-    }
-
-    public static List<MessageEntity> CheckSheets(Spreadsheet sheetInfoResponse)
-    {
-        var messages = new List<MessageEntity>();
-        var spreadsheetSheets = sheetInfoResponse.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
-
-        // Loop through all sheets to see if they exist.
-        foreach (var name in Enum.GetNames<SheetEnum>())
-        {
-            if (!spreadsheetSheets.Contains(name))
-            {
-                messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find sheet {name}", MessageTypeEnum.CHECK_SHEET));
-                continue;
-            }
-        }
-
-        if (messages.Count > 0)
-        {
-            return messages;
-        }
-        
-        messages.Add(MessageHelpers.CreateInfoMessage("All sheets found", MessageTypeEnum.CHECK_SHEET));
-
-        return messages;
     }
 
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
@@ -312,6 +231,12 @@ public class GoogleSheetManager : IGoogleSheetManager
         return await CreateSheets(sheets);
     }
 
+    public async Task<SheetEntity> CreateSheets(List<string> sheets)
+    {
+        var sheetEnums = sheets.Select(x => x.GetValueFromName<SheetEnum>()).ToList();
+        return await CreateSheets(sheetEnums);
+    }
+
     public async Task<SheetEntity> CreateSheets(List<SheetEnum> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetsHelpers.Generate(sheets);
@@ -375,13 +300,19 @@ public class GoogleSheetManager : IGoogleSheetManager
             var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
             if (spreadsheetInfo != null)
             {
-                messages.AddRange(CheckSheets(spreadsheetInfo));
+                var missingSheets = SheetHelpers.CheckSheets<SheetEnum>(spreadsheetInfo);
+
+                if (missingSheets.Count != 0)
+                {
+                    messages.AddRange(SheetHelpers.CheckSheets(missingSheets));
+                    var createSheets = await CreateSheets(missingSheets);
+                    messages.AddRange(createSheets.Messages);
+                }
             }
             else
             {
                 messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GET_SHEETS));
             }
-
         }
         else
         {
@@ -391,7 +322,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             var spreadsheetInfo = await _googleSheetService.GetSheetInfo(ranges);
             if (spreadsheetInfo != null)
             {
-                data.Messages.AddRange(CheckSheetHeaders(spreadsheetInfo));
+                messages.AddRange(CheckSheetHeaders(spreadsheetInfo));
             }
 
             data = GigSheetHelpers.MapData(response) ?? new SheetEntity();
@@ -400,6 +331,12 @@ public class GoogleSheetManager : IGoogleSheetManager
         data.Messages.AddRange(messages);
 
         return data;
+    }
+
+    public async Task<List<PropertyEntity>> GetSheetProperties() // TODO: Look into moving this to a common area
+    {
+        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+        return await GetSheetProperties(sheets.Select(t => t.GetDescription()).ToList());
     }
 
     public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets) // TODO: Look into moving this to a common area
@@ -433,15 +370,4 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         return properties;
     }
-
-    public async Task<string?> GetSpreadsheetName() // TODO: Look into moving this to a common area
-    {
-        var response = await _googleSheetService.GetSheetInfo();
-
-        if (response == null)
-            return null;
-
-        return response.Properties.Title;
-    }
-
 }

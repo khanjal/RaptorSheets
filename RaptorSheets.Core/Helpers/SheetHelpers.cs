@@ -1,5 +1,6 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Models.Google;
 
@@ -7,13 +8,61 @@ namespace RaptorSheets.Core.Helpers;
 
 public static class SheetHelpers
 {
-    public static string GetSpreadsheetTitle(Spreadsheet sheet)
+    public static List<string> CheckSheets<TEnum>(Spreadsheet? sheetInfoResponse) where TEnum : Enum
     {
+        var missingSheets = new List<string>();
+        var spreadsheetSheets = GetSpreadsheetSheets(sheetInfoResponse);
+
+        // Loop through all sheets to see if they exist.
+        foreach (var name in Enum.GetNames(typeof(TEnum)))
+        {
+            if (!spreadsheetSheets.Contains(name))
+            {
+                missingSheets.Add(name);
+                continue;
+            }
+        }
+
+        return missingSheets;
+    }
+
+    public static List<MessageEntity> CheckSheets(List<string> sheets)
+    {
+        var messages = new List<MessageEntity>();
+
+        // Loop through all sheets to see if they exist.
+        foreach (var sheet in sheets)
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find sheet {sheet}", MessageTypeEnum.CHECK_SHEET));
+            continue;
+        }
+
+        if (messages.Count > 0)
+        {
+            return messages;
+        }
+
+        messages.Add(MessageHelpers.CreateInfoMessage("All sheets found", MessageTypeEnum.CHECK_SHEET));
+
+        return messages;
+    }
+
+    public static string GetSpreadsheetTitle(Spreadsheet? sheet)
+    {
+        if (sheet == null)
+        {
+            return string.Empty;
+        }
+
         return sheet.Properties.Title;
     }
 
-    public static List<string> GetSpreadsheetSheets(Spreadsheet sheet)
+    public static List<string> GetSpreadsheetSheets(Spreadsheet? sheet)
     {
+        if (sheet == null)
+        {
+            return [];
+        }
         return sheet.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
     }
 

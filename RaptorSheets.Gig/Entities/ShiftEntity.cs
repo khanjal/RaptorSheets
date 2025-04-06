@@ -49,6 +49,12 @@ public class ShiftEntity : AmountEntity
     [JsonPropertyName("note")]
     public string Note { get; set; } = "";
 
+    [JsonPropertyName("totalActive")]
+    public string TotalActive { get; set; } = "";
+
+    [JsonPropertyName("totalTime")]
+    public string TotalTime { get; set; } = "";
+
     [JsonPropertyName("totalTrips")]
     public int TotalTrips { get; set; }
 

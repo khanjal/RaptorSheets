@@ -7,6 +7,7 @@ using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
 using RaptorSheets.Gig.Tests.Data.Helpers;
+using RaptorSheets.Core.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Integration.Managers;
 
@@ -36,7 +37,7 @@ public class GoogleSheetManagerTests
     {
         var result = await _googleSheetManager!.GetSheet(_sheetEnum.GetDescription());
         Assert.NotNull(result);
-        Assert.Single(result.Messages);
+        Assert.Equal(2, result.Messages.Count);
         Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages[0].Level);
         Assert.Equal(MessageTypeEnum.GET_SHEETS.GetDescription(), result!.Messages[0].Type);
     }
@@ -57,7 +58,7 @@ public class GoogleSheetManagerTests
     {
         var result = await _googleSheetManager!.GetSheets(new List<SheetEnum> { _sheetEnum });
         Assert.NotNull(result);
-        Assert.Single(result!.Messages);
+        Assert.Equal(2, result!.Messages.Count);
         Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages[0].Level);
         Assert.Contains(_sheetEnum.ToString(), result!.Messages[0].Message);
         Assert.True(result!.Messages[0].Time >= _currentTime);
@@ -68,7 +69,7 @@ public class GoogleSheetManagerTests
     {
         var result = await _googleSheetManager!.GetSheets();
         Assert.NotNull(result);
-        Assert.Single(result!.Messages);
+        Assert.Equal(2, result!.Messages.Count);
         Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages[0].Level);
         Assert.Contains(_sheetEnum.ToString(), result!.Messages[0].Message);
         Assert.True(result!.Messages[0].Time >= _currentTime);
@@ -94,21 +95,6 @@ public class GoogleSheetManagerTests
         Assert.Single(result!.Messages);
         Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result!.Messages[0].Level);
         Assert.True(result!.Messages[0].Time >= _currentTime);
-    }
-
-    [FactCheckUserSecrets]
-    public async Task GivenGetSpreadsheetName_WithValidSpreadsheetId_ReturnTitle()
-    {
-        var result = await _googleSheetManager!.GetSpreadsheetName();
-        Assert.False(string.IsNullOrWhiteSpace(result));
-    }
-
-    [FactCheckUserSecrets]
-    public async Task GivenGetSpreadsheetName_WithInvalidSpreadsheetId_ReturnNull()
-    {
-        var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
-        var result = await googleSheetManager.GetSpreadsheetName();
-        Assert.Null(result);
     }
 
     [Fact]
@@ -207,22 +193,6 @@ public class GoogleSheetManagerTests
         Assert.NotNull(result);
         Assert.Single(result.Messages);
         Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result.Messages[0].Level);
-    }
-
-    [FactCheckUserSecrets]
-    public async Task GivenCheckSheets_WithNoHeaderCheck_ThenReturnData()
-    {
-        var result = await _googleSheetManager!.CheckSheets();
-        Assert.NotNull(result);
-        Assert.Single(result);
-    }
-
-    [FactCheckUserSecrets]
-    public async Task GivenCheckSheets_WithHeaderCheck_ThenReturnData()
-    {
-        var result = await _googleSheetManager!.CheckSheets(true);
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count);
     }
 
     [FactCheckUserSecrets]
