@@ -134,7 +134,7 @@ public class GoogleSheetHelpersTests
     {
         var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
         var repeatCells = batchRequest.Requests.Where(x => x.RepeatCell != null).ToList();
-        var repeatHeaders = config.Headers.Where(x => x.Format != null || x.Validation != null).ToList();
+        var repeatHeaders = config.Headers.Where(x => x.Format != null || !string.IsNullOrEmpty(x.Validation)).ToList();
 
         Assert.Equal(repeatHeaders.Count, repeatCells.Count);
     }
