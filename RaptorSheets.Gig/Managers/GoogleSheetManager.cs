@@ -298,7 +298,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         if (response == null)
         {
-            spreadsheetInfo = await _googleSheetService.GetSheetInfo(sheetsList);
+            spreadsheetInfo = await _googleSheetService.GetSheetInfo();
             if (spreadsheetInfo != null)
             {
                 var missingSheets = SheetHelpers.CheckSheets<SheetEnum>(spreadsheetInfo);
