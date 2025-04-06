@@ -39,17 +39,18 @@ public static class GoogleRequestHelpers
         // Append more columns if the default amount isn't enough
         var defaultColumns = GoogleConfig.DefaultColumnCount;
 
-        if (sheet!.Headers.Count <= defaultColumns)
-        {
-            return new Request();
-        }
-
         var appendDimensionRequest = new AppendDimensionRequest
         {
             Dimension = DimensionEnum.COLUMNS.GetDescription(),
             Length = sheet.Headers.Count - defaultColumns,
             SheetId = sheet.Id
         };
+
+        if (appendDimensionRequest.Length < 0)
+        {
+            appendDimensionRequest.Length = 0;
+        }
+
         var request = new Request { AppendDimension = appendDimensionRequest };
 
         return request;

@@ -91,7 +91,7 @@ public static class GenerateSheetsHelpers
             {
                 GridRange = range,
                 CellFormat = (header.Format != null ? SheetHelpers.GetCellFormat((FormatEnum)header.Format) : null),
-                DataValidation = (header.Validation != null ? GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>()) : null)
+                DataValidation = (!string.IsNullOrEmpty(header.Validation) ? GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>()) : null)
             };
 
             _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
