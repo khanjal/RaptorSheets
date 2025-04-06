@@ -26,7 +26,13 @@ public static class GenerateSheetsHelpers
             sheetModel.Id = random.Next();
 
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendDimension(sheetModel));
+
+            var appendDimension = GoogleRequestHelpers.GenerateAppendDimension(sheetModel);
+            if (appendDimension != null)
+            {
+                _batchUpdateSpreadsheetRequest!.Requests.Add(appendDimension);
+            }
+
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
             GenerateHeadersFormatAndProtection(sheetModel);
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
@@ -82,7 +88,7 @@ public static class GenerateSheetsHelpers
             }
 
             // If there's no format or validation then go to next header
-            if (header.Format == null && header.Validation == null)
+            if (header.Format == null && string.IsNullOrEmpty(header.Validation))
             {
                 return;
             }
@@ -90,9 +96,17 @@ public static class GenerateSheetsHelpers
             var repeatCellModel = new RepeatCellModel
             {
                 GridRange = range,
-                CellFormat = (header.Format != null ? SheetHelpers.GetCellFormat((FormatEnum)header.Format) : null),
-                DataValidation = (!string.IsNullOrEmpty(header.Validation) ? GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>()) : null)
             };
+
+            if (header.Format != null)
+            {
+                repeatCellModel.CellFormat = SheetHelpers.GetCellFormat((FormatEnum)header.Format);
+            }
+
+            if (!string.IsNullOrEmpty(header.Validation))
+            {
+                repeatCellModel.DataValidation = GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>());
+            }
 
             _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
         });

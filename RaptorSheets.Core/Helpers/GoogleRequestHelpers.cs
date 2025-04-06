@@ -34,10 +34,15 @@ public static class GoogleRequestHelpers
         return new Request { AppendCells = appendCellsRequest };
     }
 
-    public static Request GenerateAppendDimension(SheetModel sheet)
+    public static Request? GenerateAppendDimension(SheetModel sheet)
     {
         // Append more columns if the default amount isn't enough
         var defaultColumns = GoogleConfig.DefaultColumnCount;
+
+        if (sheet!.Headers.Count <= defaultColumns)
+        {
+            return null;
+        }
 
         var appendDimensionRequest = new AppendDimensionRequest
         {
@@ -45,11 +50,6 @@ public static class GoogleRequestHelpers
             Length = sheet.Headers.Count - defaultColumns,
             SheetId = sheet.Id
         };
-
-        if (appendDimensionRequest.Length < 0)
-        {
-            appendDimensionRequest.Length = 0;
-        }
 
         var request = new Request { AppendDimension = appendDimensionRequest };
 
