@@ -226,9 +226,15 @@ public static class ShiftMapper
         });
         var dateRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
         // Start Time        
-        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.TIME_START.GetDescription() });
+        sheet.Headers.AddColumn(new SheetCellModel { 
+            Name = HeaderEnum.TIME_START.GetDescription(),
+            Format = FormatEnum.TIME
+        });
         // End Time
-        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.TIME_END.GetDescription() });
+        sheet.Headers.AddColumn(new SheetCellModel { 
+            Name = HeaderEnum.TIME_END.GetDescription(),
+            Format = FormatEnum.TIME
+        });
         // Service
         sheet.Headers.AddColumn(new SheetCellModel
         {

@@ -9,7 +9,6 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
-using System.Collections.Generic;
 
 namespace RaptorSheets.Gig.Managers;
 
@@ -59,7 +58,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                     break;
                 default:
                     // Unsupported sheet.
-                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.LOOKUP} data: {sheet.UpperName()} not supported", MessageTypeEnum.GENERAL));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet.UpperName()} not supported", MessageTypeEnum.GENERAL));
                     break;
             }
         }
@@ -137,7 +136,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
             if (spreadsheetInfo != null)
             {
-                sheetEntity.Messages.AddRange(SheetHelpers.CheckSheets(SheetHelpers.CheckSheets<SheetEnum>(spreadsheetInfo)));
+                sheetEntity.Messages.AddRange(await HandleMissingSheets(spreadsheetInfo));
             }
 
             sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageTypeEnum.SAVE_DATA));
@@ -299,30 +298,9 @@ public class GoogleSheetManager : IGoogleSheetManager
         if (response == null)
         {
             spreadsheetInfo = await _googleSheetService.GetSheetInfo();
-            if (spreadsheetInfo != null)
-            {
-                var missingSheets = SheetHelpers.CheckSheets<SheetEnum>(spreadsheetInfo);
-
-                if (missingSheets.Count != 0)
-                {
-                    messages.AddRange(SheetHelpers.CheckSheets(missingSheets));
-                    messages.AddRange((await CreateSheets(missingSheets)).Messages);
-
-                    // Reattempt to get the sheets once after creating them
-                    response = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
-                    if (response == null)
-                    {
-                        messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s) after creation", MessageTypeEnum.GET_SHEETS));
-                    }
-                }
-            }
-            else
-            {
-                messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GET_SHEETS));
-            }
+            messages.AddRange(await HandleMissingSheets(spreadsheetInfo));
         }
-
-        if (response != null)
+        else
         {
             messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
             
@@ -378,5 +356,26 @@ public class GoogleSheetManager : IGoogleSheetManager
         }
 
         return properties;
+    }
+
+    private async Task<List<MessageEntity>> HandleMissingSheets(Spreadsheet? spreadsheet)
+    {
+        var messages = new List<MessageEntity>();
+        if (spreadsheet != null)
+        {
+            var missingSheets = SheetHelpers.CheckSheets<SheetEnum>(spreadsheet);
+
+            if (missingSheets.Count != 0)
+            {
+                messages.AddRange(SheetHelpers.CheckSheets(missingSheets));
+                messages.AddRange((await CreateSheets(missingSheets)).Messages);
+            }
+        }
+        else
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GET_SHEETS));
+        }
+
+        return messages;
     }
 }

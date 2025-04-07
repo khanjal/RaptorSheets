@@ -349,10 +349,14 @@ public static class TripMapper
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.PICKUP.GetDescription(),
-            Note = ColumnNotes.Pickup
+            Note = ColumnNotes.Pickup,
+            Format = FormatEnum.TIME
         });
         // Dropoff
-        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.DROPOFF.GetDescription() });
+        sheet.Headers.AddColumn(new SheetCellModel { 
+            Name = HeaderEnum.DROPOFF.GetDescription(),
+            Format = FormatEnum.TIME
+        });
         // Duration
         sheet.Headers.AddColumn(new SheetCellModel
         {
