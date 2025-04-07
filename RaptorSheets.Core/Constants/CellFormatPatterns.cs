@@ -10,6 +10,6 @@ public static class CellFormatPatterns
     public static string Distance => "#,##0.0";
     public static string Duration => "[h]:mm";
     public static string Number => "#,##0";
-    public static string Time => "hh:mm:ss am/pm";
+    public static string Time => "hh:mm am/pm";
     public static string Weekday => "ddd";
 }
