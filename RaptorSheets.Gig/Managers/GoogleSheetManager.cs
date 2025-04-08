@@ -315,6 +315,11 @@ public class GoogleSheetManager : IGoogleSheetManager
             data = GigSheetHelpers.MapData(response) ?? new SheetEntity();
         }
 
+        if (spreadsheetInfo != null)
+        {
+            data.Properties.Name = spreadsheetInfo.Properties.Title;
+        }
+
         data.Messages.AddRange(messages);
 
         return data;
