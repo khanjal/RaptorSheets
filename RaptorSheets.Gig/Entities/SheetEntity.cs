@@ -29,6 +29,9 @@ public class SheetEntity
     [JsonPropertyName("services")]
     public List<ServiceEntity> Services { get; set; } = [];
 
+    [JsonPropertyName("setup")]
+    public List<SetupEntity> Setup { get; set; } = [];
+
     [JsonPropertyName("shifts")]
     public List<ShiftEntity> Shifts { get; set; } = [];
 

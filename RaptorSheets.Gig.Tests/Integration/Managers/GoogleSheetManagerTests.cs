@@ -1,5 +1,4 @@
 ﻿using Moq;
-using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
@@ -7,7 +6,7 @@ using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
 using RaptorSheets.Gig.Tests.Data.Helpers;
-using RaptorSheets.Core.Helpers;
+using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
 
 namespace RaptorSheets.Gig.Tests.Integration.Managers;
 
@@ -181,15 +180,15 @@ public class GoogleSheetManagerTests
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
-        googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<SheetEnum>>())).ReturnsAsync(new SheetEntity());
-        var result = await googleSheetManager.Object.CreateSheets(new List<SheetEnum>());
+        googleSheetManager.Setup(x => x.CreateSheets()).ReturnsAsync(new SheetEntity());
+        var result = await googleSheetManager.Object.CreateSheets();
         Assert.NotNull(result);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnData()
     {
-        var result = await _googleSheetManager!.CreateSheets(new List<SheetEnum> { _sheetEnum });
+        var result = await _googleSheetManager!.CreateSheets(new List<string> { _sheetEnum.GetDescription() });
         Assert.NotNull(result);
         Assert.Single(result.Messages);
         Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result.Messages[0].Level);

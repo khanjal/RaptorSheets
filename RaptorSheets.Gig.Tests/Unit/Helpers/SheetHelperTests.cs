@@ -1,7 +1,6 @@
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Tests.Data.Helpers;
 
@@ -113,6 +112,6 @@ public class SheetHelperTests
 
         var spreadsheetSheets = SheetHelpers.GetSpreadsheetSheets(spreadsheet!);
         Assert.NotNull(spreadsheetSheets);
-        Assert.Equal(Enum.GetNames(typeof(SheetEnum)).Length, spreadsheetSheets.Count);
+        Assert.Equal(Enum.GetNames(typeof(Enums.SheetEnum)).Length, spreadsheetSheets.Count);
     }
 }

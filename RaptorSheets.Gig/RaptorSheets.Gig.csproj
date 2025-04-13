@@ -28,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RaptorSheets.Common\RaptorSheets.Common.csproj" />
     <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" PrivateAssets="All" />
   </ItemGroup>
 

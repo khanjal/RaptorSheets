@@ -6,6 +6,7 @@ using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
+using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
 
 namespace RaptorSheets.Gig.Mappers;
 
@@ -212,7 +213,7 @@ public static class ShiftMapper
         var sheet = SheetsConfig.ShiftSheet;
 
         var tripSheet = TripMapper.GetSheet();
-        var sheetTripsName = SheetEnum.TRIPS.GetDescription();
+        var sheetTripsName = Enums.SheetEnum.TRIPS.GetDescription();
         var sheetTripsTypeRange = tripSheet.Headers.First(x => x.Name == HeaderEnum.TYPE.GetDescription()).Range;
 
         sheet.Headers = [];

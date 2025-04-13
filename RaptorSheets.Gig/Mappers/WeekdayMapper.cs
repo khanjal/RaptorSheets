@@ -4,8 +4,8 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
-using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
+using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
 
 namespace RaptorSheets.Gig.Mappers;
 
@@ -66,7 +66,7 @@ public static class WeekdayMapper
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.AMOUNT_CURRENT.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.AMOUNT_CURRENT.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\", true,IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+{sheetKeyRange},{SheetEnum.DAILY.GetDescription()}!{dailySheet.GetColumn(HeaderEnum.DATE.GetDescription())}:{dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription())},{dailySheet.GetIndex(HeaderEnum.TOTAL.GetDescription())}+1,false),0)))",
+            Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.AMOUNT_CURRENT.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\", true,IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+{sheetKeyRange},{Enums.SheetEnum.DAILY.GetDescription()}!{dailySheet.GetColumn(HeaderEnum.DATE.GetDescription())}:{dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription())},{dailySheet.GetIndex(HeaderEnum.TOTAL.GetDescription())}+1,false),0)))",
             Format = FormatEnum.ACCOUNTING
         });
 
@@ -74,7 +74,7 @@ public static class WeekdayMapper
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.AMOUNT_PREVIOUS.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.AMOUNT_PREVIOUS.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\", true,IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+{sheetKeyRange}-7,{SheetEnum.DAILY.GetDescription()}!{dailySheet.GetColumn(HeaderEnum.DATE.GetDescription())}:{dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription())},{dailySheet.GetIndex(HeaderEnum.TOTAL.GetDescription())}+1,false),0)))",
+            Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.AMOUNT_PREVIOUS.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\", true,IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+{sheetKeyRange}-7,{Enums.SheetEnum.DAILY.GetDescription()}!{dailySheet.GetColumn(HeaderEnum.DATE.GetDescription())}:{dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription())},{dailySheet.GetIndex(HeaderEnum.TOTAL.GetDescription())}+1,false),0)))",
             Format = FormatEnum.ACCOUNTING
         });
 

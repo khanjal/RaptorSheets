@@ -14,7 +14,8 @@ public class GoogleSheetServiceTests
     private readonly string? _spreadsheetId;
     private readonly Dictionary<string, string> _credential;
     private readonly GoogleSheetService _googleSheetService = null!;
-    private readonly List<SheetEnum> _sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+
+    private readonly List<string> _sheets = GigSheetHelpers.GetSheetNames();
 
     public GoogleSheetServiceTests()
     {
@@ -28,10 +29,10 @@ public class GoogleSheetServiceTests
     [FactCheckUserSecrets]
     public async Task GivenGetAllData_ThenReturnInfo()
     {
-        var result = await _googleSheetService.GetBatchData(_sheets.Select(x => x.GetDescription()).ToList());
+        var result = await _googleSheetService.GetBatchData(_sheets);
         Assert.NotNull(result);
         Assert.NotNull(result!.ValueRanges);
-        Assert.Equal(Enum.GetNames(typeof(SheetEnum)).Length, result!.ValueRanges.Count);
+        Assert.Equal(GigSheetHelpers.GetSheetNames().Count, result!.ValueRanges.Count);
 
         var sheet = GigSheetHelpers.MapData(result!);
 
@@ -44,7 +45,7 @@ public class GoogleSheetServiceTests
     public async Task GivenGetAllData_WithInvalidSpreadsheetId_ReturnException()
     {
         var googleSheetService = new GoogleSheetService(_credential, "invalid");
-        var result = await googleSheetService.GetBatchData(_sheets.Select(x => x.GetDescription()).ToList());
+        var result = await googleSheetService.GetBatchData(_sheets);
         Assert.Null(result);
     }
 

@@ -5,7 +5,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Stock.Constants;
 using RaptorSheets.Stock.Entities;
-using RaptorSheets.Stock.Enums;
+using HeaderEnum = RaptorSheets.Stock.Enums.HeaderEnum;
 
 namespace RaptorSheets.Stock.Mappers;
 

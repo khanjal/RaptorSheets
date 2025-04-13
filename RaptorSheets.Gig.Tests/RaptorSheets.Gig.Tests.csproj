@@ -83,6 +83,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RaptorSheets.Common\RaptorSheets.Common.csproj" />
     <ProjectReference Include="..\RaptorSheets.Core.Tests\RaptorSheets.Core.Tests.csproj" />
     <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
     <ProjectReference Include="..\RaptorSheets.Gig\RaptorSheets.Gig.csproj" />

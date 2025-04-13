@@ -6,6 +6,7 @@ using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
+using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
 
 namespace RaptorSheets.Gig.Mappers;
 

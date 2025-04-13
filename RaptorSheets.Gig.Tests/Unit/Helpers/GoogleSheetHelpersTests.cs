@@ -5,6 +5,8 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Common.Mappers;
 
 namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
@@ -13,19 +15,20 @@ public class GoogleSheetHelpersTests
     public static IEnumerable<object[]> Sheets =>
     new List<object[]>
     {
-        new object[] { AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.ADDRESSES }) },
-        new object[] { DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.DAILY }) },
-        new object[] { MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.MONTHLY }) },
-        new object[] { NameMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.NAMES }) },
-        new object[] { PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.PLACES }) },
-        new object[] { RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.REGIONS }) },
-        new object[] { ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.SERVICES }) },
-        new object[] { ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.SHIFTS }) },
-        new object[] { TripMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.TRIPS }) },
-        new object[] { TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.TYPES }) },
-        new object[] { WeekdayMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.WEEKDAYS }) },
-        new object[] { WeeklyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.WEEKLY }) },
-        new object[] { YearlyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<SheetEnum> { SheetEnum.YEARLY }) },
+        new object[] { AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.ADDRESSES.GetDescription() }) },
+        new object[] { DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.DAILY.GetDescription() }) },
+        new object[] { MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.MONTHLY.GetDescription() }) },
+        new object[] { NameMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.NAMES.GetDescription() }) },
+        new object[] { PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.PLACES.GetDescription() }) },
+        new object[] { RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.REGIONS.GetDescription() }) },
+        new object[] { ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.SERVICES.GetDescription() }) },
+        new object[] { SetupMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { Common.Enums.SheetEnum.SETUP.GetDescription() }) },
+        new object[] { ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.SHIFTS.GetDescription() }) },
+        new object[] { TripMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.TRIPS.GetDescription() }) },
+        new object[] { TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.TYPES.GetDescription() }) },
+        new object[] { WeekdayMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.WEEKDAYS.GetDescription() }) },
+        new object[] { WeeklyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.WEEKLY.GetDescription() }) },
+        new object[] { YearlyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.YEARLY.GetDescription() }) },
     };
 
     [Theory]

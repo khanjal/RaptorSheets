@@ -10,6 +10,7 @@ public enum ColorEnum
     LIGHT_CYAN,
     LIGHT_GRAY,
     LIGHT_GREEN,
+    LIGHT_PURPLE,
     LIGHT_RED,
     LIGHT_YELLOW,
     LIME,

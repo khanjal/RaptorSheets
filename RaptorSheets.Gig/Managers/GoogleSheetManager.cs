@@ -1,6 +1,5 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
-using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Gig.Entities;
@@ -9,6 +8,8 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
+using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
+using RaptorSheets.Common.Mappers;
 
 namespace RaptorSheets.Gig.Managers;
 
@@ -16,7 +17,6 @@ public interface IGoogleSheetManager
 {
     public Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
     public Task<SheetEntity> CreateSheets();
-    public Task<SheetEntity> CreateSheets(List<SheetEnum> sheets);
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetSheets();
     public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
@@ -159,6 +159,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Loop through sheets to check headers.
         foreach (var sheet in sheetInfoResponse.Sheets)
         {
+            var sheetName = sheet.Properties.Title.ToUpper();
             if (!Enum.TryParse(sheet.Properties.Title.ToUpper(), out SheetEnum sheetEnum))
             {
                 messages.Add(MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known enum value", MessageTypeEnum.CHECK_SHEET));
@@ -166,45 +167,48 @@ public class GoogleSheetManager : IGoogleSheetManager
             }
             var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
-            switch (sheetEnum)
+            switch (sheetName.ToUpper())
             {
-                case SheetEnum.ADDRESSES:
+                case nameof(SheetEnum.ADDRESSES):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
                     break;
-                case SheetEnum.DAILY:
+                case nameof(SheetEnum.DAILY):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
-                case SheetEnum.MONTHLY:
+                case nameof(SheetEnum.MONTHLY):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;
-                case SheetEnum.NAMES:
+                case nameof(SheetEnum.NAMES):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
                     break;
-                case SheetEnum.PLACES:
+                case nameof(SheetEnum.PLACES):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
                     break;
-                case SheetEnum.REGIONS:
+                case nameof(SheetEnum.REGIONS):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
                     break;
-                case SheetEnum.SERVICES:
+                case nameof(SheetEnum.SERVICES):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
-                case SheetEnum.SHIFTS:
+                case nameof(Common.Enums.SheetEnum.SETUP):
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, SetupMapper.GetSheet()));
+                    break;
+                case nameof(SheetEnum.SHIFTS):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
                     break;
-                case SheetEnum.TRIPS:
+                case nameof(SheetEnum.TRIPS):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
                     break;
-                case SheetEnum.TYPES:
+                case nameof(SheetEnum.TYPES):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
                     break;
-                case SheetEnum.WEEKDAYS:
+                case nameof(SheetEnum.WEEKDAYS):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
                     break;
-                case SheetEnum.WEEKLY:
+                case nameof(SheetEnum.WEEKLY):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
                     break;
-                case SheetEnum.YEARLY:
+                case nameof(SheetEnum.YEARLY):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
                     break;
                 default:
@@ -227,17 +231,11 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<SheetEntity> CreateSheets()
     {
-        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().Select(t => t.GetDescription()).ToList();
         return await CreateSheets(sheets);
     }
 
     public async Task<SheetEntity> CreateSheets(List<string> sheets)
-    {
-        var sheetEnums = sheets.Select(x => x.GetValueFromName<SheetEnum>()).ToList();
-        return await CreateSheets(sheetEnums);
-    }
-
-    public async Task<SheetEntity> CreateSheets(List<SheetEnum> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetsHelpers.Generate(sheets);
         var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
@@ -249,7 +247,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             foreach (var sheet in sheets)
             {
-                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{sheet.UpperName()} not created", MessageTypeEnum.CREATE_SHEET));
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{sheet} not created", MessageTypeEnum.CREATE_SHEET));
             }
 
             return sheetEntity;

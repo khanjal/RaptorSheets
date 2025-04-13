@@ -13,7 +13,7 @@ public static class GenerateSheetHelpers
     private static BatchUpdateSpreadsheetRequest? _batchUpdateSpreadsheetRequest;
     private static List<RepeatCellRequest>? _repeatCellRequests;
 
-    public static BatchUpdateSpreadsheetRequest Generate(List<SheetEnum> sheets)
+    public static BatchUpdateSpreadsheetRequest Generate(List<Enums.SheetEnum> sheets)
     {
         _batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
         _batchUpdateSpreadsheetRequest.Requests = [];
@@ -41,13 +41,13 @@ public static class GenerateSheetHelpers
         return _batchUpdateSpreadsheetRequest;
     }
 
-    private static SheetModel GetSheetModel(SheetEnum sheetEnum)
+    private static SheetModel GetSheetModel(Enums.SheetEnum sheetEnum)
     {
         return sheetEnum switch
         {
-            SheetEnum.ACCOUNTS => AccountMapper.GetSheet(),
-            SheetEnum.STOCKS => StockMapper.GetSheet(),
-            SheetEnum.TICKERS => TickerMapper.GetSheet(),
+            Enums.SheetEnum.ACCOUNTS => AccountMapper.GetSheet(),
+            Enums.SheetEnum.STOCKS => StockMapper.GetSheet(),
+            Enums.SheetEnum.TICKERS => TickerMapper.GetSheet(),
             _ => throw new NotImplementedException(),
         };
     }

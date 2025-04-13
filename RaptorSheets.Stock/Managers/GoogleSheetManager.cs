@@ -6,20 +6,20 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Stock.Entities;
-using RaptorSheets.Stock.Enums;
 using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Stock.Helpers;
+using SheetEnum = RaptorSheets.Stock.Enums.SheetEnum;
 
 namespace RaptorSheets.Stock.Managers;
 
 public interface IGoogleSheetManager
 {
-    public Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
+    public Task<SheetEntity> AddSheetData(List<Enums.SheetEnum> sheets, SheetEntity sheetEntity);
     public Task<SheetEntity> CreateSheets();
-    public Task<SheetEntity> CreateSheets(List<SheetEnum> sheets);
+    public Task<SheetEntity> CreateSheets(List<Enums.SheetEnum> sheets);
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetSheets();
-    public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
+    public Task<SheetEntity> GetSheets(List<Enums.SheetEnum> sheets);
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -36,7 +36,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
     }
 
-    public async Task<SheetEntity> AddSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity)
+    public async Task<SheetEntity> AddSheetData(List<Enums.SheetEnum> sheets, SheetEntity sheetEntity)
     {
         foreach (var sheet in sheets)
         {
@@ -49,7 +49,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
             switch (sheet)
             {
-                case SheetEnum.ACCOUNTS:
+                case Enums.SheetEnum.ACCOUNTS:
                     //values = ShiftMapper.MapToRangeData(sheetEntity.Shifts, headers);
                     sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Adding data to {sheet.UpperName()}", MessageTypeEnum.ADD_DATA));
                     break;
@@ -93,18 +93,18 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Loop through sheets to check headers.
         foreach (var sheet in sheetInfoResponse.Sheets)
         {
-            var sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), sheet.Properties.Title.ToUpper());
+            var sheetEnum = (Enums.SheetEnum)Enum.Parse(typeof(Enums.SheetEnum), sheet.Properties.Title.ToUpper());
             var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
             switch (sheetEnum)
             {
-                case SheetEnum.ACCOUNTS:
+                case Enums.SheetEnum.ACCOUNTS:
                     // headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, AccountMapper.GetSheet()));
                     break;
-                case SheetEnum.STOCKS:
+                case Enums.SheetEnum.STOCKS:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, StockMapper.GetSheet()));
                     break;
-                case SheetEnum.TICKERS:
+                case Enums.SheetEnum.TICKERS:
                     // headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, TickerMapper.GetSheet()));
                     break;
                 default:
@@ -131,7 +131,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         return await CreateSheets(sheets);
     }
 
-    public async Task<SheetEntity> CreateSheets(List<SheetEnum> sheets)
+    public async Task<SheetEntity> CreateSheets(List<Enums.SheetEnum> sheets)
     {
         var batchUpdateSpreadsheetRequest = GenerateSheetHelpers.Generate(sheets);
         var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
@@ -153,7 +153,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         foreach (var sheetTitle in sheetTitles)
         {
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{sheetTitle.GetValueFromName<SheetEnum>()} created", MessageTypeEnum.CREATE_SHEET));
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"{sheetTitle.GetValueFromName<Enums.SheetEnum>()} created", MessageTypeEnum.CREATE_SHEET));
         }
 
         return sheetEntity;
@@ -161,7 +161,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<SheetEntity> GetSheet(string sheet)
     {
-        var sheetExists = Enum.TryParse(sheet.ToUpper(), out SheetEnum sheetEnum) && Enum.IsDefined(typeof(SheetEnum), sheetEnum);
+        var sheetExists = Enum.TryParse(sheet.ToUpper(), out Enums.SheetEnum sheetEnum) && Enum.IsDefined(typeof(Enums.SheetEnum), sheetEnum);
 
         if (!sheetExists)
         {
@@ -181,7 +181,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         return response ?? new SheetEntity();
     }
 
-    public async Task<SheetEntity> GetSheets(List<SheetEnum> sheets)
+    public async Task<SheetEntity> GetSheets(List<Enums.SheetEnum> sheets)
     {
         var data = new SheetEntity();
         var messages = new List<MessageEntity>();
@@ -200,7 +200,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         }
 
         // Only get spreadsheet name when all sheets are requested.
-        if (sheets.Count < Enum.GetNames(typeof(SheetEnum)).Length)
+        if (sheets.Count < Enum.GetNames(typeof(Enums.SheetEnum)).Length)
         {
             data!.Messages = messages;
             return data;

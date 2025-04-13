@@ -97,6 +97,7 @@ public static class SheetHelpers
             ColorEnum.LIGHT_CYAN => Colors.LightCyan,
             ColorEnum.LIGHT_GRAY => Colors.LightGray,
             ColorEnum.LIGHT_GREEN => Colors.LightGreen,
+            ColorEnum.LIGHT_PURPLE => Colors.LightPurple,
             ColorEnum.LIGHT_RED => Colors.LightRed,
             ColorEnum.LIGHT_YELLOW => Colors.LightYellow,
             ColorEnum.LIME => Colors.Lime,

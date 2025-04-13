@@ -1,8 +1,8 @@
 ﻿using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Stock.Enums;
 using System.Diagnostics.CodeAnalysis;
+using HeaderEnum = RaptorSheets.Stock.Enums.HeaderEnum;
 
 namespace RaptorSheets.Stock.Constants;
 
@@ -11,7 +11,7 @@ public static class SheetsConfig
 {
     public static SheetModel AccountSheet => new()
     {
-        Name = SheetEnum.ACCOUNTS.GetDescription(),
+        Name = Enums.SheetEnum.ACCOUNTS.GetDescription(),
         CellColor = ColorEnum.LIGHT_GREEN,
         TabColor = ColorEnum.GREEN,
         FreezeColumnCount = 1,
@@ -27,7 +27,7 @@ public static class SheetsConfig
 
     public static SheetModel StockSheet => new()
     {
-        Name = SheetEnum.STOCKS.GetDescription(),
+        Name = Enums.SheetEnum.STOCKS.GetDescription(),
         CellColor = ColorEnum.LIGHT_CYAN,
         TabColor = ColorEnum.CYAN,
         FreezeColumnCount = 1,
@@ -43,7 +43,7 @@ public static class SheetsConfig
 
     public static SheetModel TickerSheet => new()
     {
-        Name = SheetEnum.TICKERS.GetDescription(),
+        Name = Enums.SheetEnum.TICKERS.GetDescription(),
         CellColor = ColorEnum.LIGHT_YELLOW,
         TabColor = ColorEnum.ORANGE,
         FreezeColumnCount = 1,
