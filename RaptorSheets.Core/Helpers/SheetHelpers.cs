@@ -71,6 +71,12 @@ public static class SheetHelpers
         var sheetValues = new Dictionary<string, IList<IList<object>>>();
         foreach (var sheetData in sheet.Sheets)
         {
+            if (sheetData.Data[0].RowData == null)
+            {
+                sheetValues.Add(sheetData.Properties.Title, []);
+                continue;
+            }
+
             var values = sheetData.Data[0]?.RowData
                 .Select(x => (IList<object>)x.Values.Select(y => (object)y.FormattedValue).ToList())
                 .Where(row => row.Count > 0 && row[0] != null && !string.IsNullOrEmpty(row[0].ToString()))

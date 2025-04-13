@@ -562,70 +562,11 @@ public static class GigSheetHelpers
             }
         };
 
-        var values = SheetHelpers.GetSheetValues(spreadsheet);
+        var sheetValues = SheetHelpers.GetSheetValues(spreadsheet);
         foreach (var sheet in spreadsheet.Sheets)
         {
-            var headers = HeaderHelpers.GetHeadersFromCellData(sheet.Data[0].RowData[0].Values);
-
-            switch (sheet.Properties.Title)
-            {
-                case nameof(SheetEnum.ADDRESSES):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, AddressMapper.GetSheet()));
-                    sheetEntity.Addresses = AddressMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.DAILY):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, DailyMapper.GetSheet()));
-                    sheetEntity.Daily = DailyMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.MONTHLY):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, MonthlyMapper.GetSheet()));
-                    sheetEntity.Monthly = MonthlyMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.NAMES):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, NameMapper.GetSheet()));
-                    sheetEntity.Names = NameMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.PLACES):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, PlaceMapper.GetSheet()));
-                    sheetEntity.Places = PlaceMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.REGIONS):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, RegionMapper.GetSheet()));
-                    sheetEntity.Regions = RegionMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.SERVICES):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, ServiceMapper.GetSheet()));
-                    sheetEntity.Services = ServiceMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(Common.Enums.SheetEnum.SETUP):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SetupMapper.GetSheet()));
-                    sheetEntity.Setup = SetupMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.SHIFTS):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, ShiftMapper.GetSheet()));
-                    sheetEntity.Shifts = ShiftMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.TRIPS):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TripMapper.GetSheet()));
-                    sheetEntity.Trips = TripMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.TYPES):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TypeMapper.GetSheet()));
-                    sheetEntity.Types = TypeMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.WEEKDAYS):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, WeekdayMapper.GetSheet()));
-                    sheetEntity.Weekdays = WeekdayMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.WEEKLY):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, WeeklyMapper.GetSheet()));
-                    sheetEntity.Weekly = WeeklyMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-                case nameof(SheetEnum.YEARLY):
-                    sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, YearlyMapper.GetSheet()));
-                    sheetEntity.Yearly = YearlyMapper.MapFromRangeData(values[sheet.Properties.Title]);
-                    break;
-            }
+            var values = sheetValues[sheet.Properties.Title];
+            ProcessSheetData(sheetEntity, sheet.Properties.Title, values);
         }
 
         return sheetEntity;
@@ -638,82 +579,85 @@ public static class GigSheetHelpers
             return null;
         }
 
-        var sheet = new SheetEntity();
+        var sheetEntity = new SheetEntity();
 
-        // TODO: Figure out a better way to handle looping with message and entity mapping in the switch.
         foreach (var matchedValue in response.ValueRanges)
         {
             var sheetRange = matchedValue.DataFilters[0].A1Range;
             var values = matchedValue.ValueRange.Values;
-
-            if (values == null || values.Count == 0)
-            {
-                continue;
-            }
-
-            var headerValues = values.First();
-
-            switch (sheetRange.ToUpper())
-            {
-                case nameof(SheetEnum.ADDRESSES):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, AddressMapper.GetSheet()));
-                    sheet.Addresses = AddressMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.DAILY):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, DailyMapper.GetSheet()));
-                    sheet.Daily = DailyMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.MONTHLY):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, MonthlyMapper.GetSheet()));
-                    sheet.Monthly = MonthlyMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.NAMES):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, NameMapper.GetSheet()));
-                    sheet.Names = NameMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.PLACES):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, PlaceMapper.GetSheet()));
-                    sheet.Places = PlaceMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.REGIONS):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, RegionMapper.GetSheet()));
-                    sheet.Regions = RegionMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.SERVICES):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ServiceMapper.GetSheet()));
-                    sheet.Services = ServiceMapper.MapFromRangeData(values);
-                    break;
-                case nameof(Common.Enums.SheetEnum.SETUP):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, SetupMapper.GetSheet()));
-                    sheet.Setup = SetupMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.SHIFTS):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ShiftMapper.GetSheet()));
-                    sheet.Shifts = ShiftMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.TRIPS):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TripMapper.GetSheet()));
-                    sheet.Trips = TripMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.TYPES):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TypeMapper.GetSheet()));
-                    sheet.Types = TypeMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.WEEKDAYS):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, WeekdayMapper.GetSheet()));
-                    sheet.Weekdays = WeekdayMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.WEEKLY):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, WeeklyMapper.GetSheet()));
-                    sheet.Weekly = WeeklyMapper.MapFromRangeData(values);
-                    break;
-                case nameof(SheetEnum.YEARLY):
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, YearlyMapper.GetSheet()));
-                    sheet.Yearly = YearlyMapper.MapFromRangeData(values);
-                    break;
-            }
+            ProcessSheetData(sheetEntity, sheetRange, values);
         }
 
-        return sheet;
+        return sheetEntity;
+    }
+
+    private static void ProcessSheetData(SheetEntity sheetEntity, string sheetName, IList<IList<object>> values)
+    {
+        if (values == null || values.Count == 0)
+        {
+            return;
+        }
+
+        var headerValues = values.First();
+
+        switch (sheetName.ToUpper())
+        {
+            case nameof(SheetEnum.ADDRESSES):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, AddressMapper.GetSheet()));
+                sheetEntity.Addresses = AddressMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.DAILY):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, DailyMapper.GetSheet()));
+                sheetEntity.Daily = DailyMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.MONTHLY):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, MonthlyMapper.GetSheet()));
+                sheetEntity.Monthly = MonthlyMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.NAMES):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, NameMapper.GetSheet()));
+                sheetEntity.Names = NameMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.PLACES):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, PlaceMapper.GetSheet()));
+                sheetEntity.Places = PlaceMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.REGIONS):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, RegionMapper.GetSheet()));
+                sheetEntity.Regions = RegionMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.SERVICES):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ServiceMapper.GetSheet()));
+                sheetEntity.Services = ServiceMapper.MapFromRangeData(values);
+                break;
+            case nameof(Common.Enums.SheetEnum.SETUP):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, SetupMapper.GetSheet()));
+                sheetEntity.Setup = SetupMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.SHIFTS):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ShiftMapper.GetSheet()));
+                sheetEntity.Shifts = ShiftMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.TRIPS):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TripMapper.GetSheet()));
+                sheetEntity.Trips = TripMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.TYPES):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TypeMapper.GetSheet()));
+                sheetEntity.Types = TypeMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.WEEKDAYS):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, WeekdayMapper.GetSheet()));
+                sheetEntity.Weekdays = WeekdayMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.WEEKLY):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, WeeklyMapper.GetSheet()));
+                sheetEntity.Weekly = WeeklyMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.YEARLY):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, YearlyMapper.GetSheet()));
+                sheetEntity.Yearly = YearlyMapper.MapFromRangeData(values);
+                break;
+        }
     }
 }

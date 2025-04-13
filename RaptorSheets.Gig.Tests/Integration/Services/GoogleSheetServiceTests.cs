@@ -27,7 +27,22 @@ public class GoogleSheetServiceTests
     }
 
     [FactCheckUserSecrets]
-    public async Task GivenGetAllData_ThenReturnInfo()
+    public async Task GivenGetSheetInfo_ThenReturnInfo()
+    {
+        var result = await _googleSheetService.GetSheetInfo(_sheets);
+        Assert.NotNull(result);
+        Assert.NotNull(result!.Sheets);
+        Assert.Equal(GigSheetHelpers.GetSheetNames().Count, result!.Sheets.Count);
+
+        var sheet = GigSheetHelpers.MapData(result!);
+
+        Assert.NotNull(sheet);
+
+        // TODO: Look into maybe spot checking each entity to ensure there is some data there.
+    }
+
+    [FactCheckUserSecrets]
+    public async Task GivenGetBatchData_ThenReturnInfo()
     {
         var result = await _googleSheetService.GetBatchData(_sheets);
         Assert.NotNull(result);
