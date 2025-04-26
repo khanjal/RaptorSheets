@@ -261,7 +261,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         foreach (var sheetTitle in sheetTitles)
         {
-            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"{sheetTitle.GetValueFromName<SheetEnum>()} created", MessageTypeEnum.CREATE_SHEET));
+            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"{sheetTitle.ToUpperInvariant()} created", MessageTypeEnum.CREATE_SHEET));
         }
 
         return sheetEntity;
