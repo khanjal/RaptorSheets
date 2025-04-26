@@ -173,9 +173,17 @@ public static class SheetHelpers
 
             var value = new ExtendedValue();
 
-            if (!string.IsNullOrEmpty(header.Formula))
+            if (!string.IsNullOrEmpty(header.Formula) || header.Protect)
             {
-                value.FormulaValue = header.Formula;
+                if (header.Formula != null)
+                {
+                    value.FormulaValue = header.Formula;
+                }
+                else
+                {
+                    value.FormulaValue = header.Name;
+                }
+                
 
                 if (!sheet.ProtectSheet)
                 {

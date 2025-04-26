@@ -35,7 +35,7 @@ public static class HeaderHelpers
             return false;
         }
 
-        return values[columnId]?.ToString()?.Trim().ToUpper() == "TRUE";
+        return string.Equals(values[columnId]?.ToString()?.Trim(), "TRUE", StringComparison.OrdinalIgnoreCase);
     }
 
     public static string GetDateValue(string columnName, IList<object> values, Dictionary<int, string> headers)

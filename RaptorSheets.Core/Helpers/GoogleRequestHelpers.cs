@@ -14,7 +14,7 @@ public static class GoogleRequestHelpers
         // Create Sheet Headers
         var appendCellsRequest = new AppendCellsRequest
         {
-            Fields = FieldEnum.USER_ENTERED_VALUE.GetDescription(),
+            Fields = FieldEnum.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(),
             Rows = SheetHelpers.HeadersToRowData(sheet!),
             SheetId = sheet!.Id
         };
@@ -242,7 +242,7 @@ public static class GoogleRequestHelpers
 
         var repeatCellRequest = new RepeatCellRequest
         {
-            Fields = FieldEnum.ALL.GetDescription(),
+            Fields = FieldEnum.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(),
             Range = repeatCellModel.GridRange,
             Cell = new CellData()
         };

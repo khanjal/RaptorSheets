@@ -30,7 +30,16 @@ internal class TestGigHelpers
         var randomNumber = random.Next(1, 99);
 
         var sheetEntity = new SheetEntity();
-        sheetEntity.Shifts.Add(new ShiftEntity { RowId = shiftStartId, Action = actionType.GetDescription(), Date = date, Number = randomNumber, Service = service!, Start = DateTime.Now.ToString("T"), Note = actionType.GetDescription() });
+        sheetEntity.Shifts.Add(new ShiftEntity { 
+            RowId = shiftStartId, 
+            Action = actionType.GetDescription(), 
+            Date = date, 
+            Number = randomNumber, 
+            Service = service!, 
+            Start = DateTime.Now.ToString("T"), 
+            Region = "Test",
+            Note = actionType.GetDescription() }
+        );
 
         // Add random amount of trips
         for (int i = tripStartId; i < random.Next(tripStartId + 1, tripStartId + 5); i++)
@@ -44,6 +53,7 @@ internal class TestGigHelpers
             tripEntity.Date = date;
             tripEntity.Number = randomNumber;
             tripEntity.Service = service!;
+            tripEntity.Region = "Test";
             tripEntity.Pickup = DateTime.Now.ToString("T");
             tripEntity.Dropoff = DateTime.Now.AddMinutes(10).ToString("T");
             tripEntity.Duration = "00:10:00.000";

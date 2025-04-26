@@ -132,7 +132,7 @@ public class GoogleRequestHelpersTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(FieldEnum.ALL.GetDescription(), result.Fields);
+        Assert.Equal(FieldEnum.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(), result.Fields);
         Assert.Equal(repeatCellModel.GridRange, result.Range);
         Assert.NotNull(result.Cell.UserEnteredFormat);
         Assert.NotNull(result.Cell.DataValidation);

@@ -8,7 +8,7 @@ public enum FieldEnum
     /// Use this field to update value and format of a cell
     /// </summary>
     [Description("*")]
-    ALL,
+    USER_ENTERED_VALUE_AND_FORMAT,
 
     /// <summary>
     /// Use this field to update the value of a cell
