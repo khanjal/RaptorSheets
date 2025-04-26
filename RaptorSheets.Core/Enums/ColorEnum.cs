@@ -2,7 +2,8 @@ namespace RaptorSheets.Core.Enums;
 
 public enum ColorEnum
 {
-    BLACK,
+    // DEFAULT BLACK
+    BLACK = 0,
     BLUE,
     CYAN,
     DARK_YELLOW,

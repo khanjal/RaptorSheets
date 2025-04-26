@@ -22,7 +22,7 @@ public class GoogleRequestHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.AppendCells);
-        Assert.Equal(FieldEnum.USER_ENTERED_VALUE.GetDescription(), result.AppendCells.Fields);
+        Assert.Equal(FieldEnum.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(), result.AppendCells.Fields);
         Assert.Equal(sheet.Id, result.AppendCells.SheetId);
     }
 

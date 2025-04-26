@@ -12,6 +12,7 @@ namespace RaptorSheets.Common.Constants.SheetConfigs
             Name = SheetEnum.SETUP.GetDescription(),
             CellColor = ColorEnum.LIGHT_PURPLE,
             TabColor = ColorEnum.PURPLE,
+            FontColor = ColorEnum.WHITE,
             FreezeColumnCount = 1,
             FreezeRowCount = 1,
             ProtectSheet = false,

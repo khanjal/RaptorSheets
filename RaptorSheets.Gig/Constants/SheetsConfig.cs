@@ -126,6 +126,7 @@ public static class SheetsConfig
         Name = Enums.SheetEnum.SHIFTS.GetDescription(),
         TabColor = ColorEnum.RED,
         CellColor = ColorEnum.LIGHT_RED,
+        FontColor = ColorEnum.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = [

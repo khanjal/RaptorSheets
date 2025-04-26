@@ -166,7 +166,8 @@ public static class SheetHelpers
                 {
                     TextFormat = new TextFormat
                     {
-                        Bold = true
+                        Bold = true,
+                        ForegroundColor = GetColor(sheet.FontColor),
                     }
                 }
             };

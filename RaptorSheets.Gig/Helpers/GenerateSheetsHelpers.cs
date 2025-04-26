@@ -49,6 +49,13 @@ public static class GenerateSheetsHelpers
         return _batchUpdateSpreadsheetRequest;
     }
 
+    public static List<string> GetSheetNames()
+    {
+        var sheetNames = Enum.GetNames(typeof(SheetEnum)).ToList();
+        sheetNames.AddRange([.. Enum.GetNames(typeof(Common.Enums.SheetEnum))]);
+        return sheetNames;
+    }
+
     private static SheetModel GetSheetModel(string sheet)
     {
         return sheet.ToUpper() switch

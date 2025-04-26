@@ -15,11 +15,11 @@ namespace RaptorSheets.Gig.Managers;
 
 public interface IGoogleSheetManager
 {
-    public Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity);
+    public Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
     public Task<SheetEntity> CreateSheets();
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetSheets();
-    public Task<SheetEntity> GetSheets(List<SheetEnum> sheets);
+    public Task<SheetEntity> GetSheets(List<string> sheets);
     public Task<List<PropertyEntity>> GetSheetProperties();
     public Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
 }
@@ -38,27 +38,27 @@ public class GoogleSheetManager : IGoogleSheetManager
         _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
     }
 
-    public async Task<SheetEntity> ChangeSheetData(List<SheetEnum> sheets, SheetEntity sheetEntity)
+    public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity)
     {
-        var changes = new Dictionary<SheetEnum, object>();
+        var changes = new Dictionary<string, object>();
 
         // Pull out all changes into a single object to iterate through.
         foreach (var sheet in sheets)
         {
-            switch (sheet)
+            switch (sheet.ToUpperInvariant())
             {
-                case SheetEnum.SHIFTS:
+                case nameof(SheetEnum.SHIFTS):
                     if (sheetEntity.Shifts.Count > 0)
                         changes.Add(sheet, sheetEntity.Shifts);
                     break;
 
-                case SheetEnum.TRIPS:
+                case nameof(SheetEnum.TRIPS):
                     if (sheetEntity.Trips.Count > 0)
                         changes.Add(sheet, sheetEntity.Trips);
                     break;
                 default:
                     // Unsupported sheet.
-                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet.UpperName()} not supported", MessageTypeEnum.GENERAL));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet.ToUpperInvariant()} not supported", MessageTypeEnum.GENERAL));
                     break;
             }
         }
@@ -69,7 +69,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             return sheetEntity;
         }
 
-        var sheetInfo = await GetSheetProperties(sheets.Select(t => t.GetDescription()).ToList());
+        var sheetInfo = await GetSheetProperties(sheets);
         var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
         {
             Requests = []
@@ -77,19 +77,19 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         foreach (var change in changes)
         {
-            switch (change.Key)
+            switch (change.Key.ToUpperInvariant())
             {
-                case SheetEnum.SHIFTS:
-                    var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key.GetDescription());
+                case nameof(SheetEnum.SHIFTS):
+                    var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
                     break;
-                case SheetEnum.TRIPS:
-                    var tripPropertes = sheetInfo.FirstOrDefault(x => x.Name == change.Key.GetDescription());
+                case nameof(SheetEnum.TRIPS):
+                    var tripPropertes = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripPropertes));
                     break;
             }
 
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {change.Key.UpperName()}", MessageTypeEnum.SAVE_DATA));
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {change.Key.ToUpperInvariant()}", MessageTypeEnum.SAVE_DATA));
         }
 
         // TODO: Look into returning data from the batch update.
@@ -160,11 +160,6 @@ public class GoogleSheetManager : IGoogleSheetManager
         foreach (var sheet in sheetInfoResponse.Sheets)
         {
             var sheetName = sheet.Properties.Title.ToUpper();
-            if (!Enum.TryParse(sheet.Properties.Title.ToUpper(), out SheetEnum sheetEnum))
-            {
-                messages.Add(MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known enum value", MessageTypeEnum.CHECK_SHEET));
-                continue;
-            }
             var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
             switch (sheetName.ToUpper())
@@ -212,6 +207,7 @@ public class GoogleSheetManager : IGoogleSheetManager
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
                     break;
                 default:
+                    messages.Add(MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known enum value", MessageTypeEnum.CHECK_SHEET));
                     break;
             }
         }
@@ -265,32 +261,32 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<SheetEntity> GetSheet(string sheet)
     {
-        var sheetExists = Enum.TryParse(sheet.ToUpper(), out SheetEnum sheetEnum) && Enum.IsDefined(typeof(SheetEnum), sheetEnum);
+        var sheetExists = GenerateSheetsHelpers.GetSheetNames()
+        .Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
 
         if (!sheetExists)
         {
             return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageTypeEnum.GET_SHEETS)] };
         }
 
-        return await GetSheets([sheetEnum]);
+        return await GetSheets([sheet]);
     }
      
     public async Task<SheetEntity> GetSheets()
     {
-        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+        var sheets = GenerateSheetsHelpers.GetSheetNames();
         var response = await GetSheets(sheets);
 
         return response ?? new SheetEntity();
     }
 
-    public async Task<SheetEntity> GetSheets(List<SheetEnum> sheets)
+    public async Task<SheetEntity> GetSheets(List<string> sheets)
     {
         var data = new SheetEntity();
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
-        var sheetsList = sheets.Select(x => x.GetDescription()).ToList();
 
-        var response = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
+        var response = await _googleSheetService.GetBatchData(sheets);
         Spreadsheet? spreadsheetInfo;
 
         if (response == null)
@@ -302,7 +298,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
             
-            var ranges = sheetsList.Select(sheet => $"{sheet}!{GoogleConfig.HeaderRange}").ToList();
+            var ranges = sheets.Select(sheet => $"{sheet}!{GoogleConfig.HeaderRange}").ToList();
             spreadsheetInfo = await _googleSheetService.GetSheetInfo(ranges);
 
             if (spreadsheetInfo != null)
@@ -367,6 +363,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         if (spreadsheet != null)
         {
             var missingSheets = SheetHelpers.CheckSheets<SheetEnum>(spreadsheet);
+            missingSheets.AddRange(SheetHelpers.CheckSheets<Common.Enums.SheetEnum>(spreadsheet));
 
             if (missingSheets.Count != 0)
             {
