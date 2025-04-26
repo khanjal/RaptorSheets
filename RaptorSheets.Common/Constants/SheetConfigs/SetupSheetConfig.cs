@@ -17,9 +17,9 @@ namespace RaptorSheets.Common.Constants.SheetConfigs
             FreezeRowCount = 1,
             ProtectSheet = false,
             Headers = [
-            new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.VALUE.GetDescription() }
-        ]
+                new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
+                new SheetCellModel { Name = HeaderEnum.VALUE.GetDescription() }
+            ]
         };
     }
 }

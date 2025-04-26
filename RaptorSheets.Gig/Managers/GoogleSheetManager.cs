@@ -56,6 +56,10 @@ public class GoogleSheetManager : IGoogleSheetManager
                     if (sheetEntity.Trips.Count > 0)
                         changes.Add(sheet, sheetEntity.Trips);
                     break;
+                case nameof(Common.Enums.SheetEnum.SETUP):
+                    if (sheetEntity.Setup.Count > 0)
+                        changes.Add(sheet, sheetEntity.Setup);
+                    break;
                 default:
                     // Unsupported sheet.
                     sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet.ToUpperInvariant()} not supported", MessageTypeEnum.GENERAL));
@@ -84,8 +88,12 @@ public class GoogleSheetManager : IGoogleSheetManager
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
                     break;
                 case nameof(SheetEnum.TRIPS):
-                    var tripPropertes = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
-                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripPropertes));
+                    var tripProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
+                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripProperties));
+                    break;
+                case nameof(Common.Enums.SheetEnum.SETUP):
+                    var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
+                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
                     break;
             }
 

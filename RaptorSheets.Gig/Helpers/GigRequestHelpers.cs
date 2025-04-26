@@ -1,4 +1,5 @@
 ﻿using Google.Apis.Sheets.v4.Data;
+using RaptorSheets.Common.Mappers;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
@@ -30,8 +31,6 @@ public static class GigRequestHelpers
     public static List<Request> ChangeTripSheetData(List<TripEntity> trips, PropertyEntity? sheetProperties)
     {
         var requests = new List<Request>();
-
-        var request = new Request();
 
         // Append/Update requests
         var saveTrips = trips?.Where(x => x.Action != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
@@ -121,6 +120,55 @@ public static class GigRequestHelpers
             var request = new Request();
 
             requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, shift.RowId - 1, rowData));
+        }
+
+        return requests;
+    }
+
+    // SETUP
+    public static List<Request> ChangeSetupSheetData(List<SetupEntity> setup, PropertyEntity? sheetProperties)
+    {
+        var requests = new List<Request>();
+
+        // AppendUpdate requets
+        var saveSetup = setup?.Where(x => x.Action != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        requests.AddRange(CreateUpdateCellSetupRequests(saveSetup, sheetProperties));
+
+        // Delete requests
+        var deleteSetup = setup?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        var rowIds = deleteSetup.Select(x => x.RowId).ToList();
+        requests.AddRange(CreateDeleteRequests(rowIds, sheetProperties));
+
+        return requests;
+    }
+
+    public static IEnumerable<Request> CreateUpdateCellSetupRequests(List<SetupEntity> setup, PropertyEntity? sheetProperties)
+    {
+        var headers = sheetProperties?.Attributes[PropertyEnum.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
+        var maxRow = int.Parse(sheetProperties?.Attributes[PropertyEnum.MAX_ROW.GetDescription()] ?? "0");
+        int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
+
+        if (setup.Count == 0 || sheetProperties == null || headers?.Count == 0 || sheetId == 0)
+        {
+            return [];
+        }
+
+        var requests = new List<Request>();
+
+        var appendSetup = setup.Where(x => x.RowId > maxRow).ToList();
+        if (appendSetup.Count > 0)
+        {
+            var appendData = SetupMapper.MapToRowData(appendSetup, headers!);
+            requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetId, appendData));
+        }
+
+        var updateSetup = setup.Where(x => x.RowId <= maxRow).ToList();
+        foreach (var item in updateSetup)
+        {
+            var rowData = SetupMapper.MapToRowData([item], headers!);
+            var request = new Request();
+
+            requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, item.RowId - 1, rowData));
         }
 
         return requests;
