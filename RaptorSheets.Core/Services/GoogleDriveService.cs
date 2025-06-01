@@ -1,11 +1,13 @@
 ﻿using RaptorSheets.Core.Wrappers;
 using System.Diagnostics.CodeAnalysis;
+using File = Google.Apis.Drive.v3.Data.File;
 
 namespace RaptorSheets.Core.Services;
 
 public interface IGoogleDriveService
 {
-    public Task<IList<string>> GetSheetFiles();
+    public Task<File> CreateSpreadsheet(string name);
+    public Task<IList<File>> GetSpreadsheets();
 }
 
 [ExcludeFromCodeCoverage]
@@ -18,12 +20,17 @@ public class GoogleDriveService : IGoogleDriveService
         _driveService = new DriveServiceWrapper(accessToken);
     }
 
-    public async Task<IList<string>> GetSheetFiles()
+    public async Task<File> CreateSpreadsheet(string name)
     {
-        var sheets = await _driveService.GetSheetFiles();
+        var sheet = await _driveService.CreateSpreadsheet(name);
 
-        var sheetList = sheets.Select(s => s.Name.ToString()).ToList();
+        return sheet;
+    }
 
-        return sheetList;
+    public async Task<IList<File>> GetSpreadsheets()
+    {
+        var sheets = await _driveService.ListSpreadsheets();
+
+        return [.. sheets];
     }
 }

@@ -8,8 +8,8 @@ namespace RaptorSheets.Core.Wrappers;
 
 public interface IDriveServiceWrapper
 {
-    Task<IList<File>> GetSheetFiles();
-    Task<IList<File>> SearchSheetFiles(string name);
+    Task<File> CreateSpreadsheet(string name);
+    Task<IList<File>> ListSpreadsheets();
 }
 
 [ExcludeFromCodeCoverage]
@@ -35,25 +35,26 @@ public class DriveServiceWrapper : DriveService, IDriveServiceWrapper
         return _driveService;
     }
 
-    public async Task<IList<File>> GetSheetFiles()
+    public async Task<File> CreateSpreadsheet(string name)
     {
-        // Define parameters of request.
-        FilesResource.ListRequest listRequest = _driveService.Files.List();
-        //listRequest.PageSize = 10;
+        var fileMetadata = new File
+        {
+            Name = name,
+            MimeType = "application/vnd.google-apps.spreadsheet"
+        };
+
+        var request = _driveService.Files.Create(fileMetadata);
+        request.Fields = "id, name, mimeType";
+        return await request.ExecuteAsync();
+    }
+
+    public async Task<IList<File>> ListSpreadsheets()
+    {
+        var listRequest = _driveService.Files.List();
         listRequest.Q = "mimeType='application/vnd.google-apps.spreadsheet'";
-
-        // List files.
-        return (await listRequest.ExecuteAsync()).Files;
+        listRequest.Fields = "files(id, name, mimeType)";
+        var result = await listRequest.ExecuteAsync();
+        return result.Files;
     }
 
-    public async Task<IList<File>> SearchSheetFiles(string name)
-    {
-        // Define parameters of request.
-        FilesResource.ListRequest listRequest = _driveService.Files.List();
-        //listRequest.PageSize = 10;
-        listRequest.Q = $"mimeType='application/vnd.google-apps.spreadsheet' and name contains '{name}'";
-
-        // List files.
-        return (await listRequest.ExecuteAsync()).Files;
-    }
 }
