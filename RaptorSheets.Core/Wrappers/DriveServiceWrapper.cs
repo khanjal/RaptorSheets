@@ -51,10 +51,9 @@ public class DriveServiceWrapper : DriveService, IDriveServiceWrapper
     public async Task<IList<File>> ListSpreadsheets()
     {
         var listRequest = _driveService.Files.List();
-        listRequest.Q = "mimeType='application/vnd.google-apps.spreadsheet'";
+        listRequest.Q = "mimeType='application/vnd.google-apps.spreadsheet' and trashed = false";
         listRequest.Fields = "files(id, name, mimeType)";
         var result = await listRequest.ExecuteAsync();
         return result.Files;
     }
-
 }
