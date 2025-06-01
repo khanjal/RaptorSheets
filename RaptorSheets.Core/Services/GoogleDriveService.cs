@@ -1,13 +1,14 @@
-﻿using RaptorSheets.Core.Wrappers;
+﻿using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Wrappers;
 using System.Diagnostics.CodeAnalysis;
-using File = Google.Apis.Drive.v3.Data.File;
 
 namespace RaptorSheets.Core.Services;
 
 public interface IGoogleDriveService
 {
-    public Task<File> CreateSpreadsheet(string name);
-    public Task<IList<File>> GetSpreadsheets();
+    public Task<PropertyEntity> CreateSpreadsheet(string name);
+    public Task<IList<PropertyEntity>> GetSpreadsheets();
 }
 
 [ExcludeFromCodeCoverage]
@@ -20,17 +21,15 @@ public class GoogleDriveService : IGoogleDriveService
         _driveService = new DriveServiceWrapper(accessToken);
     }
 
-    public async Task<File> CreateSpreadsheet(string name)
+    public async Task<PropertyEntity> CreateSpreadsheet(string name)
     {
         var sheet = await _driveService.CreateSpreadsheet(name);
-
-        return sheet;
+        return PropertyEntityMapper.MapFromDriveFile(sheet);
     }
 
-    public async Task<IList<File>> GetSpreadsheets()
+    public async Task<IList<PropertyEntity>> GetSpreadsheets()
     {
         var sheets = await _driveService.ListSpreadsheets();
-
-        return [.. sheets];
+        return PropertyEntityMapper.MapFromDriveFiles(sheets);
     }
 }

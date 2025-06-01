@@ -1,15 +1,15 @@
-﻿using RaptorSheets.Core.Services;
-using File = Google.Apis.Drive.v3.Data.File;
+﻿using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Services;
 
 namespace RaptorSheets.Core.Managers;
 
-public interface IGoogleSheetManager
+public interface IGoogleFileManager
 {
-    public Task<File> CreateFile(string name);
-    public Task<List<File>> GetFiles();
+    public Task<PropertyEntity> CreateFile(string name);
+    public Task<List<PropertyEntity>> GetFiles();
 }
 
-public class GoogleFileManager : IGoogleSheetManager
+public class GoogleFileManager : IGoogleFileManager
 {
     private readonly GoogleDriveService _googleDriveService;
 
@@ -18,17 +18,17 @@ public class GoogleFileManager : IGoogleSheetManager
         _googleDriveService = new GoogleDriveService(accessToken);
     }
 
-    public async Task<File> CreateFile(string name)
+    public async Task<PropertyEntity> CreateFile(string name)
     {
         var file = await _googleDriveService.CreateSpreadsheet(name);
 
         return file;
     }
 
-    public async Task<List<File>> GetFiles()
+    public async Task<List<PropertyEntity>> GetFiles()
     {
         var files = await _googleDriveService.GetSpreadsheets();
 
-        return files.ToList();
+        return [.. files];
     }
 }
