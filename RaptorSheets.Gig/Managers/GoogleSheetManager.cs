@@ -236,6 +236,7 @@ public class GoogleSheetManager : IGoogleSheetManager
     public async Task<SheetEntity> CreateSheets()
     {
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().Select(t => t.GetDescription()).ToList();
+        sheets.AddRange(Enum.GetValues(typeof(Common.Enums.SheetEnum)).Cast<Common.Enums.SheetEnum>().Select(t => t.GetDescription()));
         return await CreateSheets(sheets);
     }
 
