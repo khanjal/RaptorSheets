@@ -8,7 +8,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>RaptorSheets.Gig</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageVersion>1.1.0</PackageVersion>
+    <PackageVersion>1.1.1</PackageVersion>
     <PackageAuthors>Iron Raptor Digital</PackageAuthors>
     <PackageDescription>A library used to handle the interactions between a custom API service and Google Sheets API.</PackageDescription>
     <RepositoryUrl>https://github.com/khanjal/RaptorSheets</RepositoryUrl>
@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.69.0.3703" />
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.69.0.3694" />
   </ItemGroup>
 
