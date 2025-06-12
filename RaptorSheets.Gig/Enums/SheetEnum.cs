@@ -12,6 +12,9 @@ public enum SheetEnum
     [Description("Shifts")]
     SHIFTS,
 
+    [Description("Expenses")]
+    EXPENSES,
+
     // Auxillary
     [Description("Addresses")]
     ADDRESSES,

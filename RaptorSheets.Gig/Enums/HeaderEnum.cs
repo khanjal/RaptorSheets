@@ -13,6 +13,9 @@ public enum HeaderEnum
     [Description("End Address")]
     ADDRESS_END,
 
+    [Description("Amount")]
+    AMOUNT,
+
     [Description("Curr Amt")]
     AMOUNT_CURRENT,
 
@@ -43,6 +46,9 @@ public enum HeaderEnum
     [Description("Cash")]
     CASH,
 
+    [Description("Category")]
+    CATEGORY,
+
     [Description("Date")]
     DATE,
 
@@ -63,6 +69,9 @@ public enum HeaderEnum
 
     [Description("Since")]
     DAYS_SINCE_VISIT,
+
+    [Description("Description")]
+    DESCRIPTION,
 
     [Description("Dist")]
     DISTANCE,
@@ -117,6 +126,9 @@ public enum HeaderEnum
 
     [Description("Service")]
     SERVICE,
+
+    [Description("Tax Deductiblea")]
+    TAX_DEDUCTIBLE,
 
     [Description("Active")]
     TIME_ACTIVE,
