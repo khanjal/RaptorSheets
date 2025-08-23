@@ -53,6 +53,24 @@ public class GoogleRequestHelpersTests
     }
 
     [Fact]
+    public void GenerateAppendDimension_WithDefaultColumns_ShouldReturnNull()
+    {
+        // Arrange
+        var headers = new List<SheetCellModel>();
+        for (var i = 0; i < GoogleConfig.DefaultColumnCount; i++)
+        {
+            headers.Add(new SheetCellModel { Name = $"Header{i}" });
+        }
+        var sheet = new SheetModel { Id = 1, Headers = headers };
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateAppendDimension(sheet);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
     public void GenerateBandingRequest_ShouldReturnValidRequest()
     {
         // Arrange
@@ -67,12 +85,15 @@ public class GoogleRequestHelpersTests
         Assert.Equal(sheet.Id, result.AddBanding.BandedRange.BandedRangeId);
     }
 
-    [Fact]
-    public void GenerateDeleteRequest_ShouldReturnValidRequest()
+    [Theory]
+    //[InlineData(new int[] { 1 }, 1)]
+    [InlineData(new int[] { 2 }, 1)]
+    [InlineData(new int[] { 1, 2, 3 }, 1)]
+    [InlineData(new int[] { 5, 10, 15 }, 3)]
+    public void GenerateDeleteRequest_ShouldReturnValidRequest(int[] rowIds, int expected)
     {
         // Arrange
         int sheetId = 1;
-        int[] rowIds = [2];
         var rowList = rowIds.ToList();
 
         // Act
@@ -80,10 +101,50 @@ public class GoogleRequestHelpersTests
 
         // Assert
         Assert.NotNull(requests);
-        Assert.NotNull(requests[0].DeleteDimension);
-        Assert.Equal(sheetId, requests[0].DeleteDimension.Range.SheetId);
-        Assert.Equal(rowIds[0] - 1, requests[0].DeleteDimension.Range.StartIndex);
-        Assert.Equal(rowIds[0], requests[0].DeleteDimension.Range.EndIndex);
+        Assert.Equal(expected, requests.Count);
+        
+        // Verify all requests have correct sheet ID
+        foreach (var request in requests)
+        {
+            Assert.NotNull(request.DeleteDimension);
+            Assert.Equal(sheetId, request.DeleteDimension.Range.SheetId);
+        }
+
+        // For specific test cases, verify ranges
+        if (rowIds.SequenceEqual(new int[] { 1, 2, 3 }))
+        {
+            Assert.Equal(0, requests[0].DeleteDimension.Range.StartIndex); // 1 - 1
+            Assert.Equal(3, requests[0].DeleteDimension.Range.EndIndex); // last row ID
+        }
+        else if (rowIds.SequenceEqual(new int[] { 5, 10, 15 }))
+        {
+            Assert.Equal(4, requests[0].DeleteDimension.Range.StartIndex); // 5 - 1
+            Assert.Equal(5, requests[0].DeleteDimension.Range.EndIndex); // 5
+            Assert.Equal(9, requests[1].DeleteDimension.Range.StartIndex); // 10 - 1
+            Assert.Equal(10, requests[1].DeleteDimension.Range.EndIndex); // 10
+            Assert.Equal(14, requests[2].DeleteDimension.Range.StartIndex); // 15 - 1
+            Assert.Equal(15, requests[2].DeleteDimension.Range.EndIndex); // 15
+        }
+        else if (rowIds.SequenceEqual(new int[] { 2 }))
+        {
+            Assert.Equal(1, requests[0].DeleteDimension.Range.StartIndex); // 2 - 1
+            Assert.Equal(2, requests[0].DeleteDimension.Range.EndIndex); // 2
+        }
+    }
+
+    [Fact]
+    public void GenerateDeleteRequest_WithEmptyList_ShouldReturnEmptyList()
+    {
+        // Arrange
+        int sheetId = 1;
+        var rowList = new List<int>();
+
+        // Act
+        var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, rowList);
+
+        // Assert
+        Assert.NotNull(requests);
+        Assert.Empty(requests);
     }
 
     [Fact]
@@ -99,6 +160,23 @@ public class GoogleRequestHelpersTests
         Assert.NotNull(result);
         Assert.NotNull(result.AddProtectedRange);
         Assert.Equal(sheet.Id, result.AddProtectedRange.ProtectedRange.Range.SheetId);
+    }
+
+    [Fact]
+    public void GenerateProtectedRangeForHeaderOrSheet_WithoutProtection_ShouldReturnHeaderProtection()
+    {
+        // Arrange
+        var sheet = new SheetModel { Id = 1, ProtectSheet = false };
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheet);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.AddProtectedRange);
+        Assert.Equal(sheet.Id, result.AddProtectedRange.ProtectedRange.Range.SheetId);
+        Assert.Equal(0, result.AddProtectedRange.ProtectedRange.Range.StartRowIndex);
+        Assert.Equal(1, result.AddProtectedRange.ProtectedRange.Range.EndRowIndex);
     }
 
     [Fact]
@@ -139,10 +217,37 @@ public class GoogleRequestHelpersTests
     }
 
     [Fact]
+    public void GenerateRepeatCellRequest_WithNullValidation_ShouldHandleGracefully()
+    {
+        // Arrange
+        var repeatCellModel = new RepeatCellModel
+        {
+            GridRange = new GridRange { SheetId = 1 },
+            CellFormat = new CellFormat(),
+            DataValidation = null
+        };
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Cell.UserEnteredFormat);
+        Assert.Null(result.Cell.DataValidation);
+    }
+
+    [Fact]
     public void GenerateSheetPropertes_ShouldReturnValidRequest()
     {
         // Arrange
-        var sheet = new SheetModel { Id = 1, Name = "TestSheet", TabColor = ColorEnum.BLUE, FreezeColumnCount = 1, FreezeRowCount = 1 };
+        var sheet = new SheetModel 
+        { 
+            Id = 1, 
+            Name = "TestSheet", 
+            TabColor = ColorEnum.BLUE, 
+            FreezeColumnCount = 1, 
+            FreezeRowCount = 1 
+        };
 
         // Act
         var result = GoogleRequestHelpers.GenerateSheetPropertes(sheet);
@@ -171,5 +276,80 @@ public class GoogleRequestHelpersTests
         Assert.NotNull(result);
         Assert.NotEmpty(result.Data);
         Assert.Equal(sheetName + "!A1", result.Data[0].Range);
+    }
+
+    [Fact]
+    public void GenerateUpdateRequest_WithMultipleRows_ShouldReturnValidRequest()
+    {
+        // Arrange
+        var sheetName = "TestSheet";
+        var rowValues = new Dictionary<int, IList<IList<object?>>>
+        {
+            { 1, new List<IList<object?>> { new List<object?> { "Value1" } } },
+            { 2, new List<IList<object?>> { new List<object?> { "Value2" } } },
+            { 5, new List<IList<object?>> { new List<object?> { "Value5" } } }
+        };
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateUpdateValueRequest(sheetName, rowValues);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Data.Count);
+        Assert.Equal(sheetName + "!A1", result.Data[0].Range);
+        Assert.Equal(sheetName + "!A2", result.Data[1].Range);
+        Assert.Equal(sheetName + "!A5", result.Data[2].Range);
+    }
+
+    [Fact]
+    public void GenerateUpdateRequest_WithEmptyValues_ShouldReturnEmptyRequest()
+    {
+        // Arrange
+        var sheetName = "TestSheet";
+        var rowValues = new Dictionary<int, IList<IList<object?>>>();
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateUpdateValueRequest(sheetName, rowValues);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result.Data);
+    }
+
+    [Theory]
+    [InlineData(1, 2, 1)]
+    [InlineData(1, 5, 1)]
+    [InlineData(10, 15, 1)]
+    [InlineData(1, 10, 1)]
+    public void GenerateIndexRanges_WithConsecutiveNumbers_ShouldReturnSingleRange(int start, int end, int expectedRanges)
+    {
+        // Arrange
+        var rowIds = Enumerable.Range(start, end - start + 1).ToList();
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateIndexRanges(rowIds);
+
+        // Assert
+        Assert.Equal(expectedRanges, result.Count);
+        Assert.Equal(start - 1, result[0].Item1);
+        Assert.Equal(end, result[0].Item2);
+    }
+
+    [Fact]
+    public void GenerateIndexRanges_WithNonConsecutiveNumbers_ShouldReturnMultipleRanges()
+    {
+        // Arrange
+        var rowIds = new List<int> { 1, 3, 5, 7, 9 };
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateIndexRanges(rowIds);
+
+        // Assert
+        Assert.Equal(5, result.Count);
+        for (int i = 0; i < result.Count; i++)
+        {
+            Assert.Equal(rowIds[i] - 1, result[i].Item1);
+            Assert.Equal(rowIds[i], result[i].Item2);
+        }
     }
 }

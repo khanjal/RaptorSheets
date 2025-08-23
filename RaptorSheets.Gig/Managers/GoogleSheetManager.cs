@@ -178,6 +178,9 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case nameof(SheetEnum.DAILY):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
+                case nameof(SheetEnum.EXPENSES):
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ExpenseMapper.GetSheet()));
+                    break;
                 case nameof(SheetEnum.MONTHLY):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;

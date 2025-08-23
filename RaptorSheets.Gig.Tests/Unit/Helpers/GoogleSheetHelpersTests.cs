@@ -17,6 +17,7 @@ public class GoogleSheetHelpersTests
     {
         new object[] { AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.ADDRESSES.GetDescription() }) },
         new object[] { DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.DAILY.GetDescription() }) },
+        new object[] { ExpenseMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.EXPENSES.GetDescription() }) },
         new object[] { MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.MONTHLY.GetDescription() }) },
         new object[] { NameMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.NAMES.GetDescription() }) },
         new object[] { PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.PLACES.GetDescription() }) },

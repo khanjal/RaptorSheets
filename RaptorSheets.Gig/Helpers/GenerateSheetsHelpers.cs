@@ -62,6 +62,7 @@ public static class GenerateSheetsHelpers
         {
             nameof(SheetEnum.ADDRESSES) => AddressMapper.GetSheet(),
             nameof(SheetEnum.DAILY) => DailyMapper.GetSheet(),
+            nameof(SheetEnum.EXPENSES) => ExpenseMapper.GetSheet(),
             nameof(SheetEnum.MONTHLY) => MonthlyMapper.GetSheet(),
             nameof(SheetEnum.NAMES) => NameMapper.GetSheet(),
             nameof(SheetEnum.PLACES) => PlaceMapper.GetSheet(),

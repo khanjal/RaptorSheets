@@ -75,6 +75,9 @@ public static class GigSheetHelpers
                 case nameof(SheetEnum.DAILY):
                     sheetData.Add(DailyMapper.GetSheet());
                     break;
+                case nameof(SheetEnum.EXPENSES):
+                    sheetData.Add(ExpenseMapper.GetSheet());
+                    break;
                 case nameof(SheetEnum.MONTHLY):
                     sheetData.Add(MonthlyMapper.GetSheet());
                     break;
@@ -609,6 +612,10 @@ public static class GigSheetHelpers
             case nameof(SheetEnum.DAILY):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, DailyMapper.GetSheet()));
                 sheetEntity.Daily = DailyMapper.MapFromRangeData(values);
+                break;
+            case nameof(SheetEnum.EXPENSES):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ExpenseMapper.GetSheet()));
+                sheetEntity.Expenses = ExpenseMapper.MapFromRangeData(values);
                 break;
             case nameof(SheetEnum.MONTHLY):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, MonthlyMapper.GetSheet()));

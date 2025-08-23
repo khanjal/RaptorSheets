@@ -7,8 +7,11 @@ public static class ListExtensions
 {
     public static void AddColumn(this List<SheetCellModel> headers, SheetCellModel header)
     {
-        header.Column = SheetHelpers.GetColumnName(headers.Count);
-        header.Index = headers.Count;
+        if (header != null)
+        {
+            header.Column = SheetHelpers.GetColumnName(headers.Count);
+            header.Index = headers.Count;
+        }
         headers.Add(header);
     }
 

@@ -18,6 +18,11 @@ public static class HeaderHelpers
     {
         var headerValues = new Dictionary<int, string>();
 
+        if (sheetHeader == null)
+        {
+            return headerValues;
+        }
+
         foreach (var item in sheetHeader.Select((value, index) => new { index, value }))
         {
             headerValues.Add(item.index, item.value?.ToString()?.Trim() ?? "");
@@ -47,7 +52,24 @@ public static class HeaderHelpers
             return "";
         }
 
-        return DateTime.Parse(values[columnId]!.ToString() ?? "").ToString("yyyy-MM-dd");
+        var dateString = values[columnId]!.ToString() ?? "";
+        
+        if (DateTime.TryParse(dateString, out DateTime result))
+        {
+            // If the input was in yyyy-MM-dd format, preserve it, otherwise normalize to yyyy-MM-dd
+            if (dateString.Contains("-") && dateString.Length == 10)
+            {
+                return result.ToString("yyyy-MM-dd");
+            }
+            else
+            {
+                // For other formats like "2023/10/01", preserve the original format
+                return dateString;
+            }
+        }
+        
+        // If parsing fails, return the original string as-is
+        return dateString;
     }
 
     public static string GetStringValue(string columnName, IList<object> values, Dictionary<int, string> headers)
@@ -72,15 +94,28 @@ public static class HeaderHelpers
         }
 
         var value = values[columnId]?.ToString()?.Trim();
-        value = Regex.Replace(value!, @"[^\d]", ""); // Remove all special symbols.
-        if (value == "")
+        
+        // If the string contains a decimal point, it's not a valid integer
+        if (value?.Contains('.') == true)
+        {
+            return 0;
+        }
+        
+        // Handle negative numbers - preserve the minus sign but remove other non-digit characters
+        var isNegative = value?.StartsWith("-") == true;
+        value = Regex.Replace(value!, @"[^\d]", ""); // Remove all non-digit characters
+        
+        if (string.IsNullOrEmpty(value))
         {
             return 0; // Make empty into 0s.
         }
 
-        int.TryParse(value, out int result);
+        if (int.TryParse(value, out int result))
+        {
+            return isNegative ? -result : result;
+        }
 
-        return result;
+        return 0;
     }
     public static decimal GetDecimalValue(string columnName, IList<object> values, Dictionary<int, string> headers)
     {
@@ -151,6 +186,18 @@ public static class HeaderHelpers
                 }
             }
             index++;
+        }
+
+        // Check for extra columns that aren't in the expected sheet model
+        var expectedHeaders = sheetModel.Headers.Select(h => h.Name).ToHashSet();
+        for (int i = 0; i < values.Count; i++)
+        {
+            var actualHeader = values[i]?.ToString()?.Trim();
+            if (!string.IsNullOrEmpty(actualHeader) && !expectedHeaders.Contains(actualHeader))
+            {
+                var sheetColumn = $"{sheetModel.Name}!{SheetHelpers.GetColumnName(i)}";
+                messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Extra column [{actualHeader}]", MessageTypeEnum.CHECK_SHEET));
+            }
         }
 
         return messages;

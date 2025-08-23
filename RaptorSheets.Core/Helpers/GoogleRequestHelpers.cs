@@ -89,19 +89,16 @@ public static class GoogleRequestHelpers
         // Convert rowIds to index ranges
         var indexRanges = new List<Tuple<int, int>>();
 
-        var startIndex = 0;
-        var endIndex = 0;
-
-        foreach (var rowId in rowIds)
+        if (rowIds.Count == 0)
         {
-            // Initialize first index range
-            if (startIndex == 0)
-            {
-                startIndex = rowId - 1;
-                endIndex = rowId;
-                continue;
-            }
+            return indexRanges;
+        }
 
+        var startIndex = rowIds[0] - 1; // Initialize with first row ID
+        var endIndex = rowIds[0];
+
+        foreach (var rowId in rowIds.Skip(1)) // Skip the first element since we already processed it
+        {
             // If the rowId is consecutive increment the end index
             if (rowId == endIndex + 1)
             {

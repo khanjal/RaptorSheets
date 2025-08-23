@@ -18,6 +18,7 @@ public class CheckSheetHeaderTests
         {
             new object[] { AddressMapper.GetSheet(), Enums.SheetEnum.ADDRESSES },
             new object[] { DailyMapper.GetSheet(), Enums.SheetEnum.DAILY },
+            new object[] { ExpenseMapper.GetSheet(), Enums.SheetEnum.EXPENSES },
             new object[] { MonthlyMapper.GetSheet(), Enums.SheetEnum.MONTHLY },
             new object[] { NameMapper.GetSheet(), Enums.SheetEnum.NAMES },
             new object[] { PlaceMapper.GetSheet(), Enums.SheetEnum.PLACES },
