@@ -55,10 +55,59 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         await CleanupTestData();
     }
 
-    #region Workflow Tests - Ordered Execution
+    [FactCheckUserSecrets]
+    public async Task ComprehensiveWorkflow_ShouldExecuteCompleteLifecycle()
+    {
+        // Step 1: Verify Sheet Structure
+        await VerifySheetStructure();
+        
+        // Step 2: Create New Data
+        await CreateNewShiftWithTrips();
+        
+        // Step 3: Verify Data Was Added
+        await VerifyDataWasAdded();
+        
+        // Step 4: Update Existing Data
+        await UpdateExistingData();
+        
+        // Step 5: Delete Test Data
+        await DeleteTestData();
+        
+        // Step 6: Verify Final Clean State
+        await VerifyFinalState();
+    }
 
     [FactCheckUserSecrets]
-    public async Task Step01_VerifySheetStructure_ShouldHaveCorrectSheetsAndHeaders()
+    public async Task ErrorHandling_InvalidSpreadsheetId_ShouldReturnErrors()
+    {
+        // Arrange
+        var invalidManager = new GoogleSheetManager(_credential, "invalid-spreadsheet-id");
+
+        // Act
+        var result = await invalidManager.GetSheets(_testSheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result.Messages);
+        Assert.All(result.Messages, msg => 
+            Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), msg.Level));
+    }
+
+    [FactCheckUserSecrets]
+    public async Task ErrorHandling_NonExistentSheets_ShouldHandleGracefully()
+    {
+        // Act
+        var result = await _googleSheetManager!.GetSheetProperties(new List<string> { "NonExistentSheet1", "NonExistentSheet2" });
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+        Assert.All(result, prop => Assert.Empty(prop.Id)); // Should return empty properties
+    }
+
+    #region Workflow Steps (Private Methods)
+
+    private async Task VerifySheetStructure()
     {
         // Arrange & Act
         var sheetProperties = await _googleSheetManager!.GetSheetProperties(_testSheets);
@@ -86,8 +135,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         Assert.Empty(errorMessages);
     }
 
-    [FactCheckUserSecrets]
-    public async Task Step02_CreateNewShiftWithTrips_ShouldAddDataSuccessfully()
+    private async Task CreateNewShiftWithTrips()
     {
         // Arrange
         var sheetInfo = await _googleSheetManager!.GetSheetProperties(_testSheets);
@@ -115,8 +163,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         }
     }
 
-    [FactCheckUserSecrets]
-    public async Task Step03_VerifyDataWasAdded_ShouldFindNewData()
+    private async Task VerifyDataWasAdded()
     {
         // Arrange - Wait a moment for data to propagate
         await Task.Delay(1000);
@@ -150,8 +197,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         Assert.Equal(createdTrip.Name, foundTrip.Name);
     }
 
-    [FactCheckUserSecrets]
-    public async Task Step04_UpdateExistingData_ShouldModifyDataSuccessfully()
+    private async Task UpdateExistingData()
     {
         // Arrange
         Assert.NotNull(_createdShiftData);
@@ -195,8 +241,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         Assert.Equal(999, verifyTrip.Tip);
     }
 
-    [FactCheckUserSecrets]
-    public async Task Step05_DeleteTestData_ShouldRemoveDataSuccessfully()
+    private async Task DeleteTestData()
     {
         // Arrange
         Assert.NotNull(_createdShiftData);
@@ -246,8 +291,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         }
     }
 
-    [FactCheckUserSecrets]
-    public async Task Step06_VerifyFinalState_ShouldHaveCleanData()
+    private async Task VerifyFinalState()
     {
         // Act
         var finalState = await _googleSheetManager!.GetSheets(_testSheets);
@@ -275,38 +319,6 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         // Verify sheet structure is intact
         Assert.Equal(2, sheetProperties.Count);
         Assert.All(sheetProperties, prop => Assert.NotEmpty(prop.Id));
-    }
-
-    #endregion
-
-    #region Error Handling Tests
-
-    [FactCheckUserSecrets]
-    public async Task ErrorHandling_InvalidSpreadsheetId_ShouldReturnErrors()
-    {
-        // Arrange
-        var invalidManager = new GoogleSheetManager(_credential, "invalid-spreadsheet-id");
-
-        // Act
-        var result = await invalidManager.GetSheets(_testSheets);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotEmpty(result.Messages);
-        Assert.All(result.Messages, msg => 
-            Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), msg.Level));
-    }
-
-    [FactCheckUserSecrets]
-    public async Task ErrorHandling_NonExistentSheets_ShouldHandleGracefully()
-    {
-        // Act
-        var result = await _googleSheetManager!.GetSheetProperties(new List<string> { "NonExistentSheet1", "NonExistentSheet2" });
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count);
-        Assert.All(result, prop => Assert.Empty(prop.Id)); // Should return empty properties
     }
 
     #endregion
@@ -383,4 +395,4 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     }
 
     #endregion
-}}
+}
