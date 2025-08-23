@@ -5,7 +5,6 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
-using RaptorSheets.Gig.Enums;
 using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
 
 namespace RaptorSheets.Gig.Mappers;
@@ -30,7 +29,7 @@ public static class ExpenseMapper
 
             ExpenseEntity expense = new()
             {
-                Id = HeaderHelpers.GetStringValue(HeaderEnum.KEY.GetDescription(), value, headers),
+                RowId = id,
                 Date = DateTime.TryParse(HeaderHelpers.GetStringValue(HeaderEnum.DATE.GetDescription(), value, headers), out var date) ? date : DateTime.MinValue,
                 Name = HeaderHelpers.GetStringValue(HeaderEnum.NAME.GetDescription(), value, headers),
                 Description = HeaderHelpers.GetStringValue(HeaderEnum.DESCRIPTION.GetDescription(), value, headers),
@@ -72,9 +71,6 @@ public static class ExpenseMapper
                     case HeaderEnum.CATEGORY:
                         objectList.Add(expense.Category);
                         break;
-                    case HeaderEnum.KEY:
-                        objectList.Add(expense.Id);
-                        break;
                     default:
                         objectList.Add(null);
                         break;
@@ -113,9 +109,6 @@ public static class ExpenseMapper
                         break;
                     case HeaderEnum.CATEGORY:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = expense.Category ?? null } });
-                        break;
-                    case HeaderEnum.KEY:
-                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = expense.Id ?? null } });
                         break;
                     default:
                         cells.Add(new CellData());
@@ -167,7 +160,6 @@ public static class ExpenseMapper
             Note = ColumnNotes.DateFormat,
             Format = FormatEnum.DATE
         });
-        var dateRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
 
         // Name
         sheet.Headers.AddColumn(new SheetCellModel
