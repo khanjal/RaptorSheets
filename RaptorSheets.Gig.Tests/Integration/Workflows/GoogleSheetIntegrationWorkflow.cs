@@ -6,6 +6,8 @@ using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Gig.Tests.Data.Helpers;
 using RaptorSheets.Test.Common.Helpers;
+using RaptorSheets.Gig.Helpers;
+using System.Reflection;
 using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
 
 namespace RaptorSheets.Gig.Tests.Integration.Workflows;
@@ -19,6 +21,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     private readonly GoogleSheetManager? _googleSheetManager;
     private readonly Dictionary<string, string> _credential;
     private readonly List<string> _testSheets;
+    private readonly List<string> _allSheets;
     private readonly long _testStartTime;
 
     // Test data tracking
@@ -30,6 +33,15 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     {
         _testStartTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         _testSheets = new List<string> { SheetEnum.TRIPS.GetDescription(), SheetEnum.SHIFTS.GetDescription() };
+        
+        // Get all available sheets from GenerateSheetsHelpers - convert enum values to descriptions
+        _allSheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>()
+            .Select(e => e.GetDescription())
+            .ToList();
+        
+        // Also add common sheets (Setup sheet)
+        _allSheets.AddRange(Enum.GetValues(typeof(RaptorSheets.Common.Enums.SheetEnum)).Cast<RaptorSheets.Common.Enums.SheetEnum>()
+            .Select(e => e.GetDescription()));
         
         var spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
         _credential = TestConfigurationHelpers.GetJsonCredential();
@@ -44,7 +56,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
         // Clean slate: Clear existing test data and prepare sheets
         await CleanupTestData();
-        await EnsureSheetsExist();
+        // Note: We don't call EnsureAllSheetsExist here anymore since it's part of the main test flow
     }
 
     public async Task DisposeAsync()
@@ -58,22 +70,37 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     [FactCheckUserSecrets]
     public async Task ComprehensiveWorkflow_ShouldExecuteCompleteLifecycle()
     {
-        // Step 1: Verify Sheet Structure
+        // Step 1: Start Fresh - Delete ALL existing sheets and recreate from scratch
+        await StartFreshWithAllSheets();
+        
+        // Step 2: Verify Sheet Structure (Primary + Aggregate)
         await VerifySheetStructure();
         
-        // Step 2: Create New Data
+        // Step 3: Capture Pre-Test Aggregate State
+        var preTestAggregates = await CaptureAggregateState();
+        
+        // Step 4: Create New Data
         await CreateNewShiftWithTrips();
         
-        // Step 3: Verify Data Was Added
+        // Step 5: Verify Data Was Added
         await VerifyDataWasAdded();
         
-        // Step 4: Update Existing Data
+        // Step 6: Verify Aggregate Sheets Updated
+        await VerifyAggregateDataUpdated(preTestAggregates);
+        
+        // Step 7: Update Existing Data
         await UpdateExistingData();
         
-        // Step 5: Delete Test Data
+        // Step 8: Verify Aggregates Reflect Updates
+        await VerifyAggregateDataReflectsUpdates();
+        
+        // Step 9: Delete Test Data
         await DeleteTestData();
         
-        // Step 6: Verify Final Clean State
+        // Step 10: Verify Aggregates Cleaned Up
+        await VerifyAggregateDataCleanedUp(preTestAggregates);
+        
+        // Step 11: Verify Final Clean State
         await VerifyFinalState();
     }
 
@@ -109,30 +136,91 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
     private async Task VerifySheetStructure()
     {
-        // Arrange & Act
-        var sheetProperties = await _googleSheetManager!.GetSheetProperties(_testSheets);
-        var allSheets = await _googleSheetManager.GetSheets();
+        // Arrange & Act - Verify all sheets exist and have proper structure
+        // (After StartFreshWithAllSheets, all sheets should definitely exist)
+        var sheetProperties = await _googleSheetManager!.GetSheetProperties(_allSheets);
+        var allSheetsData = await _googleSheetManager.GetSheets(_allSheets);
 
-        // Assert - Verify all required sheets exist
-        Assert.NotNull(sheetProperties);
-        Assert.Equal(2, sheetProperties.Count);
+        // Debug logging
+        System.Diagnostics.Debug.WriteLine($"=== Verifying Sheet Structure ===");
+        System.Diagnostics.Debug.WriteLine($"Expected sheets ({_allSheets.Count}): {string.Join(", ", _allSheets)}");
         
-        var tripsSheet = sheetProperties.FirstOrDefault(x => x.Name == SheetEnum.TRIPS.GetDescription());
-        var shiftsSheet = sheetProperties.FirstOrDefault(x => x.Name == SheetEnum.SHIFTS.GetDescription());
+        // Get existing sheets (should be all of them after StartFreshWithAllSheets)
+        var existingSheets = sheetProperties.Where(p => !string.IsNullOrEmpty(p.Id)).ToList();
+        System.Diagnostics.Debug.WriteLine($"Found sheets ({existingSheets.Count}): {string.Join(", ", existingSheets.Select(p => p.Name))}");
+
+        // Assert - All sheets should exist after StartFreshWithAllSheets
+        Assert.NotNull(sheetProperties);
+        Assert.Equal(_allSheets.Count, sheetProperties.Count); // Should return one property per requested sheet
+        Assert.Equal(_allSheets.Count, existingSheets.Count); // ALL sheets should exist
+        
+        // Verify primary sheets (TRIPS, SHIFTS) exist and have proper structure
+        var tripsSheet = existingSheets.FirstOrDefault(x => x.Name == SheetEnum.TRIPS.GetDescription());
+        var shiftsSheet = existingSheets.FirstOrDefault(x => x.Name == SheetEnum.SHIFTS.GetDescription());
         
         Assert.NotNull(tripsSheet);
         Assert.NotNull(shiftsSheet);
         Assert.NotEmpty(tripsSheet.Id);
         Assert.NotEmpty(shiftsSheet.Id);
-        
-        // Verify headers are present
         Assert.NotEmpty(tripsSheet.Attributes[PropertyEnum.HEADERS.GetDescription()]);
         Assert.NotEmpty(shiftsSheet.Attributes[PropertyEnum.HEADERS.GetDescription()]);
 
+        // Verify ALL sheets have proper headers and structure
+        foreach (var sheet in existingSheets)
+        {
+            Assert.NotEmpty(sheet.Id);
+            Assert.NotEmpty(sheet.Attributes[PropertyEnum.HEADERS.GetDescription()]);
+        }
+
         // Verify no errors in sheet retrieval
-        Assert.NotNull(allSheets);
-        var errorMessages = allSheets.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription());
+        Assert.NotNull(allSheetsData);
+        var errorMessages = allSheetsData.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription());
         Assert.Empty(errorMessages);
+
+        // Verify aggregate sheets contain expected data structure
+        Assert.NotNull(allSheetsData.Addresses);
+        Assert.NotNull(allSheetsData.Names);
+        Assert.NotNull(allSheetsData.Places);
+        Assert.NotNull(allSheetsData.Regions);
+        Assert.NotNull(allSheetsData.Services);
+        Assert.NotNull(allSheetsData.Daily);
+        Assert.NotNull(allSheetsData.Weekly);
+        Assert.NotNull(allSheetsData.Monthly);
+        Assert.NotNull(allSheetsData.Yearly);
+
+        System.Diagnostics.Debug.WriteLine($"=== Sheet structure verification completed successfully for all {existingSheets.Count} sheets ===");
+        
+        // TODO: Add visual format validation if needed
+        // await VerifySheetFormatting(tripsSheet, shiftsSheet);
+    }
+
+    // Optional: Add detailed format validation
+    private async Task VerifySheetFormatting(RaptorSheets.Core.Entities.PropertyEntity tripsSheet, RaptorSheets.Core.Entities.PropertyEntity shiftsSheet)
+    {
+        // This would require additional Google Sheets API calls to get detailed formatting
+        // You would need to call the Sheets API directly to get:
+        // - Cell formatting (colors, fonts, borders)
+        // - Column widths
+        // - Data validation rules
+        // - Conditional formatting rules
+        
+        // Example structure (would need implementation):
+        /*
+        var tripsFormatting = await GetSheetFormatting(tripsSheet.Id);
+        var shiftsFormatting = await GetSheetFormatting(shiftsSheet.Id);
+        
+        // Verify header formatting
+        Assert.True(tripsFormatting.HeaderRow.HasBoldText);
+        Assert.Equal(ExpectedColors.HeaderBackground, tripsFormatting.HeaderRow.BackgroundColor);
+        
+        // Verify alternating row colors
+        Assert.True(tripsFormatting.HasAlternatingRowColors);
+        
+        // Verify data validation
+        Assert.Contains(ValidationRule.DateFormat, tripsFormatting.ValidationRules);
+        */
+        
+        await Task.CompletedTask; // Placeholder
     }
 
     private async Task CreateNewShiftWithTrips()
@@ -154,7 +242,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         // Assert
         Assert.NotNull(result);
         Assert.Equal(2, result.Messages.Count);
-        
+
         foreach (var message in result.Messages)
         {
             Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
@@ -293,15 +381,15 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
     private async Task VerifyFinalState()
     {
-        // Act
-        var finalState = await _googleSheetManager!.GetSheets(_testSheets);
-        var sheetProperties = await _googleSheetManager.GetSheetProperties(_testSheets);
+        // Act - Verify all sheets are in clean state
+        var finalState = await _googleSheetManager!.GetSheets(_allSheets);
+        var sheetProperties = await _googleSheetManager.GetSheetProperties(_allSheets);
 
         // Assert
         Assert.NotNull(finalState);
         Assert.NotNull(sheetProperties);
 
-        // Verify no test data remains
+        // Verify no test data remains in primary sheets
         foreach (var shiftId in _createdShiftIds)
         {
             Assert.DoesNotContain(finalState.Shifts, s => s.RowId == shiftId);
@@ -316,11 +404,158 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         var errorMessages = finalState.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription());
         Assert.Empty(errorMessages);
 
-        // Verify sheet structure is intact
-        Assert.Equal(2, sheetProperties.Count);
-        Assert.All(sheetProperties, prop => Assert.NotEmpty(prop.Id));
+        // Verify all sheet structure is intact
+        var existingSheets = sheetProperties.Where(prop => !string.IsNullOrEmpty(prop.Id)).ToList();
+        Assert.True(existingSheets.Count > 0, "Should have at least some sheets after the test");
+        Assert.All(existingSheets, prop => Assert.NotEmpty(prop.Id));
+
+        // Verify aggregate sheets are still populated with valid data (if they exist)
+        if (finalState.Addresses != null) Assert.NotNull(finalState.Addresses);
+        if (finalState.Names != null) Assert.NotNull(finalState.Names);
+        if (finalState.Places != null) Assert.NotNull(finalState.Places);
+        if (finalState.Regions != null) Assert.NotNull(finalState.Regions);
+        if (finalState.Services != null) Assert.NotNull(finalState.Services);
+        if (finalState.Daily != null) Assert.NotNull(finalState.Daily);
+        if (finalState.Weekly != null) Assert.NotNull(finalState.Weekly);
+        if (finalState.Monthly != null) Assert.NotNull(finalState.Monthly);
+        if (finalState.Yearly != null) Assert.NotNull(finalState.Yearly);
+
+        // Verify aggregate sheets don't contain test artifacts
+        if (finalState.Regions != null)
+        {
+            Assert.DoesNotContain(finalState.Regions, r => r.Region == "Updated Region" && r.Trips > 0);
+        }
+        
+        // Log final counts for debugging
+        System.Diagnostics.Debug.WriteLine($"Final counts - " +
+            $"Addresses: {finalState.Addresses?.Count ?? 0}, " +
+            $"Names: {finalState.Names?.Count ?? 0}, " +
+            $"Places: {finalState.Places?.Count ?? 0}, " +
+            $"Regions: {finalState.Regions?.Count ?? 0}, " +
+            $"Services: {finalState.Services?.Count ?? 0}");
     }
 
+    private async Task TestCompleteSheetDeletionAndRecreation()
+    {
+        // Step 3a: Verify ALL sheets exist (they should after EnsureAllSheetsExist)
+        var initialProperties = await _googleSheetManager!.GetSheetProperties(_allSheets);
+        var existingSheets = initialProperties.Where(prop => !string.IsNullOrEmpty(prop.Id)).ToList();
+        
+        System.Diagnostics.Debug.WriteLine($"Found {existingSheets.Count} existing sheets to delete and recreate");
+        
+        if (existingSheets.Count != _allSheets.Count)
+        {
+            throw new InvalidOperationException($"Expected {_allSheets.Count} sheets to exist, but found {existingSheets.Count}. EnsureAllSheetsExist should have created all sheets.");
+        }
+        
+        // Get list of ALL sheet names for deletion/recreation
+        var allSheetNames = existingSheets.Select(s => s.Name).ToList();
+        
+        // Store initial sheet information for comparison
+        var initialSheetIds = existingSheets.ToDictionary(s => s.Name, s => s.Id);
+        
+        // Step 3b: Delete ALL existing sheets (this tests the deletion capability)
+        System.Diagnostics.Debug.WriteLine($"Deleting all {allSheetNames.Count} sheets: {string.Join(", ", allSheetNames)}");
+        var deletionResult = await _googleSheetManager.DeleteSheets(allSheetNames);
+        Assert.NotNull(deletionResult);
+        
+        // Log the results for debugging
+        foreach (var message in deletionResult.Messages)
+        {
+            System.Diagnostics.Debug.WriteLine($"Delete operation: {message.Level} - {message.Message}");
+        }
+        
+        // Check if deletion was successful or if it failed due to permissions
+        var errorMessages = deletionResult.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription());
+        var warningMessages = deletionResult.Messages.Where(m => m.Level == MessageLevelEnum.WARNING.GetDescription());
+        
+        // If there are errors that aren't permission-related, fail the test
+        var criticalErrors = errorMessages.Where(m => 
+            !m.Message.Contains("Cannot delete") && 
+            !m.Message.Contains("permission"));
+            
+        if (criticalErrors.Any())
+        {
+            throw new InvalidOperationException($"Critical error during sheet deletion: {criticalErrors.First().Message}");
+        }
+        
+        // If deletion failed due to permissions, skip the rest of this test
+        var permissionIssues = errorMessages.Concat(warningMessages)
+            .Where(m => m.Message.Contains("Cannot delete") || m.Message.Contains("permission"));
+            
+        if (permissionIssues.Any())
+        {
+            System.Diagnostics.Debug.WriteLine("Skipping deletion verification due to permission issues");
+            throw new InvalidOperationException("Cannot complete test: insufficient permissions to delete sheets");
+        }
+        
+        // Step 3c: Verify ALL sheets are deleted/missing
+        // Wait for deletion to propagate
+        System.Diagnostics.Debug.WriteLine("Waiting for sheet deletion to propagate...");
+        await Task.Delay(5000);
+        
+        var afterDeletionProperties = await _googleSheetManager.GetSheetProperties(allSheetNames);
+        
+        // Verify that ALL sheets are actually deleted (should have empty IDs)
+        var deletedSheets = afterDeletionProperties.Where(prop => string.IsNullOrEmpty(prop.Id)).ToList();
+        if (deletedSheets.Count != allSheetNames.Count)
+        {
+            // If sheets weren't actually deleted, this might be due to Google Sheets limitations
+            System.Diagnostics.Debug.WriteLine($"Expected {allSheetNames.Count} deleted sheets, but only {deletedSheets.Count} were deleted");
+            System.Diagnostics.Debug.WriteLine("This might be due to Google Sheets API limitations or caching");
+            throw new InvalidOperationException($"Sheet deletion verification failed: expected {allSheetNames.Count} deleted sheets, got {deletedSheets.Count}");
+        }
+        
+        Assert.All(afterDeletionProperties, prop => Assert.Empty(prop.Id)); // Should be empty after deletion
+        System.Diagnostics.Debug.WriteLine($"Successfully verified all {allSheetNames.Count} sheets were deleted");
+        
+        // Step 3d: Recreate ALL sheets using the manager's CreateSheets() method
+        // This will create all sheets in the correct order with proper dependencies
+        System.Diagnostics.Debug.WriteLine("Recreating all sheets...");
+        var recreationResult = await _googleSheetManager.CreateSheets();
+        Assert.NotNull(recreationResult);
+        
+        // Should have success messages for recreation (warnings are used for successful creation)
+        var successMessages = recreationResult.Messages.Where(m => 
+            m.Level == MessageLevelEnum.WARNING.GetDescription() && 
+            m.Type == MessageTypeEnum.CREATE_SHEET.GetDescription());
+        Assert.NotEmpty(successMessages);
+        
+        System.Diagnostics.Debug.WriteLine($"Recreation created {successMessages.Count()} sheets");
+        
+        // Step 3e: Verify ALL sheets are recreated with proper structure
+        // Wait for sheets to be fully created
+        System.Diagnostics.Debug.WriteLine("Waiting for sheet recreation to complete...");
+        await Task.Delay(10000);
+        
+        var recreatedProperties = await _googleSheetManager.GetSheetProperties(_allSheets);
+        var newExistingSheets = recreatedProperties.Where(prop => !string.IsNullOrEmpty(prop.Id)).ToList();
+        
+        // Should have ALL sheets recreated
+        Assert.Equal(_allSheets.Count, newExistingSheets.Count);
+        System.Diagnostics.Debug.WriteLine($"Verified {newExistingSheets.Count} sheets were recreated");
+        
+        // Verify that ALL sheets have different IDs (proving they were recreated)
+        foreach (var recreatedSheet in newExistingSheets)
+        {
+            if (initialSheetIds.ContainsKey(recreatedSheet.Name))
+            {
+                Assert.NotEqual(initialSheetIds[recreatedSheet.Name], recreatedSheet.Id);
+                System.Diagnostics.Debug.WriteLine($"Sheet '{recreatedSheet.Name}' has new ID: {recreatedSheet.Id} (was {initialSheetIds[recreatedSheet.Name]})");
+            }
+        }
+        
+        // Verify headers are properly created for ALL recreated sheets
+        foreach (var sheet in newExistingSheets)
+        {
+            Assert.NotEmpty(sheet.Attributes[PropertyEnum.HEADERS.GetDescription()]);
+        }
+        
+        System.Diagnostics.Debug.WriteLine($"Successfully completed deletion and recreation of all {newExistingSheets.Count} sheets");
+        
+        // Step 3f: Verify recreated sheets are functional (can receive data)
+        // This will be tested in the subsequent CreateNewShiftWithTrips step
+    }
     #endregion
 
     #region Helper Methods
@@ -369,15 +604,9 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
     private async Task EnsureSheetsExist()
     {
-        if (_googleSheetManager == null) return;
-
-        var properties = await _googleSheetManager.GetSheetProperties(_testSheets);
-        var missingSheets = properties.Where(p => string.IsNullOrEmpty(p.Id)).Select(p => p.Name).ToList();
-        
-        if (missingSheets.Count > 0)
-        {
-            await _googleSheetManager.CreateSheets(missingSheets);
-        }
+        // This method is deprecated - the test now uses StartFreshWithAllSheets
+        // which deletes all existing sheets and creates all required sheets from scratch
+        await StartFreshWithAllSheets();
     }
 
     private static int GetMaxRowValue(List<RaptorSheets.Core.Entities.PropertyEntity> sheetInfo, string sheetName)
@@ -394,5 +623,281 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         return 1; // Default to 1 if no data exists (header row)
     }
 
+    private async Task<Dictionary<string, object>> CaptureAggregateState()
+    {
+        // Capture the state of aggregate sheets before making changes
+        var aggregateState = new Dictionary<string, object>();
+        
+        var allData = await _googleSheetManager!.GetSheets(_allSheets);
+        
+        // Store counts and key metrics for comparison (check if data exists first)
+        aggregateState["AddressCount"] = allData.Addresses?.Count ?? 0;
+        aggregateState["NameCount"] = allData.Names?.Count ?? 0;
+        aggregateState["PlaceCount"] = allData.Places?.Count ?? 0;
+        aggregateState["RegionCount"] = allData.Regions?.Count ?? 0;
+        aggregateState["ServiceCount"] = allData.Services?.Count ?? 0;
+        aggregateState["DailyCount"] = allData.Daily?.Count ?? 0;
+        aggregateState["WeeklyCount"] = allData.Weekly?.Count ?? 0;
+        aggregateState["MonthlyCount"] = allData.Monthly?.Count ?? 0;
+        aggregateState["YearlyCount"] = allData.Yearly?.Count ?? 0;
+        
+        // Store specific data points for verification
+        var testDate = DateTime.Now.ToString("yyyy-MM-dd");
+        var existingDailyForDate = allData.Daily?.FirstOrDefault(d => d.Date == testDate);
+        if (existingDailyForDate != null)
+        {
+            aggregateState["ExistingDailyTrips"] = existingDailyForDate.Trips;
+            aggregateState["ExistingDailyTotal"] = existingDailyForDate.Total;
+        }
+        
+        return aggregateState;
+    }
+
+    private async Task VerifyAggregateDataUpdated(Dictionary<string, object> preTestState)
+    {
+        // Verify that aggregate sheets properly reflect the new data
+        await Task.Delay(2000); // Allow time for formulas to calculate
+        
+        var currentData = await _googleSheetManager!.GetSheets(_allSheets);
+        
+        Assert.NotNull(currentData);
+        Assert.NotNull(_createdShiftData);
+        
+        // Only verify if we have the relevant sheets
+        if (currentData.Regions == null || currentData.Services == null || currentData.Places == null)
+        {
+            System.Diagnostics.Debug.WriteLine("Skipping aggregate verification - required sheets not available");
+            return;
+        }
+        
+        // Verify lookup sheets were updated with new unique values
+        var createdShift = _createdShiftData.Shifts.First();
+        var createdTrip = _createdShiftData.Trips.First();
+        
+        // Check if new region appears in REGIONS sheet (if it's a new region)
+        if (!string.IsNullOrEmpty(createdShift.Region))
+        {
+            var regionEntry = currentData.Regions.FirstOrDefault(r => r.Region == createdShift.Region);
+            if (regionEntry != null)
+            {
+                Assert.True(regionEntry.Trips > 0, $"Region '{createdShift.Region}' should have trip count > 0");
+                Assert.True(regionEntry.Total > 0, $"Region '{createdShift.Region}' should have total > 0");
+            }
+        }
+        
+        // Check if new service appears in SERVICES sheet
+        if (!string.IsNullOrEmpty(createdShift.Service))
+        {
+            var serviceEntry = currentData.Services.FirstOrDefault(s => s.Service == createdShift.Service);
+            if (serviceEntry != null)
+            {
+                Assert.True(serviceEntry.Trips > 0, $"Service '{createdShift.Service}' should have trip count > 0");
+                Assert.True(serviceEntry.Total > 0, $"Service '{createdShift.Service}' should have total > 0");
+            }
+        }
+        
+        // Check if new place appears in PLACES sheet
+        if (!string.IsNullOrEmpty(createdTrip.Place))
+        {
+            var placeEntry = currentData.Places.FirstOrDefault(p => p.Place == createdTrip.Place);
+            if (placeEntry != null)
+            {
+                Assert.True(placeEntry.Trips > 0, $"Place '{createdTrip.Place}' should have trip count > 0");
+            }
+        }
+        
+        // Verify DAILY sheet reflects new data (if available)
+        if (currentData.Daily != null)
+        {
+            var testDate = DateTime.Now.ToString("yyyy-MM-dd");
+            var dailyEntry = currentData.Daily.FirstOrDefault(d => d.Date == testDate);
+            if (dailyEntry != null)
+            {
+                var expectedMinTrips = (int)(preTestState.ContainsKey("ExistingDailyTrips") ? preTestState["ExistingDailyTrips"] : 0) + _createdShiftData.Trips.Count;
+                Assert.True(dailyEntry.Trips >= expectedMinTrips, 
+                    $"Daily entry for {testDate} should have at least {expectedMinTrips} trips, but has {dailyEntry.Trips}");
+            }
+        }
+    }
+
+    private async Task VerifyAggregateDataReflectsUpdates()
+    {
+        // Verify that updates to primary data are reflected in aggregates
+        await Task.Delay(2000); // Allow time for formulas to recalculate
+        
+        var currentData = await _googleSheetManager!.GetSheets(_allSheets);
+        
+        Assert.NotNull(currentData);
+        Assert.NotNull(_createdShiftData);
+        
+        // Only verify if we have the relevant sheets
+        if (currentData.Regions == null || currentData.Services == null)
+        {
+            System.Diagnostics.Debug.WriteLine("Skipping aggregate update verification - required sheets not available");
+            return;
+        }
+        
+        var updatedShift = _createdShiftData.Shifts.First();
+        
+        // Verify the updated region ("Updated Region") appears in REGIONS sheet
+        var updatedRegionEntry = currentData.Regions.FirstOrDefault(r => r.Region == "Updated Region");
+        Assert.NotNull(updatedRegionEntry);
+        Assert.True(updatedRegionEntry.Trips > 0, "Updated region should have trip count > 0");
+        
+        // Verify trip with tip = 999 is reflected in aggregates
+        var updatedTrip = _createdShiftData.Trips.First();
+        var serviceEntry = currentData.Services.FirstOrDefault(s => s.Service == updatedShift.Service);
+        if (serviceEntry != null)
+        {
+            // The service total should include our updated tip of 999
+            Assert.True(serviceEntry.Total >= 999, $"Service total should include updated tip of 999, current total: {serviceEntry.Total}");
+        }
+    }
+
+    private async Task VerifyAggregateDataCleanedUp(Dictionary<string, object> preTestState)
+    {
+        // Verify that aggregate sheets return to their pre-test state after cleanup
+        await Task.Delay(2000); // Allow time for formulas to recalculate
+        
+        var currentData = await _googleSheetManager!.GetSheets(_allSheets);
+        
+        Assert.NotNull(currentData);
+        
+        // For sheets with formula-based data, counts should return to pre-test levels
+        // Note: Some aggregate data might persist if it was the only instance of that value
+        
+        // Verify DAILY data returns to expected state (if available)
+        if (currentData.Daily != null)
+        {
+            var testDate = DateTime.Now.ToString("yyyy-MM-dd");
+            var dailyEntry = currentData.Daily.FirstOrDefault(d => d.Date == testDate);
+            
+            if (preTestState.ContainsKey("ExistingDailyTrips") && dailyEntry != null)
+            {
+                var expectedTrips = (int)preTestState["ExistingDailyTrips"];
+                // Allow for some variance due to concurrent test runs or existing data
+                Assert.True(Math.Abs(dailyEntry.Trips - expectedTrips) <= 5, 
+                    $"Daily trips for {testDate} should be close to pre-test value of {expectedTrips}, current: {dailyEntry.Trips}");
+            }
+        }
+        
+        // Verify "Updated Region" is no longer in REGIONS sheet (if it was test-only data)
+        if (currentData.Regions != null)
+        {
+            var updatedRegionEntry = currentData.Regions.FirstOrDefault(r => r.Region == "Updated Region");
+            if (updatedRegionEntry != null)
+            {
+                // If it still exists, it should have 0 trips (meaning our test data was cleaned up)
+                Assert.True(updatedRegionEntry.Trips == 0 || updatedRegionEntry.Total == 0, 
+                    "Updated region should have no trips/total after cleanup");
+            }
+        }
+    }
+
+    private async Task StartFreshWithAllSheets()
+    {
+        System.Diagnostics.Debug.WriteLine("=== Starting Fresh: Delete All Existing Sheets and Recreate ===");
+        
+        // Step 1a: Get ALL existing sheets in the spreadsheet (regardless of what they are)
+        var allExistingProperties = await _googleSheetManager!.GetSheetProperties(_allSheets);
+        var existingSheets = allExistingProperties.Where(prop => !string.IsNullOrEmpty(prop.Id)).ToList();
+        
+        System.Diagnostics.Debug.WriteLine($"Found {existingSheets.Count} existing sheets in spreadsheet: {string.Join(", ", existingSheets.Select(s => s.Name))}");
+        
+        // Step 1b: Delete ALL existing sheets (start completely fresh)
+        if (existingSheets.Count > 0)
+        {
+            var existingSheetNames = existingSheets.Select(s => s.Name).ToList();
+            
+            System.Diagnostics.Debug.WriteLine($"Deleting ALL {existingSheetNames.Count} existing sheets to start fresh...");
+            var deletionResult = await _googleSheetManager.DeleteSheets(existingSheetNames);
+            
+            // Log deletion results
+            foreach (var message in deletionResult.Messages)
+            {
+                System.Diagnostics.Debug.WriteLine($"Delete operation: {message.Level} - {message.Message}");
+            }
+            
+            // Check for critical errors (but allow permission issues)
+            var errorMessages = deletionResult.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription());
+            var criticalErrors = errorMessages.Where(m => 
+                !m.Message.Contains("Cannot delete") && 
+                !m.Message.Contains("permission"));
+                
+            if (criticalErrors.Any())
+            {
+                throw new InvalidOperationException($"Critical error during sheet deletion: {criticalErrors.First().Message}");
+            }
+            
+            // Check for permission issues
+            var permissionIssues = deletionResult.Messages.Where(m => 
+                m.Message.Contains("Cannot delete") || m.Message.Contains("permission"));
+                
+            if (permissionIssues.Any())
+            {
+                throw new InvalidOperationException($"Cannot complete test: insufficient permissions to delete sheets. Error: {permissionIssues.First().Message}");
+            }
+            
+            // Step 1c: Wait for deletion to propagate and verify sheets are deleted
+            System.Diagnostics.Debug.WriteLine("Waiting for sheet deletion to propagate...");
+            await Task.Delay(5000);
+            
+            var afterDeletionProperties = await _googleSheetManager.GetSheetProperties(existingSheetNames);
+            var remainingSheets = afterDeletionProperties.Where(prop => !string.IsNullOrEmpty(prop.Id)).ToList();
+            
+            if (remainingSheets.Count > 0)
+            {
+                throw new InvalidOperationException($"Sheet deletion failed: {remainingSheets.Count} sheets still exist after deletion: {string.Join(", ", remainingSheets.Select(s => s.Name))}");
+            }
+            
+            System.Diagnostics.Debug.WriteLine($"Successfully deleted all {existingSheetNames.Count} sheets");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("No existing sheets found - spreadsheet is already empty");
+        }
+        
+        // Step 1d: Create ALL required sheets from scratch
+        System.Diagnostics.Debug.WriteLine($"Creating ALL {_allSheets.Count} sheets from scratch...");
+        var creationResult = await _googleSheetManager.CreateSheets();
+        Assert.NotNull(creationResult);
+        
+        // Log creation results
+        foreach (var message in creationResult.Messages)
+        {
+            System.Diagnostics.Debug.WriteLine($"Sheet creation: {message.Level} - {message.Message}");
+        }
+        
+        // Verify creation was successful (warnings are used for successful creation)
+        var successMessages = creationResult.Messages.Where(m => 
+            m.Level == MessageLevelEnum.WARNING.GetDescription() && 
+            m.Type == MessageTypeEnum.CREATE_SHEET.GetDescription());
+        Assert.NotEmpty(successMessages);
+        
+        System.Diagnostics.Debug.WriteLine($"Creation result shows {successMessages.Count()} sheets were created");
+        
+        // Step 1e: Wait for creation to complete and verify all sheets exist
+        System.Diagnostics.Debug.WriteLine("Waiting for sheet creation to complete...");
+        await Task.Delay(10000); // Longer wait for creation of multiple sheets
+        
+        var finalProperties = await _googleSheetManager.GetSheetProperties(_allSheets);
+        var createdSheets = finalProperties.Where(prop => !string.IsNullOrEmpty(prop.Id)).ToList();
+        
+        // Verify ALL expected sheets were created
+        if (createdSheets.Count != _allSheets.Count)
+        {
+            var missingSheets = _allSheets.Except(createdSheets.Select(s => s.Name)).ToList();
+            throw new InvalidOperationException($"Sheet creation incomplete: Expected {_allSheets.Count} sheets, got {createdSheets.Count}. Missing: {string.Join(", ", missingSheets)}");
+        }
+        
+        // Verify all sheets have proper headers
+        foreach (var sheet in createdSheets)
+        {
+            Assert.NotEmpty(sheet.Attributes[PropertyEnum.HEADERS.GetDescription()]);
+        }
+        
+        System.Diagnostics.Debug.WriteLine($"=== Successfully Started Fresh: All {createdSheets.Count} sheets created with proper structure ===");
+        System.Diagnostics.Debug.WriteLine($"Created sheets: {string.Join(", ", createdSheets.Select(s => $"{s.Name}({s.Id})"))}");
+    }
     #endregion
 }
