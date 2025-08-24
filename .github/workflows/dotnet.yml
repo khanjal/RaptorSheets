@@ -82,6 +82,9 @@ jobs:
       with:
         name: build-output
 
+    - name: Restore dependencies (if needed)
+      run: dotnet restore
+
     - name: Test with Coverage
       env:
         spreadsheets:gig: ${{ secrets.GIG_SPREADSHEET_ID }}
@@ -92,7 +95,7 @@ jobs:
         google_credentials:client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
         google_credentials:client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
       run: |
-        dotnet test --no-build --configuration Release \
+        dotnet test --configuration Release \
           --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults \
           --logger trx \
@@ -104,8 +107,14 @@ jobs:
 
     - name: Generate Coverage Report
       run: |
+        echo "Looking for coverage files..."
+        find . -name "*.xml" -type f | grep -i coverage
+        echo "Files in TestResults:"
+        ls -la TestResults/ || echo "TestResults directory not found"
+        find TestResults -name "*.xml" 2>/dev/null || echo "No XML files in TestResults"
+        
         reportgenerator \
-          -reports:"TestResults/**/coverage.cobertura.xml" \
+          -reports:"TestResults/**/coverage.cobertura.xml;TestResults/**/coverage.opencover.xml" \
           -targetdir:"coverage/report" \
           -reporttypes:"Html;TextSummary" \
           -verbosity:Info
