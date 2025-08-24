@@ -61,7 +61,8 @@ jobs:
           /o:"ironraptor" \
           /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
           /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.opencover.reportsPaths="coverage/**/coverage.opencover.xml"
+          /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+          /d:sonar.cs.vstest.reportsPaths="**/*.trx"
 
     - name: Build
       run: dotnet build --no-restore --configuration Release
@@ -78,9 +79,10 @@ jobs:
       run: |
         dotnet test --no-build --configuration Release \
           --collect:"XPlat Code Coverage" \
-          --results-directory ./coverage \
+          --results-directory ./TestResults \
           --logger trx \
-          --verbosity normal
+          --verbosity normal \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover,cobertura
 
     - name: End SonarCloud Scan
       env:
@@ -95,7 +97,7 @@ jobs:
     - name: Generate Coverage Report
       run: |
         reportgenerator \
-          -reports:"coverage/**/coverage.cobertura.xml" \
+          -reports:"TestResults/**/coverage.cobertura.xml" \
           -targetdir:"coverage/report" \
           -reporttypes:"Html;TextSummary" \
           -verbosity:Info
