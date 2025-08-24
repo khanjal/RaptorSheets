@@ -28,6 +28,7 @@ public class SheetHelperTests
     [InlineData(ColorEnum.LIGHT_CYAN)]
     [InlineData(ColorEnum.LIGHT_GRAY)]
     [InlineData(ColorEnum.LIGHT_GREEN)]
+    [InlineData(ColorEnum.LIGHT_PURPLE)]
     [InlineData(ColorEnum.LIGHT_RED)]
     [InlineData(ColorEnum.LIGHT_YELLOW)]
     [InlineData(ColorEnum.LIME)]
