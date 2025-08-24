@@ -281,25 +281,21 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             // Get sheet properties to find sheet IDs
             var sheetProperties = await GetSheetProperties(sheets);
-            var sheetIdsToDelete = sheetProperties
-                .Where(p => !string.IsNullOrEmpty(p.Id))
-                .Select(p => int.Parse(p.Id))
-                .ToList();
-
-            if (sheetIdsToDelete.Count == 0)
+            
+            if (sheetProperties.Count == 0)
             {
                 sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No sheets found to delete", MessageTypeEnum.DELETE_SHEET));
                 return sheetEntity;
             }
 
-            // Create delete requests for each sheet
-            var deleteRequests = sheetIdsToDelete.Select(sheetId => new Request
+            // Use the helper to create delete sheet requests
+            var deleteRequests = GoogleRequestHelpers.GenerateDeleteSheetRequests(sheetProperties);
+
+            if (deleteRequests.Count == 0)
             {
-                DeleteSheet = new DeleteSheetRequest
-                {
-                    SheetId = sheetId
-                }
-            }).ToList();
+                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No valid sheet IDs found for deletion", MessageTypeEnum.DELETE_SHEET));
+                return sheetEntity;
+            }
 
             var batchRequest = new BatchUpdateSpreadsheetRequest
             {
@@ -311,9 +307,15 @@ public class GoogleSheetManager : IGoogleSheetManager
 
             if (result != null)
             {
-                foreach (var sheet in sheets)
+                // Get the names of successfully processed sheets
+                var validSheetNames = sheetProperties
+                    .Where(p => !string.IsNullOrEmpty(p.Id))
+                    .Select(p => p.Name)
+                    .ToList();
+
+                foreach (var sheetName in validSheetNames)
                 {
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Sheet {sheet} deleted successfully", MessageTypeEnum.DELETE_SHEET));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Sheet {sheetName} deleted successfully", MessageTypeEnum.DELETE_SHEET));
                 }
             }
             else

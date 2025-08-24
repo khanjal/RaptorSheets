@@ -1,5 +1,6 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
@@ -427,5 +428,61 @@ public class GoogleRequestHelpersTests
             Assert.Equal(sortedRowIds[i] - 1, result[i].Item1);
             Assert.Equal(sortedRowIds[i], result[i].Item2);
         }
+    }
+
+    [Fact]
+    public void GenerateDeleteSheetRequests_WithValidSheetProperties_ShouldReturnDeleteRequests()
+    {
+        // Arrange
+        var sheetProperties = new List<PropertyEntity>
+        {
+            new PropertyEntity { Id = "100", Name = "TestSheet1" },
+            new PropertyEntity { Id = "200", Name = "TestSheet2" },
+            new PropertyEntity { Id = "", Name = "EmptyIdSheet" }, // Should be skipped
+            new PropertyEntity { Id = "invalid", Name = "InvalidIdSheet" } // Should be skipped
+        };
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateDeleteSheetRequests(sheetProperties).ToList();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count); // Only sheets with valid IDs should be processed
+
+        // Verify first delete request
+        Assert.NotNull(result[0].DeleteSheet);
+        Assert.Equal(100, result[0].DeleteSheet.SheetId);
+
+        // Verify second delete request
+        Assert.NotNull(result[1].DeleteSheet);
+        Assert.Equal(200, result[1].DeleteSheet.SheetId);
+    }
+
+    [Fact]
+    public void GenerateDeleteSheetRequests_WithEmptyList_ShouldReturnEmptyList()
+    {
+        // Arrange
+        var sheetProperties = new List<PropertyEntity>();
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateDeleteSheetRequests(sheetProperties);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void GenerateDeleteSheetRequests_WithNullInput_ShouldReturnEmptyList()
+    {
+        // Arrange
+        List<PropertyEntity> sheetProperties = null!;
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateDeleteSheetRequests(sheetProperties);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
     }
 }

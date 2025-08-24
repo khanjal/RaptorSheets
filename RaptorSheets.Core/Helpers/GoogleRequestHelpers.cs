@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
@@ -82,6 +83,35 @@ public static class GoogleRequestHelpers
             }
         };
         return new Request { AddBanding = addBandingRequest };
+    }
+
+    public static List<Request> GenerateDeleteSheetRequests(List<PropertyEntity> sheetProperties)
+    {
+        var requests = new List<Request>();
+        
+        if (sheetProperties?.Count == 0 || sheetProperties == null)
+        {
+            return requests;
+        }
+
+        // Create delete sheet requests for sheets that exist (have valid IDs)
+        var sheetIdsToDelete = sheetProperties
+            .Where(p => !string.IsNullOrEmpty(p.Id) && int.TryParse(p.Id, out _))
+            .Select(p => int.Parse(p.Id))
+            .ToList();
+
+        foreach (var sheetId in sheetIdsToDelete)
+        {
+            requests.Add(new Request
+            {
+                DeleteSheet = new DeleteSheetRequest
+                {
+                    SheetId = sheetId
+                }
+            });
+        }
+
+        return requests;
     }
 
     public static List<Tuple<int, int>> GenerateIndexRanges(List<int> rowIds)
