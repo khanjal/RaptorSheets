@@ -9,7 +9,7 @@
 | Code Quality | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=khanjal_RaptorSheets&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=khanjal_RaptorSheets) | [SonarCloud](https://sonarcloud.io/project/overview?id=khanjal_RaptorSheets) |
 | License | [![License](https://img.shields.io/github/license/khanjal/RaptorSheets)](LICENSE) | - |
 
-## ?? Quick Start
+## 🚀 Quick Start
 
 ```bash
 # Install the package for your use case
@@ -31,36 +31,36 @@ await manager.CreateSheets();
 var data = await manager.GetSheets();
 ```
 
-## ?? Project Description
+## 📚 Project Description
 
 RaptorSheets is a comprehensive .NET 8 library suite that simplifies interactions between custom API services and the Google Sheets API. Built for developers who need powerful spreadsheet integration without the complexity, featuring extensive test coverage and production-ready reliability.
 
-### ? Key Features
+### ✨ Key Features
 
-- **?? Header Management**: Extension methods for column and index assignments with automatic processing
-- **?? Column Formatting**: Apply data formatting, configure drop-downs, and set cell protection
-- **?? Sheet Styling**: Alternating row colors, full sheet protection, and custom tab colors
-- **? Batch Operations**: Efficient bulk operations for large datasets with automatic batching
-- **??? Type Safety**: Strongly typed entities and enums for all operations
-- **?? Auto Validation**: Automatic header validation with detailed error reporting
-- **?? Error Handling**: Comprehensive message system for operation feedback
-- **?? Well Tested**: Extensive unit and integration test coverage
+- **📋 Header Management**: Extension methods for column and index assignments with automatic processing
+- **🎨 Column Formatting**: Apply data formatting, configure drop-downs, and set cell protection
+- **🎯 Sheet Styling**: Alternating row colors, full sheet protection, and custom tab colors
+- **⚡ Batch Operations**: Efficient bulk operations for large datasets with automatic batching
+- **🔒 Type Safety**: Strongly typed entities and enums for all operations
+- **✅ Auto Validation**: Automatic header validation with detailed error reporting
+- **🛠️ Error Handling**: Comprehensive message system for operation feedback
+- **🧪 Well Tested**: Extensive unit and integration test coverage
 
-### ??? Architecture
+### 🏗️ Architecture
 
 ```
 Your Application
-       ?
+       ↓
 Package-Specific Manager (Gig, Stock, etc.)
-       ?
+       ↓
 RaptorSheets.Core (GoogleSheetService)
-       ?
+       ↓
 SheetServiceWrapper (API abstraction)
-       ?
+       ↓
 Google Sheets API v4
 ```
 
-### ?? Use Cases
+### 💼 Use Cases
 
 - **Gig Work Tracking**: Track trips, shifts, expenses, and earnings across platforms
 - **Stock Portfolio**: Manage accounts, tickers, and performance data
@@ -68,28 +68,28 @@ Google Sheets API v4
 - **Data Analytics**: Generate daily, weekly, monthly, and yearly reports
 - **Custom Integrations**: Build your own sheet types using the Core library
 
-## ?? Documentation
+## 📖 Documentation
 
 Choose the documentation that matches your needs:
 
 | Documentation | Purpose | Audience |
 |---------------|---------|----------|
-| **[?? Complete Guide](DOCUMENTATION.md)** | Comprehensive overview and getting started | All users |
-| **[?? Core Library](docs/CORE.md)** | Core functionality and custom implementations | Library developers |
-| **[?? Gig Package](docs/GIG.md)** | Gig work and freelance tracking | Gig workers, freelancers |
-| **[?? Stock Package](docs/STOCK.md)** | Stock portfolio management | Investors, traders |
-| **[?? Authentication](docs/AUTHENTICATION.md)** | Setup guide for Google APIs | All users |
+| **[📚 Complete Guide](DOCUMENTATION.md)** | Comprehensive overview and getting started | All users |
+| **[🔧 Core Library](docs/CORE.md)** | Core functionality and custom implementations | Library developers |
+| **[💼 Gig Package](docs/GIG.md)** | Gig work and freelance tracking | Gig workers, freelancers |
+| **[📈 Stock Package](docs/STOCK.md)** | Stock portfolio management | Investors, traders |
+| **[🔐 Authentication](docs/AUTHENTICATION.md)** | Setup guide for Google APIs | All users |
 
-## ?? Available Packages
+## 📦 Available Packages
 
 | Package | Version | Purpose | Dependencies | Documentation |
 |---------|---------|---------|--------------|---------------|
-| **RaptorSheets.Gig** | ![NuGet](https://img.shields.io/nuget/v/RaptorSheets.Gig) | Gig work and freelance tracking | Google.Apis.Sheets.v4, Google.Apis.Drive.v3 | [?? Gig Docs](docs/GIG.md) |
-| **RaptorSheets.Stock** | ![NuGet](https://img.shields.io/nuget/v/RaptorSheets.Stock) | Stock market data management | Google.Apis.Sheets.v4 | [?? Stock Docs](docs/STOCK.md) |
-| **RaptorSheets.Core** | *Coming Soon* | Core functionality for custom implementations | Google.Apis.Sheets.v4 | [?? Core Docs](docs/CORE.md) |
+| **RaptorSheets.Gig** | ![NuGet](https://img.shields.io/nuget/v/RaptorSheets.Gig) | Gig work and freelance tracking | Google.Apis.Sheets.v4, Google.Apis.Drive.v3 | [💼 Gig Docs](docs/GIG.md) |
+| **RaptorSheets.Stock** | ![NuGet](https://img.shields.io/nuget/v/RaptorSheets.Stock) | Stock market data management | Google.Apis.Sheets.v4 | [📈 Stock Docs](docs/STOCK.md) |
+| **RaptorSheets.Core** | *Coming Soon* | Core functionality for custom implementations | Google.Apis.Sheets.v4 | [🔧 Core Docs](docs/CORE.md) |
 | **RaptorSheets.Common** | - | Shared utilities (included in packages) | - | - |
 
-## ?? Authentication
+## 🔐 Authentication
 
 RaptorSheets supports multiple authentication methods. Here's a quick example:
 
