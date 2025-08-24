@@ -1,5 +1,6 @@
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Data.Attributes;
@@ -11,15 +12,13 @@ namespace RaptorSheets.Gig.Tests.Integration.Workflows;
 
 /// <summary>
 /// Comprehensive integration test workflow for GoogleSheetManager
-/// Tests the complete lifecycle: Setup -> Delete All -> Recreate -> Create -> Add -> Read -> Update -> Delete
+/// Tests the complete lifecycle: Delete All -> Recreate -> Create -> Read -> Update -> Delete
 /// </summary>
 public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 {
     private readonly GoogleSheetManager? _googleSheetManager;
-    private readonly Dictionary<string, string> _credential;
     private readonly List<string> _testSheets;
     private readonly List<string> _allSheets;
-    private readonly List<string> _aggregateSheets;
     private readonly long _testStartTime;
 
     // Test data tracking
@@ -48,27 +47,11 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             .Cast<RaptorSheets.Common.Enums.SheetEnum>()
             .Select(e => e.GetDescription()));
 
-        // Define aggregate sheets for verification
-        _aggregateSheets = new List<string>
-        {
-            SheetEnum.ADDRESSES.GetDescription(),
-            SheetEnum.NAMES.GetDescription(),
-            SheetEnum.PLACES.GetDescription(),
-            SheetEnum.REGIONS.GetDescription(),
-            SheetEnum.SERVICES.GetDescription(),
-            SheetEnum.TYPES.GetDescription(),
-            SheetEnum.DAILY.GetDescription(),
-            SheetEnum.WEEKDAYS.GetDescription(),
-            SheetEnum.WEEKLY.GetDescription(),
-            SheetEnum.MONTHLY.GetDescription(),
-            SheetEnum.YEARLY.GetDescription()
-        };
-
         var spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
-        _credential = TestConfigurationHelpers.GetJsonCredential();
+        var credential = TestConfigurationHelpers.GetJsonCredential();
 
-        if (GoogleCredentialHelpers.IsCredentialFilled(_credential))
-            _googleSheetManager = new GoogleSheetManager(_credential, spreadsheetId);
+        if (GoogleCredentialHelpers.IsCredentialFilled(credential))
+            _googleSheetManager = new GoogleSheetManager(credential, spreadsheetId);
     }
 
     public async Task InitializeAsync()
@@ -78,7 +61,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        // No cleanup - test should leave data in place
+        // No cleanup - test should leave data in place per requirements
     }
 
     [FactCheckUserSecrets]
@@ -132,9 +115,9 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         {
             System.Diagnostics.Debug.WriteLine($"Integration test failed with exception: {ex.Message}");
             // For integration tests, we might want to skip rather than fail if there are API issues
-            if (ex.Message.Contains("credentials") || ex.Message.Contains("authentication") || ex.Message.Contains("Requested entity was not found"))
+            if (IsApiRelatedError(ex))
             {
-                System.Diagnostics.Debug.WriteLine("Skipping integration test due to authentication/access issues");
+                System.Diagnostics.Debug.WriteLine("Skipping integration test due to API/authentication issues");
                 return;
             }
             throw;
@@ -145,7 +128,8 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     public async Task ErrorHandling_InvalidSpreadsheetId_ShouldReturnErrors()
     {
         // Arrange
-        var invalidManager = new GoogleSheetManager(_credential, "invalid-spreadsheet-id");
+        var credential = TestConfigurationHelpers.GetJsonCredential();
+        var invalidManager = new GoogleSheetManager(credential, "invalid-spreadsheet-id");
 
         // Act
         var result = await invalidManager.GetSheets(_testSheets);
@@ -190,10 +174,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             var deletionResult = await _googleSheetManager.DeleteSheets(existingSheetNames);
 
             // Log results (but don't fail if some can't be deleted due to Google Sheets limitations)
-            foreach (var message in deletionResult.Messages)
-            {
-                System.Diagnostics.Debug.WriteLine($"Delete result: {message.Level} - {message.Message}");
-            }
+            LogMessages("Delete", deletionResult.Messages);
 
             // Wait for deletion to propagate
             await Task.Delay(5000);
@@ -205,10 +186,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         Assert.NotNull(creationResult);
 
         // Log creation results
-        foreach (var message in creationResult.Messages)
-        {
-            System.Diagnostics.Debug.WriteLine($"Create result: {message.Level} - {message.Message}");
-        }
+        LogMessages("Create", creationResult.Messages);
 
         // Wait for creation to complete
         await Task.Delay(10000);
@@ -230,7 +208,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         Assert.True(existingSheets.Count >= _testSheets.Count, 
             $"Expected at least {_testSheets.Count} core sheets, found {existingSheets.Count}");
 
-        // Verify primary sheets exist
+        // Verify primary sheets exist with proper headers
         foreach (var testSheetName in _testSheets)
         {
             var sheet = existingSheets.FirstOrDefault(x => x.Name == testSheetName);
@@ -247,16 +225,8 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         var errorMessages = allSheetsData.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription());
         Assert.Empty(errorMessages);
 
-        // Verify aggregate sheet collections are not null
-        Assert.NotNull(allSheetsData.Addresses);
-        Assert.NotNull(allSheetsData.Names);
-        Assert.NotNull(allSheetsData.Places);
-        Assert.NotNull(allSheetsData.Regions);
-        Assert.NotNull(allSheetsData.Services);
-        Assert.NotNull(allSheetsData.Daily);
-        Assert.NotNull(allSheetsData.Weekly);
-        Assert.NotNull(allSheetsData.Monthly);
-        Assert.NotNull(allSheetsData.Yearly);
+        // Verify required aggregate sheet collections are not null
+        AssertAggregateCollectionsExist(allSheetsData);
 
         System.Diagnostics.Debug.WriteLine("? Sheet structure verification completed successfully");
     }
@@ -283,7 +253,6 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
                 maxTripsPerShift: 6
             );
 
-            // Generate test expenses  
             var testExpenses = GenerateTestExpenses(maxExpenseId + 1, 8);
 
             // Combine all test data
@@ -302,46 +271,25 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             // Load the test data
             var result = await _googleSheetManager.ChangeSheetData(_testSheets, _createdTestData);
             Assert.NotNull(result);
-            Assert.Equal(3, result.Messages.Count); // Should have messages for SHIFTS, TRIPS, and EXPENSES
 
-            // Check for errors first and provide helpful debugging information
+            // Check for errors and handle appropriately
             var errorMessages = result.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
             if (errorMessages.Any())
             {
-                System.Diagnostics.Debug.WriteLine("=== ERROR MESSAGES FOUND ===");
-                foreach (var error in errorMessages)
-                {
-                    System.Diagnostics.Debug.WriteLine($"ERROR: {error.Message}");
-                }
-                
-                // Clear test data if there were errors
-                _createdTestData = null;
-                _createdShiftIds.Clear();
-                _createdTripIds.Clear();
-                _createdExpenseIds.Clear();
-                
-                System.Diagnostics.Debug.WriteLine("Cleared test data due to errors");
+                LogMessages("Load Data Error", errorMessages);
+                ClearTestData();
                 return;
             }
-            else
-            {
-                foreach (var message in result.Messages)
-                {
-                    Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
-                    Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), message.Type);
-                    Assert.True(message.Time >= _testStartTime);
-                }
-            }
+
+            // Validate successful operation
+            ValidateOperationMessages(result.Messages, 3);
 
             System.Diagnostics.Debug.WriteLine("? Test data loaded successfully");
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"LoadTestData failed: {ex.Message}");
-            _createdTestData = null;
-            _createdShiftIds.Clear();
-            _createdTripIds.Clear();
-            _createdExpenseIds.Clear();
+            ClearTestData();
             throw;
         }
     }
@@ -350,46 +298,16 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     {
         System.Diagnostics.Debug.WriteLine("=== Step 4: Verify Data Was Inserted Correctly ===");
 
-        // Wait for data to propagate
-        await Task.Delay(3000);
+        await Task.Delay(3000); // Wait for data to propagate
 
         var result = await _googleSheetManager!.GetSheets(_testSheets);
         Assert.NotNull(result);
         Assert.NotNull(_createdTestData);
 
-        // Verify all shifts were added
-        foreach (var createdShift in _createdTestData.Shifts)
-        {
-            var foundShift = result.Shifts.FirstOrDefault(s => s.RowId == createdShift.RowId);
-            Assert.NotNull(foundShift);
-            Assert.Equal(createdShift.Date, foundShift.Date);
-            Assert.Equal(createdShift.Number, foundShift.Number);
-            Assert.Equal(createdShift.Service, foundShift.Service);
-            Assert.Equal(createdShift.Region, foundShift.Region);
-        }
-
-        // Verify all trips were added
-        foreach (var createdTrip in _createdTestData.Trips)
-        {
-            var foundTrip = result.Trips.FirstOrDefault(t => t.RowId == createdTrip.RowId);
-            Assert.NotNull(foundTrip);
-            Assert.Equal(createdTrip.Date, foundTrip.Date);
-            Assert.Equal(createdTrip.Number, foundTrip.Number);
-            Assert.Equal(createdTrip.Service, foundTrip.Service);
-            Assert.Equal(createdTrip.Place, foundTrip.Place);
-            Assert.Equal(createdTrip.Name, foundTrip.Name);
-        }
-
-        // Verify all expenses were added
-        foreach (var createdExpense in _createdTestData.Expenses)
-        {
-            var foundExpense = result.Expenses.FirstOrDefault(e => e.RowId == createdExpense.RowId);
-            Assert.NotNull(foundExpense);
-            Assert.Equal(createdExpense.Date, foundExpense.Date);
-            Assert.Equal(createdExpense.Amount, foundExpense.Amount);
-            Assert.Equal(createdExpense.Category, foundExpense.Category);
-            Assert.Equal(createdExpense.Description, foundExpense.Description);
-        }
+        // Verify all data was added correctly
+        VerifyEntitiesExist(_createdTestData.Shifts, result.Shifts, "shifts");
+        VerifyEntitiesExist(_createdTestData.Trips, result.Trips, "trips");
+        VerifyEntitiesExist(_createdTestData.Expenses, result.Expenses, "expenses");
 
         System.Diagnostics.Debug.WriteLine($"? Data insertion verified: {result.Shifts.Count} total shifts, {result.Trips.Count} total trips, {result.Expenses.Count} total expenses");
     }
@@ -422,7 +340,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             updateData.Trips.Add(trip);
         }
 
-        // Update some expenses (NOTE: ExpenseEntity doesn't have Action property, so we need to work with the sheet data differently)
+        // Update some expenses
         var expensesToUpdate = _createdTestData.Expenses.Take(2).ToList();
         foreach (var expense in expensesToUpdate)
         {
@@ -435,23 +353,10 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         var result = await _googleSheetManager!.ChangeSheetData(_testSheets, updateData);
         Assert.NotNull(result);
 
-        // Check for errors and provide debugging information
-        var errorMessages = result.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
-        if (errorMessages.Any())
+        // Validate the operation
+        if (!ValidateOperationResult(result, "Update"))
         {
-            System.Diagnostics.Debug.WriteLine("=== UPDATE ERROR MESSAGES FOUND ===");
-            foreach (var error in errorMessages)
-            {
-                System.Diagnostics.Debug.WriteLine($"ERROR: {error.Message}");
-            }
-        }
-        else
-        {
-            foreach (var message in result.Messages)
-            {
-                Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
-                Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), message.Type);
-            }
+            return; // Skip validation if there were errors
         }
 
         System.Diagnostics.Debug.WriteLine($"? Updated {shiftsToUpdate.Count} shifts, {tripsToUpdate.Count} trips, {expensesToUpdate.Count} expenses");
@@ -466,19 +371,15 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         var updatedData = await _googleSheetManager!.GetSheets(_testSheets);
         Assert.NotNull(updatedData);
 
-        // Verify shift updates
+        // Verify updates using distinctive values we set
         var updatedShifts = updatedData.Shifts.Where(s => s.Region == "Updated Region").ToList();
         Assert.Equal(2, updatedShifts.Count);
         Assert.All(updatedShifts, s => Assert.Equal("Updated by integration test", s.Note));
 
-
-
-        // Verify trip updates
         var updatedTrips = updatedData.Trips.Where(t => t.Tip == 999).ToList();
         Assert.Equal(3, updatedTrips.Count);
         Assert.All(updatedTrips, t => Assert.Equal("Updated trip note", t.Note));
 
-        // Verify expense updates
         var updatedExpenses = updatedData.Expenses.Where(e => e.Amount == 12345.67m).ToList();
         Assert.Equal(2, updatedExpenses.Count);
         Assert.All(updatedExpenses, e => Assert.Equal("Updated expense description", e.Description));
@@ -507,7 +408,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             deleteData.Trips.Add(trip);
         }
 
-        // Add expenses for deletion (NOTE: ExpenseEntity doesn't have Action property)
+        // Add expenses for deletion (ExpenseEntity doesn't have Action property)
         foreach (var expense in _createdTestData.Expenses)
         {
             deleteData.Expenses.Add(expense);
@@ -517,24 +418,8 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         var result = await _googleSheetManager!.ChangeSheetData(_testSheets, deleteData);
         Assert.NotNull(result);
 
-        // Check for errors and provide debugging information
-        var errorMessages = result.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
-        if (errorMessages.Any())
-        {
-            System.Diagnostics.Debug.WriteLine("=== DELETE ERROR MESSAGES FOUND ===");
-            foreach (var error in errorMessages)
-            {
-                System.Diagnostics.Debug.WriteLine($"ERROR: {error.Message}");
-            }
-        }
-        else
-        {
-            foreach (var message in result.Messages)
-            {
-                Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
-                Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), message.Type);
-            }
-        }
+        // Validate the operation
+        ValidateOperationResult(result, "Delete");
 
         System.Diagnostics.Debug.WriteLine($"? Deletion commands sent for {deleteData.Shifts.Count} shifts, {deleteData.Trips.Count} trips, {deleteData.Expenses.Count} expenses");
     }
@@ -548,28 +433,12 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         var remainingData = await _googleSheetManager!.GetSheets(_testSheets);
         Assert.NotNull(remainingData);
 
-        // Verify all test shifts were deleted
-        foreach (var shiftId in _createdShiftIds)
-        {
-            var deletedShift = remainingData.Shifts.FirstOrDefault(s => s.RowId == shiftId);
-            Assert.Null(deletedShift);
-        }
+        // Verify all test data was deleted by ID
+        VerifyEntitiesDeleted(_createdShiftIds, remainingData.Shifts, "shifts");
+        VerifyEntitiesDeleted(_createdTripIds, remainingData.Trips, "trips");
+        VerifyEntitiesDeleted(_createdExpenseIds, remainingData.Expenses, "expenses");
 
-        // Verify all test trips were deleted
-        foreach (var tripId in _createdTripIds)
-        {
-            var deletedTrip = remainingData.Trips.FirstOrDefault(t => t.RowId == tripId);
-            Assert.Null(deletedTrip);
-        }
-
-        // Verify all test expenses were deleted
-        foreach (var expenseId in _createdExpenseIds)
-        {
-            var deletedExpense = remainingData.Expenses.FirstOrDefault(e => e.RowId == expenseId);
-            Assert.Null(deletedExpense);
-        }
-
-        // Additional verification - check by unique identifiers to ensure no artifacts remain
+        // Verify no artifacts remain using distinctive values
         Assert.Empty(remainingData.Shifts.Where(s => s.Region == "Updated Region"));
         Assert.Empty(remainingData.Trips.Where(t => t.Tip == 999));
         Assert.Empty(remainingData.Expenses.Where(e => e.Amount == 12345.67m));
@@ -595,7 +464,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             {
                 RowId = startingId + i,
                 Date = currentDate.AddDays(-random.Next(0, 30)),
-                Amount = Math.Round((decimal)(random.NextDouble() * 200 + 10), 2), // Random amount between $10-$210
+                Amount = Math.Round((decimal)(random.NextDouble() * 200 + 10), 2),
                 Category = expenseCategories[random.Next(expenseCategories.Length)],
                 Name = $"Test Expense {i + 1}",
                 Description = $"Test expense {i + 1} - {expenseCategories[random.Next(expenseCategories.Length)]}"
@@ -619,6 +488,165 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         }
 
         return 1; // Default to 1 if no data exists (header row)
+    }
+
+    private static bool IsApiRelatedError(Exception ex)
+    {
+        return ex.Message.Contains("credentials") || 
+               ex.Message.Contains("authentication") || 
+               ex.Message.Contains("Requested entity was not found");
+    }
+
+    private void ClearTestData()
+    {
+        _createdTestData = null;
+        _createdShiftIds.Clear();
+        _createdTripIds.Clear();
+        _createdExpenseIds.Clear();
+        System.Diagnostics.Debug.WriteLine("Cleared test data due to errors");
+    }
+
+    private void LogMessages(string operation, List<MessageEntity> messages)
+    {
+        foreach (var message in messages)
+        {
+            System.Diagnostics.Debug.WriteLine($"{operation} result: {message.Level} - {message.Message}");
+        }
+    }
+
+    private void ValidateOperationMessages(List<MessageEntity> messages, int expectedCount)
+    {
+        Assert.Equal(expectedCount, messages.Count);
+        foreach (var message in messages)
+        {
+            Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
+            Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), message.Type);
+            Assert.True(message.Time >= _testStartTime);
+        }
+    }
+
+    private bool ValidateOperationResult(SheetEntity result, string operationName)
+    {
+        var errorMessages = result.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
+        if (errorMessages.Any())
+        {
+            System.Diagnostics.Debug.WriteLine($"=== {operationName.ToUpper()} ERROR MESSAGES FOUND ===");
+            foreach (var error in errorMessages)
+            {
+                System.Diagnostics.Debug.WriteLine($"ERROR: {error.Message}");
+            }
+            return false;
+        }
+
+        foreach (var message in result.Messages)
+        {
+            Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
+            Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), message.Type);
+        }
+        return true;
+    }
+
+    private void AssertAggregateCollectionsExist(SheetEntity allSheetsData)
+    {
+        Assert.NotNull(allSheetsData.Addresses);
+        Assert.NotNull(allSheetsData.Names);
+        Assert.NotNull(allSheetsData.Places);
+        Assert.NotNull(allSheetsData.Regions);
+        Assert.NotNull(allSheetsData.Services);
+        Assert.NotNull(allSheetsData.Daily);
+        Assert.NotNull(allSheetsData.Weekly);
+        Assert.NotNull(allSheetsData.Monthly);
+        Assert.NotNull(allSheetsData.Yearly);
+    }
+
+    private void VerifyEntitiesExist<T>(List<T> createdEntities, List<T> foundEntities, string entityType) where T : class
+    {
+        foreach (var created in createdEntities)
+        {
+            var found = FindEntityById(created, foundEntities);
+            Assert.NotNull(found);
+            VerifyEntityProperties(created, found);
+        }
+    }
+
+    private void VerifyEntitiesDeleted<T>(List<int> deletedIds, List<T> remainingEntities, string entityType) where T : class
+    {
+        foreach (var deletedId in deletedIds)
+        {
+            var found = FindEntityById(deletedId, remainingEntities);
+            Assert.Null(found);
+        }
+    }
+
+    private T? FindEntityById<T>(T entity, List<T> entities) where T : class
+    {
+        var rowIdProp = typeof(T).GetProperty("RowId");
+        if (rowIdProp == null) return null;
+        
+        var targetId = (int?)rowIdProp.GetValue(entity);
+        return entities.FirstOrDefault(e => (int?)rowIdProp.GetValue(e) == targetId);
+    }
+
+    private T? FindEntityById<T>(int rowId, List<T> entities) where T : class
+    {
+        var rowIdProp = typeof(T).GetProperty("RowId");
+        if (rowIdProp == null) return null;
+        
+        return entities.FirstOrDefault(e => (int?)rowIdProp.GetValue(e) == rowId);
+    }
+
+    private void VerifyEntityProperties<T>(T created, T found) where T : class
+    {
+        var type = typeof(T);
+        
+        // Common verification for all entity types
+        if (type.GetProperty("Date") != null)
+        {
+            Assert.Equal(type.GetProperty("Date")?.GetValue(created), 
+                        type.GetProperty("Date")?.GetValue(found));
+        }
+
+        // Entity-specific verifications
+        switch (type.Name)
+        {
+            case nameof(ShiftEntity):
+                VerifyShiftProperties(created as ShiftEntity, found as ShiftEntity);
+                break;
+            case nameof(TripEntity):
+                VerifyTripProperties(created as TripEntity, found as TripEntity);
+                break;
+            case nameof(ExpenseEntity):
+                VerifyExpenseProperties(created as ExpenseEntity, found as ExpenseEntity);
+                break;
+        }
+    }
+
+    private void VerifyShiftProperties(ShiftEntity? created, ShiftEntity? found)
+    {
+        if (created == null || found == null) return;
+        
+        Assert.Equal(created.Number, found.Number);
+        Assert.Equal(created.Service, found.Service);
+        Assert.Equal(created.Region, found.Region);
+    }
+
+    private void VerifyTripProperties(TripEntity? created, TripEntity? found)
+    {
+        if (created == null || found == null) return;
+        
+        Assert.Equal(created.Number, found.Number);
+        Assert.Equal(created.Service, found.Service);
+        Assert.Equal(created.Place, found.Place);
+        Assert.Equal(created.Name, found.Name);
+    }
+
+    private void VerifyExpenseProperties(ExpenseEntity? created, ExpenseEntity? found)
+    {
+        if (created == null || found == null) return;
+        
+        Assert.Equal(created.Amount, found.Amount);
+        Assert.Equal(created.Category, found.Category);
+        Assert.Equal(created.Description, found.Description);
     }
 
     #endregion
