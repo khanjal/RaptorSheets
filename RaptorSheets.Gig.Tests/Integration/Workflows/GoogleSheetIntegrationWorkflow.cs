@@ -236,11 +236,21 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         var maxShiftId = GetMaxRowValue(sheetInfo, SheetEnum.SHIFTS.GetDescription());
         var maxTripId = GetMaxRowValue(sheetInfo, SheetEnum.TRIPS.GetDescription());
 
-        _createdShiftData = TestGigHelpers.GenerateShift(ActionTypeEnum.APPEND, maxShiftId + 1, maxTripId + 1);
+        // Generate comprehensive test data with multiple shifts and trips for better testing coverage
+        _createdShiftData = TestGigHelpers.GenerateMultipleShifts(
+            ActionTypeEnum.APPEND, 
+            maxShiftId + 1, 
+            maxTripId + 1, 
+            numberOfShifts: 6,        // Create 6 shifts (increased from 1)
+            minTripsPerShift: 3,      // Minimum 3 trips per shift 
+            maxTripsPerShift: 8       // Maximum 8 trips per shift
+        );
         
         // Track created IDs for cleanup
         _createdShiftIds.AddRange(_createdShiftData.Shifts.Select(s => s.RowId));
         _createdTripIds.AddRange(_createdShiftData.Trips.Select(t => t.RowId));
+
+        System.Diagnostics.Debug.WriteLine($"Generated {_createdShiftData.Shifts.Count} shifts with {_createdShiftData.Trips.Count} trips for comprehensive testing");
 
         // Act
         var result = await _googleSheetManager.ChangeSheetData(_testSheets, _createdShiftData);
@@ -1177,4 +1187,143 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         System.Diagnostics.Debug.WriteLine("? Aggregate data cleanup verification complete - all calculations returned to expected state");
     }
     #endregion
+
+    [FactCheckUserSecrets]
+    public async Task BatchOperations_ShouldHandleLargeDataSetsCorrectly()
+    {
+        // This test specifically focuses on batch operations with larger datasets
+        
+        // Step 1: Start with clean sheets
+        await StartFreshWithAllSheets();
+        
+        // Step 2: Generate large batch of test data
+        var sheetInfo = await _googleSheetManager!.GetSheetProperties(_testSheets);
+        var maxShiftId = GetMaxRowValue(sheetInfo, SheetEnum.SHIFTS.GetDescription());
+        var maxTripId = GetMaxRowValue(sheetInfo, SheetEnum.TRIPS.GetDescription());
+
+        var batchTestData = TestGigHelpers.GenerateMultipleShifts(
+            ActionTypeEnum.APPEND, 
+            maxShiftId + 1, 
+            maxTripId + 1, 
+            numberOfShifts: 12,       // Large batch: 12 shifts
+            minTripsPerShift: 5,      // 5-15 trips per shift
+            maxTripsPerShift: 15
+        );
+        
+        var batchShiftIds = batchTestData.Shifts.Select(s => s.RowId).ToList();
+        var batchTripIds = batchTestData.Trips.Select(t => t.RowId).ToList();
+
+        System.Diagnostics.Debug.WriteLine($"=== Batch Operations Test: Creating {batchTestData.Shifts.Count} shifts with {batchTestData.Trips.Count} trips ===");
+
+        // Step 3: Batch create
+        var createResult = await _googleSheetManager.ChangeSheetData(_testSheets, batchTestData);
+        Assert.NotNull(createResult);
+        Assert.Equal(2, createResult.Messages.Count);
+
+        // Step 4: Verify batch creation
+        await Task.Delay(3000); // Allow time for large batch to propagate
+        var verifyData = await _googleSheetManager.GetSheets(_testSheets);
+        
+        foreach (var shiftId in batchShiftIds)
+        {
+            var createdShift = verifyData.Shifts.FirstOrDefault(s => s.RowId == shiftId);
+            Assert.NotNull(createdShift);
+        }
+        
+        foreach (var tripId in batchTripIds)
+        {
+            var createdTrip = verifyData.Trips.FirstOrDefault(t => t.RowId == tripId);
+            Assert.NotNull(createdTrip);
+        }
+
+        System.Diagnostics.Debug.WriteLine($"? Batch creation verified: {batchShiftIds.Count} shifts and {batchTripIds.Count} trips created");
+
+        // Step 5: Test selective batch deletion (delete every 3rd shift and every 4th trip)
+        var deleteData = new SheetEntity();
+        var shiftsToDelete = batchTestData.Shifts.Where((s, index) => index % 3 == 0).ToList();
+        var tripsToDelete = batchTestData.Trips.Where((t, index) => index % 4 == 0).ToList();
+
+        foreach (var shift in shiftsToDelete)
+        {
+            shift.Action = ActionTypeEnum.DELETE.GetDescription();
+            deleteData.Shifts.Add(shift);
+        }
+
+        foreach (var trip in tripsToDelete)
+        {
+            trip.Action = ActionTypeEnum.DELETE.GetDescription();
+            deleteData.Trips.Add(trip);
+        }
+
+        System.Diagnostics.Debug.WriteLine($"Selectively deleting {deleteData.Shifts.Count} shifts and {deleteData.Trips.Count} trips from batch");
+
+        var deleteResult = await _googleSheetManager.ChangeSheetData(_testSheets, deleteData);
+        Assert.NotNull(deleteResult);
+        Assert.Equal(2, deleteResult.Messages.Count);
+
+        // Step 6: Verify selective batch deletions
+        await Task.Delay(2000);
+        var verifyDeletedData = await _googleSheetManager.GetSheets(_testSheets);
+        
+        foreach (var shift in shiftsToDelete)
+        {
+            var deletedShift = verifyDeletedData.Shifts.FirstOrDefault(s => s.RowId == shift.RowId);
+            Assert.Null(deletedShift);
+        }
+        
+        foreach (var trip in tripsToDelete)
+        {
+            var deletedTrip = verifyDeletedData.Trips.FirstOrDefault(t => t.RowId == trip.RowId);
+            Assert.Null(deletedTrip);
+        }
+
+        // Verify remaining items still exist
+        var remainingShiftIds = batchShiftIds.Except(shiftsToDelete.Select(s => s.RowId)).ToList();
+        var remainingTripIds = batchTripIds.Except(tripsToDelete.Select(t => t.RowId)).ToList();
+
+        foreach (var remainingShiftId in remainingShiftIds)
+        {
+            var remainingShift = verifyDeletedData.Shifts.FirstOrDefault(s => s.RowId == remainingShiftId);
+            Assert.NotNull(remainingShift);
+        }
+
+        foreach (var remainingTripId in remainingTripIds)
+        {
+            var remainingTrip = verifyDeletedData.Trips.FirstOrDefault(t => t.RowId == remainingTripId);
+            Assert.NotNull(remainingTrip);
+        }
+
+        System.Diagnostics.Debug.WriteLine($"? Selective batch deletion verified: Deleted {shiftsToDelete.Count} shifts and {tripsToDelete.Count} trips, preserved {remainingShiftIds.Count} shifts and {remainingTripIds.Count} trips");
+
+        // Step 7: Cleanup remaining test data
+        var cleanupData = new SheetEntity();
+        
+        foreach (var remainingShiftId in remainingShiftIds)
+        {
+            var shift = batchTestData.Shifts.FirstOrDefault(s => s.RowId == remainingShiftId);
+            if (shift != null)
+            {
+                shift.Action = ActionTypeEnum.DELETE.GetDescription();
+                cleanupData.Shifts.Add(shift);
+            }
+        }
+
+        foreach (var remainingTripId in remainingTripIds)
+        {
+            var trip = batchTestData.Trips.FirstOrDefault(t => t.RowId == remainingTripId);
+            if (trip != null)
+            {
+                trip.Action = ActionTypeEnum.DELETE.GetDescription();
+                cleanupData.Trips.Add(trip);
+            }
+        }
+
+        if (cleanupData.Shifts.Count > 0 || cleanupData.Trips.Count > 0)
+        {
+            await _googleSheetManager.ChangeSheetData(_testSheets, cleanupData);
+            await Task.Delay(1000);
+        }
+
+        System.Diagnostics.Debug.WriteLine($"? Batch operations test completed successfully");
+    }
 }
