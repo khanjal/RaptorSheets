@@ -1,0 +1,115 @@
+name: Release Packages to NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to release'
+        required: true
+        type: choice
+        options:
+          - 'RaptorSheets.Gig'
+          - 'RaptorSheets.Stock'
+          - 'RaptorSheets.Core'
+      version:
+        description: 'Version to release (e.g., 1.2.0)'
+        required: true
+        type: string
+
+jobs:
+  check_workflow:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - name: Check if workflow is successful
+      id: check
+      run: |
+        workflow_path=".github/workflows/dotnet.yml"
+        status=$(gh api repos/${{ github.repository }}/actions/runs | jq -r ".workflow_runs[] | select(.path==\""$workflow_path\"") | .conclusion" | head -n 1)
+        if [ "$status" != "success" ]; then
+          echo "Workflow $workflow_path did not succeed."
+          echo "Status: $status"
+          exit 1
+        fi
+
+  detect_package:
+    runs-on: ubuntu-latest
+    outputs:
+      package: ${{ steps.detect.outputs.package }}
+      version: ${{ steps.detect.outputs.version }}
+    steps:
+    - name: Detect package from release tag or input
+      id: detect
+      run: |
+        if [ "${{ github.event_name }}" = "release" ]; then
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          echo "Processing release tag: $TAG_NAME"
+          
+          # Extract package and version from tag
+          # Expected formats: gig/v1.2.0, stock/v1.2.0, core/v1.2.0
+          if [[ "$TAG_NAME" == gig/* ]]; then
+            PACKAGE="RaptorSheets.Gig"
+            VERSION=${TAG_NAME#gig/v}
+          elif [[ "$TAG_NAME" == stock/* ]]; then
+            PACKAGE="RaptorSheets.Stock"
+            VERSION=${TAG_NAME#stock/v}
+          elif [[ "$TAG_NAME" == core/* ]]; then
+            PACKAGE="RaptorSheets.Core"
+            VERSION=${TAG_NAME#core/v}
+          else
+            echo "Unknown tag format: $TAG_NAME"
+            echo "Expected formats: gig/v1.2.0, stock/v1.2.0, core/v1.2.0"
+            exit 1
+          fi
+        else
+          # Manual workflow dispatch
+          PACKAGE="${{ github.event.inputs.package }}"
+          VERSION="${{ github.event.inputs.version }}"
+        fi
+        
+        echo "package=$PACKAGE" >> $GITHUB_OUTPUT
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Releasing: $PACKAGE version $VERSION"
+
+  build:
+    needs: [check_workflow, detect_package]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Pack NuGet package
+      run: |
+        PACKAGE="${{ needs.detect_package.outputs.package }}"
+        VERSION="${{ needs.detect_package.outputs.version }}"
+        
+        echo "Packing $PACKAGE version $VERSION"
+        
+        dotnet pack $PACKAGE/$PACKAGE.csproj \
+          -c Release \
+          -p:PackageVersion=$VERSION \
+          --output .
+          
+    - name: Push to NuGet
+      run: |
+        PACKAGE="${{ needs.detect_package.outputs.package }}"
+        echo "Pushing $PACKAGE to NuGet..."
+        dotnet nuget push "$PACKAGE.*.nupkg" \
+          --api-key ${{ secrets.nuget_api_key }} \
+          --source https://api.nuget.org/v3/index.json
+          
+    - name: Create release summary
+      run: |
+        echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+        echo "**Package:** ${{ needs.detect_package.outputs.package }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Version:** ${{ needs.detect_package.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ✅ Successfully published to NuGet" >> $GITHUB_STEP_SUMMARY

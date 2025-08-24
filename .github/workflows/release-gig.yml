@@ -1,12 +1,14 @@
 name: Release RaptorSheets.Gig to NuGet
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
-      workflow_path:
-        description: 'The path of the workflow to check'
+      version:
+        description: 'Version to release (e.g., 1.2.0)'
         required: true
-        default: '.github/workflows/dotnet.yml'
+        type: string
 
 jobs:
   check_workflow:
@@ -17,7 +19,7 @@ jobs:
     - name: Check if workflow is successful
       id: check
       run: |
-        workflow_path=${{ github.event.inputs.workflow_path }}
+        workflow_path=".github/workflows/dotnet.yml"
         status=$(gh api repos/${{ github.repository }}/actions/runs | jq -r ".workflow_runs[] | select(.path==\""$workflow_path\"") | .conclusion" | head -n 1)
         if [ "$status" != "success" ]; then
           echo "Workflow $workflow_path did not succeed."
@@ -31,10 +33,32 @@ jobs:
     timeout-minutes: 5
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+      
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v1
-    - name: Pack nugets
-      run: dotnet pack /home/runner/work/RaptorSheets/RaptorSheets/RaptorSheets.Gig/RaptorSheets.Gig.csproj -c Release --output .
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Get version from tag or input
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "release" ]; then
+          VERSION=${{ github.event.release.tag_name }}
+        else
+          VERSION=${{ github.event.inputs.version }}
+        fi
+        # Remove 'v' prefix if present
+        VERSION=${VERSION#v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Using version: $VERSION"
+        
+    - name: Pack nugets with version
+      run: |
+        dotnet pack RaptorSheets.Gig/RaptorSheets.Gig.csproj \
+          -c Release \
+          -p:PackageVersion=${{ steps.version.outputs.version }} \
+          --output .
+          
     - name: Push to NuGet - RaptorSheets.Gig
       run: dotnet nuget push "*.nupkg" --api-key ${{secrets.nuget_api_key}} --source https://api.nuget.org/v3/index.json
