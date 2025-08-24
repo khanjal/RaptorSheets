@@ -100,11 +100,13 @@ jobs:
           --output .
           
     - name: Push to NuGet
+      env:
+        NUGET_API_KEY: ${{ secrets.nuget_api_key }}
       run: |
         PACKAGE="${{ needs.detect_package.outputs.package }}"
         echo "Pushing $PACKAGE to NuGet..."
         dotnet nuget push "$PACKAGE.*.nupkg" \
-          --api-key ${{ secrets.nuget_api_key }} \
+          --api-key $NUGET_API_KEY \
           --source https://api.nuget.org/v3/index.json
           
     - name: Create release summary
