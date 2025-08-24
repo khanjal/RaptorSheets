@@ -23,29 +23,34 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
     // Test data tracking
     private SheetEntity? _createdTestData;
-    private List<int> _createdShiftIds = new();
-    private List<int> _createdTripIds = new();
-    private List<int> _createdExpenseIds = new();
+    private readonly List<int> _createdShiftIds = [];
+    private readonly List<int> _createdTripIds = [];
+    private readonly List<int> _createdExpenseIds = [];
+
+    // Constants for test configuration
+    private const int NumberOfShifts = 5;
+    private const int MinTripsPerShift = 3;
+    private const int MaxTripsPerShift = 6;
+    private const int NumberOfExpenses = 8;
+    private const int DataPropagationDelayMs = 3000;
+    private const int SheetCreationDelayMs = 10000;
+    private const int SheetDeletionDelayMs = 5000;
 
     public GoogleSheetIntegrationWorkflow()
     {
         _testStartTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        _testSheets = new List<string> 
-        { 
+        
+        _testSheets = [
             SheetEnum.SHIFTS.GetDescription(), 
             SheetEnum.TRIPS.GetDescription(),
             SheetEnum.EXPENSES.GetDescription()
-        };
+        ];
 
         // Get all available sheets from enums
-        _allSheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>()
-            .Select(e => e.GetDescription())
-            .ToList();
-
-        // Also add common sheets (Setup sheet)
-        _allSheets.AddRange(Enum.GetValues(typeof(RaptorSheets.Common.Enums.SheetEnum))
-            .Cast<RaptorSheets.Common.Enums.SheetEnum>()
-            .Select(e => e.GetDescription()));
+        _allSheets = [
+            .. Enum.GetValues<SheetEnum>().Select(e => e.GetDescription()),
+            .. Enum.GetValues<RaptorSheets.Common.Enums.SheetEnum>().Select(e => e.GetDescription())
+        ];
 
         var spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
         var credential = TestConfigurationHelpers.GetJsonCredential();
@@ -54,15 +59,9 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             _googleSheetManager = new GoogleSheetManager(credential, spreadsheetId);
     }
 
-    public async Task InitializeAsync()
-    {
-        // Nothing to initialize
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public async Task DisposeAsync()
-    {
-        // No cleanup - test should leave data in place per requirements
-    }
+    public Task DisposeAsync() => Task.CompletedTask; // No cleanup per requirements
 
     [FactCheckUserSecrets]
     public async Task ComprehensiveWorkflow_ShouldExecuteCompleteLifecycle()
@@ -78,35 +77,21 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
         try
         {
-            // Step 1: Delete all existing sheets and recreate fresh
             await DeleteAllSheetsAndRecreate();
-
-            // Step 2: Verify sheet structure is correct
             await VerifySheetStructure();
-
-            // Step 3: Load test data (shifts, trips, expenses)
             await LoadTestData();
 
             // Only proceed if test data was created successfully
-            if (_createdTestData == null || !_createdShiftIds.Any())
+            if (_createdTestData?.Shifts.Count == 0 || _createdShiftIds.Count == 0)
             {
                 System.Diagnostics.Debug.WriteLine("Test data creation failed - skipping remaining steps");
                 return;
             }
 
-            // Step 4: Verify data was inserted correctly
             await VerifyDataWasInserted();
-
-            // Step 5: Update the test data
             await UpdateTestData();
-
-            // Step 6: Verify data was updated correctly  
             await VerifyDataWasUpdated();
-
-            // Step 7: Delete the test data
             await DeleteTestData();
-
-            // Step 8: Verify data was deleted correctly
             await VerifyDataWasDeleted();
 
             System.Diagnostics.Debug.WriteLine("=== Comprehensive Integration Test Workflow Completed Successfully ===");
@@ -114,7 +99,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Integration test failed with exception: {ex.Message}");
-            // For integration tests, we might want to skip rather than fail if there are API issues
+            
             if (IsApiRelatedError(ex))
             {
                 System.Diagnostics.Debug.WriteLine("Skipping integration test due to API/authentication issues");
@@ -127,14 +112,11 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     [FactCheckUserSecrets]
     public async Task ErrorHandling_InvalidSpreadsheetId_ShouldReturnErrors()
     {
-        // Arrange
         var credential = TestConfigurationHelpers.GetJsonCredential();
         var invalidManager = new GoogleSheetManager(credential, "invalid-spreadsheet-id");
 
-        // Act
         var result = await invalidManager.GetSheets(_testSheets);
 
-        // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result.Messages);
         Assert.All(result.Messages, msg =>
@@ -144,13 +126,11 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     [FactCheckUserSecrets]
     public async Task ErrorHandling_NonExistentSheets_ShouldHandleGracefully()
     {
-        // Act
-        var result = await _googleSheetManager!.GetSheetProperties(new List<string> { "NonExistentSheet1", "NonExistentSheet2" });
+        var result = await _googleSheetManager!.GetSheetProperties(["NonExistentSheet1", "NonExistentSheet2"]);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
-        Assert.All(result, prop => Assert.Empty(prop.Id)); // Should return empty properties
+        Assert.All(result, prop => Assert.Empty(prop.Id));
     }
 
     #region Workflow Steps
@@ -159,7 +139,6 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     {
         System.Diagnostics.Debug.WriteLine("=== Step 1: Delete All Existing Sheets and Recreate ===");
 
-        // Get all existing sheets
         var allExistingProperties = await _googleSheetManager!.GetSheetProperties(_allSheets);
         var existingSheets = allExistingProperties.Where(prop => !string.IsNullOrEmpty(prop.Id)).ToList();
 
@@ -168,28 +147,19 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         if (existingSheets.Count > 0)
         {
             var existingSheetNames = existingSheets.Select(s => s.Name).ToList();
-
-            // Try to delete all existing sheets
             System.Diagnostics.Debug.WriteLine($"Deleting {existingSheetNames.Count} sheets: {string.Join(", ", existingSheetNames)}");
+            
             var deletionResult = await _googleSheetManager.DeleteSheets(existingSheetNames);
-
-            // Log results (but don't fail if some can't be deleted due to Google Sheets limitations)
             LogMessages("Delete", deletionResult.Messages);
-
-            // Wait for deletion to propagate
-            await Task.Delay(5000);
+            await Task.Delay(SheetDeletionDelayMs);
         }
 
-        // Create all sheets from scratch
         System.Diagnostics.Debug.WriteLine($"Creating all {_allSheets.Count} sheets from scratch");
         var creationResult = await _googleSheetManager.CreateSheets();
         Assert.NotNull(creationResult);
 
-        // Log creation results
         LogMessages("Create", creationResult.Messages);
-
-        // Wait for creation to complete
-        await Task.Delay(10000);
+        await Task.Delay(SheetCreationDelayMs);
 
         System.Diagnostics.Debug.WriteLine("? Successfully deleted and recreated all sheets");
     }
@@ -198,13 +168,11 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     {
         System.Diagnostics.Debug.WriteLine("=== Step 2: Verify Sheet Structure ===");
 
-        // Get sheet properties
         var sheetProperties = await _googleSheetManager!.GetSheetProperties(_allSheets);
         var existingSheets = sheetProperties.Where(p => !string.IsNullOrEmpty(p.Id)).ToList();
 
         System.Diagnostics.Debug.WriteLine($"Found {existingSheets.Count} sheets after recreation");
 
-        // Verify we have at least our core test sheets
         Assert.True(existingSheets.Count >= _testSheets.Count, 
             $"Expected at least {_testSheets.Count} core sheets, found {existingSheets.Count}");
 
@@ -217,15 +185,12 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             Assert.NotEmpty(sheet.Attributes[PropertyEnum.HEADERS.GetDescription()]);
         }
 
-        // Get all sheets data to verify structure
         var allSheetsData = await _googleSheetManager.GetSheets(_allSheets);
         Assert.NotNull(allSheetsData);
 
-        // Verify no errors in retrieval
         var errorMessages = allSheetsData.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription());
         Assert.Empty(errorMessages);
 
-        // Verify required aggregate sheet collections are not null
         AssertAggregateCollectionsExist(allSheetsData);
 
         System.Diagnostics.Debug.WriteLine("? Sheet structure verification completed successfully");
@@ -237,53 +202,45 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
         try
         {
-            // Get current max IDs to avoid conflicts
             var sheetInfo = await _googleSheetManager!.GetSheetProperties(_testSheets);
             var maxShiftId = GetMaxRowValue(sheetInfo, SheetEnum.SHIFTS.GetDescription());
             var maxTripId = GetMaxRowValue(sheetInfo, SheetEnum.TRIPS.GetDescription());
             var maxExpenseId = GetMaxRowValue(sheetInfo, SheetEnum.EXPENSES.GetDescription());
 
-            // Generate comprehensive test data
             var testShiftsAndTrips = TestGigHelpers.GenerateMultipleShifts(
                 ActionTypeEnum.APPEND,
                 maxShiftId + 1,
                 maxTripId + 1,
-                numberOfShifts: 5,
-                minTripsPerShift: 3,
-                maxTripsPerShift: 6
+                NumberOfShifts,
+                MinTripsPerShift,
+                MaxTripsPerShift
             );
 
-            var testExpenses = GenerateTestExpenses(maxExpenseId + 1, 8);
+            var testExpenses = GenerateTestExpenses(maxExpenseId + 1, NumberOfExpenses);
 
-            // Combine all test data
             _createdTestData = new SheetEntity();
             _createdTestData.Shifts.AddRange(testShiftsAndTrips.Shifts);
             _createdTestData.Trips.AddRange(testShiftsAndTrips.Trips);
             _createdTestData.Expenses.AddRange(testExpenses.Expenses);
 
-            // Track IDs for verification and updates
             _createdShiftIds.AddRange(_createdTestData.Shifts.Select(s => s.RowId));
             _createdTripIds.AddRange(_createdTestData.Trips.Select(t => t.RowId));
             _createdExpenseIds.AddRange(_createdTestData.Expenses.Select(e => e.RowId));
 
             System.Diagnostics.Debug.WriteLine($"Generated test data: {_createdTestData.Shifts.Count} shifts, {_createdTestData.Trips.Count} trips, {_createdTestData.Expenses.Count} expenses");
 
-            // Load the test data
             var result = await _googleSheetManager.ChangeSheetData(_testSheets, _createdTestData);
             Assert.NotNull(result);
 
-            // Check for errors and handle appropriately
             var errorMessages = result.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
-            if (errorMessages.Any())
+            if (errorMessages.Count != 0)
             {
                 LogMessages("Load Data Error", errorMessages);
                 ClearTestData();
                 return;
             }
 
-            // Validate successful operation
             ValidateOperationMessages(result.Messages, 3);
-
             System.Diagnostics.Debug.WriteLine("? Test data loaded successfully");
         }
         catch (Exception ex)
@@ -298,16 +255,15 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     {
         System.Diagnostics.Debug.WriteLine("=== Step 4: Verify Data Was Inserted Correctly ===");
 
-        await Task.Delay(3000); // Wait for data to propagate
+        await Task.Delay(DataPropagationDelayMs);
 
         var result = await _googleSheetManager!.GetSheets(_testSheets);
         Assert.NotNull(result);
         Assert.NotNull(_createdTestData);
 
-        // Verify all data was added correctly
-        VerifyEntitiesExist(_createdTestData.Shifts, result.Shifts, "shifts");
-        VerifyEntitiesExist(_createdTestData.Trips, result.Trips, "trips");
-        VerifyEntitiesExist(_createdTestData.Expenses, result.Expenses, "expenses");
+        VerifyEntitiesExist(_createdTestData.Shifts, result.Shifts);
+        VerifyEntitiesExist(_createdTestData.Trips, result.Trips);
+        VerifyEntitiesExist(_createdTestData.Expenses, result.Expenses);
 
         System.Diagnostics.Debug.WriteLine($"? Data insertion verified: {result.Shifts.Count} total shifts, {result.Trips.Count} total trips, {result.Expenses.Count} total expenses");
     }
@@ -316,44 +272,42 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     {
         System.Diagnostics.Debug.WriteLine("=== Step 5: Update Test Data ===");
 
-        Assert.NotNull(_createdTestData);
+        ArgumentNullException.ThrowIfNull(_createdTestData);
 
         var updateData = new SheetEntity();
 
-        // Update some shifts
+        // Update shifts with distinctive values
         var shiftsToUpdate = _createdTestData.Shifts.Take(2).ToList();
-        foreach (var shift in shiftsToUpdate)
+        shiftsToUpdate.ForEach(shift =>
         {
             shift.Action = ActionTypeEnum.UPDATE.GetDescription();
             shift.Region = "Updated Region";
             shift.Note = "Updated by integration test";
             updateData.Shifts.Add(shift);
-        }
+        });
 
-        // Update some trips
+        // Update trips with distinctive values
         var tripsToUpdate = _createdTestData.Trips.Take(3).ToList();
-        foreach (var trip in tripsToUpdate)
+        tripsToUpdate.ForEach(trip =>
         {
             trip.Action = ActionTypeEnum.UPDATE.GetDescription();
             trip.Tip = 999; // Distinctive value
             trip.Note = "Updated trip note";
             updateData.Trips.Add(trip);
-        }
+        });
 
-        // Update some expenses
+        // Update expenses with distinctive values
         var expensesToUpdate = _createdTestData.Expenses.Take(2).ToList();
-        foreach (var expense in expensesToUpdate)
+        expensesToUpdate.ForEach(expense =>
         {
             expense.Description = "Updated expense description";
             expense.Amount = 12345.67m; // Distinctive value
             updateData.Expenses.Add(expense);
-        }
+        });
 
-        // Apply updates
         var result = await _googleSheetManager!.ChangeSheetData(_testSheets, updateData);
         Assert.NotNull(result);
 
-        // Validate the operation
         if (!ValidateOperationResult(result, "Update"))
         {
             return; // Skip validation if there were errors
@@ -366,12 +320,12 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     {
         System.Diagnostics.Debug.WriteLine("=== Step 6: Verify Data Was Updated Correctly ===");
 
-        await Task.Delay(3000);
+        await Task.Delay(DataPropagationDelayMs);
 
         var updatedData = await _googleSheetManager!.GetSheets(_testSheets);
         Assert.NotNull(updatedData);
 
-        // Verify updates using distinctive values we set
+        // Verify updates using distinctive values
         var updatedShifts = updatedData.Shifts.Where(s => s.Region == "Updated Region").ToList();
         Assert.Equal(2, updatedShifts.Count);
         Assert.All(updatedShifts, s => Assert.Equal("Updated by integration test", s.Note));
@@ -391,34 +345,29 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     {
         System.Diagnostics.Debug.WriteLine("=== Step 7: Delete Test Data ===");
 
-        Assert.NotNull(_createdTestData);
+        ArgumentNullException.ThrowIfNull(_createdTestData);
 
         var deleteData = new SheetEntity();
 
         // Mark all test data for deletion
-        foreach (var shift in _createdTestData.Shifts)
+        _createdTestData.Shifts.ForEach(shift =>
         {
             shift.Action = ActionTypeEnum.DELETE.GetDescription();
             deleteData.Shifts.Add(shift);
-        }
+        });
 
-        foreach (var trip in _createdTestData.Trips)
+        _createdTestData.Trips.ForEach(trip =>
         {
             trip.Action = ActionTypeEnum.DELETE.GetDescription();
             deleteData.Trips.Add(trip);
-        }
+        });
 
         // Add expenses for deletion (ExpenseEntity doesn't have Action property)
-        foreach (var expense in _createdTestData.Expenses)
-        {
-            deleteData.Expenses.Add(expense);
-        }
+        deleteData.Expenses.AddRange(_createdTestData.Expenses);
 
-        // Delete the data
         var result = await _googleSheetManager!.ChangeSheetData(_testSheets, deleteData);
         Assert.NotNull(result);
 
-        // Validate the operation
         ValidateOperationResult(result, "Delete");
 
         System.Diagnostics.Debug.WriteLine($"? Deletion commands sent for {deleteData.Shifts.Count} shifts, {deleteData.Trips.Count} trips, {deleteData.Expenses.Count} expenses");
@@ -428,20 +377,20 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     {
         System.Diagnostics.Debug.WriteLine("=== Step 8: Verify Data Was Deleted Correctly ===");
 
-        await Task.Delay(3000);
+        await Task.Delay(DataPropagationDelayMs);
 
         var remainingData = await _googleSheetManager!.GetSheets(_testSheets);
         Assert.NotNull(remainingData);
 
         // Verify all test data was deleted by ID
-        VerifyEntitiesDeleted(_createdShiftIds, remainingData.Shifts, "shifts");
-        VerifyEntitiesDeleted(_createdTripIds, remainingData.Trips, "trips");
-        VerifyEntitiesDeleted(_createdExpenseIds, remainingData.Expenses, "expenses");
+        VerifyEntitiesDeleted(_createdShiftIds, remainingData.Shifts);
+        VerifyEntitiesDeleted(_createdTripIds, remainingData.Trips);
+        VerifyEntitiesDeleted(_createdExpenseIds, remainingData.Expenses);
 
         // Verify no artifacts remain using distinctive values
-        Assert.Empty(remainingData.Shifts.Where(s => s.Region == "Updated Region"));
-        Assert.Empty(remainingData.Trips.Where(t => t.Tip == 999));
-        Assert.Empty(remainingData.Expenses.Where(e => e.Amount == 12345.67m));
+        Assert.DoesNotContain(remainingData.Shifts, s => s.Region == "Updated Region");
+        Assert.DoesNotContain(remainingData.Trips, t => t.Tip == 999);
+        Assert.DoesNotContain(remainingData.Expenses, e => e.Amount == 12345.67m);
 
         System.Diagnostics.Debug.WriteLine($"? Data deletion verified: {_createdShiftIds.Count} shifts, {_createdTripIds.Count} trips, {_createdExpenseIds.Count} expenses successfully removed");
     }
@@ -450,13 +399,13 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
     #region Helper Methods
 
-    private SheetEntity GenerateTestExpenses(int startingId, int count)
+    private static SheetEntity GenerateTestExpenses(int startingId, int count)
     {
         var sheetEntity = new SheetEntity();
         var currentDate = DateTime.Now;
         var random = new Random();
         
-        var expenseCategories = new[] { "Gas", "Maintenance", "Insurance", "Parking", "Tolls", "Phone", "Food", "Supplies" };
+        string[] expenseCategories = ["Gas", "Maintenance", "Insurance", "Parking", "Tolls", "Phone", "Food", "Supplies"];
         
         for (int i = 0; i < count; i++)
         {
@@ -476,26 +425,21 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         return sheetEntity;
     }
 
-    private static int GetMaxRowValue(List<RaptorSheets.Core.Entities.PropertyEntity> sheetInfo, string sheetName)
+    private static int GetMaxRowValue(List<PropertyEntity> sheetInfo, string sheetName)
     {
         var sheet = sheetInfo.FirstOrDefault(x => x.Name == sheetName);
         var maxRowKey = PropertyEnum.MAX_ROW_VALUE.GetDescription();
 
-        if (sheet?.Attributes?.TryGetValue(maxRowKey, out var maxRowValue) == true
-            && int.TryParse(maxRowValue, out var maxRow))
-        {
-            return maxRow;
-        }
-
-        return 1; // Default to 1 if no data exists (header row)
+        return sheet?.Attributes?.TryGetValue(maxRowKey, out var maxRowValue) == true
+               && int.TryParse(maxRowValue, out var maxRow)
+            ? maxRow
+            : 1; // Default to 1 if no data exists (header row)
     }
 
-    private static bool IsApiRelatedError(Exception ex)
-    {
-        return ex.Message.Contains("credentials") || 
-               ex.Message.Contains("authentication") || 
-               ex.Message.Contains("Requested entity was not found");
-    }
+    private static bool IsApiRelatedError(Exception ex) =>
+        ex.Message.Contains("credentials", StringComparison.OrdinalIgnoreCase) || 
+        ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase) || 
+        ex.Message.Contains("Requested entity was not found", StringComparison.OrdinalIgnoreCase);
 
     private void ClearTestData()
     {
@@ -506,7 +450,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         System.Diagnostics.Debug.WriteLine("Cleared test data due to errors");
     }
 
-    private void LogMessages(string operation, List<MessageEntity> messages)
+    private static void LogMessages(string operation, List<MessageEntity> messages)
     {
         foreach (var message in messages)
         {
@@ -525,10 +469,10 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         }
     }
 
-    private bool ValidateOperationResult(SheetEntity result, string operationName)
+    private static bool ValidateOperationResult(SheetEntity result, string operationName)
     {
         var errorMessages = result.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
-        if (errorMessages.Any())
+        if (errorMessages.Count != 0)
         {
             System.Diagnostics.Debug.WriteLine($"=== {operationName.ToUpper()} ERROR MESSAGES FOUND ===");
             foreach (var error in errorMessages)
@@ -546,7 +490,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         return true;
     }
 
-    private void AssertAggregateCollectionsExist(SheetEntity allSheetsData)
+    private static void AssertAggregateCollectionsExist(SheetEntity allSheetsData)
     {
         Assert.NotNull(allSheetsData.Addresses);
         Assert.NotNull(allSheetsData.Names);
@@ -559,7 +503,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         Assert.NotNull(allSheetsData.Yearly);
     }
 
-    private void VerifyEntitiesExist<T>(List<T> createdEntities, List<T> foundEntities, string entityType) where T : class
+    private static void VerifyEntitiesExist<T>(List<T> createdEntities, List<T> foundEntities) where T : class
     {
         foreach (var created in createdEntities)
         {
@@ -569,7 +513,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         }
     }
 
-    private void VerifyEntitiesDeleted<T>(List<int> deletedIds, List<T> remainingEntities, string entityType) where T : class
+    private static void VerifyEntitiesDeleted<T>(List<int> deletedIds, List<T> remainingEntities) where T : class
     {
         foreach (var deletedId in deletedIds)
         {
@@ -578,7 +522,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         }
     }
 
-    private T? FindEntityById<T>(T entity, List<T> entities) where T : class
+    private static T? FindEntityById<T>(T entity, List<T> entities) where T : class
     {
         var rowIdProp = typeof(T).GetProperty("RowId");
         if (rowIdProp == null) return null;
@@ -587,15 +531,13 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         return entities.FirstOrDefault(e => (int?)rowIdProp.GetValue(e) == targetId);
     }
 
-    private T? FindEntityById<T>(int rowId, List<T> entities) where T : class
+    private static T? FindEntityById<T>(int rowId, List<T> entities) where T : class
     {
         var rowIdProp = typeof(T).GetProperty("RowId");
-        if (rowIdProp == null) return null;
-        
-        return entities.FirstOrDefault(e => (int?)rowIdProp.GetValue(e) == rowId);
+        return rowIdProp == null ? null : entities.FirstOrDefault(e => (int?)rowIdProp.GetValue(e) == rowId);
     }
 
-    private void VerifyEntityProperties<T>(T created, T found) where T : class
+    private static void VerifyEntityProperties<T>(T created, T found) where T : class
     {
         var type = typeof(T);
         
@@ -606,44 +548,38 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
                         type.GetProperty("Date")?.GetValue(found));
         }
 
-        // Entity-specific verifications
-        switch (type.Name)
+        // Entity-specific verifications using pattern matching
+        switch (created, found)
         {
-            case nameof(ShiftEntity):
-                VerifyShiftProperties(created as ShiftEntity, found as ShiftEntity);
+            case (ShiftEntity createdShift, ShiftEntity foundShift):
+                VerifyShiftProperties(createdShift, foundShift);
                 break;
-            case nameof(TripEntity):
-                VerifyTripProperties(created as TripEntity, found as TripEntity);
+            case (TripEntity createdTrip, TripEntity foundTrip):
+                VerifyTripProperties(createdTrip, foundTrip);
                 break;
-            case nameof(ExpenseEntity):
-                VerifyExpenseProperties(created as ExpenseEntity, found as ExpenseEntity);
+            case (ExpenseEntity createdExpense, ExpenseEntity foundExpense):
+                VerifyExpenseProperties(createdExpense, foundExpense);
                 break;
         }
     }
 
-    private void VerifyShiftProperties(ShiftEntity? created, ShiftEntity? found)
+    private static void VerifyShiftProperties(ShiftEntity created, ShiftEntity found)
     {
-        if (created == null || found == null) return;
-        
         Assert.Equal(created.Number, found.Number);
         Assert.Equal(created.Service, found.Service);
         Assert.Equal(created.Region, found.Region);
     }
 
-    private void VerifyTripProperties(TripEntity? created, TripEntity? found)
+    private static void VerifyTripProperties(TripEntity created, TripEntity found)
     {
-        if (created == null || found == null) return;
-        
         Assert.Equal(created.Number, found.Number);
         Assert.Equal(created.Service, found.Service);
         Assert.Equal(created.Place, found.Place);
         Assert.Equal(created.Name, found.Name);
     }
 
-    private void VerifyExpenseProperties(ExpenseEntity? created, ExpenseEntity? found)
+    private static void VerifyExpenseProperties(ExpenseEntity created, ExpenseEntity found)
     {
-        if (created == null || found == null) return;
-        
         Assert.Equal(created.Amount, found.Amount);
         Assert.Equal(created.Category, found.Category);
         Assert.Equal(created.Description, found.Description);
