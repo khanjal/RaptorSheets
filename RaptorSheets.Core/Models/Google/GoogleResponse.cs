@@ -1,7 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace RaptorSheets.Core.Models.Google;
 
+[ExcludeFromCodeCoverage]
 public class GoogleResponse
 {
     [JsonPropertyName("range")]

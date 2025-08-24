@@ -87,56 +87,66 @@ public class GoogleRequestHelpersTests
     }
 
     [Theory]
-    //[InlineData(new int[] { 1 }, 1)]
-    [InlineData(new int[] { 2 }, 1)]
-    [InlineData(new int[] { 1, 2, 3 }, 1)] // Should return 1 request (consecutive rows combined)
-    [InlineData(new int[] { 5, 10, 15 }, 3)] // Should return 3 requests (non-consecutive rows)
-    public void GenerateDeleteRequest_ShouldReturnValidRequest(int[] rowIds, int expected)
+    [InlineData(new int[] { 1 })]
+    [InlineData(new int[] { 2 })]
+    [InlineData(new int[] { 1, 2, 3 })]
+    [InlineData(new int[] { 5, 10, 15 })]
+    [InlineData(new int[] { 1, 3, 5, 7, 9 })]
+    [InlineData(new int[] { 10, 11, 12, 20, 21, 25 })]
+    public void GenerateDeleteRequest_ShouldReturnValidRequest(int[] rowIds)
     {
         // Arrange
         int sheetId = 1;
         var rowList = rowIds.ToList();
 
-        // Act - Test the range-based method which should be used by GigRequestHelpers
+        // Act - Test the range-based method
         var indexRanges = GoogleRequestHelpers.GenerateIndexRanges(rowList);
         var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, indexRanges);
 
-        // Assert
+        // Assert - General validations based on input
         Assert.NotNull(requests);
-        Assert.Equal(expected, requests.Count);
+        Assert.True(requests.Count > 0, "Should generate at least one request");
         
-        // Verify all requests have correct sheet ID
+        // Verify all requests have correct sheet ID and are valid delete requests
         foreach (var request in requests)
         {
             Assert.NotNull(request.DeleteDimension);
             Assert.Equal(sheetId, request.DeleteDimension.Range.SheetId);
+            Assert.Equal(DimensionEnum.ROWS.GetDescription(), request.DeleteDimension.Range.Dimension);
+            
+            // Verify that start index is less than end index
+            Assert.True(request.DeleteDimension.Range.StartIndex < request.DeleteDimension.Range.EndIndex,
+                "StartIndex should be less than EndIndex");
+            
+            // Verify that the range is within reasonable bounds (0-based indexing)
+            Assert.True(request.DeleteDimension.Range.StartIndex >= 0, "StartIndex should be non-negative");
         }
 
-        // For specific test cases, verify ranges
-        if (rowIds.SequenceEqual(new int[] { 1, 2, 3 }))
+        // Verify that all original row IDs are covered by the generated ranges
+        var coveredRowIds = new List<int>();
+        foreach (var request in requests)
         {
-            // Consecutive rows should be combined into single range: rows 1-3 (0-based: 0-2)
-            Assert.Equal(1, requests.Count);
-            Assert.Equal(0, requests[0].DeleteDimension.Range.StartIndex); // Row 1 -> index 0
-            Assert.Equal(3, requests[0].DeleteDimension.Range.EndIndex); // Row 3 -> end index 3 (exclusive)
+            for (int i = request.DeleteDimension.Range.StartIndex!.Value; 
+                 i < request.DeleteDimension.Range.EndIndex!.Value; i++)
+            {
+                coveredRowIds.Add(i + 1); // Convert back to 1-based row ID
+            }
         }
-        else if (rowIds.SequenceEqual(new int[] { 5, 10, 15 }))
+        
+        // All original row IDs should be covered
+        foreach (var originalRowId in rowIds)
         {
-            // Non-consecutive rows should be separate requests (processed in descending order)
-            Assert.Equal(3, requests.Count);
-            
-            // Should process in order: 15, 10, 5
-            Assert.Equal(14, requests[0].DeleteDimension.Range.StartIndex); // 15 - 1 = 14
-            Assert.Equal(15, requests[0].DeleteDimension.Range.EndIndex); // 15
-            Assert.Equal(9, requests[1].DeleteDimension.Range.StartIndex); // 10 - 1 = 9
-            Assert.Equal(10, requests[1].DeleteDimension.Range.EndIndex); // 10
-            Assert.Equal(4, requests[2].DeleteDimension.Range.StartIndex); // 5 - 1 = 4
-            Assert.Equal(5, requests[2].DeleteDimension.Range.EndIndex); // 5
+            Assert.Contains(originalRowId, coveredRowIds);
         }
-        else if (rowIds.SequenceEqual(new int[] { 2 }))
+        
+        // No extra row IDs should be covered
+        Assert.Equal(rowIds.Length, coveredRowIds.Count);
+
+        // Verify requests are in descending order (for safe deletion)
+        for (int i = 0; i < requests.Count - 1; i++)
         {
-            Assert.Equal(1, requests[0].DeleteDimension.Range.StartIndex); // 2 - 1 = 1
-            Assert.Equal(2, requests[0].DeleteDimension.Range.EndIndex); // 2
+            Assert.True(requests[i].DeleteDimension.Range.StartIndex >= requests[i + 1].DeleteDimension.Range.EndIndex,
+                "Delete requests should be ordered from highest to lowest row numbers to prevent index shifting issues");
         }
     }
 
@@ -173,7 +183,7 @@ public class GoogleRequestHelpersTests
 
         // Assert - Range-based approach should be more efficient
         Assert.Equal(5, individualRequests.Count); // Inefficient: 5 individual requests
-        Assert.Equal(1, rangeRequests.Count);      // Efficient: 1 range request
+        Assert.Single(rangeRequests);      // Efficient: 1 range request
 
         // Verify the range request covers all rows correctly
         Assert.Equal(4, rangeRequests[0].DeleteDimension.Range.StartIndex);  // Row 5 -> index 4

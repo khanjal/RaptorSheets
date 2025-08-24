@@ -1,5 +1,8 @@
-﻿namespace RaptorSheets.Core.Entities;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace RaptorSheets.Core.Entities;
+
+[ExcludeFromCodeCoverage]
 public class SetupEntity
 {
     public int RowId { get; set; }

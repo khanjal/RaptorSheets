@@ -194,4 +194,200 @@ public class ListExtensionsTests
         Assert.Equal("Header2", headers[1].Name);
         Assert.Equal("Formula2", headers[1].Formula);
     }
+
+    #region GetRandomItem Tests
+
+    [Fact]
+    public void GetRandomItem_WithValidList_ShouldReturnItemFromList()
+    {
+        // Arrange
+        var list = new List<string> { "item1", "item2", "item3", "item4", "item5" };
+
+        // Act
+        var result = list.GetRandomItem();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Contains(result, list);
+    }
+
+    [Fact]
+    public void GetRandomItem_WithSingleItem_ShouldReturnThatItem()
+    {
+        // Arrange
+        var list = new List<int> { 42 };
+
+        // Act
+        var result = list.GetRandomItem();
+
+        // Assert
+        Assert.Equal(42, result);
+    }
+
+    [Fact]
+    public void GetRandomItem_WithEmptyList_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var list = new List<string>();
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() => list.GetRandomItem());
+        Assert.Equal("The list cannot be null or empty. (Parameter 'list')", exception.Message);
+        Assert.Equal("list", exception.ParamName);
+    }
+
+    [Fact]
+    public void GetRandomItem_WithNullList_ShouldThrowArgumentException()
+    {
+        // Arrange
+        List<string>? list = null;
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() => list!.GetRandomItem());
+        Assert.Equal("The list cannot be null or empty. (Parameter 'list')", exception.Message);
+        Assert.Equal("list", exception.ParamName);
+    }
+
+    [Fact]
+    public void GetRandomItem_WithMultipleCalls_ShouldReturnValidResults()
+    {
+        // Arrange
+        var list = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+        // Act & Assert
+        for (int i = 0; i < 50; i++)
+        {
+            var result = list.GetRandomItem();
+            Assert.Contains(result, list);
+        }
+    }
+
+    [Fact]
+    public void GetRandomItem_ShouldReturnDifferentValues()
+    {
+        // Arrange
+        var list = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        var results = new HashSet<int>();
+
+        // Act
+        for (int i = 0; i < 100; i++)
+        {
+            results.Add(list.GetRandomItem());
+        }
+
+        // Assert - With enough iterations, we should get multiple different values
+        Assert.True(results.Count > 1, "GetRandomItem should return different values over multiple calls");
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(5)]
+    [InlineData(10)]
+    [InlineData(100)]
+    public void GetRandomItem_WithVariousListSizes_ShouldWorkCorrectly(int listSize)
+    {
+        // Arrange
+        var list = Enumerable.Range(1, listSize).ToList();
+
+        // Act
+        var result = list.GetRandomItem();
+
+        // Assert
+        Assert.InRange(result, 1, listSize);
+        Assert.Contains(result, list);
+    }
+
+    [Fact]
+    public void GetRandomItem_WithDifferentTypes_ShouldWorkCorrectly()
+    {
+        // Arrange & Act & Assert
+        
+        // String list
+        var stringList = new List<string> { "alpha", "beta", "gamma" };
+        var stringResult = stringList.GetRandomItem();
+        Assert.Contains(stringResult, stringList);
+
+        // Double list
+        var doubleList = new List<double> { 1.1, 2.2, 3.3 };
+        var doubleResult = doubleList.GetRandomItem();
+        Assert.Contains(doubleResult, doubleList);
+
+        // Boolean list
+        var boolList = new List<bool> { true, false };
+        var boolResult = boolList.GetRandomItem();
+        Assert.Contains(boolResult, boolList);
+
+        // Object list
+        var objectList = new List<object> { new object(), "string", 123 };
+        var objectResult = objectList.GetRandomItem();
+        Assert.Contains(objectResult, objectList);
+    }
+
+    [Fact]
+    public void GetRandomItem_WithNullableTypes_ShouldHandleNulls()
+    {
+        // Arrange
+        var list = new List<string?> { "item1", null, "item3" };
+
+        // Act
+        var result = list.GetRandomItem();
+
+        // Assert
+        Assert.Contains(result, list);
+    }
+
+    [Fact]
+    public void GetRandomItem_WithComplexObjects_ShouldWorkCorrectly()
+    {
+        // Arrange
+        var list = new List<SheetCellModel>
+        {
+            new SheetCellModel { Name = "Header1", Index = 0 },
+            new SheetCellModel { Name = "Header2", Index = 1 },
+            new SheetCellModel { Name = "Header3", Index = 2 }
+        };
+
+        // Act
+        var result = list.GetRandomItem();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Contains(result, list);
+        Assert.NotNull(result.Name);
+    }
+
+    [Fact]
+    public void GetRandomItem_WithListContainingDuplicates_ShouldWorkCorrectly()
+    {
+        // Arrange
+        var list = new List<int> { 1, 2, 2, 3, 3, 3 };
+
+        // Act
+        var result = list.GetRandomItem();
+
+        // Assert
+        Assert.Contains(result, list);
+        Assert.InRange(result, 1, 3);
+    }
+
+    [Fact]
+    public void GetRandomItem_ShouldUseNewRandomInstanceEachTime()
+    {
+        // Arrange
+        var list = new List<int> { 1, 2, 3, 4, 5 };
+        var results = new List<int>();
+
+        // Act - Call multiple times to see if we get variety
+        for (int i = 0; i < 20; i++)
+        {
+            results.Add(list.GetRandomItem());
+        }
+
+        // Assert - Should get some variety in results (not all the same)
+        var distinctResults = results.Distinct().Count();
+        Assert.True(distinctResults > 1, "Should get variety in random results");
+    }
+
+    #endregion
 }

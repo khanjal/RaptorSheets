@@ -11,10 +11,18 @@ public interface IGoogleFileManager
 
 public class GoogleFileManager : IGoogleFileManager
 {
-    private readonly GoogleDriveService _googleDriveService;
+    private readonly IGoogleDriveService _googleDriveService;
 
+    // Primary constructor for dependency injection
+    public GoogleFileManager(IGoogleDriveService googleDriveService)
+    {
+        _googleDriveService = googleDriveService ?? throw new ArgumentNullException(nameof(googleDriveService));
+    }
+
+    // Convenience constructor for backward compatibility
     public GoogleFileManager(string accessToken)
     {
+        ArgumentNullException.ThrowIfNull(accessToken);
         _googleDriveService = new GoogleDriveService(accessToken);
     }
 
@@ -28,7 +36,6 @@ public class GoogleFileManager : IGoogleFileManager
     public async Task<List<PropertyEntity>> GetFiles()
     {
         var files = await _googleDriveService.GetSpreadsheets();
-
-        return [.. files];
+        return files?.ToList() ?? new List<PropertyEntity>();
     }
 }

@@ -3,7 +3,6 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
-using System.Linq;
 
 namespace RaptorSheets.Core.Helpers;
 
