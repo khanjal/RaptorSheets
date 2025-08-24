@@ -29,19 +29,9 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-artifacts
-        path: |
-          **/bin/Release/
-          **/obj/
-        retention-days: 1
-
   test:
     name: Test & Coverage
     runs-on: ubuntu-latest
-    needs: build
     
     steps:
     - uses: actions/checkout@v4
@@ -51,10 +41,11 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: build-artifacts
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
 
     - name: Test with Coverage
       env:
@@ -112,7 +103,6 @@ jobs:
   code-quality:
     name: Code Quality Analysis
     runs-on: ubuntu-latest
-    needs: build
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     
     steps:
@@ -147,10 +137,8 @@ jobs:
         mkdir -p ./.sonar/scanner
         dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
 
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: build-artifacts
+    - name: Restore dependencies
+      run: dotnet restore
 
     - name: Begin SonarCloud Scan
       env:
@@ -165,6 +153,9 @@ jobs:
           /d:sonar.host.url="https://sonarcloud.io" \
           /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
           /d:sonar.cs.vstest.reportsPaths="**/*.trx"
+
+    - name: Build
+      run: dotnet build --configuration Release
 
     - name: Run Tests for SonarCloud
       env:
