@@ -1,5 +1,8 @@
-﻿namespace RaptorSheets.Gig.Entities;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace RaptorSheets.Gig.Entities;
+
+[ExcludeFromCodeCoverage]
 public class ExpenseEntity
 {
     public int RowId { get; set; }
