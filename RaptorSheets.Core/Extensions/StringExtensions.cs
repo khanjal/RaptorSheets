@@ -17,24 +17,44 @@ public static class StringExtensions
 
     public static double? ToSerialDuration(this string stringDuration)
     {
+        if (string.IsNullOrWhiteSpace(stringDuration))
+        {
+            return null;
+        }
+
         try
         {
+            bool isNegative = stringDuration.StartsWith("-");
+            string normalizedDuration = isNegative ? stringDuration.Substring(1) : stringDuration;
+
             // Split off milliseconds
-            var durationParts = stringDuration.Split('.');
+            var durationParts = normalizedDuration.Split('.');
 
             // Split duration into hours, minutes, and seconds
             var timeParts = durationParts[0].Split(':');
 
-            // Convert time parts to a time span
-            var timeSpan = new TimeSpan(
-                int.Parse(timeParts[0]),
-                int.Parse(timeParts[1]),
-                int.Parse(timeParts[2])
-            );
+            // Validate time format - must have exactly 3 parts (hours:minutes:seconds)
+            if (timeParts.Length != 3)
+            {
+                return null;
+            }
 
-            return timeSpan.TotalDays;
+            // Parse time parts with validation
+            if (!int.TryParse(timeParts[0], out int hours) ||
+                !int.TryParse(timeParts[1], out int minutes) ||
+                !int.TryParse(timeParts[2], out int seconds))
+            {
+                return null;
+            }
+
+            // Create timespan
+            var timeSpan = new TimeSpan(hours, minutes, seconds);
+
+            // Calculate result and apply negative sign if needed
+            double result = timeSpan.TotalDays;
+            return isNegative ? -result : result;
         }
-        catch (Exception)
+        catch
         {
             return null;
         }

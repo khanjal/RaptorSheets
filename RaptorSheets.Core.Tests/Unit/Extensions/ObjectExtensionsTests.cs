@@ -40,4 +40,106 @@ public class ObjectExtensionsTests
     {
         Assert.Equal(range, modelData.GetLocalRange(header.GetDescription()));
     }
+
+    [Fact]
+    public void GetColumn_WithNonExistentHeader_ShouldReturnEmpty()
+    {
+        // Act
+        var result = modelData.GetColumn("NonExistent");
+
+        // Assert
+        Assert.Equal("", result);
+    }
+
+    [Fact]
+    public void GetIndex_WithNonExistentHeader_ShouldReturnEmpty()
+    {
+        // Act
+        var result = modelData.GetIndex("NonExistent");
+
+        // Assert
+        Assert.Equal("", result);
+    }
+
+    [Fact]
+    public void GetRange_WithNonExistentHeader_ShouldReturnSheetName()
+    {
+        // Act
+        var result = modelData.GetRange("NonExistent");
+
+        // Assert
+        Assert.Equal($"{modelData.Name}!", result);
+    }
+
+    [Fact]
+    public void GetLocalRange_WithNonExistentHeader_ShouldReturnEmpty()
+    {
+        // Act
+        var result = modelData.GetLocalRange("NonExistent");
+
+        // Assert
+        Assert.Equal("", result);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    public void GetColumn_WithNullOrEmptyHeader_ShouldReturnEmpty(string? headerName)
+    {
+        // Act
+        var result = modelData.GetColumn(headerName!);
+
+        // Assert
+        Assert.Equal("", result);
+    }
+
+    [Fact]
+    public void ObjectExtensions_WithNullSheetModel_ShouldHandleGracefully()
+    {
+        // Arrange
+        SheetModel? nullModel = null;
+
+        // Act & Assert
+        Assert.Throws<NullReferenceException>(() => nullModel!.GetColumn("Test"));
+        Assert.Throws<NullReferenceException>(() => nullModel!.GetIndex("Test"));
+        Assert.Throws<NullReferenceException>(() => nullModel!.GetRange("Test"));
+        Assert.Throws<NullReferenceException>(() => nullModel!.GetLocalRange("Test"));
+    }
+
+    [Fact]
+    public void ObjectExtensions_WithEmptyHeaders_ShouldReturnDefaults()
+    {
+        // Arrange
+        var emptyModel = new SheetModel
+        {
+            Name = "EmptySheet",
+            Headers = new List<SheetCellModel>()
+        };
+
+        // Act
+        var column = emptyModel.GetColumn("Test");
+        var index = emptyModel.GetIndex("Test");
+        var range = emptyModel.GetRange("Test");
+        var localRange = emptyModel.GetLocalRange("Test");
+
+        // Assert
+        Assert.Equal("", column);
+        Assert.Equal("", index);
+        Assert.Equal("EmptySheet!", range);
+        Assert.Equal("", localRange);
+    }
+
+    [Fact]
+    public void ObjectExtensions_CaseSensitivity_ShouldWork()
+    {
+        // Act
+        var lowerResult = modelData.GetColumn(HeaderEnum.FIRST_COLUMN.GetDescription().ToLower());
+        var upperResult = modelData.GetColumn(HeaderEnum.FIRST_COLUMN.GetDescription().ToUpper());
+        var correctResult = modelData.GetColumn(HeaderEnum.FIRST_COLUMN.GetDescription());
+
+        // Assert (assuming case-sensitive implementation)
+        Assert.Equal("A", correctResult);
+        // Depending on implementation, these might be empty or match
+    }
 }

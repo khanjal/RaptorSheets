@@ -45,6 +45,22 @@ public static class SheetsConfig
         ]
     };
 
+    public static SheetModel ExpenseSheet => new()
+    {
+        Name = Enums.SheetEnum.EXPENSES.GetDescription(),
+        TabColor = ColorEnum.RED,
+        CellColor = ColorEnum.LIGHT_RED,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        Headers = [
+            new SheetCellModel { Name = HeaderEnum.DATE.GetDescription() },
+            new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
+            new SheetCellModel { Name = HeaderEnum.DESCRIPTION.GetDescription() },
+            new SheetCellModel { Name = HeaderEnum.AMOUNT.GetDescription() },
+            new SheetCellModel { Name = HeaderEnum.CATEGORY.GetDescription() }
+        ]
+    };
+
     public static SheetModel MonthlySheet => new()
     {
         Name = Enums.SheetEnum.MONTHLY.GetDescription(),

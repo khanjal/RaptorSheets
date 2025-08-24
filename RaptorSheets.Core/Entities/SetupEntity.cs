@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace RaptorSheets.Core.Entities;
+﻿namespace RaptorSheets.Core.Entities;
 
 public class SetupEntity
 {

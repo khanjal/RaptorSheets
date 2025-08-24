@@ -1,4 +1,4 @@
-# This workflow will build a .NET project
+# This workflow will build a .NET project with test coverage and code quality analysis
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
 name: .NET Tests
@@ -11,21 +11,25 @@ on:
   workflow_call: # this is the trigger for the tests job
 
 jobs:
-  build:
-
+  test:
+    name: Test & Coverage
     runs-on: ubuntu-latest
-
+    
     steps:
     - uses: actions/checkout@v4
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+
     - name: Restore dependencies
       run: dotnet restore
+
     - name: Build
-      run: dotnet build --no-restore
-    - name: Test
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Test with Coverage
       env:
         spreadsheets:gig: ${{ secrets.GIG_SPREADSHEET_ID }}
         spreadsheets:stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
@@ -34,4 +38,127 @@ jobs:
         google_credentials:private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
         google_credentials:client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
         google_credentials:client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
-      run: dotnet test --no-build --verbosity normal
+      run: |
+        dotnet test --no-build --configuration Release \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger trx \
+          --verbosity normal \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover,cobertura
+
+    - name: Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+    - name: Generate Coverage Report
+      run: |
+        echo "Looking for coverage files..."
+        find . -name "*.xml" -type f | grep -i coverage
+        echo "Files in TestResults:"
+        ls -la TestResults/ || echo "TestResults directory not found"
+        find TestResults -name "*.xml" 2>/dev/null || echo "No XML files in TestResults"
+        
+        reportgenerator \
+          -reports:"TestResults/**/coverage.cobertura.xml;TestResults/**/coverage.opencover.xml" \
+          -targetdir:"coverage/report" \
+          -reporttypes:"Html;TextSummary" \
+          -verbosity:Info
+
+    - name: Display Coverage Summary
+      run: cat coverage/report/Summary.txt
+
+    - name: Upload Coverage Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: coverage/report/
+        retention-days: 30
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: TestResults/
+        retention-days: 30
+
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Cache SonarCloud packages
+      uses: actions/cache@v4
+      with:
+        path: ~\sonar\cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+
+    - name: Cache SonarCloud scanner
+      id: cache-sonar-scanner
+      uses: actions/cache@v4
+      with:
+        path: .\.sonar\scanner
+        key: ${{ runner.os }}-sonar-scanner
+        restore-keys: ${{ runner.os }}-sonar-scanner
+
+    - name: Install SonarCloud scanner
+      if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p ./.sonar/scanner
+        dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Begin SonarCloud Scan
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      shell: bash
+      run: |
+        ./.sonar/scanner/dotnet-sonarscanner begin \
+          /k:"khanjal_RaptorSheets" \
+          /o:"ironraptor" \
+          /d:sonar.token="$SONAR_TOKEN" \
+          /d:sonar.host.url="https://sonarcloud.io" \
+          /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+          /d:sonar.cs.vstest.reportsPaths="**/*.trx"
+
+    - name: Build for SonarCloud
+      run: dotnet build --configuration Release
+
+    - name: Run Tests for SonarCloud
+      env:
+        spreadsheets:gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets:stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        google_credentials:type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
+        google_credentials:private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials:private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials:client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials:client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+      run: |
+        dotnet test --no-build --configuration Release \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger trx \
+          --verbosity normal \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover,cobertura
+
+    - name: End SonarCloud Scan
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      shell: bash
+      run: ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"

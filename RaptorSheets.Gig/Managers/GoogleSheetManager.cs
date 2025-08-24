@@ -17,6 +17,8 @@ public interface IGoogleSheetManager
 {
     public Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
     public Task<SheetEntity> CreateSheets();
+    public Task<SheetEntity> CreateSheets(List<string> sheets);
+    public Task<SheetEntity> DeleteSheets(List<string> sheets); // New method
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetSheets();
     public Task<SheetEntity> GetSheets(List<string> sheets);
@@ -178,6 +180,9 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case nameof(SheetEnum.DAILY):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
+                case nameof(SheetEnum.EXPENSES):
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ExpenseMapper.GetSheet()));
+                    break;
                 case nameof(SheetEnum.MONTHLY):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;
@@ -263,6 +268,70 @@ public class GoogleSheetManager : IGoogleSheetManager
         foreach (var sheetTitle in sheetTitles)
         {
             sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"{sheetTitle.ToUpperInvariant()} created", MessageTypeEnum.CREATE_SHEET));
+        }
+
+        return sheetEntity;
+    }
+
+    public async Task<SheetEntity> DeleteSheets(List<string> sheets)
+    {
+        var sheetEntity = new SheetEntity();
+        
+        try
+        {
+            // Get sheet properties to find sheet IDs
+            var sheetProperties = await GetSheetProperties(sheets);
+            var sheetIdsToDelete = sheetProperties
+                .Where(p => !string.IsNullOrEmpty(p.Id))
+                .Select(p => int.Parse(p.Id))
+                .ToList();
+
+            if (sheetIdsToDelete.Count == 0)
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No sheets found to delete", MessageTypeEnum.DELETE_SHEET));
+                return sheetEntity;
+            }
+
+            // Create delete requests for each sheet
+            var deleteRequests = sheetIdsToDelete.Select(sheetId => new Request
+            {
+                DeleteSheet = new DeleteSheetRequest
+                {
+                    SheetId = sheetId
+                }
+            }).ToList();
+
+            var batchRequest = new BatchUpdateSpreadsheetRequest
+            {
+                Requests = deleteRequests
+            };
+
+            // Execute the deletion
+            var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest);
+
+            if (result != null)
+            {
+                foreach (var sheet in sheets)
+                {
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Sheet {sheet} deleted successfully", MessageTypeEnum.DELETE_SHEET));
+                }
+            }
+            else
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage("Failed to delete sheets", MessageTypeEnum.DELETE_SHEET));
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle specific Google API errors
+            if (ex.Message.Contains("Cannot delete") || ex.Message.Contains("permission"))
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"Unable to delete sheets: {ex.Message}", MessageTypeEnum.DELETE_SHEET));
+            }
+            else
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Error deleting sheets: {ex.Message}", MessageTypeEnum.DELETE_SHEET));
+            }
         }
 
         return sheetEntity;

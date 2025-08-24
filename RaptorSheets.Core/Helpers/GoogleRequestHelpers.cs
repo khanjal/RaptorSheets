@@ -3,6 +3,7 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
+using System.Linq;
 
 namespace RaptorSheets.Core.Helpers;
 
@@ -89,29 +90,30 @@ public static class GoogleRequestHelpers
         // Convert rowIds to index ranges
         var indexRanges = new List<Tuple<int, int>>();
 
-        var startIndex = 0;
-        var endIndex = 0;
-
-        foreach (var rowId in rowIds)
+        if (rowIds.Count == 0)
         {
-            // Initialize first index range
-            if (startIndex == 0)
-            {
-                startIndex = rowId - 1;
-                endIndex = rowId;
-                continue;
-            }
+            return indexRanges;
+        }
 
-            // If the rowId is consecutive increment the end index
-            if (rowId == endIndex + 1)
+        // Sort rowIds in descending order to delete from bottom to top
+        // This prevents row shifting issues when deleting multiple rows
+        var sortedRowIds = rowIds.OrderByDescending(x => x).ToList();
+
+        var startIndex = sortedRowIds[0] - 1; // Initialize with first row ID (convert to 0-based index)
+        var endIndex = sortedRowIds[0]; // End index is exclusive, so this is the row after the one to delete
+
+        foreach (var rowId in sortedRowIds.Skip(1)) // Skip the first element since we already processed it
+        {
+            // If the rowId is consecutive (going backwards) extend the range
+            if (rowId == startIndex) // Previous row (going backwards)
             {
-                endIndex = rowId;
+                startIndex = rowId - 1; // Extend range downward
             }
             else // Start a new index range
             {
                 indexRanges.Add(new Tuple<int, int>(startIndex, endIndex));
-                startIndex = rowId - 1;
-                endIndex = rowId;
+                startIndex = rowId - 1; // Convert to 0-based index
+                endIndex = rowId; // End index is exclusive
             }
         }
 
@@ -122,9 +124,34 @@ public static class GoogleRequestHelpers
 
     public static List<Request> GenerateDeleteRequests(int sheetId, List<int> rowIds)
     {
-        var indexRanges = GenerateIndexRanges(rowIds);
+        if (rowIds.Count == 0)
+        {
+            return new List<Request>();
+        }
 
-        var requests = GenerateDeleteRequests(sheetId, indexRanges);
+        // Sort rowIds in descending order to delete from bottom to top
+        // This prevents row shifting issues when deleting multiple rows
+        var sortedRowIds = rowIds.OrderByDescending(x => x).ToList();
+        
+        var requests = new List<Request>();
+
+        // Create individual delete requests for each row
+        // Google Sheets API handles the deletion more reliably when done one by one
+        foreach (var rowId in sortedRowIds)
+        {
+            var deleteDimension = new DeleteDimensionRequest
+            {
+                Range = new DimensionRange
+                {
+                    Dimension = DimensionEnum.ROWS.GetDescription(),
+                    SheetId = sheetId,
+                    StartIndex = rowId - 1, // Convert to 0-based index
+                    EndIndex = rowId // Exclusive end, so this deletes exactly one row
+                }
+            };
+
+            requests.Add(new Request { DeleteDimension = deleteDimension });
+        }
 
         return requests;
     }
@@ -148,7 +175,6 @@ public static class GoogleRequestHelpers
 
             requests.Add(new Request { DeleteDimension = deleteDimension });
         }
-
 
         return requests;
     }

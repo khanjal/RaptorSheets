@@ -14,6 +14,9 @@ public class SheetEntity
     [JsonPropertyName("daily")]
     public List<DailyEntity> Daily { get; set; } = [];
 
+    [JsonPropertyName("expenses")]
+    public List<ExpenseEntity> Expenses { get; set; } = [];
+
     [JsonPropertyName("monthly")]
     public List<MonthlyEntity> Monthly { get; set; } = [];
 

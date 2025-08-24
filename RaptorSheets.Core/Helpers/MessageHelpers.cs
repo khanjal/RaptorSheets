@@ -8,7 +8,7 @@ public static class MessageHelpers
 {
     public static MessageEntity CreateMessage(MessageEntity message)
     {
-        if (string.IsNullOrEmpty(message.Type))
+        if (string.IsNullOrWhiteSpace(message.Type))
         {
             message.Type = MessageTypeEnum.GENERAL.GetDescription();
         }

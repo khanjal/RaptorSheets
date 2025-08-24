@@ -37,24 +37,31 @@ public static class EnumExtensions
 
     public static T? GetValueFromName<T>(this string name) where T : Enum
     {
+        if (string.IsNullOrEmpty(name))
+        {
+            // Return the first enum value as the default when name is null or empty
+            return Enum.GetValues(typeof(T)).Cast<T>().FirstOrDefault();
+        }
+
         var type = typeof(T);
 
         foreach (var field in type.GetFields())
         {
             if (Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) is DescriptionAttribute attribute)
             {
-                if (attribute.Description == name)
+                if (string.Equals(attribute.Description, name, StringComparison.OrdinalIgnoreCase))
                 {
                     return (T?)field.GetValue(null);
                 }
             }
 
-            if (field.Name == name)
+            if (string.Equals(field.Name, name, StringComparison.OrdinalIgnoreCase))
             {
                 return (T?)field.GetValue(null);
             }
         }
 
-        return default;
+        // Return the first enum value if no match is found
+        return Enum.GetValues(typeof(T)).Cast<T>().FirstOrDefault();
     }
 }

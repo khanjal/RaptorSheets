@@ -13,6 +13,7 @@ public class MapperGetSheetTests
     {
         new object[] { AddressMapper.GetSheet(), SheetsConfig.AddressSheet },
         new object[] { DailyMapper.GetSheet(), SheetsConfig.DailySheet },
+        new object[] { ExpenseMapper.GetSheet(), SheetsConfig.ExpenseSheet },
         new object[] { MonthlyMapper.GetSheet(), SheetsConfig.MonthlySheet },
         new object[] { NameMapper.GetSheet(), SheetsConfig.NameSheet },
         new object[] { PlaceMapper.GetSheet(), SheetsConfig.PlaceSheet },

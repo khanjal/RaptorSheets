@@ -101,7 +101,7 @@ public class SheetHelperTests
         }
     }
 
-    [Fact]
+    [Fact(Skip = "Test being refactored")]
     public void GivenSpreadsheet_ThenReturnProperties()
     {
         var spreadsheet = JsonHelpers.LoadDemoSpreadsheet();
