@@ -4,6 +4,7 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
+using System.Linq;
 using Xunit;
 
 namespace RaptorSheets.Core.Tests.Unit.Helpers;
@@ -88,16 +89,17 @@ public class GoogleRequestHelpersTests
     [Theory]
     //[InlineData(new int[] { 1 }, 1)]
     [InlineData(new int[] { 2 }, 1)]
-    [InlineData(new int[] { 1, 2, 3 }, 1)]
-    [InlineData(new int[] { 5, 10, 15 }, 3)]
+    [InlineData(new int[] { 1, 2, 3 }, 1)] // Should return 1 request (consecutive rows combined)
+    [InlineData(new int[] { 5, 10, 15 }, 3)] // Should return 3 requests (non-consecutive rows)
     public void GenerateDeleteRequest_ShouldReturnValidRequest(int[] rowIds, int expected)
     {
         // Arrange
         int sheetId = 1;
         var rowList = rowIds.ToList();
 
-        // Act
-        var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, rowList);
+        // Act - Test the range-based method which should be used by GigRequestHelpers
+        var indexRanges = GoogleRequestHelpers.GenerateIndexRanges(rowList);
+        var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, indexRanges);
 
         // Assert
         Assert.NotNull(requests);
@@ -113,21 +115,27 @@ public class GoogleRequestHelpersTests
         // For specific test cases, verify ranges
         if (rowIds.SequenceEqual(new int[] { 1, 2, 3 }))
         {
-            Assert.Equal(0, requests[0].DeleteDimension.Range.StartIndex); // 1 - 1
-            Assert.Equal(3, requests[0].DeleteDimension.Range.EndIndex); // last row ID
+            // Consecutive rows should be combined into single range: rows 1-3 (0-based: 0-2)
+            Assert.Equal(1, requests.Count);
+            Assert.Equal(0, requests[0].DeleteDimension.Range.StartIndex); // Row 1 -> index 0
+            Assert.Equal(3, requests[0].DeleteDimension.Range.EndIndex); // Row 3 -> end index 3 (exclusive)
         }
         else if (rowIds.SequenceEqual(new int[] { 5, 10, 15 }))
         {
-            Assert.Equal(4, requests[0].DeleteDimension.Range.StartIndex); // 5 - 1
-            Assert.Equal(5, requests[0].DeleteDimension.Range.EndIndex); // 5
-            Assert.Equal(9, requests[1].DeleteDimension.Range.StartIndex); // 10 - 1
+            // Non-consecutive rows should be separate requests (processed in descending order)
+            Assert.Equal(3, requests.Count);
+            
+            // Should process in order: 15, 10, 5
+            Assert.Equal(14, requests[0].DeleteDimension.Range.StartIndex); // 15 - 1 = 14
+            Assert.Equal(15, requests[0].DeleteDimension.Range.EndIndex); // 15
+            Assert.Equal(9, requests[1].DeleteDimension.Range.StartIndex); // 10 - 1 = 9
             Assert.Equal(10, requests[1].DeleteDimension.Range.EndIndex); // 10
-            Assert.Equal(14, requests[2].DeleteDimension.Range.StartIndex); // 15 - 1
-            Assert.Equal(15, requests[2].DeleteDimension.Range.EndIndex); // 15
+            Assert.Equal(4, requests[2].DeleteDimension.Range.StartIndex); // 5 - 1 = 4
+            Assert.Equal(5, requests[2].DeleteDimension.Range.EndIndex); // 5
         }
         else if (rowIds.SequenceEqual(new int[] { 2 }))
         {
-            Assert.Equal(1, requests[0].DeleteDimension.Range.StartIndex); // 2 - 1
+            Assert.Equal(1, requests[0].DeleteDimension.Range.StartIndex); // 2 - 1 = 1
             Assert.Equal(2, requests[0].DeleteDimension.Range.EndIndex); // 2
         }
     }
@@ -139,12 +147,65 @@ public class GoogleRequestHelpersTests
         int sheetId = 1;
         var rowList = new List<int>();
 
-        // Act
-        var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, rowList);
+        // Act - Test both methods
+        var individualRequests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, rowList);
+        var indexRanges = GoogleRequestHelpers.GenerateIndexRanges(rowList);
+        var rangeRequests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, indexRanges);
 
         // Assert
-        Assert.NotNull(requests);
-        Assert.Empty(requests);
+        Assert.NotNull(individualRequests);
+        Assert.Empty(individualRequests);
+        Assert.NotNull(rangeRequests);
+        Assert.Empty(rangeRequests);
+    }
+
+    [Fact]
+    public void GenerateDeleteRequests_IndividualVsRange_ShouldShowEfficiencyDifference()
+    {
+        // Arrange - Test with consecutive rows
+        int sheetId = 1;
+        var consecutiveRowIds = new List<int> { 5, 6, 7, 8, 9 }; // 5 consecutive rows
+
+        // Act - Compare both approaches
+        var individualRequests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, consecutiveRowIds);
+        var indexRanges = GoogleRequestHelpers.GenerateIndexRanges(consecutiveRowIds);
+        var rangeRequests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, indexRanges);
+
+        // Assert - Range-based approach should be more efficient
+        Assert.Equal(5, individualRequests.Count); // Inefficient: 5 individual requests
+        Assert.Equal(1, rangeRequests.Count);      // Efficient: 1 range request
+
+        // Verify the range request covers all rows correctly
+        Assert.Equal(4, rangeRequests[0].DeleteDimension.Range.StartIndex);  // Row 5 -> index 4
+        Assert.Equal(9, rangeRequests[0].DeleteDimension.Range.EndIndex);    // Row 9 -> end index 9 (exclusive)
+    }
+
+    [Fact]
+    public void GenerateDeleteRequests_MixedConsecutiveRanges_ShouldOptimizeCorrectly()
+    {
+        // Arrange - Test with mixed consecutive and non-consecutive rows
+        int sheetId = 1;
+        var mixedRowIds = new List<int> { 1, 2, 3, 10, 15, 16, 17 }; // Two ranges: 1-3 and 15-17, plus isolated 10
+
+        // Act
+        var indexRanges = GoogleRequestHelpers.GenerateIndexRanges(mixedRowIds);
+        var rangeRequests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, indexRanges);
+
+        // Assert - Should optimize to 3 requests: [15-17], [10], [1-3] (in descending order)
+        Assert.Equal(3, rangeRequests.Count);
+
+        // Verify ranges are processed in descending order
+        // Range 1: 15-17
+        Assert.Equal(14, rangeRequests[0].DeleteDimension.Range.StartIndex); // Row 15 -> index 14
+        Assert.Equal(17, rangeRequests[0].DeleteDimension.Range.EndIndex);   // Row 17 -> end index 17
+
+        // Range 2: 10 (isolated)
+        Assert.Equal(9, rangeRequests[1].DeleteDimension.Range.StartIndex);  // Row 10 -> index 9
+        Assert.Equal(10, rangeRequests[1].DeleteDimension.Range.EndIndex);   // Row 10 -> end index 10
+
+        // Range 3: 1-3  
+        Assert.Equal(0, rangeRequests[2].DeleteDimension.Range.StartIndex);  // Row 1 -> index 0
+        Assert.Equal(3, rangeRequests[2].DeleteDimension.Range.EndIndex);    // Row 3 -> end index 3
     }
 
     [Fact]
@@ -331,8 +392,10 @@ public class GoogleRequestHelpersTests
 
         // Assert
         Assert.Equal(expectedRanges, result.Count);
-        Assert.Equal(start - 1, result[0].Item1);
-        Assert.Equal(end, result[0].Item2);
+        // Note: With the new descending order logic, consecutive ranges are still grouped
+        // but the range covers from the lowest to highest in the sequence
+        Assert.Equal(start - 1, result[0].Item1); // Start of range (0-based)
+        Assert.Equal(end, result[0].Item2); // End of range (exclusive)
     }
 
     [Fact]
@@ -346,10 +409,13 @@ public class GoogleRequestHelpersTests
 
         // Assert
         Assert.Equal(5, result.Count);
+        
+        // Verify ranges are in descending order (highest row ID first)
+        var sortedRowIds = rowIds.OrderByDescending(x => x).ToList(); // [9, 7, 5, 3, 1]
         for (int i = 0; i < result.Count; i++)
         {
-            Assert.Equal(rowIds[i] - 1, result[i].Item1);
-            Assert.Equal(rowIds[i], result[i].Item2);
+            Assert.Equal(sortedRowIds[i] - 1, result[i].Item1);
+            Assert.Equal(sortedRowIds[i], result[i].Item2);
         }
     }
 }

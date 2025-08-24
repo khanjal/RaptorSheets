@@ -21,22 +21,23 @@ public static class GigRequestHelpers
             return [];
         }
 
-        var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, rowIds);
+        // Use the efficient range-based approach for better performance
+        var indexRanges = GoogleRequestHelpers.GenerateIndexRanges(rowIds);
+        var requests = GoogleRequestHelpers.GenerateDeleteRequests(sheetId, indexRanges);
 
         return requests;
     }
 
     // TRIP
-
     public static List<Request> ChangeTripSheetData(List<TripEntity> trips, PropertyEntity? sheetProperties)
     {
         var requests = new List<Request>();
 
-        // Append/Update requests
+        // Append/Update requests FIRST - this ensures row IDs are correct before any deletions
         var saveTrips = trips?.Where(x => x.Action != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
         requests.AddRange(CreateUpdateCellTripRequests(saveTrips, sheetProperties));
 
-        // Delete requests
+        // Delete requests AFTER updates - delete from highest row ID to lowest to prevent shifting issues
         var deleteTrips = trips?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
         var rowIds = deleteTrips.Select(x => x.RowId).ToList();
         requests.AddRange(CreateDeleteRequests(rowIds, sheetProperties));
@@ -81,11 +82,11 @@ public static class GigRequestHelpers
     {
         var requests = new List<Request>();
 
-        // AppendUpdate requets
+        // Append/Update requests FIRST - this ensures row IDs are correct before any deletions
         var saveShifts = shifts?.Where(x => x.Action != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
         requests.AddRange(CreateUpdateCellShiftRequests(saveShifts, sheetProperties));
 
-        // Delete requests
+        // Delete requests AFTER updates - delete from highest row ID to lowest to prevent shifting issues
         var deleteShifts = shifts?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
         var rowIds = deleteShifts.Select(x => x.RowId).ToList();
         requests.AddRange(CreateDeleteRequests(rowIds, sheetProperties));
@@ -130,11 +131,11 @@ public static class GigRequestHelpers
     {
         var requests = new List<Request>();
 
-        // AppendUpdate requets
+        // Append/Update requests FIRST - this ensures row IDs are correct before any deletions
         var saveSetup = setup?.Where(x => x.Action != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
         requests.AddRange(CreateUpdateCellSetupRequests(saveSetup, sheetProperties));
 
-        // Delete requests
+        // Delete requests AFTER updates - delete from highest row ID to lowest to prevent shifting issues
         var deleteSetup = setup?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
         var rowIds = deleteSetup.Select(x => x.RowId).ToList();
         requests.AddRange(CreateDeleteRequests(rowIds, sheetProperties));
