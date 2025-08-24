@@ -8,6 +8,10 @@ namespace RaptorSheets.Core.Helpers;
 
 public static class HeaderHelpers
 {
+    // Regex patterns with timeout to prevent potential performance issues
+    private static readonly Regex NonDigitRegex = new(@"[^\d]", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+    private static readonly Regex NonDecimalRegex = new(@"[^\d.-]", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+
     public static IList<object> GetHeadersFromCellData(IList<CellData>? cellData)
     {
         var headers = cellData?.Where(x => x.FormattedValue != null).Select(v => v.FormattedValue).ToList() ?? [];
@@ -103,7 +107,7 @@ public static class HeaderHelpers
         
         // Handle negative numbers - preserve the minus sign but remove other non-digit characters
         var isNegative = value?.StartsWith("-") == true;
-        value = Regex.Replace(value!, @"[^\d]", ""); // Remove all non-digit characters
+        value = NonDigitRegex.Replace(value!, ""); // Remove all non-digit characters with timeout
         
         if (string.IsNullOrEmpty(value))
         {
@@ -134,7 +138,7 @@ public static class HeaderHelpers
         }
 
         var value = values[columnId]?.ToString()?.Trim();
-        value = Regex.Replace(value!, @"[^\d.-]", ""); // Remove all special currency symbols except for .'s and -'s
+        value = NonDecimalRegex.Replace(value!, ""); // Remove all special currency symbols except for .'s and -'s with timeout
         if (value == "-" || value == "")
         {
             return null;  // Make account -'s into nulls.
