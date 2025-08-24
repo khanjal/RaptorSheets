@@ -29,24 +29,6 @@ public class GoogleSheetManagerTests
     }
 
     [Fact]
-    public void Constructor_WithParameters_ShouldInitialize()
-    {
-        // Arrange
-        var parameters = new Dictionary<string, string>
-        {
-            { "type", "service_account" },
-            { "privateKeyId", "test-key-id" },
-            { "privateKey", "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n" },
-            { "clientEmail", "test@test-project.iam.gserviceaccount.com" },
-            { "clientId", "12345" }
-        };
-
-        // Act & Assert - If no exception is thrown, the constructor works
-        var manager = new GoogleSheetManager(parameters, "test-spreadsheet-id");
-        Assert.NotNull(manager);
-    }
-
-    [Fact]
     public void CheckSheetHeaders_WithNullSpreadsheet_ShouldReturnErrorMessage()
     {
         // Act

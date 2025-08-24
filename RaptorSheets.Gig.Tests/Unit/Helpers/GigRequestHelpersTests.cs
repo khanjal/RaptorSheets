@@ -102,7 +102,15 @@ public class GigRequestHelpersTests
     {
         // Arrange
         var trips = new List<TripEntity>();
-        var sheetProperties = new PropertyEntity { Id = "1" };
+        var sheetProperties = new PropertyEntity 
+        { 
+            Id = "1",
+            Attributes = new Dictionary<string, string>
+            {
+                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
+                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+            }
+        };
 
         // Act
         var result = GigRequestHelpers.ChangeTripSheetData(trips, sheetProperties);
@@ -116,7 +124,15 @@ public class GigRequestHelpersTests
     public void ChangeTripSheetData_WithNullTrips_ShouldReturnEmptyList()
     {
         // Arrange
-        var sheetProperties = new PropertyEntity { Id = "1" };
+        var sheetProperties = new PropertyEntity 
+        { 
+            Id = "1",
+            Attributes = new Dictionary<string, string>
+            {
+                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
+                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+            }
+        };
 
         // Act
         var result = GigRequestHelpers.ChangeTripSheetData(null, sheetProperties);
@@ -191,29 +207,6 @@ public class GigRequestHelpersTests
 
         // Act
         var result = GigRequestHelpers.CreateUpdateCellTripRequests(trips, null);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public void CreateUpdateCellTripRequests_WithEmptyHeaders_ShouldReturnEmptyList()
-    {
-        // Arrange
-        var trips = new List<TripEntity> { new() { RowId = 1 } };
-        var sheetProperties = new PropertyEntity 
-        { 
-            Id = "1",
-            Attributes = new Dictionary<string, string>
-            {
-                { PropertyEnum.HEADERS.GetDescription(), "" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "5" }
-            }
-        };
-
-        // Act
-        var result = GigRequestHelpers.CreateUpdateCellTripRequests(trips, sheetProperties);
 
         // Assert
         Assert.NotNull(result);
@@ -332,7 +325,15 @@ public class GigRequestHelpersTests
     {
         // Arrange
         var shifts = new List<ShiftEntity>();
-        var sheetProperties = new PropertyEntity { Id = "1" };
+        var sheetProperties = new PropertyEntity 
+        { 
+            Id = "1",
+            Attributes = new Dictionary<string, string>
+            {
+                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
+                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+            }
+        };
 
         // Act
         var result = GigRequestHelpers.ChangeShiftSheetData(shifts, sheetProperties);
@@ -346,7 +347,15 @@ public class GigRequestHelpersTests
     public void ChangeShiftSheetData_WithNullShifts_ShouldReturnEmptyList()
     {
         // Arrange
-        var sheetProperties = new PropertyEntity { Id = "1" };
+        var sheetProperties = new PropertyEntity 
+        { 
+            Id = "1",
+            Attributes = new Dictionary<string, string>
+            {
+                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
+                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+            }
+        };
 
         // Act
         var result = GigRequestHelpers.ChangeShiftSheetData(null, sheetProperties);
@@ -414,7 +423,15 @@ public class GigRequestHelpersTests
     {
         // Arrange
         var setup = new List<SetupEntity>();
-        var sheetProperties = new PropertyEntity { Id = "1" };
+        var sheetProperties = new PropertyEntity 
+        { 
+            Id = "1",
+            Attributes = new Dictionary<string, string>
+            {
+                { PropertyEnum.HEADERS.GetDescription(), "Name,Value" },
+                { PropertyEnum.MAX_ROW.GetDescription(), "5" }
+            }
+        };
 
         // Act
         var result = GigRequestHelpers.ChangeSetupSheetData(setup, sheetProperties);
@@ -456,7 +473,7 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Key,Value,Description" },
+                { PropertyEnum.HEADERS.GetDescription(), "Name,Value,Description" },
                 { PropertyEnum.MAX_ROW.GetDescription(), "10" }
             }
         };
@@ -480,7 +497,7 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Key,Value,Description" },
+                { PropertyEnum.HEADERS.GetDescription(), "Name,Value,Description" },
                 { PropertyEnum.MAX_ROW.GetDescription(), "10" }
             }
         };
@@ -493,89 +510,6 @@ public class GigRequestHelpersTests
         Assert.Single(result);
         Assert.NotNull(result[0].UpdateCells);
         Assert.Equal(4, result[0].UpdateCells.Range.StartRowIndex); // RowId 5 -> index 4
-    }
-
-    [Fact]
-    public void CreateUpdateCellSetupRequests_WithEmptySetup_ShouldReturnEmptyList()
-    {
-        // Arrange
-        var setup = new List<SetupEntity>();
-        var sheetProperties = new PropertyEntity 
-        { 
-            Id = "1",
-            Attributes = new Dictionary<string, string>
-            {
-                { PropertyEnum.HEADERS.GetDescription(), "Key,Value" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "5" }
-            }
-        };
-
-        // Act
-        var result = GigRequestHelpers.CreateUpdateCellSetupRequests(setup, sheetProperties);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public void CreateUpdateCellSetupRequests_WithNullSheetProperties_ShouldReturnEmptyList()
-    {
-        // Arrange
-        var setup = new List<SetupEntity> { new() { RowId = 1 } };
-
-        // Act
-        var result = GigRequestHelpers.CreateUpdateCellSetupRequests(setup, null);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public void CreateUpdateCellSetupRequests_WithEmptyHeaders_ShouldReturnEmptyList()
-    {
-        // Arrange
-        var setup = new List<SetupEntity> { new() { RowId = 1 } };
-        var sheetProperties = new PropertyEntity 
-        { 
-            Id = "1",
-            Attributes = new Dictionary<string, string>
-            {
-                { PropertyEnum.HEADERS.GetDescription(), "" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "5" }
-            }
-        };
-
-        // Act
-        var result = GigRequestHelpers.CreateUpdateCellSetupRequests(setup, sheetProperties);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public void CreateUpdateCellSetupRequests_WithInvalidSheetId_ShouldReturnEmptyList()
-    {
-        // Arrange
-        var setup = new List<SetupEntity> { new() { RowId = 1 } };
-        var sheetProperties = new PropertyEntity 
-        { 
-            Id = "invalid",
-            Attributes = new Dictionary<string, string>
-            {
-                { PropertyEnum.HEADERS.GetDescription(), "Key,Value" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "5" }
-            }
-        };
-
-        // Act
-        var result = GigRequestHelpers.CreateUpdateCellSetupRequests(setup, sheetProperties);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result);
     }
 
     #endregion

@@ -16,7 +16,7 @@ public class ShiftMapperTests
         // Arrange
         var values = new List<IList<object>>
         {
-            new List<object> { "Date", "Time Start", "Time End", "Service", "Number", "Region" }, // Headers
+            new List<object> { "Date", "Start", "Finish", "Service", "#", "Region" }, // Headers using correct HeaderEnum descriptions
             new List<object> { "2024-01-15", "09:00:00", "17:00:00", "Uber", "123", "Downtown" },
             new List<object> { "2024-01-16", "10:00:00", "18:00:00", "Lyft", "124", "Suburbs" }
         };
@@ -92,7 +92,7 @@ public class ShiftMapperTests
                 Region = "Suburbs"
             }
         };
-        var headers = new List<object> { "Date", "Time Start", "Time End", "Service", "Number", "Region", "Note" };
+        var headers = new List<object> { "Date", "Start", "Finish", "Service", "#", "Region", "Note" };
 
         // Act
         var result = ShiftMapper.MapToRangeData(shifts, headers);
@@ -112,8 +112,12 @@ public class ShiftMapperTests
         
         var secondRow = result[1];
         Assert.Equal("2024-01-16", secondRow[0]);
+        Assert.Equal("10:00:00", secondRow[1]);
+        Assert.Equal("18:00:00", secondRow[2]);
         Assert.Equal("Lyft", secondRow[3]);
         Assert.Equal("124", secondRow[4]);
+        Assert.Equal("Suburbs", secondRow[5]);
+        Assert.Equal("", secondRow[6]); // Note is empty string, not null for second shift
     }
 
     [Fact]
@@ -134,7 +138,7 @@ public class ShiftMapperTests
                 Region = "Downtown"
             }
         };
-        var headers = new List<object> { "Date", "Time Start", "Service", "Number", "Pay", "Tips", "Time Omit", "Region" };
+        var headers = new List<object> { "Date", "Start", "Service", "#", "Pay", "Tips", "O", "Region" };
 
         // Act
         var result = ShiftMapper.MapToRowData(shifts, headers);

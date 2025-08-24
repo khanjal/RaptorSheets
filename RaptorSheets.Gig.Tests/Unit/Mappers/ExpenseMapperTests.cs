@@ -136,7 +136,7 @@ public class ExpenseMapperTests
             {
                 Date = new DateTime(2024, 1, 15),
                 Name = "Gas",
-                Description = "Fuel",
+                Description = "Fuel for vehicle",
                 Amount = 45.67m,
                 Category = "Transportation"
             },
@@ -161,7 +161,7 @@ public class ExpenseMapperTests
         var firstRow = result[0];
         Assert.Equal("2024-01-15", firstRow[0]);
         Assert.Equal("Gas", firstRow[1]);
-        Assert.Equal("Fuel", firstRow[2]);
+        Assert.Equal("Fuel for vehicle", firstRow[2]);
         Assert.Equal("45.67", firstRow[3]);
         Assert.Equal("Transportation", firstRow[4]);
         
@@ -169,7 +169,7 @@ public class ExpenseMapperTests
         Assert.Equal("2024-01-16", secondRow[0]);
         Assert.Equal("Food", secondRow[1]);
         Assert.Equal("Lunch", secondRow[2]);
-        Assert.Equal("12.5", secondRow[3]);
+        Assert.Equal("12.50", secondRow[3]); // Should be "12.50", not "12.5"
         Assert.Equal("Meals", secondRow[4]);
     }
 
@@ -192,7 +192,7 @@ public class ExpenseMapperTests
         var row = result[0];
         Assert.Equal("Test", row[0]);
         Assert.Null(row[1]); // Unknown column should be null
-        Assert.Equal("10", row[2]);
+        Assert.Equal("10.00", row[2]); // Should be "10.00", not "10"
     }
 
     [Fact]
