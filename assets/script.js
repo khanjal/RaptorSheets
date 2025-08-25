@@ -87,11 +87,37 @@ window.addEventListener('scroll', function() {
     lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
 }, { passive: true });
 
-// Mobile menu toggle (if needed in future)
+// Mobile menu toggle
 function toggleMobileMenu() {
-    const menu = document.querySelector('.nav__menu');
-    menu.classList.toggle('nav__menu--active');
+    const navToggle = document.getElementById('navToggle');
+    const navMenu = document.getElementById('navMenu');
+    
+    navToggle.addEventListener('click', function() {
+        navToggle.classList.toggle('nav__toggle--active');
+        navMenu.classList.toggle('nav__menu--active');
+    });
+    
+    // Close menu when clicking on a link
+    const navLinks = document.querySelectorAll('.nav__link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            navToggle.classList.remove('nav__toggle--active');
+            navMenu.classList.remove('nav__menu--active');
+        });
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', function(event) {
+        const isClickInsideNav = navToggle.contains(event.target) || navMenu.contains(event.target);
+        if (!isClickInsideNav && navMenu.classList.contains('nav__menu--active')) {
+            navToggle.classList.remove('nav__toggle--active');
+            navMenu.classList.remove('nav__menu--active');
+        }
+    });
 }
+
+// Initialize mobile menu
+document.addEventListener('DOMContentLoaded', toggleMobileMenu);
 
 // Add subtle parallax effect to hero section
 window.addEventListener('scroll', function() {

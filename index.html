@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
     <title>RaptorSheets - Powerful Google Sheets Integration for .NET</title>
     <meta name="description" content="Comprehensive .NET library suite that simplifies Google Sheets API integration for developers. Build powerful spreadsheet applications with ease.">
     <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
@@ -18,7 +19,12 @@
                 <i class="fas fa-table nav__icon"></i>
                 <span class="nav__title">RaptorSheets</span>
             </div>
-            <ul class="nav__menu">
+            <button class="nav__toggle" id="navToggle">
+                <span class="nav__toggle-line"></span>
+                <span class="nav__toggle-line"></span>
+                <span class="nav__toggle-line"></span>
+            </button>
+            <ul class="nav__menu" id="navMenu">
                 <li class="nav__item">
                     <a href="#applications" class="nav__link">Live Apps</a>
                 </li>
