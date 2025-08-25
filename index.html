@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaptorSheets - Powerful Google Sheets Integration for .NET</title>
+    <meta name="description" content="Comprehensive .NET library suite that simplifies Google Sheets API integration for developers. Build powerful spreadsheet applications with ease.">
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+    <link rel="stylesheet" href="./assets/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <div class="nav__brand">
+                <i class="fas fa-table nav__icon"></i>
+                <span class="nav__title">RaptorSheets</span>
+            </div>
+            <ul class="nav__menu">
+                <li class="nav__item">
+                    <a href="#applications" class="nav__link">Live Apps</a>
+                </li>
+                <li class="nav__item">
+                    <a href="#developer" class="nav__link">For Developers</a>
+                </li>
+                <li class="nav__item">
+                    <a href="https://github.com/khanjal/RaptorSheets" class="nav__link nav__link--github" target="_blank">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero__content">
+                <h1 class="hero__title">
+                    <span class="highlight">RaptorSheets</span> - Google Sheets Made Simple
+                </h1>
+                <p class="hero__description">
+                    Powerful tools for managing your data with Google Sheets. Whether you're a developer looking for .NET libraries 
+                    or a user wanting ready-to-use applications, we've got you covered.
+                </p>
+                <div class="hero__sections">
+                    <div class="hero__section">
+                        <div class="hero__section-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3>Live Applications</h3>
+                        <p>Ready-to-use web apps for tracking and managing your data</p>
+                        <a href="#applications" class="btn btn--primary">
+                            <i class="fas fa-play"></i>
+                            Use Apps
+                        </a>
+                    </div>
+                    <div class="hero__section">
+                        <div class="hero__section-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h3>Developer Resources</h3>
+                        <p>NuGet packages and libraries for building your own solutions</p>
+                        <a href="#developer" class="btn btn--secondary">
+                            <i class="fab fa-github"></i>
+                            For Developers
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Applications Section -->
+    <section id="applications" class="applications">
+        <div class="container">
+            <div class="section__header">
+                <h2 class="section__title">Live Applications</h2>
+                <p class="section__subtitle">Ready-to-use web applications powered by RaptorSheets technology</p>
+            </div>
+            <div class="applications__grid">
+                <div class="application application--featured">
+                    <div class="application__header">
+                        <div class="application__icon">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <div class="application__status">
+                            <span class="status-badge status-badge--live">LIVE</span>
+                        </div>
+                    </div>
+                    <h3 class="application__title">Gig Work Tracker</h3>
+                    <p class="application__description">
+                        Track your rideshare, delivery, and gig work with automated Google Sheets integration. 
+                        Monitor trips, calculate earnings, and generate detailed reports automatically.
+                    </p>
+                    <div class="application__features">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Trip and shift tracking</li>
+                            <li><i class="fas fa-check"></i> Automatic earnings calculation</li>
+                            <li><i class="fas fa-check"></i> Daily, weekly, monthly reports</li>
+                            <li><i class="fas fa-check"></i> Address and location management</li>
+                            <li><i class="fas fa-check"></i> Export to Google Sheets</li>
+                        </ul>
+                    </div>
+                    <div class="application__actions">
+                        <a href="https://gig.raptorsheets.com" class="btn btn--primary btn--large" target="_blank">
+                            <i class="fas fa-external-link-alt"></i>
+                            Start Tracking
+                        </a>
+                    </div>
+                    <div class="application__url">
+                        <span>gig.raptorsheets.com</span>
+                    </div>
+                </div>
+
+                <div class="application application--coming-soon">
+                    <div class="application__header">
+                        <div class="application__icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="application__status">
+                            <span class="status-badge status-badge--coming-soon">COMING SOON</span>
+                        </div>
+                    </div>
+                    <h3 class="application__title">Stock Portfolio Manager</h3>
+                    <p class="application__description">
+                        Advanced portfolio tracking and analysis with real-time data integration. 
+                        Monitor your investments, calculate performance metrics, and optimize your strategy.
+                    </p>
+                    <div class="application__features">
+                        <ul>
+                            <li><i class="fas fa-clock"></i> Real-time portfolio tracking</li>
+                            <li><i class="fas fa-clock"></i> Performance analytics</li>
+                            <li><i class="fas fa-clock"></i> Risk assessment tools</li>
+                            <li><i class="fas fa-clock"></i> Dividend tracking</li>
+                            <li><i class="fas fa-clock"></i> Tax reporting assistance</li>
+                        </ul>
+                    </div>
+                    <div class="application__actions">
+                        <a href="#" class="btn btn--primary btn--large btn--disabled">
+                            <i class="fas fa-clock"></i>
+                            Coming Soon
+                        </a>
+                    </div>
+                    <div class="application__url">
+                        <span>stock.raptorsheets.com</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Developer Section -->
+    <section id="developer" class="developer">
+        <div class="container">
+            <div class="section__header">
+                <h2 class="section__title">For Developers</h2>
+                <p class="section__subtitle">Build your own Google Sheets integration with our comprehensive .NET libraries</p>
+                <div class="developer__badges">
+                    <img src="https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg" alt="Build Status">
+                    <img src="https://img.shields.io/nuget/v/RaptorSheets.Gig" alt="NuGet Version">
+                    <img src="https://sonarcloud.io/api/project_badges/measure?project=khanjal_RaptorSheets&metric=coverage" alt="Coverage">
+                    <img src="https://img.shields.io/github/license/khanjal/RaptorSheets" alt="License">
+                </div>
+            </div>
+
+            <!-- Quick Start -->
+            <div class="developer__quickstart">
+                <h3>Quick Start</h3>
+                <div class="quickstart__steps">
+                    <div class="quickstart__step">
+                        <span class="step-number">1</span>
+                        <div class="step-content">
+                            <h4>Install Package</h4>
+                            <div class="code-block">
+                                <code>dotnet add package RaptorSheets.Gig</code>
+                                <button class="copy-btn" onclick="copyToClipboard(this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quickstart__step">
+                        <span class="step-number">2</span>
+                        <div class="step-content">
+                            <h4>Initialize & Create</h4>
+                            <div class="code-block">
+                                <code>var manager = new GoogleSheetManager(accessToken, spreadsheetId);
+await manager.CreateSheets();</code>
+                                <button class="copy-btn" onclick="copyToClipboard(this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Packages -->
+            <div class="packages__grid">
+                <div class="package">
+                    <div class="package__header">
+                        <h3 class="package__title">RaptorSheets.Gig</h3>
+                        <img src="https://img.shields.io/nuget/v/RaptorSheets.Gig" alt="NuGet Version" class="package__badge">
+                    </div>
+                    <p class="package__description">
+                        Specialized package for gig work tracking and management. Perfect for rideshare drivers, delivery workers, and freelancers.
+                    </p>
+                    <div class="package__features">
+                        <ul>
+                            <li>Trip and shift tracking</li>
+                            <li>Automated statistics generation</li>
+                            <li>Address and location management</li>
+                            <li>Daily, weekly, and monthly reports</li>
+                        </ul>
+                    </div>
+                    <div class="package__buttons">
+                        <a href="https://www.nuget.org/packages/RaptorSheets.Gig/" class="btn btn--small btn--primary" target="_blank">
+                            <i class="fas fa-download"></i>
+                            Install Package
+                        </a>
+                        <a href="https://github.com/khanjal/RaptorSheets/tree/main/docs" class="btn btn--small btn--secondary" target="_blank">
+                            <i class="fas fa-book"></i>
+                            Documentation
+                        </a>
+                    </div>
+                </div>
+
+                <div class="package">
+                    <div class="package__header">
+                        <h3 class="package__title">RaptorSheets.Stock</h3>
+                        <img src="https://img.shields.io/nuget/v/RaptorSheets.Stock" alt="NuGet Version" class="package__badge">
+                    </div>
+                    <p class="package__description">
+                        Comprehensive stock portfolio management system with real-time data integration and advanced analytics.
+                    </p>
+                    <div class="package__features">
+                        <ul>
+                            <li>Portfolio tracking and analysis</li>
+                            <li>Real-time stock data integration</li>
+                            <li>Performance metrics calculation</li>
+                            <li>Investment strategy optimization</li>
+                        </ul>
+                    </div>
+                    <div class="package__buttons">
+                        <a href="https://www.nuget.org/packages/RaptorSheets.Stock/" class="btn btn--small btn--primary" target="_blank">
+                            <i class="fas fa-download"></i>
+                            Install Package
+                        </a>
+                        <a href="https://github.com/khanjal/RaptorSheets/tree/main/docs" class="btn btn--small btn--secondary" target="_blank">
+                            <i class="fas fa-book"></i>
+                            Documentation
+                        </a>
+                    </div>
+                </div>
+
+                <div class="package">
+                    <div class="package__header">
+                        <h3 class="package__title">RaptorSheets.Core</h3>
+                        <span class="package__status">Coming Soon</span>
+                    </div>
+                    <p class="package__description">
+                        Core library providing foundational functionality for all RaptorSheets packages. Build custom solutions with ease.
+                    </p>
+                    <div class="package__features">
+                        <ul>
+                            <li>Base Google Sheets integration</li>
+                            <li>Common utilities and helpers</li>
+                            <li>Extensible architecture</li>
+                            <li>Custom sheet builders</li>
+                        </ul>
+                    </div>
+                    <div class="package__buttons">
+                        <a href="#" class="btn btn--small btn--primary btn--disabled">
+                            <i class="fas fa-download"></i>
+                            Coming Soon
+                        </a>
+                        <a href="https://github.com/khanjal/RaptorSheets" class="btn btn--small btn--secondary" target="_blank">
+                            <i class="fab fa-github"></i>
+                            View Source
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Features -->
+            <div class="developer__features">
+                <h3>Key Features</h3>
+                <div class="features__grid">
+                    <div class="feature">
+                        <div class="feature__icon">
+                            <i class="fas fa-table"></i>
+                        </div>
+                        <h4 class="feature__title">Header Management</h4>
+                        <p class="feature__description">Extension methods for column and index assignments with automatic processing</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature__icon">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <h4 class="feature__title">Column Formatting</h4>
+                        <p class="feature__description">Apply data formatting, configure drop-downs, and set cell protection</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature__icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h4 class="feature__title">Batch Operations</h4>
+                        <p class="feature__description">Efficient bulk operations for large datasets with automatic batching</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature__icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4 class="feature__title">Type Safety</h4>
+                        <p class="feature__description">Strongly typed entities and enums for all operations</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resources -->
+            <div class="developer__resources">
+                <h3>Resources & Documentation</h3>
+                <div class="docs__grid">
+                    <div class="doc">
+                        <h4 class="doc__title">
+                            <i class="fas fa-book"></i>
+                            Getting Started Guide
+                        </h4>
+                        <p class="doc__description">Quick start guide with code examples and best practices</p>
+                        <a href="https://github.com/khanjal/RaptorSheets#-quick-start" class="doc__link" target="_blank">
+                            Read Guide <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="doc">
+                        <h4 class="doc__title">
+                            <i class="fas fa-code"></i>
+                            API Reference
+                        </h4>
+                        <p class="doc__description">Complete API documentation with detailed method references</p>
+                        <a href="https://github.com/khanjal/RaptorSheets/tree/main/docs" class="doc__link" target="_blank">
+                            View API Docs <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="doc">
+                        <h4 class="doc__title">
+                            <i class="fab fa-github"></i>
+                            Source Code
+                        </h4>
+                        <p class="doc__description">Explore the source code, contribute, or report issues</p>
+                        <a href="https://github.com/khanjal/RaptorSheets" class="doc__link" target="_blank">
+                            View on GitHub <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="doc">
+                        <h4 class="doc__title">
+                            <i class="fas fa-flask"></i>
+                            Examples
+                        </h4>
+                        <p class="doc__description">Sample code and implementation examples for common scenarios</p>
+                        <a href="https://github.com/khanjal/RaptorSheets/tree/main/RaptorSheets.Core.Tests" class="doc__link" target="_blank">
+                            View Examples <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__content">
+                <div class="footer__brand">
+                    <i class="fas fa-table"></i>
+                    <span>RaptorSheets</span>
+                </div>
+                <div class="footer__links">
+                    <a href="https://github.com/khanjal/RaptorSheets" target="_blank">GitHub</a>
+                    <a href="https://www.nuget.org/packages/RaptorSheets.Gig/" target="_blank">NuGet</a>
+                    <a href="https://sonarcloud.io/project/overview?id=khanjal_RaptorSheets" target="_blank">Quality</a>
+                    <a href="https://github.com/khanjal/RaptorSheets/blob/main/LICENSE" target="_blank">License</a>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p>&copy; 2025 RaptorSheets. Built with ❤️ for developers.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="./assets/script.js"></script>
+</body>
+</html>

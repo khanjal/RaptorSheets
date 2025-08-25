@@ -1,0 +1,52 @@
+# GitHub Pages Configuration for RaptorSheets
+title: "RaptorSheets - Powerful Google Sheets Integration for .NET"
+description: "Comprehensive .NET library suite that simplifies Google Sheets API integration for developers. Build powerful spreadsheet applications with ease."
+url: "https://raptorsheets.com"
+baseurl: ""
+
+# GitHub Pages settings
+remote_theme: null
+theme: null
+markdown: kramdown
+highlighter: rouge
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# SEO settings
+author: "khanjal"
+twitter:
+  username: khanjal
+  card: summary_large_image
+
+social:
+  name: RaptorSheets
+  links:
+    - https://github.com/khanjal/RaptorSheets
+    - https://www.nuget.org/packages/RaptorSheets.Gig/
+    - https://gig.raptorsheets.com
+
+# Site settings
+lang: en_US
+timezone: America/New_York
+
+# Build settings
+safe: true
+incremental: false
+profile: false
+strict_front_matter: false
+
+# Exclude files from processing
+exclude:
+  - bin/
+  - obj/
+  - .vs/
+  - .git/
+  - .gitignore
+  - "*.csproj"
+  - "*.sln"
+  - "*.nupkg"
+  - scripts/
+  - docs/
+  - RaptorSheets.*/
