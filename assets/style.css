@@ -5,6 +5,43 @@
     box-sizing: border-box;
 }
 
+/* Prevent horizontal overflow on all devices */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+/* Additional mobile-friendly defaults */
+img, video, iframe, canvas, svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Ensure long words don't break layout */
+h1, h2, h3, h4, h5, h6, p, div, span {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Handle long URLs and code snippets */
+a, code, pre {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+/* Prevent tables from causing horizontal scroll */
+table {
+    width: 100%;
+    table-layout: fixed;
+    overflow-wrap: break-word;
+}
+
+th, td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
 :root {
     --primary-color: #2563eb;
     --primary-dark: #1d4ed8;
@@ -35,6 +72,8 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Typography */
@@ -761,6 +800,16 @@ body {
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
     overflow-x: auto;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.code-block code {
+    display: block;
+    white-space: pre;
+    word-wrap: normal;
+    overflow-wrap: normal;
 }
 
 .copy-btn {
@@ -867,6 +916,8 @@ body {
         visibility: hidden;
         transition: all 0.3s ease;
         border-top: 1px solid var(--border-color);
+        box-sizing: border-box;
+        overflow-x: hidden;
     }
     
     .nav__menu--active {
@@ -880,6 +931,9 @@ body {
         padding: 0.5rem 1rem;
         border-radius: var(--border-radius);
         transition: all 0.2s ease;
+        width: auto;
+        max-width: 90%;
+        text-align: center;
     }
     
     .nav__link:hover {
@@ -1138,6 +1192,11 @@ html {
         overflow-x: hidden;
     }
     
+    /* Ensure all containers stay within viewport */
+    * {
+        max-width: 100%;
+    }
+    
     /* Better spacing for mobile */
     .section {
         padding: 3rem 0;
@@ -1150,23 +1209,135 @@ html {
     }
     
     /* Better mobile form elements */
+    .code-block {
+        max-width: 100%;
+        overflow-x: auto;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+    
     .code-block code {
-        word-break: break-all;
+        word-break: break-word;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        max-width: 100%;
+    }
+    
+    /* Prevent any element from overflowing */
+    .hero__content,
+    .application,
+    .package,
+    .feature,
+    .doc {
+        max-width: 100%;
+        overflow-wrap: break-word;
+    }
+    
+    /* Responsive images */
+    img {
+        max-width: 100%;
+        height: auto;
     }
 }
 
-/* Very small screens */
-@media (max-width: 360px) {
+/* Samsung Galaxy S24+ and similar devices */
+@media (max-width: 430px) {
     .container {
         padding: 0 0.75rem;
     }
     
     .hero__title {
         font-size: 2rem;
+        line-height: 1.1;
+    }
+    
+    .hero__description {
+        font-size: 0.95rem;
+        padding: 0 0.5rem;
     }
     
     .nav__title {
         font-size: 1.25rem;
+    }
+    
+    /* Ensure code blocks don't cause horizontal scroll */
+    .code-block {
+        font-size: 0.75rem;
+        padding: 0.75rem;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        overflow-x: hidden;
+        scrollbar-width: thin;
+    }
+    
+    .code-block code {
+        word-break: break-word;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        max-width: 100%;
+    }
+    
+    /* Prevent button overflow */
+    .btn {
+        font-size: 0.9rem;
+        padding: 0.875rem 1rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .application__title {
+        font-size: 1.375rem;
+    }
+    
+    /* Tighter spacing for very small screens */
+    .section {
+        padding: 2.5rem 0;
+    }
+    
+    .section__title {
+        font-size: 1.75rem;
+    }
+    
+    /* Ensure navigation doesn't overflow */
+    .nav__menu {
+        width: 100vw;
+        left: 0;
+        margin-left: 0;
+    }
+    
+    /* Better responsive grids */
+    .features__grid,
+    .packages__grid,
+    .applications__grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    /* Responsive step numbers */
+    .step-number {
+        width: 32px;
+        height: 32px;
+        font-size: 0.875rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+    .container {
+        padding: 0 0.5rem;
+    }
+    
+    .hero__title {
+        font-size: 1.875rem;
+    }
+    
+    .nav__title {
+        font-size: 1.125rem;
+    }
+    
+    .code-block {
+        font-size: 0.7rem;
+        padding: 0.5rem;
     }
 }
 
