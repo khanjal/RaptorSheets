@@ -441,7 +441,8 @@ body {
 }
 
 .developer__badges img {
-    height: 20px;
+    height: 24px;
+    transition: height 0.2s ease;
 }
 
 .developer__quickstart {
@@ -470,6 +471,15 @@ body {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
+}
+
+.step-content {
+    flex: 1;
+    width: 100%;
+}
+
+.step-content .code-block {
+    margin-top: 0.5rem;
 }
 
 .step-number {
@@ -596,18 +606,24 @@ body {
 .package__header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .package__title {
     font-size: 1.5rem;
     font-weight: 600;
     color: var(--text-primary);
+    flex-grow: 1;
+    margin-right: 1rem;
 }
 
 .package__badge {
-    height: 20px;
+    height: 24px;
+    transition: height 0.2s ease;
+    flex-shrink: 0; /* Prevent badge from shrinking */
 }
 
 .package__status {
@@ -797,6 +813,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     padding: 1rem;
+    padding-right: 3.5rem; /* Make room for copy button */
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
     overflow-x: auto;
@@ -810,25 +827,33 @@ body {
     white-space: pre;
     word-wrap: normal;
     overflow-wrap: normal;
+    max-width: calc(100% - 3rem); /* Ensure code doesn't overlap copy button */
 }
 
 .copy-btn {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
+    top: 0.75rem;
+    right: 0.75rem;
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 0.25rem;
-    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.5rem;
     color: var(--text-secondary);
     cursor: pointer;
     font-size: 0.75rem;
     transition: all 0.2s ease;
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
 }
 
 .copy-btn:hover {
     background-color: var(--primary-color);
     color: white;
+    transform: scale(1.05);
 }
 
 /* Footer */
@@ -889,6 +914,15 @@ body {
     
     .packages__grid {
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+    
+    /* Slightly smaller badges for tablet view */
+    .developer__badges img {
+        height: 22px;
+    }
+    
+    .package__badge {
+        height: 22px;
     }
 }
 
@@ -987,8 +1021,52 @@ body {
         gap: 2rem;
     }
     
+    /* Better package layout on mobile */
+    .package__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .package__badge {
+        height: 18px;
+        align-self: flex-start;
+    }
+    
+    .package__buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
+    }
+    
     .quickstart__steps {
         grid-template-columns: 1fr;
+    }
+    
+    .quickstart__step {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 1.25rem;
+        padding: 1.5rem 0;
+    }
+    
+    .step-content {
+        flex: 1;
+    }
+    
+    .code-block {
+        padding: 1rem;
+        padding-right: 3.25rem; /* Ensure enough space for copy button */
+        font-size: 0.85rem;
+    }
+    
+    .copy-btn {
+        min-width: 38px;
+        min-height: 38px;
+        top: 0.625rem;
+        right: 0.625rem;
+        font-size: 0.7rem;
     }
     
     .features__grid {
@@ -1094,17 +1172,54 @@ body {
         flex-direction: column;
         align-items: flex-start;
         text-align: left;
-        padding: 1rem 0;
+        padding: 1.5rem 0;
+        gap: 1rem;
     }
     
     .step-number {
         align-self: flex-start;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0;
+    }
+    
+    .step-content {
+        width: 100%;
+    }
+    
+    .step-content h4 {
+        margin-bottom: 1rem;
+        font-size: 1.125rem;
     }
     
     .code-block {
         width: 100%;
         font-size: 0.8rem;
+        padding: 1rem;
+        padding-right: 3.5rem; /* Make room for copy button */
+    }
+    
+    .copy-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        min-width: 36px;
+        min-height: 36px;
+        padding: 0.375rem;
+        font-size: 0.65rem;
+        border-radius: 0.25rem;
+        z-index: 10;
+    }
+    
+    /* Improve badge display on mobile */
+    .developer__badges {
+        gap: 0.5rem;
+        margin-top: 1rem;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .developer__badges img {
+        height: 16px;
+        max-width: none; /* Allow badges to maintain aspect ratio */
     }
     
     .features__grid {
@@ -1159,6 +1274,39 @@ body {
     .copy-btn {
         min-width: 44px;
         min-height: 44px;
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        padding: 0.5rem;
+        font-size: 0.7rem;
+        border-radius: 0.375rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Improve badge display on mobile */
+    .developer__badges {
+        gap: 0.75rem;
+        margin-top: 1rem;
+        padding: 0 1rem;
+    }
+    
+    .developer__badges img {
+        height: 18px;
+        max-width: 100%;
+    }
+    
+    .package__badge {
+        height: 18px;
+        max-width: 100%;
+    }
+    
+    /* Better spacing for package badges */
+    .package__header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: flex-start;
     }
 }
 
@@ -1264,6 +1412,7 @@ html {
     .code-block {
         font-size: 0.75rem;
         padding: 0.75rem;
+        padding-right: 3rem; /* Space for copy button */
         word-wrap: break-word;
         white-space: pre-wrap;
         overflow-x: hidden;
@@ -1274,7 +1423,54 @@ html {
         word-break: break-word;
         white-space: pre-wrap;
         overflow-wrap: break-word;
-        max-width: 100%;
+        max-width: calc(100% - 2.5rem);
+    }
+    
+    .copy-btn {
+        min-width: 32px;
+        min-height: 32px;
+        padding: 0.25rem;
+        font-size: 0.6rem;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+    
+    /* Better quickstart layout */
+    .quickstart__step {
+        padding: 1.25rem 0;
+        gap: 0.75rem;
+    }
+    
+    .step-content h4 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .developer__quickstart {
+        padding: 1.25rem;
+        margin: 2rem 0;
+    }
+    
+    /* Better badge layout for small screens */
+    .developer__badges {
+        gap: 0.375rem;
+        padding: 0 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .developer__badges img {
+        height: 14px;
+    }
+    
+    .package__badge {
+        height: 16px;
+    }
+    
+    .package__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.375rem;
     }
     
     /* Prevent button overflow */
@@ -1338,6 +1534,55 @@ html {
     .code-block {
         font-size: 0.7rem;
         padding: 0.5rem;
+        padding-right: 2.75rem; /* Reduced space for copy button */
+    }
+    
+    .code-block code {
+        max-width: calc(100% - 2.25rem);
+    }
+    
+    .copy-btn {
+        min-width: 28px;
+        min-height: 28px;
+        padding: 0.125rem;
+        font-size: 0.55rem;
+        top: 0.375rem;
+        right: 0.375rem;
+    }
+    
+    /* Tighter quickstart layout */
+    .quickstart__step {
+        padding: 1rem 0;
+        gap: 0.5rem;
+    }
+    
+    .step-content h4 {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .developer__quickstart {
+        padding: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .developer__quickstart h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Extra small badges */
+    .developer__badges img {
+        height: 12px;
+    }
+    
+    .package__badge {
+        height: 14px;
+    }
+    
+    /* Stack everything vertically */
+    .package__buttons {
+        gap: 0.5rem;
     }
 }
 
