@@ -127,7 +127,7 @@ public enum HeaderEnum
     [Description("Service")]
     SERVICE,
 
-    [Description("Tax Deductiblea")]
+    [Description("Tax Deductible")]
     TAX_DEDUCTIBLE,
 
     [Description("Active")]

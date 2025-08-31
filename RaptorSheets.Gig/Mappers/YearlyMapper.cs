@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
@@ -57,7 +58,11 @@ namespace RaptorSheets.Gig.Mappers
 
             var monthlySheet = MonthlyMapper.GetSheet();
 
+            // Use the GigSheetHelpers to generate the correct headers with formulas
             sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(monthlySheet, HeaderEnum.YEAR);
+
+            // Update column indexes to ensure proper assignment
+            sheet.Headers.UpdateColumns();
 
             return sheet;
         }

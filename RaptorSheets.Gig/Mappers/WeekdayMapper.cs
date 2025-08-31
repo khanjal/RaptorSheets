@@ -56,35 +56,64 @@ public static class WeekdayMapper
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.WeekdaySheet;
-
         var dailySheet = DailyMapper.GetSheet();
 
+        // Use the GigSheetHelpers to generate the correct headers with formulas
         sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.DAY);
+
+        // Update column indexes to ensure proper assignment
+        sheet.Headers.UpdateColumns();
+
         var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.DAY.GetDescription());
 
-        // Curr Amt
+        // Current Amount - using new gig-specific formula builder approach
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.AMOUNT_CURRENT.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.AMOUNT_CURRENT.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\", true,IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+{sheetKeyRange},{Enums.SheetEnum.DAILY.GetDescription()}!{dailySheet.GetColumn(HeaderEnum.DATE.GetDescription())}:{dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription())},{dailySheet.GetIndex(HeaderEnum.TOTAL.GetDescription())}+1,false),0)))",
+            Formula = GigFormulaBuilder.BuildArrayFormulaCurrentAmount(
+                sheetKeyRange,
+                HeaderEnum.AMOUNT_CURRENT.GetDescription(),
+                sheetKeyRange,
+                Enums.SheetEnum.DAILY.GetDescription(),
+                dailySheet.GetColumn(HeaderEnum.DATE.GetDescription()),
+                dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription()),
+                (dailySheet.GetIndex(HeaderEnum.TOTAL.GetDescription()) + 1).ToString()
+            ),
             Format = FormatEnum.ACCOUNTING
         });
 
-        // Prev Amt
+        // Previous Amount - using new gig-specific formula builder approach
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.AMOUNT_PREVIOUS.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.AMOUNT_PREVIOUS.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\", true,IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+{sheetKeyRange}-7,{Enums.SheetEnum.DAILY.GetDescription()}!{dailySheet.GetColumn(HeaderEnum.DATE.GetDescription())}:{dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription())},{dailySheet.GetIndex(HeaderEnum.TOTAL.GetDescription())}+1,false),0)))",
+            Formula = GigFormulaBuilder.BuildArrayFormulaPreviousAmount(
+                sheetKeyRange,
+                HeaderEnum.AMOUNT_PREVIOUS.GetDescription(),
+                sheetKeyRange,
+                Enums.SheetEnum.DAILY.GetDescription(),
+                dailySheet.GetColumn(HeaderEnum.DATE.GetDescription()),
+                dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription()),
+                (dailySheet.GetIndex(HeaderEnum.TOTAL.GetDescription()) + 1).ToString()
+            ),
             Format = FormatEnum.ACCOUNTING
         });
 
-        // Prev Avg =ARRAYFORMULA(IFS(ROW(A1:A)=1,"Prev/Day",ISBLANK(A1:A), "", C1:C = 0, 0,true,(G1:G-P1:P)/IF(C1:C=0,1,C1:C-IF(P1:P=0,0,-1))))
+        // Previous Day Average - using new gig-specific formula builder approach
         sheet.Headers.AddColumn(new SheetCellModel
         {
             Name = HeaderEnum.AMOUNT_PER_PREVIOUS_DAY.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.AMOUNT_PER_PREVIOUS_DAY.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription())} = 0, 0,true,({sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription())}-{sheet.GetLocalRange(HeaderEnum.AMOUNT_PREVIOUS.GetDescription())})/IF({sheet.GetLocalRange(HeaderEnum.DAYS.GetDescription())}=0,1,{sheet.GetLocalRange(HeaderEnum.DAYS.GetDescription())}-IF({sheet.GetLocalRange(HeaderEnum.AMOUNT_PREVIOUS.GetDescription())}=0,0,-1))))",
+            Formula = GigFormulaBuilder.BuildArrayFormulaPreviousDayAverage(
+                sheetKeyRange,
+                HeaderEnum.AMOUNT_PER_PREVIOUS_DAY.GetDescription(),
+                sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()),
+                sheet.GetLocalRange(HeaderEnum.AMOUNT_PREVIOUS.GetDescription()),
+                sheet.GetLocalRange(HeaderEnum.DAYS.GetDescription())
+            ),
             Format = FormatEnum.ACCOUNTING
         });
+
+        // Update columns again after adding new headers
+        sheet.Headers.UpdateColumns();
 
         return sheet;
     }

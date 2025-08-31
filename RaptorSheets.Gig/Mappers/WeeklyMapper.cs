@@ -62,7 +62,12 @@ namespace RaptorSheets.Gig.Mappers
 
             var dailySheet = DailyMapper.GetSheet();
 
+            // Use the GigSheetHelpers to generate the correct headers with formulas
             sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.WEEK);
+
+            // Update column indexes to ensure proper assignment
+            sheet.Headers.UpdateColumns();
+
             var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.WEEK.GetDescription());
 
             // #
@@ -94,6 +99,9 @@ namespace RaptorSheets.Gig.Mappers
                 Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.DATE_END.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,DATE({sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription())},1,7)+(({sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())}-1)*7)-WEEKDAY(DATE({sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription())},1,1),3)))",
                 Format = FormatEnum.DATE
             });
+
+            // Update columns again after adding new headers
+            sheet.Headers.UpdateColumns();
 
             return sheet;
         }

@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
@@ -54,16 +55,38 @@ public static class PlaceMapper
 
         var tripSheet = TripMapper.GetSheet();
 
+        // Use the GigSheetHelpers to generate the correct headers with formulas
         sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.PLACE);
 
-        // // Days/Visit
-        // sheet.Headers.Add(new SheetCellModel{Name = HeaderEnum.DAYS_PER_VISIT.DisplayName(),
-        //     Formula = $"=ARRAYFORMULA(IFS(ROW($A:$A)=1,\"{HeaderEnum.DAYS_PER_VISIT.DisplayName()}\",ISBLANK($A:$A), \"\", true, DAYS(K:K,J:J)/B:B))",
-        //     Note = $"Average days between visits.{(char)10}{(char)10}Doesn't take into account active time vs all time."});
-        // // Since
-        // sheet.Headers.Add(new SheetCellModel{Name = HeaderEnum.DAYS_SINCE_VISIT.DisplayName(),
-        //     Formula = $"=ARRAYFORMULA(IFS(ROW($A:$A)=1,\"{HeaderEnum.DAYS_SINCE_VISIT.DisplayName()}\",ISBLANK($A:$A), \"\", true, DAYS(TODAY(),K:K)))",
-        //     Note = "Days since last visit."});
+        // Update column indexes to ensure proper assignment
+        sheet.Headers.UpdateColumns();
+
+        // Example: If we wanted to use the new GoogleFormulaBuilder instead of GigSheetHelpers
+        // This shows how we could refactor to use the new constants:
+        /*
+        var placeRange = sheet.GetLocalRange(HeaderEnum.PLACE.GetDescription());
+        var tripKeyRange = tripSheet.GetRange(HeaderEnum.PLACE.GetDescription());
+
+        sheet.Headers.ForEach(header =>
+        {
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            switch (headerEnum)
+            {
+                case HeaderEnum.PLACE:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaUnique(placeRange, HeaderEnum.PLACE.GetDescription(), tripSheet.GetRange(HeaderEnum.PLACE.GetDescription(), 2));
+                    break;
+                case HeaderEnum.TRIPS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(placeRange, HeaderEnum.TRIPS.GetDescription(), tripKeyRange);
+                    header.Format = FormatEnum.NUMBER;
+                    break;
+                case HeaderEnum.PAY:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(placeRange, HeaderEnum.PAY.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.PAY.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                // ... etc for other headers
+            }
+        });
+        */
 
         return sheet;
     }

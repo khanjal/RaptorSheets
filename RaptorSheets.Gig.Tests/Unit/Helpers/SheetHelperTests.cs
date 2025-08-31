@@ -101,18 +101,4 @@ public class SheetHelperTests
             Assert.Null(cellFormat.NumberFormat.Pattern);
         }
     }
-
-    [Fact(Skip ="Refactoring")]
-    public void GivenSpreadsheet_ThenReturnProperties()
-    {
-        var spreadsheet = JsonHelpers.LoadDemoSpreadsheet();
-
-        var spreadsheetTitle = SheetHelpers.GetSpreadsheetTitle(spreadsheet!);
-        Assert.NotNull(spreadsheetTitle);
-        Assert.Equal("Demo Raptor Gig Sheet", spreadsheetTitle);
-
-        var spreadsheetSheets = SheetHelpers.GetSpreadsheetSheets(spreadsheet!);
-        Assert.NotNull(spreadsheetSheets);
-        Assert.Equal(Enum.GetNames(typeof(Enums.SheetEnum)).Length, spreadsheetSheets.Count);
-    }
 }

@@ -81,6 +81,9 @@ public static class GenerateSheetsHelpers
 
     private static void GenerateHeadersFormatAndProtection(SheetModel sheet)
     {
+        // Ensure headers have proper Column/Index assignments prior to formatting, like Stock implementation
+        sheet.Headers.UpdateColumns();
+
         // Format/Protect Column Cells
         sheet!.Headers.ForEach(header =>
         {

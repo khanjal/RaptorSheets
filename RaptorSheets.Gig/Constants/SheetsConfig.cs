@@ -48,7 +48,7 @@ public static class SheetsConfig
     public static SheetModel ExpenseSheet => new()
     {
         Name = Enums.SheetEnum.EXPENSES.GetDescription(),
-        TabColor = ColorEnum.RED,
+        TabColor = ColorEnum.ORANGE,
         CellColor = ColorEnum.LIGHT_RED,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,

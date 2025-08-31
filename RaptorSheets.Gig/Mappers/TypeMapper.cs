@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
@@ -53,7 +54,11 @@ namespace RaptorSheets.Gig.Mappers
 
             var tripSheet = TripMapper.GetSheet();
 
+            // Use the GigSheetHelpers to generate the correct headers with formulas
             sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.TYPE);
+
+            // Update column indexes to ensure proper assignment
+            sheet.Headers.UpdateColumns();
 
             return sheet;
         }

@@ -24,6 +24,7 @@ public interface IGoogleSheetManager
     public Task<SheetEntity> GetSheets(List<string> sheets);
     public Task<List<PropertyEntity>> GetSheetProperties();
     public Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
+    public Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null); // New method for testing
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -457,5 +458,10 @@ public class GoogleSheetManager : IGoogleSheetManager
         }
 
         return messages;
+    }
+
+    public async Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null)
+    {
+        return await _googleSheetService.GetSheetInfo(ranges);
     }
 }

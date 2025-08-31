@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
@@ -59,7 +60,12 @@ namespace RaptorSheets.Gig.Mappers
 
             var dailySheet = DailyMapper.GetSheet();
 
+            // Use the GigSheetHelpers to generate the correct headers with formulas
             sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.MONTH);
+
+            // Update column indexes to ensure proper assignment
+            sheet.Headers.UpdateColumns();
+
             var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.MONTH.GetDescription());
 
             // #
@@ -75,6 +81,9 @@ namespace RaptorSheets.Gig.Mappers
                 Name = HeaderEnum.YEAR.GetDescription(),
                 Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.YEAR.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,IFERROR(INDEX(SPLIT({sheetKeyRange}, \"-\"), 0,2), 0)))"
             });
+
+            // Update columns again after adding new headers
+            sheet.Headers.UpdateColumns();
 
             return sheet;
         }

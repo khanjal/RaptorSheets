@@ -55,38 +55,71 @@ namespace RaptorSheets.Gig.Mappers
         public static SheetModel GetSheet()
         {
             var sheet = SheetsConfig.DailySheet;
+            sheet.Headers.UpdateColumns();
 
             var shiftSheet = ShiftMapper.GetSheet();
-
-            sheet.Headers = GigSheetHelpers.GetCommonShiftGroupSheetHeaders(shiftSheet, HeaderEnum.DATE);
             var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
 
-            // Day
-            sheet.Headers.AddColumn(new SheetCellModel
+            sheet.Headers.ForEach(header =>
             {
-                Name = HeaderEnum.DAY.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.DAY.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,WEEKDAY({sheetKeyRange},2)))",
-                Format = FormatEnum.NUMBER
+                var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+
+                switch (headerEnum)
+                {
+                    case HeaderEnum.DATE:
+                        header.Format = FormatEnum.DATE;
+                        break;
+                    case HeaderEnum.TRIPS:
+                        header.Format = FormatEnum.NUMBER;
+                        break;
+                    case HeaderEnum.PAY:
+                    case HeaderEnum.TIPS:
+                    case HeaderEnum.BONUS:
+                    case HeaderEnum.TOTAL:
+                    case HeaderEnum.CASH:
+                    case HeaderEnum.AMOUNT_PER_TRIP:
+                    case HeaderEnum.AMOUNT_PER_TIME:
+                        header.Format = FormatEnum.ACCOUNTING;
+                        break;
+                    case HeaderEnum.DISTANCE:
+                        header.Format = FormatEnum.DISTANCE;
+                        break;
+                    case HeaderEnum.AMOUNT_PER_DISTANCE:
+                        header.Format = FormatEnum.ACCOUNTING;
+                        break;
+                    case HeaderEnum.TIME_TOTAL:
+                        header.Format = FormatEnum.DURATION;
+                        break;
+                    case HeaderEnum.DAY:
+                        header.Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.DAY.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,WEEKDAY({sheetKeyRange},2)))";
+                        header.Format = FormatEnum.NUMBER;
+                        break;
+                    case HeaderEnum.WEEKDAY:
+                        header.Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.WEEKDAY.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,WEEKDAY({sheetKeyRange},1)))";
+                        header.Format = FormatEnum.WEEKDAY;
+                        break;
+                    case HeaderEnum.WEEK:
+                        header.Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.WEEK.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,WEEKNUM({sheetKeyRange},2)&\"-\"&YEAR({sheetKeyRange})))";
+                        break;
+                    case HeaderEnum.MONTH:
+                        header.Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.MONTH.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,MONTH({sheetKeyRange})&\"-\"&YEAR({sheetKeyRange})))";
+                        break;
+                    default:
+                        break;
+                }
             });
-            // Weekday
-            sheet.Headers.AddColumn(new SheetCellModel
+
+            // Get data from shift sheet using GigSheetHelpers functionality
+            var commonHeaders = GigSheetHelpers.GetCommonShiftGroupSheetHeaders(shiftSheet, HeaderEnum.DATE);
+            
+            // Apply formulas from common headers to the corresponding sheet headers
+            for (int i = 0; i < Math.Min(sheet.Headers.Count, commonHeaders.Count); i++)
             {
-                Name = HeaderEnum.WEEKDAY.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.WEEKDAY.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,WEEKDAY({sheetKeyRange},1)))",
-                Format = FormatEnum.WEEKDAY
-            });
-            // Week
-            sheet.Headers.AddColumn(new SheetCellModel
-            {
-                Name = HeaderEnum.WEEK.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.WEEK.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,WEEKNUM({sheetKeyRange},2)&\"-\"&YEAR({sheetKeyRange})))"
-            });
-            //  Month
-            sheet.Headers.AddColumn(new SheetCellModel
-            {
-                Name = HeaderEnum.MONTH.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.MONTH.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,MONTH({sheetKeyRange})&\"-\"&YEAR({sheetKeyRange})))"
-            });
+                if (!string.IsNullOrEmpty(commonHeaders[i].Formula) && string.IsNullOrEmpty(sheet.Headers[i].Formula))
+                {
+                    sheet.Headers[i].Formula = commonHeaders[i].Formula;
+                }
+            }
 
             return sheet;
         }
