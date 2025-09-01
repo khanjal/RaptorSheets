@@ -258,6 +258,26 @@ public static class GigFormulaBuilder
         {
             return GoogleFormulaBuilder.BuildArrayFormulaSortedLookup(keyRange, header, sourceSheet, dateColumn, keyColumn, isFirst);
         }
+
+        /// <summary>
+        /// Builds multiple field visit lookup for address tracking (checks multiple fields for matching)
+        /// </summary>
+        public static string BuildMultipleFieldVisitLookup(string keyRange, string header, string sourceSheet, string dateColumn, string keyColumn1, string keyColumn2, string dateIndex, bool isFirst)
+        {
+            var functionName = isFirst ? "MIN" : "MAX";
+            var multipleVisitFormula = GigFormulas.MultipleFieldVisitLookup
+                .Replace("MIN", functionName)
+                .Replace("{keyRange}", keyRange)
+                .Replace("{sourceSheet}", sourceSheet)
+                .Replace("{keyColumn1}", keyColumn1)
+                .Replace("{keyColumn2}", keyColumn2)
+                .Replace("{dateColumn}", dateColumn);
+
+            return GoogleFormulas.ArrayFormulaBase
+                .Replace("{keyRange}", keyRange)
+                .Replace("{header}", header)
+                .Replace("{formula}", multipleVisitFormula);
+        }
     }
 
     #endregion
@@ -379,6 +399,34 @@ public static class GigFormulaBuilder
             .Replace("{keyRange}", keyRange)
             .Replace("{header}", header)
             .Replace("{formula}", averageFormula);
+    }
+
+    /// <summary>
+    /// Builds week begin date calculation from week number
+    /// </summary>
+    public static string BuildArrayFormulaWeekBeginDate(string keyRange, string header, string weekRange)
+    {
+        var beginFormula = GigFormulas.WeekBeginDate
+            .Replace("{weekRange}", weekRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", beginFormula);
+    }
+
+    /// <summary>
+    /// Builds week end date calculation from week number
+    /// </summary>
+    public static string BuildArrayFormulaWeekEndDate(string keyRange, string header, string weekRange)
+    {
+        var endFormula = GigFormulas.WeekEndDate
+            .Replace("{weekRange}", weekRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", endFormula);
     }
 
     #endregion

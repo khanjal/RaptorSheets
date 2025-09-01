@@ -54,10 +54,16 @@ public static class RegionMapper
         sheet.Headers.UpdateColumns();
 
         var shiftSheet = ShiftMapper.GetSheet();
-        var tripSheet = TripMapper.GetSheet();
         var keyRange = sheet.GetLocalRange(HeaderEnum.REGION.GetDescription());
         var shiftKeyRange = shiftSheet.GetRange(HeaderEnum.REGION.GetDescription());
 
+        // Configure common aggregation patterns (eliminates ~80% of duplication)
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, shiftSheet, shiftKeyRange);
+        
+        // Configure common ratio calculations  
+        MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);
+
+        // Configure specific headers unique to RegionMapper
         sheet.Headers.ForEach(header =>
         {
             var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
@@ -65,55 +71,26 @@ public static class RegionMapper
             switch (headerEnum)
             {
                 case HeaderEnum.REGION:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombined(HeaderEnum.REGION.GetDescription(), TripMapper.GetSheet().GetRange(HeaderEnum.REGION.GetDescription(), 2), ShiftMapper.GetSheet().GetRange(HeaderEnum.REGION.GetDescription(), 2));
-                    break;
-                case HeaderEnum.TRIPS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TRIPS.GetDescription()));
-                    header.Format = FormatEnum.NUMBER;
-                    break;
-                case HeaderEnum.PAY:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_PAY.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.TIPS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TIPS.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TIPS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.BONUS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_BONUS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.TOTAL:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(keyRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.CASH:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_CASH.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.AMOUNT_PER_TRIP:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(keyRange, HeaderEnum.AMOUNT_PER_TRIP.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.TRIPS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.DISTANCE:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_DISTANCE.GetDescription()));
-                    header.Format = FormatEnum.DISTANCE;
-                    break;
-                case HeaderEnum.AMOUNT_PER_DISTANCE:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(keyRange, HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombined(
+                        HeaderEnum.REGION.GetDescription(), 
+                        TripMapper.GetSheet().GetRange(HeaderEnum.REGION.GetDescription(), 2), 
+                        ShiftMapper.GetSheet().GetRange(HeaderEnum.REGION.GetDescription(), 2));
                     break;
                 case HeaderEnum.VISIT_FIRST:
-                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), SheetEnum.SHIFTS.GetDescription(), shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), shiftSheet.GetColumn(HeaderEnum.REGION.GetDescription()), true);
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), 
+                        SheetEnum.SHIFTS.GetDescription(), 
+                        shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
+                        shiftSheet.GetColumn(HeaderEnum.REGION.GetDescription()), true);
                     header.Note = ColumnNotes.DateFormat;
                     header.Format = FormatEnum.DATE;
                     break;
                 case HeaderEnum.VISIT_LAST:
-                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), SheetEnum.SHIFTS.GetDescription(), shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), shiftSheet.GetColumn(HeaderEnum.REGION.GetDescription()), false);
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), 
+                        SheetEnum.SHIFTS.GetDescription(), 
+                        shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
+                        shiftSheet.GetColumn(HeaderEnum.REGION.GetDescription()), false);
                     header.Note = ColumnNotes.DateFormat;
                     header.Format = FormatEnum.DATE;
-                    break;
-                default:
                     break;
             }
         });
