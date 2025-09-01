@@ -68,7 +68,7 @@ namespace RaptorSheets.Gig.Mappers
                 switch (headerEnum)
                 {
                     case HeaderEnum.DATE:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaUniqueFiltered(dateRange, HeaderEnum.DATE.GetDescription(), shiftSheet.GetRange(HeaderEnum.DATE.GetDescription(), 2));
+                        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUnique(HeaderEnum.DATE.GetDescription(), shiftSheet.GetRange(HeaderEnum.DATE.GetDescription(), 2));
                         header.Format = FormatEnum.DATE;
                         break;
                     case HeaderEnum.WEEKDAY:
@@ -76,8 +76,8 @@ namespace RaptorSheets.Gig.Mappers
                         header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.WEEKDAY.GetDescription()}\",ISBLANK({dateRange}), \"\", true,TEXT({dateRange}+1,\"ddd\")))";
                         break;
                     case HeaderEnum.DAY:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(HeaderEnum.DAY.GetDescription(), shiftSheet.GetRange(HeaderEnum.DAY.GetDescription(), 2));
-                        header.Format = FormatEnum.DATE;
+                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
+                        header.Format = FormatEnum.NUMBER;
                         break;
                     case HeaderEnum.WEEK:
                         header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekNumber(dateRange, HeaderEnum.WEEK.GetDescription(), dateRange);

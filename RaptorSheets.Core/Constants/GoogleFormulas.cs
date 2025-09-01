@@ -33,11 +33,11 @@ public static class GoogleFormulas
     public const string ArrayLiteralUniqueCombined = "={\"{header}\";SORT(UNIQUE({{range1};{range2}}))}";
 
     /// <summary>
-    /// Simple array literal for unique filtered values: ="{header}";SORT(UNIQUE(FILTER({sourceRange}, {sourceRange}<>"")))
+    /// Simple array literal for unique filtered values: ="{header}";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>""))))
     /// Placeholders: {header}, {sourceRange}
     /// More efficient than ArrayFormulaBase for filtered unique values
     /// </summary>
-    public const string ArrayLiteralUniqueFiltered = "={\"{header}\";SORT(UNIQUE(FILTER({sourceRange}, {sourceRange}<>\"\")))}";
+    public const string ArrayLiteralUniqueFiltered = "={\"{header}\";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\"))))}";
 
     /// <summary>
     /// ARRAYFORMULA for unique values: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true, SORT(UNIQUE({sourceRange}))))
@@ -46,10 +46,10 @@ public static class GoogleFormulas
     public const string ArrayFormulaUnique = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true, SORT(UNIQUE({sourceRange}))))";
 
     /// <summary>
-    /// ARRAYFORMULA for unique filtered values: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true, SORT(UNIQUE(FILTER({sourceRange}, {sourceRange}<>"")), 1)))
+    /// ARRAYFORMULA for unique filtered values: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true, SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>"")), 1)))
     /// Placeholders: {keyRange}, {header}, {sourceRange}
     /// </summary>
-    public const string ArrayFormulaUniqueFiltered = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true, SORT(UNIQUE(FILTER({sourceRange}, {sourceRange}<>\"\")), 1)))";
+    public const string ArrayFormulaUniqueFiltered = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true, SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\")), 1))))";
 
     #endregion
 

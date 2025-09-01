@@ -69,30 +69,44 @@ public static class WeekdayMapper
             switch (headerEnum)
             {
                 case HeaderEnum.DAY:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(HeaderEnum.DAY.GetDescription(), dailySheet.GetRange(HeaderEnum.DAY.GetDescription(), 2));
+                    // Generate weekday numbers 1-7 for Monday through Sunday
+                    header.Formula = "={\"Day\";{1;2;3;4;5;6;7}}";
+                    header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.WEEKDAY:
-                    // This one is special - it uses day of week calculation  
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(keyRange, HeaderEnum.WEEKDAY.GetDescription(), keyRange);
+                    // Generate weekday names corresponding to numbers 1-7
+                    header.Formula = "={\"Weekday\";{\"Mon\";\"Tue\";\"Wed\";\"Thu\";\"Fri\";\"Sat\";\"Sun\"}}";
                     break;
                 case HeaderEnum.TRIPS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), dailyKeyRange, dailySheet.GetRange(HeaderEnum.TRIPS.GetDescription()));
+                    // Sum trips by weekday number - convert daily dates to weekday numbers for matching
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), 
+                        $"WEEKDAY({dailySheet.GetRange(HeaderEnum.DATE.GetDescription(), 2)},2)", 
+                        dailySheet.GetRange(HeaderEnum.TRIPS.GetDescription()));
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.DAYS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, HeaderEnum.DAYS.GetDescription(), dailyKeyRange);
+                    // Count days by weekday number - convert daily dates to weekday numbers for matching
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, HeaderEnum.DAYS.GetDescription(), 
+                        $"WEEKDAY({dailySheet.GetRange(HeaderEnum.DATE.GetDescription(), 2)},2)");
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.PAY:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), dailyKeyRange, dailySheet.GetRange(HeaderEnum.PAY.GetDescription()));
+                    // Sum pay by weekday number - convert daily dates to weekday numbers for matching
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), 
+                        $"WEEKDAY({dailySheet.GetRange(HeaderEnum.DATE.GetDescription(), 2)},2)", 
+                        dailySheet.GetRange(HeaderEnum.PAY.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TIPS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TIPS.GetDescription(), dailyKeyRange, dailySheet.GetRange(HeaderEnum.TIPS.GetDescription()));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TIPS.GetDescription(), 
+                        $"WEEKDAY({dailySheet.GetRange(HeaderEnum.DATE.GetDescription(), 2)},2)", 
+                        dailySheet.GetRange(HeaderEnum.TIPS.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.BONUS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), dailyKeyRange, dailySheet.GetRange(HeaderEnum.BONUS.GetDescription()));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), 
+                        $"WEEKDAY({dailySheet.GetRange(HeaderEnum.DATE.GetDescription(), 2)},2)", 
+                        dailySheet.GetRange(HeaderEnum.BONUS.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TOTAL:
@@ -100,7 +114,9 @@ public static class WeekdayMapper
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.CASH:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), dailyKeyRange, dailySheet.GetRange(HeaderEnum.CASH.GetDescription()));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), 
+                        $"WEEKDAY({dailySheet.GetRange(HeaderEnum.DATE.GetDescription(), 2)},2)", 
+                        dailySheet.GetRange(HeaderEnum.CASH.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.AMOUNT_PER_TRIP:
@@ -108,7 +124,9 @@ public static class WeekdayMapper
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.DISTANCE:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), dailyKeyRange, dailySheet.GetRange(HeaderEnum.DISTANCE.GetDescription()));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), 
+                        $"WEEKDAY({dailySheet.GetRange(HeaderEnum.DATE.GetDescription(), 2)},2)", 
+                        dailySheet.GetRange(HeaderEnum.DISTANCE.GetDescription()));
                     header.Format = FormatEnum.DISTANCE;
                     break;
                 case HeaderEnum.AMOUNT_PER_DISTANCE:
@@ -116,7 +134,9 @@ public static class WeekdayMapper
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TIME_TOTAL:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TIME_TOTAL.GetDescription(), dailyKeyRange, dailySheet.GetRange(HeaderEnum.TIME_TOTAL.GetDescription()));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TIME_TOTAL.GetDescription(), 
+                        $"WEEKDAY({dailySheet.GetRange(HeaderEnum.DATE.GetDescription(), 2)},2)", 
+                        dailySheet.GetRange(HeaderEnum.TIME_TOTAL.GetDescription()));
                     header.Format = FormatEnum.DURATION;
                     break;
                 case HeaderEnum.AMOUNT_PER_TIME:
@@ -128,10 +148,11 @@ public static class WeekdayMapper
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.AMOUNT_CURRENT:
+                    // For weekday analysis, we need to aggregate current amounts by weekday
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaCurrentAmount(
                         keyRange,
                         HeaderEnum.AMOUNT_CURRENT.GetDescription(),
-                        keyRange,
+                        $"WEEKDAY({dailySheet.GetRange(HeaderEnum.DATE.GetDescription(), 2)},2)",
                         Enums.SheetEnum.DAILY.GetDescription(),
                         dailySheet.GetColumn(HeaderEnum.DATE.GetDescription()),
                         dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription()),
@@ -143,7 +164,7 @@ public static class WeekdayMapper
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaPreviousAmount(
                         keyRange,
                         HeaderEnum.AMOUNT_PREVIOUS.GetDescription(),
-                        keyRange,
+                        $"WEEKDAY({dailySheet.GetRange(HeaderEnum.DATE.GetDescription(), 2)},2)",
                         Enums.SheetEnum.DAILY.GetDescription(),
                         dailySheet.GetColumn(HeaderEnum.DATE.GetDescription()),
                         dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription()),

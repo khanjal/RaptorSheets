@@ -40,7 +40,7 @@ public class GoogleFormulasTests
         var formula = GoogleFormulas.ArrayFormulaUniqueFiltered;
 
         // Assert
-        Assert.Contains("SORT(UNIQUE(FILTER(", formula);
+        Assert.Contains("SORT(UNIQUE(IFERROR(FILTER(", formula);
         Assert.Contains("{sourceRange}", formula);
         Assert.Contains("<>\"\"", formula); // Filter condition
     }
@@ -195,7 +195,7 @@ public class GoogleFormulasTests
         var formula = GoogleFormulas.ArrayLiteralUniqueFiltered;
 
         // Assert
-        Assert.Contains("{\"{header}\";SORT(UNIQUE(FILTER({sourceRange}, {sourceRange}<>\"\")))", formula);
+        Assert.Contains("{\"{header}\";SORT(UNIQUE(IFERROR(FILTER({sourceRange}", GoogleFormulas.ArrayLiteralUniqueFiltered); // Updated to include IFERROR
         Assert.Contains("{header}", formula);
         Assert.Contains("{sourceRange}", formula);
         Assert.Contains("<>\"\"", formula);

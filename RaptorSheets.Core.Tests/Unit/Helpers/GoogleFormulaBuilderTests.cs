@@ -67,7 +67,7 @@ public class GoogleFormulaBuilderTests
 
         // Assert
         Assert.Contains("=ARRAYFORMULA(", result);
-        Assert.Contains("SORT(UNIQUE(FILTER(", result);
+        Assert.Contains("SORT(UNIQUE(IFERROR(FILTER(", result); // Updated to include IFERROR
         Assert.Contains(TestKeyRange, result);
         Assert.Contains(TestHeader, result);
         Assert.Contains(TestSourceRange, result);
@@ -300,7 +300,7 @@ public class GoogleFormulaBuilderTests
         var result = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(header, sourceRange);
 
         // Assert
-        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(FILTER(", result);
+        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(IFERROR(FILTER(", result); // Updated to include IFERROR
         Assert.Contains(sourceRange, result);
         Assert.Contains("<>\"\"", result);
     }
