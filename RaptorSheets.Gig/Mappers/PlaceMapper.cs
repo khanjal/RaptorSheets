@@ -52,43 +52,70 @@ public static class PlaceMapper
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.PlaceSheet;
-
-        var tripSheet = TripMapper.GetSheet();
-
-        // Use the GigSheetHelpers to generate the correct headers with formulas
-        sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.PLACE);
-
-        // Update column indexes to ensure proper assignment
         sheet.Headers.UpdateColumns();
 
-        // Example: If we wanted to use the new GoogleFormulaBuilder instead of GigSheetHelpers
-        // This shows how we could refactor to use the new constants:
-        /*
-        var placeRange = sheet.GetLocalRange(HeaderEnum.PLACE.GetDescription());
+        var tripSheet = TripMapper.GetSheet();
+        var keyRange = sheet.GetLocalRange(HeaderEnum.PLACE.GetDescription());
         var tripKeyRange = tripSheet.GetRange(HeaderEnum.PLACE.GetDescription());
 
         sheet.Headers.ForEach(header =>
         {
             var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            
             switch (headerEnum)
             {
                 case HeaderEnum.PLACE:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaUnique(placeRange, HeaderEnum.PLACE.GetDescription(), tripSheet.GetRange(HeaderEnum.PLACE.GetDescription(), 2));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUnique(HeaderEnum.PLACE.GetDescription(), tripSheet.GetRange(HeaderEnum.PLACE.GetDescription(), 2));
                     break;
                 case HeaderEnum.TRIPS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(placeRange, HeaderEnum.TRIPS.GetDescription(), tripKeyRange);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, HeaderEnum.TRIPS.GetDescription(), tripKeyRange);
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.PAY:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(placeRange, HeaderEnum.PAY.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.PAY.GetDescription()));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.PAY.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
-                // ... etc for other headers
+                case HeaderEnum.TIPS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TIPS.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.TIPS.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.BONUS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.BONUS.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.TOTAL:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(keyRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.CASH:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.CASH.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.AMOUNT_PER_TRIP:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(keyRange, HeaderEnum.AMOUNT_PER_TRIP.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.TRIPS.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.DISTANCE:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.DISTANCE.GetDescription()));
+                    header.Format = FormatEnum.DISTANCE;
+                    break;
+                case HeaderEnum.AMOUNT_PER_DISTANCE:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(keyRange, HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.VISIT_FIRST:
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), SheetEnum.TRIPS.GetDescription(), tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), tripSheet.GetColumn(HeaderEnum.PLACE.GetDescription()), true);
+                    header.Format = FormatEnum.DATE;
+                    break;
+                case HeaderEnum.VISIT_LAST:
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), SheetEnum.TRIPS.GetDescription(), tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), tripSheet.GetColumn(HeaderEnum.PLACE.GetDescription()), false);
+                    header.Format = FormatEnum.DATE;
+                    break;
+                default:
+                    break;
             }
         });
-        */
 
         return sheet;
     }
-
 }

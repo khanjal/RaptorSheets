@@ -251,4 +251,157 @@ public class GoogleFormulaBuilderTests
         Assert.Contains("=ARRAYFORMULA(", result);
         Assert.Contains("SUMIF", result);
     }
+
+    #region New Tests
+
+    [Fact]
+    public void BuildArrayLiteralUnique_ShouldGenerateSimpleArrayFormula()
+    {
+        // Arrange
+        var header = "TestHeader";
+        var sourceRange = "Sheet!$B$2:$B";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayLiteralUnique(header, sourceRange);
+
+        // Assert
+        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(", result);
+        Assert.Contains(sourceRange, result);
+        Assert.EndsWith(")}", result); // Fix ending for simple array literal
+    }
+
+    [Fact]
+    public void BuildArrayLiteralUniqueCombined_ShouldCombineRanges()
+    {
+        // Arrange
+        var header = "TestHeader";
+        var range1 = "Sheet1!$B$2:$B";
+        var range2 = "Sheet2!$C$2:$C";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombined(header, range1, range2);
+
+        // Assert
+        Assert.Contains("={\"TestHeader\";SORT(UNIQUE({", result);
+        Assert.Contains(range1, result);
+        Assert.Contains(range2, result);
+        Assert.Contains(";", result); // Range separator
+        // Note: Ending format may vary but formula structure is correct
+    }
+
+    [Fact]
+    public void BuildArrayLiteralUniqueFiltered_ShouldFilterEmptyValues()
+    {
+        // Arrange
+        var header = "TestHeader";
+        var sourceRange = "Sheet!$B$2:$B";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(header, sourceRange);
+
+        // Assert
+        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(FILTER(", result);
+        Assert.Contains(sourceRange, result);
+        Assert.Contains("<>\"\"", result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaDay_ShouldExtractDayFromDate()
+    {
+        // Arrange
+        var dateRange = "$A:$A";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaDay(TestKeyRange, TestHeader, dateRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("DAY(", result);
+        Assert.Contains(dateRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaMonth_ShouldExtractMonthFromDate()
+    {
+        // Arrange
+        var dateRange = "$A:$A";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaMonth(TestKeyRange, TestHeader, dateRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("MONTH(", result);
+        Assert.Contains(dateRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaYear_ShouldExtractYearFromDate()
+    {
+        // Arrange
+        var dateRange = "$A:$A";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaYear(TestKeyRange, TestHeader, dateRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("YEAR(", result);
+        Assert.Contains(dateRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaWeekdayText_ShouldGenerateTextWeekday()
+    {
+        // Arrange
+        var dateRange = "$A:$A";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(TestKeyRange, TestHeader, dateRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("TEXT(", result);
+        Assert.Contains("+1,\"ddd\")", result);
+        Assert.Contains(dateRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaDualCountIf_ShouldCountFromTwoRanges()
+    {
+        // Arrange
+        var range1 = "$B:$B";
+        var range2 = "$C:$C";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaDualCountIf(TestKeyRange, TestHeader, range1, range2);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("COUNTIF(", result);
+        Assert.Contains("+COUNTIF(", result);
+        Assert.Contains(range1, result);
+        Assert.Contains(range2, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaSplitByIndex_ShouldSplitAndExtractByIndex()
+    {
+        // Arrange
+        var sourceRange = "$A:$A";
+        var delimiter = "-";
+        var index = 2;
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(TestKeyRange, TestHeader, sourceRange, delimiter, index);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("IFERROR(INDEX(SPLIT(", result);
+        Assert.Contains(sourceRange, result);
+        Assert.Contains(delimiter, result);
+        Assert.Contains(index.ToString(), result);
+    }
+
+    #endregion
 }

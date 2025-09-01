@@ -45,6 +45,37 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
+    /// Builds a simple array literal for unique values (more efficient than ARRAYFORMULA for simple lists)
+    /// </summary>
+    public static string BuildArrayLiteralUnique(string header, string sourceRange)
+    {
+        return GoogleFormulas.ArrayLiteralUnique
+            .Replace("{header}", header)
+            .Replace("{sourceRange}", sourceRange);
+    }
+
+    /// <summary>
+    /// Builds a simple array literal for unique values from combined ranges
+    /// </summary>
+    public static string BuildArrayLiteralUniqueCombined(string header, string range1, string range2)
+    {
+        return GoogleFormulas.ArrayLiteralUniqueCombined
+            .Replace("{header}", header)
+            .Replace("{range1}", range1)
+            .Replace("{range2}", range2);
+    }
+
+    /// <summary>
+    /// Builds a simple array literal for unique filtered values
+    /// </summary>
+    public static string BuildArrayLiteralUniqueFiltered(string header, string sourceRange)
+    {
+        return GoogleFormulas.ArrayLiteralUniqueFiltered
+            .Replace("{header}", header)
+            .Replace("{sourceRange}", sourceRange);
+    }
+
+    /// <summary>
     /// Builds a complete ARRAYFORMULA for unique values
     /// </summary>
     public static string BuildArrayFormulaUnique(string keyRange, string header, string sourceRange)
@@ -135,6 +166,82 @@ public static class GoogleFormulaBuilder
     /// Builds string split by delimiter formula
     /// </summary>
     public static string BuildArrayFormulaSplit(string keyRange, string header, string sourceRange, string delimiter, int index)
+    {
+        var splitFormula = GoogleFormulas.SplitStringByIndex
+            .Replace("{sourceRange}", sourceRange)
+            .Replace("{delimiter}", delimiter)
+            .Replace("{index}", index.ToString());
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", splitFormula);
+    }
+
+    /// <summary>
+    /// Builds ARRAYFORMULA for day extraction from dates
+    /// </summary>
+    public static string BuildArrayFormulaDay(string keyRange, string header, string dateRange)
+    {
+        var dayFormula = $"DAY({dateRange})";
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", dayFormula);
+    }
+
+    /// <summary>
+    /// Builds ARRAYFORMULA for month extraction from dates
+    /// </summary>
+    public static string BuildArrayFormulaMonth(string keyRange, string header, string dateRange)
+    {
+        var monthFormula = $"MONTH({dateRange})";
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", monthFormula);
+    }
+
+    /// <summary>
+    /// Builds ARRAYFORMULA for year extraction from dates
+    /// </summary>
+    public static string BuildArrayFormulaYear(string keyRange, string header, string dateRange)
+    {
+        var yearFormula = $"YEAR({dateRange})";
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", yearFormula);
+    }
+
+    /// <summary>
+    /// Builds ARRAYFORMULA for weekday text extraction from dates
+    /// </summary>
+    public static string BuildArrayFormulaWeekdayText(string keyRange, string header, string dateRange)
+    {
+        var weekdayFormula = $"TEXT({dateRange}+1,\"ddd\")";
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", weekdayFormula);
+    }
+
+    /// <summary>
+    /// Builds ARRAYFORMULA for dual count (counts occurrences in two ranges)
+    /// </summary>
+    public static string BuildArrayFormulaDualCountIf(string keyRange, string header, string range1, string range2)
+    {
+        var dualCountFormula = $"COUNTIF({range1},{keyRange})+COUNTIF({range2},{keyRange})";
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", dualCountFormula);
+    }
+
+    /// <summary>
+    /// Builds ARRAYFORMULA for splitting strings and extracting parts by index
+    /// </summary>
+    public static string BuildArrayFormulaSplitByIndex(string keyRange, string header, string sourceRange, string delimiter, int index)
     {
         var splitFormula = GoogleFormulas.SplitStringByIndex
             .Replace("{sourceRange}", sourceRange)

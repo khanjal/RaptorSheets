@@ -35,6 +35,12 @@ public static class GigFormulas
     /// </summary>
     public const string AmountPerTimeFormula = "{totalRange}/IF({timeRange}=0,1,{timeRange}*24)";
 
+    /// <summary>
+    /// Amount per day calculation: {totalRange}/IF({daysRange}=0,1,{daysRange})
+    /// Placeholders: {totalRange}, {daysRange}
+    /// </summary>
+    public const string AmountPerDayFormula = "{totalRange}/IF({daysRange}=0,1,{daysRange})";
+
     #endregion
 
     #region Gig-Specific Date Formulas
@@ -86,10 +92,60 @@ public static class GigFormulas
     public const string PreviousDayAverage = "({totalRange}-{previousRange})/IF({daysRange}=0,1,{daysRange}-IF({previousRange}=0,0,-1))";
 
     /// <summary>
-    /// Multiple field visit lookup for addresses: IFERROR(MIN(IF({sourceSheet}!{keyColumn1}:{keyColumn1}={keyRange},IF({sourceSheet}!{keyColumn2}:{keyColumn2}={keyRange},{sourceSheet}!{dateColumn}:{dateColumn})))),""
+    /// Multiple field visit lookup for addresses: IFERROR(MIN(IF({sourceSheet}!{keyColumn1}:{keyColumn1}={keyRange},IF({sourceSheet}!{keyColumn2}:{keyColumn2}={keyRange},{sourceSheet}!{dateColumn}:{dateColumn}))),\"\")
     /// Placeholders: {keyRange}, {sourceSheet}, {keyColumn1}, {keyColumn2}, {dateColumn}
     /// </summary>
     public const string MultipleFieldVisitLookup = "IFERROR(MIN(IF({sourceSheet}!{keyColumn1}:{keyColumn1}={keyRange},IF({sourceSheet}!{keyColumn2}:{keyColumn2}={keyRange},{sourceSheet}!{dateColumn}:{dateColumn}))),\"\")";
+
+    #endregion
+
+    #region Shift-Specific Business Logic
+
+    /// <summary>
+    /// Shift key generation: IF(ISBLANK({numberRange}), {dateRange} & "-0-" & {serviceRange}, {dateRange} & "-" & {numberRange} & "-" & {serviceRange})
+    /// Placeholders: {numberRange}, {dateRange}, {serviceRange}
+    /// </summary>
+    public const string ShiftKeyGeneration = "IF(ISBLANK({numberRange}), {dateRange} & \"-0-\" & {serviceRange}, {dateRange} & \"-\" & {numberRange} & \"-\" & {serviceRange})";
+
+    /// <summary>
+    /// Trip key generation with exclude: IF({excludeRange},{dateRange} & "-X-" & {serviceRange},IF(ISBLANK({numberRange}), {dateRange} & "-0-" & {serviceRange}, {dateRange} & "-" & {numberRange} & "-" & {serviceRange}))
+    /// Placeholders: {excludeRange}, {dateRange}, {serviceRange}, {numberRange}
+    /// </summary>
+    public const string TripKeyGeneration = "IF({excludeRange},{dateRange} & \"-X-\" & {serviceRange},IF(ISBLANK({numberRange}), {dateRange} & \"-0-\" & {serviceRange}, {dateRange} & \"-\" & {numberRange} & \"-\" & {serviceRange}))";
+
+    /// <summary>
+    /// Total time active with fallback: IF(ISBLANK({activeTimeRange}),SUMIF({tripKeyRange},{shiftKeyRange},{tripDurationRange}),{activeTimeRange})
+    /// Placeholders: {activeTimeRange}, {tripKeyRange}, {shiftKeyRange}, {tripDurationRange}
+    /// </summary>
+    public const string TotalTimeActiveWithFallback = "IF(ISBLANK({activeTimeRange}),SUMIF({tripKeyRange},{shiftKeyRange},{tripDurationRange}),{activeTimeRange})";
+
+    /// <summary>
+    /// Total time with omit logic: IF({omitRange}=false,IF(ISBLANK({totalTimeRange}),{totalActiveRange},{totalTimeRange}),0)
+    /// Placeholders: {omitRange}, {totalTimeRange}, {totalActiveRange}
+    /// </summary>
+    public const string TotalTimeWithOmit = "IF({omitRange}=false,IF(ISBLANK({totalTimeRange}),{totalActiveRange},{totalTimeRange}),0)";
+
+    /// <summary>
+    /// Shift total addition pattern: {localRange} + SUMIF({tripKeyRange},{shiftKeyRange},{tripSumRange})
+    /// Placeholders: {localRange}, {tripKeyRange}, {shiftKeyRange}, {tripSumRange}
+    /// </summary>
+    public const string ShiftTotalWithTripSum = "{localRange} + SUMIF({tripKeyRange},{shiftKeyRange},{tripSumRange})";
+
+    /// <summary>
+    /// Shift total trips pattern: {localTripsRange} + COUNTIF({tripKeyRange},{shiftKeyRange})
+    /// Placeholders: {localTripsRange}, {tripKeyRange}, {shiftKeyRange}
+    /// </summary>
+    public const string ShiftTotalTrips = "{localTripsRange} + COUNTIF({tripKeyRange},{shiftKeyRange})";
+
+    #endregion
+
+    #region Mapper-Specific Formulas
+
+    /// <summary>
+    /// Complex rolling average for time series analysis: DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})
+    /// Placeholders: {totalRange}
+    /// </summary>
+    public const string RollingAverageFormula = "DAVERAGE(transpose({{{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})";
 
     #endregion
 }

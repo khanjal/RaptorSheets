@@ -19,6 +19,27 @@ public static class GoogleFormulas
     public const string ArrayFormulaBase = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true, {formula}))";
 
     /// <summary>
+    /// Simple array literal for unique values: ="{header}";SORT(UNIQUE({sourceRange}))
+    /// Placeholders: {header}, {sourceRange}
+    /// This is more efficient than ArrayFormulaBase for simple unique value lists
+    /// </summary>
+    public const string ArrayLiteralUnique = "={\"{header}\";SORT(UNIQUE({sourceRange}))}";
+
+    /// <summary>
+    /// Simple array literal for unique values with combined ranges: ="{header}";SORT(UNIQUE({range1};{range2}))
+    /// Placeholders: {header}, {range1}, {range2}
+    /// Used when combining multiple source ranges for unique values
+    /// </summary>
+    public const string ArrayLiteralUniqueCombined = "={\"{header}\";SORT(UNIQUE({{range1};{range2}}))}";
+
+    /// <summary>
+    /// Simple array literal for unique filtered values: ="{header}";SORT(UNIQUE(FILTER({sourceRange}, {sourceRange}<>"")))
+    /// Placeholders: {header}, {sourceRange}
+    /// More efficient than ArrayFormulaBase for filtered unique values
+    /// </summary>
+    public const string ArrayLiteralUniqueFiltered = "={\"{header}\";SORT(UNIQUE(FILTER({sourceRange}, {sourceRange}<>\"\")))}";
+
+    /// <summary>
     /// ARRAYFORMULA for unique values: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true, SORT(UNIQUE({sourceRange}))))
     /// Placeholders: {keyRange}, {header}, {sourceRange}
     /// </summary>

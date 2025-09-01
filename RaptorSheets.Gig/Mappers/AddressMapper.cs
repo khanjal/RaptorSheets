@@ -18,7 +18,7 @@ public static class AddressMapper
         values = values!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
         var id = 0;
 
-        foreach (List<object> value in values.Cast<List<object>>())
+        foreach (var value in values)
         {
             id++;
             if (id == 1)
@@ -26,11 +26,6 @@ public static class AddressMapper
                 headers = HeaderHelpers.ParserHeader(value);
                 continue;
             }
-
-            if (value.Count < headers.Count)
-            {
-                value.AddItems(headers.Count - value.Count);
-            };
 
             AddressEntity address = new()
             {
@@ -56,14 +51,69 @@ public static class AddressMapper
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.AddressSheet;
+        sheet.Headers.UpdateColumns();
 
         var tripSheet = TripMapper.GetSheet();
+        var keyRange = sheet.GetLocalRange(HeaderEnum.ADDRESS.GetDescription());
+        var tripKeyRange = tripSheet.GetRange(HeaderEnum.ADDRESS_END.GetDescription());
 
-        // Use the GigSheetHelpers to generate the correct headers with formulas
-        sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.ADDRESS_END);
-
-        // Update column indexes to ensure proper assignment
-        sheet.Headers.UpdateColumns();
+        sheet.Headers.ForEach(header =>
+        {
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            
+            switch (headerEnum)
+            {
+                case HeaderEnum.ADDRESS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombined(HeaderEnum.ADDRESS.GetDescription(), tripSheet.GetRange(HeaderEnum.ADDRESS_END.GetDescription(), 2), tripSheet.GetRange(HeaderEnum.ADDRESS_START.GetDescription(), 2));
+                    break;
+                case HeaderEnum.TRIPS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDualCountIf(keyRange, HeaderEnum.TRIPS.GetDescription(), tripSheet.GetRange(HeaderEnum.ADDRESS_END.GetDescription(), 2), tripSheet.GetRange(HeaderEnum.ADDRESS_START.GetDescription(), 2));
+                    header.Format = FormatEnum.NUMBER;
+                    break;
+                case HeaderEnum.PAY:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.PAY.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.TIPS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TIPS.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.TIPS.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.BONUS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.BONUS.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.TOTAL:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(keyRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.CASH:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.CASH.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.AMOUNT_PER_TRIP:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(keyRange, HeaderEnum.AMOUNT_PER_TRIP.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.TRIPS.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.DISTANCE:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), tripKeyRange, tripSheet.GetRange(HeaderEnum.DISTANCE.GetDescription()));
+                    header.Format = FormatEnum.DISTANCE;
+                    break;
+                case HeaderEnum.AMOUNT_PER_DISTANCE:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(keyRange, HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.VISIT_FIRST:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaMultipleFieldVisit(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), SheetEnum.TRIPS.GetDescription(), tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), tripSheet.GetColumn(HeaderEnum.ADDRESS_START.GetDescription()), tripSheet.GetColumn(HeaderEnum.ADDRESS_END.GetDescription()), true);
+                    header.Format = FormatEnum.DATE;
+                    break;
+                case HeaderEnum.VISIT_LAST:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaMultipleFieldVisit(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), SheetEnum.TRIPS.GetDescription(), tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), tripSheet.GetColumn(HeaderEnum.ADDRESS_START.GetDescription()), tripSheet.GetColumn(HeaderEnum.ADDRESS_END.GetDescription()), false);
+                    header.Format = FormatEnum.DATE;
+                    break;
+                default:
+                    break;
+            }
+        });
 
         return sheet;
     }

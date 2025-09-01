@@ -202,26 +202,35 @@ public class FormulaBuilderIntegrationTests
     }
 
     [Fact]
-    public void GigSheetHelpers_WithNewFormulaBuilders_ShouldMaintainCompatibility()
+    public void MapperFormulas_ShouldGenerateValidGoogleSheetsFormulas()
     {
-        // This test verifies that existing GigSheetHelpers still work correctly
-        // even though they use the legacy ArrayFormulaHelpers internally
+        // This test verifies that the refactored mappers generate valid formulas
         
-        // Arrange
-        var tripSheet = TripMapper.GetSheet();
-        
-        // Act - Use existing helper that internally uses ArrayFormulaHelpers
-        var commonHeaders = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, Enums.HeaderEnum.PLACE);
+        // Arrange - Get actual configured sheets
+        var placeSheet = PlaceMapper.GetSheet();
+        var nameSheet = NameMapper.GetSheet();
+        var dailySheet = DailyMapper.GetSheet();
 
-        // Assert
-        Assert.NotNull(commonHeaders);
-        Assert.NotEmpty(commonHeaders);
+        // Act - Get formulas from actual headers
+        var placeFormulas = placeSheet.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).Select(h => h.Formula).ToList();
+        var nameFormulas = nameSheet.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).Select(h => h.Formula).ToList();
+        var dailyFormulas = dailySheet.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).Select(h => h.Formula).ToList();
+
+        // Assert - All formulas should be valid
+        Assert.NotEmpty(placeFormulas);
+        Assert.NotEmpty(nameFormulas);
+        Assert.NotEmpty(dailyFormulas);
         
-        // Verify headers contain expected formulas
-        var formulaHeaders = commonHeaders.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
-        Assert.NotEmpty(formulaHeaders);
+        // All formulas should start with =
+        Assert.All(placeFormulas, formula => Assert.StartsWith("=", formula));
+        Assert.All(nameFormulas, formula => Assert.StartsWith("=", formula));
+        Assert.All(dailyFormulas, formula => Assert.StartsWith("=", formula));
         
-        // All formula headers should contain ARRAYFORMULA
-        Assert.All(formulaHeaders, header => Assert.Contains("ARRAYFORMULA", header.Formula));
+        // Most formulas should contain ARRAYFORMULA
+        var arrayFormulaCount = placeFormulas.Count(f => f.Contains("ARRAYFORMULA")) +
+                              nameFormulas.Count(f => f.Contains("ARRAYFORMULA")) +
+                              dailyFormulas.Count(f => f.Contains("ARRAYFORMULA"));
+        
+        Assert.True(arrayFormulaCount > 0);
     }
 }

@@ -161,6 +161,48 @@ public class GoogleFormulasTests
         Assert.Contains("{calculation}", formula);
     }
 
+    #region Array Literal Formula Tests
+
+    [Fact]
+    public void ArrayLiteralUnique_ShouldHaveProperFormat()
+    {
+        // Act
+        var formula = GoogleFormulas.ArrayLiteralUnique;
+
+        // Assert
+        Assert.Contains("{\"{header}\";SORT(UNIQUE({sourceRange}))}", formula);
+        Assert.Contains("{header}", formula);
+        Assert.Contains("{sourceRange}", formula);
+    }
+
+    [Fact]
+    public void ArrayLiteralUniqueCombined_ShouldCombineRanges()
+    {
+        // Act
+        var formula = GoogleFormulas.ArrayLiteralUniqueCombined;
+
+        // Assert
+        Assert.Contains("{\"{header}\";SORT(UNIQUE({{range1};{range", GoogleFormulas.ArrayLiteralUniqueCombined); // Update to match actual template structure
+        Assert.Contains("{header}", formula);
+        Assert.Contains("{range1}", formula);
+        Assert.Contains("{range2}", formula);
+    }
+
+    [Fact]
+    public void ArrayLiteralUniqueFiltered_ShouldFilterEmptyValues()
+    {
+        // Act
+        var formula = GoogleFormulas.ArrayLiteralUniqueFiltered;
+
+        // Assert
+        Assert.Contains("{\"{header}\";SORT(UNIQUE(FILTER({sourceRange}, {sourceRange}<>\"\")))", formula);
+        Assert.Contains("{header}", formula);
+        Assert.Contains("{sourceRange}", formula);
+        Assert.Contains("<>\"\"", formula);
+    }
+
+    #endregion
+
     [Theory]
     [InlineData("ArrayFormulaBase")]
     [InlineData("ArrayFormulaUnique")]

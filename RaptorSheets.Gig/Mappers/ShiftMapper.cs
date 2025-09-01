@@ -6,6 +6,7 @@ using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Helpers;
 using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
 
 namespace RaptorSheets.Gig.Mappers;
@@ -266,72 +267,72 @@ public static class ShiftMapper
                     header.Validation = ValidationEnum.RANGE_REGION.GetDescription();
                     break;
                 case HeaderEnum.KEY:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.KEY.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())}), {dateRange} & \"-0-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())}, {dateRange} & \"-\" & {sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())} & \"-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())})))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftKey(dateRange, HeaderEnum.KEY.GetDescription(), dateRange, sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription()), sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()));
                     header.Note = ColumnNotes.ShiftKey;
                     break;
                 case HeaderEnum.TOTAL_TIME_ACTIVE:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TIME_ACTIVE.GetDescription()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TIME_ACTIVE.GetDescription())}),SUMIF({tripSheet.GetRange(HeaderEnum.KEY.GetDescription())},{keyRange},{tripSheet.GetRange(HeaderEnum.DURATION.GetDescription())}),{sheet.GetLocalRange(HeaderEnum.TIME_ACTIVE.GetDescription())})))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotalTimeActive(dateRange, HeaderEnum.TOTAL_TIME_ACTIVE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TIME_ACTIVE.GetDescription()), tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), keyRange, tripSheet.GetRange(HeaderEnum.DURATION.GetDescription()));
                     header.Note = ColumnNotes.TotalTimeActive;
                     header.Format = FormatEnum.DURATION;
                     break;
                 case HeaderEnum.TOTAL_TIME:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TIME.GetDescription()}\",ISBLANK({dateRange}), \"\",true,IF({sheet.GetLocalRange(HeaderEnum.TIME_OMIT.GetDescription())}=false,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TIME_TOTAL.GetDescription())}),{sheet.GetLocalRange(HeaderEnum.TOTAL_TIME_ACTIVE.GetDescription())},{sheet.GetLocalRange(HeaderEnum.TIME_TOTAL.GetDescription())}),0)))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotalTimeWithOmit(dateRange, HeaderEnum.TOTAL_TIME.GetDescription(), sheet.GetLocalRange(HeaderEnum.TIME_OMIT.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIME_TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.TOTAL_TIME_ACTIVE.GetDescription()));
                     header.Format = FormatEnum.DURATION;
                     break;
                 case HeaderEnum.TOTAL_TRIPS:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TRIPS.GetDescription()}\",ISBLANK({dateRange}), \"\",true, {sheet.GetLocalRange(HeaderEnum.TRIPS.GetDescription())} + COUNTIF({tripSheet.GetRange(HeaderEnum.KEY.GetDescription())},{keyRange})))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftTotalTrips(dateRange, HeaderEnum.TOTAL_TRIPS.GetDescription(), sheet.GetLocalRange(HeaderEnum.TRIPS.GetDescription()), tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), keyRange);
                     header.Note = ColumnNotes.TotalTrips;
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.TOTAL_PAY:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_PAY.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.PAY.GetDescription())} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY.GetDescription())},{keyRange},{tripSheet.GetRange(HeaderEnum.PAY.GetDescription())})))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftTotalWithTripSum(dateRange, HeaderEnum.TOTAL_PAY.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), keyRange, tripSheet.GetRange(HeaderEnum.PAY.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TOTAL_TIPS:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_TIPS.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription())} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY.GetDescription())},{keyRange},{tripSheet.GetRange(HeaderEnum.TIPS.GetDescription())})))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftTotalWithTripSum(dateRange, HeaderEnum.TOTAL_TIPS.GetDescription(), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), keyRange, tripSheet.GetRange(HeaderEnum.TIPS.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TOTAL_BONUS:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_BONUS.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription())} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY.GetDescription())},{keyRange},{tripSheet.GetRange(HeaderEnum.BONUS.GetDescription())})))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftTotalWithTripSum(dateRange, HeaderEnum.TOTAL_BONUS.GetDescription(), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()), tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), keyRange, tripSheet.GetRange(HeaderEnum.BONUS.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TOTAL_GRAND:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_GRAND.GetDescription()}\",ISBLANK({dateRange}), \"\",true, {sheet.GetLocalRange(HeaderEnum.TOTAL_PAY.GetDescription())}+{sheet.GetLocalRange(HeaderEnum.TOTAL_TIPS.GetDescription())}+{sheet.GetLocalRange(HeaderEnum.TOTAL_BONUS.GetDescription())}))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(dateRange, HeaderEnum.TOTAL_GRAND.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL_PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TOTAL_TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.TOTAL_BONUS.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TOTAL_CASH:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_CASH.GetDescription()}\",ISBLANK({dateRange}), \"\",true,SUMIF({tripSheet.GetRange(HeaderEnum.KEY.GetDescription())},{keyRange},{tripSheet.GetRange(HeaderEnum.CASH.GetDescription())})))";
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.AMOUNT_PER_TRIP:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_TRIP.GetDescription()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS.GetDescription())}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND.GetDescription())}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS.GetDescription())}=0,1,{sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS.GetDescription())}))))";
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.AMOUNT_PER_TIME:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_TIME.GetDescription()}\",ISBLANK({dateRange}), \"\", true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME.GetDescription())}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND.GetDescription())}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME.GetDescription())}=0,1,({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME.GetDescription())}*24)))))";
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(dateRange, HeaderEnum.TOTAL_CASH.GetDescription(), tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), tripSheet.GetRange(HeaderEnum.CASH.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TOTAL_DISTANCE:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL_DISTANCE.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription())} + SUMIF({tripSheet.GetRange(HeaderEnum.KEY.GetDescription())},{keyRange},{tripSheet.GetRange(HeaderEnum.DISTANCE.GetDescription())})))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftTotalWithTripSum(dateRange, HeaderEnum.TOTAL_DISTANCE.GetDescription(), sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()), tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), keyRange, tripSheet.GetRange(HeaderEnum.DISTANCE.GetDescription()));
                     header.Note = ColumnNotes.TotalDistance;
                     header.Format = FormatEnum.DISTANCE;
                     break;
+                case HeaderEnum.AMOUNT_PER_TRIP:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(dateRange, HeaderEnum.AMOUNT_PER_TRIP.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND.GetDescription()), sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.AMOUNT_PER_TIME:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(dateRange, HeaderEnum.AMOUNT_PER_TIME.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND.GetDescription()), sheet.GetLocalRange(HeaderEnum.TOTAL_TIME.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
                 case HeaderEnum.AMOUNT_PER_DISTANCE:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND.GetDescription())}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND.GetDescription())}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_DISTANCE.GetDescription())}=0,1,{sheet.GetLocalRange(HeaderEnum.TOTAL_DISTANCE.GetDescription())}))))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(dateRange, HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND.GetDescription()), sheet.GetLocalRange(HeaderEnum.TOTAL_DISTANCE.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TRIPS_PER_HOUR:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TRIPS_PER_HOUR.GetDescription()}\",ISBLANK({dateRange}), \"\",true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME.GetDescription())}), \"\", ({sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS.GetDescription())}/IF({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME.GetDescription())}=0,1,({sheet.GetLocalRange(HeaderEnum.TOTAL_TIME.GetDescription())}*24))))))";
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(dateRange, HeaderEnum.TRIPS_PER_HOUR.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.TOTAL_TIME.GetDescription()));
                     header.Format = FormatEnum.DISTANCE;
                     break;
                 case HeaderEnum.DAY:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.DAY.GetDescription()}\",ISBLANK({dateRange}), \"\",true,DAY({dateRange})))";
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
                     break;
                 case HeaderEnum.MONTH:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.MONTH.GetDescription()}\",ISBLANK({dateRange}), \"\",true,MONTH({dateRange})))";
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonth(dateRange, HeaderEnum.MONTH.GetDescription(), dateRange);
                     break;
                 case HeaderEnum.YEAR:
-                    header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.YEAR.GetDescription()}\",ISBLANK({dateRange}), \"\",true,YEAR({dateRange})))";
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(dateRange, HeaderEnum.YEAR.GetDescription(), dateRange);
                     break;
                 default:
                     break;

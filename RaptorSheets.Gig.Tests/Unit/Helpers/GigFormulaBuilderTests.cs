@@ -315,4 +315,168 @@ public class GigFormulaBuilderTests
         Assert.Contains(bonusRange, result);
         Assert.Contains("+", result);
     }
+
+    #region New Formula Tests
+
+    [Fact]
+    public void BuildArrayFormulaAmountPerDay_ShouldGenerateDailyAverage()
+    {
+        // Arrange
+        var totalRange = "$B:$B";
+        var daysRange = "$C:$C";
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaAmountPerDay(TestKeyRange, TestHeader, totalRange, daysRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains(totalRange, result);
+        Assert.Contains(daysRange, result);
+        Assert.Contains("/IF(", result);
+        Assert.Contains("=0,1,", result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaShiftKey_ShouldGenerateKeyWithFallback()
+    {
+        // Arrange
+        var dateRange = "$A:$A";
+        var serviceRange = "$B:$B";
+        var numberRange = "$C:$C";
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaShiftKey(TestKeyRange, TestHeader, dateRange, serviceRange, numberRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("IF(ISBLANK(", result);
+        Assert.Contains("\"-0-\"", result); // Default number fallback
+        Assert.Contains("\"-\"", result); // Delimiter
+        Assert.Contains(dateRange, result);
+        Assert.Contains(serviceRange, result);
+        Assert.Contains(numberRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaTripKey_ShouldGenerateKeyWithExcludeLogic()
+    {
+        // Arrange
+        var dateRange = "$A:$A";
+        var serviceRange = "$B:$B";
+        var numberRange = "$C:$C";
+        var excludeRange = "$D:$D";
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaTripKey(TestKeyRange, TestHeader, dateRange, serviceRange, numberRange, excludeRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("IF(ISBLANK(", result); // Should contain conditional logic
+        Assert.Contains("\"-X-\"", result); // Exclude marker
+        Assert.Contains("\"-0-\"", result); // Default number fallback
+        Assert.Contains(dateRange, result);
+        Assert.Contains(serviceRange, result);
+        Assert.Contains(numberRange, result);
+        Assert.Contains(excludeRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaTotalTimeActive_ShouldGenerateTimeWithFallback()
+    {
+        // Arrange
+        var activeTimeRange = "$B:$B";
+        var tripKeyRange = "$C:$C";
+        var shiftKeyRange = "$D:$D";
+        var tripDurationRange = "$E:$E";
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaTotalTimeActive(TestKeyRange, TestHeader, activeTimeRange, tripKeyRange, shiftKeyRange, tripDurationRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("IF(ISBLANK(", result);
+        Assert.Contains("SUMIF(", result);
+        Assert.Contains(activeTimeRange, result);
+        Assert.Contains(tripKeyRange, result);
+        Assert.Contains(shiftKeyRange, result);
+        Assert.Contains(tripDurationRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaTotalTimeWithOmit_ShouldGenerateOmitLogic()
+    {
+        // Arrange
+        var omitRange = "$B:$B";
+        var totalTimeRange = "$C:$C";
+        var totalActiveRange = "$D:$D";
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaTotalTimeWithOmit(TestKeyRange, TestHeader, omitRange, totalTimeRange, totalActiveRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("IF(ISBLANK(", result); // Should contain conditional logic
+        Assert.Contains("=false", result); // Omit logic (resolved, not placeholder)
+        Assert.Contains(",0)", result); // Omit returns 0
+        Assert.Contains(omitRange, result);
+        Assert.Contains(totalTimeRange, result);
+        Assert.Contains(totalActiveRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaShiftTotalWithTripSum_ShouldGenerateShiftPlusTripTotal()
+    {
+        // Arrange
+        var localRange = "$B:$B";
+        var tripKeyRange = "$C:$C";
+        var shiftKeyRange = "$D:$D";
+        var tripSumRange = "$E:$E";
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaShiftTotalWithTripSum(TestKeyRange, TestHeader, localRange, tripKeyRange, shiftKeyRange, tripSumRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains($"{localRange} + SUMIF(", result);
+        Assert.Contains(tripKeyRange, result);
+        Assert.Contains(shiftKeyRange, result);
+        Assert.Contains(tripSumRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaShiftTotalTrips_ShouldGenerateTripsCount()
+    {
+        // Arrange
+        var localTripsRange = "$B:$B";
+        var tripKeyRange = "$C:$C";
+        var shiftKeyRange = "$D:$D";
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaShiftTotalTrips(TestKeyRange, TestHeader, localTripsRange, tripKeyRange, shiftKeyRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains($"{localTripsRange} + COUNTIF(", result);
+        Assert.Contains(tripKeyRange, result);
+        Assert.Contains(shiftKeyRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaRollingAverage_ShouldGenerateComplexAverage()
+    {
+        // Arrange
+        var totalRange = "$B:$B";
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaRollingAverage(TestKeyRange, TestHeader, totalRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("DAVERAGE(", result);
+        Assert.Contains("transpose(", result);
+        Assert.Contains("sequence(", result);
+        Assert.Contains(totalRange, result);
+    }
+
+    #endregion
 }

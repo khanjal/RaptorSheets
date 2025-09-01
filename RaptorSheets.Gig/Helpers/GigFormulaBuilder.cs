@@ -75,6 +75,21 @@ public static class GigFormulaBuilder
             .Replace("{formula}", amountPerTimeFormula);
     }
 
+    /// <summary>
+    /// Builds ARRAYFORMULA with amount per day calculation
+    /// </summary>
+    public static string BuildArrayFormulaAmountPerDay(string keyRange, string header, string totalRange, string daysRange)
+    {
+        var amountPerDayFormula = GigFormulas.AmountPerDayFormula
+            .Replace("{totalRange}", totalRange)
+            .Replace("{daysRange}", daysRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", amountPerDayFormula);
+    }
+
     #endregion
 
     #region Gig Date/Time Formula Builders
@@ -243,6 +258,127 @@ public static class GigFormulaBuilder
         {
             return GoogleFormulaBuilder.BuildArrayFormulaSortedLookup(keyRange, header, sourceSheet, dateColumn, keyColumn, isFirst);
         }
+    }
+
+    #endregion
+
+    #region Shift-Specific Business Logic Builders
+
+    /// <summary>
+    /// Builds shift key generation formula
+    /// </summary>
+    public static string BuildArrayFormulaShiftKey(string keyRange, string header, string dateRange, string serviceRange, string numberRange)
+    {
+        var keyFormula = GigFormulas.ShiftKeyGeneration
+            .Replace("{dateRange}", dateRange)
+            .Replace("{serviceRange}", serviceRange)
+            .Replace("{numberRange}", numberRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", keyFormula);
+    }
+
+    /// <summary>
+    /// Builds trip key generation formula with exclude logic
+    /// </summary>
+    public static string BuildArrayFormulaTripKey(string keyRange, string header, string dateRange, string serviceRange, string numberRange, string excludeRange)
+    {
+        var keyFormula = GigFormulas.TripKeyGeneration
+            .Replace("{dateRange}", dateRange)
+            .Replace("{serviceRange}", serviceRange)
+            .Replace("{numberRange}", numberRange)
+            .Replace("{excludeRange}", excludeRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", keyFormula);
+    }
+
+    /// <summary>
+    /// Builds total time active with trip fallback
+    /// </summary>
+    public static string BuildArrayFormulaTotalTimeActive(string keyRange, string header, string activeTimeRange, string tripKeyRange, string shiftKeyRange, string tripDurationRange)
+    {
+        var timeActiveFormula = GigFormulas.TotalTimeActiveWithFallback
+            .Replace("{activeTimeRange}", activeTimeRange)
+            .Replace("{tripKeyRange}", tripKeyRange)
+            .Replace("{shiftKeyRange}", shiftKeyRange)
+            .Replace("{tripDurationRange}", tripDurationRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", timeActiveFormula);
+    }
+
+    /// <summary>
+    /// Builds total time with omit logic
+    /// </summary>
+    public static string BuildArrayFormulaTotalTimeWithOmit(string keyRange, string header, string omitRange, string totalTimeRange, string totalActiveRange)
+    {
+        var totalTimeFormula = GigFormulas.TotalTimeWithOmit
+            .Replace("{omitRange}", omitRange)
+            .Replace("{totalTimeRange}", totalTimeRange)
+            .Replace("{totalActiveRange}", totalActiveRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", totalTimeFormula);
+    }
+
+    /// <summary>
+    /// Builds shift total with trip sum pattern
+    /// </summary>
+    public static string BuildArrayFormulaShiftTotalWithTripSum(string keyRange, string header, string localRange, string tripKeyRange, string shiftKeyRange, string tripSumRange)
+    {
+        var shiftTotalFormula = GigFormulas.ShiftTotalWithTripSum
+            .Replace("{localRange}", localRange)
+            .Replace("{tripKeyRange}", tripKeyRange)
+            .Replace("{shiftKeyRange}", shiftKeyRange)
+            .Replace("{tripSumRange}", tripSumRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", shiftTotalFormula);
+    }
+
+    /// <summary>
+    /// Builds shift total trips pattern
+    /// </summary>
+    public static string BuildArrayFormulaShiftTotalTrips(string keyRange, string header, string localTripsRange, string tripKeyRange, string shiftKeyRange)
+    {
+        var totalTripsFormula = GigFormulas.ShiftTotalTrips
+            .Replace("{localTripsRange}", localTripsRange)
+            .Replace("{tripKeyRange}", tripKeyRange)
+            .Replace("{shiftKeyRange}", shiftKeyRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", totalTripsFormula);
+    }
+
+    #endregion
+
+    #region Advanced Time Series Formula Builders
+
+    /// <summary>
+    /// Builds rolling average formula for time series analysis
+    /// </summary>
+    public static string BuildArrayFormulaRollingAverage(string keyRange, string header, string totalRange)
+    {
+        var averageFormula = GigFormulas.RollingAverageFormula
+            .Replace("{totalRange}", totalRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", averageFormula);
     }
 
     #endregion

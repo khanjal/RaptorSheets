@@ -220,4 +220,120 @@ public class GigFormulasTests
             Assert.True(containsValidFunction, $"Formula '{formula}' should contain at least one valid Google Sheets function or operator");
         }
     }
+
+    #region New Formula Tests
+
+    [Fact]
+    public void AmountPerDayFormula_ShouldContainDivisionWithZeroProtection()
+    {
+        // Act
+        var formula = GigFormulas.AmountPerDayFormula;
+
+        // Assert
+        Assert.Contains("{totalRange}/IF({daysRange}=0,1,{daysRange})", formula);
+        Assert.Contains("{totalRange}", formula);
+        Assert.Contains("{daysRange}", formula);
+    }
+
+    [Fact]
+    public void ShiftKeyGeneration_ShouldContainKeyLogic()
+    {
+        // Act
+        var formula = GigFormulas.ShiftKeyGeneration;
+
+        // Assert
+        Assert.Contains("IF(ISBLANK({numberRange})", formula);
+        Assert.Contains("\"-0-\"", formula); // Default number
+        Assert.Contains("\"-\"", formula); // Delimiter
+        Assert.Contains("{dateRange}", formula);
+        Assert.Contains("{serviceRange}", formula);
+        Assert.Contains("{numberRange}", formula);
+    }
+
+    [Fact]
+    public void TripKeyGeneration_ShouldContainExcludeLogic()
+    {
+        // Act
+        var formula = GigFormulas.TripKeyGeneration;
+
+        // Assert
+        Assert.Contains("IF({excludeRange}", formula);
+        Assert.Contains("\"-X-\"", formula); // Exclude marker
+        Assert.Contains("\"-0-\"", formula); // Default number
+        Assert.Contains("{excludeRange}", formula);
+        Assert.Contains("{dateRange}", formula);
+        Assert.Contains("{serviceRange}", formula);
+        Assert.Contains("{numberRange}", formula);
+    }
+
+    [Fact]
+    public void TotalTimeActiveWithFallback_ShouldContainFallbackLogic()
+    {
+        // Act
+        var formula = GigFormulas.TotalTimeActiveWithFallback;
+
+        // Assert
+        Assert.Contains("IF(ISBLANK({activeTimeRange})", formula);
+        Assert.Contains("SUMIF({tripKeyRange},{shiftKeyRange},{tripDurationRange})", formula);
+        Assert.Contains("{activeTimeRange}", formula);
+        Assert.Contains("{tripKeyRange}", formula);
+        Assert.Contains("{shiftKeyRange}", formula);
+        Assert.Contains("{tripDurationRange}", formula);
+    }
+
+    [Fact]
+    public void TotalTimeWithOmit_ShouldContainOmitLogic()
+    {
+        // Act
+        var formula = GigFormulas.TotalTimeWithOmit;
+
+        // Assert
+        Assert.Contains("IF({omitRange}=false", formula);
+        Assert.Contains("IF(ISBLANK({totalTimeRange})", formula);
+        Assert.Contains(",0)", formula); // Returns 0 when omitted
+        Assert.Contains("{omitRange}", formula);
+        Assert.Contains("{totalTimeRange}", formula);
+        Assert.Contains("{totalActiveRange}", formula);
+    }
+
+    [Fact]
+    public void ShiftTotalWithTripSum_ShouldContainAdditionPattern()
+    {
+        // Act
+        var formula = GigFormulas.ShiftTotalWithTripSum;
+
+        // Assert
+        Assert.Contains("{localRange} + SUMIF(", formula);
+        Assert.Contains("{tripKeyRange}", formula);
+        Assert.Contains("{shiftKeyRange}", formula);
+        Assert.Contains("{tripSumRange}", formula);
+    }
+
+    [Fact]
+    public void ShiftTotalTrips_ShouldContainTripsPattern()
+    {
+        // Act
+        var formula = GigFormulas.ShiftTotalTrips;
+
+        // Assert
+        Assert.Contains("{localTripsRange} + COUNTIF(", formula);
+        Assert.Contains("{tripKeyRange}", formula);
+        Assert.Contains("{shiftKeyRange}", formula);
+    }
+
+    [Fact]
+    public void RollingAverageFormula_ShouldContainComplexAverageLogic()
+    {
+        // Act
+        var formula = GigFormulas.RollingAverageFormula;
+
+        // Assert
+        Assert.Contains("DAVERAGE(", formula);
+        Assert.Contains("transpose(", formula);
+        Assert.Contains("sequence(", formula);
+        Assert.Contains("{totalRange}", formula);
+        Assert.Contains("ROW({totalRange})", formula);
+    }
+
+    #endregion
 }
