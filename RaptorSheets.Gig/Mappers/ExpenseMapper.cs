@@ -7,7 +7,6 @@ using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using System.Xml;
-using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
 
 namespace RaptorSheets.Gig.Mappers;
 
@@ -32,11 +31,11 @@ public static class ExpenseMapper
             ExpenseEntity expense = new()
             {
                 RowId = id,
-                Date = DateTime.TryParse(HeaderHelpers.GetStringValue(HeaderEnum.DATE.GetDescription(), value, headers), out var date) ? date : DateTime.MinValue,
-                Name = HeaderHelpers.GetStringValue(HeaderEnum.NAME.GetDescription(), value, headers),
-                Description = HeaderHelpers.GetStringValue(HeaderEnum.DESCRIPTION.GetDescription(), value, headers),
-                Amount = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT.GetDescription(), value, headers),
-                Category = HeaderHelpers.GetStringValue(HeaderEnum.CATEGORY.GetDescription(), value, headers)
+                Date = DateTime.TryParse(HeaderHelpers.GetStringValue(SheetsConfig.HeaderNames.Date, value, headers), out var date) ? date : DateTime.MinValue,
+                Name = HeaderHelpers.GetStringValue(SheetsConfig.HeaderNames.Name, value, headers),
+                Description = HeaderHelpers.GetStringValue(SheetsConfig.HeaderNames.Description, value, headers),
+                Amount = HeaderHelpers.GetDecimalValue(SheetsConfig.HeaderNames.Amount, value, headers),
+                Category = HeaderHelpers.GetStringValue(SheetsConfig.HeaderNames.Category, value, headers)
             };
 
             expenses.Add(expense);
@@ -54,23 +53,23 @@ public static class ExpenseMapper
 
             foreach (var header in expenseHeaders)
             {
-                var headerEnum = header.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+                var headerName = header.ToString()!.Trim();
 
-                switch (headerEnum)
+                switch (headerName)
                 {
-                    case HeaderEnum.DATE:
+                    case SheetsConfig.HeaderNames.Date:
                         objectList.Add(expense.Date.ToString("yyyy-MM-dd"));
                         break;
-                    case HeaderEnum.NAME:
+                    case SheetsConfig.HeaderNames.Name:
                         objectList.Add(expense.Name);
                         break;
-                    case HeaderEnum.DESCRIPTION:
+                    case SheetsConfig.HeaderNames.Description:
                         objectList.Add(expense.Description);
                         break;
-                    case HeaderEnum.AMOUNT:
+                    case SheetsConfig.HeaderNames.Amount:
                         objectList.Add(expense.Amount.ToString());
                         break;
-                    case HeaderEnum.CATEGORY:
+                    case SheetsConfig.HeaderNames.Category:
                         objectList.Add(expense.Category);
                         break;
                     default:
@@ -94,22 +93,22 @@ public static class ExpenseMapper
             var cells = new List<CellData>();
             foreach (var header in headers)
             {
-                var headerEnum = header!.ToString()!.Trim().GetValueFromName<HeaderEnum>();
-                switch (headerEnum)
+                var headerName = header!.ToString()!.Trim();
+                switch (headerName)
                 {
-                    case HeaderEnum.DATE:
+                    case SheetsConfig.HeaderNames.Date:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = expense.Date.ToString("yyyy-MM-dd").ToSerialDate() } });
                         break;
-                    case HeaderEnum.NAME:
+                    case SheetsConfig.HeaderNames.Name:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = expense.Name ?? null } });
                         break;
-                    case HeaderEnum.DESCRIPTION:
+                    case SheetsConfig.HeaderNames.Description:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = expense.Description ?? null } });
                         break;
-                    case HeaderEnum.AMOUNT:
+                    case SheetsConfig.HeaderNames.Amount:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double)expense.Amount } });
                         break;
-                    case HeaderEnum.CATEGORY:
+                    case SheetsConfig.HeaderNames.Category:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = expense.Category ?? null } });
                         break;
                     default:
@@ -130,13 +129,13 @@ public static class ExpenseMapper
         var cells = new List<CellData>();
         foreach (var header in headers)
         {
-            var headerEnum = header!.ToString()!.Trim().GetValueFromName<HeaderEnum>();
-            switch (headerEnum)
+            var headerName = header!.ToString()!.Trim();
+            switch (headerName)
             {
-                case HeaderEnum.DATE:
+                case SheetsConfig.HeaderNames.Date:
                     cells.Add(new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.DATE) });
                     break;
-                case HeaderEnum.AMOUNT:
+                case SheetsConfig.HeaderNames.Amount:
                     cells.Add(new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.ACCOUNTING) });
                     break;
                 default:
@@ -154,18 +153,18 @@ public static class ExpenseMapper
         // Use the new configuration helper for consistency and cleaner code
         return SheetConfigurationHelpers.ConfigureSheet(SheetsConfig.ExpenseSheet, (header, index) =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            var headerName = header!.Name;
             
-            switch (headerEnum)
+            switch (headerName)
             {
-                case HeaderEnum.DATE:
+                case SheetsConfig.HeaderNames.Date:
                     header.Note = ColumnNotes.DateFormat;
                     header.Format = FormatEnum.DATE;
                     break;
-                case HeaderEnum.AMOUNT:
+                case SheetsConfig.HeaderNames.Amount:
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
-                case HeaderEnum.CATEGORY:
+                case SheetsConfig.HeaderNames.Category:
                     header.Validation = ValidationEnum.RANGE_SELF.GetDescription();
                     break;
                 default:

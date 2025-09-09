@@ -1,318 +1,407 @@
 ﻿using RaptorSheets.Core.Enums;
-using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using System.Diagnostics.CodeAnalysis;
-using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
 
 namespace RaptorSheets.Gig.Constants;
 
+/// <summary>
+/// Configuration constants and models for Google Sheets in the Gig domain.
+/// </summary>
 [ExcludeFromCodeCoverage]
 public static class SheetsConfig
 {
     /// <summary>
-    /// Sheet name constants for consistent usage across the application
+    /// Sheet names
     /// </summary>
     public static class SheetNames
     {
-        public const string ADDRESSES = "ADDRESSES";
-        public const string DAILY = "DAILY";
-        public const string EXPENSES = "EXPENSES";
-        public const string MONTHLY = "MONTHLY";
-        public const string NAMES = "NAMES";
-        public const string PLACES = "PLACES";
-        public const string REGIONS = "REGIONS";
-        public const string SERVICES = "SERVICES";
-        public const string SETUP = "SETUP";
-        public const string SHIFTS = "SHIFTS";
-        public const string TRIPS = "TRIPS";
-        public const string TYPES = "TYPES";
-        public const string WEEKDAYS = "WEEKDAYS";
-        public const string WEEKLY = "WEEKLY";
-        public const string YEARLY = "YEARLY";
+        public const string Addresses = "Addresses";
+        public const string Daily = "Daily";
+        public const string Expenses = "Expenses";
+        public const string Monthly = "Monthly";
+        public const string Names = "Names";
+        public const string Places = "Places";
+        public const string Regions = "Regions";
+        public const string Services = "Services";
+        public const string Setup = "Setup";
+        public const string Shifts = "Shifts";
+        public const string Trips = "Trips";
+        public const string Types = "Types";
+        public const string Weekdays = "Weekdays";
+        public const string Weekly = "Weekly";
+        public const string Yearly = "Yearly";
+    }
+
+    /// <summary>
+    /// Header names
+    /// </summary>
+    public static class HeaderNames
+    {
+        public const string Address = "Address";
+        public const string AddressStart = "Start Address";
+        public const string AddressEnd = "End Address";
+        public const string Amount = "Amount";
+        public const string AmountCurrent = "Curr Amt";
+        public const string AmountPrevious = "Prev Amt";
+        public const string AmountPerDay = "Amt/Day";
+        public const string AmountPerDistance = "Amt/Dist";
+        public const string AmountPerPreviousDay = "Amt/Prev";
+        public const string AmountPerTime = "Amt/Hour";
+        public const string AmountPerTrip = "Amt/Trip";
+        public const string Average = "Average";
+        public const string Bonus = "Bonus";
+        public const string Cash = "Cash";
+        public const string Category = "Category";
+        public const string Date = "Date";
+        public const string DateBegin = "Begin";
+        public const string DateEnd = "End";
+        public const string Day = "Day";
+        public const string Days = "Days";
+        public const string Description = "Description";
+        public const string Distance = "Dist";
+        public const string Dropoff = "Dropoff";
+        public const string Duration = "Duration";
+        public const string Exclude = "X";
+        public const string Key = "Key";
+        public const string Month = "Month";
+        public const string Name = "Name";
+        public const string Note = "Note";
+        public const string Number = "#";
+        public const string OdometerEnd = "Odo End";
+        public const string OdometerStart = "Odo Start";
+        public const string OrderNumber = "Order #";
+        public const string Pay = "Pay";
+        public const string Pickup = "Pickup";
+        public const string Place = "Place";
+        public const string Region = "Region";
+        public const string Service = "Service";
+        public const string TimeActive = "Active";
+        public const string TimeEnd = "Finish";
+        public const string TimeOmit = "O";
+        public const string TimeStart = "Start";
+        public const string TimeTotal = "Time";
+        public const string Tips = "Tips";
+        public const string Total = "Total";
+        public const string TotalBonus = "T Bonus";
+        public const string TotalCash = "T Cash";
+        public const string TotalDistance = "T Dist";
+        public const string TotalGrand = "G Total";
+        public const string TotalPay = "T Pay";
+        public const string TotalTime = "T Time";
+        public const string TotalTimeActive = "T Active";
+        public const string TotalTips = "T Tips";
+        public const string TotalTrips = "T Trips";
+        public const string Trips = "Trips";
+        public const string TripsPerHour = "Trips/Hour";
+        public const string Type = "Type";
+        public const string UnitEnd = "End Unit";
+        public const string VisitFirst = "First Trip";
+        public const string VisitLast = "Last Trip";
+        public const string Week = "Week";
+        public const string Weekday = "Weekday";
+        public const string Year = "Year";
+    }
+
+    /// <summary>
+    /// Utility methods for working with sheet names
+    /// </summary>
+    public static class SheetUtilities
+    {
+        public static List<string> GetAllSheetNames() =>
+        [
+            SheetNames.Addresses, SheetNames.Daily, SheetNames.Expenses,
+            SheetNames.Monthly, SheetNames.Names, SheetNames.Places,
+            SheetNames.Regions, SheetNames.Services, SheetNames.Setup,
+            SheetNames.Shifts, SheetNames.Trips, SheetNames.Types,
+            SheetNames.Weekdays, SheetNames.Weekly, SheetNames.Yearly
+        ];
+        
+        public static bool IsValidSheetName(string name) =>
+            GetAllSheetNames().Any(sheet => string.Equals(sheet, name, StringComparison.OrdinalIgnoreCase));
     }
 
     public static SheetModel AddressSheet => new()
     {
-        Name = Enums.SheetEnum.ADDRESSES.GetDescription(),
+        Name = SheetNames.Addresses,
         CellColor = ColorEnum.LIGHT_CYAN,
         TabColor = ColorEnum.CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.ADDRESS.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Address },
             .. CommonTripSheetHeaders
         ]
     };
 
     public static SheetModel DailySheet => new()
     {
-        Name = Enums.SheetEnum.DAILY.GetDescription(),
+        Name = SheetNames.Daily,
         TabColor = ColorEnum.LIGHT_GREEN,
         CellColor = ColorEnum.LIGHT_GRAY,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.DATE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TRIPS.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Date },
+            new SheetCellModel { Name = HeaderNames.Trips },
             .. CommonIncomeHeaders,
             .. CommonTravelHeaders,
-            new SheetCellModel { Name = HeaderEnum.TIME_TOTAL.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_TIME.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DAY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.WEEKDAY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.WEEK.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.MONTH.GetDescription() }
+            new SheetCellModel { Name = HeaderNames.TimeTotal },
+            new SheetCellModel { Name = HeaderNames.AmountPerTime },
+            new SheetCellModel { Name = HeaderNames.Day },
+            new SheetCellModel { Name = HeaderNames.Weekday },
+            new SheetCellModel { Name = HeaderNames.Week },
+            new SheetCellModel { Name = HeaderNames.Month }
         ]
     };
 
     public static SheetModel ExpenseSheet => new()
     {
-        Name = Enums.SheetEnum.EXPENSES.GetDescription(),
+        Name = SheetNames.Expenses,
         TabColor = ColorEnum.ORANGE,
         CellColor = ColorEnum.LIGHT_RED,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.DATE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DESCRIPTION.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.CATEGORY.GetDescription() }
+            new SheetCellModel { Name = HeaderNames.Date },
+            new SheetCellModel { Name = HeaderNames.Name },
+            new SheetCellModel { Name = HeaderNames.Description },
+            new SheetCellModel { Name = HeaderNames.Amount },
+            new SheetCellModel { Name = HeaderNames.Category }
         ]
     };
 
     public static SheetModel MonthlySheet => new()
     {
-        Name = Enums.SheetEnum.MONTHLY.GetDescription(),
+        Name = SheetNames.Monthly,
         TabColor = ColorEnum.LIGHT_GREEN,
         CellColor = ColorEnum.LIGHT_GRAY,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.MONTH.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TRIPS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DAYS.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Month },
+            new SheetCellModel { Name = HeaderNames.Trips },
+            new SheetCellModel { Name = HeaderNames.Days },
             .. CommonIncomeHeaders,
             .. CommonTravelHeaders,
             .. CommonPeriodicHeaders,
-            new SheetCellModel { Name = HeaderEnum.NUMBER.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.YEAR.GetDescription() }
+            new SheetCellModel { Name = HeaderNames.Number },
+            new SheetCellModel { Name = HeaderNames.Year }
         ]
     };
 
     public static SheetModel NameSheet => new()
     {
-        Name = Enums.SheetEnum.NAMES.GetDescription(),
+        Name = SheetNames.Names,
         TabColor = ColorEnum.CYAN,
         CellColor = ColorEnum.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Name },
             .. CommonTripSheetHeaders
         ]
     };
 
     public static SheetModel PlaceSheet => new()
     {
-        Name = Enums.SheetEnum.PLACES.GetDescription(),
+        Name = SheetNames.Places,
         TabColor = ColorEnum.CYAN,
         CellColor = ColorEnum.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.PLACE.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Place },
             .. CommonTripSheetHeaders
         ]
     };
 
     public static SheetModel RegionSheet => new()
     {
-        Name = Enums.SheetEnum.REGIONS.GetDescription(),
+        Name = SheetNames.Regions,
         TabColor = ColorEnum.CYAN,
         CellColor = ColorEnum.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.REGION.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Region },
             .. CommonTripSheetHeaders
         ]
     };
 
     public static SheetModel ServiceSheet => new()
     {
-        Name = Enums.SheetEnum.SERVICES.GetDescription(),
+        Name = SheetNames.Services,
         TabColor = ColorEnum.CYAN,
         CellColor = ColorEnum.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.SERVICE.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Service },
             .. CommonTripSheetHeaders
         ]
     };
 
     public static SheetModel ShiftSheet => new()
     {
-        Name = Enums.SheetEnum.SHIFTS.GetDescription(),
+        Name = SheetNames.Shifts,
         TabColor = ColorEnum.RED,
         CellColor = ColorEnum.LIGHT_RED,
         FontColor = ColorEnum.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.DATE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TIME_START.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TIME_END.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.SERVICE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.NUMBER.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TIME_ACTIVE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TIME_TOTAL.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TIME_OMIT.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TRIPS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.PAY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TIPS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.BONUS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.CASH.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DISTANCE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.REGION.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.NOTE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.KEY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TOTAL_TIME_ACTIVE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TOTAL_TIME.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TOTAL_TRIPS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TOTAL_PAY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TOTAL_TIPS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TOTAL_BONUS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TOTAL_GRAND.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TOTAL_CASH.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_TRIP.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_TIME.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TOTAL_DISTANCE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TRIPS_PER_HOUR.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DAY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.MONTH.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.YEAR.GetDescription() }
+            new SheetCellModel { Name = HeaderNames.Date },
+            new SheetCellModel { Name = HeaderNames.TimeStart },
+            new SheetCellModel { Name = HeaderNames.TimeEnd },
+            new SheetCellModel { Name = HeaderNames.Service },
+            new SheetCellModel { Name = HeaderNames.Number },
+            new SheetCellModel { Name = HeaderNames.TimeActive },
+            new SheetCellModel { Name = HeaderNames.TimeTotal },
+            new SheetCellModel { Name = HeaderNames.TimeOmit },
+            new SheetCellModel { Name = HeaderNames.Trips },
+            new SheetCellModel { Name = HeaderNames.Pay },
+            new SheetCellModel { Name = HeaderNames.Tips },
+            new SheetCellModel { Name = HeaderNames.Bonus },
+            new SheetCellModel { Name = HeaderNames.Cash },
+            new SheetCellModel { Name = HeaderNames.Distance },
+            new SheetCellModel { Name = HeaderNames.Region },
+            new SheetCellModel { Name = HeaderNames.Note },
+            new SheetCellModel { Name = HeaderNames.Key },
+            new SheetCellModel { Name = HeaderNames.TotalTimeActive },
+            new SheetCellModel { Name = HeaderNames.TotalTime },
+            new SheetCellModel { Name = HeaderNames.TotalTrips },
+            new SheetCellModel { Name = HeaderNames.TotalPay },
+            new SheetCellModel { Name = HeaderNames.TotalTips },
+            new SheetCellModel { Name = HeaderNames.TotalBonus },
+            new SheetCellModel { Name = HeaderNames.TotalGrand },
+            new SheetCellModel { Name = HeaderNames.TotalCash },
+            new SheetCellModel { Name = HeaderNames.AmountPerTrip },
+            new SheetCellModel { Name = HeaderNames.AmountPerTime },
+            new SheetCellModel { Name = HeaderNames.TotalDistance },
+            new SheetCellModel { Name = HeaderNames.AmountPerDistance },
+            new SheetCellModel { Name = HeaderNames.TripsPerHour },
+            new SheetCellModel { Name = HeaderNames.Day },
+            new SheetCellModel { Name = HeaderNames.Month },
+            new SheetCellModel { Name = HeaderNames.Year }
         ]
     };
 
     public static SheetModel TripSheet => new()
     {
-        Name = Enums.SheetEnum.TRIPS.GetDescription(),
+        Name = SheetNames.Trips,
         TabColor = ColorEnum.DARK_YELLOW,
         CellColor = ColorEnum.LIGHT_YELLOW,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.DATE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.SERVICE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.NUMBER.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.EXCLUDE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TYPE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.PLACE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.PICKUP.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DROPOFF.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DURATION.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Date },
+            new SheetCellModel { Name = HeaderNames.Service },
+            new SheetCellModel { Name = HeaderNames.Number },
+            new SheetCellModel { Name = HeaderNames.Exclude },
+            new SheetCellModel { Name = HeaderNames.Type },
+            new SheetCellModel { Name = HeaderNames.Place },
+            new SheetCellModel { Name = HeaderNames.Pickup },
+            new SheetCellModel { Name = HeaderNames.Dropoff },
+            new SheetCellModel { Name = HeaderNames.Duration },
             .. CommonIncomeHeaders,
-            new SheetCellModel { Name = HeaderEnum.ODOMETER_START.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.ODOMETER_END.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DISTANCE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.ADDRESS_START.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.ADDRESS_END.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.UNIT_END.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.ORDER_NUMBER.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.REGION.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.NOTE.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.KEY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DAY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.MONTH.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.YEAR.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_TIME.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription() }
+            new SheetCellModel { Name = HeaderNames.OdometerStart },
+            new SheetCellModel { Name = HeaderNames.OdometerEnd },
+            new SheetCellModel { Name = HeaderNames.Distance },
+            new SheetCellModel { Name = HeaderNames.Name },
+            new SheetCellModel { Name = HeaderNames.AddressStart },
+            new SheetCellModel { Name = HeaderNames.AddressEnd },
+            new SheetCellModel { Name = HeaderNames.UnitEnd },
+            new SheetCellModel { Name = HeaderNames.OrderNumber },
+            new SheetCellModel { Name = HeaderNames.Region },
+            new SheetCellModel { Name = HeaderNames.Note },
+            new SheetCellModel { Name = HeaderNames.Key },
+            new SheetCellModel { Name = HeaderNames.Day },
+            new SheetCellModel { Name = HeaderNames.Month },
+            new SheetCellModel { Name = HeaderNames.Year },
+            new SheetCellModel { Name = HeaderNames.AmountPerTime },
+            new SheetCellModel { Name = HeaderNames.AmountPerDistance }
        ]
     };
 
     public static SheetModel TypeSheet => new()
     {
-        Name = Enums.SheetEnum.TYPES.GetDescription(),
+        Name = SheetNames.Types,
         TabColor = ColorEnum.CYAN,
         CellColor = ColorEnum.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.TYPE.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Type },
             .. CommonTripSheetHeaders
         ]
     };
 
     public static SheetModel WeekdaySheet => new()
     {
-        Name = Enums.SheetEnum.WEEKDAYS.GetDescription(),
+        Name = SheetNames.Weekdays,
         TabColor = ColorEnum.LIGHT_GREEN,
         CellColor = ColorEnum.LIGHT_GRAY,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.DAY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.WEEKDAY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TRIPS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DAYS.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Day },
+            new SheetCellModel { Name = HeaderNames.Weekday },
+            new SheetCellModel { Name = HeaderNames.Trips },
+            new SheetCellModel { Name = HeaderNames.Days },
             .. CommonIncomeHeaders,
             .. CommonTravelHeaders,
-            new SheetCellModel { Name = HeaderEnum.TIME_TOTAL.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_TIME.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_DAY.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_CURRENT.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_PREVIOUS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_PREVIOUS_DAY.GetDescription() }
+            new SheetCellModel { Name = HeaderNames.TimeTotal },
+            new SheetCellModel { Name = HeaderNames.AmountPerTime },
+            new SheetCellModel { Name = HeaderNames.AmountPerDay },
+            new SheetCellModel { Name = HeaderNames.AmountCurrent },
+            new SheetCellModel { Name = HeaderNames.AmountPrevious },
+            new SheetCellModel { Name = HeaderNames.AmountPerPreviousDay }
         ]
     };
 
     public static SheetModel WeeklySheet => new()
     {
-        Name = Enums.SheetEnum.WEEKLY.GetDescription(),
+        Name = SheetNames.Weekly,
         TabColor = ColorEnum.LIGHT_GREEN,
         CellColor = ColorEnum.LIGHT_GRAY,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.WEEK.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TRIPS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DAYS.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Week },
+            new SheetCellModel { Name = HeaderNames.Trips },
+            new SheetCellModel { Name = HeaderNames.Days },
             .. CommonIncomeHeaders,
             .. CommonTravelHeaders,
             .. CommonPeriodicHeaders,
-            new SheetCellModel { Name = HeaderEnum.NUMBER.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.YEAR.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DATE_BEGIN.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DATE_END.GetDescription() }
+            new SheetCellModel { Name = HeaderNames.Number },
+            new SheetCellModel { Name = HeaderNames.Year },
+            new SheetCellModel { Name = HeaderNames.DateBegin },
+            new SheetCellModel { Name = HeaderNames.DateEnd }
         ]
     };
 
     public static SheetModel YearlySheet => new()
     {
-        Name = Enums.SheetEnum.YEARLY.GetDescription(),
+        Name = SheetNames.Yearly,
         TabColor = ColorEnum.LIGHT_GREEN,
         CellColor = ColorEnum.LIGHT_GRAY,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.YEAR.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.TRIPS.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.DAYS.GetDescription() },
+            new SheetCellModel { Name = HeaderNames.Year },
+            new SheetCellModel { Name = HeaderNames.Trips },
+            new SheetCellModel { Name = HeaderNames.Days },
             .. CommonIncomeHeaders,
             .. CommonTravelHeaders,
             .. CommonPeriodicHeaders
@@ -321,31 +410,31 @@ public static class SheetsConfig
 
     private static List<SheetCellModel> CommonTripSheetHeaders =>
     [
-        new SheetCellModel { Name = HeaderEnum.TRIPS.GetDescription() },
+        new SheetCellModel { Name = HeaderNames.Trips },
         .. CommonIncomeHeaders,
         .. CommonTravelHeaders,
-        new SheetCellModel { Name = HeaderEnum.VISIT_FIRST.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.VISIT_LAST.GetDescription() }
+        new SheetCellModel { Name = HeaderNames.VisitFirst },
+        new SheetCellModel { Name = HeaderNames.VisitLast }
     ];
 
     private static List<SheetCellModel> CommonIncomeHeaders => [
-        new SheetCellModel { Name = HeaderEnum.PAY.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.TIPS.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.BONUS.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.TOTAL.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.CASH.GetDescription() }
+        new SheetCellModel { Name = HeaderNames.Pay },
+        new SheetCellModel { Name = HeaderNames.Tips },
+        new SheetCellModel { Name = HeaderNames.Bonus },
+        new SheetCellModel { Name = HeaderNames.Total },
+        new SheetCellModel { Name = HeaderNames.Cash }
     ];
 
     private static List<SheetCellModel> CommonPeriodicHeaders => [
-        new SheetCellModel { Name = HeaderEnum.TIME_TOTAL.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_TIME.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_DAY.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.AVERAGE.GetDescription() }
+        new SheetCellModel { Name = HeaderNames.TimeTotal },
+        new SheetCellModel { Name = HeaderNames.AmountPerTime },
+        new SheetCellModel { Name = HeaderNames.AmountPerDay },
+        new SheetCellModel { Name = HeaderNames.Average }
     ];
 
     private static List<SheetCellModel> CommonTravelHeaders => [
-        new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_TRIP.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.DISTANCE.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription() }
+        new SheetCellModel { Name = HeaderNames.AmountPerTrip },
+        new SheetCellModel { Name = HeaderNames.Distance },
+        new SheetCellModel { Name = HeaderNames.AmountPerDistance }
     ];
 }

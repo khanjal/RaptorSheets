@@ -49,27 +49,27 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Pull out all changes into a single object to iterate through.
         foreach (var sheet in sheets)
         {
-            switch (sheet.ToUpperInvariant())
+            switch (sheet)
             {
-                case SheetsConfig.SheetNames.EXPENSES:
+                case SheetsConfig.SheetNames.Expenses:
                     if (sheetEntity.Expenses.Count > 0)
                         changes.Add(sheet, sheetEntity.Expenses);
                     break;
-                case SheetsConfig.SheetNames.SETUP:
+                case SheetsConfig.SheetNames.Setup:
                     if (sheetEntity.Setup.Count > 0)
                         changes.Add(sheet, sheetEntity.Setup);
                     break;
-                case SheetsConfig.SheetNames.SHIFTS:
+                case SheetsConfig.SheetNames.Shifts:
                     if (sheetEntity.Shifts.Count > 0)
                         changes.Add(sheet, sheetEntity.Shifts);
                     break;
-                case SheetsConfig.SheetNames.TRIPS:
+                case SheetsConfig.SheetNames.Trips:
                     if (sheetEntity.Trips.Count > 0)
                         changes.Add(sheet, sheetEntity.Trips);
                     break;
                 default:
                     // Unsupported sheet.
-                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet.ToUpperInvariant()} not supported", MessageTypeEnum.GENERAL));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
                     break;
             }
         }
@@ -88,21 +88,21 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         foreach (var change in changes)
         {
-            switch (change.Key.ToUpperInvariant())
+            switch (change.Key)
             {
-                case SheetsConfig.SheetNames.EXPENSES:
+                case SheetsConfig.SheetNames.Expenses:
                     var expenseProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], expenseProperties));
                     break;
-                case SheetsConfig.SheetNames.SETUP:
+                case SheetsConfig.SheetNames.Setup:
                     var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
                     break;
-                case SheetsConfig.SheetNames.SHIFTS:
+                case SheetsConfig.SheetNames.Shifts:
                     var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
                     break;
-                case SheetsConfig.SheetNames.TRIPS:
+                case SheetsConfig.SheetNames.Trips:
                     var tripProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripProperties));
                     break;
@@ -181,51 +181,51 @@ public class GoogleSheetManager : IGoogleSheetManager
             var sheetName = sheet.Properties.Title.ToUpper();
             var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
-            switch (sheetName.ToUpper())
+            switch (sheetName)
             {
-                case SheetsConfig.SheetNames.ADDRESSES:
+                case SheetsConfig.SheetNames.Addresses:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.DAILY:
+                case SheetsConfig.SheetNames.Daily:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.EXPENSES:
+                case SheetsConfig.SheetNames.Expenses:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ExpenseMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.MONTHLY:
+                case SheetsConfig.SheetNames.Monthly:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.NAMES:
+                case SheetsConfig.SheetNames.Names:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.PLACES:
+                case SheetsConfig.SheetNames.Places:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.REGIONS:
+                case SheetsConfig.SheetNames.Regions:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.SERVICES:
+                case SheetsConfig.SheetNames.Services:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.SETUP:
+                case SheetsConfig.SheetNames.Setup:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, SetupMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.SHIFTS:
+                case SheetsConfig.SheetNames.Shifts:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.TRIPS:
+                case SheetsConfig.SheetNames.Trips:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.TYPES:
+                case SheetsConfig.SheetNames.Types:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.WEEKDAYS:
+                case SheetsConfig.SheetNames.Weekdays:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.WEEKLY:
+                case SheetsConfig.SheetNames.Weekly:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.YEARLY:
+                case SheetsConfig.SheetNames.Yearly:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
                     break;
                 default:
@@ -249,9 +249,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<SheetEntity> CreateSheets()
     {
-        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().Select(t => t.GetDescription()).ToList();
-        sheets.AddRange(Enum.GetValues(typeof(Common.Enums.SheetEnum)).Cast<Common.Enums.SheetEnum>().Select(t => t.GetDescription()));
-        return await CreateSheets(sheets);
+        return await CreateSheets(SheetsConfig.SheetUtilities.GetAllSheetNames());
     }
 
     public async Task<SheetEntity> CreateSheets(List<string> sheets)

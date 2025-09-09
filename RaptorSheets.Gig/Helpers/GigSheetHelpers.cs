@@ -12,6 +12,18 @@ using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Helpers;
 
+/// <summary>
+/// Helper methods for Google Sheets operations in the Gig domain.
+/// 
+/// SHEET NAME CENTRALIZATION:
+/// All sheet names are centralized through SheetEnum.GetDescription() to ensure consistency.
+/// The enum descriptions are the single source of truth for sheet names throughout the application.
+/// 
+/// Pattern used:
+/// - SheetEnum.TRIPS.GetDescription() returns "Trips"
+/// - All switch statements use pattern matching with enum.GetDescription().ToUpper()
+/// - This eliminates string constant duplication and makes enum the authority
+/// </summary>
 public static class GigSheetHelpers
 {
     public static List<SheetModel> GetSheets()
@@ -27,10 +39,7 @@ public static class GigSheetHelpers
 
     public static List<string> GetSheetNames()
     {
-        var sheetNames = Enum.GetNames<SheetEnum>().ToList();
-        sheetNames.AddRange(Enum.GetNames<Common.Enums.SheetEnum>());
-
-        return sheetNames;
+        return SheetsConfig.SheetUtilities.GetAllSheetNames();
     }
 
     public static List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet)
@@ -48,51 +57,51 @@ public static class GigSheetHelpers
                 continue;
             }
 
-            switch (name.ToUpper())
+            switch (name)
             {
-                case SheetsConfig.SheetNames.ADDRESSES:
+                case SheetsConfig.SheetNames.Addresses:
                     sheetData.Add(AddressMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.DAILY:
+                case SheetsConfig.SheetNames.Daily:
                     sheetData.Add(DailyMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.EXPENSES:
+                case SheetsConfig.SheetNames.Expenses:
                     sheetData.Add(ExpenseMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.MONTHLY:
+                case SheetsConfig.SheetNames.Monthly:
                     sheetData.Add(MonthlyMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.NAMES:
+                case SheetsConfig.SheetNames.Names:
                     sheetData.Add(NameMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.PLACES:
+                case SheetsConfig.SheetNames.Places:
                     sheetData.Add(PlaceMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.REGIONS:
+                case SheetsConfig.SheetNames.Regions:
                     sheetData.Add(RegionMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.SETUP:
+                case SheetsConfig.SheetNames.Setup:
                     sheetData.Add(SetupMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.SERVICES:
+                case SheetsConfig.SheetNames.Services:
                     sheetData.Add(ServiceMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.SHIFTS:
+                case SheetsConfig.SheetNames.Shifts:
                     sheetData.Add(ShiftMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.TRIPS:
+                case SheetsConfig.SheetNames.Trips:
                     sheetData.Add(TripMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.TYPES:
+                case SheetsConfig.SheetNames.Types:
                     sheetData.Add(TypeMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.WEEKDAYS:
+                case SheetsConfig.SheetNames.Weekdays:
                     sheetData.Add(WeekdayMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.WEEKLY:
+                case SheetsConfig.SheetNames.Weekly:
                     sheetData.Add(WeeklyMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.YEARLY:
+                case SheetsConfig.SheetNames.Yearly:
                     sheetData.Add(YearlyMapper.GetSheet());
                     break;
             }
@@ -194,65 +203,65 @@ public static class GigSheetHelpers
 
         var headerValues = values.First();
 
-        switch (sheetName.ToUpper())
+        switch (sheetName)
         {
-            case SheetsConfig.SheetNames.ADDRESSES:
+            case SheetsConfig.SheetNames.Addresses:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, AddressMapper.GetSheet()));
                 sheetEntity.Addresses = AddressMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.DAILY:
+            case SheetsConfig.SheetNames.Daily:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, DailyMapper.GetSheet()));
                 sheetEntity.Daily = DailyMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.EXPENSES:
+            case SheetsConfig.SheetNames.Expenses:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ExpenseMapper.GetSheet()));
                 sheetEntity.Expenses = ExpenseMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.MONTHLY:
+            case SheetsConfig.SheetNames.Monthly:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, MonthlyMapper.GetSheet()));
                 sheetEntity.Monthly = MonthlyMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.NAMES:
+            case SheetsConfig.SheetNames.Names:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, NameMapper.GetSheet()));
                 sheetEntity.Names = NameMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.PLACES:
+            case SheetsConfig.SheetNames.Places:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, PlaceMapper.GetSheet()));
                 sheetEntity.Places = PlaceMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.REGIONS:
+            case SheetsConfig.SheetNames.Regions:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, RegionMapper.GetSheet()));
                 sheetEntity.Regions = RegionMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.SERVICES:
+            case SheetsConfig.SheetNames.Services:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ServiceMapper.GetSheet()));
                 sheetEntity.Services = ServiceMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.SETUP:
+            case SheetsConfig.SheetNames.Setup:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, SetupMapper.GetSheet()));
                 sheetEntity.Setup = SetupMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.SHIFTS:
+            case SheetsConfig.SheetNames.Shifts:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ShiftMapper.GetSheet()));
                 sheetEntity.Shifts = ShiftMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.TRIPS:
+            case SheetsConfig.SheetNames.Trips:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TripMapper.GetSheet()));
                 sheetEntity.Trips = TripMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.TYPES:
+            case SheetsConfig.SheetNames.Types:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TypeMapper.GetSheet()));
                 sheetEntity.Types = TypeMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.WEEKDAYS:
+            case SheetsConfig.SheetNames.Weekdays:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, WeekdayMapper.GetSheet()));
                 sheetEntity.Weekdays = WeekdayMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.WEEKLY:
+            case SheetsConfig.SheetNames.Weekly:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, WeeklyMapper.GetSheet()));
                 sheetEntity.Weekly = WeeklyMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetNames.YEARLY:
+            case SheetsConfig.SheetNames.Yearly:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, YearlyMapper.GetSheet()));
                 sheetEntity.Yearly = YearlyMapper.MapFromRangeData(values);
                 break;
