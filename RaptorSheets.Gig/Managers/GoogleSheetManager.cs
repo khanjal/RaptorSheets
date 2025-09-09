@@ -89,6 +89,14 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             switch (change.Key.ToUpperInvariant())
             {
+                case nameof(SheetEnum.EXPENSES):
+                    var expenseProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
+                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], expenseProperties));
+                    break;
+                case nameof(Common.Enums.SheetEnum.SETUP):
+                    var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
+                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
+                    break;
                 case nameof(SheetEnum.SHIFTS):
                     var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
@@ -96,10 +104,6 @@ public class GoogleSheetManager : IGoogleSheetManager
                 case nameof(SheetEnum.TRIPS):
                     var tripProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripProperties));
-                    break;
-                case nameof(Common.Enums.SheetEnum.SETUP):
-                    var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
-                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
                     break;
             }
 

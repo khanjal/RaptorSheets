@@ -513,4 +513,67 @@ public class GigRequestHelpersTests
     }
 
     #endregion
+
+    #region Generic Tests
+
+    [Fact]
+    public void ChangeSheetDataGeneric_WithMixedActions_ShouldHandleCorrectly()
+    {
+        // Arrange
+        var trips = new List<TripEntity>
+        {
+            new() { RowId = 10, Action = ActionTypeEnum.INSERT.GetDescription() }, // New trip (append)
+            new() { RowId = 5, Action = ActionTypeEnum.UPDATE.GetDescription() }, // Update trip
+            new() { RowId = 15, Action = ActionTypeEnum.DELETE.GetDescription() } // Delete trip
+        };
+        
+        var sheetProperties = new PropertyEntity 
+        { 
+            Id = "1",
+            Attributes = new Dictionary<string, string>
+            {
+                { PropertyEnum.HEADERS.GetDescription(), "Date,Service,Pay,Tips" },
+                { PropertyEnum.MAX_ROW.GetDescription(), "8" }
+            }
+        };
+
+        // Act
+        var result = GigRequestHelpers.ChangeTripSheetData(trips, sheetProperties);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count); // Should have append, update, and delete requests
+        
+        // Should have one append request (RowId 10 > maxRow 8)
+        Assert.Single(result, r => r.AppendCells != null);
+        
+        // Should have one update request (RowId 5 <= maxRow 8) 
+        Assert.Single(result, r => r.UpdateCells != null);
+        
+        // Should have one delete request (RowId 15 marked for deletion)
+        Assert.Single(result, r => r.DeleteDimension != null);
+    }
+
+    [Fact]
+    public void GenericHelpers_ShouldWorkWithAllEntityTypes()
+    {
+        // Arrange
+        var setupEntity = new SetupEntity { RowId = 1, Action = ActionTypeEnum.INSERT.GetDescription() };
+        var tripEntity = new TripEntity { RowId = 2, Action = ActionTypeEnum.UPDATE.GetDescription() };
+        var shiftEntity = new ShiftEntity { RowId = 3, Action = ActionTypeEnum.DELETE.GetDescription() };
+        var expenseEntity = new ExpenseEntity { RowId = 4, Action = ActionTypeEnum.INSERT.GetDescription() };
+
+        // Act & Assert - Should not throw exceptions
+        var setupAction = GigRequestHelpers.GetEntityAction(setupEntity);
+        var tripRowId = GigRequestHelpers.GetEntityRowId(tripEntity);
+        var shiftAction = GigRequestHelpers.GetEntityAction(shiftEntity);
+        var expenseRowId = GigRequestHelpers.GetEntityRowId(expenseEntity);
+
+        Assert.Equal(ActionTypeEnum.INSERT.GetDescription(), setupAction);
+        Assert.Equal(2, tripRowId);
+        Assert.Equal(ActionTypeEnum.DELETE.GetDescription(), shiftAction);
+        Assert.Equal(4, expenseRowId);
+    }
+
+    #endregion
 }
