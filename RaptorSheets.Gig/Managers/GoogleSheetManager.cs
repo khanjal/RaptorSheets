@@ -50,18 +50,21 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             switch (sheet.ToUpperInvariant())
             {
-                case nameof(SheetEnum.SHIFTS):
-                    if (sheetEntity.Shifts.Count > 0)
-                        changes.Add(sheet, sheetEntity.Shifts);
-                    break;
-
-                case nameof(SheetEnum.TRIPS):
-                    if (sheetEntity.Trips.Count > 0)
-                        changes.Add(sheet, sheetEntity.Trips);
+                case nameof(SheetEnum.EXPENSES):
+                    if (sheetEntity.Expenses.Count > 0)
+                        changes.Add(sheet, sheetEntity.Expenses);
                     break;
                 case nameof(Common.Enums.SheetEnum.SETUP):
                     if (sheetEntity.Setup.Count > 0)
                         changes.Add(sheet, sheetEntity.Setup);
+                    break;
+                case nameof(SheetEnum.SHIFTS):
+                    if (sheetEntity.Shifts.Count > 0)
+                        changes.Add(sheet, sheetEntity.Shifts);
+                    break;
+                case nameof(SheetEnum.TRIPS):
+                    if (sheetEntity.Trips.Count > 0)
+                        changes.Add(sheet, sheetEntity.Trips);
                     break;
                 default:
                     // Unsupported sheet.
