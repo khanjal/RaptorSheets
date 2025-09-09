@@ -49,21 +49,25 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Pull out all changes into a single object to iterate through.
         foreach (var sheet in sheets)
         {
-            switch (sheet)
+            // Normalize sheet name for consistent comparison
+            var normalizedSheetName = sheet.ToUpperInvariant();
+
+            // Use constants for switch comparison
+            switch (normalizedSheetName)
             {
-                case SheetsConfig.SheetNames.Expenses:
+                case SheetsConfig.SheetUtilities.UpperCase.Expenses:
                     if (sheetEntity.Expenses.Count > 0)
                         changes.Add(sheet, sheetEntity.Expenses);
                     break;
-                case SheetsConfig.SheetNames.Setup:
+                case SheetsConfig.SheetUtilities.UpperCase.Setup:
                     if (sheetEntity.Setup.Count > 0)
                         changes.Add(sheet, sheetEntity.Setup);
                     break;
-                case SheetsConfig.SheetNames.Shifts:
+                case SheetsConfig.SheetUtilities.UpperCase.Shifts:
                     if (sheetEntity.Shifts.Count > 0)
                         changes.Add(sheet, sheetEntity.Shifts);
                     break;
-                case SheetsConfig.SheetNames.Trips:
+                case SheetsConfig.SheetUtilities.UpperCase.Trips:
                     if (sheetEntity.Trips.Count > 0)
                         changes.Add(sheet, sheetEntity.Trips);
                     break;
@@ -88,21 +92,25 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         foreach (var change in changes)
         {
-            switch (change.Key)
+            // Normalize sheet name for consistent comparison
+            var normalizedChangeKey = change.Key.ToUpperInvariant();
+
+            // Use constants for comparison
+            switch (normalizedChangeKey)
             {
-                case SheetsConfig.SheetNames.Expenses:
+                case SheetsConfig.SheetUtilities.UpperCase.Expenses:
                     var expenseProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], expenseProperties));
                     break;
-                case SheetsConfig.SheetNames.Setup:
+                case SheetsConfig.SheetUtilities.UpperCase.Setup:
                     var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
                     break;
-                case SheetsConfig.SheetNames.Shifts:
+                case SheetsConfig.SheetUtilities.UpperCase.Shifts:
                     var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
                     break;
-                case SheetsConfig.SheetNames.Trips:
+                case SheetsConfig.SheetUtilities.UpperCase.Trips:
                     var tripProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripProperties));
                     break;
@@ -178,58 +186,62 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Loop through sheets to check headers.
         foreach (var sheet in sheetInfoResponse.Sheets)
         {
-            var sheetName = sheet.Properties.Title.ToUpper();
+            var sheetName = sheet.Properties.Title;
             var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
-            switch (sheetName)
+            // Normalize sheet name for consistent comparison
+            var normalizedSheetName = sheetName.ToUpperInvariant();
+
+            // Use constants for comparison
+            switch (normalizedSheetName)
             {
-                case SheetsConfig.SheetNames.Addresses:
+                case SheetsConfig.SheetUtilities.UpperCase.Addresses:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Daily:
+                case SheetsConfig.SheetUtilities.UpperCase.Daily:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Expenses:
+                case SheetsConfig.SheetUtilities.UpperCase.Expenses:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ExpenseMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Monthly:
+                case SheetsConfig.SheetUtilities.UpperCase.Monthly:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Names:
+                case SheetsConfig.SheetUtilities.UpperCase.Names:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Places:
+                case SheetsConfig.SheetUtilities.UpperCase.Places:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Regions:
+                case SheetsConfig.SheetUtilities.UpperCase.Regions:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Services:
+                case SheetsConfig.SheetUtilities.UpperCase.Services:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Setup:
+                case SheetsConfig.SheetUtilities.UpperCase.Setup:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, SetupMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Shifts:
+                case SheetsConfig.SheetUtilities.UpperCase.Shifts:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Trips:
+                case SheetsConfig.SheetUtilities.UpperCase.Trips:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Types:
+                case SheetsConfig.SheetUtilities.UpperCase.Types:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Weekdays:
+                case SheetsConfig.SheetUtilities.UpperCase.Weekdays:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Weekly:
+                case SheetsConfig.SheetUtilities.UpperCase.Weekly:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetNames.Yearly:
+                case SheetsConfig.SheetUtilities.UpperCase.Yearly:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
                     break;
                 default:
-                    messages.Add(MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known enum value", MessageTypeEnum.CHECK_SHEET));
+                    messages.Add(MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageTypeEnum.CHECK_SHEET));
                     break;
             }
         }

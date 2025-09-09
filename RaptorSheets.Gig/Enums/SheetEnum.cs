@@ -4,10 +4,10 @@ using RaptorSheets.Gig.Constants;
 namespace RaptorSheets.Gig.Enums;
 
 /// <summary>
-/// Compatibility wrapper around SheetsConfig.SheetNames constants.
-/// This allows existing code to continue working while we migrate to the new constants approach.
+/// Sheet enumeration for type safety and IntelliSense support.
+/// Descriptions map to SheetsConfig.SheetNames constants for consistency.
+/// Use enums for type safety and constants for switch statements and comparisons.
 /// </summary>
-[Obsolete("Use SheetsConfig.SheetNames constants directly instead of SheetEnum.FIELD.GetDescription()")]
 public enum SheetEnum
 {
     [Description(SheetsConfig.SheetNames.Addresses)]

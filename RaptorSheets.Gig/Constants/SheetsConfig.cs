@@ -57,6 +57,8 @@ public static class SheetsConfig
         public const string DateEnd = "End";
         public const string Day = "Day";
         public const string Days = "Days";
+        public const string DaysPerVisit = "D/V";
+        public const string DaysSinceVisit = "Since";
         public const string Description = "Description";
         public const string Distance = "Dist";
         public const string Dropoff = "Dropoff";
@@ -67,6 +69,7 @@ public static class SheetsConfig
         public const string Name = "Name";
         public const string Note = "Note";
         public const string Number = "#";
+        public const string NumberOfDays = "# Days";
         public const string OdometerEnd = "Odo End";
         public const string OdometerStart = "Odo Start";
         public const string OrderNumber = "Order #";
@@ -75,11 +78,13 @@ public static class SheetsConfig
         public const string Place = "Place";
         public const string Region = "Region";
         public const string Service = "Service";
+        public const string TaxDeductible = "Tax Deductible";
         public const string TimeActive = "Active";
         public const string TimeEnd = "Finish";
         public const string TimeOmit = "O";
         public const string TimeStart = "Start";
         public const string TimeTotal = "Time";
+        public const string Tip = "Tip";
         public const string Tips = "Tips";
         public const string Total = "Total";
         public const string TotalBonus = "T Bonus";
@@ -92,11 +97,13 @@ public static class SheetsConfig
         public const string TotalTips = "T Tips";
         public const string TotalTrips = "T Trips";
         public const string Trips = "Trips";
+        public const string TripsPerDay = "Trips/Day";
         public const string TripsPerHour = "Trips/Hour";
         public const string Type = "Type";
         public const string UnitEnd = "End Unit";
         public const string VisitFirst = "First Trip";
         public const string VisitLast = "Last Trip";
+        public const string Visits = "Visits";
         public const string Week = "Week";
         public const string Weekday = "Weekday";
         public const string Year = "Year";
@@ -118,6 +125,28 @@ public static class SheetsConfig
         
         public static bool IsValidSheetName(string name) =>
             GetAllSheetNames().Any(sheet => string.Equals(sheet, name, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>
+        /// Gets all sheet names in uppercase for case-insensitive switch statements
+        /// </summary>
+        public static class UpperCase
+        {
+            public const string Addresses = "ADDRESSES";
+            public const string Daily = "DAILY";
+            public const string Expenses = "EXPENSES";
+            public const string Monthly = "MONTHLY";
+            public const string Names = "NAMES";
+            public const string Places = "PLACES";
+            public const string Regions = "REGIONS";
+            public const string Services = "SERVICES";
+            public const string Setup = "SETUP";
+            public const string Shifts = "SHIFTS";
+            public const string Trips = "TRIPS";
+            public const string Types = "TYPES";
+            public const string Weekdays = "WEEKDAYS";
+            public const string Weekly = "WEEKLY";
+            public const string Yearly = "YEARLY";
+        }
     }
 
     public static SheetModel AddressSheet => new()

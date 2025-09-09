@@ -4,10 +4,10 @@ using RaptorSheets.Gig.Constants;
 namespace RaptorSheets.Gig.Enums;
 
 /// <summary>
-/// Compatibility wrapper around SheetsConfig.HeaderNames constants.
-/// This allows existing code to continue working while we migrate to the new constants approach.
+/// Header enumeration for type safety and IntelliSense support.
+/// Descriptions map to SheetsConfig.HeaderNames constants for consistency.
+/// Use enums for type safety and constants for switch statements and comparisons.
 /// </summary>
-[Obsolete("Use SheetsConfig.HeaderNames constants directly instead of HeaderEnum.FIELD.GetDescription()")]
 public enum HeaderEnum
 {
     [Description(SheetsConfig.HeaderNames.Address)]
@@ -70,10 +70,10 @@ public enum HeaderEnum
     [Description(SheetsConfig.HeaderNames.Days)]
     DAYS,
 
-    [Description("D/V")]
+    [Description(SheetsConfig.HeaderNames.DaysPerVisit)]
     DAYS_PER_VISIT,
 
-    [Description("Since")]
+    [Description(SheetsConfig.HeaderNames.DaysSinceVisit)]
     DAYS_SINCE_VISIT,
 
     [Description(SheetsConfig.HeaderNames.Description)]
@@ -106,7 +106,7 @@ public enum HeaderEnum
     [Description(SheetsConfig.HeaderNames.Number)]
     NUMBER,
 
-    [Description("# Days")]
+    [Description(SheetsConfig.HeaderNames.NumberOfDays)]
     NUMBER_OF_DAYS,
 
     [Description(SheetsConfig.HeaderNames.OdometerEnd)]
@@ -133,7 +133,7 @@ public enum HeaderEnum
     [Description(SheetsConfig.HeaderNames.Service)]
     SERVICE,
 
-    [Description("Tax Deductible")]
+    [Description(SheetsConfig.HeaderNames.TaxDeductible)]
     TAX_DEDUCTIBLE,
 
     [Description(SheetsConfig.HeaderNames.TimeActive)]
@@ -151,7 +151,7 @@ public enum HeaderEnum
     [Description(SheetsConfig.HeaderNames.TimeTotal)]
     TIME_TOTAL,
 
-    [Description("Tip")]
+    [Description(SheetsConfig.HeaderNames.Tip)]
     TIP,
 
     [Description(SheetsConfig.HeaderNames.Tips)]
@@ -190,7 +190,7 @@ public enum HeaderEnum
     [Description(SheetsConfig.HeaderNames.Trips)]
     TRIPS,
 
-    [Description("Trips/Day")]
+    [Description(SheetsConfig.HeaderNames.TripsPerDay)]
     TRIPS_PER_DAY,
 
     [Description(SheetsConfig.HeaderNames.TripsPerHour)]
@@ -208,7 +208,7 @@ public enum HeaderEnum
     [Description(SheetsConfig.HeaderNames.VisitLast)]
     VISIT_LAST,
 
-    [Description("Visits")]
+    [Description(SheetsConfig.HeaderNames.Visits)]
     VISITS,
 
     [Description(SheetsConfig.HeaderNames.Week)]
