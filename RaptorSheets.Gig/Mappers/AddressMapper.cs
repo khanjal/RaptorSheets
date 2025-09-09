@@ -18,7 +18,7 @@ public static class AddressMapper
         values = values!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
         var id = 0;
 
-        foreach (var value in values)
+        foreach (List<object> value in values.Cast<List<object>>())
         {
             id++;
             if (id == 1)
