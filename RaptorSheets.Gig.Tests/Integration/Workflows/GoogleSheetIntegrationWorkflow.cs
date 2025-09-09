@@ -9,7 +9,7 @@ using RaptorSheets.Gig.Tests.Data.Helpers;
 using RaptorSheets.Test.Common.Helpers;
 using RaptorSheets.Core.Tests.Data.Helpers;
 using RaptorSheets.Core.Helpers;
-using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
+using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Tests.Integration.Workflows;
 
@@ -44,16 +44,13 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         _testStartTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         
         _testSheets = [
-            SheetEnum.SHIFTS.GetDescription(), 
-            SheetEnum.TRIPS.GetDescription(),
-            SheetEnum.EXPENSES.GetDescription()
+            SheetsConfig.SheetNames.Shifts, 
+            SheetsConfig.SheetNames.Trips,
+            SheetsConfig.SheetNames.Expenses
         ];
 
-        // Get all available sheets from enums
-        _allSheets = [
-            .. Enum.GetValues<SheetEnum>().Select(e => e.GetDescription()),
-            .. Enum.GetValues<RaptorSheets.Common.Enums.SheetEnum>().Select(e => e.GetDescription())
-        ];
+        // Get all available sheets from constants
+        _allSheets = SheetsConfig.SheetUtilities.GetAllSheetNames();
 
         var spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
         var credential = TestConfigurationHelpers.GetJsonCredential();
@@ -278,10 +275,10 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             Assert.NotNull(spreadsheetSheets);
             Assert.True(spreadsheetSheets.Count > 0, "Should have at least one sheet");
             
-            // Verify we have at least as many sheets as the enum defines (similar to unit test expectation)
-            var expectedSheetCount = Enum.GetNames(typeof(SheetEnum)).Length;
+            // Verify we have at least as many sheets as defined in constants
+            var expectedSheetCount = SheetsConfig.SheetUtilities.GetAllSheetNames().Count;
             Assert.True(spreadsheetSheets.Count >= expectedSheetCount, 
-                $"Expected at least {expectedSheetCount} sheets from enum, found {spreadsheetSheets.Count}");
+                $"Expected at least {expectedSheetCount} sheets from constants, found {spreadsheetSheets.Count}");
 
             System.Diagnostics.Debug.WriteLine($"  Found {spreadsheetSheets.Count} sheets: {string.Join(", ", spreadsheetSheets.Take(5))}...");
 
@@ -292,11 +289,11 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
                 Assert.True(sheetExists, $"Sheet '{testSheetName}' should exist in spreadsheet");
             }
 
-            // Verify enum coverage - all sheet enum values should be represented
-            foreach (var enumName in Enum.GetNames(typeof(SheetEnum)))
+            // Verify sheet coverage - all sheet constants should be represented
+            foreach (var sheetName in SheetsConfig.SheetUtilities.GetAllSheetNames())
             {
-                var sheetExists = spreadsheetSheets.Contains(enumName.ToUpperInvariant());
-                Assert.True(sheetExists, $"Enum sheet '{enumName}' should exist in spreadsheet");
+                var sheetExists = spreadsheetSheets.Contains(sheetName.ToUpperInvariant());
+                Assert.True(sheetExists, $"Sheet '{sheetName}' should exist in spreadsheet");
             }
 
             System.Diagnostics.Debug.WriteLine("? Spreadsheet properties verification completed successfully");
@@ -602,9 +599,9 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         try
         {
             var sheetInfo = await _googleSheetManager!.GetSheetProperties(_testSheets);
-            var maxShiftId = GetMaxRowValue(sheetInfo, SheetEnum.SHIFTS.GetDescription());
-            var maxTripId = GetMaxRowValue(sheetInfo, SheetEnum.TRIPS.GetDescription());
-            var maxExpenseId = GetMaxRowValue(sheetInfo, SheetEnum.EXPENSES.GetDescription());
+            var maxShiftId = GetMaxRowValue(sheetInfo, SheetsConfig.SheetNames.Shifts);
+            var maxTripId = GetMaxRowValue(sheetInfo, SheetsConfig.SheetNames.Trips);
+            var maxExpenseId = GetMaxRowValue(sheetInfo, SheetsConfig.SheetNames.Expenses);
 
             var testShiftsAndTrips = TestGigHelpers.GenerateMultipleShifts(
                 ActionTypeEnum.APPEND,

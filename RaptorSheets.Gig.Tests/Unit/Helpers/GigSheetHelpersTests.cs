@@ -8,6 +8,7 @@ using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
@@ -23,8 +24,8 @@ public class GigSheetHelpersTests
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
         
-        var shiftSheet = result.FirstOrDefault(s => s.Name == SheetEnum.SHIFTS.GetDescription());
-        var tripSheet = result.FirstOrDefault(s => s.Name == SheetEnum.TRIPS.GetDescription());
+        var shiftSheet = result.FirstOrDefault(s => s.Name == SheetsConfig.SheetNames.Shifts);
+        var tripSheet = result.FirstOrDefault(s => s.Name == SheetsConfig.SheetNames.Trips);
         
         Assert.NotNull(shiftSheet);
         Assert.NotNull(tripSheet);
@@ -41,11 +42,11 @@ public class GigSheetHelpersTests
         Assert.NotEmpty(result);
         
         // Should contain Gig sheets
-        Assert.Contains(SheetEnum.SHIFTS.GetDescription().ToUpper(), result.Select(x => x.ToUpper()));
-        Assert.Contains(SheetEnum.TRIPS.GetDescription().ToUpper(), result.Select(x => x.ToUpper()));
+        Assert.Contains(SheetsConfig.SheetNames.Shifts.ToUpper(), result.Select(x => x.ToUpper()));
+        Assert.Contains(SheetsConfig.SheetNames.Trips.ToUpper(), result.Select(x => x.ToUpper()));
         
         // Should contain Common sheets
-        Assert.Contains(Common.Enums.SheetEnum.SETUP.GetDescription().ToUpper(), result.Select(x => x.ToUpper()));
+        Assert.Contains(SheetsConfig.SheetNames.Setup.ToUpper(), result.Select(x => x.ToUpper()));
     }
 
     [Fact]
@@ -77,8 +78,8 @@ public class GigSheetHelpersTests
         {
             Sheets = new List<Sheet>
             {
-                new() { Properties = new SheetProperties { Title = SheetEnum.SHIFTS.GetDescription() } },
-                new() { Properties = new SheetProperties { Title = SheetEnum.TRIPS.GetDescription() } }
+                new() { Properties = new SheetProperties { Title = SheetsConfig.SheetNames.Shifts } },
+                new() { Properties = new SheetProperties { Title = SheetsConfig.SheetNames.Trips } }
             }
         };
 
@@ -89,11 +90,11 @@ public class GigSheetHelpersTests
         Assert.NotNull(result);
         
         // Should not contain existing sheets
-        Assert.DoesNotContain(result, s => s.Name == SheetEnum.SHIFTS.GetDescription());
-        Assert.DoesNotContain(result, s => s.Name == SheetEnum.TRIPS.GetDescription());
+        Assert.DoesNotContain(result, s => s.Name == SheetsConfig.SheetNames.Shifts);
+        Assert.DoesNotContain(result, s => s.Name == SheetsConfig.SheetNames.Trips);
         
         // But should contain other sheets like SETUP, EXPENSES, etc.
-        Assert.Contains(result, s => s.Name == Common.Enums.SheetEnum.SETUP.GetDescription());
+        Assert.Contains(result, s => s.Name == SheetsConfig.SheetNames.Setup);
     }
 
     [Fact]
@@ -164,7 +165,7 @@ public class GigSheetHelpersTests
             {
                 new()
                 {
-                    Properties = new SheetProperties { Title = SheetEnum.SHIFTS.GetDescription() },
+                    Properties = new SheetProperties { Title = SheetsConfig.SheetNames.Shifts },
                     Data = new List<GridData>
                     {
                         new()
@@ -207,7 +208,7 @@ public class GigSheetHelpersTests
                 {
                     DataFilters = new List<DataFilter>
                     {
-                        new() { A1Range = SheetEnum.SHIFTS.GetDescription() }
+                        new() { A1Range = SheetsConfig.SheetNames.Shifts }
                     },
                     ValueRange = new ValueRange
                     {
@@ -258,7 +259,7 @@ public class GigSheetHelpersTests
                 {
                     DataFilters = new List<DataFilter>
                     {
-                        new() { A1Range = SheetEnum.SHIFTS.GetDescription() }
+                        new() { A1Range = SheetsConfig.SheetNames.Shifts }
                     },
                     ValueRange = new ValueRange
                     {
@@ -282,21 +283,21 @@ public class GigSheetHelpersTests
         // Arrange
         var sheetNames = new[]
         {
-            nameof(SheetEnum.ADDRESSES),
-            nameof(SheetEnum.DAILY),
-            nameof(SheetEnum.EXPENSES),
-            nameof(SheetEnum.MONTHLY),
-            nameof(SheetEnum.NAMES),
-            nameof(SheetEnum.PLACES),
-            nameof(SheetEnum.REGIONS),
-            nameof(SheetEnum.SERVICES),
-            nameof(Common.Enums.SheetEnum.SETUP),
-            nameof(SheetEnum.SHIFTS),
-            nameof(SheetEnum.TRIPS),
-            nameof(SheetEnum.TYPES),
-            nameof(SheetEnum.WEEKDAYS),
-            nameof(SheetEnum.WEEKLY),
-            nameof(SheetEnum.YEARLY)
+            SheetsConfig.SheetNames.Addresses,
+            SheetsConfig.SheetNames.Daily,
+            SheetsConfig.SheetNames.Expenses,
+            SheetsConfig.SheetNames.Monthly,
+            SheetsConfig.SheetNames.Names,
+            SheetsConfig.SheetNames.Places,
+            SheetsConfig.SheetNames.Regions,
+            SheetsConfig.SheetNames.Services,
+            SheetsConfig.SheetNames.Setup,
+            SheetsConfig.SheetNames.Shifts,
+            SheetsConfig.SheetNames.Trips,
+            SheetsConfig.SheetNames.Types,
+            SheetsConfig.SheetNames.Weekdays,
+            SheetsConfig.SheetNames.Weekly,
+            SheetsConfig.SheetNames.Yearly
         };
 
         var valueRanges = sheetNames.Select(sheetName => new MatchedValueRange

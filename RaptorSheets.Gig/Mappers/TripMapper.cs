@@ -7,7 +7,6 @@ using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
-using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
 
 namespace RaptorSheets.Gig.Mappers;
 

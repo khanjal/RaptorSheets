@@ -6,7 +6,6 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Entities;
-using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
 using RaptorSheets.Common.Mappers;
 using RaptorSheets.Gig.Constants;
 
@@ -52,7 +51,7 @@ public static class GigSheetHelpers
         // Loop through all sheets to see if they exist.
         foreach (var name in sheetNames)
         {
-            if (spreadsheetSheets.Contains(name))
+            if (spreadsheetSheets.Contains(name.ToUpper()))
             {
                 continue;
             }

@@ -1,67 +1,73 @@
 using System.ComponentModel;
+using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Enums;
 
+/// <summary>
+/// Compatibility wrapper around SheetsConfig.HeaderNames constants.
+/// This allows existing code to continue working while we migrate to the new constants approach.
+/// </summary>
+[Obsolete("Use SheetsConfig.HeaderNames constants directly instead of HeaderEnum.FIELD.GetDescription()")]
 public enum HeaderEnum
 {
-    [Description("Address")]
+    [Description(SheetsConfig.HeaderNames.Address)]
     ADDRESS,
 
-    [Description("Start Address")]
+    [Description(SheetsConfig.HeaderNames.AddressStart)]
     ADDRESS_START,
 
-    [Description("End Address")]
+    [Description(SheetsConfig.HeaderNames.AddressEnd)]
     ADDRESS_END,
 
-    [Description("Amount")]
+    [Description(SheetsConfig.HeaderNames.Amount)]
     AMOUNT,
 
-    [Description("Curr Amt")]
+    [Description(SheetsConfig.HeaderNames.AmountCurrent)]
     AMOUNT_CURRENT,
 
-    [Description("Prev Amt")]
+    [Description(SheetsConfig.HeaderNames.AmountPrevious)]
     AMOUNT_PREVIOUS,
 
-    [Description("Amt/Day")]
+    [Description(SheetsConfig.HeaderNames.AmountPerDay)]
     AMOUNT_PER_DAY,
 
-    [Description("Amt/Dist")]
+    [Description(SheetsConfig.HeaderNames.AmountPerDistance)]
     AMOUNT_PER_DISTANCE,
 
-    [Description("Amt/Prev")]
+    [Description(SheetsConfig.HeaderNames.AmountPerPreviousDay)]
     AMOUNT_PER_PREVIOUS_DAY,
 
-    [Description("Amt/Hour")]
+    [Description(SheetsConfig.HeaderNames.AmountPerTime)]
     AMOUNT_PER_TIME,
 
-    [Description("Amt/Trip")]
+    [Description(SheetsConfig.HeaderNames.AmountPerTrip)]
     AMOUNT_PER_TRIP,
 
-    [Description("Average")]
+    [Description(SheetsConfig.HeaderNames.Average)]
     AVERAGE,
 
-    [Description("Bonus")]
+    [Description(SheetsConfig.HeaderNames.Bonus)]
     BONUS,
 
-    [Description("Cash")]
+    [Description(SheetsConfig.HeaderNames.Cash)]
     CASH,
 
-    [Description("Category")]
+    [Description(SheetsConfig.HeaderNames.Category)]
     CATEGORY,
 
-    [Description("Date")]
+    [Description(SheetsConfig.HeaderNames.Date)]
     DATE,
 
-    [Description("Begin")]
+    [Description(SheetsConfig.HeaderNames.DateBegin)]
     DATE_BEGIN,
 
-    [Description("End")]
+    [Description(SheetsConfig.HeaderNames.DateEnd)]
     DATE_END,
 
-    [Description("Day")]
+    [Description(SheetsConfig.HeaderNames.Day)]
     DAY,
 
-    [Description("Days")]
+    [Description(SheetsConfig.HeaderNames.Days)]
     DAYS,
 
     [Description("D/V")]
@@ -70,147 +76,147 @@ public enum HeaderEnum
     [Description("Since")]
     DAYS_SINCE_VISIT,
 
-    [Description("Description")]
+    [Description(SheetsConfig.HeaderNames.Description)]
     DESCRIPTION,
 
-    [Description("Dist")]
+    [Description(SheetsConfig.HeaderNames.Distance)]
     DISTANCE,
 
-    [Description("Dropoff")]
+    [Description(SheetsConfig.HeaderNames.Dropoff)]
     DROPOFF,
 
-    [Description("Duration")]
+    [Description(SheetsConfig.HeaderNames.Duration)]
     DURATION,
 
-    [Description("X")]
+    [Description(SheetsConfig.HeaderNames.Exclude)]
     EXCLUDE,
 
-    [Description("Key")]
+    [Description(SheetsConfig.HeaderNames.Key)]
     KEY,
 
-    [Description("Month")]
+    [Description(SheetsConfig.HeaderNames.Month)]
     MONTH,
 
-    [Description("Name")]
+    [Description(SheetsConfig.HeaderNames.Name)]
     NAME,
 
-    [Description("Note")]
+    [Description(SheetsConfig.HeaderNames.Note)]
     NOTE,
 
-    [Description("#")]
+    [Description(SheetsConfig.HeaderNames.Number)]
     NUMBER,
 
     [Description("# Days")]
     NUMBER_OF_DAYS,
 
-    [Description("Odo End")]
+    [Description(SheetsConfig.HeaderNames.OdometerEnd)]
     ODOMETER_END,
 
-    [Description("Odo Start")]
+    [Description(SheetsConfig.HeaderNames.OdometerStart)]
     ODOMETER_START,
 
-    [Description("Order #")]
+    [Description(SheetsConfig.HeaderNames.OrderNumber)]
     ORDER_NUMBER,
 
-    [Description("Pay")]
+    [Description(SheetsConfig.HeaderNames.Pay)]
     PAY,
 
-    [Description("Pickup")]
+    [Description(SheetsConfig.HeaderNames.Pickup)]
     PICKUP,
 
-    [Description("Place")]
+    [Description(SheetsConfig.HeaderNames.Place)]
     PLACE,
 
-    [Description("Region")]
+    [Description(SheetsConfig.HeaderNames.Region)]
     REGION,
 
-    [Description("Service")]
+    [Description(SheetsConfig.HeaderNames.Service)]
     SERVICE,
 
     [Description("Tax Deductible")]
     TAX_DEDUCTIBLE,
 
-    [Description("Active")]
+    [Description(SheetsConfig.HeaderNames.TimeActive)]
     TIME_ACTIVE,
 
-    [Description("Finish")]
+    [Description(SheetsConfig.HeaderNames.TimeEnd)]
     TIME_END,
 
-    [Description("O")]
+    [Description(SheetsConfig.HeaderNames.TimeOmit)]
     TIME_OMIT,
 
-    [Description("Start")]
+    [Description(SheetsConfig.HeaderNames.TimeStart)]
     TIME_START,
 
-    [Description("Time")]
+    [Description(SheetsConfig.HeaderNames.TimeTotal)]
     TIME_TOTAL,
 
     [Description("Tip")]
     TIP,
 
-    [Description("Tips")]
+    [Description(SheetsConfig.HeaderNames.Tips)]
     TIPS,
 
-    [Description("Total")]
+    [Description(SheetsConfig.HeaderNames.Total)]
     TOTAL,
 
-    [Description("T Bonus")]
+    [Description(SheetsConfig.HeaderNames.TotalBonus)]
     TOTAL_BONUS,
 
-    [Description("T Cash")]
+    [Description(SheetsConfig.HeaderNames.TotalCash)]
     TOTAL_CASH,
 
-    [Description("T Dist")]
+    [Description(SheetsConfig.HeaderNames.TotalDistance)]
     TOTAL_DISTANCE,
 
-    [Description("G Total")]
+    [Description(SheetsConfig.HeaderNames.TotalGrand)]
     TOTAL_GRAND,
 
-    [Description("T Pay")]
+    [Description(SheetsConfig.HeaderNames.TotalPay)]
     TOTAL_PAY,
 
-    [Description("T Time")]
+    [Description(SheetsConfig.HeaderNames.TotalTime)]
     TOTAL_TIME,
 
-    [Description("T Active")]
+    [Description(SheetsConfig.HeaderNames.TotalTimeActive)]
     TOTAL_TIME_ACTIVE,
 
-    [Description("T Tips")]
+    [Description(SheetsConfig.HeaderNames.TotalTips)]
     TOTAL_TIPS,
 
-    [Description("T Trips")]
+    [Description(SheetsConfig.HeaderNames.TotalTrips)]
     TOTAL_TRIPS,
 
-    [Description("Trips")]
+    [Description(SheetsConfig.HeaderNames.Trips)]
     TRIPS,
 
     [Description("Trips/Day")]
     TRIPS_PER_DAY,
 
-    [Description("Trips/Hour")]
+    [Description(SheetsConfig.HeaderNames.TripsPerHour)]
     TRIPS_PER_HOUR,
 
-    [Description("Type")]
+    [Description(SheetsConfig.HeaderNames.Type)]
     TYPE,
 
-    [Description("End Unit")]
+    [Description(SheetsConfig.HeaderNames.UnitEnd)]
     UNIT_END,
 
-    [Description("First Trip")]
+    [Description(SheetsConfig.HeaderNames.VisitFirst)]
     VISIT_FIRST,
 
-    [Description("Last Trip")]
+    [Description(SheetsConfig.HeaderNames.VisitLast)]
     VISIT_LAST,
 
     [Description("Visits")]
     VISITS,
 
-    [Description("Week")]
+    [Description(SheetsConfig.HeaderNames.Week)]
     WEEK,
 
-    [Description("Weekday")]
+    [Description(SheetsConfig.HeaderNames.Weekday)]
     WEEKDAY,
 
-    [Description("Year")]
+    [Description(SheetsConfig.HeaderNames.Year)]
     YEAR,
 }

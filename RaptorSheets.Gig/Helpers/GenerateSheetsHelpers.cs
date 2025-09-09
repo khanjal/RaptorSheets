@@ -5,7 +5,6 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Extensions;
-using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
 using RaptorSheets.Common.Mappers;
 using RaptorSheets.Gig.Constants;
 

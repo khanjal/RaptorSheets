@@ -8,9 +8,9 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
-using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
 using RaptorSheets.Common.Mappers;
 using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Enums;
 
 namespace RaptorSheets.Gig.Managers;
 
