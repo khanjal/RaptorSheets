@@ -7,6 +7,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Extensions;
 using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
 using RaptorSheets.Common.Mappers;
+using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Helpers;
 
@@ -51,8 +52,8 @@ public static class GenerateSheetsHelpers
 
     public static List<string> GetSheetNames()
     {
-        var sheetNames = Enum.GetNames(typeof(SheetEnum)).ToList();
-        sheetNames.AddRange([.. Enum.GetNames(typeof(Common.Enums.SheetEnum))]);
+        var sheetNames = Enum.GetValues<SheetEnum>().Select(e => e.GetDescription()).ToList();
+        sheetNames.AddRange(Enum.GetValues<Common.Enums.SheetEnum>().Select(e => e.GetDescription()));
         return sheetNames;
     }
 
@@ -60,22 +61,22 @@ public static class GenerateSheetsHelpers
     {
         return sheet.ToUpper() switch
         {
-            nameof(SheetEnum.ADDRESSES) => AddressMapper.GetSheet(),
-            nameof(SheetEnum.DAILY) => DailyMapper.GetSheet(),
-            nameof(SheetEnum.EXPENSES) => ExpenseMapper.GetSheet(),
-            nameof(SheetEnum.MONTHLY) => MonthlyMapper.GetSheet(),
-            nameof(SheetEnum.NAMES) => NameMapper.GetSheet(),
-            nameof(SheetEnum.PLACES) => PlaceMapper.GetSheet(),
-            nameof(SheetEnum.REGIONS) => RegionMapper.GetSheet(),
-            nameof(SheetEnum.SERVICES) => ServiceMapper.GetSheet(),
-            nameof(Common.Enums.SheetEnum.SETUP) => SetupMapper.GetSheet(),
-            nameof(SheetEnum.SHIFTS) => ShiftMapper.GetSheet(),
-            nameof(SheetEnum.TRIPS) => TripMapper.GetSheet(),
-            nameof(SheetEnum.TYPES) => TypeMapper.GetSheet(),
-            nameof(SheetEnum.WEEKDAYS) => WeekdayMapper.GetSheet(),
-            nameof(SheetEnum.WEEKLY) => WeeklyMapper.GetSheet(),
-            nameof(SheetEnum.YEARLY) => YearlyMapper.GetSheet(),
-            _ => throw new NotImplementedException(),
+            SheetsConfig.SheetNames.ADDRESSES => AddressMapper.GetSheet(),
+            SheetsConfig.SheetNames.DAILY => DailyMapper.GetSheet(),
+            SheetsConfig.SheetNames.EXPENSES => ExpenseMapper.GetSheet(),
+            SheetsConfig.SheetNames.MONTHLY => MonthlyMapper.GetSheet(),
+            SheetsConfig.SheetNames.NAMES => NameMapper.GetSheet(),
+            SheetsConfig.SheetNames.PLACES => PlaceMapper.GetSheet(),
+            SheetsConfig.SheetNames.REGIONS => RegionMapper.GetSheet(),
+            SheetsConfig.SheetNames.SERVICES => ServiceMapper.GetSheet(),
+            SheetsConfig.SheetNames.SETUP => SetupMapper.GetSheet(),
+            SheetsConfig.SheetNames.SHIFTS => ShiftMapper.GetSheet(),
+            SheetsConfig.SheetNames.TRIPS => TripMapper.GetSheet(),
+            SheetsConfig.SheetNames.TYPES => TypeMapper.GetSheet(),
+            SheetsConfig.SheetNames.WEEKDAYS => WeekdayMapper.GetSheet(),
+            SheetsConfig.SheetNames.WEEKLY => WeeklyMapper.GetSheet(),
+            SheetsConfig.SheetNames.YEARLY => YearlyMapper.GetSheet(),
+            _ => throw new NotImplementedException($"Sheet model not found for: {sheet}"),
         };
     }
 

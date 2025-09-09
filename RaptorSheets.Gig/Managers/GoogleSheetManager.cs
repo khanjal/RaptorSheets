@@ -10,6 +10,7 @@ using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
 using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
 using RaptorSheets.Common.Mappers;
+using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Managers;
 
@@ -50,19 +51,19 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             switch (sheet.ToUpperInvariant())
             {
-                case nameof(SheetEnum.EXPENSES):
+                case SheetsConfig.SheetNames.EXPENSES:
                     if (sheetEntity.Expenses.Count > 0)
                         changes.Add(sheet, sheetEntity.Expenses);
                     break;
-                case nameof(Common.Enums.SheetEnum.SETUP):
+                case SheetsConfig.SheetNames.SETUP:
                     if (sheetEntity.Setup.Count > 0)
                         changes.Add(sheet, sheetEntity.Setup);
                     break;
-                case nameof(SheetEnum.SHIFTS):
+                case SheetsConfig.SheetNames.SHIFTS:
                     if (sheetEntity.Shifts.Count > 0)
                         changes.Add(sheet, sheetEntity.Shifts);
                     break;
-                case nameof(SheetEnum.TRIPS):
+                case SheetsConfig.SheetNames.TRIPS:
                     if (sheetEntity.Trips.Count > 0)
                         changes.Add(sheet, sheetEntity.Trips);
                     break;
@@ -89,19 +90,19 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             switch (change.Key.ToUpperInvariant())
             {
-                case nameof(SheetEnum.EXPENSES):
+                case SheetsConfig.SheetNames.EXPENSES:
                     var expenseProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], expenseProperties));
                     break;
-                case nameof(Common.Enums.SheetEnum.SETUP):
+                case SheetsConfig.SheetNames.SETUP:
                     var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
                     break;
-                case nameof(SheetEnum.SHIFTS):
+                case SheetsConfig.SheetNames.SHIFTS:
                     var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
                     break;
-                case nameof(SheetEnum.TRIPS):
+                case SheetsConfig.SheetNames.TRIPS:
                     var tripProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripProperties));
                     break;
@@ -182,49 +183,49 @@ public class GoogleSheetManager : IGoogleSheetManager
 
             switch (sheetName.ToUpper())
             {
-                case nameof(SheetEnum.ADDRESSES):
+                case SheetsConfig.SheetNames.ADDRESSES:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.DAILY):
+                case SheetsConfig.SheetNames.DAILY:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.EXPENSES):
+                case SheetsConfig.SheetNames.EXPENSES:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ExpenseMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.MONTHLY):
+                case SheetsConfig.SheetNames.MONTHLY:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.NAMES):
+                case SheetsConfig.SheetNames.NAMES:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.PLACES):
+                case SheetsConfig.SheetNames.PLACES:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.REGIONS):
+                case SheetsConfig.SheetNames.REGIONS:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.SERVICES):
+                case SheetsConfig.SheetNames.SERVICES:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
-                case nameof(Common.Enums.SheetEnum.SETUP):
+                case SheetsConfig.SheetNames.SETUP:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, SetupMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.SHIFTS):
+                case SheetsConfig.SheetNames.SHIFTS:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.TRIPS):
+                case SheetsConfig.SheetNames.TRIPS:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.TYPES):
+                case SheetsConfig.SheetNames.TYPES:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.WEEKDAYS):
+                case SheetsConfig.SheetNames.WEEKDAYS:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.WEEKLY):
+                case SheetsConfig.SheetNames.WEEKLY:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.YEARLY):
+                case SheetsConfig.SheetNames.YEARLY:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
                     break;
                 default:

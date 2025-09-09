@@ -9,6 +9,28 @@ namespace RaptorSheets.Gig.Constants;
 [ExcludeFromCodeCoverage]
 public static class SheetsConfig
 {
+    /// <summary>
+    /// Sheet name constants for consistent usage across the application
+    /// </summary>
+    public static class SheetNames
+    {
+        public const string ADDRESSES = "ADDRESSES";
+        public const string DAILY = "DAILY";
+        public const string EXPENSES = "EXPENSES";
+        public const string MONTHLY = "MONTHLY";
+        public const string NAMES = "NAMES";
+        public const string PLACES = "PLACES";
+        public const string REGIONS = "REGIONS";
+        public const string SERVICES = "SERVICES";
+        public const string SETUP = "SETUP";
+        public const string SHIFTS = "SHIFTS";
+        public const string TRIPS = "TRIPS";
+        public const string TYPES = "TYPES";
+        public const string WEEKDAYS = "WEEKDAYS";
+        public const string WEEKLY = "WEEKLY";
+        public const string YEARLY = "YEARLY";
+    }
+
     public static SheetModel AddressSheet => new()
     {
         Name = Enums.SheetEnum.ADDRESSES.GetDescription(),
