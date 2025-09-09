@@ -104,7 +104,7 @@ public static class GigSheetHelpers
         return sheetData;
     }
 
-    public static DataValidationRule GetDataValidation(ValidationEnum validation)
+    public static DataValidationRule GetDataValidation(ValidationEnum validation, string? range = "")
     {
         var dataValidation = new DataValidationRule();
 
@@ -121,6 +121,12 @@ public static class GigSheetHelpers
             case ValidationEnum.RANGE_TYPE:
                 var values = new List<ConditionValue> { new() { UserEnteredValue = $"={GetSheetForRange(validation)?.GetDescription()}!A2:A" } };
                 dataValidation.Condition = new BooleanCondition { Type = "ONE_OF_RANGE", Values = values };
+                dataValidation.ShowCustomUi = true;
+                dataValidation.Strict = false;
+                break;
+            case ValidationEnum.RANGE_SELF:
+                var selfValues = new List<ConditionValue> { new() { UserEnteredValue = $"={range}" } };
+                dataValidation.Condition = new BooleanCondition { Type = "ONE_OF_RANGE", Values = selfValues };
                 dataValidation.ShowCustomUi = true;
                 dataValidation.Strict = false;
                 break;

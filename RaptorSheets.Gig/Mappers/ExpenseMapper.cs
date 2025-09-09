@@ -5,6 +5,8 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Enums;
+using System.Xml;
 using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
 
 namespace RaptorSheets.Gig.Mappers;
@@ -162,6 +164,9 @@ public static class ExpenseMapper
                     break;
                 case HeaderEnum.AMOUNT:
                     header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.CATEGORY:
+                    header.Validation = ValidationEnum.RANGE_SELF.GetDescription();
                     break;
                 default:
                     // Apply common formatting patterns automatically

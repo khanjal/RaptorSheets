@@ -119,7 +119,8 @@ public static class GenerateSheetsHelpers
 
             if (!string.IsNullOrEmpty(header.Validation))
             {
-                repeatCellModel.DataValidation = GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>());
+                var columnRange = $"{header.Column}2:{header.Column}";
+                repeatCellModel.DataValidation = GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>(), columnRange);
             }
 
             _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
