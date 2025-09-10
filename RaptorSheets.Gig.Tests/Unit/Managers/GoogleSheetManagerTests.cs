@@ -1,10 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
-using Moq;
-using RaptorSheets.Common.Mappers;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
-using RaptorSheets.Core.Services;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Managers;
@@ -31,8 +28,10 @@ public class GoogleSheetManagerTests
     [Fact]
     public void CheckSheetHeaders_WithNullSpreadsheet_ShouldReturnErrorMessage()
     {
-        // Act
+        // Act - pass null to test null handling behavior
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type
         var result = GoogleSheetManager.CheckSheetHeaders(null);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type
 
         // Assert
         Assert.NotNull(result);
@@ -145,7 +144,7 @@ public class GoogleSheetManagerTests
     [InlineData("SHIFTS")]
     [InlineData("shifts")]
     [InlineData("Shifts")]
-    public async Task GetSheet_WithValidSheetName_ShouldCallGetSheets(string sheetName)
+    public void GetSheet_WithValidSheetName_ShouldCallGetSheets(string sheetName)
     {
         // This test verifies the method exists and handles case-insensitive input
         // The actual implementation would require mocking the service calls

@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
@@ -51,21 +52,45 @@ public static class PlaceMapper
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.PlaceSheet;
+        sheet.Headers.UpdateColumns();
 
         var tripSheet = TripMapper.GetSheet();
+        var keyRange = sheet.GetLocalRange(HeaderEnum.PLACE.GetDescription());
+        var tripKeyRange = tripSheet.GetRange(HeaderEnum.PLACE.GetDescription());
 
-        sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, HeaderEnum.PLACE);
+        // Configure common aggregation patterns (for trip-based data)
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, tripSheet, tripKeyRange, useShiftTotals: false);
+        
+        // Configure common ratio calculations
+        MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);
 
-        // // Days/Visit
-        // sheet.Headers.Add(new SheetCellModel{Name = HeaderEnum.DAYS_PER_VISIT.DisplayName(),
-        //     Formula = $"=ARRAYFORMULA(IFS(ROW($A:$A)=1,\"{HeaderEnum.DAYS_PER_VISIT.DisplayName()}\",ISBLANK($A:$A), \"\", true, DAYS(K:K,J:J)/B:B))",
-        //     Note = $"Average days between visits.{(char)10}{(char)10}Doesn't take into account active time vs all time."});
-        // // Since
-        // sheet.Headers.Add(new SheetCellModel{Name = HeaderEnum.DAYS_SINCE_VISIT.DisplayName(),
-        //     Formula = $"=ARRAYFORMULA(IFS(ROW($A:$A)=1,\"{HeaderEnum.DAYS_SINCE_VISIT.DisplayName()}\",ISBLANK($A:$A), \"\", true, DAYS(TODAY(),K:K)))",
-        //     Note = "Days since last visit."});
+        // Configure specific headers unique to PlaceMapper
+        sheet.Headers.ForEach(header =>
+        {
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            
+            switch (headerEnum)
+            {
+                case HeaderEnum.PLACE:
+                    MapperFormulaHelper.ConfigureUniqueValueHeader(header, tripSheet.GetRange(HeaderEnum.PLACE.GetDescription(), 2));
+                    break;
+                case HeaderEnum.VISIT_FIRST:
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), 
+                        SheetEnum.TRIPS.GetDescription(), 
+                        tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
+                        tripSheet.GetColumn(HeaderEnum.PLACE.GetDescription()), true);
+                    header.Format = FormatEnum.DATE;
+                    break;
+                case HeaderEnum.VISIT_LAST:
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), 
+                        SheetEnum.TRIPS.GetDescription(), 
+                        tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
+                        tripSheet.GetColumn(HeaderEnum.PLACE.GetDescription()), false);
+                    header.Format = FormatEnum.DATE;
+                    break;
+            }
+        });
 
         return sheet;
     }
-
 }

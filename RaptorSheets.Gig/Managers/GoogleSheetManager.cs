@@ -8,8 +8,9 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Core.Helpers;
-using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
 using RaptorSheets.Common.Mappers;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Enums;
 
 namespace RaptorSheets.Gig.Managers;
 
@@ -24,6 +25,7 @@ public interface IGoogleSheetManager
     public Task<SheetEntity> GetSheets(List<string> sheets);
     public Task<List<PropertyEntity>> GetSheetProperties();
     public Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
+    public Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null); // New method for testing
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -47,24 +49,31 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Pull out all changes into a single object to iterate through.
         foreach (var sheet in sheets)
         {
-            switch (sheet.ToUpperInvariant())
-            {
-                case nameof(SheetEnum.SHIFTS):
-                    if (sheetEntity.Shifts.Count > 0)
-                        changes.Add(sheet, sheetEntity.Shifts);
-                    break;
+            // Normalize sheet name for consistent comparison
+            var normalizedSheetName = sheet.ToUpperInvariant();
 
-                case nameof(SheetEnum.TRIPS):
-                    if (sheetEntity.Trips.Count > 0)
-                        changes.Add(sheet, sheetEntity.Trips);
+            // Use constants for switch comparison
+            switch (normalizedSheetName)
+            {
+                case SheetsConfig.SheetUtilities.UpperCase.Expenses:
+                    if (sheetEntity.Expenses.Count > 0)
+                        changes.Add(sheet, sheetEntity.Expenses);
                     break;
-                case nameof(Common.Enums.SheetEnum.SETUP):
+                case SheetsConfig.SheetUtilities.UpperCase.Setup:
                     if (sheetEntity.Setup.Count > 0)
                         changes.Add(sheet, sheetEntity.Setup);
                     break;
+                case SheetsConfig.SheetUtilities.UpperCase.Shifts:
+                    if (sheetEntity.Shifts.Count > 0)
+                        changes.Add(sheet, sheetEntity.Shifts);
+                    break;
+                case SheetsConfig.SheetUtilities.UpperCase.Trips:
+                    if (sheetEntity.Trips.Count > 0)
+                        changes.Add(sheet, sheetEntity.Trips);
+                    break;
                 default:
                     // Unsupported sheet.
-                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet.ToUpperInvariant()} not supported", MessageTypeEnum.GENERAL));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
                     break;
             }
         }
@@ -83,19 +92,27 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         foreach (var change in changes)
         {
-            switch (change.Key.ToUpperInvariant())
+            // Normalize sheet name for consistent comparison
+            var normalizedChangeKey = change.Key.ToUpperInvariant();
+
+            // Use constants for comparison
+            switch (normalizedChangeKey)
             {
-                case nameof(SheetEnum.SHIFTS):
+                case SheetsConfig.SheetUtilities.UpperCase.Expenses:
+                    var expenseProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
+                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], expenseProperties));
+                    break;
+                case SheetsConfig.SheetUtilities.UpperCase.Setup:
+                    var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
+                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
+                    break;
+                case SheetsConfig.SheetUtilities.UpperCase.Shifts:
                     var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
                     break;
-                case nameof(SheetEnum.TRIPS):
+                case SheetsConfig.SheetUtilities.UpperCase.Trips:
                     var tripProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripProperties));
-                    break;
-                case nameof(Common.Enums.SheetEnum.SETUP):
-                    var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
-                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
                     break;
             }
 
@@ -169,58 +186,62 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Loop through sheets to check headers.
         foreach (var sheet in sheetInfoResponse.Sheets)
         {
-            var sheetName = sheet.Properties.Title.ToUpper();
+            var sheetName = sheet.Properties.Title;
             var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
-            switch (sheetName.ToUpper())
+            // Normalize sheet name for consistent comparison
+            var normalizedSheetName = sheetName.ToUpperInvariant();
+
+            // Use constants for comparison
+            switch (normalizedSheetName)
             {
-                case nameof(SheetEnum.ADDRESSES):
+                case SheetsConfig.SheetUtilities.UpperCase.Addresses:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.DAILY):
+                case SheetsConfig.SheetUtilities.UpperCase.Daily:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.EXPENSES):
+                case SheetsConfig.SheetUtilities.UpperCase.Expenses:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ExpenseMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.MONTHLY):
+                case SheetsConfig.SheetUtilities.UpperCase.Monthly:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.NAMES):
+                case SheetsConfig.SheetUtilities.UpperCase.Names:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.PLACES):
+                case SheetsConfig.SheetUtilities.UpperCase.Places:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.REGIONS):
+                case SheetsConfig.SheetUtilities.UpperCase.Regions:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.SERVICES):
+                case SheetsConfig.SheetUtilities.UpperCase.Services:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
-                case nameof(Common.Enums.SheetEnum.SETUP):
+                case SheetsConfig.SheetUtilities.UpperCase.Setup:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, SetupMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.SHIFTS):
+                case SheetsConfig.SheetUtilities.UpperCase.Shifts:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.TRIPS):
+                case SheetsConfig.SheetUtilities.UpperCase.Trips:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.TYPES):
+                case SheetsConfig.SheetUtilities.UpperCase.Types:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.WEEKDAYS):
+                case SheetsConfig.SheetUtilities.UpperCase.Weekdays:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.WEEKLY):
+                case SheetsConfig.SheetUtilities.UpperCase.Weekly:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
                     break;
-                case nameof(SheetEnum.YEARLY):
+                case SheetsConfig.SheetUtilities.UpperCase.Yearly:
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
                     break;
                 default:
-                    messages.Add(MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known enum value", MessageTypeEnum.CHECK_SHEET));
+                    messages.Add(MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageTypeEnum.CHECK_SHEET));
                     break;
             }
         }
@@ -240,9 +261,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<SheetEntity> CreateSheets()
     {
-        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().Select(t => t.GetDescription()).ToList();
-        sheets.AddRange(Enum.GetValues(typeof(Common.Enums.SheetEnum)).Cast<Common.Enums.SheetEnum>().Select(t => t.GetDescription()));
-        return await CreateSheets(sheets);
+        return await CreateSheets(SheetsConfig.SheetUtilities.GetAllSheetNames());
     }
 
     public async Task<SheetEntity> CreateSheets(List<string> sheets)
@@ -457,5 +476,10 @@ public class GoogleSheetManager : IGoogleSheetManager
         }
 
         return messages;
+    }
+
+    public async Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null)
+    {
+        return await _googleSheetService.GetSheetInfo(ranges);
     }
 }

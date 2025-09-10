@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
@@ -56,24 +57,39 @@ namespace RaptorSheets.Gig.Mappers
         public static SheetModel GetSheet()
         {
             var sheet = SheetsConfig.MonthlySheet;
+            sheet.Headers.UpdateColumns();
 
             var dailySheet = DailyMapper.GetSheet();
+            var keyRange = sheet.GetLocalRange(HeaderEnum.MONTH.GetDescription());
+            var dailyKeyRange = dailySheet.GetRange(HeaderEnum.MONTH.GetDescription(), 2);
 
-            sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.MONTH);
-            var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.MONTH.GetDescription());
+            // Configure common aggregation patterns (eliminates major duplication)
+            MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, dailySheet, dailyKeyRange, useShiftTotals: false);
+            
+            // Configure common ratio calculations
+            MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);
 
-            // #
-            sheet.Headers.AddColumn(new SheetCellModel
+            // Configure specific headers unique to MonthlyMapper
+            sheet.Headers.ForEach(header =>
             {
-                Name = HeaderEnum.NUMBER.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.NUMBER.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,IFERROR(INDEX(SPLIT({sheetKeyRange}, \"-\"), 0,1), 0)))"
-            });
+                var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
 
-            // Year
-            sheet.Headers.AddColumn(new SheetCellModel
-            {
-                Name = HeaderEnum.YEAR.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.YEAR.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,IFERROR(INDEX(SPLIT({sheetKeyRange}, \"-\"), 0,2), 0)))"
+                switch (headerEnum)
+                {
+                    case HeaderEnum.MONTH:
+                        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(HeaderEnum.MONTH.GetDescription(), dailySheet.GetRange(HeaderEnum.MONTH.GetDescription(), 2));
+                        break;
+                    case HeaderEnum.AVERAGE:
+                        header.Formula = GigFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, HeaderEnum.AVERAGE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()));
+                        header.Format = FormatEnum.ACCOUNTING;
+                        break;
+                    case HeaderEnum.NUMBER:
+                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.NUMBER.GetDescription(), keyRange, "-", 1);
+                        break;
+                    case HeaderEnum.YEAR:
+                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.YEAR.GetDescription(), keyRange, "-", 2);
+                        break;
+                }
             });
 
             return sheet;

@@ -5,14 +5,14 @@ namespace RaptorSheets.Core.Extensions;
 
 public static class ListExtensions
 {
-    public static void AddColumn(this List<SheetCellModel> headers, SheetCellModel header)
+    public static void AddColumn(this List<SheetCellModel> headers, SheetCellModel? header)
     {
         if (header != null)
         {
             header.Column = SheetHelpers.GetColumnName(headers.Count);
             header.Index = headers.Count;
         }
-        headers.Add(header);
+        headers.Add(header!);
     }
 
     public static void UpdateColumns(this List<SheetCellModel> headers)

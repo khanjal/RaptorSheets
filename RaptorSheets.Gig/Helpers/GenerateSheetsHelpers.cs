@@ -5,8 +5,8 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Extensions;
-using SheetEnum = RaptorSheets.Gig.Enums.SheetEnum;
 using RaptorSheets.Common.Mappers;
+using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Helpers;
 
@@ -51,36 +51,37 @@ public static class GenerateSheetsHelpers
 
     public static List<string> GetSheetNames()
     {
-        var sheetNames = Enum.GetNames(typeof(SheetEnum)).ToList();
-        sheetNames.AddRange([.. Enum.GetNames(typeof(Common.Enums.SheetEnum))]);
-        return sheetNames;
+        return SheetsConfig.SheetUtilities.GetAllSheetNames();
     }
 
     private static SheetModel GetSheetModel(string sheet)
     {
-        return sheet.ToUpper() switch
+        return sheet switch
         {
-            nameof(SheetEnum.ADDRESSES) => AddressMapper.GetSheet(),
-            nameof(SheetEnum.DAILY) => DailyMapper.GetSheet(),
-            nameof(SheetEnum.EXPENSES) => ExpenseMapper.GetSheet(),
-            nameof(SheetEnum.MONTHLY) => MonthlyMapper.GetSheet(),
-            nameof(SheetEnum.NAMES) => NameMapper.GetSheet(),
-            nameof(SheetEnum.PLACES) => PlaceMapper.GetSheet(),
-            nameof(SheetEnum.REGIONS) => RegionMapper.GetSheet(),
-            nameof(SheetEnum.SERVICES) => ServiceMapper.GetSheet(),
-            nameof(Common.Enums.SheetEnum.SETUP) => SetupMapper.GetSheet(),
-            nameof(SheetEnum.SHIFTS) => ShiftMapper.GetSheet(),
-            nameof(SheetEnum.TRIPS) => TripMapper.GetSheet(),
-            nameof(SheetEnum.TYPES) => TypeMapper.GetSheet(),
-            nameof(SheetEnum.WEEKDAYS) => WeekdayMapper.GetSheet(),
-            nameof(SheetEnum.WEEKLY) => WeeklyMapper.GetSheet(),
-            nameof(SheetEnum.YEARLY) => YearlyMapper.GetSheet(),
-            _ => throw new NotImplementedException(),
+            SheetsConfig.SheetNames.Addresses => AddressMapper.GetSheet(),
+            SheetsConfig.SheetNames.Daily => DailyMapper.GetSheet(),
+            SheetsConfig.SheetNames.Expenses => ExpenseMapper.GetSheet(),
+            SheetsConfig.SheetNames.Monthly => MonthlyMapper.GetSheet(),
+            SheetsConfig.SheetNames.Names => NameMapper.GetSheet(),
+            SheetsConfig.SheetNames.Places => PlaceMapper.GetSheet(),
+            SheetsConfig.SheetNames.Regions => RegionMapper.GetSheet(),
+            SheetsConfig.SheetNames.Services => ServiceMapper.GetSheet(),
+            SheetsConfig.SheetNames.Setup => SetupMapper.GetSheet(),
+            SheetsConfig.SheetNames.Shifts => ShiftMapper.GetSheet(),
+            SheetsConfig.SheetNames.Trips => TripMapper.GetSheet(),
+            SheetsConfig.SheetNames.Types => TypeMapper.GetSheet(),
+            SheetsConfig.SheetNames.Weekdays => WeekdayMapper.GetSheet(),
+            SheetsConfig.SheetNames.Weekly => WeeklyMapper.GetSheet(),
+            SheetsConfig.SheetNames.Yearly => YearlyMapper.GetSheet(),
+            _ => throw new NotImplementedException($"Sheet model not found for: {sheet}"),
         };
     }
 
     private static void GenerateHeadersFormatAndProtection(SheetModel sheet)
     {
+        // Ensure headers have proper Column/Index assignments prior to formatting, like Stock implementation
+        sheet.Headers.UpdateColumns();
+
         // Format/Protect Column Cells
         sheet!.Headers.ForEach(header =>
         {
@@ -116,7 +117,8 @@ public static class GenerateSheetsHelpers
 
             if (!string.IsNullOrEmpty(header.Validation))
             {
-                repeatCellModel.DataValidation = GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>());
+                var columnRange = $"{header.Column}2:{header.Column}";
+                repeatCellModel.DataValidation = GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>(), columnRange);
             }
 
             _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));

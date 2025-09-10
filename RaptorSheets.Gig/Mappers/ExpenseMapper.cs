@@ -5,7 +5,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
-using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
+using RaptorSheets.Gig.Enums;
 
 namespace RaptorSheets.Gig.Mappers;
 
@@ -149,43 +149,28 @@ public static class ExpenseMapper
 
     public static SheetModel GetSheet()
     {
-        var sheet = SheetsConfig.ExpenseSheet;
-
-        sheet.Headers = [];
-
-        // Date
-        sheet.Headers.AddColumn(new SheetCellModel
+        // Use the new configuration helper for consistency and cleaner code
+        return SheetConfigurationHelpers.ConfigureSheet(SheetsConfig.ExpenseSheet, (header, index) =>
         {
-            Name = HeaderEnum.DATE.GetDescription(),
-            Note = ColumnNotes.DateFormat,
-            Format = FormatEnum.DATE
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            
+            switch (headerEnum)
+            {
+                case HeaderEnum.DATE:
+                    header.Note = ColumnNotes.DateFormat;
+                    header.Format = FormatEnum.DATE;
+                    break;
+                case HeaderEnum.AMOUNT:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.CATEGORY:
+                    header.Validation = ValidationEnum.RANGE_SELF.GetDescription();
+                    break;
+                default:
+                    // Apply common formatting patterns automatically
+                    SheetConfigurationHelpers.ApplyCommonFormats(header, header.Name);
+                    break;
+            }
         });
-
-        // Name
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.NAME.GetDescription()
-        });
-
-        // Description
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.DESCRIPTION.GetDescription()
-        });
-
-        // Amount
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.AMOUNT.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-
-        // Category
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.CATEGORY.GetDescription()
-        });
-
-        return sheet;
     }
 }

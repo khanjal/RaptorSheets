@@ -9,5 +9,6 @@ public enum ValidationEnum
     RANGE_PLACE,
     RANGE_REGION,
     RANGE_SERVICE,
+    RANGE_SELF,
     RANGE_TYPE
 }

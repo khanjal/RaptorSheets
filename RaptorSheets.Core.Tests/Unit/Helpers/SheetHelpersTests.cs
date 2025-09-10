@@ -1,6 +1,5 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
-using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
@@ -68,8 +67,27 @@ public class SheetHelpersTests
     [Fact]
     public void CheckSheets_WithNullSpreadsheet_ShouldReturnAllSheetNames()
     {
-        // Arrange
+        // Arrange - Test with empty spreadsheet to verify handling behavior
+        Spreadsheet spreadsheet = new Spreadsheet();
+
+        // Act
+        var result = SheetHelpers.CheckSheets<TestSheetEnum>(spreadsheet);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count);
+        Assert.Contains("SHEET1", result);
+        Assert.Contains("SHEET2", result);
+        Assert.Contains("MISSINGSHEET", result);
+    }
+
+    [Fact]
+    public void CheckSheets_WithActuallyNullSpreadsheet_ShouldReturnAllSheetNames()
+    {
+        // Arrange - Test with actual null to verify null handling behavior
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Spreadsheet? spreadsheet = null;
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         // Act
         var result = SheetHelpers.CheckSheets<TestSheetEnum>(spreadsheet);
@@ -251,8 +269,24 @@ public class SheetHelpersTests
     [Fact]
     public void GetSpreadsheetSheets_WithNullSpreadsheet_ShouldReturnEmptyList()
     {
-        // Arrange
+        // Arrange - Test with empty spreadsheet to verify handling behavior
+        Spreadsheet sheet = new Spreadsheet();
+
+        // Act
+        var result = SheetHelpers.GetSpreadsheetSheets(sheet);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void GetSpreadsheetSheets_WithActuallyNullSpreadsheet_ShouldReturnEmptyList()
+    {
+        // Arrange - Test with actual null to verify null handling behavior
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Spreadsheet? sheet = null;
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type;
 
         // Act
         var result = SheetHelpers.GetSpreadsheetSheets(sheet);

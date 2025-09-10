@@ -131,15 +131,13 @@ public static class StockMapper
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.StockSheet;
-        sheet.Headers.UpdateColumns();
-
         var tickerSheet = SheetsConfig.TickerSheet;
-        tickerSheet.Headers.UpdateColumns();
-
-        var keyRange = GoogleConfig.KeyRange;
-        sheet.Headers.ForEach(header =>
+        
+        // Use the new configuration helper for consistency
+        return SheetConfigurationHelpers.ConfigureSheet(sheet, (header, index) =>
         {
             var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            var keyRange = GoogleConfig.KeyRange;
 
             switch (headerEnum)
             {
@@ -191,12 +189,11 @@ public static class StockMapper
                 case HeaderEnum.SHARES:
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
-
                 default:
+                    // Apply common formatting patterns
+                    SheetConfigurationHelpers.ApplyCommonFormats(header, header.Name);
                     break;
             }
         });
-
-        return sheet;
     }
 }

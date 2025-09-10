@@ -6,7 +6,7 @@ using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
-using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
+using RaptorSheets.Gig.Helpers;
 
 namespace RaptorSheets.Gig.Mappers;
 
@@ -302,182 +302,99 @@ public static class TripMapper
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.TripSheet;
+        sheet.Headers.UpdateColumns();
 
-        sheet.Headers = [];
-
-        // Date
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.DATE.GetDescription(),
-            Note = ColumnNotes.DateFormat,
-            Format = FormatEnum.DATE
-        });
         var dateRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
-        // Service
-        sheet.Headers.AddColumn(new SheetCellModel
+
+        sheet.Headers.ForEach(header =>
         {
-            Name = HeaderEnum.SERVICE.GetDescription(),
-            Validation = ValidationEnum.RANGE_SERVICE.GetDescription()
-        });
-        // #
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.NUMBER.GetDescription(),
-            Note = ColumnNotes.ShiftNumber
-        });
-        // X
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.EXCLUDE.GetDescription(),
-            Note = ColumnNotes.Exclude,
-            Validation = ValidationEnum.BOOLEAN.GetDescription()
-        });
-        // Type
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.TYPE.GetDescription(),
-            Note = ColumnNotes.Types,
-            Validation = ValidationEnum.RANGE_TYPE.GetDescription()
-        });
-        // Place
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.PLACE.GetDescription(),
-            Note = ColumnNotes.Place,
-            Validation = ValidationEnum.RANGE_PLACE.GetDescription()
-        });
-        // Pickup
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.PICKUP.GetDescription(),
-            Note = ColumnNotes.Pickup,
-            Format = FormatEnum.TIME
-        });
-        // Dropoff
-        sheet.Headers.AddColumn(new SheetCellModel { 
-            Name = HeaderEnum.DROPOFF.GetDescription(),
-            Format = FormatEnum.TIME
-        });
-        // Duration
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.DURATION.GetDescription(),
-            Note = ColumnNotes.Duration,
-            Format = FormatEnum.DURATION
-        });
-        // Pay
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.PAY.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Tips
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.TIPS.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Bonus
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.BONUS.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Total
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.TOTAL.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.TOTAL.GetDescription()}\",ISBLANK({dateRange}), \"\",true,{sheet.GetLocalRange(HeaderEnum.PAY.GetDescription())}+{sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription())}+{sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription())}))",
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Cash
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.CASH.GetDescription(),
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Odo Start
-        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.ODOMETER_START.GetDescription() });
-        // Odo End
-        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.ODOMETER_END.GetDescription() });
-        // Distance
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.DISTANCE.GetDescription(),
-            Note = ColumnNotes.TripDistance
-        });
-        // Name
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.NAME.GetDescription(),
-            Validation = ValidationEnum.RANGE_NAME.GetDescription()
-        });
-        // Start Address
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.ADDRESS_START.GetDescription(),
-            Validation = ValidationEnum.RANGE_ADDRESS.GetDescription()
-        });
-        // End Address
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.ADDRESS_END.GetDescription(),
-            Validation = ValidationEnum.RANGE_ADDRESS.GetDescription()
-        });
-        // End Unit
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.UNIT_END.GetDescription(),
-            Note = ColumnNotes.UnitTypes
-        });
-        // Order Number
-        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.ORDER_NUMBER.GetDescription() });
-        // Region
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.REGION.GetDescription(),
-            Validation = ValidationEnum.RANGE_REGION.GetDescription()
-        });
-        // Note
-        sheet.Headers.AddColumn(new SheetCellModel { Name = HeaderEnum.NOTE.GetDescription() });
-        // Key
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.KEY.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.KEY.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())}), \"\",true,IF({sheet.GetLocalRange(HeaderEnum.EXCLUDE.GetDescription())},{dateRange} & \"-X-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())},IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())}), {dateRange} & \"-0-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())}, {dateRange} & \"-\" & {sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())} & \"-\" & {sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription())}))))",
-            Note = ColumnNotes.TripKey
-        });
-        // Day
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.DAY.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.DAY.GetDescription()}\",ISBLANK({dateRange}), \"\",true,DAY({dateRange})))"
-        });
-        // Month
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.MONTH.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.MONTH.GetDescription()}\",ISBLANK({dateRange}), \"\",true,MONTH({dateRange})))"
-        });
-        // Year
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.YEAR.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.YEAR.GetDescription()}\",ISBLANK({dateRange}), \"\",true,YEAR({dateRange})))"
-        });
-        // Amt/Time
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.AMOUNT_PER_TIME.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_TIME.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription())}), \"\", true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription())}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription())}/IF({sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription())}=0,1,({sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription())}*24)))))",
-            Format = FormatEnum.ACCOUNTING
-        });
-        // Amt/Dist
-        sheet.Headers.AddColumn(new SheetCellModel
-        {
-            Name = HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(),
-            Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription()}\",ISBLANK({sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription())}), \"\", true,IF(ISBLANK({sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription())}), \"\", {sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription())}/IF({sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription())}=0,1,{sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription())}))))",
-            Format = FormatEnum.ACCOUNTING
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+
+            switch (headerEnum)
+            {
+                case HeaderEnum.DATE:
+                    header.Note = ColumnNotes.DateFormat;
+                    header.Format = FormatEnum.DATE;
+                    break;
+                case HeaderEnum.SERVICE:
+                    header.Validation = ValidationEnum.RANGE_SERVICE.GetDescription();
+                    break;
+                case HeaderEnum.NUMBER:
+                    header.Note = ColumnNotes.ShiftNumber;
+                    break;
+                case HeaderEnum.EXCLUDE:
+                    header.Note = ColumnNotes.Exclude;
+                    header.Validation = ValidationEnum.BOOLEAN.GetDescription();
+                    break;
+                case HeaderEnum.TYPE:
+                    header.Note = ColumnNotes.Types;
+                    header.Validation = ValidationEnum.RANGE_TYPE.GetDescription();
+                    break;
+                case HeaderEnum.PLACE:
+                    header.Note = ColumnNotes.Place;
+                    header.Validation = ValidationEnum.RANGE_PLACE.GetDescription();
+                    break;
+                case HeaderEnum.PICKUP:
+                    header.Note = ColumnNotes.Pickup;
+                    header.Format = FormatEnum.TIME;
+                    break;
+                case HeaderEnum.DROPOFF:
+                    header.Format = FormatEnum.TIME;
+                    break;
+                case HeaderEnum.DURATION:
+                    header.Note = ColumnNotes.Duration;
+                    header.Format = FormatEnum.DURATION;
+                    break;
+                case HeaderEnum.PAY:
+                case HeaderEnum.TIPS:
+                case HeaderEnum.BONUS:
+                case HeaderEnum.CASH:
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.TOTAL:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(dateRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.DISTANCE:
+                    header.Note = ColumnNotes.TripDistance;
+                    break;
+                case HeaderEnum.NAME:
+                    header.Validation = ValidationEnum.RANGE_NAME.GetDescription();
+                    break;
+                case HeaderEnum.ADDRESS_START:
+                case HeaderEnum.ADDRESS_END:
+                    header.Validation = ValidationEnum.RANGE_ADDRESS.GetDescription();
+                    break;
+                case HeaderEnum.UNIT_END:
+                    header.Note = ColumnNotes.UnitTypes;
+                    break;
+                case HeaderEnum.REGION:
+                    header.Validation = ValidationEnum.RANGE_REGION.GetDescription();
+                    break;
+                case HeaderEnum.KEY:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTripKey(dateRange, HeaderEnum.KEY.GetDescription(), dateRange, sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription()), sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()), sheet.GetLocalRange(HeaderEnum.EXCLUDE.GetDescription()));
+                    header.Note = ColumnNotes.TripKey;
+                    break;
+                case HeaderEnum.DAY:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
+                    break;
+                case HeaderEnum.MONTH:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonth(dateRange, HeaderEnum.MONTH.GetDescription(), dateRange);
+                    break;
+                case HeaderEnum.YEAR:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(dateRange, HeaderEnum.YEAR.GetDescription(), dateRange);
+                    break;
+                case HeaderEnum.AMOUNT_PER_TIME:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(dateRange, HeaderEnum.AMOUNT_PER_TIME.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                case HeaderEnum.AMOUNT_PER_DISTANCE:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(dateRange, HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()));
+                    header.Format = FormatEnum.ACCOUNTING;
+                    break;
+                default:
+                    break;
+            }
         });
 
         return sheet;

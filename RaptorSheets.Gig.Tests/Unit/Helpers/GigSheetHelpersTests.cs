@@ -1,68 +1,12 @@
 using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Common.Mappers;
-using RaptorSheets.Core.Entities;
-using RaptorSheets.Core.Extensions;
-using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
-using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
 public class GigSheetHelpersTests
 {
-    [Fact]
-    public void ArrayFormulaCountIf_ShouldReturnFormattedFormula()
-    {
-        // Act
-        var result = GigSheetHelpers.ArrayFormulaCountIf();
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Contains("ARRAYFORMULA", result);
-        Assert.Contains("COUNTIF", result);
-        Assert.Contains("{0}", result); // Placeholder for header
-        Assert.Contains("{1}", result); // Placeholder for range
-    }
-
-    [Fact]
-    public void ArrayFormulaSumIf_ShouldReturnFormattedFormula()
-    {
-        // Act
-        var result = GigSheetHelpers.ArrayFormulaSumIf();
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Contains("ARRAYFORMULA", result);
-        Assert.Contains("SUMIF", result);
-        Assert.Contains("{0}", result); // Placeholder for header
-        Assert.Contains("{1}", result); // Placeholder for range 1
-        Assert.Contains("{2}", result); // Placeholder for range 2
-    }
-
-    [Theory]
-    [InlineData("Test Header", "TestSheet", "A", "B", true)]
-    [InlineData("Visit First", "Shifts", "C", "D", true)]
-    [InlineData("Visit Last", "Trips", "E", "F", false)]
-    public void ArrayFormulaVisit_ShouldReturnFormattedFormula(string headerText, string referenceSheet, 
-        string columnStart, string columnEnd, bool first)
-    {
-        // Act
-        var result = GigSheetHelpers.ArrayFormulaVisit(headerText, referenceSheet, columnStart, columnEnd, first);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Contains("ARRAYFORMULA", result);
-        Assert.Contains("VLOOKUP", result);
-        Assert.Contains(headerText, result);
-        Assert.Contains(referenceSheet, result);
-        Assert.Contains(columnStart, result);
-        Assert.Contains(columnEnd, result);
-        // Note: The boolean value in the formula is converted differently, so we won't test the exact string
-    }
-
     [Fact]
     public void GetSheets_ShouldReturnCorrectSheetModels()
     {
@@ -73,8 +17,8 @@ public class GigSheetHelpersTests
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
         
-        var shiftSheet = result.FirstOrDefault(s => s.Name == SheetEnum.SHIFTS.GetDescription());
-        var tripSheet = result.FirstOrDefault(s => s.Name == SheetEnum.TRIPS.GetDescription());
+        var shiftSheet = result.FirstOrDefault(s => s.Name == SheetsConfig.SheetNames.Shifts);
+        var tripSheet = result.FirstOrDefault(s => s.Name == SheetsConfig.SheetNames.Trips);
         
         Assert.NotNull(shiftSheet);
         Assert.NotNull(tripSheet);
@@ -91,11 +35,11 @@ public class GigSheetHelpersTests
         Assert.NotEmpty(result);
         
         // Should contain Gig sheets
-        Assert.Contains(SheetEnum.SHIFTS.GetDescription().ToUpper(), result.Select(x => x.ToUpper()));
-        Assert.Contains(SheetEnum.TRIPS.GetDescription().ToUpper(), result.Select(x => x.ToUpper()));
+        Assert.Contains(SheetsConfig.SheetNames.Shifts.ToUpper(), result.Select(x => x.ToUpper()));
+        Assert.Contains(SheetsConfig.SheetNames.Trips.ToUpper(), result.Select(x => x.ToUpper()));
         
         // Should contain Common sheets
-        Assert.Contains(Common.Enums.SheetEnum.SETUP.GetDescription().ToUpper(), result.Select(x => x.ToUpper()));
+        Assert.Contains(SheetsConfig.SheetNames.Setup.ToUpper(), result.Select(x => x.ToUpper()));
     }
 
     [Fact]
@@ -127,8 +71,8 @@ public class GigSheetHelpersTests
         {
             Sheets = new List<Sheet>
             {
-                new() { Properties = new SheetProperties { Title = SheetEnum.SHIFTS.GetDescription() } },
-                new() { Properties = new SheetProperties { Title = SheetEnum.TRIPS.GetDescription() } }
+                new() { Properties = new SheetProperties { Title = SheetsConfig.SheetNames.Shifts } },
+                new() { Properties = new SheetProperties { Title = SheetsConfig.SheetNames.Trips } }
             }
         };
 
@@ -139,11 +83,11 @@ public class GigSheetHelpersTests
         Assert.NotNull(result);
         
         // Should not contain existing sheets
-        Assert.DoesNotContain(result, s => s.Name == SheetEnum.SHIFTS.GetDescription());
-        Assert.DoesNotContain(result, s => s.Name == SheetEnum.TRIPS.GetDescription());
+        Assert.DoesNotContain(result, s => s.Name == SheetsConfig.SheetNames.Shifts);
+        Assert.DoesNotContain(result, s => s.Name == SheetsConfig.SheetNames.Trips);
         
         // But should contain other sheets like SETUP, EXPENSES, etc.
-        Assert.Contains(result, s => s.Name == Common.Enums.SheetEnum.SETUP.GetDescription());
+        Assert.Contains(result, s => s.Name == SheetsConfig.SheetNames.Setup);
     }
 
     [Fact]
@@ -203,112 +147,6 @@ public class GigSheetHelpersTests
         }
     }
 
-    [Theory]
-    [InlineData(HeaderEnum.REGION)]
-    [InlineData(HeaderEnum.SERVICE)]
-    [InlineData(HeaderEnum.DATE)]
-    [InlineData(HeaderEnum.NAME)]
-    public void GetCommonShiftGroupSheetHeaders_ShouldReturnCorrectHeaders(HeaderEnum keyEnum)
-    {
-        // Arrange
-        var shiftSheet = ShiftMapper.GetSheet();
-
-        // Act
-        var result = GigSheetHelpers.GetCommonShiftGroupSheetHeaders(shiftSheet, keyEnum);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotEmpty(result);
-        
-        // Should always have key column
-        Assert.Contains(result, h => h.Name == keyEnum.GetDescription() || 
-            (keyEnum == HeaderEnum.REGION && h.Name == HeaderEnum.REGION.GetDescription()) ||
-            (keyEnum == HeaderEnum.SERVICE && h.Name == HeaderEnum.SERVICE.GetDescription()));
-        
-        // Should have common financial columns
-        Assert.Contains(result, h => h.Name == HeaderEnum.TRIPS.GetDescription());
-        Assert.Contains(result, h => h.Name == HeaderEnum.PAY.GetDescription());
-        Assert.Contains(result, h => h.Name == HeaderEnum.TIPS.GetDescription());
-        Assert.Contains(result, h => h.Name == HeaderEnum.TOTAL.GetDescription());
-        
-        // Special cases for visit columns
-        if (new[] { HeaderEnum.ADDRESS, HeaderEnum.NAME, HeaderEnum.PLACE, HeaderEnum.REGION, HeaderEnum.SERVICE, HeaderEnum.TYPE }.Contains(keyEnum))
-        {
-            Assert.Contains(result, h => h.Name == HeaderEnum.VISIT_FIRST.GetDescription());
-            Assert.Contains(result, h => h.Name == HeaderEnum.VISIT_LAST.GetDescription());
-        }
-        
-        // Special case for date columns
-        if (keyEnum == HeaderEnum.DATE)
-        {
-            Assert.Contains(result, h => h.Name == HeaderEnum.TIME_TOTAL.GetDescription());
-            Assert.Contains(result, h => h.Name == HeaderEnum.AMOUNT_PER_TIME.GetDescription());
-        }
-    }
-
-    [Theory]
-    [InlineData(HeaderEnum.DAY)]
-    [InlineData(HeaderEnum.WEEK)]
-    [InlineData(HeaderEnum.MONTH)]
-    [InlineData(HeaderEnum.YEAR)]
-    [InlineData(HeaderEnum.NAME)]
-    [InlineData(HeaderEnum.PLACE)]
-    [InlineData(HeaderEnum.ADDRESS_END)]
-    public void GetCommonTripGroupSheetHeaders_ShouldReturnCorrectHeaders(HeaderEnum keyEnum)
-    {
-        // Arrange
-        var tripSheet = TripMapper.GetSheet();
-
-        // Act
-        var result = GigSheetHelpers.GetCommonTripGroupSheetHeaders(tripSheet, keyEnum);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotEmpty(result);
-        
-        // Should have common columns
-        Assert.Contains(result, h => h.Name == HeaderEnum.TRIPS.GetDescription());
-        Assert.Contains(result, h => h.Name == HeaderEnum.PAY.GetDescription());
-        Assert.Contains(result, h => h.Name == HeaderEnum.TIPS.GetDescription());
-        Assert.Contains(result, h => h.Name == HeaderEnum.TOTAL.GetDescription());
-        
-        // Time-based enums should have specific columns
-        if (new[] { HeaderEnum.DAY, HeaderEnum.WEEK, HeaderEnum.MONTH, HeaderEnum.YEAR }.Contains(keyEnum))
-        {
-            Assert.Contains(result, h => h.Name == HeaderEnum.DAYS.GetDescription());
-            Assert.Contains(result, h => h.Name == HeaderEnum.TIME_TOTAL.GetDescription());
-            Assert.Contains(result, h => h.Name == HeaderEnum.AMOUNT_PER_TIME.GetDescription());
-            Assert.Contains(result, h => h.Name == HeaderEnum.AMOUNT_PER_DAY.GetDescription());
-            
-            // Special case for DAY enum
-            if (keyEnum == HeaderEnum.DAY)
-            {
-                Assert.Contains(result, h => h.Name == HeaderEnum.WEEKDAY.GetDescription());
-            }
-            
-            // Non-DAY time enums should have average
-            if (keyEnum != HeaderEnum.DAY)
-            {
-                Assert.Contains(result, h => h.Name == HeaderEnum.AVERAGE.GetDescription());
-            }
-        }
-        
-        // Visit columns for certain enums
-        if (new[] { HeaderEnum.NAME, HeaderEnum.PLACE, HeaderEnum.REGION, HeaderEnum.SERVICE, HeaderEnum.TYPE }.Contains(keyEnum))
-        {
-            Assert.Contains(result, h => h.Name == HeaderEnum.VISIT_FIRST.GetDescription());
-            Assert.Contains(result, h => h.Name == HeaderEnum.VISIT_LAST.GetDescription());
-        }
-        
-        // Special handling for ADDRESS_END
-        if (keyEnum == HeaderEnum.ADDRESS_END)
-        {
-            Assert.Contains(result, h => h.Name == HeaderEnum.ADDRESS.GetDescription()); // Should be ADDRESS, not ADDRESS_END
-            Assert.Contains(result, h => h.Name == HeaderEnum.VISIT_FIRST.GetDescription());
-            Assert.Contains(result, h => h.Name == HeaderEnum.VISIT_LAST.GetDescription());
-        }
-    }
-
     [Fact]
     public void MapData_WithSpreadsheet_ShouldReturnSheetEntity()
     {
@@ -320,7 +158,7 @@ public class GigSheetHelpersTests
             {
                 new()
                 {
-                    Properties = new SheetProperties { Title = SheetEnum.SHIFTS.GetDescription() },
+                    Properties = new SheetProperties { Title = SheetsConfig.SheetNames.Shifts },
                     Data = new List<GridData>
                     {
                         new()
@@ -363,7 +201,7 @@ public class GigSheetHelpersTests
                 {
                     DataFilters = new List<DataFilter>
                     {
-                        new() { A1Range = SheetEnum.SHIFTS.GetDescription() }
+                        new() { A1Range = SheetsConfig.SheetNames.Shifts }
                     },
                     ValueRange = new ValueRange
                     {
@@ -414,7 +252,7 @@ public class GigSheetHelpersTests
                 {
                     DataFilters = new List<DataFilter>
                     {
-                        new() { A1Range = SheetEnum.SHIFTS.GetDescription() }
+                        new() { A1Range = SheetsConfig.SheetNames.Shifts }
                     },
                     ValueRange = new ValueRange
                     {
@@ -438,21 +276,21 @@ public class GigSheetHelpersTests
         // Arrange
         var sheetNames = new[]
         {
-            nameof(SheetEnum.ADDRESSES),
-            nameof(SheetEnum.DAILY),
-            nameof(SheetEnum.EXPENSES),
-            nameof(SheetEnum.MONTHLY),
-            nameof(SheetEnum.NAMES),
-            nameof(SheetEnum.PLACES),
-            nameof(SheetEnum.REGIONS),
-            nameof(SheetEnum.SERVICES),
-            nameof(Common.Enums.SheetEnum.SETUP),
-            nameof(SheetEnum.SHIFTS),
-            nameof(SheetEnum.TRIPS),
-            nameof(SheetEnum.TYPES),
-            nameof(SheetEnum.WEEKDAYS),
-            nameof(SheetEnum.WEEKLY),
-            nameof(SheetEnum.YEARLY)
+            SheetsConfig.SheetNames.Addresses,
+            SheetsConfig.SheetNames.Daily,
+            SheetsConfig.SheetNames.Expenses,
+            SheetsConfig.SheetNames.Monthly,
+            SheetsConfig.SheetNames.Names,
+            SheetsConfig.SheetNames.Places,
+            SheetsConfig.SheetNames.Regions,
+            SheetsConfig.SheetNames.Services,
+            SheetsConfig.SheetNames.Setup,
+            SheetsConfig.SheetNames.Shifts,
+            SheetsConfig.SheetNames.Trips,
+            SheetsConfig.SheetNames.Types,
+            SheetsConfig.SheetNames.Weekdays,
+            SheetsConfig.SheetNames.Weekly,
+            SheetsConfig.SheetNames.Yearly
         };
 
         var valueRanges = sheetNames.Select(sheetName => new MatchedValueRange

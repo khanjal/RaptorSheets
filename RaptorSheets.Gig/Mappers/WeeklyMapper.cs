@@ -4,8 +4,8 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
-using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
 
 namespace RaptorSheets.Gig.Mappers
 {
@@ -59,40 +59,47 @@ namespace RaptorSheets.Gig.Mappers
         public static SheetModel GetSheet()
         {
             var sheet = SheetsConfig.WeeklySheet;
+            sheet.Headers.UpdateColumns();
 
             var dailySheet = DailyMapper.GetSheet();
+            var keyRange = sheet.GetLocalRange(HeaderEnum.WEEK.GetDescription());
+            var dailyKeyRange = dailySheet.GetRange(HeaderEnum.WEEK.GetDescription(), 2);
 
-            sheet.Headers = GigSheetHelpers.GetCommonTripGroupSheetHeaders(dailySheet, HeaderEnum.WEEK);
-            var sheetKeyRange = sheet.GetLocalRange(HeaderEnum.WEEK.GetDescription());
+            // Configure common aggregation patterns (eliminates major duplication)
+            MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, dailySheet, dailyKeyRange, useShiftTotals: false);
+            
+            // Configure common ratio calculations
+            MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);
 
-            // #
-            sheet.Headers.AddColumn(new SheetCellModel
+            // Configure specific headers unique to WeeklyMapper
+            sheet.Headers.ForEach(header =>
             {
-                Name = HeaderEnum.NUMBER.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.NUMBER.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,IFERROR(INDEX(SPLIT({sheetKeyRange}, \"-\"), 0,1), 0)))"
-            });
+                var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
 
-            // Year
-            sheet.Headers.AddColumn(new SheetCellModel
-            {
-                Name = HeaderEnum.YEAR.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.YEAR.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,IFERROR(INDEX(SPLIT({sheetKeyRange}, \"-\"), 0,2), 0)))"
-            });
-
-            // Begin
-            sheet.Headers.AddColumn(new SheetCellModel
-            {
-                Name = HeaderEnum.DATE_BEGIN.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.DATE_BEGIN.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,DATE({sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription())},1,1)+(({sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())}-1)*7)-WEEKDAY(DATE({sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription())},1,1),3)))",
-                Format = FormatEnum.DATE
-            });
-
-            // End
-            sheet.Headers.AddColumn(new SheetCellModel
-            {
-                Name = HeaderEnum.DATE_END.GetDescription(),
-                Formula = $"=ARRAYFORMULA(IFS(ROW({sheetKeyRange})=1,\"{HeaderEnum.DATE_END.GetDescription()}\",ISBLANK({sheetKeyRange}), \"\",true,DATE({sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription())},1,7)+(({sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription())}-1)*7)-WEEKDAY(DATE({sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription())},1,1),3)))",
-                Format = FormatEnum.DATE
+                switch (headerEnum)
+                {
+                    case HeaderEnum.WEEK:
+                        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(HeaderEnum.WEEK.GetDescription(), dailySheet.GetRange(HeaderEnum.WEEK.GetDescription(), 2));
+                        break;
+                    case HeaderEnum.AVERAGE:
+                        header.Formula = GigFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, HeaderEnum.AVERAGE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()));
+                        header.Format = FormatEnum.ACCOUNTING;
+                        break;
+                    case HeaderEnum.NUMBER:
+                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.NUMBER.GetDescription(), keyRange, "-", 1);
+                        break;
+                    case HeaderEnum.YEAR:
+                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.YEAR.GetDescription(), keyRange, "-", 2);
+                        break;
+                    case HeaderEnum.DATE_BEGIN:
+                        header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekBeginDate(keyRange, HeaderEnum.DATE_BEGIN.GetDescription(), keyRange);
+                        header.Format = FormatEnum.DATE;
+                        break;
+                    case HeaderEnum.DATE_END:
+                        header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekEndDate(keyRange, HeaderEnum.DATE_END.GetDescription(), keyRange);
+                        header.Format = FormatEnum.DATE;
+                        break;
+                }
             });
 
             return sheet;

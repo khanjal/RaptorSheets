@@ -1,11 +1,8 @@
-using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Common.Mappers;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Helpers;
-using RaptorSheets.Gig.Tests.Data.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
@@ -31,9 +28,10 @@ public class GigRequestHelpersTests
     {
         // Arrange
         var rowIds = new List<int> { 1, 2, 3 };
+        var sheetProperties = new PropertyEntity(); // Use default instance instead of null
 
         // Act
-        var result = GigRequestHelpers.CreateDeleteRequests(rowIds, null);
+        var result = GigRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties);
 
         // Assert
         Assert.NotNull(result);
@@ -133,47 +131,14 @@ public class GigRequestHelpersTests
                 { PropertyEnum.MAX_ROW.GetDescription(), "10" }
             }
         };
-
-        // Act
-        var result = GigRequestHelpers.ChangeTripSheetData(null, sheetProperties);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public void ChangeTripSheetData_WithMixedActions_ShouldProcessInCorrectOrder()
-    {
-        // Arrange
-        var trips = new List<TripEntity>
-        {
-            new() { RowId = 1, Action = ActionTypeEnum.INSERT.GetDescription() },
-            new() { RowId = 2, Action = ActionTypeEnum.UPDATE.GetDescription() },
-            new() { RowId = 3, Action = ActionTypeEnum.DELETE.GetDescription() },
-            new() { RowId = 4, Action = ActionTypeEnum.DELETE.GetDescription() }
-        };
-        var sheetProperties = new PropertyEntity 
-        { 
-            Id = "1",
-            Attributes = new Dictionary<string, string>
-            {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
-            }
-        };
+        var trips = new List<TripEntity>(); // Use empty list instead of null
 
         // Act
         var result = GigRequestHelpers.ChangeTripSheetData(trips, sheetProperties);
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotEmpty(result);
-        
-        // Should process updates first, then deletes
-        // The actual implementation may optimize delete requests differently
-        var deleteRequests = result.Where(r => r.DeleteDimension != null).ToList();
-        Assert.True(deleteRequests.Count > 0, "Should have delete requests for DELETE actions");
+        Assert.Empty(result);
     }
 
     [Fact]
@@ -205,8 +170,10 @@ public class GigRequestHelpersTests
         // Arrange
         var trips = new List<TripEntity> { new() { RowId = 1 } };
 
-        // Act
+        // Act - pass null to test null handling behavior
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type
         var result = GigRequestHelpers.CreateUpdateCellTripRequests(trips, null);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type
 
         // Assert
         Assert.NotNull(result);
@@ -356,9 +323,10 @@ public class GigRequestHelpersTests
                 { PropertyEnum.MAX_ROW.GetDescription(), "10" }
             }
         };
+        var shifts = new List<ShiftEntity>(); // Use empty list instead of null
 
         // Act
-        var result = GigRequestHelpers.ChangeShiftSheetData(null, sheetProperties);
+        var result = GigRequestHelpers.ChangeShiftSheetData(shifts, sheetProperties);
 
         // Assert
         Assert.NotNull(result);
@@ -454,9 +422,10 @@ public class GigRequestHelpersTests
                 { PropertyEnum.MAX_ROW.GetDescription(), "5" }
             }
         };
+        var setup = new List<SetupEntity>(); // Use empty list instead of null
 
         // Act
-        var result = GigRequestHelpers.ChangeSetupSheetData(null, sheetProperties);
+        var result = GigRequestHelpers.ChangeSetupSheetData(setup, sheetProperties);
 
         // Assert
         Assert.NotNull(result);
@@ -510,6 +479,69 @@ public class GigRequestHelpersTests
         Assert.Single(result);
         Assert.NotNull(result[0].UpdateCells);
         Assert.Equal(4, result[0].UpdateCells.Range.StartRowIndex); // RowId 5 -> index 4
+    }
+
+    #endregion
+
+    #region Generic Tests
+
+    [Fact]
+    public void ChangeSheetDataGeneric_WithMixedActions_ShouldHandleCorrectly()
+    {
+        // Arrange
+        var trips = new List<TripEntity>
+        {
+            new() { RowId = 10, Action = ActionTypeEnum.INSERT.GetDescription() }, // New trip (append)
+            new() { RowId = 5, Action = ActionTypeEnum.UPDATE.GetDescription() }, // Update trip
+            new() { RowId = 15, Action = ActionTypeEnum.DELETE.GetDescription() } // Delete trip
+        };
+        
+        var sheetProperties = new PropertyEntity 
+        { 
+            Id = "1",
+            Attributes = new Dictionary<string, string>
+            {
+                { PropertyEnum.HEADERS.GetDescription(), "Date,Service,Pay,Tips" },
+                { PropertyEnum.MAX_ROW.GetDescription(), "8" }
+            }
+        };
+
+        // Act
+        var result = GigRequestHelpers.ChangeTripSheetData(trips, sheetProperties);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count); // Should have append, update, and delete requests
+        
+        // Should have one append request (RowId 10 > maxRow 8)
+        Assert.Single(result, r => r.AppendCells != null);
+        
+        // Should have one update request (RowId 5 <= maxRow 8) 
+        Assert.Single(result, r => r.UpdateCells != null);
+        
+        // Should have one delete request (RowId 15 marked for deletion)
+        Assert.Single(result, r => r.DeleteDimension != null);
+    }
+
+    [Fact]
+    public void GenericHelpers_ShouldWorkWithAllEntityTypes()
+    {
+        // Arrange
+        var setupEntity = new SetupEntity { RowId = 1, Action = ActionTypeEnum.INSERT.GetDescription() };
+        var tripEntity = new TripEntity { RowId = 2, Action = ActionTypeEnum.UPDATE.GetDescription() };
+        var shiftEntity = new ShiftEntity { RowId = 3, Action = ActionTypeEnum.DELETE.GetDescription() };
+        var expenseEntity = new ExpenseEntity { RowId = 4, Action = ActionTypeEnum.INSERT.GetDescription() };
+
+        // Act & Assert - Should not throw exceptions
+        var setupAction = GigRequestHelpers.GetEntityAction(setupEntity);
+        var tripRowId = GigRequestHelpers.GetEntityRowId(tripEntity);
+        var shiftAction = GigRequestHelpers.GetEntityAction(shiftEntity);
+        var expenseRowId = GigRequestHelpers.GetEntityRowId(expenseEntity);
+
+        Assert.Equal(ActionTypeEnum.INSERT.GetDescription(), setupAction);
+        Assert.Equal(2, tripRowId);
+        Assert.Equal(ActionTypeEnum.DELETE.GetDescription(), shiftAction);
+        Assert.Equal(4, expenseRowId);
     }
 
     #endregion

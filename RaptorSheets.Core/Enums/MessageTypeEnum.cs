@@ -10,5 +10,10 @@ public enum MessageTypeEnum
     DELETE_SHEET,
     GET_SHEETS,
     SAVE_DATA,
-    UPDATE_DATA
+    UPDATE_DATA,
+    VALIDATION,
+    AUTHENTICATION,
+    API_ERROR,
+    BULK_OPERATION,
+    MISSING_SHEETS
 }
