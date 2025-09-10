@@ -1,6 +1,5 @@
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
-using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;

@@ -16,8 +16,8 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.69.0.3703" />
-    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.69.0.3694" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.70.0.3893" />
+    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.70.0.3819" />
   </ItemGroup>
 
 </Project>

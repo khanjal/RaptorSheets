@@ -1,6 +1,5 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
-using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;

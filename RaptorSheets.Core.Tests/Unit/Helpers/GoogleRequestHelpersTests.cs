@@ -5,7 +5,6 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
-using System.Linq;
 using Xunit;
 
 namespace RaptorSheets.Core.Tests.Unit.Helpers;

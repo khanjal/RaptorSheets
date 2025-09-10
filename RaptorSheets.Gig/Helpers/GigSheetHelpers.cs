@@ -2,7 +2,6 @@ using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Gig.Entities;
-using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Entities;
