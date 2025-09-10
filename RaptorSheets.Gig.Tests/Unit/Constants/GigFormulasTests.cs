@@ -26,6 +26,7 @@ public class GigFormulasTests
         var formula = GigFormulas.AmountPerTripFormula;
 
         // Assert
+        Assert.Contains("{totalRange}/IF({tripsRange}=0,1,{tripsRange})", formula);
         Assert.Contains("{totalRange}", formula);
         Assert.Contains("{tripsRange}", formula);
         Assert.Contains("/IF(", formula);
@@ -39,6 +40,7 @@ public class GigFormulasTests
         var formula = GigFormulas.AmountPerDistanceFormula;
 
         // Assert
+        Assert.Contains("{totalRange}/IF({distanceRange}=0,1,{distanceRange})", formula);
         Assert.Contains("{totalRange}", formula);
         Assert.Contains("{distanceRange}", formula);
         Assert.Contains("/IF(", formula);
@@ -52,6 +54,7 @@ public class GigFormulasTests
         var formula = GigFormulas.AmountPerTimeFormula;
 
         // Assert
+        Assert.Contains("{totalRange}/IF({timeRange}=0,1,{timeRange}*24)", formula);
         Assert.Contains("{totalRange}", formula);
         Assert.Contains("{timeRange}", formula);
         Assert.Contains("*24", formula); // Time conversion to hours
@@ -92,7 +95,7 @@ public class GigFormulasTests
 
         // Assert
         Assert.Contains("DATE({yearRange},1,1)", formula);
-        Assert.Contains("({weekRange}-1)*7", formula);
+        Assert.Contains("(({weekRange}-1)*7)", formula);
         Assert.Contains("WEEKDAY(DATE({yearRange},1,1),3)", formula);
         Assert.Contains("{yearRange}", formula);
         Assert.Contains("{weekRange}", formula);
@@ -106,7 +109,7 @@ public class GigFormulasTests
 
         // Assert
         Assert.Contains("DATE({yearRange},1,7)", formula); // Week end uses day 7
-        Assert.Contains("({weekRange}-1)*7", formula);
+        Assert.Contains("(({weekRange}-1)*7)", formula);
         Assert.Contains("WEEKDAY(DATE({yearRange},1,1),3)", formula);
     }
 
@@ -190,7 +193,7 @@ public class GigFormulasTests
     public void AllGigFormulas_ShouldContainValidGoogleSheetsFunction()
     {
         // Arrange
-        var expectedFunctions = new[] { "WEEKNUM", "MONTH", "YEAR", "DATE", "WEEKDAY", "TODAY", "VLOOKUP", "MIN", "MAX", "IF" };
+        var expectedFunctions = new[] { "WEEKNUM", "MONTH", "YEAR", "DATE", "WEEKDAY", "TODAY", "VLOOKUP", "MIN", "MAX", "IF", "SUMIF", "COUNTIF", "AVERAGE", "OFFSET", "INDIRECT" };
         var allFormulas = new[]
         {
             GigFormulas.TotalIncomeFormula,
@@ -204,7 +207,15 @@ public class GigFormulasTests
             GigFormulas.CurrentAmountLookup,
             GigFormulas.PreviousAmountLookup,
             GigFormulas.PreviousDayAverage,
-            GigFormulas.MultipleFieldVisitLookup
+            GigFormulas.MultipleFieldVisitLookup,
+            GigFormulas.AmountPerDayFormula,
+            GigFormulas.ShiftKeyGeneration,
+            GigFormulas.TripKeyGeneration,
+            GigFormulas.TotalTimeActiveWithFallback,
+            GigFormulas.TotalTimeWithOmit,
+            GigFormulas.ShiftTotalWithTripSum,
+            GigFormulas.ShiftTotalTrips,
+            GigFormulas.RollingAverageFormula
         };
 
         // Act & Assert
@@ -328,11 +339,11 @@ public class GigFormulasTests
         var formula = GigFormulas.RollingAverageFormula;
 
         // Assert
-        Assert.Contains("DAVERAGE(", formula);
-        Assert.Contains("transpose(", formula);
-        Assert.Contains("sequence(", formula);
-        Assert.Contains("{totalRange}", formula);
+        Assert.Contains("AVERAGE(", formula);
+        Assert.Contains("OFFSET(", formula);
+        Assert.Contains("INDIRECT(", formula);
         Assert.Contains("ROW({totalRange})", formula);
+        Assert.Contains("{totalRange}", formula);
     }
 
     #endregion

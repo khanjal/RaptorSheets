@@ -472,9 +472,10 @@ public class GigFormulaBuilderTests
 
         // Assert
         Assert.Contains("=ARRAYFORMULA(", result);
-        Assert.Contains("DAVERAGE(", result);
-        Assert.Contains("transpose(", result);
-        Assert.Contains("sequence(", result);
+        Assert.Contains("AVERAGE(", result);
+        Assert.Contains("OFFSET(", result);
+        Assert.Contains("INDIRECT(", result);
+        Assert.Contains("ROW(" + totalRange + ")", result);
         Assert.Contains(totalRange, result);
     }
 

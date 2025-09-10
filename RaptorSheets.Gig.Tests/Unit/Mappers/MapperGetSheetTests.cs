@@ -258,8 +258,9 @@ public class MapperGetSheetTests
         if (averageHeader != null)
         {
             Assert.NotNull(averageHeader.Formula);
-            Assert.Contains("DAVERAGE(", averageHeader.Formula);
-            Assert.Contains("sequence(", averageHeader.Formula);
+            Assert.Contains("AVERAGE(", averageHeader.Formula);
+            Assert.Contains("OFFSET(", averageHeader.Formula);
+            Assert.Contains("INDIRECT(", averageHeader.Formula);
         }
 
         if (numberHeader != null)
@@ -267,14 +268,14 @@ public class MapperGetSheetTests
             Assert.NotNull(numberHeader.Formula);
             Assert.Contains("INDEX(SPLIT(", numberHeader.Formula);
             Assert.Contains("\"-\"", numberHeader.Formula);
-            Assert.Contains(", 0, 1)", numberHeader.Formula); // Fix spacing - there should be spaces around comma
+            Assert.Contains(",0,1)", numberHeader.Formula.Replace(" ","")); // Ignore spaces
         }
 
         if (yearHeader != null)
         {
             Assert.NotNull(yearHeader.Formula);
             Assert.Contains("INDEX(SPLIT(", yearHeader.Formula);
-            Assert.Contains(", 0, 2)", yearHeader.Formula); // Fix spacing
+            Assert.Contains(",0,2)", yearHeader.Formula.Replace(" ","")); // Ignore spaces
         }
     }
 
