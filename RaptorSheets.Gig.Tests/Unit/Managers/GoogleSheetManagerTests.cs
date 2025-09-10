@@ -144,7 +144,7 @@ public class GoogleSheetManagerTests
     [InlineData("SHIFTS")]
     [InlineData("shifts")]
     [InlineData("Shifts")]
-    public async Task GetSheet_WithValidSheetName_ShouldCallGetSheets(string sheetName)
+    public void GetSheet_WithValidSheetName_ShouldCallGetSheets(string sheetName)
     {
         // This test verifies the method exists and handles case-insensitive input
         // The actual implementation would require mocking the service calls

@@ -85,9 +85,9 @@ public class SheetHelpersTests
     public void CheckSheets_WithActuallyNullSpreadsheet_ShouldReturnAllSheetNames()
     {
         // Arrange - Test with actual null to verify null handling behavior
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Spreadsheet? spreadsheet = null;
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         // Act
         var result = SheetHelpers.CheckSheets<TestSheetEnum>(spreadsheet);
@@ -284,9 +284,9 @@ public class SheetHelpersTests
     public void GetSpreadsheetSheets_WithActuallyNullSpreadsheet_ShouldReturnEmptyList()
     {
         // Arrange - Test with actual null to verify null handling behavior
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Spreadsheet? sheet = null;
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type;
 
         // Act
         var result = SheetHelpers.GetSpreadsheetSheets(sheet);

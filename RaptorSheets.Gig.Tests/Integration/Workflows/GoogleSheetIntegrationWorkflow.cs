@@ -135,7 +135,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     }
 
     [Fact]
-    public async Task VerifyExpectedSheetFormatting_ShouldValidateFormattingStructure()
+    public void VerifyExpectedSheetFormatting_ShouldValidateFormattingStructure()
     {
         System.Diagnostics.Debug.WriteLine("=== Testing Sheet Formatting Validation Logic ===");
 
@@ -344,20 +344,27 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         }
     }
 
-    private async Task<Spreadsheet?> GetSpreadsheetInfoForFormatting()
+    private static async Task<Spreadsheet?> GetSpreadsheetInfoForFormatting()
     {
-        try
+        return await Task.Run(() =>
         {
-            // First try to use the actual spreadsheet if we can access the service
-            // For now, we'll use demo data to verify expected formatting structure
-            return JsonHelpers.LoadDemoSpreadsheet();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Could not load formatting data: {ex.Message}");
-            return null;
-        }
+            try
+            {
+                // First try to use the actual spreadsheet if we can access the service
+                // For now, we'll use demo data to verify expected formatting structure
+                return JsonHelpers.LoadDemoSpreadsheet();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Could not load formatting data: {ex.Message}");
+                return null;
+            }
+        });
     }
+
+    #endregion
+
+    #region Formatting Verification Methods
 
     private static void VerifyIndividualSheetFormatting(Sheet sheet, string sheetName)
     {
@@ -590,7 +597,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
     #endregion
 
-    #region Workflow Steps
+    #region Test Data Management
 
     private async Task LoadTestData()
     {
@@ -939,12 +946,6 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         
         var targetId = (int?)rowIdProp.GetValue(entity);
         return entities.FirstOrDefault(e => (int?)rowIdProp.GetValue(e) == targetId);
-    }
-
-    private static T? FindEntityById<T>(int rowId, List<T> entities) where T : class
-    {
-        var rowIdProp = typeof(T).GetProperty("RowId");
-        return rowIdProp == null ? null : entities.FirstOrDefault(e => (int?)rowIdProp.GetValue(e) == rowId);
     }
 
     private static void VerifyEntityProperties<T>(T created, T found) where T : class

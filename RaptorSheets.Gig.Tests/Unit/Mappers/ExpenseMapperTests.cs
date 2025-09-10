@@ -258,10 +258,14 @@ public class ExpenseMapperTests
             new()
             {
                 Date = DateTime.MinValue,
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
                 Name = null,
                 Description = null,
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
                 Amount = 0m,
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
                 Category = null
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             }
         };
         var headers = new List<object> { "Date", "Name", "Description", "Amount", "Category" };
