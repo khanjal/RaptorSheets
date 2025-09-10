@@ -4,7 +4,6 @@
 | ---------- | :------------: | :------------: |
 | Latest Build Status | [![build status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions) | [GitHub Repo](https://github.com/khanjal/RaptorSheets/) |
 | RaptorSheets.Gig NuGet | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) | [Raptor Sheets - Gig](https://gig.raptorsheets.com) |
-| RaptorSheets.Stock NuGet | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Stock)](https://www.nuget.org/packages/RaptorSheets.Stock/) | - |
 | Test Coverage | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=khanjal_RaptorSheets&metric=coverage)](https://sonarcloud.io/summary/new_code?id=khanjal_RaptorSheets) | [SonarCloud](https://sonarcloud.io/project/overview?id=khanjal_RaptorSheets) |
 | Code Quality | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=khanjal_RaptorSheets&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=khanjal_RaptorSheets) | [SonarCloud](https://sonarcloud.io/project/overview?id=khanjal_RaptorSheets) |
 | License | [![License](https://img.shields.io/github/license/khanjal/RaptorSheets)](LICENSE) | - |
@@ -14,7 +13,6 @@
 ```bash
 # Install the package for your use case
 dotnet add package RaptorSheets.Gig      # For gig work tracking
-dotnet add package RaptorSheets.Stock    # For stock portfolio management
 # dotnet add package RaptorSheets.Core   # Core library (coming soon)
 ```
 
@@ -50,8 +48,8 @@ RaptorSheets is a comprehensive .NET 8 library suite that simplifies interaction
 
 ```
 Your Application
-       ↓
-Package-Specific Manager (Gig, Stock, etc.)
+    ↓
+Package-Specific Manager (Gig)
        ↓
 RaptorSheets.Core (GoogleSheetService)
        ↓
@@ -63,7 +61,6 @@ Google Sheets API v4
 ### 💼 Use Cases
 
 - **Gig Work Tracking**: Track trips, shifts, expenses, and earnings across platforms
-- **Stock Portfolio**: Manage accounts, tickers, and performance data
 - **Business Operations**: Handle addresses, contacts, regions, and services
 - **Data Analytics**: Generate daily, weekly, monthly, and yearly reports
 - **Custom Integrations**: Build your own sheet types using the Core library
@@ -77,15 +74,13 @@ Choose the documentation that matches your needs:
 | **[📚 Complete Guide](DOCUMENTATION.md)** | Comprehensive overview and getting started | All users |
 | **[🔧 Core Library](docs/CORE.md)** | Core functionality and custom implementations | Library developers |
 | **[💼 Gig Package](docs/GIG.md)** | Gig work and freelance tracking | Gig workers, freelancers |
-| **[📈 Stock Package](docs/STOCK.md)** | Stock portfolio management | Investors, traders |
-| **[🔐 Authentication](docs/AUTHENTICATION.md)** | Setup guide for Google APIs | All users |
+| **[ Authentication](docs/AUTHENTICATION.md)** | Setup guide for Google APIs | All users |
 
 ## 📦 Available Packages
 
 | Package | Version | Purpose | Dependencies | Documentation |
 |---------|---------|---------|--------------|---------------|
 | **RaptorSheets.Gig** | ![NuGet](https://img.shields.io/nuget/v/RaptorSheets.Gig) | Gig work and freelance tracking | Google.Apis.Sheets.v4, Google.Apis.Drive.v3 | [💼 Gig Docs](docs/GIG.md) |
-| **RaptorSheets.Stock** | ![NuGet](https://img.shields.io/nuget/v/RaptorSheets.Stock) | Stock market data management | Google.Apis.Sheets.v4 | [📈 Stock Docs](docs/STOCK.md) |
 | **RaptorSheets.Core** | *Coming Soon* | Core functionality for custom implementations | Google.Apis.Sheets.v4 | [🔧 Core Docs](docs/CORE.md) |
 | **RaptorSheets.Common** | - | Shared utilities (included in packages) | - | - |
 
@@ -131,24 +126,6 @@ var trip = new TripEntity
 var result = await manager.ChangeSheetData(["Trips"], new SheetEntity { Trips = [trip] });
 ```
 
-### Stock Portfolio Management  
-```csharp
-using RaptorSheets.Stock.Managers;
-using RaptorSheets.Stock.Entities;
-
-var manager = new GoogleSheetManager(credentials, spreadsheetId);
-
-// Record a stock transaction
-var account = new AccountEntity
-{
-    Account = "Brokerage-401k",
-    Stocks = 10,
-    Shares = 100,
-    AverageCost = 50.25m
-};
-
-var result = await manager.ChangeSheetData(["Accounts"], new SheetEntity { Accounts = [account] });
-```
 
 ### Custom Implementation (Using Core)
 ```csharp
@@ -200,7 +177,6 @@ dotnet test
 # Run package-specific tests
 dotnet test RaptorSheets.Core.Tests/
 dotnet test RaptorSheets.Gig.Tests/
-dotnet test RaptorSheets.Stock.Tests/
 
 # Run with coverage
 dotnet test --collect:"XPlat Code Coverage"
@@ -236,7 +212,6 @@ We welcome contributions to any package in the RaptorSheets suite!
 3. Choose your focus area:
    - **Core Library**: Enhance base functionality
    - **Gig Package**: Add gig work features
-   - **Stock Package**: Improve portfolio management
    - **New Package**: Create a new domain-specific package
 4. Write comprehensive tests
 5. Update relevant documentation
@@ -260,7 +235,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ?? [Complete Guide](DOCUMENTATION.md) - Overview and getting started
 - ?? [Core Library](docs/CORE.md) - Core functionality reference  
 - ?? [Gig Package](docs/GIG.md) - Gig work tracking guide
-- ?? [Stock Package](docs/STOCK.md) - Portfolio management guide
 - ?? [Authentication](docs/AUTHENTICATION.md) - Setup instructions
 
 ### Community & Support
