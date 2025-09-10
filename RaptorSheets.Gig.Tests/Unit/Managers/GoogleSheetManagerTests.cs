@@ -31,9 +31,10 @@ public class GoogleSheetManagerTests
     [Fact]
     public void CheckSheetHeaders_WithNullSpreadsheet_ShouldReturnErrorMessage()
     {
-        // Act
-        var spreadsheet = new Spreadsheet(); // Use default instance instead of null
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        // Act - pass null to test null handling behavior
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type
+        var result = GoogleSheetManager.CheckSheetHeaders(null);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type
 
         // Assert
         Assert.NotNull(result);

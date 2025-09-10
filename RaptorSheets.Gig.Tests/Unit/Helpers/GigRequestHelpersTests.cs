@@ -172,10 +172,11 @@ public class GigRequestHelpersTests
     {
         // Arrange
         var trips = new List<TripEntity> { new() { RowId = 1 } };
-        var sheetProperties = new PropertyEntity(); // Use default instance instead of null
 
-        // Act
-        var result = GigRequestHelpers.CreateUpdateCellTripRequests(trips, sheetProperties);
+        // Act - pass null to test null handling behavior
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type
+        var result = GigRequestHelpers.CreateUpdateCellTripRequests(trips, null);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type
 
         // Assert
         Assert.NotNull(result);

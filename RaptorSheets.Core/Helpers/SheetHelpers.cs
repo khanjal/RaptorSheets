@@ -59,7 +59,7 @@ public static class SheetHelpers
 
     public static List<string> GetSpreadsheetSheets(Spreadsheet? sheet)
     {
-        if (sheet == null)
+        if (sheet == null || sheet.Sheets == null)
         {
             return [];
         }
