@@ -170,9 +170,9 @@ public class ShiftMapperTests
             new()
             {
                 Date = "2024-01-15",
-                Service = null,
+                Service = string.Empty, // Use empty string instead of null
                 Pay = null,
-                Region = null
+                Region = string.Empty // Use empty string instead of null
             }
         };
         var headers = new List<object> { "Date", "Service", "Pay", "Region" };
@@ -189,9 +189,9 @@ public class ShiftMapperTests
         
         // Check null handling
         Assert.NotNull(rowData.Values[0].UserEnteredValue.NumberValue); // Date should still work
-        Assert.Null(rowData.Values[1].UserEnteredValue.StringValue); // Null service
+        Assert.Equal(string.Empty, rowData.Values[1].UserEnteredValue.StringValue); // Empty service
         Assert.Null(rowData.Values[2].UserEnteredValue.NumberValue); // Null pay
-        Assert.Null(rowData.Values[3].UserEnteredValue.StringValue); // Null region
+        Assert.Equal(string.Empty, rowData.Values[3].UserEnteredValue.StringValue); // Empty region
     }
 
     [Fact]

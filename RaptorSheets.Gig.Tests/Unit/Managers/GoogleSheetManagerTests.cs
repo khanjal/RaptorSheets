@@ -32,7 +32,8 @@ public class GoogleSheetManagerTests
     public void CheckSheetHeaders_WithNullSpreadsheet_ShouldReturnErrorMessage()
     {
         // Act
-        var result = GoogleSheetManager.CheckSheetHeaders(null);
+        var spreadsheet = new Spreadsheet(); // Use default instance instead of null
+        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);

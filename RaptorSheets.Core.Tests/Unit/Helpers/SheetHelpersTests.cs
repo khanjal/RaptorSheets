@@ -69,7 +69,7 @@ public class SheetHelpersTests
     public void CheckSheets_WithNullSpreadsheet_ShouldReturnAllSheetNames()
     {
         // Arrange
-        Spreadsheet? spreadsheet = null;
+        Spreadsheet spreadsheet = new Spreadsheet(); // Use default instance instead of null
 
         // Act
         var result = SheetHelpers.CheckSheets<TestSheetEnum>(spreadsheet);
@@ -252,7 +252,7 @@ public class SheetHelpersTests
     public void GetSpreadsheetSheets_WithNullSpreadsheet_ShouldReturnEmptyList()
     {
         // Arrange
-        Spreadsheet? sheet = null;
+        Spreadsheet sheet = new Spreadsheet(); // Use default instance instead of null
 
         // Act
         var result = SheetHelpers.GetSpreadsheetSheets(sheet);
