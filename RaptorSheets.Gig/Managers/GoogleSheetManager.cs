@@ -26,6 +26,7 @@ public interface IGoogleSheetManager
     public Task<List<PropertyEntity>> GetSheetProperties();
     public Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
     public Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null); // New method for testing
+    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets); // New method for simplified verification
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -432,7 +433,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         sheets.ForEach(sheet => ranges.Add($"{sheet}!{GoogleConfig.HeaderRange}")); // Get headers for each sheet.
         sheets.ForEach(sheet => ranges.Add($"{sheet}!{GoogleConfig.RowRange}")); // Get max row for each sheet.
 
-        var sheetInfo = await _googleSheetService.GetSheetInfo(ranges);
+        var sheetInfo = await _googleSheetService.GetSheetInfo();
 
         foreach (var sheet in sheets)
         {
@@ -481,5 +482,10 @@ public class GoogleSheetManager : IGoogleSheetManager
     public async Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null)
     {
         return await _googleSheetService.GetSheetInfo(ranges);
+    }
+
+    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets)
+    {
+        return await _googleSheetService.GetBatchData(sheets);
     }
 }

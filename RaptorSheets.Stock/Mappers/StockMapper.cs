@@ -133,9 +133,13 @@ public static class StockMapper
         var sheet = SheetsConfig.StockSheet;
         var tickerSheet = SheetsConfig.TickerSheet;
         
-        // Use the new configuration helper for consistency
-        return SheetConfigurationHelpers.ConfigureSheet(sheet, (header, index) =>
+        // Ensure column indexes are properly assigned
+        sheet.Headers.UpdateColumns();
+        
+        // Apply header-specific configurations
+        for (int i = 0; i < sheet.Headers.Count; i++)
         {
+            var header = sheet.Headers[i];
             var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
             var keyRange = GoogleConfig.KeyRange;
 
@@ -190,10 +194,28 @@ public static class StockMapper
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 default:
-                    // Apply common formatting patterns
-                    SheetConfigurationHelpers.ApplyCommonFormats(header, header.Name);
+                    // Apply basic formatting based on header name patterns
+                    ApplyBasicFormatting(header, header.Name);
                     break;
             }
-        });
+        }
+        
+        return sheet;
+    }
+
+    /// <summary>
+    /// Apply basic formatting patterns based on header content for Stock domain
+    /// </summary>
+    private static void ApplyBasicFormatting(SheetCellModel header, string headerName)
+    {
+        var lowerName = headerName.ToLowerInvariant();
+        
+        if (lowerName.Contains("cost") || lowerName.Contains("price") || lowerName.Contains("total") || 
+            lowerName.Contains("return") || lowerName.Contains("high") || lowerName.Contains("low"))
+            header.Format = FormatEnum.ACCOUNTING;
+        else if (lowerName.Contains("ratio"))
+            header.Format = FormatEnum.NUMBER;
+        else
+            header.Format = FormatEnum.TEXT;
     }
 }

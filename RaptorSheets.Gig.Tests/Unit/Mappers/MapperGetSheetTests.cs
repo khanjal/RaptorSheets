@@ -224,8 +224,9 @@ public class MapperGetSheetTests
         if (weekdayHeader != null)
         {
             Assert.NotNull(weekdayHeader.Formula);
-            // Updated expectation: Now uses static array literal instead of TEXT function
-            Assert.Contains("{\"Mon\";\"Tue\";\"Wed\";\"Thu\";\"Fri\";\"Sat\";\"Sun\"}", weekdayHeader.Formula);
+            // Updated expectation: Should use TEXT function for weekday conversion
+            Assert.Contains("TEXT(", weekdayHeader.Formula);
+            Assert.Contains("\"ddd\"", weekdayHeader.Formula);
         }
 
         if (currentAmountHeader != null)

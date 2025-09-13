@@ -227,6 +227,17 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
+    /// Builds ARRAYFORMULA for weekday text using the specific weekday text template
+    /// More efficient than BuildArrayFormulaWeekdayText for date-based ranges
+    /// </summary>
+    public static string BuildArrayFormulaWeekdayTextDirect(string keyRange, string header)
+    {
+        return GoogleFormulas.ArrayFormulaWeekdayText
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header);
+    }
+
+    /// <summary>
     /// Builds ARRAYFORMULA for dual count (counts occurrences in two ranges)
     /// </summary>
     public static string BuildArrayFormulaDualCountIf(string keyRange, string header, string range1, string range2)

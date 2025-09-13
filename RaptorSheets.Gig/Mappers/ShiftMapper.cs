@@ -40,6 +40,8 @@ public static class ShiftMapper
                 Active = HeaderHelpers.GetStringValue(HeaderEnum.TIME_ACTIVE.GetDescription(), value, headers),
                 Time = HeaderHelpers.GetStringValue(HeaderEnum.TIME_TOTAL.GetDescription(), value, headers),
                 Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
+                OdometerStart = HeaderHelpers.GetDecimalValueOrNull(HeaderEnum.ODOMETER_START.GetDescription(), value, headers),
+                OdometerEnd = HeaderHelpers.GetDecimalValueOrNull(HeaderEnum.ODOMETER_END.GetDescription(), value, headers),
                 Distance = HeaderHelpers.GetDecimalValueOrNull(HeaderEnum.DISTANCE.GetDescription(), value, headers),
                 Omit = HeaderHelpers.GetBoolValue(HeaderEnum.TIME_OMIT.GetDescription(), value, headers),
                 Region = HeaderHelpers.GetStringValue(HeaderEnum.REGION.GetDescription(), value, headers),
@@ -124,6 +126,12 @@ public static class ShiftMapper
                     case HeaderEnum.NOTE:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = shift.Note ?? null } });
                         break;
+                    case HeaderEnum.ODOMETER_START:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)shift.OdometerStart } });
+                        break;
+                    case HeaderEnum.ODOMETER_END:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)shift.OdometerEnd } });
+                        break;
                     default:
                         cells.Add(new CellData());
                         break;
@@ -192,6 +200,12 @@ public static class ShiftMapper
                         break;
                     case HeaderEnum.NOTE:
                         objectList.Add(shift.Note);
+                        break;
+                    case HeaderEnum.ODOMETER_START:
+                        objectList.Add(shift.OdometerStart?.ToString() ?? "");
+                        break;
+                    case HeaderEnum.ODOMETER_END:
+                        objectList.Add(shift.OdometerEnd?.ToString() ?? "");
                         break;
                     default:
                         objectList.Add(null);
@@ -334,6 +348,8 @@ public static class ShiftMapper
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(dateRange, HeaderEnum.YEAR.GetDescription(), dateRange);
                     break;
                 default:
+                    // Apply common formatting patterns automatically using Gig-specific logic for known enum values
+                    GigSheetConfigurationHelpers.ApplyCommonFormats(header, header.Name);
                     break;
             }
         });

@@ -116,11 +116,21 @@ public static class SheetsConfig
     {
         public static List<string> GetAllSheetNames() =>
         [
-            SheetNames.Addresses, SheetNames.Daily, SheetNames.Expenses,
-            SheetNames.Monthly, SheetNames.Names, SheetNames.Places,
-            SheetNames.Regions, SheetNames.Services, SheetNames.Setup,
-            SheetNames.Shifts, SheetNames.Trips, SheetNames.Types,
-            SheetNames.Weekdays, SheetNames.Weekly, SheetNames.Yearly
+            SheetNames.Trips, 
+            SheetNames.Shifts,
+            SheetNames.Expenses,
+            SheetNames.Addresses,
+            SheetNames.Names,
+            SheetNames.Places,
+            SheetNames.Regions,
+            SheetNames.Services,
+            SheetNames.Types,
+            SheetNames.Daily,
+            SheetNames.Weekdays,
+            SheetNames.Weekly,
+            SheetNames.Monthly,
+            SheetNames.Yearly,
+            SheetNames.Setup
         ];
         
         public static bool IsValidSheetName(string name) =>
@@ -195,9 +205,9 @@ public static class SheetsConfig
         Headers = [
             new SheetCellModel { Name = HeaderNames.Date },
             new SheetCellModel { Name = HeaderNames.Name },
-            new SheetCellModel { Name = HeaderNames.Description },
             new SheetCellModel { Name = HeaderNames.Amount },
-            new SheetCellModel { Name = HeaderNames.Category }
+            new SheetCellModel { Name = HeaderNames.Category },
+            new SheetCellModel { Name = HeaderNames.Description }
         ]
     };
 
@@ -299,6 +309,8 @@ public static class SheetsConfig
             new SheetCellModel { Name = HeaderNames.Tips },
             new SheetCellModel { Name = HeaderNames.Bonus },
             new SheetCellModel { Name = HeaderNames.Cash },
+            new SheetCellModel { Name = HeaderNames.OdometerStart },
+            new SheetCellModel { Name = HeaderNames.OdometerEnd },
             new SheetCellModel { Name = HeaderNames.Distance },
             new SheetCellModel { Name = HeaderNames.Region },
             new SheetCellModel { Name = HeaderNames.Note },

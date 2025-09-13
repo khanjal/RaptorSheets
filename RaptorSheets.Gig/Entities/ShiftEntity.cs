@@ -34,6 +34,12 @@ public class ShiftEntity : AmountEntity
     [JsonPropertyName("trips")]
     public int Trips { get; set; }
 
+    [JsonPropertyName("startOdometer")]
+    public decimal? OdometerStart { get; set; }
+
+    [JsonPropertyName("endOdometer")]
+    public decimal? OdometerEnd { get; set; }
+
     [JsonPropertyName("distance")]
     public decimal? Distance { get; set; }
 

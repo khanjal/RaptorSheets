@@ -102,10 +102,10 @@ public static class GigFormulas
     #region Shift-Specific Business Logic
 
     /// <summary>
-    /// Shift key generation: IF(ISBLANK({numberRange}), {dateRange} & "-0-" & {serviceRange}, {dateRange} & "-" & {numberRange} & "-" & {serviceRange})
-    /// Placeholders: {numberRange}, {dateRange}, {serviceRange}
+    /// Shift key generation: IFS(ROW({keyRange})=1,"{header}",ISBLANK({serviceRange}), "",true,IF(ISBLANK({numberRange}), {dateRange} & "-0-" & {serviceRange}, {dateRange} & "-" & {numberRange} & "-" & {serviceRange}))
+    /// Placeholders: {keyRange}, {header}, {serviceRange}, {numberRange}, {dateRange}
     /// </summary>
-    public const string ShiftKeyGeneration = "IF(ISBLANK({numberRange}), {dateRange} & \"-0-\" & {serviceRange}, {dateRange} & \"-\" & {numberRange} & \"-\" & {serviceRange})";
+    public const string ShiftKeyGeneration = "IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({serviceRange}), \"\",true,IF(ISBLANK({numberRange}), {dateRange} & \"-0-\" & {serviceRange}, {dateRange} & \"-\" & {numberRange} & \"-\" & {serviceRange}))";
 
     /// <summary>
     /// Trip key generation with exclude: IF({excludeRange},{dateRange} & "-X-" & {serviceRange},IF(ISBLANK({numberRange}), {dateRange} & "-0-" & {serviceRange}, {dateRange} & "-" & {numberRange} & "-" & {serviceRange}))

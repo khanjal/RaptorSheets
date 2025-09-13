@@ -51,6 +51,13 @@ public static class GoogleFormulas
     /// </summary>
     public const string ArrayFormulaUniqueFiltered = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true, SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\")), 1))))";
 
+    /// <summary>
+    /// ARRAYFORMULA for weekday text formatting from dates: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true,TEXT({keyRange}+1,"ddd")))
+    /// Placeholders: {keyRange}, {header}
+    /// Used for converting date ranges to weekday abbreviations (Mon, Tue, Wed, etc.)
+    /// </summary>
+    public const string ArrayFormulaWeekdayText = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true,TEXT({keyRange}+1,\"ddd\")))";
+
     #endregion
 
     #region Generic Aggregation Formulas
