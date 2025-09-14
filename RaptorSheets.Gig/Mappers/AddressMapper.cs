@@ -51,6 +51,26 @@ public static class AddressMapper
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.AddressSheet;
+        
+        // NEW: Apply entity-driven column ordering
+        var entityColumnOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<AddressEntity>(
+            sheet.Headers, 
+            null // Let it use original sheet header order as fallback
+        );
+        
+        // Validate that entity attributes reference valid header constants
+        var allAvailableHeaders = typeof(SheetsConfig.HeaderNames)
+            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+            .Where(f => f.FieldType == typeof(string))
+            .Select(f => (string)f.GetValue(null)!).ToList();
+            
+        var validationErrors = EntityColumnOrderHelper.ValidateEntityHeaderMapping<AddressEntity>(allAvailableHeaders);
+        
+        if (validationErrors.Any())
+        {
+            throw new InvalidOperationException($"AddressEntity has invalid header mappings: {string.Join(", ", validationErrors)}");
+        }
+        
         sheet.Headers.UpdateColumns();
 
         var tripSheet = TripMapper.GetSheet();
