@@ -1,5 +1,7 @@
 ﻿using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Entities;
 using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Gig.Constants;
@@ -167,10 +169,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Address },
-            .. CommonTripSheetHeaders
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<AddressEntity>()
     };
 
     public static SheetModel DailySheet => new()
