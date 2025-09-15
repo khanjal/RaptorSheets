@@ -117,23 +117,7 @@ public static class SheetsConfig
     public static class SheetUtilities
     {
         public static List<string> GetAllSheetNames() =>
-        [
-            SheetNames.Trips, 
-            SheetNames.Shifts,
-            SheetNames.Expenses,
-            SheetNames.Addresses,
-            SheetNames.Names,
-            SheetNames.Places,
-            SheetNames.Regions,
-            SheetNames.Services,
-            SheetNames.Types,
-            SheetNames.Daily,
-            SheetNames.Weekdays,
-            SheetNames.Weekly,
-            SheetNames.Monthly,
-            SheetNames.Yearly,
-            SheetNames.Setup
-        ];
+            EntitySheetOrderHelper.GetSheetOrderFromEntity<SheetEntity>();
         
         public static bool IsValidSheetName(string name) =>
             GetAllSheetNames().Any(sheet => string.Equals(sheet, name, StringComparison.OrdinalIgnoreCase));
@@ -312,8 +296,4 @@ public static class SheetsConfig
         ProtectSheet = true,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<YearlyEntity>()
     };
-
-    // NOTE: Common header patterns below are now obsolete since all sheets use entity-driven generation.
-    // These are kept for backward compatibility but should not be used in new implementations.
-    // All header ordering is now defined in entity SheetOrder attributes.
 }

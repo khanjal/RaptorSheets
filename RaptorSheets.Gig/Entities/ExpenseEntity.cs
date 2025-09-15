@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Gig.Constants;
@@ -13,18 +13,18 @@ public class ExpenseEntity
     [JsonPropertyName("action")]
     public string Action { get; set; } = string.Empty;
     
-    [SheetOrder(SheetsConfig.HeaderNames.Date)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
     public DateTime Date { get; set; }
     
-    [SheetOrder(SheetsConfig.HeaderNames.Name)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Name)]
     public string Name { get; set; } = string.Empty;
     
-    [SheetOrder(SheetsConfig.HeaderNames.Amount)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Amount)]
     public decimal Amount { get; set; }
     
-    [SheetOrder(SheetsConfig.HeaderNames.Category)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Category)]
     public string Category { get; set; } = string.Empty;
     
-    [SheetOrder(SheetsConfig.HeaderNames.Description)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Description)]
     public string Description { get; set; } = string.Empty;
 }

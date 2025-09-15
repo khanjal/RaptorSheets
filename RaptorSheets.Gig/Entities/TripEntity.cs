@@ -13,120 +13,120 @@ public class TripEntity
     public string Action { get; set; } = "";
 
     [JsonPropertyName("date")]
-    [SheetOrder(SheetsConfig.HeaderNames.Date)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
     public string Date { get; set; } = "";
 
     [JsonPropertyName("service")]
-    [SheetOrder(SheetsConfig.HeaderNames.Service)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Service)]
     public string Service { get; set; } = "";
 
     [JsonPropertyName("number")]
-    [SheetOrder(SheetsConfig.HeaderNames.Number)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Number)]
     public int? Number { get; set; }
 
     [JsonPropertyName("exclude")]
-    [SheetOrder(SheetsConfig.HeaderNames.Exclude)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Exclude)]
     public bool Exclude { get; set; } = false;
 
     [JsonPropertyName("type")]
-    [SheetOrder(SheetsConfig.HeaderNames.Type)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Type)]
     public string Type { get; set; } = "";
 
     [JsonPropertyName("place")]
-    [SheetOrder(SheetsConfig.HeaderNames.Place)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Place)]
     public string Place { get; set; } = "";
 
     [JsonPropertyName("pickupTime")]
-    [SheetOrder(SheetsConfig.HeaderNames.Pickup)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Pickup)]
     public string Pickup { get; set; } = "";
 
     [JsonPropertyName("dropoffTime")]
-    [SheetOrder(SheetsConfig.HeaderNames.Dropoff)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Dropoff)]
     public string Dropoff { get; set; } = "";
 
     [JsonPropertyName("duration")]
-    [SheetOrder(SheetsConfig.HeaderNames.Duration)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Duration)]
     public string Duration { get; set; } = "";
 
     [JsonPropertyName("pay")] 
-    [SheetOrder(SheetsConfig.HeaderNames.Pay)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Pay)]
     public decimal? Pay { get; set; }
 
     [JsonPropertyName("tip")]
-    [SheetOrder(SheetsConfig.HeaderNames.Tips)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Tips)]
     public decimal? Tip { get; set; }
 
     [JsonPropertyName("bonus")]
-    [SheetOrder(SheetsConfig.HeaderNames.Bonus)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Bonus)]
     public decimal? Bonus { get; set; }
 
     [JsonPropertyName("total")]
-    [SheetOrder(SheetsConfig.HeaderNames.Total)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Total)]
     public decimal? Total { get; set; }
 
     [JsonPropertyName("cash")]
-    [SheetOrder(SheetsConfig.HeaderNames.Cash)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Cash)]
     public decimal? Cash { get; set; }
 
     [JsonPropertyName("startOdometer")]
-    [SheetOrder(SheetsConfig.HeaderNames.OdometerStart)]
+    [ColumnOrder(SheetsConfig.HeaderNames.OdometerStart)]
     public decimal? OdometerStart { get; set; }
 
     [JsonPropertyName("endOdometer")]
-    [SheetOrder(SheetsConfig.HeaderNames.OdometerEnd)]
+    [ColumnOrder(SheetsConfig.HeaderNames.OdometerEnd)]
     public decimal? OdometerEnd { get; set; }
 
     [JsonPropertyName("distance")]
-    [SheetOrder(SheetsConfig.HeaderNames.Distance)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Distance)]
     public decimal? Distance { get; set; }
 
     [JsonPropertyName("name")]
-    [SheetOrder(SheetsConfig.HeaderNames.Name)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Name)]
     public string Name { get; set; } = "";
 
     [JsonPropertyName("startAddress")]
-    [SheetOrder(SheetsConfig.HeaderNames.AddressStart)]
+    [ColumnOrder(SheetsConfig.HeaderNames.AddressStart)]
     public string StartAddress { get; set; } = "";
 
     [JsonPropertyName("endAddress")]
-    [SheetOrder(SheetsConfig.HeaderNames.AddressEnd)]
+    [ColumnOrder(SheetsConfig.HeaderNames.AddressEnd)]
     public string EndAddress { get; set; } = "";
 
     [JsonPropertyName("endUnit")]
-    [SheetOrder(SheetsConfig.HeaderNames.UnitEnd)]
+    [ColumnOrder(SheetsConfig.HeaderNames.UnitEnd)]
     public string EndUnit { get; set; } = "";
 
     [JsonPropertyName("orderNumber")]
-    [SheetOrder(SheetsConfig.HeaderNames.OrderNumber)]
+    [ColumnOrder(SheetsConfig.HeaderNames.OrderNumber)]
     public string OrderNumber { get; set; } = "";
 
     [JsonPropertyName("region")]
-    [SheetOrder(SheetsConfig.HeaderNames.Region)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Region)]
     public string Region { get; set; } = "";
 
     [JsonPropertyName("note")]
-    [SheetOrder(SheetsConfig.HeaderNames.Note)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Note)]
     public string Note { get; set; } = "";
 
     [JsonPropertyName("key")]
-    [SheetOrder(SheetsConfig.HeaderNames.Key)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Key)]
     public string Key { get; set; } = "";
 
-    [SheetOrder(SheetsConfig.HeaderNames.Day)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Day)]
     public string Day { get; set; } = "";
 
-    [SheetOrder(SheetsConfig.HeaderNames.Month)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Month)]
     public string Month { get; set; } = "";
 
-    [SheetOrder(SheetsConfig.HeaderNames.Year)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Year)]
     public string Year { get; set; } = "";
 
     [JsonPropertyName("amountPerTime")]
-    [SheetOrder(SheetsConfig.HeaderNames.AmountPerTime)]
+    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerTime)]
     public decimal? AmountPerTime { get; set; }
 
     [JsonPropertyName("amountPerDistance")]
-    [SheetOrder(SheetsConfig.HeaderNames.AmountPerDistance)]
+    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerDistance)]
     public decimal? AmountPerDistance { get; set; }
 
     [JsonPropertyName("saved")]

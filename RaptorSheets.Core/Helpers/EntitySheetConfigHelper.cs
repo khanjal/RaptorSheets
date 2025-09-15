@@ -9,13 +9,13 @@ using RaptorSheets.Core.Models.Google;
 namespace RaptorSheets.Core.Helpers;
 
 /// <summary>
-/// Helper class for generating sheet headers directly from entity SheetOrder attributes.
+/// Helper class for generating sheet headers directly from entity ColumnOrder attributes.
 /// This eliminates the need for manual header definition in SheetsConfig.
 /// </summary>
 public static class EntitySheetConfigHelper
 {
     /// <summary>
-    /// Generates sheet headers from an entity type based on SheetOrder attributes.
+    /// Generates sheet headers from an entity type based on ColumnOrder attributes.
     /// Headers are created in inheritance order (base class properties first).
     /// </summary>
     /// <typeparam name="T">The entity type to generate headers from</typeparam>
@@ -29,14 +29,14 @@ public static class EntitySheetConfigHelper
         // Get all properties from the inheritance hierarchy (base class first)
         var allProperties = GetPropertiesInInheritanceOrder(entityType);
 
-        // Process properties with SheetOrder attributes
+        // Process properties with ColumnOrder attributes
         foreach (var property in allProperties)
         {
-            var sheetOrderAttr = property.GetCustomAttribute<SheetOrderAttribute>();
-            if (sheetOrderAttr != null && !processedHeaders.Contains(sheetOrderAttr.HeaderName))
+            var columnOrderAttr = property.GetCustomAttribute<ColumnOrderAttribute>();
+            if (columnOrderAttr != null && !processedHeaders.Contains(columnOrderAttr.HeaderName))
             {
-                headers.Add(new SheetCellModel { Name = sheetOrderAttr.HeaderName });
-                processedHeaders.Add(sheetOrderAttr.HeaderName);
+                headers.Add(new SheetCellModel { Name = columnOrderAttr.HeaderName });
+                processedHeaders.Add(columnOrderAttr.HeaderName);
             }
         }
 
@@ -95,7 +95,7 @@ public static class EntitySheetConfigHelper
     }
 
     /// <summary>
-    /// Validates that an entity has the required SheetOrder attributes for sheet generation.
+    /// Validates that an entity has the required ColumnOrder attributes for sheet generation.
     /// </summary>
     /// <typeparam name="T">The entity type to validate</typeparam>
     /// <param name="requiredHeaders">Optional list of required header names</param>
@@ -107,13 +107,13 @@ public static class EntitySheetConfigHelper
         
         var allProperties = GetPropertiesInInheritanceOrder(entityType);
         var entityHeaders = allProperties
-            .Select(p => p.GetCustomAttribute<SheetOrderAttribute>()?.HeaderName)
+            .Select(p => p.GetCustomAttribute<ColumnOrderAttribute>()?.HeaderName)
             .Where(h => h != null)
             .ToList();
 
         if (!entityHeaders.Any())
         {
-            errors.Add($"Entity '{entityType.Name}' has no properties with SheetOrder attributes. Cannot generate sheet headers.");
+            errors.Add($"Entity '{entityType.Name}' has no properties with ColumnOrder attributes. Cannot generate sheet headers.");
         }
 
         if (requiredHeaders != null)
@@ -123,7 +123,7 @@ public static class EntitySheetConfigHelper
             {
                 if (!entityHeaderSet.Contains(requiredHeader))
                 {
-                    errors.Add($"Entity '{entityType.Name}' is missing required header '{requiredHeader}' with SheetOrder attribute.");
+                    errors.Add($"Entity '{entityType.Name}' is missing required header '{requiredHeader}' with ColumnOrder attribute.");
                 }
             }
         }

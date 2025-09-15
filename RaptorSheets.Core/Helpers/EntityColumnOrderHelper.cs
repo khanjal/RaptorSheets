@@ -8,73 +8,120 @@ using RaptorSheets.Core.Models.Google;
 namespace RaptorSheets.Core.Helpers;
 
 /// <summary>
-/// Helper class for extracting sheet column order from entity attributes.
-/// Supports inheritance hierarchies and maintains consistent ordering based on SheetOrderAttribute.
+/// Helper class for extracting and applying column ordering from entity ColumnOrder attributes.
+/// This provides a centralized way to maintain column order consistency across sheets.
 /// </summary>
 public static class EntityColumnOrderHelper
 {
     /// <summary>
-    /// Extracts the column order from an entity type based on SheetOrderAttribute decorations.
-    /// Processes inheritance hierarchy from base classes up to derived classes.
+    /// Extracts column order from an entity type based on ColumnOrder attributes.
+    /// Returns headers in inheritance order (base class properties first).
     /// </summary>
-    /// <typeparam name="T">The entity type to analyze</typeparam>
-    /// <param name="sheetHeaders">The sheet headers collection to update with proper ordering</param>
-    /// <param name="headerOrder">Optional predefined header order from SheetsConfig (used as reference)</param>
-    /// <returns>List of header names in the order defined by the entity properties</returns>
+    /// <typeparam name="T">The entity type to extract column order from</typeparam>
+    /// <param name="sheetHeaders">Optional existing sheet headers to reorder</param>
+    /// <param name="additionalHeaders">Optional additional headers to include at the end</param>
+    /// <returns>List of header names in entity-defined order</returns>
     public static List<string> GetColumnOrderFromEntity<T>(
         List<SheetCellModel>? sheetHeaders = null, 
-        List<string>? headerOrder = null)
+        List<SheetCellModel>? additionalHeaders = null)
     {
         var entityType = typeof(T);
-        var orderedHeaders = new List<string>();
+        var columnOrder = new List<string>();
         var processedHeaders = new HashSet<string>();
 
         // Get all properties from the inheritance hierarchy (base class first)
         var allProperties = GetPropertiesInInheritanceOrder(entityType);
 
-        // Process properties with SheetOrder attributes
+        // Process properties with ColumnOrder attributes
         foreach (var property in allProperties)
         {
-            var sheetOrderAttr = property.GetCustomAttribute<SheetOrderAttribute>();
-            if (sheetOrderAttr != null && !processedHeaders.Contains(sheetOrderAttr.HeaderName))
+            var columnOrderAttr = property.GetCustomAttribute<ColumnOrderAttribute>();
+            if (columnOrderAttr != null && !processedHeaders.Contains(columnOrderAttr.HeaderName))
             {
-                orderedHeaders.Add(sheetOrderAttr.HeaderName);
-                processedHeaders.Add(sheetOrderAttr.HeaderName);
+                columnOrder.Add(columnOrderAttr.HeaderName);
+                processedHeaders.Add(columnOrderAttr.HeaderName);
             }
         }
 
-        // If sheet headers are provided, reorder them to match entity order
-        if (sheetHeaders != null)
+        // Add any additional headers that aren't already in the entity order
+        if (additionalHeaders != null)
         {
-            ReorderSheetHeaders(sheetHeaders, orderedHeaders, headerOrder);
+            foreach (var header in additionalHeaders)
+            {
+                if (!processedHeaders.Contains(header.Name))
+                {
+                    columnOrder.Add(header.Name);
+                    processedHeaders.Add(header.Name);
+                }
+            }
         }
 
-        return orderedHeaders;
+        // Add any sheet headers that aren't already in the entity order
+        if (sheetHeaders != null)
+        {
+            foreach (var header in sheetHeaders)
+            {
+                if (!processedHeaders.Contains(header.Name))
+                {
+                    columnOrder.Add(header.Name);
+                    processedHeaders.Add(header.Name);
+                }
+            }
+        }
+
+        return columnOrder;
     }
 
     /// <summary>
-    /// Validates that entity properties with SheetOrderAttribute match available sheet headers.
+    /// Applies entity-defined column ordering to a list of sheet headers.
+    /// Reorders the headers based on ColumnOrder attributes in the entity.
+    /// </summary>
+    /// <typeparam name="T">The entity type that defines the column order</typeparam>
+    /// <param name="headers">The sheet headers to reorder</param>
+    /// <param name="additionalHeaders">Optional additional headers to include at the end</param>
+    public static void ApplyEntityColumnOrder<T>(
+        List<SheetCellModel> headers, 
+        List<SheetCellModel>? additionalHeaders = null)
+    {
+        var entityOrder = GetColumnOrderFromEntity<T>(headers, additionalHeaders);
+        var headerDict = headers.ToDictionary(h => h.Name, h => h);
+        
+        headers.Clear();
+        
+        foreach (var headerName in entityOrder)
+        {
+            if (headerDict.TryGetValue(headerName, out var header))
+            {
+                headers.Add(header);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Validates that all ColumnOrder attributes in an entity reference valid header names.
     /// </summary>
     /// <typeparam name="T">The entity type to validate</typeparam>
-    /// <param name="availableHeaders">Available header names from SheetsConfig</param>
-    /// <returns>List of validation errors (empty if all valid)</returns>
+    /// <param name="availableHeaders">List of valid header names (e.g., from SheetsConfig.HeaderNames)</param>
+    /// <returns>List of validation errors (empty if valid)</returns>
     public static List<string> ValidateEntityHeaderMapping<T>(IEnumerable<string> availableHeaders)
     {
         var entityType = typeof(T);
+        var availableHeadersSet = availableHeaders.ToHashSet();
         var errors = new List<string>();
-        var availableHeaderSet = availableHeaders.ToHashSet();
-        
+
         var allProperties = GetPropertiesInInheritanceOrder(entityType);
         
         foreach (var property in allProperties)
         {
-            var sheetOrderAttr = property.GetCustomAttribute<SheetOrderAttribute>();
-            if (sheetOrderAttr != null)
+            var columnOrderAttr = property.GetCustomAttribute<ColumnOrderAttribute>();
+            if (columnOrderAttr != null)
             {
-                if (!availableHeaderSet.Contains(sheetOrderAttr.HeaderName))
+                if (!availableHeadersSet.Contains(columnOrderAttr.HeaderName))
                 {
-                    errors.Add($"Property '{property.Name}' references unknown header '{sheetOrderAttr.HeaderName}'. " +
-                             $"Available headers should be from SheetsConfig.HeaderNames constants.");
+                    errors.Add($"Property '{property.Name}' in entity '{entityType.Name}' " +
+                              $"references header '{columnOrderAttr.HeaderName}' which is not available in " +
+                              $"SheetsConfig.HeaderNames. Please add this header to the constants or " +
+                              $"update the ColumnOrder attribute.");
                 }
             }
         }
@@ -84,6 +131,7 @@ public static class EntityColumnOrderHelper
 
     /// <summary>
     /// Gets properties from an entity type, ordered by inheritance hierarchy (base class properties first).
+    /// This ensures that when applying column ordering, base class properties appear before derived class properties.
     /// </summary>
     private static List<PropertyInfo> GetPropertiesInInheritanceOrder(Type entityType)
     {
@@ -110,7 +158,7 @@ public static class EntityColumnOrderHelper
             
             foreach (var property in properties)
             {
-                // Skip if we've already processed this property name (no virtual/override support needed for attributes)
+                // Skip if we've already processed this property name (handles overrides)
                 if (!processedProperties.Contains(property.Name))
                 {
                     orderedProperties.Add(property);
@@ -120,52 +168,5 @@ public static class EntityColumnOrderHelper
         }
 
         return orderedProperties;
-    }
-
-    /// <summary>
-    /// Reorders sheet headers to match the entity column order.
-    /// </summary>
-    private static void ReorderSheetHeaders(
-        List<SheetCellModel> sheetHeaders, 
-        List<string> entityOrder, 
-        List<string>? fallbackOrder)
-    {
-        if (!entityOrder.Any()) return;
-
-        var reorderedHeaders = new List<SheetCellModel>();
-        var remainingHeaders = sheetHeaders.ToList();
-
-        // First, add headers in entity order
-        foreach (var headerName in entityOrder)
-        {
-            var header = remainingHeaders.FirstOrDefault(h => h.Name == headerName);
-            if (header != null)
-            {
-                reorderedHeaders.Add(header);
-                remainingHeaders.Remove(header);
-            }
-        }
-
-        // Add any remaining headers (not specified in entity) at the end
-        // Use fallback order if provided, otherwise maintain original order
-        if (fallbackOrder != null)
-        {
-            foreach (var headerName in fallbackOrder)
-            {
-                var header = remainingHeaders.FirstOrDefault(h => h.Name == headerName);
-                if (header != null)
-                {
-                    reorderedHeaders.Add(header);
-                    remainingHeaders.Remove(header);
-                }
-            }
-        }
-
-        // Add any truly unordered headers at the end
-        reorderedHeaders.AddRange(remainingHeaders);
-
-        // Replace the original list contents
-        sheetHeaders.Clear();
-        sheetHeaders.AddRange(reorderedHeaders);
     }
 }
