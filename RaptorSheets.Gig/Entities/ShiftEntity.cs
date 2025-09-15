@@ -4,7 +4,7 @@ using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class ShiftEntity : AmountEntity
+public class ShiftEntity
 {
     [JsonPropertyName("rowId")]
     public int RowId { get; set; }
@@ -48,7 +48,22 @@ public class ShiftEntity : AmountEntity
     [SheetOrder(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
-    // AmountEntity properties: Pay, Tips, Bonus, Cash (inherited)
+    // Financial properties from AmountEntity in correct position
+    [JsonPropertyName("pay")]
+    [SheetOrder(SheetsConfig.HeaderNames.Pay)]
+    public decimal? Pay { get; set; }
+
+    [JsonPropertyName("tip")]
+    [SheetOrder(SheetsConfig.HeaderNames.Tips)]
+    public decimal? Tip { get; set; }
+
+    [JsonPropertyName("bonus")]
+    [SheetOrder(SheetsConfig.HeaderNames.Bonus)]
+    public decimal? Bonus { get; set; }
+
+    [JsonPropertyName("cash")]
+    [SheetOrder(SheetsConfig.HeaderNames.Cash)]
+    public decimal? Cash { get; set; }
 
     [JsonPropertyName("startOdometer")]
     [SheetOrder(SheetsConfig.HeaderNames.OdometerStart)]

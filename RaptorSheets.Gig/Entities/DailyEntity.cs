@@ -4,7 +4,7 @@ using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class DailyEntity : AmountEntity
+public class DailyEntity
 {
     [JsonPropertyName("rowId")]
     public int RowId { get; set; }
@@ -17,7 +17,26 @@ public class DailyEntity : AmountEntity
     [SheetOrder(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
-    // AmountEntity properties: Pay, Tips, Bonus, Total, Cash (inherited)
+    // Financial properties in correct position (after Trips)
+    [JsonPropertyName("pay")]
+    [SheetOrder(SheetsConfig.HeaderNames.Pay)]
+    public decimal? Pay { get; set; }
+
+    [JsonPropertyName("tip")]
+    [SheetOrder(SheetsConfig.HeaderNames.Tips)]
+    public decimal? Tip { get; set; }
+
+    [JsonPropertyName("bonus")]
+    [SheetOrder(SheetsConfig.HeaderNames.Bonus)]
+    public decimal? Bonus { get; set; }
+
+    [JsonPropertyName("total")]
+    [SheetOrder(SheetsConfig.HeaderNames.Total)]
+    public decimal? Total { get; set; }
+
+    [JsonPropertyName("cash")]
+    [SheetOrder(SheetsConfig.HeaderNames.Cash)]
+    public decimal? Cash { get; set; }
 
     [JsonPropertyName("amt/trip")]
     [SheetOrder(SheetsConfig.HeaderNames.AmountPerTrip)]

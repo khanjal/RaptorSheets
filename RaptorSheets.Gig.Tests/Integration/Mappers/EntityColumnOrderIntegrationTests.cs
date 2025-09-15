@@ -1,4 +1,4 @@
-using RaptorSheets.Core.Helpers;
+﻿using RaptorSheets.Core.Helpers;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Mappers;
@@ -56,25 +56,28 @@ public class EntityColumnOrderIntegrationTests
         // Assert
         Assert.NotEmpty(columnOrder);
         
-        // Verify inheritance order: AmountEntity ? VisitEntity ? AddressEntity
-        var expectedBaseOrder = new[]
+        // Verify flattened order: Address + CommonTripSheetHeaders pattern
+        // AddressEntity no longer uses inheritance - it defines all properties directly
+        var expectedOrder = new[]
         {
-            SheetsConfig.HeaderNames.Pay,       // AmountEntity
-            SheetsConfig.HeaderNames.Tips,      // AmountEntity
-            SheetsConfig.HeaderNames.Bonus,     // AmountEntity
-            SheetsConfig.HeaderNames.Total,     // AmountEntity
-            SheetsConfig.HeaderNames.Cash,      // AmountEntity
-            SheetsConfig.HeaderNames.Trips,     // VisitEntity
-            SheetsConfig.HeaderNames.VisitFirst, // VisitEntity
-            SheetsConfig.HeaderNames.VisitLast,  // VisitEntity
-            SheetsConfig.HeaderNames.Address,   // AddressEntity
-            SheetsConfig.HeaderNames.Distance   // AddressEntity
+            SheetsConfig.HeaderNames.Address,    // Entity-specific property first
+            SheetsConfig.HeaderNames.Trips,     // CommonTripSheetHeaders start
+            SheetsConfig.HeaderNames.Pay,       // CommonIncomeHeaders
+            SheetsConfig.HeaderNames.Tips,      // CommonIncomeHeaders
+            SheetsConfig.HeaderNames.Bonus,     // CommonIncomeHeaders
+            SheetsConfig.HeaderNames.Total,     // CommonIncomeHeaders
+            SheetsConfig.HeaderNames.Cash,      // CommonIncomeHeaders
+            SheetsConfig.HeaderNames.AmountPerTrip,     // CommonTravelHeaders
+            SheetsConfig.HeaderNames.Distance,          // CommonTravelHeaders
+            SheetsConfig.HeaderNames.AmountPerDistance, // CommonTravelHeaders
+            SheetsConfig.HeaderNames.VisitFirst,        // Visit properties
+            SheetsConfig.HeaderNames.VisitLast          // Visit properties
         };
 
-        Assert.Equal(expectedBaseOrder.Length, columnOrder.Count);
-        for (int i = 0; i < expectedBaseOrder.Length; i++)
+        Assert.Equal(expectedOrder.Length, columnOrder.Count);
+        for (int i = 0; i < expectedOrder.Length; i++)
         {
-            Assert.Equal(expectedBaseOrder[i], columnOrder[i]);
+            Assert.Equal(expectedOrder[i], columnOrder[i]);
         }
     }
 
@@ -121,30 +124,35 @@ public class EntityColumnOrderIntegrationTests
     }
 
     [Fact]
-    public void EntityColumnOrderHelper_WithComplexInheritance_HandlesAllEntityTypes()
+    public void EntityColumnOrderHelper_WithFlattenedEntities_HandlesAllEntityTypes()
     {
-        // Test that the helper works with various entity types in the inheritance chain
+        // Test that the helper works with flattened entities (no more inheritance)
         
         // Act & Assert - None of these should throw
-        var amountOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<AmountEntity>();
-        var visitOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<VisitEntity>();
         var addressOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<AddressEntity>();
+        var nameOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<NameEntity>();
+        var tripOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<TripEntity>();
 
-        // Verify inheritance progression
-        Assert.Equal(5, amountOrder.Count);  // 5 financial properties
-        Assert.Equal(8, visitOrder.Count);   // 5 financial + 3 visit properties  
-        Assert.Equal(10, addressOrder.Count); // 5 financial + 3 visit + 2 address properties
+        // Verify entity property counts for flattened entities
+        Assert.Equal(12, addressOrder.Count); // AddressEntity: 1 address + 11 other properties
+        Assert.Equal(12, nameOrder.Count);    // NameEntity: 1 name + 11 other properties (same pattern)
+        Assert.True(tripOrder.Count >= 20);   // TripEntity has many properties
 
-        // Verify base properties appear in all derived types
-        foreach (var baseHeader in amountOrder)
+        // Verify that flattened entities contain the same financial headers
+        var financialHeaders = new[] 
+        { 
+            SheetsConfig.HeaderNames.Pay, 
+            SheetsConfig.HeaderNames.Tips, 
+            SheetsConfig.HeaderNames.Bonus, 
+            SheetsConfig.HeaderNames.Total, 
+            SheetsConfig.HeaderNames.Cash 
+        };
+        
+        foreach (var financialHeader in financialHeaders)
         {
-            Assert.Contains(baseHeader, visitOrder);
-            Assert.Contains(baseHeader, addressOrder);
-        }
-
-        foreach (var visitHeader in visitOrder)
-        {
-            Assert.Contains(visitHeader, addressOrder);
+            Assert.Contains(financialHeader, addressOrder);
+            Assert.Contains(financialHeader, nameOrder);
+            Assert.Contains(financialHeader, tripOrder);
         }
     }
 
@@ -164,19 +172,22 @@ public class EntityColumnOrderIntegrationTests
         var finalHeaderNames = sheet.Headers.Select(h => h.Name).ToList();
 
         // Assert
-        // The entity should define at least the core headers, but the sheet may have additional ones
+        // The entity should define all the headers for AddressEntity (flattened design)
         foreach (var entityHeader in entityOrder)
         {
             Assert.Contains(entityHeader, finalHeaderNames);
         }
 
-        // Key entity headers should appear in the expected order
+        // Key headers should appear in the correct flattened order
         var addressIndex = finalHeaderNames.IndexOf(SheetsConfig.HeaderNames.Address);
+        var tripsIndex = finalHeaderNames.IndexOf(SheetsConfig.HeaderNames.Trips);
         var payIndex = finalHeaderNames.IndexOf(SheetsConfig.HeaderNames.Pay);
         var distanceIndex = finalHeaderNames.IndexOf(SheetsConfig.HeaderNames.Distance);
 
-        Assert.True(payIndex < addressIndex, "AmountEntity properties should come before AddressEntity properties");
-        Assert.True(addressIndex < distanceIndex, "Address should come before Distance within AddressEntity properties");
+        // AddressEntity follows: Address, Trips, Pay..., Distance...
+        Assert.True(addressIndex < tripsIndex, "Address should come before Trips");
+        Assert.True(tripsIndex < payIndex, "Trips should come before Pay in CommonTripSheetHeaders pattern");
+        Assert.True(payIndex < distanceIndex, "Pay should come before Distance");
     }
 
     [Fact]
@@ -186,16 +197,10 @@ public class EntityColumnOrderIntegrationTests
         // across different entity types that might be used in other mappers
         
         // Act
-        var amountErrors = EntityColumnOrderHelper.ValidateEntityHeaderMapping<AmountEntity>(
-            GetAllAvailableHeaders());
-        var visitErrors = EntityColumnOrderHelper.ValidateEntityHeaderMapping<VisitEntity>(
-            GetAllAvailableHeaders());
         var addressErrors = EntityColumnOrderHelper.ValidateEntityHeaderMapping<AddressEntity>(
             GetAllAvailableHeaders());
 
         // Assert
-        Assert.Empty(amountErrors);
-        Assert.Empty(visitErrors); 
         Assert.Empty(addressErrors);
     }
 

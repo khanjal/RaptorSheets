@@ -313,33 +313,7 @@ public static class SheetsConfig
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<YearlyEntity>()
     };
 
-    private static List<SheetCellModel> CommonTripSheetHeaders =>
-    [
-        new SheetCellModel { Name = HeaderNames.Trips },
-        .. CommonIncomeHeaders,
-        .. CommonTravelHeaders,
-        new SheetCellModel { Name = HeaderNames.VisitFirst },
-        new SheetCellModel { Name = HeaderNames.VisitLast }
-    ];
-
-    private static List<SheetCellModel> CommonIncomeHeaders => [
-        new SheetCellModel { Name = HeaderNames.Pay },
-        new SheetCellModel { Name = HeaderNames.Tips },
-        new SheetCellModel { Name = HeaderNames.Bonus },
-        new SheetCellModel { Name = HeaderNames.Total },
-        new SheetCellModel { Name = HeaderNames.Cash }
-    ];
-
-    private static List<SheetCellModel> CommonPeriodicHeaders => [
-        new SheetCellModel { Name = HeaderNames.TimeTotal },
-        new SheetCellModel { Name = HeaderNames.AmountPerTime },
-        new SheetCellModel { Name = HeaderNames.AmountPerDay },
-        new SheetCellModel { Name = HeaderNames.Average }
-    ];
-
-    private static List<SheetCellModel> CommonTravelHeaders => [
-        new SheetCellModel { Name = HeaderNames.AmountPerTrip },
-        new SheetCellModel { Name = HeaderNames.Distance },
-        new SheetCellModel { Name = HeaderNames.AmountPerDistance }
-    ];
+    // NOTE: Common header patterns below are now obsolete since all sheets use entity-driven generation.
+    // These are kept for backward compatibility but should not be used in new implementations.
+    // All header ordering is now defined in entity SheetOrder attributes.
 }

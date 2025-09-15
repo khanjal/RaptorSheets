@@ -38,25 +38,26 @@ public class EntityDrivenSheetsConfigIntegrationTests
         // Act
         var entityHeaders = EntitySheetConfigHelper.GenerateHeadersFromEntity<AddressEntity>();
 
-        // Assert
-        Assert.Equal(10, entityHeaders.Count); // 5 AmountEntity + 3 VisitEntity + 2 AddressEntity
+        // Assert - AddressEntity now follows flattened CommonTripSheetHeaders pattern
+        Assert.Equal(12, entityHeaders.Count); // Address + 11 CommonTripSheetHeaders properties
         
-        // Verify inheritance order: AmountEntity ? VisitEntity ? AddressEntity
+        // Verify flattened order: Address + CommonTripSheetHeaders pattern
         var expectedOrder = new[]
         {
-            // AmountEntity (base class)
+            // Entity-specific property first
+            SheetsConfig.HeaderNames.Address,
+            // CommonTripSheetHeaders pattern: Trips + CommonIncomeHeaders + CommonTravelHeaders + Visit properties
+            SheetsConfig.HeaderNames.Trips,
             SheetsConfig.HeaderNames.Pay,
             SheetsConfig.HeaderNames.Tips,
             SheetsConfig.HeaderNames.Bonus,
             SheetsConfig.HeaderNames.Total,
             SheetsConfig.HeaderNames.Cash,
-            // VisitEntity (middle class)  
-            SheetsConfig.HeaderNames.Trips,
+            SheetsConfig.HeaderNames.AmountPerTrip,
+            SheetsConfig.HeaderNames.Distance,
+            SheetsConfig.HeaderNames.AmountPerDistance,
             SheetsConfig.HeaderNames.VisitFirst,
-            SheetsConfig.HeaderNames.VisitLast,
-            // AddressEntity (derived class)
-            SheetsConfig.HeaderNames.Address,
-            SheetsConfig.HeaderNames.Distance
+            SheetsConfig.HeaderNames.VisitLast
         };
 
         for (int i = 0; i < expectedOrder.Length; i++)
@@ -142,12 +143,12 @@ public class EntityDrivenSheetsConfigIntegrationTests
         var headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<AddressEntity>(commonHeaders);
 
         // Assert
-        Assert.True(headers.Count >= 10); // At least the entity headers
+        Assert.True(headers.Count >= 11); // At least the entity headers
         Assert.Contains(headers, h => h.Name == "Extra Header 1");
         Assert.Contains(headers, h => h.Name == "Extra Header 2");
         
-        // Entity headers should come first
-        Assert.Equal(SheetsConfig.HeaderNames.Pay, headers[0].Name);
+        // Entity headers should come first - Address is now the first property
+        Assert.Equal(SheetsConfig.HeaderNames.Address, headers[0].Name);
     }
 
     [Fact]
@@ -171,5 +172,30 @@ public class EntityDrivenSheetsConfigIntegrationTests
         {
             Assert.Equal(entityHeaders[i].Name, configHeaders[i].Name);
         }
+    }
+
+    [Fact]
+    public void FlattenedEntity_EliminatesInheritanceOrderingIssues()
+    {
+        // This test demonstrates that flattening entities eliminates inheritance ordering problems
+        // where base class properties would appear first regardless of desired column order
+        
+        // Act
+        var entityHeaders = EntitySheetConfigHelper.GenerateHeadersFromEntity<AddressEntity>();
+        
+        // Assert - Address appears first (entity-specific property)
+        Assert.Equal(SheetsConfig.HeaderNames.Address, entityHeaders[0].Name);
+        
+        // Financial properties appear in the correct position (after Trips, not first)
+        var tripsIndex = entityHeaders.FindIndex(h => h.Name == SheetsConfig.HeaderNames.Trips);
+        var payIndex = entityHeaders.FindIndex(h => h.Name == SheetsConfig.HeaderNames.Pay);
+        
+        Assert.True(tripsIndex < payIndex, "Trips should come before Pay in CommonTripSheetHeaders pattern");
+        Assert.True(tripsIndex >= 0 && payIndex >= 0, "Both Trips and Pay should be present");
+        
+        // Verify the pattern: Address, Trips, [financial properties], [travel properties], [visit properties]
+        Assert.Equal(SheetsConfig.HeaderNames.Address, entityHeaders[0].Name);
+        Assert.Equal(SheetsConfig.HeaderNames.Trips, entityHeaders[1].Name);
+        Assert.Equal(SheetsConfig.HeaderNames.Pay, entityHeaders[2].Name);
     }
 }
