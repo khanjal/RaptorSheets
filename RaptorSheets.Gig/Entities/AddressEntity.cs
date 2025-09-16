@@ -1,10 +1,10 @@
-using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Gig.Constants;
+using System.Text.Json.Serialization;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class AddressEntity
+public class AddressEntity : EntityBase
 {
     [JsonPropertyName("rowId")]
     public int RowId { get; set; }

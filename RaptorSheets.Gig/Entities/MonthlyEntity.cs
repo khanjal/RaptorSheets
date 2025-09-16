@@ -4,7 +4,7 @@ using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class MonthlyEntity
+public class MonthlyEntity : EntityBase
 {
     [JsonPropertyName("rowId")]
     public int RowId { get; set; }

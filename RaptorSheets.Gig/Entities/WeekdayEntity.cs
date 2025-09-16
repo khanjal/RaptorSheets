@@ -4,7 +4,7 @@ using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class WeekdayEntity
+public class WeekdayEntity : EntityBase
 {
     [JsonPropertyName("rowId")]
     public int RowId { get; set; }

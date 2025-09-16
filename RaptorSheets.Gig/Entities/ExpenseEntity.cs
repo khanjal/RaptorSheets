@@ -6,7 +6,7 @@ using RaptorSheets.Gig.Constants;
 namespace RaptorSheets.Gig.Entities;
 
 [ExcludeFromCodeCoverage]
-public class ExpenseEntity
+public class ExpenseEntity : EntityBase
 {
     public int RowId { get; set; }
     
