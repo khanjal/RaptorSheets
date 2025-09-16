@@ -428,26 +428,23 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
     {
         try
         {
-            // Use the mapper's GetSheet() method to get the complete header configuration
-            var normalizedSheetName = sheetName.ToUpperInvariant();
-            
-            return normalizedSheetName switch
+            return sheetName switch
             {
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Addresses => AddressMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Daily => DailyMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Expenses => ExpenseMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Monthly => MonthlyMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Names => NameMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Places => PlaceMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Regions => RegionMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Services => ServiceMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Setup => SetupMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Shifts => ShiftMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Trips => TripMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Types => TypeMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Weekdays => WeekdayMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Weekly => WeeklyMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
-                var s when s == SheetsConfig.SheetUtilities.UpperCase.Yearly => YearlyMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase) => AddressMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase) => DailyMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) => ExpenseMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) => MonthlyMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) => NameMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) => PlaceMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) => RegionMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) => ServiceMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => SetupMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) => ShiftMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) => TripMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase) => TypeMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase) => WeekdayMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase) => WeeklyMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase) => YearlyMapper.GetSheet().Headers.Select(h => h.Name).ToList(),
                 _ => new List<string>() // Unknown sheet type
             };
         }

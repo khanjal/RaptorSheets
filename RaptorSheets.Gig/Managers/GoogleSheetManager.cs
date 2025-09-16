@@ -50,30 +50,25 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Pull out all changes into a single object to iterate through.
         foreach (var sheet in sheets)
         {
-            // Normalize sheet name for consistent comparison
-            var normalizedSheetName = sheet.ToUpperInvariant();
-
-            // Use constants for switch comparison (case-insensitive)
-            switch (normalizedSheetName)
+            switch (sheet)
             {
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Expenses:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
                     if (sheetEntity.Expenses.Count > 0)
                         changes.Add(sheet, sheetEntity.Expenses);
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Setup:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
                     if (sheetEntity.Setup.Count > 0)
                         changes.Add(sheet, sheetEntity.Setup);
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Shifts:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                     if (sheetEntity.Shifts.Count > 0)
                         changes.Add(sheet, sheetEntity.Shifts);
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Trips:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
                     if (sheetEntity.Trips.Count > 0)
                         changes.Add(sheet, sheetEntity.Trips);
                     break;
                 default:
-                    // Unsupported sheet.
                     sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
                     break;
             }
@@ -93,25 +88,21 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         foreach (var change in changes)
         {
-            // Normalize sheet name for consistent comparison
-            var normalizedChangeKey = change.Key.ToUpperInvariant();
-
-            // Use constants for comparison (case-insensitive)
-            switch (normalizedChangeKey)
+            switch (change.Key)
             {
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Expenses:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
                     var expenseProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], expenseProperties));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Setup:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
                     var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Shifts:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                     var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Trips:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
                     var tripProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripProperties));
                     break;
@@ -190,55 +181,51 @@ public class GoogleSheetManager : IGoogleSheetManager
             var sheetName = sheet.Properties.Title;
             var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
-            // Normalize sheet name for consistent comparison
-            var normalizedSheetName = sheetName.ToUpperInvariant();
-
-            // Use constants for comparison (case-insensitive)
-            switch (normalizedSheetName)
+            switch (sheetName)
             {
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Addresses:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Daily:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Expenses:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ExpenseMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Monthly:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Names:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Places:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Regions:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Services:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Setup:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, SetupMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Shifts:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Trips:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Types:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Weekdays:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Weekly:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
                     break;
-                case var s when s == SheetsConfig.SheetUtilities.UpperCase.Yearly:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
                     break;
                 default:

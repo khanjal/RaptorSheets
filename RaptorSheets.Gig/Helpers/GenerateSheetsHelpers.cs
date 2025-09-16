@@ -56,24 +56,23 @@ public static class GenerateSheetsHelpers
 
     private static SheetModel GetSheetModel(string sheet)
     {
-        var upper = sheet.ToUpperInvariant();
-        return upper switch
+        return sheet switch
         {
-            var s when s == SheetsConfig.SheetNames.Addresses.ToUpperInvariant() => AddressMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Daily.ToUpperInvariant() => DailyMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Expenses.ToUpperInvariant() => ExpenseMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Monthly.ToUpperInvariant() => MonthlyMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Names.ToUpperInvariant() => NameMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Places.ToUpperInvariant() => PlaceMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Regions.ToUpperInvariant() => RegionMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Services.ToUpperInvariant() => ServiceMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Setup.ToUpperInvariant() => SetupMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Shifts.ToUpperInvariant() => ShiftMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Trips.ToUpperInvariant() => TripMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Types.ToUpperInvariant() => TypeMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Weekdays.ToUpperInvariant() => WeekdayMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Weekly.ToUpperInvariant() => WeeklyMapper.GetSheet(),
-            var s when s == SheetsConfig.SheetNames.Yearly.ToUpperInvariant() => YearlyMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase) => AddressMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase) => DailyMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) => ExpenseMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) => MonthlyMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) => NameMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) => PlaceMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) => RegionMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) => ServiceMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => SetupMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) => ShiftMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) => TripMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase) => TypeMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase) => WeekdayMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase) => WeeklyMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase) => YearlyMapper.GetSheet(),
             _ => throw new NotImplementedException($"Sheet model not found for: {sheet}"),
         };
     }
