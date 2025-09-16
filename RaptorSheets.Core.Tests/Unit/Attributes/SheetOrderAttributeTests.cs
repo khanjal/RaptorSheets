@@ -6,53 +6,56 @@ namespace RaptorSheets.Core.Tests.Unit.Attributes;
 public class SheetOrderAttributeTests
 {
     [Fact]
-    public void Constructor_WithValidHeaderName_ShouldSetHeaderName()
+    public void Constructor_WithValidOrderAndSheetName_ShouldSetProperties()
     {
         // Arrange
-        const string headerName = "Test Header";
+        const int order = 5;
+        const string sheetName = "Test Sheet";
 
         // Act
-        var attribute = new SheetOrderAttribute(headerName);
+        var attribute = new SheetOrderAttribute(order, sheetName);
 
         // Assert
-        Assert.Equal(headerName, attribute.HeaderName);
+        Assert.Equal(order, attribute.Order);
+        Assert.Equal(sheetName, attribute.SheetName);
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData("\t")]
-    [InlineData("\n")]
-    public void Constructor_WithNullOrWhitespaceHeaderName_ShouldThrowArgumentException(string headerName)
+    [InlineData(0, "Trips")]
+    [InlineData(1, "Shifts")]
+    [InlineData(10, "Setup")]
+    public void Constructor_WithVariousValidValues_ShouldSetProperties(int order, string sheetName)
     {
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => new SheetOrderAttribute(headerName));
-        Assert.Equal("Header name cannot be null or empty (Parameter 'headerName')", exception.Message);
-        Assert.Equal("headerName", exception.ParamName);
+        // Act
+        var attribute = new SheetOrderAttribute(order, sheetName);
+
+        // Assert
+        Assert.Equal(order, attribute.Order);
+        Assert.Equal(sheetName, attribute.SheetName);
     }
 
     [Fact]
-    public void Constructor_WithNullHeaderName_ShouldThrowArgumentException()
+    public void Constructor_WithNullSheetName_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => new SheetOrderAttribute(null!));
-        Assert.Equal("Header name cannot be null or empty (Parameter 'headerName')", exception.Message);
-        Assert.Equal("headerName", exception.ParamName);
+        var exception = Assert.Throws<ArgumentNullException>(() => new SheetOrderAttribute(0, null!));
+        Assert.Equal("sheetName", exception.ParamName);
     }
 
     [Theory]
-    [InlineData("Address")]
-    [InlineData("Pay")]
-    [InlineData("Total Grand")]
-    [InlineData("Amount Per Time")]
-    [InlineData("Visit First")]
-    public void Constructor_WithVariousValidHeaderNames_ShouldSetHeaderName(string headerName)
+    [InlineData(-1)]
+    [InlineData(-10)]
+    public void Constructor_WithNegativeOrder_ShouldStillWork(int order)
     {
+        // Arrange
+        const string sheetName = "Test Sheet";
+
         // Act
-        var attribute = new SheetOrderAttribute(headerName);
+        var attribute = new SheetOrderAttribute(order, sheetName);
 
         // Assert
-        Assert.Equal(headerName, attribute.HeaderName);
+        Assert.Equal(order, attribute.Order);
+        Assert.Equal(sheetName, attribute.SheetName);
     }
 
     [Fact]

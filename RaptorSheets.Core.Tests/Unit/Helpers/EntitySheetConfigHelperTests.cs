@@ -131,7 +131,7 @@ public class EntitySheetConfigHelperTests
         // Assert
         Assert.NotEmpty(errors);
         Assert.Contains(errors, e => e.Contains("TestNoAttributesEntity"));
-        Assert.Contains(errors, e => e.Contains("no properties with SheetOrder attributes"));
+        Assert.Contains(errors, e => e.Contains("no properties with ColumnOrder attributes"));
     }
 
     [Fact]

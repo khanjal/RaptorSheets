@@ -117,7 +117,7 @@ public static class SheetsConfig
     public static class SheetUtilities
     {
         public static List<string> GetAllSheetNames() =>
-            EntitySheetOrderHelper.GetSheetOrderFromEntity<SheetEntity>();
+            EntitySheetOrderHelper.GetSheetOrderFromEntity<SheetOrderEntity>();
         
         public static bool IsValidSheetName(string name) =>
             GetAllSheetNames().Any(sheet => string.Equals(sheet, name, StringComparison.OrdinalIgnoreCase));

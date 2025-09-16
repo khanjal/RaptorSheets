@@ -37,20 +37,20 @@ SheetsConfig.HeaderNames.DaysPerVisit   // Visit frequency metric
 // ... complete catalog available in SheetsConfig.HeaderNames
 ```
 
-**Sheet Tab Ordering**: SheetsConfig maintains the definitive sheet order for consistent tab layout:
+**Sheet Tab Ordering**: SheetsConfig maintains entity-driven sheet order for consistent tab layout:
 ```csharp
-// Predefined tab order (left to right in spreadsheet)
+// Entity-driven tab order (left to right in spreadsheet)
 var allSheets = SheetsConfig.SheetUtilities.GetAllSheetNames();
-// Returns in order: [Trips, Shifts, Expenses, Addresses, Names, Places, Regions, Services, Types, Daily, Weekdays, Weekly, Monthly, Yearly, Setup]
+// Returns entity-defined order from SheetOrderEntity: [Trips, Shifts, Expenses, Addresses, Names, Places, Regions, Services, Types, Daily, Weekdays, Weekly, Monthly, Yearly, Setup]
 ```
 
 **Responsibilities**:
 - Define sheet visual properties (colors, frozen rows/columns)
-- Automatically generate headers from entity `SheetOrder` attributes
-- Group common header patterns (`CommonIncomeHeaders`, `CommonTravelHeaders`)
+- Automatically generate headers from entity `ColumnOrder` attributes
+- Use entity-driven sheet ordering from `SheetOrderEntity`
 - Set protection and validation rules
 
-### 2. Entity Classes with SheetOrder Attributes
+### 2. Entity Classes with ColumnOrder Attributes
 **Purpose**: Domain objects representing data rows in sheets with built-in column ordering
 
 **Attribute-Based Column Ordering**:
@@ -61,45 +61,69 @@ public class ExampleEntity : BaseEntity
     public int RowId { get; set; }
     
     [JsonPropertyName("keyField")]
-    [SheetOrder(SheetsConfig.HeaderNames.KeyField)]  // References header constants
+    [ColumnOrder(SheetsConfig.HeaderNames.KeyField)]  // References header constants
     public string KeyField { get; set; } = "";
     
     [JsonPropertyName("measureField")]
-    [SheetOrder(SheetsConfig.HeaderNames.MeasureField)]
+    [ColumnOrder(SheetsConfig.HeaderNames.MeasureField)]
     public decimal MeasureField { get; set; }
     
-    // Inherits ordered properties from base classes automatically
+    // For flattened entities: all properties defined directly in correct order
 }
 ```
 
-**Inheritance-Aware Ordering**: The system respects inheritance hierarchy:
+**Flattened Entity Design**: Modern entities define all properties directly to control exact column ordering:
 ```csharp
-// Base class properties
-[SheetOrder(SheetsConfig.HeaderNames.BaseField1)]
-public decimal? BaseField1 { get; set; }
-
-[SheetOrder(SheetsConfig.HeaderNames.BaseField2)]
-public decimal? BaseField2 { get; set; }
-
-// Middle class properties
-[SheetOrder(SheetsConfig.HeaderNames.MiddleField)]
-public int MiddleField { get; set; }
-
-// Derived class properties
-[SheetOrder(SheetsConfig.HeaderNames.DerivedField)]
-public string DerivedField { get; set; } = "";
-
-// Resulting column order: BaseField1, BaseField2, MiddleField, DerivedField
+public class DataEntity
+{
+    [JsonPropertyName("date")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
+    public string Date { get; set; } = "";
+    
+    [JsonPropertyName("trips")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Trips)]
+    public int Trips { get; set; }
+    
+    // Financial properties in exact position needed
+    [JsonPropertyName("pay")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Pay)]
+    public decimal? Pay { get; set; }
+    
+    [JsonPropertyName("tip")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Tips)]
+    public decimal? Tip { get; set; }
+    
+    // Resulting column order: Date, Trips, Pay, Tip...
+}
 ```
 
 **Characteristics**:
-- Inherit from base classes for shared properties
+- Use `ColumnOrder` attributes to define column order
+- Reference `SheetsConfig.HeaderNames` constants exclusively
 - Include `RowId` for Google Sheets row mapping
 - Use JSON property names for serialization
-- Use `SheetOrder` attributes to define column order without hardcoding numbers
-- May contain more or fewer properties than sheet columns
+- Flattened design for precise column control
 
-### 3. Mapper Classes with Entity-Driven Ordering
+### 3. Sheet Tab Ordering with SheetOrderEntity
+**Purpose**: Central definition of sheet tab order in workbooks
+
+**SheetOrder Attributes for Tabs**:
+```csharp
+public class SheetOrderEntity
+{
+    [JsonPropertyName("trips")]
+    [SheetOrder(0, SheetsConfig.SheetNames.Trips)]
+    public bool Trips { get; set; } = true;
+
+    [JsonPropertyName("shifts")]
+    [SheetOrder(1, SheetsConfig.SheetNames.Shifts)]
+    public bool Shifts { get; set; } = true;
+    
+    // ... more sheets in order
+}
+```
+
+### 4. Mapper Classes with Entity-Driven Ordering
 **Purpose**: Translate between entities and Google Sheets data structures with automatic column ordering
 
 **Simplified Configuration**:
@@ -134,7 +158,7 @@ public static class ExampleMapper
 }
 ```
 
-### 4. Header Management (`HeaderHelpers`)
+### 5. Header Management (`HeaderHelpers`)
 **Purpose**: Parse and extract data from Google Sheets rows
 
 **Key Functions**:
@@ -148,29 +172,36 @@ int GetIntValue(string columnName, IList<object> values, Dictionary<int, string>
 decimal GetDecimalValue(string columnName, IList<object> values, Dictionary<int, string> headers)
 ```
 
-### 5. Entity-Driven Configuration Helpers
-**Purpose**: Extract and validate column ordering from entity attributes
+### 6. Entity-Driven Configuration Helpers
+**Purpose**: Extract and validate column/sheet ordering from entity attributes
 
 **Key Classes**:
 ```csharp
-// Generate sheet headers from entity attributes
+// Generate sheet headers from entity ColumnOrder attributes
 EntitySheetConfigHelper.GenerateHeadersFromEntity<T>()
 
 // Extract column order and apply to existing headers
 EntityColumnOrderHelper.GetColumnOrderFromEntity<T>(sheetHeaders)
 
-// Validate entity attribute mappings
+// Validate entity ColumnOrder attribute mappings
 EntityColumnOrderHelper.ValidateEntityHeaderMapping<T>(availableHeaders)
+
+// Extract sheet order from SheetOrder attributes
+EntitySheetOrderHelper.GetSheetOrderFromEntity<T>()
+
+// Validate entity SheetOrder attribute mappings
+EntitySheetOrderHelper.ValidateEntitySheetMapping<T>(availableSheets)
 ```
 
 ## Current Workflow
 
 ### Sheet Creation Process
 
-1. **Define Entity with Ordering**: Create entity class with `SheetOrder` attributes
-2. **Define Configuration**: Add static `SheetModel` to `SheetsConfig` using entity-driven generation
-3. **Implement Mapper**: Create mapper with simplified configuration
-4. **Configure Formulas**: Set up formulas and formatting in `GetSheet()` method
+1. **Define Entity with Column Ordering**: Create entity class with `ColumnOrder` attributes
+2. **Define Sheet Tab Ordering**: Update `SheetOrderEntity` with `SheetOrder` attributes
+3. **Define Configuration**: Add static `SheetModel` to `SheetsConfig` using entity-driven generation
+4. **Implement Mapper**: Create mapper with simplified configuration
+5. **Configure Formulas**: Set up formulas and formatting in `GetSheet()` method
 
 ### Column Order Management
 
@@ -178,7 +209,7 @@ EntityColumnOrderHelper.ValidateEntityHeaderMapping<T>(availableHeaders)
 ```csharp
 public static SheetModel GetSheet()
 {
-    var sheet = SheetsConfig.ExampleSheet;  // Headers from entity attributes
+    var sheet = SheetsConfig.ExampleSheet;  // Headers from entity ColumnOrder attributes
     sheet.Headers.UpdateColumns();         // Sets column indexes A, B, C, etc.
     
     // Now safe to reference columns by index for formulas
@@ -186,19 +217,21 @@ public static SheetModel GetSheet()
 }
 ```
 
-**Benefits**:
-- **Single Source of Truth**: Entity properties define column order
-- **References Constants**: Uses `SheetsConfig.HeaderNames` for consistency
-- **Inheritance Support**: Handles complex entity hierarchies automatically
-- **No Hardcoding**: Eliminates order numbers or column letters
-- **Readable**: Column order is visible in entity definition
+### Sheet Tab Order Management
 
-**Why This Matters**:
-- Enables formula references without hardcoding column letters
-- Maintains correct order when mapping to/from Google Sheets
-- Supports complex formulas that reference other columns
-- Allows dynamic column insertion without breaking downstream references
-- Column order is defined in entities and automatically applied
+**Entity-Driven Sheet Ordering**:
+```csharp
+// SheetsConfig.SheetUtilities.GetAllSheetNames() now uses:
+EntitySheetOrderHelper.GetSheetOrderFromEntity<SheetOrderEntity>()
+// Returns sheets in order defined by SheetOrder attributes: [Trips, Shifts, Expenses, ...]
+```
+
+**Benefits**:
+- **Single Source of Truth**: Entity properties define both column and sheet order
+- **References Constants**: Uses `SheetsConfig.HeaderNames` and `SheetsConfig.SheetNames` for consistency
+- **Flattened Design**: Precise control over column positioning
+- **No Hardcoding**: Eliminates order numbers or column letters
+- **Readable**: Order is visible in entity definitions
 
 ### Data Flow
 
@@ -214,26 +247,41 @@ Entity Properties → MapToRangeData/MapToRowData → Google Sheets Batch Update
 
 **Sheet Generation**:
 ```
-Entity SheetOrder Attributes → EntitySheetConfigHelper → SheetsConfig → Mapper.GetSheet() → Formula Configuration → Google Sheets Creation
+Entity ColumnOrder Attributes → EntitySheetConfigHelper → SheetsConfig → Mapper.GetSheet() → Formula Configuration → Google Sheets Creation
+```
+
+**Sheet Ordering**:
+```
+SheetOrderEntity SheetOrder Attributes → EntitySheetOrderHelper → SheetsConfig.SheetUtilities → Workbook Tab Order
 ```
 
 ## Implementation Patterns
 
-### Adding SheetOrder Attributes to Entities
+### Adding ColumnOrder Attributes to Entities
 
 ```csharp
-public class DataEntity : BaseEntity
+public class DataEntity
 {
     [JsonPropertyName("date")]
-    [SheetOrder(SheetsConfig.HeaderNames.Date)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
     public string Date { get; set; } = "";
     
     [JsonPropertyName("service")]
-    [SheetOrder(SheetsConfig.HeaderNames.Service)]
+    [ColumnOrder(SheetsConfig.HeaderNames.Service)]
     public string Service { get; set; } = "";
     
-    // Inherits ordered properties from base classes automatically
-    // Final order: BaseField1, BaseField2, Date, Service, ...
+    // All properties defined directly for precise control
+}
+```
+
+### Adding SheetOrder Attributes to SheetOrderEntity
+
+```csharp
+public class SheetOrderEntity
+{
+    [JsonPropertyName("newSheet")]
+    [SheetOrder(15, SheetsConfig.SheetNames.NewSheet)]  // Add to end
+    public bool NewSheet { get; set; } = true;
 }
 ```
 
@@ -269,12 +317,12 @@ public static SheetModel GetSheet()
 
 ## Benefits Achieved
 
-1. **Maintainable Order**: Column order visible in entity definition
-2. **Constant References**: Uses `SheetsConfig.HeaderNames` exclusively  
-3. **Inheritance Support**: Base class properties ordered correctly
-4. **Validation**: Build-time checks for invalid header references
-5. **No Magic Numbers**: Eliminates hardcoded column positions
-6. **Flexible**: Can still add additional headers if needed
+1. **Maintainable Order**: Column and sheet order visible in entity definitions
+2. **Constant References**: Uses `SheetsConfig.HeaderNames` and `SheetsConfig.SheetNames` exclusively  
+3. **Precise Control**: Flattened entities allow exact column positioning
+4. **Validation**: Build-time checks for invalid header/sheet references
+5. **No Magic Numbers**: Eliminates hardcoded positions
+6. **Centralized Sheet Ordering**: Single place to define tab order
 
 ## Key Features
 
@@ -291,51 +339,58 @@ Headers = [
 Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<EntityType>()
 ```
 
-### Inheritance Support
+### Entity-Driven Sheet Ordering
 ```csharp
-// Automatically handles complex inheritance chains
-// Base → Middle → Derived class property ordering
-var headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<DerivedEntity>();
-// Returns: [BaseProps..., MiddleProps..., DerivedProps...]
+// OLD: Hardcoded array
+public static List<string> GetAllSheetNames() => [
+    SheetNames.Trips, SheetNames.Shifts, ...
+];
+
+// NEW: Entity-driven ordering
+public static List<string> GetAllSheetNames() =>
+    EntitySheetOrderHelper.GetSheetOrderFromEntity<SheetOrderEntity>();
 ```
 
 ### Validation and Error Prevention
 ```csharp
 // Validates entity configuration at build/test time
-var errors = EntitySheetConfigHelper.ValidateEntityForSheetGeneration<EntityType>();
-if (errors.Any()) throw new InvalidOperationException(string.Join(", ", errors));
+var columnErrors = EntitySheetConfigHelper.ValidateEntityForSheetGeneration<EntityType>();
+var sheetErrors = EntitySheetOrderHelper.ValidateEntitySheetMapping<SheetOrderEntity>(availableSheets);
 ```
 
 ## Migration Guide
 
 ### For New Sheets
-1. Add `SheetOrder` attributes to entity properties
-2. Use `EntitySheetConfigHelper.GenerateHeadersFromEntity<T>()` in SheetsConfig
-3. Simplify mapper by removing manual ordering code
+1. Add `ColumnOrder` attributes to entity properties
+2. **Add `SheetOrder` attribute to `SheetOrderEntity` if creating new sheet**
+3. Use `EntitySheetConfigHelper.GenerateHeadersFromEntity<T>()` in SheetsConfig
+4. Simplify mapper by removing manual ordering code
 
 ### For Existing Sheets
-1. Add `SheetOrder` attributes to existing entity properties
+1. Add `ColumnOrder` attributes to existing entity properties
 2. Update SheetsConfig to use entity-driven generation
-3. Remove manual header definitions and validation code from mappers
+3. Remove manual header definitions from mappers
 4. Test to ensure column order matches expectations
 
 ## Best Practices
 
-1. **Always use constants**: Reference `SheetsConfig.HeaderNames` in `SheetOrder` attributes
-2. **Test inheritance**: Verify column order with complex entity hierarchies
+1. **Always use constants**: Reference `SheetsConfig.HeaderNames` in `ColumnOrder` attributes
+2. **Use constants for sheets**: Reference `SheetsConfig.SheetNames` in `SheetOrder` attributes  
 3. **Validate at build time**: Use helper validation methods in tests
 4. **Keep UpdateColumns()**: Still needed for formula column references
-5. **Document changes**: Update entity documentation when changing column order
+5. **Document changes**: Update entity documentation when changing order
+6. **Flatten when needed**: Use flattened entities for precise column control
 
 ## Summary
 
-The **entity-driven column ordering system** provides:
+The **dual entity-driven ordering system** provides:
 
-- **Single source of truth** for column order (in entities)
-- **Strong typing** through header constant references
-- **Automatic inheritance handling** for complex entity hierarchies
+- **Single source of truth** for both column and sheet order (in entities)
+- **Strong typing** through header and sheet constant references
+- **Precise column control** via flattened entity design
+- **Centralized sheet ordering** via `SheetOrderEntity`
 - **Simplified configuration** in SheetsConfig and mappers
-- **Validation** to ensure entity attributes reference valid headers
+- **Validation** to ensure entity attributes reference valid headers/sheets
 - **Backward compatibility** with existing formula and configuration systems
 
-This approach eliminates manual column management while maintaining the explicit control that complex Google Sheets formulas require. The system significantly improves maintainability and reduces the chance of column order mismatches.
+This approach eliminates manual order management while maintaining the explicit control that complex Google Sheets formulas require. The system significantly improves maintainability and reduces the chance of ordering mismatches.

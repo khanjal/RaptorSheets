@@ -31,7 +31,7 @@ public class EntityColumnOrderIntegrationTests
     }
 
     [Fact]
-    public void AddressEntity_HasValidSheetOrderAttributes()
+    public void AddressEntity_HasValidColumnOrderAttributes()
     {
         // Arrange - Get all available header constants from SheetsConfig
         var availableHeaders = typeof(SheetsConfig.HeaderNames)

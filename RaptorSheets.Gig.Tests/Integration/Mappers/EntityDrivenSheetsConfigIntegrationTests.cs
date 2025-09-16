@@ -81,7 +81,7 @@ public class EntityDrivenSheetsConfigIntegrationTests
         // After: Entity-driven header generation
         var sheet = SheetsConfig.AddressSheet;
         
-        // Verify that all entity properties with SheetOrder attributes are included
+        // Verify that all entity properties with ColumnOrder attributes are included
         var entityOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<AddressEntity>();
         var sheetHeaderNames = sheet.Headers.Select(h => h.Name).ToList();
         
@@ -155,11 +155,11 @@ public class EntityDrivenSheetsConfigIntegrationTests
     public void NewApproach_SimplifiesMaintenanceWorkflow()
     {
         // This test documents the simplified workflow:
-        // 1. Add SheetOrder attributes to entity properties
+        // 1. Add ColumnOrder attributes to entity properties
         // 2. SheetsConfig automatically generates headers
         // 3. No manual header maintenance needed
         
-        // Verify entity has SheetOrder attributes
+        // Verify entity has ColumnOrder attributes
         var entityHeaders = EntitySheetConfigHelper.GenerateHeadersFromEntity<AddressEntity>();
         Assert.NotEmpty(entityHeaders);
         
