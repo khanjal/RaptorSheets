@@ -1,10 +1,12 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class TypeEntity : EntityBase
+[SuppressMessage("Major Code Smell", "S4144:Properties should not be duplicated", Justification = "Intentional duplication for sheet mapping")]
+public class TypeEntity
 {
     [JsonPropertyName("rowId")]
     public int RowId { get; set; }
