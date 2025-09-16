@@ -11,7 +11,7 @@ public class SheetOrderAttribute : Attribute
 {
     /// <summary>
     /// Gets the order position for this sheet in the workbook.
-    /// Lower numbers appear first (leftmost tabs).
+    /// Lower numbers appear first (leftmost tabs). If not set, property order is used.
     /// </summary>
     public int Order { get; }
 
@@ -22,13 +22,24 @@ public class SheetOrderAttribute : Attribute
     public string SheetName { get; }
 
     /// <summary>
-    /// Initializes a new instance of the SheetOrderAttribute.
+    /// Initializes a new instance of the SheetOrderAttribute with explicit order.
     /// </summary>
     /// <param name="order">The order position (0-based, lower numbers appear first)</param>
     /// <param name="sheetName">The sheet name from SheetsConfig.SheetNames</param>
     public SheetOrderAttribute(int order, string sheetName)
     {
         Order = order;
+        SheetName = sheetName ?? throw new ArgumentNullException(nameof(sheetName));
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the SheetOrderAttribute using only the sheet name.
+    /// Property order will be used for tab order.
+    /// </summary>
+    /// <param name="sheetName">The sheet name from SheetsConfig.SheetNames</param>
+    public SheetOrderAttribute(string sheetName)
+    {
+        Order = -1; // Indicates not set, use property order
         SheetName = sheetName ?? throw new ArgumentNullException(nameof(sheetName));
     }
 }
