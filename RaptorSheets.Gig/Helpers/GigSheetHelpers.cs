@@ -203,63 +203,63 @@ public static class GigSheetHelpers
 
         switch (normalizedSheetName)
         {
-            case SheetsConfig.SheetUtilities.UpperCase.Addresses:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Addresses:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, AddressMapper.GetSheet()));
                 sheetEntity.Addresses = AddressMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Daily:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Daily:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, DailyMapper.GetSheet()));
                 sheetEntity.Daily = DailyMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Expenses:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Expenses:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ExpenseMapper.GetSheet()));
                 sheetEntity.Expenses = ExpenseMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Monthly:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Monthly:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, MonthlyMapper.GetSheet()));
                 sheetEntity.Monthly = MonthlyMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Names:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Names:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, NameMapper.GetSheet()));
                 sheetEntity.Names = NameMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Places:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Places:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, PlaceMapper.GetSheet()));
                 sheetEntity.Places = PlaceMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Regions:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Regions:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, RegionMapper.GetSheet()));
                 sheetEntity.Regions = RegionMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Services:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Services:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ServiceMapper.GetSheet()));
                 sheetEntity.Services = ServiceMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Setup:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Setup:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, SetupMapper.GetSheet()));
                 sheetEntity.Setup = SetupMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Shifts:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Shifts:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ShiftMapper.GetSheet()));
                 sheetEntity.Shifts = ShiftMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Trips:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Trips:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TripMapper.GetSheet()));
                 sheetEntity.Trips = TripMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Types:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Types:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TypeMapper.GetSheet()));
                 sheetEntity.Types = TypeMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Weekdays:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Weekdays:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, WeekdayMapper.GetSheet()));
                 sheetEntity.Weekdays = WeekdayMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Weekly:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Weekly:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, WeeklyMapper.GetSheet()));
                 sheetEntity.Weekly = WeeklyMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Yearly:
+            case var s when s == SheetsConfig.SheetUtilities.UpperCase.Yearly:
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, YearlyMapper.GetSheet()));
                 sheetEntity.Yearly = YearlyMapper.MapFromRangeData(values);
                 break;

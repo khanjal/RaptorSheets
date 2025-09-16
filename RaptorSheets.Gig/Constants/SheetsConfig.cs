@@ -127,21 +127,21 @@ public static class SheetsConfig
         /// </summary>
         public static class UpperCase
         {
-            public const string Addresses = "ADDRESSES";
-            public const string Daily = "DAILY";
-            public const string Expenses = "EXPENSES";
-            public const string Monthly = "MONTHLY";
-            public const string Names = "NAMES";
-            public const string Places = "PLACES";
-            public const string Regions = "REGIONS";
-            public const string Services = "SERVICES";
-            public const string Setup = "SETUP";
-            public const string Shifts = "SHIFTS";
-            public const string Trips = "TRIPS";
-            public const string Types = "TYPES";
-            public const string Weekdays = "WEEKDAYS";
-            public const string Weekly = "WEEKLY";
-            public const string Yearly = "YEARLY";
+            public static string Addresses => SheetNames.Addresses.ToUpperInvariant();
+            public static string Daily => SheetNames.Daily.ToUpperInvariant();
+            public static string Expenses => SheetNames.Expenses.ToUpperInvariant();
+            public static string Monthly => SheetNames.Monthly.ToUpperInvariant();
+            public static string Names => SheetNames.Names.ToUpperInvariant();
+            public static string Places => SheetNames.Places.ToUpperInvariant();
+            public static string Regions => SheetNames.Regions.ToUpperInvariant();
+            public static string Services => SheetNames.Services.ToUpperInvariant();
+            public static string Setup => SheetNames.Setup.ToUpperInvariant();
+            public static string Shifts => SheetNames.Shifts.ToUpperInvariant();
+            public static string Trips => SheetNames.Trips.ToUpperInvariant();
+            public static string Types => SheetNames.Types.ToUpperInvariant();
+            public static string Weekdays => SheetNames.Weekdays.ToUpperInvariant();
+            public static string Weekly => SheetNames.Weekly.ToUpperInvariant();
+            public static string Yearly => SheetNames.Yearly.ToUpperInvariant();
         }
     }
 
