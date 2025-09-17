@@ -6,7 +6,6 @@ using RaptorSheets.Gig.Constants;
 namespace RaptorSheets.Gig.Entities;
 
 [ExcludeFromCodeCoverage]
-[SuppressMessage("Major Code Smell", "S4144:Properties should not be duplicated", Justification = "Intentional duplication for sheet mapping")]
 public class ExpenseEntity
 {
     public int RowId { get; set; }

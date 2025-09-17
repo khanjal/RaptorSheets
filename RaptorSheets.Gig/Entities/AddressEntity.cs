@@ -1,11 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Gig.Constants;
 using System.Text.Json.Serialization;
 
 namespace RaptorSheets.Gig.Entities;
 
-[SuppressMessage("Major Code Smell", "S4144:Properties should not be duplicated", Justification = "Intentional duplication for sheet mapping")]
 public class AddressEntity 
 {
     [JsonPropertyName("rowId")]
