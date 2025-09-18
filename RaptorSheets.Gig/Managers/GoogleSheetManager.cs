@@ -426,15 +426,40 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             var property = new PropertyEntity();
             var sheetProperties = sheetInfo?.Sheets.FirstOrDefault(x => x.Properties.Title == sheet);
-            var sheetHeaderValues = string.Join(",", sheetProperties?.Data?[0]?.RowData?[0]?.Values?.Where(x => x.FormattedValue != null).Select(x => x.FormattedValue).ToList() ?? []);
-            var maxRow = (sheetProperties?.Data?[1]?.RowData ?? []).Count;
-            var maxRowValue = (sheetProperties?.Data?[1]?.RowData.Where(x => x.Values?[0]?.FormattedValue != null).Select(x => x.Values?[0]?.FormattedValue).ToList() ?? []).Count;
+            
+            // Safely access Data array with bounds checking
+            var sheetHeaderValues = "";
+            var maxRow = 0;
+            var maxRowValue = 0;
             var sheetId = sheetProperties?.Properties.SheetId.ToString() ?? "";
+
+            if (sheetProperties?.Data != null && sheetProperties.Data.Count > 0)
+            {
+                // Safely get header values from first data element
+                var headerData = sheetProperties.Data[0];
+                if (headerData?.RowData != null && headerData.RowData.Count > 0 && headerData.RowData[0]?.Values != null)
+                {
+                    sheetHeaderValues = string.Join(",", headerData.RowData[0].Values
+                        .Where(x => x.FormattedValue != null)
+                        .Select(x => x.FormattedValue)
+                        .ToList());
+                }
+
+                // Safely get max row values from second data element if it exists
+                if (sheetProperties.Data.Count > 1)
+                {
+                    var rowData = sheetProperties.Data[1];
+                    maxRow = (rowData?.RowData ?? []).Count;
+                    maxRowValue = (rowData?.RowData?.Where(x => x.Values?[0]?.FormattedValue != null)
+                        .Select(x => x.Values?[0]?.FormattedValue)
+                        .ToList() ?? []).Count;
+                }
+            }
 
             property.Id = sheetId;
             property.Name = sheet;
 
-            property.Attributes.Add(PropertyEnum.HEADERS.GetDescription(),sheetHeaderValues);
+            property.Attributes.Add(PropertyEnum.HEADERS.GetDescription(), sheetHeaderValues);
             property.Attributes.Add(PropertyEnum.MAX_ROW.GetDescription(), maxRow.ToString());
             property.Attributes.Add(PropertyEnum.MAX_ROW_VALUE.GetDescription(), maxRowValue.ToString());
 
