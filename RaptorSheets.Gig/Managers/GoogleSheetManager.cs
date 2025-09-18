@@ -414,51 +414,54 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets) // TODO: Look into moving this to a common area
     {
-        var ranges = new List<string>();
         var properties = new List<PropertyEntity>();
-
-        sheets.ForEach(sheet => ranges.Add($"{sheet}!{GoogleConfig.HeaderRange}")); // Get headers for each sheet.
-        sheets.ForEach(sheet => ranges.Add($"{sheet}!{GoogleConfig.RowRange}")); // Get max row for each sheet.
-
         var sheetInfo = await _googleSheetService.GetSheetInfo(sheets);
 
         foreach (var sheet in sheets)
         {
             var property = new PropertyEntity();
             var sheetProperties = sheetInfo?.Sheets.FirstOrDefault(x => x.Properties.Title == sheet);
-            
-            // Safely access Data array with bounds checking
+
             var sheetHeaderValues = "";
-            var maxRow = 0;
-            var maxRowValue = 0;
+            int maxRow = 0;
+            int maxRowValue = 0;
             var sheetId = sheetProperties?.Properties.SheetId.ToString() ?? "";
 
-            if (sheetProperties?.Data != null && sheetProperties.Data.Count > 0)
+            if (sheetProperties != null)
             {
-                // Safely get header values from first data element
-                var headerData = sheetProperties.Data[0];
-                if (headerData?.RowData != null && headerData.RowData.Count > 0 && headerData.RowData[0]?.Values != null)
-                {
-                    sheetHeaderValues = string.Join(",", headerData.RowData[0].Values
-                        .Where(x => x.FormattedValue != null)
-                        .Select(x => x.FormattedValue)
-                        .ToList());
-                }
+                // Get the total number of rows in the sheet (default 1000, or as set in the sheet)
+                maxRow = sheetProperties.Properties.GridProperties.RowCount ?? 0;
 
-                // Safely get max row values from second data element if it exists
-                if (sheetProperties.Data.Count > 1)
+                // Get header values from the first row
+                if (sheetProperties.Data != null && sheetProperties.Data.Count > 0)
                 {
-                    var rowData = sheetProperties.Data[1];
-                    maxRow = (rowData?.RowData ?? []).Count;
-                    maxRowValue = (rowData?.RowData?.Where(x => x.Values?[0]?.FormattedValue != null)
-                        .Select(x => x.Values?[0]?.FormattedValue)
-                        .ToList() ?? []).Count;
+                    var headerData = sheetProperties.Data[0];
+                    if (headerData?.RowData != null && headerData.RowData.Count > 0 && headerData.RowData[0]?.Values != null)
+                    {
+                        sheetHeaderValues = string.Join(",", headerData.RowData[0].Values
+                            .Where(x => x.FormattedValue != null)
+                            .Select(x => x.FormattedValue)
+                            .ToList());
+                    }
+
+                    // Find the last row with a value in the first column (excluding header)
+                    var rowData = headerData.RowData;
+                    for (int i = rowData.Count - 1; i > 0; i--) // start from the end, skip header (i=0)
+                    {
+                        var cell = rowData[i]?.Values?.FirstOrDefault();
+                        if (cell != null && !string.IsNullOrEmpty(cell.FormattedValue))
+                        {
+                            maxRowValue = i + 1; // +1 because row index is zero-based
+                            break;
+                        }
+                    }
+                    if (maxRowValue == 0 && rowData.Count > 1)
+                        maxRowValue = 1; // Only header exists
                 }
             }
 
             property.Id = sheetId;
             property.Name = sheet;
-
             property.Attributes.Add(PropertyEnum.HEADERS.GetDescription(), sheetHeaderValues);
             property.Attributes.Add(PropertyEnum.MAX_ROW.GetDescription(), maxRow.ToString());
             property.Attributes.Add(PropertyEnum.MAX_ROW_VALUE.GetDescription(), maxRowValue.ToString());

@@ -206,39 +206,16 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             }
 
             // We have gig sheets that weren't deleted - this is a problem
-            System.Diagnostics.Debug.WriteLine($"❌ WARNING: {remainingGigSheets.Count} gig sheets were not deleted:");
-            foreach (var sheet in remainingGigSheets)
-            {
-                System.Diagnostics.Debug.WriteLine($"  - {sheet.Name} (ID: {sheet.Id})");
-            }
-
-            // Attempt to delete the remaining gig sheets one more time
-            var remainingGigSheetNames = remainingGigSheets.Select(s => s.Name).ToList();
-            System.Diagnostics.Debug.WriteLine("Attempting to delete remaining gig sheets...");
-            var retryDeletionResult = await _googleSheetManager.DeleteSheets(remainingGigSheetNames);
-            LogMessages("Retry Delete", retryDeletionResult.Messages);
-            await Task.Delay(SheetDeletionDelayMs);
-
-            // Final verification - check only the gig sheets that we tried to delete
-            var finalProperties = await _googleSheetManager.GetSheetProperties(remainingGigSheetNames);
-            var finalRemainingGigSheets = finalProperties.Where(prop => !string.IsNullOrEmpty(prop.Id)).ToList();
-            
-            if (finalRemainingGigSheets.Count == 0)
-            {
-                System.Diagnostics.Debug.WriteLine("✓ SUCCESS: Retry deletion completed successfully");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine($"❌ CRITICAL: {finalRemainingGigSheets.Count} gig sheets still could not be deleted");
-                foreach (var sheet in finalRemainingGigSheets)
-                {
-                    System.Diagnostics.Debug.WriteLine($"  - Persistent gig sheet: {sheet.Name} (ID: {sheet.Id})");
-                }
-            }
+            var msg = $"❌ WARNING: {remainingGigSheets.Count} gig sheets were not deleted:\n" +
+                      string.Join("\n", remainingGigSheets.Select(sheet => $"  - {sheet.Name} (ID: {sheet.Id})"));
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"❌ ERROR during gig sheet deletion verification: {ex.Message}");
+            var msg = $"❌ ERROR during gig sheet deletion verification: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
 
         System.Diagnostics.Debug.WriteLine("=== End Gig Sheet Deletion Verification ===");
@@ -250,13 +227,12 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
         try
         {
-            // Use GetBatchData to get raw sheet data directly
             var response = await _googleSheetManager!.GetBatchData(_allSheets);
-            
             if (response?.ValueRanges == null)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ CRITICAL: No data received from GetBatchData");
-                return;
+                var msg = $"❌ CRITICAL: No data received from GetBatchData";
+                System.Diagnostics.Debug.WriteLine(msg);
+                Assert.Fail(msg);
             }
 
             var foundSheets = response.ValueRanges.Count;
@@ -285,25 +261,24 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
             if (sheetsWithoutData.Count > 0)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ WARNING: {sheetsWithoutData.Count} gig sheets have no data:");
-                foreach (var sheetName in sheetsWithoutData)
-                {
-                    System.Diagnostics.Debug.WriteLine($"  - {sheetName}");
-                }
+                var msg = $"❌ WARNING: {sheetsWithoutData.Count} gig sheets have no data:\n" +
+                          string.Join("\n", sheetsWithoutData.Select(sheetName => $"  - {sheetName}"));
+                System.Diagnostics.Debug.WriteLine(msg);
+                Assert.Fail(msg);
             }
 
-            if (sheetsWithData.Count >= _testSheets.Count)
+            if (sheetsWithData.Count < _testSheets.Count)
             {
-                System.Diagnostics.Debug.WriteLine($"✓ SUCCESS: At least {_testSheets.Count} core test sheets have data");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine($"❌ CRITICAL: Only {sheetsWithData.Count} sheets have data, need at least {_testSheets.Count} for testing");
+                var msg = $"❌ CRITICAL: Only {sheetsWithData.Count} sheets have data, need at least {_testSheets.Count} for testing";
+                System.Diagnostics.Debug.WriteLine(msg);
+                Assert.Fail(msg);
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"❌ ERROR during gig sheet creation verification: {ex.Message}");
+            var msg = $"❌ ERROR during gig sheet creation verification: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
 
         System.Diagnostics.Debug.WriteLine("=== End Gig Sheet Creation Verification ===");
@@ -315,112 +290,91 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
         try
         {
-            // Use GetBatchData to get raw sheet data for all sheets
             var response = await _googleSheetManager!.GetBatchData(_allSheets);
-            
             if (response?.ValueRanges == null)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ CRITICAL: No sheet data received");
-                return;
+                var msg = $"❌ CRITICAL: No sheet data received";
+                System.Diagnostics.Debug.WriteLine(msg);
+                Assert.Fail(msg);
             }
 
             System.Diagnostics.Debug.WriteLine($"Found data for {response.ValueRanges.Count} out of {_allSheets.Count} expected sheets");
-
-            // Verify sheet headers for core test sheets only
             await VerifySheetHeaders(response);
-
             System.Diagnostics.Debug.WriteLine("✓ Sheet structure verification completed successfully");
             System.Diagnostics.Debug.WriteLine($"  - Verified {_allSheets.Count} gig sheets exist");
             System.Diagnostics.Debug.WriteLine($"  - Checked headers for {_testSheets.Count} core test sheets");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"❌ ERROR during sheet structure verification: {ex.Message}");
-            throw;
+            var msg = $"❌ ERROR during sheet structure verification: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
     }
 
     private async Task VerifySheetHeaders(BatchGetValuesByDataFilterResponse response)
     {
         System.Diagnostics.Debug.WriteLine("=== Verifying Sheet Column Headers ===");
-
-        // Check headers for ALL sheets, not just test sheets
         foreach (var expectedSheetName in _allSheets)
         {
-            var matchedValueRange = response.ValueRanges.FirstOrDefault(vr => 
+            var matchedValueRange = response.ValueRanges.FirstOrDefault(vr =>
                 vr.ValueRange?.Range?.Contains(expectedSheetName, StringComparison.OrdinalIgnoreCase) == true);
-            
             if (matchedValueRange == null)
             {
-                System.Diagnostics.Debug.WriteLine($"  ⚠ Warning: No data found for sheet: {expectedSheetName}");
-                continue;
+                var msg = $"  ⚠ Warning: No data found for sheet: {expectedSheetName}";
+                System.Diagnostics.Debug.WriteLine(msg);
+                Assert.Fail(msg);
             }
-
             VerifySheetColumnHeaders(expectedSheetName, matchedValueRange);
         }
-
         System.Diagnostics.Debug.WriteLine("✓ All sheet column headers verified successfully");
     }
 
     private void VerifySheetColumnHeaders(string sheetName, MatchedValueRange matchedValueRange)
     {
         System.Diagnostics.Debug.WriteLine($"Verifying {sheetName} sheet headers...");
-
         if (matchedValueRange?.ValueRange?.Values?.Count > 0)
         {
-            // Get the first row as headers
             var headerRow = matchedValueRange.ValueRange.Values[0];
             var actualHeaders = headerRow.Select(cell => cell?.ToString()?.Trim() ?? "").Where(h => !string.IsNullOrEmpty(h)).ToList();
-            
             System.Diagnostics.Debug.WriteLine($"  Found {actualHeaders.Count} headers: {string.Join(", ", actualHeaders.Take(5))}...");
-
-            // Get ALL expected headers for this sheet type from the mapper configuration
             var expectedHeaders = GetAllExpectedHeadersForSheet(sheetName);
-            
             if (expectedHeaders.Count > 0)
             {
                 System.Diagnostics.Debug.WriteLine($"  Expected {expectedHeaders.Count} headers for {sheetName}");
-
-                // Check for missing headers
-                var missingHeaders = expectedHeaders.Where(expected => 
+                var missingHeaders = expectedHeaders.Where(expected =>
                     !actualHeaders.Any(actual => actual.Equals(expected, StringComparison.OrdinalIgnoreCase))
                 ).ToList();
-
-                // Check for unexpected headers (headers in sheet but not in configuration)
-                var unexpectedHeaders = actualHeaders.Where(actual => 
+                var unexpectedHeaders = actualHeaders.Where(actual =>
                     !expectedHeaders.Any(expected => expected.Equals(actual, StringComparison.OrdinalIgnoreCase))
                 ).ToList();
-
-                if (missingHeaders.Count == 0 && unexpectedHeaders.Count == 0)
+                if (missingHeaders.Count > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"  ✓ All headers match perfectly for {sheetName}");
+                    var msg = $"  ⚠ Missing headers in {sheetName}: {string.Join(", ", missingHeaders)}";
+                    System.Diagnostics.Debug.WriteLine(msg);
+                    Assert.Fail(msg);
                 }
-                else
+                if (unexpectedHeaders.Count > 0)
                 {
-                    if (missingHeaders.Count > 0)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"  ⚠ Missing headers in {sheetName}: {string.Join(", ", missingHeaders)}");
-                    }
-                    
-                    if (unexpectedHeaders.Count > 0)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"  ⚠ Unexpected headers in {sheetName}: {string.Join(", ", unexpectedHeaders)}");
-                    }
+                    var msg = $"  ⚠ Unexpected headers in {sheetName}: {string.Join(", ", unexpectedHeaders)}";
+                    System.Diagnostics.Debug.WriteLine(msg);
+                    Assert.Fail(msg);
                 }
-
-                // Verify header order (first few critical headers should be in correct positions)
                 VerifyHeaderOrder(sheetName, actualHeaders, expectedHeaders);
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"  ⚠ Warning: No expected headers configuration found for {sheetName}");
+                var msg = $"  ⚠ Warning: No expected headers configuration found for {sheetName}";
+                System.Diagnostics.Debug.WriteLine(msg);
+                Assert.Fail(msg);
             }
         }
         else
         {
-            System.Diagnostics.Debug.WriteLine($"  ⚠ Warning: No data found for {sheetName} (empty sheet)");
+            var msg = $"  ⚠ Warning: No data found for {sheetName} (empty sheet)";
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
-        
         System.Diagnostics.Debug.WriteLine($"  ✓ {sheetName} header verification completed");
     }
 
@@ -499,16 +453,16 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
             if (testShiftsAndTrips.Shifts.Count == 0)
             {
-                Console.WriteLine("❌ CRITICAL: No shifts were generated by TestGigHelpers.GenerateMultipleShifts");
-                ClearTestData();
-                return;
+                var msg = "❌ CRITICAL: No shifts were generated by TestGigHelpers.GenerateMultipleShifts";
+                Console.WriteLine(msg);
+                Assert.Fail(msg);
             }
 
             if (testShiftsAndTrips.Trips.Count == 0)
             {
-                Console.WriteLine("❌ CRITICAL: No trips were generated by TestGigHelpers.GenerateMultipleShifts");
-                ClearTestData();
-                return;
+                var msg = "❌ CRITICAL: No trips were generated by TestGigHelpers.GenerateMultipleShifts";
+                Console.WriteLine(msg);
+                Assert.Fail(msg);
             }
 
             // Add odometer values to some shifts and ensure distance matches
@@ -529,9 +483,9 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
             if (testExpenses.Expenses.Count == 0)
             {
-                Console.WriteLine("❌ CRITICAL: No expenses were generated by GenerateTestExpenses");
-                ClearTestData();
-                return;
+                var msg = "❌ CRITICAL: No expenses were generated by GenerateTestExpenses";
+                Console.WriteLine(msg);
+                Assert.Fail(msg);
             }
 
             _createdTestData = new SheetEntity();
@@ -581,9 +535,9 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             
             if (result == null)
             {
-                Console.WriteLine("❌ CRITICAL: ChangeSheetData returned null");
-                ClearTestData();
-                return;
+                var msg = "❌ CRITICAL: ChangeSheetData returned null";
+                Console.WriteLine(msg);
+                Assert.Fail(msg);
             }
 
             Console.WriteLine($"ChangeSheetData returned result with:");
@@ -597,17 +551,19 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             var errorMessages = result.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
             if (errorMessages.Count != 0)
             {
-                Console.WriteLine($"❌ Data insertion failed with {errorMessages.Count} errors:");
+                var msg = $"❌ Data insertion failed with {errorMessages.Count} errors:";
+                Console.WriteLine(msg);
                 LogMessages("Load Data Error", errorMessages);
-                ClearTestData();
-                return;
+                Assert.Fail(msg);
             }
 
             var warningMessages = result.Messages.Where(m => m.Level == MessageLevelEnum.WARNING.GetDescription()).ToList();
             if (warningMessages.Count > 0)
             {
-                Console.WriteLine($"⚠ Data insertion had {warningMessages.Count} warnings:");
+                var msg = $"⚠ Data insertion had {warningMessages.Count} warnings:";
+                Console.WriteLine(msg);
                 LogMessages("Load Data Warning", warningMessages);
+                Assert.Fail(msg);
             }
 
             var infoMessages = result.Messages.Where(m => m.Level == MessageLevelEnum.INFO.GetDescription()).ToList();
@@ -616,8 +572,9 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
             if (result.Shifts?.Count == 0 && result.Trips?.Count == 0 && result.Expenses?.Count == 0)
             {
-                Console.WriteLine("⚠ WARNING: ChangeSheetData succeeded but returned no data in result entity");
-                Console.WriteLine("This may be normal if ChangeSheetData only returns success messages, not the inserted data");
+                var msg = "⚠ WARNING: ChangeSheetData succeeded but returned no data in result entity";
+                Console.WriteLine(msg);
+                Assert.Fail(msg);
             }
 
             try
@@ -628,13 +585,9 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠ Operation message validation failed: {ex.Message}");
-                Console.WriteLine("This may not be critical if the data was actually inserted successfully");
-                Console.WriteLine($"Expected: 3 messages, Actual: {result.Messages.Count} messages");
-                foreach (var msg in result.Messages)
-                {
-                    Console.WriteLine($"  Message: {msg.Level} | {msg.Type} | {msg.Message}");
-                }
+                var msg = $"⚠ Operation message validation failed: {ex.Message}";
+                Console.WriteLine(msg);
+                Assert.Fail(msg);
             }
 
             Console.WriteLine("✓ Test data loading completed - checking if data was actually created...");
@@ -651,7 +604,8 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             
             if ((immediateCheck.Shifts?.Count ?? 0) == 0 && (immediateCheck.Trips?.Count ?? 0) == 0 && (immediateCheck.Expenses?.Count ?? 0) == 0)
             {
-                Console.WriteLine("❌ CRITICAL: Immediate check shows no data was inserted despite success messages");
+                var msg = "❌ CRITICAL: Immediate check shows no data was inserted despite success messages";
+                Console.WriteLine(msg);
                 
                 // Check GetSheets error messages
                 var getErrorMessages = immediateCheck.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
@@ -664,18 +618,16 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
                     }
                 }
                 
-                ClearTestData();
-                return;
+                Assert.Fail(msg);
             }
 
             Console.WriteLine("✓ Test data loaded successfully - data confirmed in sheets");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ LoadTestData failed with exception: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
-            ClearTestData();
-            throw;
+            var msg = $"❌ LoadTestData failed with exception: {ex.Message}";
+            Console.WriteLine(msg);
+            Assert.Fail(msg);
         }
     }
 
@@ -700,23 +652,9 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         
         if (totalFound == 0 && totalExpected > 0)
         {
-            System.Diagnostics.Debug.WriteLine("? CRITICAL: No data found in any sheets despite inserting test data");
-            System.Diagnostics.Debug.WriteLine("This suggests a data insertion or retrieval issue");
-            
-            // Check for error messages in the result
-            var errorMessages = result.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
-            if (errorMessages.Count > 0)
-            {
-                System.Diagnostics.Debug.WriteLine("Error messages from GetSheets:");
-                foreach (var error in errorMessages)
-                {
-                    System.Diagnostics.Debug.WriteLine($"  {error.Type}: {error.Message}");
-                }
-            }
-            
-            // Don't throw an assertion failure - log the issue and continue
-            System.Diagnostics.Debug.WriteLine("Skipping entity verification due to data retrieval issues");
-            return;
+            var msg = "? CRITICAL: No data found in any sheets despite inserting test data";
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
 
         VerifyEntitiesExist(_createdTestData.Shifts, result.Shifts);
@@ -769,7 +707,9 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
         if (!ValidateOperationResult(result, "Update"))
         {
-            return; // Skip validation if there were errors
+            var msg = "❌ Update operation failed validation.";
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
 
         System.Diagnostics.Debug.WriteLine($"? Updated {shiftsToUpdate.Count} shifts, {tripsToUpdate.Count} trips, {expensesToUpdate.Count} expenses");
@@ -843,19 +783,16 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         var deleteErrors = result.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
         if (deleteErrors.Count > 0)
         {
-            System.Diagnostics.Debug.WriteLine($"❌ CRITICAL: Delete operation failed with {deleteErrors.Count} errors:");
-            foreach (var error in deleteErrors)
-            {
-                System.Diagnostics.Debug.WriteLine($"  Delete Error: {error.Message}");
-            }
-            
-            // Don't fail the test immediately, but log the issue
-            System.Diagnostics.Debug.WriteLine("Continuing with verification despite delete errors...");
+            var msg = $"❌ CRITICAL: Delete operation failed with {deleteErrors.Count} errors:";
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
 
         if (!ValidateOperationResult(result, "Delete"))
         {
-            System.Diagnostics.Debug.WriteLine("⚠ Delete operation validation failed, but continuing with verification");
+            var msg = "⚠ Delete operation validation failed.";
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
 
         System.Diagnostics.Debug.WriteLine($"? Deletion commands sent for {deleteData.Shifts.Count} shifts, {deleteData.Trips.Count} trips, {deleteData.Expenses.Count} expenses");
@@ -884,29 +821,26 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
 
         if (remainingUpdatedShifts.Count > 0)
         {
-            System.Diagnostics.Debug.WriteLine($"❌ CRITICAL: Found {remainingUpdatedShifts.Count} shifts with 'Updated Region' that should have been deleted:");
-            foreach (var shift in remainingUpdatedShifts.Take(3))
-            {
-                System.Diagnostics.Debug.WriteLine($"  - Shift RowId: {shift.RowId}, Region: {shift.Region}, Note: {shift.Note}");
-            }
+            var msg = $"❌ CRITICAL: Found {remainingUpdatedShifts.Count} shifts with 'Updated Region' that should have been deleted:\n" +
+                      string.Join("\n", remainingUpdatedShifts.Take(3).Select(shift => $"  - Shift RowId: {shift.RowId}, Region: {shift.Region}, Note: {shift.Note}"));
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
 
         if (remainingUpdatedTrips.Count > 0)
         {
-            System.Diagnostics.Debug.WriteLine($"❌ CRITICAL: Found {remainingUpdatedTrips.Count} trips with Tip=999 that should have been deleted:");
-            foreach (var trip in remainingUpdatedTrips.Take(3))
-            {
-                System.Diagnostics.Debug.WriteLine($"  - Trip RowId: {trip.RowId}, Tip: {trip.Tip}, Note: {trip.Note}");
-            }
+            var msg = $"❌ CRITICAL: Found {remainingUpdatedTrips.Count} trips with Tip=999 that should have been deleted:\n" +
+                      string.Join("\n", remainingUpdatedTrips.Take(3).Select(trip => $"  - Trip RowId: {trip.RowId}, Tip: {trip.Tip}, Note: {trip.Note}"));
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
 
         if (remainingUpdatedExpenses.Count > 0)
         {
-            System.Diagnostics.Debug.WriteLine($"❌ CRITICAL: Found {remainingUpdatedExpenses.Count} expenses with Amount=12345.67 that should have been deleted:");
-            foreach (var expense in remainingUpdatedExpenses.Take(3))
-            {
-                System.Diagnostics.Debug.WriteLine($"  - Expense RowId: {expense.RowId}, Amount: {expense.Amount}, Description: {expense.Description}");
-            }
+            var msg = $"❌ CRITICAL: Found {remainingUpdatedExpenses.Count} expenses with Amount=12345.67 that should have been deleted:\n" +
+                      string.Join("\n", remainingUpdatedExpenses.Take(3).Select(expense => $"  - Expense RowId: {expense.RowId}, Amount: {expense.Amount}, Description: {expense.Description}"));
+            System.Diagnostics.Debug.WriteLine(msg);
+            Assert.Fail(msg);
         }
 
         // Note: We can't verify deletion by RowId because Google Sheets automatically shifts rows up
