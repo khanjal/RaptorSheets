@@ -420,7 +420,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         sheets.ForEach(sheet => ranges.Add($"{sheet}!{GoogleConfig.HeaderRange}")); // Get headers for each sheet.
         sheets.ForEach(sheet => ranges.Add($"{sheet}!{GoogleConfig.RowRange}")); // Get max row for each sheet.
 
-        var sheetInfo = await _googleSheetService.GetSheetInfo();
+        var sheetInfo = await _googleSheetService.GetSheetInfo(sheets);
 
         foreach (var sheet in sheets)
         {

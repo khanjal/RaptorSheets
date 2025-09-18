@@ -84,7 +84,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             // Only proceed if test data was created successfully
             if (_createdTestData?.Shifts.Count == 0 || _createdShiftIds.Count == 0)
             {
-                System.Diagnostics.Debug.WriteLine("Test data creation failed - skipping remaining steps");
+                Assert.Fail("Test data creation failed - skipping remaining steps");
                 return;
             }
 
