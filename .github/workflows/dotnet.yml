@@ -3,6 +3,10 @@
 
 name: .NET Tests
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ "main" ]
@@ -12,7 +16,7 @@ on:
 
 jobs:
   test:
-    name: Test & Coverage
+    name: Build & Test
     runs-on: ubuntu-latest
     
     steps:
@@ -23,13 +27,21 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Build
       run: dotnet build --no-restore --configuration Release
 
-    - name: Test with Coverage
+    - name: Run Tests
       env:
         spreadsheets:gig: ${{ secrets.GIG_SPREADSHEET_ID }}
         spreadsheets:stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
@@ -39,32 +51,8 @@ jobs:
         google_credentials:client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
         google_credentials:client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
       run: |
-        dotnet test --no-build --configuration Release \
-          --collect:"XPlat Code Coverage" \
-          --results-directory ./TestResults \
-          --logger trx \
-          --verbosity normal \
-          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover,cobertura
-
-    - name: Install ReportGenerator
-      run: dotnet tool install -g dotnet-reportgenerator-globaltool
-
-    - name: Generate Coverage Report
-      run: |
-        echo "Looking for coverage files..."
-        find . -name "*.xml" -type f | grep -i coverage
-        echo "Files in TestResults:"
-        ls -la TestResults/ || echo "TestResults directory not found"
-        find TestResults -name "*.xml" 2>/dev/null || echo "No XML files in TestResults"
-        
-        reportgenerator \
-          -reports:"TestResults/**/coverage.cobertura.xml;TestResults/**/coverage.opencover.xml" \
-          -targetdir:"coverage/report" \
-          -reporttypes:"Html;TextSummary" \
-          -verbosity:Info
-
-    - name: Display Coverage Summary
-      run: cat coverage/report/Summary.txt
+        dotnet test --no-build --configuration Release --logger trx --verbosity normal
+        echo "(Coverage collected only in code-quality job for SonarCloud)"
 
   code-quality:
     name: Code Quality Analysis
@@ -103,6 +91,14 @@ jobs:
         mkdir -p ./.sonar/scanner
         dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
 
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
     - name: Restore dependencies
       run: dotnet restore
 
@@ -117,13 +113,22 @@ jobs:
           /o:"ironraptor" \
           /d:sonar.token="$SONAR_TOKEN" \
           /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.opencover.reportsPaths="coverage/report/coverage.opencover.xml" \
+          /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" \
           /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" \
           /d:sonar.cpd.exclusions=RaptorSheets.Gig/Entities/**/*.cs \
           /d:sonar.exclusions=RaptorSheets.Core/Entities/Generated/**,RaptorSheets.Gig/Entities/Generated/**,RaptorSheets.Stock/Entities/Generated/**,**/coverage*.xml,**/TestResults/**,**/coverage/**,**/*.coverage
 
     - name: Build for SonarCloud
       run: dotnet build --configuration Release
+
+    - name: Test with Coverage for SonarCloud
+      run: |
+        dotnet test --no-build --configuration Release \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger trx \
+          --verbosity normal \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
     - name: End SonarCloud Scan
       env:
