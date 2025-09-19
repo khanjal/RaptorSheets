@@ -82,11 +82,12 @@ jobs:
         path: TestResults/
         retention-days: 30
 
+
   code-quality:
     name: Code Quality Analysis
     runs-on: ubuntu-latest
+    needs: test
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
-    
     steps:
     - uses: actions/checkout@v4
       with:
@@ -119,6 +120,18 @@ jobs:
         mkdir -p ./.sonar/scanner
         dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
 
+    - name: Download Test Results
+      uses: actions/download-artifact@v4
+      with:
+        name: test-results
+        path: TestResults/
+
+    - name: Download Coverage Report
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage/report/
+
     - name: Restore dependencies
       run: dotnet restore
 
@@ -133,29 +146,12 @@ jobs:
           /o:"ironraptor" \
           /d:sonar.token="$SONAR_TOKEN" \
           /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
-          /d:sonar.cs.vstest.reportsPaths="**/*.trx" \
+          /d:sonar.cs.opencover.reportsPaths="coverage/report/coverage.opencover.xml" \
+          /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" \
           /d:sonar.cpd.exclusions=RaptorSheets.Gig/Entities/**/*.cs
 
     - name: Build for SonarCloud
       run: dotnet build --configuration Release
-
-    - name: Run Tests for SonarCloud
-      env:
-        spreadsheets:gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets:stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
-        google_credentials:type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
-        google_credentials:private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
-        google_credentials:private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
-        google_credentials:client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
-        google_credentials:client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
-      run: |
-        dotnet test --no-build --configuration Release \
-          --collect:"XPlat Code Coverage" \
-          --results-directory ./TestResults \
-          --logger trx \
-          --verbosity normal \
-          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover,cobertura
 
     - name: End SonarCloud Scan
       env:
