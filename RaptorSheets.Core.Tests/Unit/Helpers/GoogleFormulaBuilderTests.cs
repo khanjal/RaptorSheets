@@ -366,6 +366,20 @@ public class GoogleFormulaBuilderTests
     }
 
     [Fact]
+    public void BuildArrayFormulaWeekdayTextDirect_ShouldGenerateWeekdayTextFormula()
+    {
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekdayTextDirect(TestKeyRange, TestHeader);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(IFS(ROW(", result);
+        Assert.Contains("TEXT(", result);
+        Assert.Contains("+1,\"ddd\")", result);
+        Assert.Contains(TestKeyRange, result);
+        Assert.Contains(TestHeader, result);
+    }
+
+    [Fact]
     public void BuildArrayFormulaDualCountIf_ShouldCountFromTwoRanges()
     {
         // Arrange

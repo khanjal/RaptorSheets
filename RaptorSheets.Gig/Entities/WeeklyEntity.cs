@@ -1,51 +1,87 @@
 using System.Text.Json.Serialization;
+using RaptorSheets.Core.Attributes;
+using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class WeeklyEntity : AmountEntity
+public class WeeklyEntity
 {
     [JsonPropertyName("rowId")]
     public int RowId { get; set; }
 
     [JsonPropertyName("week")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Week)]
     public string Week { get; set; } = "";
 
     [JsonPropertyName("trips")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
     [JsonPropertyName("days")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Days)]
     public int Days { get; set; }
 
+    // Financial properties in correct position
+    [JsonPropertyName("pay")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Pay)]
+    public decimal? Pay { get; set; }
+
+    [JsonPropertyName("tip")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Tips)]
+    public decimal? Tip { get; set; }
+
+    [JsonPropertyName("bonus")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Bonus)]
+    public decimal? Bonus { get; set; }
+
+    [JsonPropertyName("total")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Total)]
+    public decimal? Total { get; set; }
+
+    [JsonPropertyName("cash")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Cash)]
+    public decimal? Cash { get; set; }
+
     [JsonPropertyName("amt/trip")]
+    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerTrip)]
     public decimal AmountPerTrip { get; set; }
 
     [JsonPropertyName("distance")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Distance)]
     public decimal Distance { get; set; }
 
     [JsonPropertyName("amt/dist")]
+    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerDistance)]
     public decimal AmountPerDistance { get; set; }
 
     [JsonPropertyName("time")]
+    [ColumnOrder(SheetsConfig.HeaderNames.TimeTotal)]
     public string Time { get; set; } = "";
 
     [JsonPropertyName("amt/hour")]
+    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerTime)]
     public decimal AmountPerTime { get; set; }
 
-    [JsonPropertyName("average")]
-    public decimal Average { get; set; }
-
-    [JsonPropertyName("amt/day")]
+    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerDay)]
     public decimal AmountPerDay { get; set; }
 
+    [JsonPropertyName("average")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Average)]
+    public decimal Average { get; set; }
+
     [JsonPropertyName("#")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Number)]
     public int Number { get; set; }
 
     [JsonPropertyName("year")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Year)]
     public int Year { get; set; }
 
     [JsonPropertyName("begin")]
+    [ColumnOrder(SheetsConfig.HeaderNames.DateBegin)]
     public string Begin { get; set; } = "";
 
     [JsonPropertyName("end")]
+    [ColumnOrder(SheetsConfig.HeaderNames.DateEnd)]
     public string End { get; set; } = "";
 }

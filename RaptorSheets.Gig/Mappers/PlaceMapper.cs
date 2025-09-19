@@ -6,6 +6,7 @@ using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
+using static RaptorSheets.Gig.Constants.SheetsConfig;
 
 namespace RaptorSheets.Gig.Mappers;
 
@@ -72,7 +73,7 @@ public static class PlaceMapper
             switch (headerEnum)
             {
                 case HeaderEnum.PLACE:
-                    MapperFormulaHelper.ConfigureUniqueValueHeader(header, tripSheet.GetRange(HeaderEnum.PLACE.GetDescription(), 2));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUnique(HeaderEnum.PLACE.GetDescription(), tripSheet.GetRange(HeaderEnum.PLACE.GetDescription(), 2));
                     break;
                 case HeaderEnum.VISIT_FIRST:
                     header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), 

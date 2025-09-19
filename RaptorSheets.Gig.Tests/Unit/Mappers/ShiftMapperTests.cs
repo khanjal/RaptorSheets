@@ -15,9 +15,9 @@ public class ShiftMapperTests
         // Arrange
         var values = new List<IList<object>>
         {
-            new List<object> { "Date", "Start", "Finish", "Service", "#", "Region" }, // Headers using correct HeaderEnum descriptions
-            new List<object> { "2024-01-15", "09:00:00", "17:00:00", "Uber", "123", "Downtown" },
-            new List<object> { "2024-01-16", "10:00:00", "18:00:00", "Lyft", "124", "Suburbs" }
+            new List<object> { HeaderEnum.DATE.GetDescription(), HeaderEnum.TIME_START.GetDescription(), HeaderEnum.TIME_END.GetDescription(), HeaderEnum.SERVICE.GetDescription(), HeaderEnum.NUMBER.GetDescription(), HeaderEnum.REGION.GetDescription(), HeaderEnum.ODOMETER_START.GetDescription(), HeaderEnum.ODOMETER_END.GetDescription(), HeaderEnum.DISTANCE.GetDescription() },
+            new List<object> { "2024-01-15", "09:00:00", "17:00:00", "Uber", "123", "Downtown", "100.0", "150.0", "50.0" },
+            new List<object> { "2024-01-16", "10:00:00", "18:00:00", "Lyft", "124", "Suburbs", "200.0", "260.0", "60.0" }
         };
 
         // Act
@@ -35,12 +35,18 @@ public class ShiftMapperTests
         Assert.Equal("Uber", firstShift.Service);
         Assert.Equal(123, firstShift.Number);
         Assert.Equal("Downtown", firstShift.Region);
+        Assert.Equal(100.0m, firstShift.OdometerStart);
+        Assert.Equal(150.0m, firstShift.OdometerEnd);
+        Assert.Equal(50.0m, firstShift.Distance); // Distance matches odometer difference
         
         var secondShift = result[1];
         Assert.Equal(3, secondShift.RowId);
         Assert.Equal("2024-01-16", secondShift.Date);
         Assert.Equal("Lyft", secondShift.Service);
         Assert.Equal("Suburbs", secondShift.Region);
+        Assert.Equal(200.0m, secondShift.OdometerStart);
+        Assert.Equal(260.0m, secondShift.OdometerEnd);
+        Assert.Equal(60.0m, secondShift.Distance); // Distance matches odometer difference
     }
 
     [Fact]
@@ -49,7 +55,7 @@ public class ShiftMapperTests
         // Arrange
         var values = new List<IList<object>>
         {
-            new List<object> { "Date", "Service" }, // Headers
+            new List<object> { HeaderEnum.DATE.GetDescription(), HeaderEnum.SERVICE.GetDescription() }, // Headers
             new List<object> { "2024-01-15", "Uber" },
             new List<object> { "", "" }, // Empty row - should be filtered
             new List<object> { "2024-01-16", "Lyft" }
@@ -91,7 +97,8 @@ public class ShiftMapperTests
                 Region = "Suburbs"
             }
         };
-        var headers = new List<object> { "Date", "Start", "Finish", "Service", "#", "Region", "Note" };
+
+        var headers = new List<object> { HeaderEnum.DATE.GetDescription(), HeaderEnum.TIME_START.GetDescription(), HeaderEnum.TIME_END.GetDescription(), HeaderEnum.SERVICE.GetDescription(), HeaderEnum.NUMBER.GetDescription(), HeaderEnum.REGION.GetDescription(), HeaderEnum.NOTE.GetDescription() };
 
         // Act
         var result = ShiftMapper.MapToRangeData(shifts, headers);
@@ -137,7 +144,17 @@ public class ShiftMapperTests
                 Region = "Downtown"
             }
         };
-        var headers = new List<object> { "Date", "Start", "Service", "#", "Pay", "Tips", "O", "Region" };
+        var headers = new List<object>
+        {
+            HeaderEnum.DATE.GetDescription(),
+            HeaderEnum.TIME_START.GetDescription(),
+            HeaderEnum.SERVICE.GetDescription(),
+            HeaderEnum.NUMBER.GetDescription(),
+            HeaderEnum.PAY.GetDescription(),
+            HeaderEnum.TIPS.GetDescription(),
+            HeaderEnum.TIME_OMIT.GetDescription(),
+            HeaderEnum.REGION.GetDescription()
+        };
 
         // Act
         var result = ShiftMapper.MapToRowData(shifts, headers);
@@ -174,7 +191,13 @@ public class ShiftMapperTests
                 Region = string.Empty // Use empty string instead of null
             }
         };
-        var headers = new List<object> { "Date", "Service", "Pay", "Region" };
+        var headers = new List<object>
+        {
+            HeaderEnum.DATE.GetDescription(),
+            HeaderEnum.SERVICE.GetDescription(),
+            HeaderEnum.PAY.GetDescription(),
+            HeaderEnum.REGION.GetDescription()
+        };
 
         // Act
         var result = ShiftMapper.MapToRowData(shifts, headers);
@@ -284,5 +307,52 @@ public class ShiftMapperTests
             HeaderEnum.REGION => "Test Region",
             _ => "Test Value"
         };
+    }
+
+    [Fact]
+    public void MapFromRangeData_WithOdometer_ShouldMapCorrectly()
+    {
+        var values = new List<IList<object>>
+        {
+            new List<object> { "Odo Start", "Odo End" },
+            new List<object> { "100.5", "150.75" }
+        };
+
+        var result = ShiftMapper.MapFromRangeData(values);
+
+        Assert.Single(result);
+        var shift = result[0];
+        Assert.Equal(100.5m, shift.OdometerStart);
+        Assert.Equal(150.75m, shift.OdometerEnd);
+    }
+
+    [Fact]
+    public void MapToRangeData_WithOdometer_ShouldReturnCorrectData()
+    {
+        var shifts = new List<ShiftEntity>
+        {
+            new() { OdometerStart = 100.5m, OdometerEnd = 150.75m }
+        };
+        var headers = new List<object> { "Odo Start", "Odo End" };
+
+        var result = ShiftMapper.MapToRangeData(shifts, headers);
+
+        Assert.Equal("100.5", result[0][0]);
+        Assert.Equal("150.75", result[0][1]);
+    }
+
+    [Fact]
+    public void MapToRowData_WithOdometer_ShouldReturnRowData()
+    {
+        var shifts = new List<ShiftEntity>
+        {
+            new() { OdometerStart = 100.5m, OdometerEnd = 150.75m }
+        };
+        var headers = new List<object> { "Odo Start", "Odo End" };
+
+        var result = ShiftMapper.MapToRowData(shifts, headers);
+
+        Assert.Equal(100.5, result[0].Values[0].UserEnteredValue.NumberValue);
+        Assert.Equal(150.75, result[0].Values[1].UserEnteredValue.NumberValue);
     }
 }

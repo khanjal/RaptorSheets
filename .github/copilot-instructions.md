@@ -1,338 +1,396 @@
-# RaptorSheets Copilot Instructions
+# Google Sheets Management System Documentation
 
-## Project Overview
-RaptorSheets is a .NET 8 library suite for Google Sheets API integration with domain-specific packages for gig work tracking, stock portfolio management, and a shared Core library. The architecture follows a layered approach: Domain Packages → Core Services → API Wrappers → Google Sheets API.
+## Current Architecture Overview
 
-## Architecture Patterns
+The RaptorSheets system manages Google Sheets through a layered architecture that separates concerns between configuration, data modeling, and business logic. The system is designed to handle complex spreadsheets with automated formulas, cross-sheet references, and strict column ordering.
 
-### Layered Architecture
-- **Domain Managers** (`RaptorSheets.Gig.Managers`, `RaptorSheets.Stock.Managers`): High-level business operations
-- **Core Services** (`RaptorSheets.Core.Services.GoogleSheetService`): Unified Google API abstraction
-- **API Wrappers** (`RaptorSheets.Core.Wrappers.SheetServiceWrapper`): Direct Google API communication
-- **Mappers**: Static classes converting between entities and Google API data structures
+## Core Components
 
-### Entity-Mapper Pattern
-All entities follow this pattern:
+### 1. Sheet Configuration (`SheetsConfig`)
+**Purpose**: Centralized definition of sheet structures and properties
+
+**NEW: Entity-Driven Implementation**:
 ```csharp
-// Entity definition
-public class TripEntity : AmountEntity { ... }
-
-// Corresponding mapper
-public static class TripMapper
+public static SheetModel ExampleSheet => new()
 {
-    public static List<TripEntity> MapFromRangeData(IList<IList<object>> values) { ... }
-    public static SheetModel GetSheet() { ... } // Sheet configuration
+    Name = SheetNames.Example,
+    CellColor = ColorEnum.LIGHT_CYAN,
+    TabColor = ColorEnum.CYAN,
+    FreezeColumnCount = 1,
+    FreezeRowCount = 1,
+    ProtectSheet = true,
+    Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ExampleEntity>()  // Auto-generated from entity
+};
+```
+
+**Central Header Repository**: SheetsConfig provides a comprehensive catalog of all available headers for consistency across sheets:
+```csharp
+// Complete header inventory - use these constants exclusively
+SheetsConfig.HeaderNames.Address         // Standard address field
+SheetsConfig.HeaderNames.AddressStart    // Start address for trips
+SheetsConfig.HeaderNames.AddressEnd      // End address for trips
+SheetsConfig.HeaderNames.Pay            // Payment amount
+SheetsConfig.HeaderNames.TotalGrand     // Grand total calculation
+SheetsConfig.HeaderNames.AmountPerTime  // Calculated hourly rate
+SheetsConfig.HeaderNames.VisitFirst     // First visit date
+SheetsConfig.HeaderNames.DaysPerVisit   // Visit frequency metric
+// ... complete catalog available in SheetsConfig.HeaderNames
+```
+
+**Sheet Tab Ordering**: SheetsConfig maintains entity-driven sheet order for consistent tab layout:
+```csharp
+// Entity-driven tab order (left to right in spreadsheet)
+var allSheets = SheetsConfig.SheetUtilities.GetAllSheetNames();
+// Returns entity-defined order from SheetOrderEntity: [Trips, Shifts, Expenses, Addresses, Names, Places, Regions, Services, Types, Daily, Weekdays, Weekly, Monthly, Yearly, Setup]
+```
+
+**Responsibilities**:
+- Define sheet visual properties (colors, frozen rows/columns)
+- Automatically generate headers from entity `ColumnOrder` attributes
+- Use entity-driven sheet ordering from `SheetOrderEntity`
+- Set protection and validation rules
+
+### 2. Entity Classes with ColumnOrder Attributes
+**Purpose**: Domain objects representing data rows in sheets with built-in column ordering
+
+**Attribute-Based Column Ordering**:
+```csharp
+public class ExampleEntity : BaseEntity
+{
+    [JsonPropertyName("rowId")]
+    public int RowId { get; set; }
+    
+    [JsonPropertyName("keyField")]
+    [ColumnOrder(SheetsConfig.HeaderNames.KeyField)]  // References header constants
+    public string KeyField { get; set; } = "";
+    
+    [JsonPropertyName("measureField")]
+    [ColumnOrder(SheetsConfig.HeaderNames.MeasureField)]
+    public decimal MeasureField { get; set; }
+    
+    // For flattened entities: all properties defined directly in correct order
 }
 ```
 
-### Batch Operations First
-Always use batch operations for Google API calls:
-- `BatchUpdateSpreadsheetRequest` for sheet modifications
-- `BatchGetValuesByDataFilterRequest` for data retrieval
-- Single requests are only for individual operations
-
-## Key Conventions
-
-### Authentication
-Two authentication patterns supported:
-- **Access Token**: `string accessToken` (preferred for external applications, follows Google auth standards)
-- **Service Account**: `Dictionary<string, string>` credentials (primarily for testing and CI/CD)
-
-### Error Handling
-All operations return `MessageEntity` collections with structured feedback:
+**Flattened Entity Design**: Modern entities define all properties directly to control exact column ordering:
 ```csharp
-// Good: Structured error handling
-var result = await manager.GetSheets();
-if (result.Messages.Any(m => m.Level == "ERROR")) { ... }
+public class DataEntity
+{
+    [JsonPropertyName("date")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
+    public string Date { get; set; } = "";
+    
+    [JsonPropertyName("trips")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Trips)]
+    public int Trips { get; set; }
+    
+    // Financial properties in exact position needed
+    [JsonPropertyName("pay")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Pay)]
+    public decimal? Pay { get; set; }
+    
+    [JsonPropertyName("tip")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Tips)]
+    public decimal? Tip { get; set; }
+    
+    // Resulting column order: Date, Trips, Pay, Tip...
+}
 ```
 
-### Header Management
-Headers use `HeaderEnum` with `GetDescription()` for column mapping:
+**Characteristics**:
+- Use `ColumnOrder` attributes to define column order
+- Reference `SheetsConfig.HeaderNames` constants exclusively
+- Include `RowId` for Google Sheets row mapping
+- Use JSON property names for serialization
+- Flattened design for precise column control
+
+### 3. Sheet Tab Ordering with SheetOrderEntity
+**Purpose**: Central definition of sheet tab order in workbooks
+
+**SheetOrder Attributes for Tabs**:
 ```csharp
-var value = HeaderHelpers.GetStringValue(HeaderEnum.SERVICE.GetDescription(), row, headers);
+public class SheetOrderEntity
+{
+    [JsonPropertyName("trips")]
+    [SheetOrder(0, SheetsConfig.SheetNames.Trips)]
+    public bool Trips { get; set; } = true;
+
+    [JsonPropertyName("shifts")]
+    [SheetOrder(1, SheetsConfig.SheetNames.Shifts)]
+    public bool Shifts { get; set; } = true;
+    
+    // ... more sheets in order
+}
 ```
 
-Follow the standardized pattern for sheet configuration:
+### 4. Mapper Classes with Entity-Driven Ordering
+**Purpose**: Translate between entities and Google Sheets data structures with automatic column ordering
+
+**Simplified Configuration**:
+```csharp
+public static class ExampleMapper
+{
+    public static SheetModel GetSheet()
+    {
+        var sheet = SheetsConfig.ExampleSheet;  // Headers auto-generated from entity
+        sheet.Headers.UpdateColumns();         // Set column indexes for formula references
+
+        // Configure formulas and formatting as needed
+        ConfigureFormulas(sheet);
+        
+        return sheet;
+    }
+}
+```
+
+**Core Methods**:
+```csharp
+public static class ExampleMapper
+{
+    // Google Sheets data → Entity objects
+    public static List<ExampleEntity> MapFromRangeData(IList<IList<object>> values)
+    
+    // Entity objects → Google Sheets data
+    public static IList<IList<object?>> MapToRangeData(List<ExampleEntity> entities, IList<object> headers)
+    
+    // Configure sheet formulas and formatting with entity-driven ordering
+    public static SheetModel GetSheet()
+}
+```
+
+### 5. Header Management (`HeaderHelpers`)
+**Purpose**: Parse and extract data from Google Sheets rows
+
+**Key Functions**:
+```csharp
+// Parse header row into column index dictionary
+Dictionary<int, string> ParserHeader(IList<object> sheetHeader)
+
+// Extract typed values using column names
+string GetStringValue(string columnName, IList<object> values, Dictionary<int, string> headers)
+int GetIntValue(string columnName, IList<object> values, Dictionary<int, string> headers)
+decimal GetDecimalValue(string columnName, IList<object> values, Dictionary<int, string> headers)
+```
+
+### 6. Entity-Driven Configuration Helpers
+**Purpose**: Extract and validate column/sheet ordering from entity attributes
+
+**Key Classes**:
+```csharp
+// Generate sheet headers from entity ColumnOrder attributes
+EntitySheetConfigHelper.GenerateHeadersFromEntity<T>()
+
+// Extract column order and apply to existing headers
+EntityColumnOrderHelper.GetColumnOrderFromEntity<T>(sheetHeaders)
+
+// Validate entity ColumnOrder attribute mappings
+EntityColumnOrderHelper.ValidateEntityHeaderMapping<T>(availableHeaders)
+
+// Extract sheet order from SheetOrder attributes
+EntitySheetOrderHelper.GetSheetOrderFromEntity<T>()
+
+// Validate entity SheetOrder attribute mappings
+EntitySheetOrderHelper.ValidateEntitySheetMapping<T>(availableSheets)
+```
+
+## Current Workflow
+
+### Sheet Creation Process
+
+1. **Define Entity with Column Ordering**: Create entity class with `ColumnOrder` attributes
+2. **Define Sheet Tab Ordering**: Update `SheetOrderEntity` with `SheetOrder` attributes
+3. **Define Configuration**: Add static `SheetModel` to `SheetsConfig` using entity-driven generation
+4. **Implement Mapper**: Create mapper with simplified configuration
+5. **Configure Formulas**: Set up formulas and formatting in `GetSheet()` method
+
+### Column Order Management
+
+**Entity-Driven Approach**:
 ```csharp
 public static SheetModel GetSheet()
 {
-    var sheet = SheetsConfig.YourSheet;
-    sheet.Headers.UpdateColumns(); // Essential: Sets proper column indexes
+    var sheet = SheetsConfig.ExampleSheet;  // Headers from entity ColumnOrder attributes
+    sheet.Headers.UpdateColumns();         // Sets column indexes A, B, C, etc.
     
-    sheet.Headers.ForEach(header => {
-        var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
-        switch (headerEnum) {
-            case HeaderEnum.DATE:
-                header.Format = FormatEnum.DATE;
-                break;
-            // ... configure other headers
-        }
-    });
+    // Now safe to reference columns by index for formulas
+    var keyRange = sheet.GetLocalRange(HeaderEnum.KEY_FIELD.GetDescription());
+}
+```
+
+### Sheet Tab Order Management
+
+**Entity-Driven Sheet Ordering**:
+```csharp
+// SheetsConfig.SheetUtilities.GetAllSheetNames() now uses:
+EntitySheetOrderHelper.GetSheetOrderFromEntity<SheetOrderEntity>()
+// Returns sheets in order defined by SheetOrder attributes: [Trips, Shifts, Expenses, ...]
+```
+
+**Benefits**:
+- **Single Source of Truth**: Entity properties define both column and sheet order
+- **References Constants**: Uses `SheetsConfig.HeaderNames` and `SheetsConfig.SheetNames` for consistency
+- **Flattened Design**: Precise control over column positioning
+- **No Hardcoding**: Eliminates order numbers or column letters
+- **Readable**: Order is visible in entity definitions
+
+### Data Flow
+
+**Reading Data**:
+```
+Google Sheets Range Data → HeaderHelpers.ParserHeader() → Entity Properties
+```
+
+**Writing Data**:
+```
+Entity Properties → MapToRangeData/MapToRowData → Google Sheets Batch Update
+```
+
+**Sheet Generation**:
+```
+Entity ColumnOrder Attributes → EntitySheetConfigHelper → SheetsConfig → Mapper.GetSheet() → Formula Configuration → Google Sheets Creation
+```
+
+**Sheet Ordering**:
+```
+SheetOrderEntity SheetOrder Attributes → EntitySheetOrderHelper → SheetsConfig.SheetUtilities → Workbook Tab Order
+```
+
+## Implementation Patterns
+
+### Adding ColumnOrder Attributes to Entities
+
+```csharp
+public class DataEntity
+{
+    [JsonPropertyName("date")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
+    public string Date { get; set; } = "";
+    
+    [JsonPropertyName("service")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Service)]
+    public string Service { get; set; } = "";
+    
+    // All properties defined directly for precise control
+}
+```
+
+### Adding SheetOrder Attributes to SheetOrderEntity
+
+```csharp
+public class SheetOrderEntity
+{
+    [JsonPropertyName("newSheet")]
+    [SheetOrder(15, SheetsConfig.SheetNames.NewSheet)]  // Add to end
+    public bool NewSheet { get; set; } = true;
+}
+```
+
+### Using Entity Ordering in SheetsConfig
+
+```csharp
+public static SheetModel DataSheet => new()
+{
+    Name = SheetNames.Data,
+    TabColor = ColorEnum.BLUE,
+    CellColor = ColorEnum.LIGHT_GRAY,
+    FreezeColumnCount = 1,
+    FreezeRowCount = 1,
+    ProtectSheet = true,
+    Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<DataEntity>()
+};
+```
+
+### Using Entity Ordering in Mappers
+
+```csharp
+public static SheetModel GetSheet()
+{
+    var sheet = SheetsConfig.DataSheet;     // Headers auto-generated from entity
+    sheet.Headers.UpdateColumns();         // Required for formula references
+    
+    // Configure formulas as usual...
+    ConfigureSheetFormulas(sheet);
     
     return sheet;
 }
 ```
 
-### Google Formula Management
-Use the centralized formula system for consistency and maintainability:
+## Benefits Achieved
 
-**New Approach (Recommended):**
+1. **Maintainable Order**: Column and sheet order visible in entity definitions
+2. **Constant References**: Uses `SheetsConfig.HeaderNames` and `SheetsConfig.SheetNames` exclusively  
+3. **Precise Control**: Flattened entities allow exact column positioning
+4. **Validation**: Build-time checks for invalid header/sheet references
+5. **No Magic Numbers**: Eliminates hardcoded positions
+6. **Centralized Sheet Ordering**: Single place to define tab order
+
+## Key Features
+
+### Automatic Header Generation
 ```csharp
-// Use GoogleFormulaBuilder for generic Google Sheets patterns
-header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-    keyRange, 
-    HeaderEnum.PAY.GetDescription(), 
-    lookupRange, 
-    sumRange
-);
+// OLD: Manual header definition
+Headers = [
+    new SheetCellModel { Name = HeaderNames.Field1 },
+    new SheetCellModel { Name = HeaderNames.Field2 },
+    // ... manual list
+]
 
-// Use domain-specific builders for business logic (e.g., GigFormulaBuilder for gig formulas)
-header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(
-    keyRange, 
-    HeaderEnum.TOTAL.GetDescription(), 
-    payRange, 
-    tipsRange, 
-    bonusRange
-);
-
-// For complex custom formulas
-header.Formula = GoogleFormulaBuilder.BuildCustomFormula(
-    GoogleFormulas.ArrayFormulaBase,
-    ("{keyRange}", keyRange),
-    ("{header}", headerName),
-    ("{formula}", customBusinessLogic)
-);
+// NEW: Entity-driven generation
+Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<EntityType>()
 ```
 
-**Legacy Approach (Still Supported):**
+### Entity-Driven Sheet Ordering
 ```csharp
-// ArrayFormulaHelpers methods still work but are marked obsolete
-header.Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, header, range, sumRange);
+// OLD: Hardcoded array
+public static List<string> GetAllSheetNames() => [
+    SheetNames.Trips, SheetNames.Shifts, ...
+];
+
+// NEW: Entity-driven ordering
+public static List<string> GetAllSheetNames() =>
+    EntitySheetOrderHelper.GetSheetOrderFromEntity<SheetOrderEntity>();
 ```
 
-**Available Formula Systems:**
-
-**Generic Templates (`GoogleFormulas`):**
-- `GoogleFormulas.ArrayFormulaBase` - Foundation for all ARRAYFORMULA constructs
-- `GoogleFormulas.SumIfAggregation` - SUMIF aggregation patterns
-- `GoogleFormulas.SafeDivisionFormula` - Zero-safe division
-- `GoogleFormulas.SortedVLookup` - Generic lookup patterns
-- `GoogleFormulas.WeekdayNumber` - Generic date calculations
-
-**Gig-Specific Templates (`GigFormulas`):**
-- `GigFormulas.TotalIncomeFormula` - Pay + Tips + Bonus calculation
-- `GigFormulas.AmountPerTripFormula` - Revenue per trip analysis
-- `GigFormulas.WeekNumberWithYear` - Gig-specific date formatting
-- `GigFormulas.CurrentAmountLookup` - Weekday analysis patterns
-- `GigFormulas.MultipleFieldVisitLookup` - Address tracking logic
-
-### Action Types
-Use `ActionTypeEnum` for CRUD operations on entities:
-- `ActionTypeEnum.ADD`, `UPDATE`, `DELETE` stored in entity `Action` property
-- Mappers check action type to generate appropriate Google API requests
-
-## Development Workflows
-
-### Build & Test
-```powershell
-dotnet restore
-dotnet build --configuration Release
-dotnet test --configuration Release --collect:"XPlat Code Coverage"
-```
-
-### Integration Tests
-- Use real Google Sheets with test credentials stored in GitHub Secrets
-- Test categories: `[Category("Unit Tests")]`, `[Category("Integration Tests")]`
-- Helper classes in `Tests\Data\Helpers` for generating test data
-- Integration tests can provide better coverage than unit tests for some scenarios (e.g., testing with real Google API responses vs. demo data)
-
-### Package Structure
-Each domain package follows this structure:
-```
-RaptorSheets.{Domain}/
-├── Managers/GoogleSheetManager.cs    # Main API surface
-├── Entities/                         # Domain models
-├── Mappers/                         # Data transformation
-├── Helpers/                         # Domain-specific utilities
-├── Enums/SheetEnum.cs              # Sheet type definitions
-└── Constants/                      # Domain constants
-```
-
-## Critical Implementation Details
-
-### Sheet Creation Pattern
-Sheets are created with predefined layouts using `GenerateSheetsHelpers`:
+### Validation and Error Prevention
 ```csharp
-var batchRequest = GenerateSheetsHelpers.Generate(sheetNames);
-await _googleSheetService.BatchUpdateSpreadsheet(batchRequest);
+// Validates entity configuration at build/test time
+var columnErrors = EntitySheetConfigHelper.ValidateEntityForSheetGeneration<EntityType>();
+var sheetErrors = EntitySheetOrderHelper.ValidateEntitySheetMapping<SheetOrderEntity>(availableSheets);
 ```
 
-### Data Validation & Protection
-- Headers are automatically protected with `GenerateProtectedRangeForHeaderOrSheet`
-- Data validation uses `ValidationEnum` for dropdowns and constraints
-- Sheet styling includes alternating row colors and tab colors
+## Migration Guide
 
-### Message System
-All operations return structured messages using `MessageHelpers`:
-```csharp
-MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {sheetList}", MessageTypeEnum.GET_SHEETS)
-```
+### For New Sheets
+1. Add `ColumnOrder` attributes to entity properties
+2. **Add `SheetOrder` attribute to `SheetOrderEntity` if creating new sheet**
+3. Use `EntitySheetConfigHelper.GenerateHeadersFromEntity<T>()` in SheetsConfig
+4. Simplify mapper by removing manual ordering code
 
-Available message types include:
-- `CHECK_SHEET` - Header validation errors (tolerated during refactoring)
-- `API_ERROR` - Google API communication issues
-- `AUTHENTICATION` - Auth-related problems
-- `VALIDATION` - Data validation errors
+### For Existing Sheets
+1. Add `ColumnOrder` attributes to existing entity properties
+2. Update SheetsConfig to use entity-driven generation
+3. Remove manual header definitions from mappers
+4. Test to ensure column order matches expectations
 
-### Extension Method Usage
-Heavily uses extension methods for:
-- Enum descriptions: `SheetEnum.TRIPS.GetDescription()`
-- String conversions: `"2023-12-25".ToSerialDate()`
-- Collection helpers: `value.AddItems(count)`
+## Best Practices
 
-## Testing Patterns
+1. **Always use constants**: Reference `SheetsConfig.HeaderNames` in `ColumnOrder` attributes
+2. **Use constants for sheets**: Reference `SheetsConfig.SheetNames` in `SheetOrder` attributes  
+3. **Validate at build time**: Use helper validation methods in tests
+4. **Keep UpdateColumns()**: Still needed for formula column references
+5. **Document changes**: Update entity documentation when changing order
+6. **Flatten when needed**: Use flattened entities for precise column control
 
-### Unit Tests
-- Mappers: Test data transformation in both directions
-- Helpers: Test utility functions with edge cases
-- Use `Theory`/`InlineData` for parameterized tests
+## Summary
 
-### Integration Tests
-- End-to-end workflows in `GoogleSheetIntegrationWorkflow`
-- Real Google API operations (when credentials available)
-- Test helper classes generate realistic test data with known patterns
-- Can replace unit tests when they provide better coverage (e.g., testing with real spreadsheet data vs. demo JSON)
+The **dual entity-driven ordering system** provides:
 
-### Test Data Generation
-Use `TestGigHelpers.GenerateSelectiveDeletionTestData()` patterns for complex scenarios.
+- **Single source of truth** for both column and sheet order (in entities)
+- **Strong typing** through header and sheet constant references
+- **Precise column control** via flattened entity design
+- **Centralized sheet ordering** via `SheetOrderEntity`
+- **Simplified configuration** in SheetsConfig and mappers
+- **Validation** to ensure entity attributes reference valid headers/sheets
+- **Backward compatibility** with existing formula and configuration systems
 
-## Common Gotchas
-
-1. **Sheet Names**: Use enum descriptions (`SheetEnum.TRIPS.GetDescription()`) not enum names
-2. **Range Formatting**: Always use `GoogleConfig.Range` for data ranges, `GoogleConfig.HeaderRange` for headers
-3. **Null Handling**: Check for null Google API responses before processing
-4. **Row IDs**: Entity `RowId` maps to Google Sheets row numbers (1-indexed)
-5. **Missing Sheets**: Use `HandleMissingSheets()` pattern to auto-create missing sheets
-6. **Header Indexing**: Always call `sheet.Headers.UpdateColumns()` after modifying Headers collection
-7. **Formula Duplication**: Use `GoogleFormulaBuilder` to avoid repeating complex formula strings across mappers
-
-## When Adding New Features
-
-### New Mapper Implementation
-```csharp
-public static SheetModel GetSheet()
-{
-    var sheet = SheetsConfig.YourSheet; // Start with config
-    sheet.Headers.UpdateColumns();      // Essential: Set column indexes
-    
-    // Use helper methods or configure headers individually
-    sheet.Headers.ForEach(header => {
-        var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
-        switch (headerEnum) {
-            case HeaderEnum.TOTAL:
-                header.Formula = GoogleFormulaBuilder.BuildArrayFormulaTotal(
-                    keyRange, header.Name, payRange, tipsRange, bonusRange
-                );
-                header.Format = FormatEnum.ACCOUNTING;
-                break;
-        }
-    });
-    
-    return sheet;
-}
-```
-
-### New Google Formulas
-When adding complex formulas:
-1. **Add template to `GoogleFormulas`** with placeholder tokens
-2. **Create builder method in `GoogleFormulaBuilder`** for type safety
-3. **Use builder in mappers** instead of string concatenation
-4. **Add unit tests** for individual formula templates
-
-### Migration from Legacy Formulas
-When encountering obsolete warnings:
-```csharp
-// Old approach - will show obsolete warnings
-var formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, header, range, sumRange);
-
-// New approach - preferred
-var formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, header, range, sumRange);
-```
-
-1. **New Entity**: Create entity class, mapper with `MapFromRangeData` and `GetSheet` methods
-2. **New Sheet Type**: Add to appropriate `SheetEnum`, update manager switch statements  
-3. **New Domain**: Follow existing package structure, implement `IGoogleSheetManager` interface
-4. **API Changes**: Update both directions - entity to Google API and Google API to entity
-
-## Formula Management Best Practices
-
-### Proper Separation of Concerns
-
-**Use Generic Builders for Common Patterns:**
-```csharp
-// Generic Google Sheets patterns (any domain can use)
-header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-    keyRange, headerName, lookupRange, sumRange
-);
-header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(
-    keyRange, headerName, lookupRange
-);
-header.Formula = GoogleFormulaBuilder.BuildSafeDivision(numerator, denominator);
-```
-
-**Use Domain Builders for Business Logic:**
-```csharp
-// Gig-specific business logic formulas
-header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(
-    keyRange, headerName, payRange, tipsRange, bonusRange
-);
-header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(
-    keyRange, headerName, totalRange, tripsRange
-);
-header.Formula = GigFormulaBuilder.BuildArrayFormulaCurrentAmount(
-    keyRange, headerName, dayRange, dailySheet, dateColumn, totalColumn, totalIndex
-);
-```
-
-### Formula Organization
-
-**Core Package (`GoogleFormulas` / `GoogleFormulaBuilder`):**
-- Generic ARRAYFORMULA patterns
-- Common aggregation functions (SUMIF, COUNTIF, VLOOKUP)
-- Generic date/time calculations
-- Safe division and error handling patterns
-
-**Domain Packages (`GigFormulas` / `GigFormulaBuilder`, etc.):**
-- Business logic specific to that domain
-- Complex calculations unique to the domain
-- Domain-specific date/time formatting
-- Multi-field lookups with domain context
-
-### Migration Pattern
-
-**Don't Do This (Avoid):**
-```csharp
-// Hard to maintain, test, or debug
-header.Formula = $"=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\",true,SUMIF({range},{keyRange},{sumRange})))";
-```
-
-**Do This (Recommended):**
-```csharp
-// For generic patterns - use Core builders
-header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, header, range, sumRange);
-
-// For domain-specific logic - use domain builders  
-header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(keyRange, header, payRange, tipsRange, bonusRange);
-```
-
-### Legacy Support
-```csharp
-// Legacy ArrayFormulaHelpers still work but show obsolete warnings
-header.Formula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, header, range, sumRange);
-// → Suggests using GoogleFormulaBuilder.BuildArrayFormulaSumIf instead
-
-header.Formula = ArrayFormulaHelpers.ArrayFormulaTotal(keyRange, header, payRange, tipsRange, bonusRange);
-// → Suggests using GigFormulaBuilder.BuildArrayFormulaTotal instead
-```
-
-The separation ensures that generic Google Sheets functionality stays in Core while domain-specific business logic stays in the appropriate domain packages, making the code more maintainable and testable.
+This approach eliminates manual order management while maintaining the explicit control that complex Google Sheets formulas require. The system significantly improves maintainability and reduces the chance of ordering mismatches.

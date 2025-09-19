@@ -26,6 +26,7 @@ public interface IGoogleSheetManager
     public Task<List<PropertyEntity>> GetSheetProperties();
     public Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
     public Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null); // New method for testing
+    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets); // New method for simplified verification
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -49,30 +50,25 @@ public class GoogleSheetManager : IGoogleSheetManager
         // Pull out all changes into a single object to iterate through.
         foreach (var sheet in sheets)
         {
-            // Normalize sheet name for consistent comparison
-            var normalizedSheetName = sheet.ToUpperInvariant();
-
-            // Use constants for switch comparison
-            switch (normalizedSheetName)
+            switch (sheet)
             {
-                case SheetsConfig.SheetUtilities.UpperCase.Expenses:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
                     if (sheetEntity.Expenses.Count > 0)
                         changes.Add(sheet, sheetEntity.Expenses);
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Setup:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
                     if (sheetEntity.Setup.Count > 0)
                         changes.Add(sheet, sheetEntity.Setup);
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Shifts:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                     if (sheetEntity.Shifts.Count > 0)
                         changes.Add(sheet, sheetEntity.Shifts);
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Trips:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
                     if (sheetEntity.Trips.Count > 0)
                         changes.Add(sheet, sheetEntity.Trips);
                     break;
                 default:
-                    // Unsupported sheet.
                     sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
                     break;
             }
@@ -92,25 +88,21 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         foreach (var change in changes)
         {
-            // Normalize sheet name for consistent comparison
-            var normalizedChangeKey = change.Key.ToUpperInvariant();
-
-            // Use constants for comparison
-            switch (normalizedChangeKey)
+            switch (change.Key)
             {
-                case SheetsConfig.SheetUtilities.UpperCase.Expenses:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
                     var expenseProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], expenseProperties));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Setup:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
                     var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Shifts:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                     var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Trips:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
                     var tripProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
                     batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripProperties));
                     break;
@@ -189,55 +181,51 @@ public class GoogleSheetManager : IGoogleSheetManager
             var sheetName = sheet.Properties.Title;
             var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
 
-            // Normalize sheet name for consistent comparison
-            var normalizedSheetName = sheetName.ToUpperInvariant();
-
-            // Use constants for comparison
-            switch (normalizedSheetName)
+            switch (sheetName)
             {
-                case SheetsConfig.SheetUtilities.UpperCase.Addresses:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Daily:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Expenses:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ExpenseMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Monthly:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Names:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Places:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Regions:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Services:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Setup:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, SetupMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Shifts:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Trips:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Types:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Weekdays:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Weekly:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
                     break;
-                case SheetsConfig.SheetUtilities.UpperCase.Yearly:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
                     break;
                 default:
@@ -426,27 +414,55 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets) // TODO: Look into moving this to a common area
     {
-        var ranges = new List<string>();
         var properties = new List<PropertyEntity>();
-
-        sheets.ForEach(sheet => ranges.Add($"{sheet}!{GoogleConfig.HeaderRange}")); // Get headers for each sheet.
-        sheets.ForEach(sheet => ranges.Add($"{sheet}!{GoogleConfig.RowRange}")); // Get max row for each sheet.
-
-        var sheetInfo = await _googleSheetService.GetSheetInfo(ranges);
+        var sheetInfo = await _googleSheetService.GetSheetInfo(sheets);
 
         foreach (var sheet in sheets)
         {
             var property = new PropertyEntity();
             var sheetProperties = sheetInfo?.Sheets.FirstOrDefault(x => x.Properties.Title == sheet);
-            var sheetHeaderValues = string.Join(",", sheetProperties?.Data?[0]?.RowData?[0]?.Values?.Where(x => x.FormattedValue != null).Select(x => x.FormattedValue).ToList() ?? []);
-            var maxRow = (sheetProperties?.Data?[1]?.RowData ?? []).Count;
-            var maxRowValue = (sheetProperties?.Data?[1]?.RowData.Where(x => x.Values?[0]?.FormattedValue != null).Select(x => x.Values?[0]?.FormattedValue).ToList() ?? []).Count;
+
+            var sheetHeaderValues = "";
+            int maxRow = 0;
+            int maxRowValue = 0;
             var sheetId = sheetProperties?.Properties.SheetId.ToString() ?? "";
+
+            if (sheetProperties != null)
+            {
+                // Get the total number of rows in the sheet (default 1000, or as set in the sheet)
+                maxRow = sheetProperties.Properties.GridProperties.RowCount ?? 0;
+
+                // Get header values from the first row
+                if (sheetProperties.Data != null && sheetProperties.Data.Count > 0)
+                {
+                    var headerData = sheetProperties.Data[0];
+                    if (headerData?.RowData != null && headerData.RowData.Count > 0 && headerData.RowData[0]?.Values != null)
+                    {
+                        sheetHeaderValues = string.Join(",", headerData.RowData[0].Values
+                            .Where(x => x.FormattedValue != null)
+                            .Select(x => x.FormattedValue)
+                            .ToList());
+                    }
+
+                    // Find the last row with a value in the first column (excluding header)
+                    var rowData = headerData.RowData;
+                    for (int i = rowData.Count - 1; i > 0; i--) // start from the end, skip header (i=0)
+                    {
+                        var cell = rowData[i]?.Values?.FirstOrDefault();
+                        if (cell != null && !string.IsNullOrEmpty(cell.FormattedValue))
+                        {
+                            maxRowValue = i + 1; // +1 because row index is zero-based
+                            break;
+                        }
+                    }
+                    if (maxRowValue == 0 && rowData.Count > 1)
+                        maxRowValue = 1; // Only header exists
+                }
+            }
 
             property.Id = sheetId;
             property.Name = sheet;
-
-            property.Attributes.Add(PropertyEnum.HEADERS.GetDescription(),sheetHeaderValues);
+            property.Attributes.Add(PropertyEnum.HEADERS.GetDescription(), sheetHeaderValues);
             property.Attributes.Add(PropertyEnum.MAX_ROW.GetDescription(), maxRow.ToString());
             property.Attributes.Add(PropertyEnum.MAX_ROW_VALUE.GetDescription(), maxRowValue.ToString());
 
@@ -481,5 +497,10 @@ public class GoogleSheetManager : IGoogleSheetManager
     public async Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null)
     {
         return await _googleSheetService.GetSheetInfo(ranges);
+    }
+
+    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets)
+    {
+        return await _googleSheetService.GetBatchData(sheets);
     }
 }

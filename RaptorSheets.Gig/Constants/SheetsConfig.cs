@@ -1,5 +1,7 @@
 ﻿using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Entities;
 using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Gig.Constants;
@@ -115,13 +117,7 @@ public static class SheetsConfig
     public static class SheetUtilities
     {
         public static List<string> GetAllSheetNames() =>
-        [
-            SheetNames.Addresses, SheetNames.Daily, SheetNames.Expenses,
-            SheetNames.Monthly, SheetNames.Names, SheetNames.Places,
-            SheetNames.Regions, SheetNames.Services, SheetNames.Setup,
-            SheetNames.Shifts, SheetNames.Trips, SheetNames.Types,
-            SheetNames.Weekdays, SheetNames.Weekly, SheetNames.Yearly
-        ];
+            EntitySheetOrderHelper.GetSheetOrderFromEntity<SheetEntity>();
         
         public static bool IsValidSheetName(string name) =>
             GetAllSheetNames().Any(sheet => string.Equals(sheet, name, StringComparison.OrdinalIgnoreCase));
@@ -131,21 +127,21 @@ public static class SheetsConfig
         /// </summary>
         public static class UpperCase
         {
-            public const string Addresses = "ADDRESSES";
-            public const string Daily = "DAILY";
-            public const string Expenses = "EXPENSES";
-            public const string Monthly = "MONTHLY";
-            public const string Names = "NAMES";
-            public const string Places = "PLACES";
-            public const string Regions = "REGIONS";
-            public const string Services = "SERVICES";
-            public const string Setup = "SETUP";
-            public const string Shifts = "SHIFTS";
-            public const string Trips = "TRIPS";
-            public const string Types = "TYPES";
-            public const string Weekdays = "WEEKDAYS";
-            public const string Weekly = "WEEKLY";
-            public const string Yearly = "YEARLY";
+            public static string Addresses => SheetNames.Addresses.ToUpperInvariant();
+            public static string Daily => SheetNames.Daily.ToUpperInvariant();
+            public static string Expenses => SheetNames.Expenses.ToUpperInvariant();
+            public static string Monthly => SheetNames.Monthly.ToUpperInvariant();
+            public static string Names => SheetNames.Names.ToUpperInvariant();
+            public static string Places => SheetNames.Places.ToUpperInvariant();
+            public static string Regions => SheetNames.Regions.ToUpperInvariant();
+            public static string Services => SheetNames.Services.ToUpperInvariant();
+            public static string Setup => SheetNames.Setup.ToUpperInvariant();
+            public static string Shifts => SheetNames.Shifts.ToUpperInvariant();
+            public static string Trips => SheetNames.Trips.ToUpperInvariant();
+            public static string Types => SheetNames.Types.ToUpperInvariant();
+            public static string Weekdays => SheetNames.Weekdays.ToUpperInvariant();
+            public static string Weekly => SheetNames.Weekly.ToUpperInvariant();
+            public static string Yearly => SheetNames.Yearly.ToUpperInvariant();
         }
     }
 
@@ -157,10 +153,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Address },
-            .. CommonTripSheetHeaders
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<AddressEntity>()
     };
 
     public static SheetModel DailySheet => new()
@@ -171,18 +164,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Date },
-            new SheetCellModel { Name = HeaderNames.Trips },
-            .. CommonIncomeHeaders,
-            .. CommonTravelHeaders,
-            new SheetCellModel { Name = HeaderNames.TimeTotal },
-            new SheetCellModel { Name = HeaderNames.AmountPerTime },
-            new SheetCellModel { Name = HeaderNames.Day },
-            new SheetCellModel { Name = HeaderNames.Weekday },
-            new SheetCellModel { Name = HeaderNames.Week },
-            new SheetCellModel { Name = HeaderNames.Month }
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<DailyEntity>()
     };
 
     public static SheetModel ExpenseSheet => new()
@@ -192,13 +174,7 @@ public static class SheetsConfig
         CellColor = ColorEnum.LIGHT_RED,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Date },
-            new SheetCellModel { Name = HeaderNames.Name },
-            new SheetCellModel { Name = HeaderNames.Description },
-            new SheetCellModel { Name = HeaderNames.Amount },
-            new SheetCellModel { Name = HeaderNames.Category }
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ExpenseEntity>()
     };
 
     public static SheetModel MonthlySheet => new()
@@ -209,16 +185,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Month },
-            new SheetCellModel { Name = HeaderNames.Trips },
-            new SheetCellModel { Name = HeaderNames.Days },
-            .. CommonIncomeHeaders,
-            .. CommonTravelHeaders,
-            .. CommonPeriodicHeaders,
-            new SheetCellModel { Name = HeaderNames.Number },
-            new SheetCellModel { Name = HeaderNames.Year }
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<MonthlyEntity>()
     };
 
     public static SheetModel NameSheet => new()
@@ -229,10 +196,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Name },
-            .. CommonTripSheetHeaders
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<NameEntity>()
     };
 
     public static SheetModel PlaceSheet => new()
@@ -243,10 +207,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Place },
-            .. CommonTripSheetHeaders
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PlaceEntity>()
     };
 
     public static SheetModel RegionSheet => new()
@@ -257,10 +218,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Region },
-            .. CommonTripSheetHeaders
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<RegionEntity>()
     };
 
     public static SheetModel ServiceSheet => new()
@@ -271,10 +229,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Service },
-            .. CommonTripSheetHeaders
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ServiceEntity>()
     };
 
     public static SheetModel ShiftSheet => new()
@@ -285,41 +240,7 @@ public static class SheetsConfig
         FontColor = ColorEnum.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Date },
-            new SheetCellModel { Name = HeaderNames.TimeStart },
-            new SheetCellModel { Name = HeaderNames.TimeEnd },
-            new SheetCellModel { Name = HeaderNames.Service },
-            new SheetCellModel { Name = HeaderNames.Number },
-            new SheetCellModel { Name = HeaderNames.TimeActive },
-            new SheetCellModel { Name = HeaderNames.TimeTotal },
-            new SheetCellModel { Name = HeaderNames.TimeOmit },
-            new SheetCellModel { Name = HeaderNames.Trips },
-            new SheetCellModel { Name = HeaderNames.Pay },
-            new SheetCellModel { Name = HeaderNames.Tips },
-            new SheetCellModel { Name = HeaderNames.Bonus },
-            new SheetCellModel { Name = HeaderNames.Cash },
-            new SheetCellModel { Name = HeaderNames.Distance },
-            new SheetCellModel { Name = HeaderNames.Region },
-            new SheetCellModel { Name = HeaderNames.Note },
-            new SheetCellModel { Name = HeaderNames.Key },
-            new SheetCellModel { Name = HeaderNames.TotalTimeActive },
-            new SheetCellModel { Name = HeaderNames.TotalTime },
-            new SheetCellModel { Name = HeaderNames.TotalTrips },
-            new SheetCellModel { Name = HeaderNames.TotalPay },
-            new SheetCellModel { Name = HeaderNames.TotalTips },
-            new SheetCellModel { Name = HeaderNames.TotalBonus },
-            new SheetCellModel { Name = HeaderNames.TotalGrand },
-            new SheetCellModel { Name = HeaderNames.TotalCash },
-            new SheetCellModel { Name = HeaderNames.AmountPerTrip },
-            new SheetCellModel { Name = HeaderNames.AmountPerTime },
-            new SheetCellModel { Name = HeaderNames.TotalDistance },
-            new SheetCellModel { Name = HeaderNames.AmountPerDistance },
-            new SheetCellModel { Name = HeaderNames.TripsPerHour },
-            new SheetCellModel { Name = HeaderNames.Day },
-            new SheetCellModel { Name = HeaderNames.Month },
-            new SheetCellModel { Name = HeaderNames.Year }
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ShiftEntity>()
     };
 
     public static SheetModel TripSheet => new()
@@ -329,34 +250,7 @@ public static class SheetsConfig
         CellColor = ColorEnum.LIGHT_YELLOW,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Date },
-            new SheetCellModel { Name = HeaderNames.Service },
-            new SheetCellModel { Name = HeaderNames.Number },
-            new SheetCellModel { Name = HeaderNames.Exclude },
-            new SheetCellModel { Name = HeaderNames.Type },
-            new SheetCellModel { Name = HeaderNames.Place },
-            new SheetCellModel { Name = HeaderNames.Pickup },
-            new SheetCellModel { Name = HeaderNames.Dropoff },
-            new SheetCellModel { Name = HeaderNames.Duration },
-            .. CommonIncomeHeaders,
-            new SheetCellModel { Name = HeaderNames.OdometerStart },
-            new SheetCellModel { Name = HeaderNames.OdometerEnd },
-            new SheetCellModel { Name = HeaderNames.Distance },
-            new SheetCellModel { Name = HeaderNames.Name },
-            new SheetCellModel { Name = HeaderNames.AddressStart },
-            new SheetCellModel { Name = HeaderNames.AddressEnd },
-            new SheetCellModel { Name = HeaderNames.UnitEnd },
-            new SheetCellModel { Name = HeaderNames.OrderNumber },
-            new SheetCellModel { Name = HeaderNames.Region },
-            new SheetCellModel { Name = HeaderNames.Note },
-            new SheetCellModel { Name = HeaderNames.Key },
-            new SheetCellModel { Name = HeaderNames.Day },
-            new SheetCellModel { Name = HeaderNames.Month },
-            new SheetCellModel { Name = HeaderNames.Year },
-            new SheetCellModel { Name = HeaderNames.AmountPerTime },
-            new SheetCellModel { Name = HeaderNames.AmountPerDistance }
-       ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TripEntity>()
     };
 
     public static SheetModel TypeSheet => new()
@@ -367,10 +261,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Type },
-            .. CommonTripSheetHeaders
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TypeEntity>()
     };
 
     public static SheetModel WeekdaySheet => new()
@@ -381,20 +272,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Day },
-            new SheetCellModel { Name = HeaderNames.Weekday },
-            new SheetCellModel { Name = HeaderNames.Trips },
-            new SheetCellModel { Name = HeaderNames.Days },
-            .. CommonIncomeHeaders,
-            .. CommonTravelHeaders,
-            new SheetCellModel { Name = HeaderNames.TimeTotal },
-            new SheetCellModel { Name = HeaderNames.AmountPerTime },
-            new SheetCellModel { Name = HeaderNames.AmountPerDay },
-            new SheetCellModel { Name = HeaderNames.AmountCurrent },
-            new SheetCellModel { Name = HeaderNames.AmountPrevious },
-            new SheetCellModel { Name = HeaderNames.AmountPerPreviousDay }
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<WeekdayEntity>()
     };
 
     public static SheetModel WeeklySheet => new()
@@ -405,18 +283,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Week },
-            new SheetCellModel { Name = HeaderNames.Trips },
-            new SheetCellModel { Name = HeaderNames.Days },
-            .. CommonIncomeHeaders,
-            .. CommonTravelHeaders,
-            .. CommonPeriodicHeaders,
-            new SheetCellModel { Name = HeaderNames.Number },
-            new SheetCellModel { Name = HeaderNames.Year },
-            new SheetCellModel { Name = HeaderNames.DateBegin },
-            new SheetCellModel { Name = HeaderNames.DateEnd }
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<WeeklyEntity>()
     };
 
     public static SheetModel YearlySheet => new()
@@ -427,43 +294,6 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = HeaderNames.Year },
-            new SheetCellModel { Name = HeaderNames.Trips },
-            new SheetCellModel { Name = HeaderNames.Days },
-            .. CommonIncomeHeaders,
-            .. CommonTravelHeaders,
-            .. CommonPeriodicHeaders
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<YearlyEntity>()
     };
-
-    private static List<SheetCellModel> CommonTripSheetHeaders =>
-    [
-        new SheetCellModel { Name = HeaderNames.Trips },
-        .. CommonIncomeHeaders,
-        .. CommonTravelHeaders,
-        new SheetCellModel { Name = HeaderNames.VisitFirst },
-        new SheetCellModel { Name = HeaderNames.VisitLast }
-    ];
-
-    private static List<SheetCellModel> CommonIncomeHeaders => [
-        new SheetCellModel { Name = HeaderNames.Pay },
-        new SheetCellModel { Name = HeaderNames.Tips },
-        new SheetCellModel { Name = HeaderNames.Bonus },
-        new SheetCellModel { Name = HeaderNames.Total },
-        new SheetCellModel { Name = HeaderNames.Cash }
-    ];
-
-    private static List<SheetCellModel> CommonPeriodicHeaders => [
-        new SheetCellModel { Name = HeaderNames.TimeTotal },
-        new SheetCellModel { Name = HeaderNames.AmountPerTime },
-        new SheetCellModel { Name = HeaderNames.AmountPerDay },
-        new SheetCellModel { Name = HeaderNames.Average }
-    ];
-
-    private static List<SheetCellModel> CommonTravelHeaders => [
-        new SheetCellModel { Name = HeaderNames.AmountPerTrip },
-        new SheetCellModel { Name = HeaderNames.Distance },
-        new SheetCellModel { Name = HeaderNames.AmountPerDistance }
-    ];
 }

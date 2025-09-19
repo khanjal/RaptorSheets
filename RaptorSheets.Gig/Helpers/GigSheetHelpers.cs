@@ -54,49 +54,49 @@ public static class GigSheetHelpers
 
             switch (name)
             {
-                case SheetsConfig.SheetNames.Addresses:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(AddressMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Daily:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(DailyMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Expenses:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(ExpenseMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Monthly:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(MonthlyMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Names:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(NameMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Places:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(PlaceMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Regions:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(RegionMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Setup:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(SetupMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Services:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(ServiceMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Shifts:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(ShiftMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Trips:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(TripMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Types:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(TypeMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Weekdays:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(WeekdayMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Weekly:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(WeeklyMapper.GetSheet());
                     break;
-                case SheetsConfig.SheetNames.Yearly:
+                case var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(YearlyMapper.GetSheet());
                     break;
             }
@@ -198,68 +198,65 @@ public static class GigSheetHelpers
 
         var headerValues = values.First();
 
-        // Normalize sheet name for consistent comparison
-        var normalizedSheetName = sheetName.ToUpperInvariant();
-
-        switch (normalizedSheetName)
+        switch (sheetName)
         {
-            case SheetsConfig.SheetUtilities.UpperCase.Addresses:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, AddressMapper.GetSheet()));
                 sheetEntity.Addresses = AddressMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Daily:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, DailyMapper.GetSheet()));
                 sheetEntity.Daily = DailyMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Expenses:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ExpenseMapper.GetSheet()));
                 sheetEntity.Expenses = ExpenseMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Monthly:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, MonthlyMapper.GetSheet()));
                 sheetEntity.Monthly = MonthlyMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Names:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, NameMapper.GetSheet()));
                 sheetEntity.Names = NameMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Places:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, PlaceMapper.GetSheet()));
                 sheetEntity.Places = PlaceMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Regions:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, RegionMapper.GetSheet()));
                 sheetEntity.Regions = RegionMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Services:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ServiceMapper.GetSheet()));
                 sheetEntity.Services = ServiceMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Setup:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, SetupMapper.GetSheet()));
                 sheetEntity.Setup = SetupMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Shifts:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ShiftMapper.GetSheet()));
                 sheetEntity.Shifts = ShiftMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Trips:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TripMapper.GetSheet()));
                 sheetEntity.Trips = TripMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Types:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TypeMapper.GetSheet()));
                 sheetEntity.Types = TypeMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Weekdays:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, WeekdayMapper.GetSheet()));
                 sheetEntity.Weekdays = WeekdayMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Weekly:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, WeeklyMapper.GetSheet()));
                 sheetEntity.Weekly = WeeklyMapper.MapFromRangeData(values);
                 break;
-            case SheetsConfig.SheetUtilities.UpperCase.Yearly:
+            case var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, YearlyMapper.GetSheet()));
                 sheetEntity.Yearly = YearlyMapper.MapFromRangeData(values);
                 break;

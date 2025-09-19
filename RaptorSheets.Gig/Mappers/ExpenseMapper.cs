@@ -6,6 +6,7 @@ using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Helpers;
 
 namespace RaptorSheets.Gig.Mappers;
 
@@ -149,8 +150,8 @@ public static class ExpenseMapper
 
     public static SheetModel GetSheet()
     {
-        // Use the new configuration helper for consistency and cleaner code
-        return SheetConfigurationHelpers.ConfigureSheet(SheetsConfig.ExpenseSheet, (header, index) =>
+        // Use the new Gig-specific configuration helper for type-safe header handling
+        return GigSheetConfigurationHelpers.ConfigureSheet(SheetsConfig.ExpenseSheet, (header, index) =>
         {
             var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
             
@@ -167,8 +168,8 @@ public static class ExpenseMapper
                     header.Validation = ValidationEnum.RANGE_SELF.GetDescription();
                     break;
                 default:
-                    // Apply common formatting patterns automatically
-                    SheetConfigurationHelpers.ApplyCommonFormats(header, header.Name);
+                    // Apply common formatting patterns automatically using Gig-specific logic
+                    GigSheetConfigurationHelpers.ApplyCommonFormats(header, header.Name);
                     break;
             }
         });
