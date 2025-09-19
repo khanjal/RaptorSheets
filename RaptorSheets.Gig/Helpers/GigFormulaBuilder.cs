@@ -289,7 +289,6 @@ public static class GigFormulaBuilder
     /// </summary>
     public static string BuildArrayFormulaShiftKey(string keyRange, string header, string dateRange, string serviceRange, string numberRange)
     {
-        // The GigFormulas.ShiftKeyGeneration already includes ARRAYFORMULA, so we don't wrap it
         return "=ARRAYFORMULA(" + GigFormulas.ShiftKeyGeneration
             .Replace("{keyRange}", keyRange)
             .Replace("{header}", header)
