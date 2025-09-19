@@ -36,38 +36,27 @@ public static class EntityColumnOrderHelper
         foreach (var property in allProperties)
         {
             var columnOrderAttr = property.GetCustomAttribute<ColumnOrderAttribute>();
-            if (columnOrderAttr != null && !processedHeaders.Contains(columnOrderAttr.HeaderName))
+            if (columnOrderAttr != null && processedHeaders.Add(columnOrderAttr.HeaderName))
             {
                 columnOrder.Add(columnOrderAttr.HeaderName);
-                processedHeaders.Add(columnOrderAttr.HeaderName);
             }
         }
 
-        // Add any additional headers that aren't already in the entity order
-        if (additionalHeaders != null)
+        // Local function to add headers if not already present
+        void AddHeaders(IEnumerable<SheetCellModel>? headers)
         {
-            foreach (var header in additionalHeaders)
+            if (headers == null) return;
+            foreach (var header in headers)
             {
-                if (!processedHeaders.Contains(header.Name))
+                if (processedHeaders.Add(header.Name))
                 {
                     columnOrder.Add(header.Name);
-                    processedHeaders.Add(header.Name);
                 }
             }
         }
 
-        // Add any sheet headers that aren't already in the entity order
-        if (sheetHeaders != null)
-        {
-            foreach (var header in sheetHeaders)
-            {
-                if (!processedHeaders.Contains(header.Name))
-                {
-                    columnOrder.Add(header.Name);
-                    processedHeaders.Add(header.Name);
-                }
-            }
-        }
+        AddHeaders(additionalHeaders);
+        AddHeaders(sheetHeaders);
 
         return columnOrder;
     }
@@ -110,19 +99,16 @@ public static class EntityColumnOrderHelper
         var errors = new List<string>();
 
         var allProperties = GetPropertiesInInheritanceOrder(entityType);
-        
+
         foreach (var property in allProperties)
         {
             var columnOrderAttr = property.GetCustomAttribute<ColumnOrderAttribute>();
-            if (columnOrderAttr != null)
+            if (columnOrderAttr != null && !availableHeadersSet.Contains(columnOrderAttr.HeaderName))
             {
-                if (!availableHeadersSet.Contains(columnOrderAttr.HeaderName))
-                {
-                    errors.Add($"Property '{property.Name}' in entity '{entityType.Name}' " +
-                              $"references header '{columnOrderAttr.HeaderName}' which is not available in " +
-                              $"SheetsConfig.HeaderNames. Please add this header to the constants or " +
-                              $"update the ColumnOrder attribute.");
-                }
+                errors.Add($"Property '{property.Name}' in entity '{entityType.Name}' " +
+                            $"references header '{columnOrderAttr.HeaderName}' which is not available in " +
+                            $"SheetsConfig.HeaderNames. Please add this header to the constants or " +
+                            $"update the ColumnOrder attribute.");
             }
         }
 

@@ -11,8 +11,10 @@ public interface IGoogleSheetService
     public Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range);
     public Task<BatchUpdateValuesResponse?> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest);
     public Task<BatchUpdateSpreadsheetResponse?> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
+    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
     public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range);
     public Task<ValueRange?> GetSheetData(string sheet);
+    public Task<Spreadsheet?> GetSheetInfo();
     public Task<Spreadsheet?> GetSheetInfo(List<string>? ranges);
     public Task<UpdateValuesResponse?> UpdateData(ValueRange valueRange, string range);
 }
@@ -20,7 +22,7 @@ public interface IGoogleSheetService
 [ExcludeFromCodeCoverage]
 public class GoogleSheetService : IGoogleSheetService
 {
-    private SheetServiceWrapper _sheetService;
+    private readonly SheetServiceWrapper _sheetService;
     private readonly string _range = GoogleConfig.Range;
 
 
@@ -79,7 +81,12 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range = "")
+    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets)
+    {
+        return await GetBatchData(sheets, null);
+    }
+
+    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range)
     {
         if (sheets == null || sheets.Count < 1)
         {
@@ -119,7 +126,12 @@ public class GoogleSheetService : IGoogleSheetService
         }
     }
 
-    public async Task<Spreadsheet?> GetSheetInfo(List<string>? ranges = null)
+    public async Task<Spreadsheet?> GetSheetInfo()
+    {
+        return await GetSheetInfo(null);
+    }
+
+    public async Task<Spreadsheet?> GetSheetInfo(List<string>? ranges)
     {
         try
         {

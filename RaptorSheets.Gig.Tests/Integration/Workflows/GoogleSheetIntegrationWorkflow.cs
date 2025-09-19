@@ -1244,18 +1244,5 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
             System.Diagnostics.Debug.WriteLine($"{operation} result: {message.Level} - {message.Message}");
         }
     }
-
-    private void ValidateOperationMessages(List<MessageEntity> messages, int expectedCount)
-    {
-        if (expectedCount <= 0) return; // Skip validation if no specific count expected
-
-        Assert.Equal(expectedCount, messages.Count);
-        foreach (var message in messages)
-        {
-            Assert.Equal(MessageLevelEnum.INFO.GetDescription(), message.Level);
-            Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), message.Type);
-            Assert.True(message.Time >= _testStartTime);
-        }
-    }
     #endregion
 }

@@ -19,7 +19,6 @@ public static class SheetHelpers
             if (!spreadsheetSheets.Contains(name))
             {
                 missingSheets.Add(name);
-                continue;
             }
         }
 
@@ -34,7 +33,6 @@ public static class SheetHelpers
         foreach (var sheet in sheets)
         {
             messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find sheet {sheet}", MessageTypeEnum.CHECK_SHEET));
-            continue;
         }
 
         if (messages.Count > 0)
@@ -80,12 +78,9 @@ public static class SheetHelpers
             var values = sheetData.Data[0]?.RowData
                 .Select(x => (IList<object>)x.Values.Select(y => (object)y.FormattedValue).ToList())
                 .Where(row => row.Count > 0 && row[0] != null && !string.IsNullOrEmpty(row[0].ToString()))
-                .ToList() ?? [];
+                .ToList();
 
-            if (values != null)
-            {
-                sheetValues.Add(sheetData.Properties.Title, values);
-            }
+            sheetValues.Add(sheetData.Properties.Title, values ?? []);
         }
         return sheetValues;
     }

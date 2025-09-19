@@ -17,69 +17,113 @@ public static class MapperFormulaHelper
     /// </summary>
     public static void ConfigureCommonAggregationHeaders(SheetModel sheet, string keyRange, SheetModel sourceSheet, string sourceKeyRange, bool useShiftTotals = true)
     {
-        sheet.Headers.ForEach(header =>
+        void SetHeaderFormulaAndFormat(SheetCellModel header, string formula, FormatEnum format)
+        {
+            header.Formula = formula;
+            header.Format = format;
+        }
+
+        string GetRange(HeaderEnum baseEnum, HeaderEnum totalEnum)
+            => useShiftTotals ? sourceSheet.GetRange(totalEnum.GetDescription()) : sourceSheet.GetRange(baseEnum.GetDescription());
+
+        foreach (var header in sheet.Headers)
         {
             var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
-            
             switch (headerEnum)
             {
                 case HeaderEnum.PAY:
-                    var payRange = useShiftTotals ? sourceSheet.GetRange(HeaderEnum.TOTAL_PAY.GetDescription()) : sourceSheet.GetRange(HeaderEnum.PAY.GetDescription());
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), sourceKeyRange, payRange);
-                    header.Format = FormatEnum.ACCOUNTING;
+                    SetHeaderFormulaAndFormat(
+                        header,
+                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                            keyRange, HeaderEnum.PAY.GetDescription(), sourceKeyRange, GetRange(HeaderEnum.PAY, HeaderEnum.TOTAL_PAY)),
+                        FormatEnum.ACCOUNTING);
                     break;
+
                 case HeaderEnum.TIPS:
-                case HeaderEnum.TIP: // Handle both singular and plural tip headers
-                    var tipsRange = useShiftTotals ? sourceSheet.GetRange(HeaderEnum.TOTAL_TIPS.GetDescription()) : sourceSheet.GetRange(HeaderEnum.TIPS.GetDescription());
-                    var headerName = headerEnum == HeaderEnum.TIP ? HeaderEnum.TIP.GetDescription() : HeaderEnum.TIPS.GetDescription();
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, headerName, sourceKeyRange, tipsRange);
-                    header.Format = FormatEnum.ACCOUNTING;
+                case HeaderEnum.TIP:
+                    var tipsRange = useShiftTotals
+                        ? sourceSheet.GetRange(HeaderEnum.TOTAL_TIPS.GetDescription())
+                        : sourceSheet.GetRange(HeaderEnum.TIPS.GetDescription());
+                    var headerName = headerEnum == HeaderEnum.TIP
+                        ? HeaderEnum.TIP.GetDescription()
+                        : HeaderEnum.TIPS.GetDescription();
+                    SetHeaderFormulaAndFormat(
+                        header,
+                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, headerName, sourceKeyRange, tipsRange),
+                        FormatEnum.ACCOUNTING);
                     break;
+
                 case HeaderEnum.BONUS:
-                    var bonusRange = useShiftTotals ? sourceSheet.GetRange(HeaderEnum.TOTAL_BONUS.GetDescription()) : sourceSheet.GetRange(HeaderEnum.BONUS.GetDescription());
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), sourceKeyRange, bonusRange);
-                    header.Format = FormatEnum.ACCOUNTING;
+                    SetHeaderFormulaAndFormat(
+                        header,
+                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                            keyRange, HeaderEnum.BONUS.GetDescription(), sourceKeyRange, GetRange(HeaderEnum.BONUS, HeaderEnum.TOTAL_BONUS)),
+                        FormatEnum.ACCOUNTING);
                     break;
+
                 case HeaderEnum.TOTAL:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(keyRange, HeaderEnum.TOTAL.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                    SetHeaderFormulaAndFormat(
+                        header,
+                        GigFormulaBuilder.BuildArrayFormulaTotal(
+                            keyRange, HeaderEnum.TOTAL.GetDescription(),
+                            sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()),
+                            sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()),
+                            sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription())),
+                        FormatEnum.ACCOUNTING);
                     break;
+
                 case HeaderEnum.CASH:
-                    var cashRange = useShiftTotals ? sourceSheet.GetRange(HeaderEnum.TOTAL_CASH.GetDescription()) : sourceSheet.GetRange(HeaderEnum.CASH.GetDescription());
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), sourceKeyRange, cashRange);
-                    header.Format = FormatEnum.ACCOUNTING;
+                    SetHeaderFormulaAndFormat(
+                        header,
+                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                            keyRange, HeaderEnum.CASH.GetDescription(), sourceKeyRange, GetRange(HeaderEnum.CASH, HeaderEnum.TOTAL_CASH)),
+                        FormatEnum.ACCOUNTING);
                     break;
+
                 case HeaderEnum.TRIPS:
                     if (useShiftTotals)
                     {
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange, sourceSheet.GetRange(HeaderEnum.TOTAL_TRIPS.GetDescription()));
+                        SetHeaderFormulaAndFormat(
+                            header,
+                            GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                                keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange, sourceSheet.GetRange(HeaderEnum.TOTAL_TRIPS.GetDescription())),
+                            FormatEnum.NUMBER);
                     }
                     else
                     {
-                        // For trip-based sheets, count occurrences instead of summing totals
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange);
+                        SetHeaderFormulaAndFormat(
+                            header,
+                            GoogleFormulaBuilder.BuildArrayFormulaCountIf(
+                                keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange),
+                            FormatEnum.NUMBER);
                     }
-                    header.Format = FormatEnum.NUMBER;
                     break;
+
                 case HeaderEnum.DAYS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, HeaderEnum.DAYS.GetDescription(), sourceKeyRange);
-                    header.Format = FormatEnum.NUMBER;
+                    SetHeaderFormulaAndFormat(
+                        header,
+                        GoogleFormulaBuilder.BuildArrayFormulaCountIf(
+                            keyRange, HeaderEnum.DAYS.GetDescription(), sourceKeyRange),
+                        FormatEnum.NUMBER);
                     break;
+
                 case HeaderEnum.DISTANCE:
-                    var distanceRange = useShiftTotals ? sourceSheet.GetRange(HeaderEnum.TOTAL_DISTANCE.GetDescription()) : sourceSheet.GetRange(HeaderEnum.DISTANCE.GetDescription());
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), sourceKeyRange, distanceRange);
-                    header.Format = FormatEnum.DISTANCE;
+                    SetHeaderFormulaAndFormat(
+                        header,
+                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                            keyRange, HeaderEnum.DISTANCE.GetDescription(), sourceKeyRange, GetRange(HeaderEnum.DISTANCE, HeaderEnum.TOTAL_DISTANCE)),
+                        FormatEnum.DISTANCE);
                     break;
+
                 case HeaderEnum.TIME_TOTAL:
-                    var timeRange = useShiftTotals ? sourceSheet.GetRange(HeaderEnum.TOTAL_TIME.GetDescription()) : sourceSheet.GetRange(HeaderEnum.TIME_TOTAL.GetDescription());
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TIME_TOTAL.GetDescription(), sourceKeyRange, timeRange);
-                    header.Format = FormatEnum.DURATION;
+                    SetHeaderFormulaAndFormat(
+                        header,
+                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                            keyRange, HeaderEnum.TIME_TOTAL.GetDescription(), sourceKeyRange, GetRange(HeaderEnum.TIME_TOTAL, HeaderEnum.TOTAL_TIME)),
+                        FormatEnum.DURATION);
                     break;
             }
-        });
+        }
     }
 
     /// <summary>
