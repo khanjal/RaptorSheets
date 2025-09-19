@@ -4,11 +4,10 @@ public static class StringExtensions
 {
     public static double? ToSerialDate(this string stringDate)
     {
-        if (DateTime.TryParse(stringDate, out var date))
+        if (DateTime.TryParse(stringDate, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var date))
         {
             // Convert date to a serial number representing the total number of days since January 1, 1900
-            var serialDate = (date - new DateTime(1899, 12, 30)).TotalDays;
-
+            var serialDate = (date - new DateTime(1899, 12, 30, 0, 0, 0, DateTimeKind.Unspecified)).TotalDays;
             return serialDate;
         }
 
@@ -24,7 +23,7 @@ public static class StringExtensions
 
         try
         {
-            bool isNegative = stringDuration.StartsWith("-");
+            bool isNegative = stringDuration.StartsWith('-');
             string normalizedDuration = isNegative ? stringDuration.Substring(1) : stringDuration;
 
             // Split off milliseconds
@@ -62,7 +61,7 @@ public static class StringExtensions
 
     public static double? ToSerialTime(this string stringTime)
     {
-        if (DateTime.TryParse(stringTime, out var dateTime))
+        if (DateTime.TryParse(stringTime, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dateTime))
         {
             // Convert time to a serial number representing the total number of days
             return dateTime.TimeOfDay.TotalDays;
