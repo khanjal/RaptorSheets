@@ -8,6 +8,13 @@
     <IsPackable>true</IsPackable>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <PackageIcon>icon.png</PackageIcon>
+    <PackageId>RaptorSheets.Core</PackageId>
+    <Authors>Iron Raptor Digital</Authors>
+    <Description>Core library for RaptorSheets - Google Sheets API integration and utilities.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/khanjal/RaptorSheets</RepositoryUrl>
+  <PackageProjectUrl>https://www.raptorsheets.com</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,19 +6,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <PackageId>RaptorSheets.Gig</PackageId>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageAuthors>Iron Raptor Digital</PackageAuthors>
-    <PackageDescription>A library used to handle the interactions between a custom API service and Google Sheets API.</PackageDescription>
-    <RepositoryUrl>https://github.com/khanjal/RaptorSheets</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>API Google Sheets Gig</PackageTags>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
-    <PackageIcon>icon.png</PackageIcon>
+  <PackageId>RaptorSheets.Gig</PackageId>
+  <PackageReadmeFile>README-GIG.md</PackageReadmeFile>
+  <Authors>Iron Raptor Digital</Authors>
+  <Description>A library used to handle the interactions between a custom API service and Google Sheets API.</Description>
+  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  <RepositoryUrl>https://github.com/khanjal/RaptorSheets</RepositoryUrl>
+  <RepositoryType>git</RepositoryType>
+  <PackageTags>API Google Sheets Gig</PackageTags>
+  <PackageProjectUrl>https://www.raptorsheets.com</PackageProjectUrl>
+  <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+  <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  <None Include="..\README.md" Pack="true" PackagePath="\" />
+  <None Include="..\README-GIG.md" Pack="true" PackagePath="\" />
     <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
