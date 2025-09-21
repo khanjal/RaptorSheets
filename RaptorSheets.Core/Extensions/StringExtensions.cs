@@ -1,14 +1,18 @@
+using System.Globalization;
+
 namespace RaptorSheets.Core.Extensions;
 
 public static class StringExtensions
 {
+    // Excel serial date epoch: 1899-12-30 (Excel's day 1 is 1900-01-01, but Excel incorrectly treats 1900 as a leap year)
+    private static readonly DateTime ExcelSerialDateEpoch = new DateTime(1899, 12, 30, 0, 0, 0, DateTimeKind.Unspecified);
+
     public static double? ToSerialDate(this string stringDate)
     {
-        if (DateTime.TryParse(stringDate, out var date))
+        if (DateTime.TryParse(stringDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
         {
-            // Convert date to a serial number representing the total number of days since January 1, 1900
-            var serialDate = (date - new DateTime(1899, 12, 30)).TotalDays;
-
+            // Convert date to a serial number representing the total number of days since the Excel serial date epoch
+            var serialDate = (date - ExcelSerialDateEpoch).TotalDays;
             return serialDate;
         }
 
@@ -24,7 +28,7 @@ public static class StringExtensions
 
         try
         {
-            bool isNegative = stringDuration.StartsWith("-");
+            bool isNegative = stringDuration.StartsWith('-');
             string normalizedDuration = isNegative ? stringDuration.Substring(1) : stringDuration;
 
             // Split off milliseconds
@@ -62,7 +66,7 @@ public static class StringExtensions
 
     public static double? ToSerialTime(this string stringTime)
     {
-        if (DateTime.TryParse(stringTime, out var dateTime))
+        if (DateTime.TryParse(stringTime, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
         {
             // Convert time to a serial number representing the total number of days
             return dateTime.TimeOfDay.TotalDays;

@@ -24,7 +24,7 @@ public interface ISheetServiceWrapper
 public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
 {
     private SheetsService _sheetsService = new();
-    private string _spreadsheetId = "";
+    private readonly string _spreadsheetId = "";
 
     public SheetServiceWrapper(string accessToken, string spreadsheetId)
     {
@@ -100,7 +100,7 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
         return response;
     }
 
-    public async Task<Spreadsheet> GetSpreadsheet(List<string>? ranges = null)
+    public async Task<Spreadsheet> GetSpreadsheet(List<string>? ranges)
     {
         var request = _sheetsService.Spreadsheets.Get(_spreadsheetId);
         if (ranges?.Count > 0)
