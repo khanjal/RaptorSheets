@@ -102,9 +102,9 @@ var credentials = new Dictionary<string, string>
 var manager = new GoogleSheetManager(credentials, spreadsheetId);
 ```
 
-**?? [Complete Authentication Guide](docs/AUTHENTICATION.md)**
+**🔐 [Complete Authentication Guide](docs/AUTHENTICATION.md)**
 
-## ?? Usage Examples
+## 💡 Usage Examples
 
 ### Gig Work Tracking
 ```csharp
@@ -148,7 +148,7 @@ var sheetModel = new SheetModel
 // Generate and execute requests (see Core docs for details)
 ```
 
-## ??? Development Setup
+## 🛠️ Development Setup
 
 ### Prerequisites
 - .NET 8.0 SDK or later
@@ -164,9 +164,9 @@ dotnet build
 dotnet test
 ```
 
-**?? [Complete Development Guide](DOCUMENTATION.md#development-setup)**
+**🛠️ [Complete Development Guide](DOCUMENTATION.md#development-setup)**
 
-## ?? Testing
+## 🧪 Testing
 
 The library includes comprehensive test coverage across all packages:
 
@@ -183,26 +183,26 @@ dotnet test --collect:"XPlat Code Coverage"
 ```
 
 **Test Coverage Areas:**
-- ? Core functionality and services
-- ? Package-specific implementations  
-- ? Authentication methods
-- ? Error handling and validation
-- ? Extension methods and utilities
-- ? Real Google Sheets API integration
+- 🏗️ Core functionality and services
+- 📦 Package-specific implementations  
+- 🔐 Authentication methods
+- ⚠️ Error handling and validation
+- 🧩 Extension methods and utilities
+- 🔗 Real Google Sheets API integration
 
-## ?? Performance & API Limits
+## 🚦 Performance & API Limits
 
 ### Google Sheets API Quotas
 - **Read/Write requests**: 100 requests per 100 seconds per user
 - **Daily requests**: 50,000 requests per day
 
 ### Library Optimizations
-- ? Automatic request batching
-- ? Efficient data retrieval strategies
-- ? Smart caching mechanisms
-- ? Rate limit handling with retries
+- 📦 Automatic request batching
+- ⚡ Efficient data retrieval strategies
+- 🧠 Smart caching mechanisms
+- 🔁 Rate limit handling with retries
 
-## ?? Contributing
+## 🤝 Contributing
 
 We welcome contributions to any package in the RaptorSheets suite!
 
@@ -225,46 +225,46 @@ We welcome contributions to any package in the RaptorSheets suite!
 - Update package-specific documentation
 - Use appropriate XML documentation
 
-## ?? License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## ?? Support & Resources
+## 💬 Support & Resources
 
 ### Documentation
-- ?? [Complete Guide](DOCUMENTATION.md) - Overview and getting started
-- ?? [Core Library](docs/CORE.md) - Core functionality reference  
-- ?? [Gig Package](docs/GIG.md) - Gig work tracking guide
-- ?? [Authentication](docs/AUTHENTICATION.md) - Setup instructions
+- 📚 [Complete Guide](DOCUMENTATION.md) - Overview and getting started
+- 🛠️ [Core Library](docs/CORE.md) - Core functionality reference  
+- 💼 [Gig Package](docs/GIG.md) - Gig work tracking guide
+- 🔐 [Authentication](docs/AUTHENTICATION.md) - Setup instructions
 
 ### Community & Support
-- ?? [Report Issues](https://github.com/khanjal/RaptorSheets/issues) - Bug reports and feature requests
-- ?? [Discussions](https://github.com/khanjal/RaptorSheets/discussions) - Community support and questions
-- ?? [Google Sheets API Reference](https://googleapis.dev/dotnet/Google.Apis.Sheets.v4/latest/api/Google.Apis.Sheets.v4.html) - Official API documentation
-- ?? [Project Homepage](https://gig.raptorsheets.com) - Additional resources and examples
+- 🐞 [Report Issues](https://github.com/khanjal/RaptorSheets/issues) - Bug reports and feature requests
+- 💬 [Discussions](https://github.com/khanjal/RaptorSheets/discussions) - Community support and questions
+- 📖 [Google Sheets API Reference](https://googleapis.dev/dotnet/Google.Apis.Sheets.v4/latest/api/Google.Apis.Sheets.v4.html) - Official API documentation
+- 🌐 [Project Homepage](https://gig.raptorsheets.com) - Additional resources and examples
 
-## ?? Roadmap
+## 🗺️ Roadmap
 
 ### Core Library
-- ?? Independent NuGet package release
-- ?? Enhanced authentication flows
-- ?? Plugin architecture for custom packages
+- 📦 Independent NuGet package release
+- 🔐 Enhanced authentication flows
+- 🧩 Plugin architecture for custom packages
 
 ### Package Ecosystem
-- ?? Advanced analytics across all packages
-- ?? Multi-language localization support
-- ?? Mobile-optimized implementations
-- ?? Enterprise features and compliance
+- 📊 Advanced analytics across all packages
+- 🌍 Multi-language localization support
+- 📱 Mobile-optimized implementations
+- 🏢 Enterprise features and compliance
 
 ### New Packages
-- ?? Business expense tracking
-- ?? Project management and time tracking
-- ?? Real estate portfolio management
-- ?? Inventory management systems
+- 💸 Business expense tracking
+- 📅 Project management and time tracking
+- 🏠 Real estate portfolio management
+- 📦 Inventory management systems
 
 ---
 
-**Made with ?? by Iron Raptor Digital**
+**Made with ❤️ by Iron Raptor Digital**
 
 ## API Documentation
 
