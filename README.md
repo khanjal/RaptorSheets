@@ -37,8 +37,6 @@ RaptorSheets is a comprehensive .NET 8 library suite that simplifies interaction
 
 ```
 Your Application
-    ↓
-Package-Specific Manager (Gig)
        ↓
 RaptorSheets.Core (GoogleSheetService)
        ↓
