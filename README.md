@@ -47,9 +47,11 @@ Google Sheets API v4
 
 ### 💼 Use Cases
 
-- **Business Operations**: Handle addresses, contacts, regions, and services
-- **Data Analytics**: Generate daily, weekly, monthly, and yearly reports
-- **Custom Integrations**: Build your own sheet types using the Core library
+- **Automate Business Workflows:** Integrate Google Sheets with your .NET applications to manage business data, reporting, and analytics.
+- **Custom Sheet Generation:** Programmatically create, format, and protect sheets for any domain—finance, inventory, CRM, project management, and more.
+- **Data Synchronization:** Sync data between your application and Google Sheets for real-time dashboards or collaborative editing.
+- **Advanced Analytics:** Build daily, weekly, monthly, or custom reports using Core’s batch operations and formula support.
+- **Reusable Foundation:** Use as a base for building higher-level packages (like RaptorSheets.Gig) or your own domain-specific sheet managers.
 
 ## 📖 Documentation
 

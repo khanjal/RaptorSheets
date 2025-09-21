@@ -52,9 +52,9 @@ This design enables:
 
 | If you need... | Install | Documentation |
 |----------------|---------|---------------|
-| **Gig work tracking** | `RaptorSheets.Gig` | [?? Gig Guide](docs/GIG.md) |
-| **Stock portfolio management** | `RaptorSheets.Stock` | [?? Stock Guide](docs/STOCK.md) |
-| **Custom sheet implementations** | `RaptorSheets.Core` | [?? Core Guide](docs/CORE.md) |
+| **Gig work tracking** | `RaptorSheets.Gig` | [💼 Gig Guide](docs/GIG.md) |
+| **Stock portfolio management** | `RaptorSheets.Stock` | [📈 Stock Guide](docs/STOCK.md) |
+| **Custom sheet implementations** | `RaptorSheets.Core` | [🛠️ Core Guide](docs/CORE.md) |
 
 ### Universal Setup Steps
 
@@ -63,7 +63,7 @@ This design enables:
    dotnet add package RaptorSheets.Gig    # or Stock, Core
    ```
 
-2. **Set up authentication** - [?? Authentication Guide](docs/AUTHENTICATION.md)
+2. **Set up authentication** - [🔐 Authentication Guide](docs/AUTHENTICATION.md)
 
 3. **Create your first spreadsheet connection**
    ```csharp
@@ -618,9 +618,9 @@ public class DataMigrationHelper
 
 For detailed API references, see the package-specific guides:
 
-- **[?? Core API Reference](docs/CORE.md)** - Low-level services, extensions, and utilities
-- **[?? Gig API Reference](docs/GIG.md)** - Gig-specific entities, managers, and helpers  
-- **[?? Stock API Reference](docs/STOCK.md)** - Portfolio entities and management operations
+- **[🛠️ Core API Reference](docs/CORE.md)** - Low-level services, extensions, and utilities
+- **[💼 Gig API Reference](docs/GIG.md)** - Gig-specific entities, managers, and helpers  
+- **[📈 Stock API Reference](docs/STOCK.md)** - Portfolio entities and management operations
 
 ### Cross-Package Interfaces
 
@@ -680,7 +680,7 @@ Key API concepts utilized:
 ### Common Issues Across All Packages
 
 1. **Authentication Problems**
-   - See [?? Authentication Guide](docs/AUTHENTICATION.md)
+    - See [🔐 Authentication Guide](docs/AUTHENTICATION.md)
    - Verify service account email is shared with spreadsheet
    - Check Google Cloud API enablement
 
