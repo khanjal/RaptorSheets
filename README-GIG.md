@@ -5,6 +5,17 @@
 | Latest Build Status | [![build status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions) | [GitHub Repo](https://github.com/khanjal/RaptorSheets/) |
 | RaptorSheets.Gig Nuget Pkg | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) | [Raptor Sheets - Gig](https://gig.raptorsheets.com) |
 
+---
+
+> **Note:** RaptorSheets.Gig is built on top of [RaptorSheets.Core](https://www.nuget.org/packages/RaptorSheets.Core/). For advanced customization or to build your own integrations, see the [Core documentation](https://www.raptorsheets.com) and [API reference](https://googleapis.dev/dotnet/Google.Apis.Sheets.v4/latest/api/Google.Apis.Sheets.v4.html).
+
+# Quick Install
+
+```bash
+dotnet add package RaptorSheets.Gig
+```
+
+
 
 # Project Description
 
@@ -75,6 +86,12 @@ var data = await googleSheetManager.GetSheets(sheets);
 ## Advanced
 
 Using the ````GoogleSheetService```` allows you to change format, colors, and other options by referencing the ````Google.Apis.Sheets.v4```` package.
+
+
+# API Reference
+
+- [RaptorSheets.Core Documentation](https://www.raptorsheets.com)
+- [Google Sheets API Reference](https://googleapis.dev/dotnet/Google.Apis.Sheets.v4/latest/api/Google.Apis.Sheets.v4.html)
 
 # Testing
 

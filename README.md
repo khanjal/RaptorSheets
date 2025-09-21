@@ -1,9 +1,10 @@
-# RaptorSheets
+
+# RaptorSheets.Core
 
 | Badge Name | Status | Site |
 | ---------- | :------------: | :------------: |
 | Latest Build Status | [![build status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions) | [GitHub Repo](https://github.com/khanjal/RaptorSheets/) |
-| RaptorSheets.Gig NuGet | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) | [Raptor Sheets - Gig](https://gig.raptorsheets.com) |
+| RaptorSheets.Core NuGet | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Core)](https://www.nuget.org/packages/RaptorSheets.Core/) | [Raptor Sheets - Core](https://www.raptorsheets.com) |
 | Test Coverage | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=khanjal_RaptorSheets&metric=coverage)](https://sonarcloud.io/summary/new_code?id=khanjal_RaptorSheets) | [SonarCloud](https://sonarcloud.io/project/overview?id=khanjal_RaptorSheets) |
 | Code Quality | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=khanjal_RaptorSheets&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=khanjal_RaptorSheets) | [SonarCloud](https://sonarcloud.io/project/overview?id=khanjal_RaptorSheets) |
 | License | [![License](https://img.shields.io/github/license/khanjal/RaptorSheets)](LICENSE) | - |
@@ -11,23 +12,11 @@
 ## 🚀 Quick Start
 
 ```bash
-# Install the package for your use case
-dotnet add package RaptorSheets.Gig      # For gig work tracking
-# dotnet add package RaptorSheets.Core   # Core library (coming soon)
+# Install the core package
+dotnet add package RaptorSheets.Core
 ```
 
-```csharp
-using RaptorSheets.Gig.Managers;
 
-// Initialize with credentials
-var manager = new GoogleSheetManager(accessToken, spreadsheetId);
-
-// Create sheets with predefined layouts
-await manager.CreateSheets();
-
-// Retrieve all data
-var data = await manager.GetSheets();
-```
 
 ## 📚 Project Description
 
@@ -60,7 +49,6 @@ Google Sheets API v4
 
 ### 💼 Use Cases
 
-- **Gig Work Tracking**: Track trips, shifts, expenses, and earnings across platforms
 - **Business Operations**: Handle addresses, contacts, regions, and services
 - **Data Analytics**: Generate daily, weekly, monthly, and yearly reports
 - **Custom Integrations**: Build your own sheet types using the Core library
@@ -73,15 +61,15 @@ Choose the documentation that matches your needs:
 |---------------|---------|----------|
 | **[📚 Complete Guide](DOCUMENTATION.md)** | Comprehensive overview and getting started | All users |
 | **[🔧 Core Library](docs/CORE.md)** | Core functionality and custom implementations | Library developers |
-| **[💼 Gig Package](docs/GIG.md)** | Gig work and freelance tracking | Gig workers, freelancers |
+| [RaptorSheets.Gig Package](https://www.nuget.org/packages/RaptorSheets.Gig/) | Gig work and freelance tracking | Gig workers, freelancers |
 | **[ Authentication](docs/AUTHENTICATION.md)** | Setup guide for Google APIs | All users |
 
 ## 📦 Available Packages
 
 | Package | Version | Purpose | Dependencies | Documentation |
 |---------|---------|---------|--------------|---------------|
+| **RaptorSheets.Core** | ![NuGet](https://img.shields.io/nuget/v/RaptorSheets.Core) | Core functionality for custom implementations | Google.Apis.Sheets.v4 | [🔧 Core Docs](docs/CORE.md) |
 | **RaptorSheets.Gig** | ![NuGet](https://img.shields.io/nuget/v/RaptorSheets.Gig) | Gig work and freelance tracking | Google.Apis.Sheets.v4, Google.Apis.Drive.v3 | [💼 Gig Docs](docs/GIG.md) |
-| **RaptorSheets.Core** | *Coming Soon* | Core functionality for custom implementations | Google.Apis.Sheets.v4 | [🔧 Core Docs](docs/CORE.md) |
 | **RaptorSheets.Common** | - | Shared utilities (included in packages) | - | - |
 
 ## 🔐 Authentication
@@ -104,30 +92,8 @@ var manager = new GoogleSheetManager(credentials, spreadsheetId);
 
 **🔐 [Complete Authentication Guide](docs/AUTHENTICATION.md)**
 
-## 💡 Usage Examples
+## 💡 Usage Example
 
-### Gig Work Tracking
-```csharp
-using RaptorSheets.Gig.Managers;
-using RaptorSheets.Gig.Entities;
-
-var manager = new GoogleSheetManager(credentials, spreadsheetId);
-
-// Record a trip
-var trip = new TripEntity
-{
-    Date = "2024-01-15",
-    Service = "DoorDash",
-    Pay = 8.50m,
-    Tip = 3.00m,
-    Distance = 2.5m
-};
-
-var result = await manager.ChangeSheetData(["Trips"], new SheetEntity { Trips = [trip] });
-```
-
-
-### Custom Implementation (Using Core)
 ```csharp
 using RaptorSheets.Core.Services;
 using RaptorSheets.Core.Models.Google;
@@ -147,6 +113,12 @@ var sheetModel = new SheetModel
 
 // Generate and execute requests (see Core docs for details)
 ```
+
+---
+
+## Looking for Gig Work Tracking?
+
+RaptorSheets.Gig is a package built on top of Core for gig work and freelance tracking. [Learn more &rarr;](https://www.nuget.org/packages/RaptorSheets.Gig/)
 
 ## 🛠️ Development Setup
 
