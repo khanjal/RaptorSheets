@@ -442,21 +442,24 @@ public class GoogleSheetManager : IGoogleSheetManager
                             .Where(x => x.FormattedValue != null)
                             .Select(x => x.FormattedValue)
                             .ToList());
-                    }
 
-                    // Find the last row with a value in the first column (excluding header)
-                    var rowData = headerData.RowData;
-                    for (int i = rowData.Count - 1; i > 0; i--) // start from the end, skip header (i=0)
-                    {
-                        var cell = rowData[i]?.Values?.FirstOrDefault();
-                        if (cell != null && !string.IsNullOrEmpty(cell.FormattedValue))
+                        // Find the last row with a value in the first column (excluding header)
+                        var rowData = headerData.RowData;
+                        if (rowData != null)
                         {
-                            maxRowValue = i + 1; // +1 because row index is zero-based
-                            break;
+                            for (int i = rowData.Count - 1; i > 0; i--) // start from the end, skip header (i=0)
+                            {
+                                var cell = rowData[i]?.Values?.FirstOrDefault();
+                                if (cell != null && !string.IsNullOrEmpty(cell.FormattedValue))
+                                {
+                                    maxRowValue = i + 1; // +1 because row index is zero-based
+                                    break;
+                                }
+                            }
+                            if (maxRowValue == 0 && rowData.Count > 1)
+                                maxRowValue = 1; // Only header exists
                         }
                     }
-                    if (maxRowValue == 0 && rowData.Count > 1)
-                        maxRowValue = 1; // Only header exists
                 }
             }
 
