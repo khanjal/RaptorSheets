@@ -1,4 +1,6 @@
-# RaptorSheets.Gig Documentation
+# RaptorSheets.Gig
+
+[![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) [![Build Status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions)
 
 ## Overview
 
@@ -640,4 +642,5 @@ Console.WriteLine($"Expenses: {result.Expenses?.Count ?? 0}");
 For Gig-specific issues and questions:
 - [Report Issues](https://github.com/khanjal/RaptorSheets/issues) with label `gig`
 - [Community Discussions](https://github.com/khanjal/RaptorSheets/discussions)
-- [Documentation](../DOCUMENTATION.md) for comprehensive guides
+- [Core Documentation](CORE.md) for underlying functionality
+- [Authentication Guide](AUTHENTICATION.md) for setup help
