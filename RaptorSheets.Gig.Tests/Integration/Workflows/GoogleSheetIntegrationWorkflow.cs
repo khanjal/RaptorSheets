@@ -190,7 +190,7 @@ public class GoogleSheetIntegrationWorkflow : IAsyncLifetime
         System.Diagnostics.Debug.WriteLine($"Creating all gig sheets using default CreateSheets() method");
         
         // Use the default CreateSheets() method which creates all gig sheets from constants
-        var creationResult = await _googleSheetManager.CreateSheets();
+        var creationResult = await _googleSheetManager.CreateAllSheets();
         Assert.NotNull(creationResult);
 
         LogMessages("Create", creationResult.Messages);

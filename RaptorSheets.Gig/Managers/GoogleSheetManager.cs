@@ -17,16 +17,16 @@ namespace RaptorSheets.Gig.Managers;
 public interface IGoogleSheetManager
 {
     public Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
-    public Task<SheetEntity> CreateSheets();
+    public Task<SheetEntity> CreateAllSheets();
     public Task<SheetEntity> CreateSheets(List<string> sheets);
-    public Task<SheetEntity> DeleteSheets(List<string> sheets); // New method
+    public Task<SheetEntity> DeleteSheets(List<string> sheets);
     public Task<SheetEntity> GetSheet(string sheet);
-    public Task<SheetEntity> GetSheets();
+    public Task<SheetEntity> GetAllSheets();
     public Task<SheetEntity> GetSheets(List<string> sheets);
-    public Task<List<PropertyEntity>> GetSheetProperties();
+    public Task<List<PropertyEntity>> GetAllSheetProperties();
     public Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
-    public Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null); // New method for testing
-    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets); // New method for simplified verification
+    public Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null);
+    public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -45,34 +45,7 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity)
     {
-        var changes = new Dictionary<string, object>();
-
-        // Pull out all changes into a single object to iterate through.
-        foreach (var sheet in sheets)
-        {
-            switch (sheet)
-            {
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
-                    if (sheetEntity.Expenses.Count > 0)
-                        changes.Add(sheet, sheetEntity.Expenses);
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
-                    if (sheetEntity.Setup.Count > 0)
-                        changes.Add(sheet, sheetEntity.Setup);
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
-                    if (sheetEntity.Shifts.Count > 0)
-                        changes.Add(sheet, sheetEntity.Shifts);
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
-                    if (sheetEntity.Trips.Count > 0)
-                        changes.Add(sheet, sheetEntity.Trips);
-                    break;
-                default:
-                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
-                    break;
-            }
-        }
+        var changes = GetSheetChanges(sheets, sheetEntity);
 
         if (changes.Count == 0)
         {
@@ -83,85 +56,90 @@ public class GoogleSheetManager : IGoogleSheetManager
         var sheetInfo = await GetSheetProperties(sheets);
         var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
         {
-            Requests = []
+            Requests = BuildBatchUpdateRequests(changes, sheetInfo, sheetEntity)
         };
-
-        foreach (var change in changes)
-        {
-            switch (change.Key)
-            {
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
-                    var expenseProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
-                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], expenseProperties));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
-                    var setupProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
-                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], setupProperties));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
-                    var shiftProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
-                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], shiftProperties));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
-                    var tripProperties = sheetInfo.FirstOrDefault(x => x.Name == change.Key);
-                    batchUpdateSpreadsheetRequest.Requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], tripProperties));
-                    break;
-            }
-
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {change.Key.ToUpperInvariant()}", MessageTypeEnum.SAVE_DATA));
-        }
-
-        // TODO: Look into returning data from the batch update.
-        //batchUpdateSpreadsheetRequest.IncludeSpreadsheetInResponse = true;
-        //batchUpdateSpreadsheetRequest.ResponseIncludeGridData = true;
-        //batchUpdateSpreadsheetRequest.ResponseRanges = [SheetEnum.ADDRESSES.GetDescription(), SheetEnum.NAMES.GetDescription(), SheetEnum.PLACES.GetDescription(), SheetEnum.REGIONS.GetDescription(), SheetEnum.SERVICES.GetDescription(), SheetEnum.TYPES.GetDescription()];
 
         var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
 
-        //if (batchUpdateSpreadsheetResponse?.UpdatedSpreadsheet?.Sheets.Count > 0) { 
-        //    var sheetData = SheetHelpers.GetSheetValues(batchUpdateSpreadsheetResponse.UpdatedSpreadsheet);
-        //    var test = SheetEnum.ADDRESSES.GetDescription();
-
-        //    foreach (var sheet in sheetData)
-        //    {
-        //        var sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), sheet.Key.ToUpper());
-        //        switch (sheetEnum)
-        //        {
-        //            case SheetEnum.ADDRESSES:
-        //                sheetEntity.Addresses = AddressMapper.MapFromRangeData(sheet.Value);
-        //                break;
-        //            case SheetEnum.NAMES:
-        //                sheetEntity.Names = NameMapper.MapFromRangeData(sheet.Value);
-        //                break;
-        //            case SheetEnum.PLACES:
-        //                sheetEntity.Places = PlaceMapper.MapFromRangeData(sheet.Value);
-        //                break;
-        //            case SheetEnum.REGIONS:
-        //                sheetEntity.Regions = RegionMapper.MapFromRangeData(sheet.Value);
-        //                break;
-        //            case SheetEnum.SERVICES:
-        //                sheetEntity.Services = ServiceMapper.MapFromRangeData(sheet.Value);
-        //                break;
-        //            case SheetEnum.TYPES:
-        //                sheetEntity.Types = TypeMapper.MapFromRangeData(sheet.Value);
-        //                break;
-        //        }
-        //    }
-        //}
-
         if (batchUpdateSpreadsheetResponse == null)
         {
-            // Call sheet properties to check sheets
             var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
             if (spreadsheetInfo != null)
             {
                 sheetEntity.Messages.AddRange(await HandleMissingSheets(spreadsheetInfo));
             }
-
             sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageTypeEnum.SAVE_DATA));
         }
 
         return sheetEntity;
+    }
+
+    private static Dictionary<string, object> GetSheetChanges(List<string> sheets, SheetEntity sheetEntity)
+    {
+        var changes = new Dictionary<string, object>();
+        foreach (var sheet in sheets)
+        {
+            if (TryAddSheetChange(sheet, sheetEntity, changes))
+                continue;
+
+            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
+        }
+        return changes;
+    }
+
+    private static bool TryAddSheetChange(string sheet, SheetEntity sheetEntity, Dictionary<string, object> changes)
+    {
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) && sheetEntity.Expenses.Count > 0)
+        {
+            changes.Add(sheet, sheetEntity.Expenses);
+            return true;
+        }
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) && sheetEntity.Setup.Count > 0)
+        {
+            changes.Add(sheet, sheetEntity.Setup);
+            return true;
+        }
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) && sheetEntity.Shifts.Count > 0)
+        {
+            changes.Add(sheet, sheetEntity.Shifts);
+            return true;
+        }
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) && sheetEntity.Trips.Count > 0)
+        {
+            changes.Add(sheet, sheetEntity.Trips);
+            return true;
+        }
+        return false;
+    }
+
+    private static List<Request> BuildBatchUpdateRequests(Dictionary<string, object> changes, List<PropertyEntity> sheetInfo, SheetEntity sheetEntity)
+    {
+        var requests = new List<Request>();
+        foreach (var change in changes)
+        {
+            var sheetName = change.Key;
+            var properties = sheetInfo.FirstOrDefault(x => x.Name == sheetName);
+            
+            if (string.Equals(sheetName, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase))
+            {
+                requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], properties));
+            }
+            else if (string.Equals(sheetName, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase))
+            {
+                requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], properties));
+            }
+            else if (string.Equals(sheetName, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase))
+            {
+                requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], properties));
+            }
+            else if (string.Equals(sheetName, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase))
+            {
+                requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], properties));
+            }
+            
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {sheetName.ToUpperInvariant()}", MessageTypeEnum.SAVE_DATA));
+        }
+        return requests;
     }
 
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
@@ -247,7 +225,7 @@ public class GoogleSheetManager : IGoogleSheetManager
         return messages;
     }
 
-    public async Task<SheetEntity> CreateSheets()
+    public async Task<SheetEntity> CreateAllSheets()
     {
         return await CreateSheets(SheetsConfig.SheetUtilities.GetAllSheetNames());
     }
@@ -358,12 +336,11 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         return await GetSheets([sheet]);
     }
-     
-    public async Task<SheetEntity> GetSheets()
+
+    public async Task<SheetEntity> GetAllSheets()
     {
         var sheets = GenerateSheetsHelpers.GetSheetNames();
         var response = await GetSheets(sheets);
-
         return response ?? new SheetEntity();
     }
 
@@ -406,13 +383,13 @@ public class GoogleSheetManager : IGoogleSheetManager
         return data;
     }
 
-    public async Task<List<PropertyEntity>> GetSheetProperties() // TODO: Look into moving this to a common area
+    public async Task<List<PropertyEntity>> GetAllSheetProperties()
     {
         var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
         return await GetSheetProperties(sheets.Select(t => t.GetDescription()).ToList());
     }
 
-    public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets) // TODO: Look into moving this to a common area
+    public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets)
     {
         var properties = new List<PropertyEntity>();
         var sheetInfo = await _googleSheetService.GetSheetInfo(sheets);

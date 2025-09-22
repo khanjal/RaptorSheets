@@ -61,10 +61,10 @@ public class EntitySheetOrderHelperTests
 
         // Assert
         Assert.Equal(4, sheetOrder.Count);
-        Assert.Equal("Trips", sheetOrder[0]);    // Order 0
-        Assert.Equal("Shifts", sheetOrder[1]);   // Order 1
-        Assert.Equal("Expenses", sheetOrder[2]); // Order 2
-        Assert.Equal("Setup", sheetOrder[3]);    // Order 3
+        Assert.Equal("Trips", sheetOrder[0]);    // First property
+        Assert.Equal("Expenses", sheetOrder[1]); // Second property
+        Assert.Equal("Shifts", sheetOrder[2]);   // Third property
+        Assert.Equal("Setup", sheetOrder[3]);    // Fourth property
     }
 
     [Fact]
