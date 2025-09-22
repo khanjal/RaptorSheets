@@ -7,9 +7,9 @@
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
   <PackageId>RaptorSheets.Gig</PackageId>
-  <PackageReadmeFile>README-GIG.md</PackageReadmeFile>
+  <PackageReadmeFile>docs\GIG.md</PackageReadmeFile>
   <Authors>Iron Raptor Digital</Authors>
-  <Description>A library used to handle the interactions between a custom API service and Google Sheets API.</Description>
+  <Description>A specialized library built on RaptorSheets.Core for gig work and freelance tracking. Provides pre-configured sheets for trips, shifts, expenses, and comprehensive analytics for gig economy workers.</Description>
   <PackageLicenseExpression>MIT</PackageLicenseExpression>
   <RepositoryUrl>https://github.com/khanjal/RaptorSheets</RepositoryUrl>
   <RepositoryType>git</RepositoryType>
@@ -21,7 +21,7 @@
 
   <ItemGroup>
   <None Include="..\README.md" Pack="true" PackagePath="\" />
-  <None Include="..\README-GIG.md" Pack="true" PackagePath="\" />
+  <None Include="..\docs\GIG.md" Pack="true" PackagePath="\" />
     <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
