@@ -6,7 +6,6 @@ using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
-using static RaptorSheets.Gig.Constants.SheetsConfig;
 
 namespace RaptorSheets.Gig.Mappers;
 

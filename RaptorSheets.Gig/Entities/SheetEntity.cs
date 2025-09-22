@@ -1,5 +1,4 @@
 using RaptorSheets.Core.Entities;
-using RaptorSheets.Gig.Entities;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Gig.Constants;
 using System.Text.Json.Serialization;

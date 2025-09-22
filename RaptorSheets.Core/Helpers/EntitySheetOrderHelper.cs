@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using RaptorSheets.Core.Attributes;
 
@@ -35,11 +32,8 @@ public static class EntitySheetOrderHelper
             }
         }
 
-        // Sort by order and return sheet names
-        return sheetInfos
-            .OrderBy(info => info.Order)
-            .Select(info => info.SheetName)
-            .ToList();
+        // Return sheet names in the order properties are declared
+        return sheetInfos.Select(info => info.SheetName).ToList();
     }
 
     /// <summary>
