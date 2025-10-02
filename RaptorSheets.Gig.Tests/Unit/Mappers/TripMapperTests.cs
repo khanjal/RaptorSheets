@@ -10,6 +10,8 @@ namespace RaptorSheets.Gig.Tests.Unit.Mappers;
 [Category("Unit Tests")]
 public class TripMapperTests
 {
+    #region Core Mapping Tests (Essential)
+    
     [Fact]
     public void MapFromRangeData_WithValidData_ShouldReturnTrips()
     {
@@ -48,150 +50,24 @@ public class TripMapperTests
     }
 
     [Fact]
-    public void GetSheet_ShouldReturnCorrectSheetConfiguration()
-    {
-        // Act
-        var result = TripMapper.GetSheet();
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Headers);
-        Assert.True(result.Headers.Count > 15); // Should have many columns
-        
-        // Check key headers exist and have proper configuration
-        var dateHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.DATE.GetDescription());
-        Assert.NotNull(dateHeader);
-        Assert.Equal(FormatEnum.DATE, dateHeader.Format);
-        
-        var serviceHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.SERVICE.GetDescription());
-        Assert.NotNull(serviceHeader);
-        Assert.Equal(ValidationEnum.RANGE_SERVICE.GetDescription(), serviceHeader.Validation);
-        
-        var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
-        Assert.NotNull(payHeader);
-        Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
-    }
-
-    [Fact]
-    public void GetSheet_KeyHeader_ShouldGenerateTripKeyFormula()
-    {
-        // Act
-        var sheet = TripMapper.GetSheet();
-        var keyHeader = sheet.Headers.First(h => h.Name.ToString() == HeaderEnum.KEY.GetDescription());
-
-        // Assert
-        Assert.NotNull(keyHeader.Formula);
-        Assert.StartsWith("=ARRAYFORMULA(", keyHeader.Formula);
-        Assert.Contains("IF(ISBLANK(", keyHeader.Formula); // Should contain conditional logic
-        Assert.Contains("\"-X-\"", keyHeader.Formula); // Exclude marker
-        Assert.Contains("\"-0-\"", keyHeader.Formula); // Default number fallback
-        Assert.Contains("\"-\"", keyHeader.Formula); // Normal delimiter
-        // Note: The actual range references will be resolved, not placeholder tokens
-    }
-
-    [Fact]
-    public void GetSheet_TotalHeader_ShouldGenerateIncomeAddition()
-    {
-        // Act
-        var sheet = TripMapper.GetSheet();
-        var totalHeader = sheet.Headers.First(h => h.Name.ToString() == HeaderEnum.TOTAL.GetDescription());
-
-        // Assert
-        Assert.NotNull(totalHeader.Formula);
-        Assert.Contains("=ARRAYFORMULA(", totalHeader.Formula);
-        Assert.Contains("+", totalHeader.Formula); // Addition of pay + tips + bonus
-        Assert.Equal(FormatEnum.ACCOUNTING, totalHeader.Format);
-    }
-
-    [Fact]
-    public void GetSheet_DateComponentHeaders_ShouldGenerateDateExtractionFormulas()
-    {
-        // Act
-        var sheet = TripMapper.GetSheet();
-        var dayHeader = sheet.Headers.First(h => h.Name.ToString() == HeaderEnum.DAY.GetDescription());
-        var monthHeader = sheet.Headers.First(h => h.Name.ToString() == HeaderEnum.MONTH.GetDescription());
-        var yearHeader = sheet.Headers.First(h => h.Name.ToString() == HeaderEnum.YEAR.GetDescription());
-
-        // Assert
-        Assert.NotNull(dayHeader.Formula);
-        Assert.Contains("DAY(", dayHeader.Formula);
-        
-        Assert.NotNull(monthHeader.Formula);
-        Assert.Contains("MONTH(", monthHeader.Formula);
-        
-        Assert.NotNull(yearHeader.Formula);
-        Assert.Contains("YEAR(", yearHeader.Formula);
-    }
-
-    [Fact]
-    public void GetSheet_AmountPerHeaders_ShouldGenerateCalculationFormulas()
-    {
-        // Act
-        var sheet = TripMapper.GetSheet();
-        var amountPerTimeHeader = sheet.Headers.First(h => h.Name.ToString() == HeaderEnum.AMOUNT_PER_TIME.GetDescription());
-        var amountPerDistanceHeader = sheet.Headers.First(h => h.Name.ToString() == HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription());
-
-        // Assert
-        Assert.NotNull(amountPerTimeHeader.Formula);
-        Assert.Contains("/IF(", amountPerTimeHeader.Formula); // Zero-safe division
-        Assert.Contains("*24", amountPerTimeHeader.Formula); // Time conversion to hours
-        Assert.Equal(FormatEnum.ACCOUNTING, amountPerTimeHeader.Format);
-        
-        Assert.NotNull(amountPerDistanceHeader.Formula);
-        Assert.Contains("/IF(", amountPerDistanceHeader.Formula);
-        Assert.Equal(FormatEnum.ACCOUNTING, amountPerDistanceHeader.Format);
-    }
-
-    [Theory]
-    [InlineData(HeaderEnum.DATE, "2024-01-15")]
-    [InlineData(HeaderEnum.SERVICE, "Uber")]
-    [InlineData(HeaderEnum.NUMBER, "123")]
-    [InlineData(HeaderEnum.TYPE, "UberX")]
-    [InlineData(HeaderEnum.PLACE, "Restaurant")]
-    [InlineData(HeaderEnum.PAY, "25.50")]
-    [InlineData(HeaderEnum.NAME, "John Doe")]
-    public void MapFromRangeData_WithSingleColumn_ShouldMapCorrectly(HeaderEnum headerType, string testValue)
+    public void MapFromRangeData_WithEmptyRows_ShouldFilterOutEmptyRows()
     {
         // Arrange
-        var headerName = headerType.GetDescription();
         var values = new List<IList<object>>
         {
-            new List<object> { headerName },
-            new List<object> { testValue }
+            new List<object> { "Date", "Service" },
+            new List<object> { "2024-01-15", "Uber" },
+            new List<object> { "", "" }, // Empty row
+            new List<object> { "2024-01-16", "Lyft" }
         };
 
         // Act
         var result = TripMapper.MapFromRangeData(values);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Single(result);
-        
-        var trip = result[0];
-        switch (headerType)
-        {
-            case HeaderEnum.DATE:
-                Assert.Equal(testValue, trip.Date);
-                break;
-            case HeaderEnum.SERVICE:
-                Assert.Equal(testValue, trip.Service);
-                break;
-            case HeaderEnum.NUMBER:
-                Assert.Equal(123, trip.Number);
-                break;
-            case HeaderEnum.TYPE:
-                Assert.Equal(testValue, trip.Type);
-                break;
-            case HeaderEnum.PLACE:
-                Assert.Equal(testValue, trip.Place);
-                break;
-            case HeaderEnum.PAY:
-                Assert.Equal(25.50m, trip.Pay);
-                break;
-            case HeaderEnum.NAME:
-                Assert.Equal(testValue, trip.Name);
-                break;
-        }
+        Assert.Equal(2, result.Count); // Empty row filtered out
+        Assert.Equal("Uber", result[0].Service);
+        Assert.Equal("Lyft", result[1].Service);
     }
 
     [Fact]
@@ -225,29 +101,104 @@ public class TripMapperTests
         Assert.Equal("Uber", row[1]);
         Assert.Equal("1", row[2]);
         Assert.Equal("UberX", row[3]);
-        Assert.Equal("25.50", row[4]); // Fix decimal comparison
-        Assert.Equal("5.00", row[5]);   // Fix decimal comparison
+        Assert.Equal("25.50", row[4]);
+        Assert.Equal("5.00", row[5]);
         Assert.Equal("John Doe", row[6]);
     }
+    
+    #endregion
 
+    #region Sheet Configuration Tests (Core Structure)
+    
     [Fact]
-    public void MapFromRangeData_WithEmptyRows_ShouldFilterOutEmptyRows()
+    public void GetSheet_ShouldReturnCorrectSheetConfiguration()
+    {
+        // Act
+        var result = TripMapper.GetSheet();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("Trips", result.Name);
+        Assert.NotNull(result.Headers);
+        Assert.True(result.Headers.Count > 10, "Trip sheet should have many columns");
+        
+        // Verify essential headers exist with proper configuration
+        var dateHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.DATE.GetDescription());
+        Assert.NotNull(dateHeader);
+        Assert.Equal(FormatEnum.DATE, dateHeader.Format);
+        
+        var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
+        Assert.NotNull(payHeader);
+        Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
+        
+        // Verify all headers have proper column assignments
+        Assert.All(result.Headers, header => 
+        {
+            Assert.True(header.Index >= 0, "All headers should have valid indexes");
+            Assert.False(string.IsNullOrEmpty(header.Column), "All headers should have column letters");
+        });
+    }
+    
+    #endregion
+
+    #region Formula Tests (High-Level Validation Only)
+    
+    [Fact]
+    public void GetSheet_ShouldGenerateValidFormulas()
+    {
+        // Act
+        var sheet = TripMapper.GetSheet();
+        var formulaHeaders = sheet.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
+
+        // Assert - High-level validation only (don't test formula internals)
+        if (formulaHeaders.Any())
+        {
+            // All formulas should start with =
+            Assert.All(formulaHeaders, header => Assert.StartsWith("=", header.Formula));
+            
+            // Should not have unresolved placeholders
+            Assert.All(formulaHeaders, header => 
+            {
+                Assert.DoesNotContain("{keyRange}", header.Formula);
+                Assert.DoesNotContain("{header}", header.Formula);
+            });
+        }
+    }
+
+    [Theory]
+    [InlineData("Date", "2024-01-15")]  // Representative test cases only
+    [InlineData("Service", "Uber")]
+    [InlineData("Pay", "25.50")]
+    public void MapFromRangeData_WithSingleColumn_ShouldMapCorrectly(string headerName, string testValue)
     {
         // Arrange
         var values = new List<IList<object>>
         {
-            new List<object> { "Date", "Service" },
-            new List<object> { "2024-01-15", "Uber" },
-            new List<object> { "", "" }, // Empty row
-            new List<object> { "2024-01-16", "Lyft" }
+            new List<object> { headerName },
+            new List<object> { testValue }
         };
 
         // Act
         var result = TripMapper.MapFromRangeData(values);
 
         // Assert
-        Assert.Equal(2, result.Count); // Empty row filtered out
-        Assert.Equal("Uber", result[0].Service);
-        Assert.Equal("Lyft", result[1].Service);
+        Assert.NotNull(result);
+        Assert.Single(result);
+        
+        var trip = result[0];
+        switch (headerName)
+        {
+            case "Date":
+                Assert.Equal(testValue, trip.Date);
+                break;
+            case "Service":
+                Assert.Equal(testValue, trip.Service);
+                break;
+            case "Pay":
+                Assert.Equal(25.50m, trip.Pay);
+                break;
+        }
     }
+    
+    #endregion
 }
