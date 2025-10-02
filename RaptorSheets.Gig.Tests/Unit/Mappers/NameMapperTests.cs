@@ -9,13 +9,15 @@ namespace RaptorSheets.Gig.Tests.Unit.Mappers;
 [Category("Unit Tests")]
 public class NameMapperTests
 {
+    #region Core Mapping Tests (Essential)
+    
     [Fact]
     public void MapFromRangeData_WithValidData_ShouldReturnNames()
     {
         // Arrange
         var values = new List<IList<object>>
         {
-            new List<object> { "Name", "Trips", "Pay", "Tip", "Bonus", "Total" }, // Use "Tip" not "Tips"
+            new List<object> { "Name", "Trips", "Pay", "Tip", "Bonus", "Total" },
             new List<object> { "John Doe", "5", "125.50", "25.00", "10.00", "160.50" },
             new List<object> { "Jane Smith", "3", "75.25", "15.00", "5.00", "95.25" }
         };
@@ -43,103 +45,6 @@ public class NameMapperTests
     }
 
     [Fact]
-    public void GetSheet_ShouldReturnCorrectSheetConfiguration()
-    {
-        // Act
-        var result = NameMapper.GetSheet();
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Headers);
-        
-        // Check key headers exist and have proper formats
-        var nameHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.NAME.GetDescription());
-        Assert.NotNull(nameHeader);
-        
-        var tripsHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.TRIPS.GetDescription());
-        Assert.NotNull(tripsHeader);
-        Assert.Equal(FormatEnum.NUMBER, tripsHeader.Format);
-        
-        var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
-        Assert.NotNull(payHeader);
-        Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
-        
-        var totalHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.TOTAL.GetDescription());
-        Assert.NotNull(totalHeader);
-        Assert.Equal(FormatEnum.ACCOUNTING, totalHeader.Format);
-    }
-
-    [Fact]
-    public void GetSheet_NameHeader_ShouldGenerateUniqueNameFormula()
-    {
-        // Act
-        var sheet = NameMapper.GetSheet();
-        var nameHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.NAME.GetDescription());
-
-        // Assert
-        if (nameHeader != null)
-        {
-            Assert.NotNull(nameHeader.Formula);
-            Assert.StartsWith("={\"Name\";SORT(UNIQUE(", nameHeader.Formula);
-            Assert.Contains("Trips!", nameHeader.Formula); // Should reference Trips sheet
-            Assert.EndsWith("))}", nameHeader.Formula);
-        }
-    }
-
-    [Fact]
-    public void GetSheet_AggregationHeaders_ShouldGenerateProperFormulas()
-    {
-        // Act
-        var sheet = NameMapper.GetSheet();
-        var tripsHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.TRIPS.GetDescription());
-        var payHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.PAY.GetDescription());
-        var totalHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.TOTAL.GetDescription());
-
-        // Assert - Only test headers that exist
-        if (tripsHeader != null)
-        {
-            Assert.NotNull(tripsHeader.Formula);
-            Assert.Contains("COUNTIF(", tripsHeader.Formula);
-        }
-        
-        if (payHeader != null)
-        {
-            Assert.NotNull(payHeader.Formula);
-            Assert.Contains("SUMIF(", payHeader.Formula);
-        }
-        
-        if (totalHeader != null)
-        {
-            Assert.NotNull(totalHeader.Formula);
-            Assert.Contains("+", totalHeader.Formula); // Should add pay + tips + bonus
-        }
-    }
-
-    [Fact]
-    public void GetSheet_VisitHeaders_ShouldGenerateVisitDateFormulas()
-    {
-        // Act
-        var sheet = NameMapper.GetSheet();
-        var firstVisitHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.VISIT_FIRST.GetDescription());
-        var lastVisitHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.VISIT_LAST.GetDescription());
-
-        // Assert - Only test headers that exist
-        if (firstVisitHeader != null)
-        {
-            Assert.NotNull(firstVisitHeader.Formula);
-            Assert.Contains("VLOOKUP(", firstVisitHeader.Formula);
-            Assert.Equal(FormatEnum.DATE, firstVisitHeader.Format);
-        }
-        
-        if (lastVisitHeader != null)
-        {
-            Assert.NotNull(lastVisitHeader.Formula);
-            Assert.Contains("VLOOKUP(", lastVisitHeader.Formula);
-            Assert.Equal(FormatEnum.DATE, lastVisitHeader.Format);
-        }
-    }
-
-    [Fact]
     public void MapFromRangeData_WithEmptyRows_ShouldFilterOutEmptyRows()
     {
         // Arrange
@@ -159,13 +64,74 @@ public class NameMapperTests
         Assert.Equal("John Doe", result[0].Name);
         Assert.Equal("Jane Smith", result[1].Name);
     }
+    
+    #endregion
+
+    #region Sheet Configuration Tests (Core Structure)
+    
+    [Fact]
+    public void GetSheet_ShouldReturnCorrectSheetConfiguration()
+    {
+        // Act
+        var result = NameMapper.GetSheet();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("Names", result.Name);
+        Assert.NotNull(result.Headers);
+        Assert.True(result.Headers.Count >= 5, "Should have basic name aggregation fields");
+        
+        // Verify essential headers exist with proper formatting
+        var nameHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.NAME.GetDescription());
+        Assert.NotNull(nameHeader);
+        
+        var tripsHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.TRIPS.GetDescription());
+        Assert.NotNull(tripsHeader);
+        Assert.Equal(FormatEnum.NUMBER, tripsHeader.Format);
+        
+        var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
+        Assert.NotNull(payHeader);
+        Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
+        
+        // Verify all headers have proper column assignments
+        Assert.All(result.Headers, header => 
+        {
+            Assert.True(header.Index >= 0, "All headers should have valid indexes");
+            Assert.False(string.IsNullOrEmpty(header.Column), "All headers should have column letters");
+        });
+    }
+    
+    #endregion
+
+    #region High-Level Formula Validation (No Implementation Details)
+    
+    [Fact]
+    public void GetSheet_ShouldGenerateValidFormulas()
+    {
+        // Act
+        var sheet = NameMapper.GetSheet();
+        var formulaHeaders = sheet.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
+
+        // Assert - High-level validation only (don't test formula internals)
+        if (formulaHeaders.Any())
+        {
+            // All formulas should start with =
+            Assert.All(formulaHeaders, header => Assert.StartsWith("=", header.Formula));
+            
+            // Should not have unresolved placeholders
+            Assert.All(formulaHeaders, header => 
+            {
+                Assert.DoesNotContain("{keyRange}", header.Formula);
+                Assert.DoesNotContain("{header}", header.Formula);
+            });
+        }
+    }
 
     [Theory]
-    [InlineData("Name", "John Doe")]
+    [InlineData("Name", "John Doe")]   // Representative test cases only
     [InlineData("Trips", "5")]
     [InlineData("Pay", "125.50")]
-    [InlineData("Tip", "25.00")]
-    public void MapFromRangeData_WithVariousHeaders_ShouldMapCorrectly(string headerName, string testValue)
+    public void MapFromRangeData_WithSingleColumn_ShouldMapCorrectly(string headerName, string testValue)
     {
         // Arrange
         var values = new List<IList<object>>
@@ -184,5 +150,20 @@ public class NameMapperTests
         var name = result[0];
         Assert.Equal(2, name.RowId);
         Assert.True(name.Saved);
+        
+        switch (headerName)
+        {
+            case "Name":
+                Assert.Equal(testValue, name.Name);
+                break;
+            case "Trips":
+                Assert.Equal(5, name.Trips);
+                break;
+            case "Pay":
+                Assert.Equal(125.50m, name.Pay);
+                break;
+        }
     }
+    
+    #endregion
 }

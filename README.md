@@ -1,5 +1,6 @@
-
 # RaptorSheets.Core
+
+A comprehensive .NET 8 library that simplifies Google Sheets API interactions for developers who need powerful spreadsheet integration without the complexity. Build custom Google Sheets solutions or use our specialized packages for common use cases.
 
 | Badge Name | Status | Site |
 | ---------- | :------------: | :------------: |
@@ -9,18 +10,80 @@
 | Code Quality | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=khanjal_RaptorSheets&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=khanjal_RaptorSheets) | [SonarCloud](https://sonarcloud.io/project/overview?id=khanjal_RaptorSheets) |
 | License | [![License](https://img.shields.io/github/license/khanjal/RaptorSheets)](LICENSE) | - |
 
-## 🚀 Quick Start
+## 📦 Installation
 
 ```bash
-# Install the core package
+# Core library for custom implementations
 dotnet add package RaptorSheets.Core
+
+# Or choose a specialized package
+dotnet add package RaptorSheets.Gig    # For gig work tracking
 ```
 
+## 🚀 Quick Start
 
+```csharp
+using RaptorSheets.Core.Services;
+using RaptorSheets.Core.Models.Google;
 
-## 📚 Project Description
+// Set up authentication
+var credentials = new Dictionary<string, string>
+{
+    ["type"] = "service_account",
+    ["client_email"] = "service@project.iam.gserviceaccount.com",
+    ["private_key"] = "-----BEGIN PRIVATE KEY-----\n...",
+    // ... other credentials
+};
 
-RaptorSheets is a comprehensive .NET 8 library suite that simplifies interactions between custom API services and the Google Sheets API. Built for developers who need powerful spreadsheet integration without the complexity, featuring extensive test coverage and production-ready reliability.
+var service = new GoogleSheetService(credentials, spreadsheetId);
+
+// Read data from existing sheet
+var sheetData = await service.GetSheetData("MySheet");
+Console.WriteLine($"Found {sheetData.Values.Count} rows");
+
+// Create custom sheet with formatting
+var sheetModel = new SheetModel
+{
+    Name = "CustomSheet",
+    TabColor = ColorEnum.BLUE,
+    Headers = new List<SheetCellModel>
+    {
+        new() { Name = "ID", Format = FormatEnum.NUMBER },
+        new() { Name = "Name", Format = FormatEnum.TEXT },
+        new() { Name = "Amount", Format = FormatEnum.CURRENCY }
+    }
+};
+
+// Generate and execute requests
+var requests = sheetModel.GenerateRequests();
+await service.ExecuteBatchUpdate(requests);
+
+// Update data
+var valueRange = new ValueRange
+{
+    Values = new List<IList<object>>
+    {
+        new List<object> { "ID", "Name", "Amount" },
+        new List<object> { 1, "John Doe", 150.75 }
+    }
+};
+await service.UpdateData(valueRange, "CustomSheet!A1:C2");
+```
+
+## 📚 Specialized Packages
+
+Built on RaptorSheets.Core, these packages provide domain-specific functionality:
+
+| Package | Version | Purpose | Documentation |
+|---------|---------|---------|---------------|
+| **[RaptorSheets.Gig](https://www.nuget.org/packages/RaptorSheets.Gig/)** | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) | Complete gig work tracking with automated analytics | **[📖 Gig Guide](docs/GIG.md)** |
+| **RaptorSheets.Stock** *(Coming Soon)* | - | Investment portfolio tracking | - |
+
+> **Looking for gig work tracking?** Check out **[RaptorSheets.Gig](docs/GIG.md)** - a complete solution for freelancers and gig workers with pre-built sheets for trips, shifts, earnings, and comprehensive analytics.
+
+## 📚 Core Library Overview
+
+RaptorSheets.Core provides the foundational infrastructure for Google Sheets integration, designed to handle complex spreadsheets with automated formulas, cross-sheet references, and strict column ordering.
 
 ### ✨ Key Features
 
@@ -36,45 +99,43 @@ RaptorSheets is a comprehensive .NET 8 library suite that simplifies interaction
 ### 🏗️ Architecture
 
 ```
-Your Application
+Your Custom Application
        ↓
-RaptorSheets.Core (GoogleSheetService)
-       ↓
-SheetServiceWrapper (API abstraction)
+RaptorSheets.Core
+  ├── GoogleSheetService (High-level operations)
+  ├── SheetServiceWrapper (API abstraction)  
+  ├── Models & Entities (Type safety)
+  └── Extensions & Helpers (Utilities)
        ↓
 Google Sheets API v4
 ```
 
 ### 💼 Use Cases
 
-- **Automate Business Workflows:** Integrate Google Sheets with your .NET applications to manage business data, reporting, and analytics.
-- **Custom Sheet Generation:** Programmatically create, format, and protect sheets for any domain—finance, inventory, CRM, project management, and more.
-- **Data Synchronization:** Sync data between your application and Google Sheets for real-time dashboards or collaborative editing.
-- **Advanced Analytics:** Build daily, weekly, monthly, or custom reports using Core’s batch operations and formula support.
-- **Reusable Foundation:** Use as a base for building higher-level packages (like RaptorSheets.Gig) or your own domain-specific sheet managers.
+- **Custom Business Solutions**: Build domain-specific Google Sheets integrations for any industry
+- **Data Pipeline Integration**: Automate data sync between your applications and collaborative spreadsheets  
+- **Advanced Report Generation**: Create complex reports with formulas, cross-sheet references, and automated calculations
+- **Workflow Automation**: Streamline business processes that rely on Google Sheets data
+- **Foundation for Specialized Packages**: Use as a base to create domain-specific managers (like RaptorSheets.Gig)
 
 ## 📖 Documentation
 
-Choose the documentation that matches your needs:
-
 | Documentation | Purpose | Audience |
 |---------------|---------|----------|
-| **[📚 Complete Guide](DOCUMENTATION.md)** | Comprehensive overview and getting started | All users |
-| **[🔧 Core Library](docs/CORE.md)** | Core functionality and custom implementations | Library developers |
-| [RaptorSheets.Gig Package](https://www.nuget.org/packages/RaptorSheets.Gig/) | Gig work and freelance tracking | Gig workers, freelancers |
-| **[ Authentication](docs/AUTHENTICATION.md)** | Setup guide for Google APIs | All users |
+| **[🚀 Getting Started](docs/GETTING-STARTED.md)** | Quick setup and first steps | All users |
+| **[🔐 Authentication](docs/AUTHENTICATION.md)** | Google API setup guide | All users |
+| **[🔧 Core Library](docs/CORE.md)** | Complete Core functionality reference | Core developers |
+| **[� API Reference](docs/API-REFERENCE.md)** | Complete API documentation | All developers |
+| **[📊 Generic Sheet Manager](docs/GENERIC-SHEET-MANAGER.md)** | Schema-less operations | Flexible use cases |
 
-## 📦 Available Packages
+### Specialized Package Documentation
+| Package | Documentation |
+|---------|---------------|
+| **[� Gig Package](docs/GIG.md)** | Complete gig work tracking guide |
 
-| Package | Version | Purpose | Dependencies | Documentation |
-|---------|---------|---------|--------------|---------------|
-| **RaptorSheets.Core** | ![NuGet](https://img.shields.io/nuget/v/RaptorSheets.Core) | Core functionality for custom implementations | Google.Apis.Sheets.v4 | [🔧 Core Docs](docs/CORE.md) |
-| **RaptorSheets.Gig** | ![NuGet](https://img.shields.io/nuget/v/RaptorSheets.Gig) | Gig work and freelance tracking | Google.Apis.Sheets.v4, Google.Apis.Drive.v3 | [💼 Gig Docs](docs/GIG.md) |
-| **RaptorSheets.Common** | - | Shared utilities (included in packages) | - | - |
+## 🔐 Authentication Quick Start
 
-## 🔐 Authentication
-
-RaptorSheets supports multiple authentication methods. Here's a quick example:
+RaptorSheets supports multiple authentication methods:
 
 ### Service Account (Recommended)
 ```csharp
@@ -86,39 +147,56 @@ var credentials = new Dictionary<string, string>
     ["client_email"] = "service@project.iam.gserviceaccount.com",
     ["client_id"] = "your-client-id"
 };
-
-var manager = new GoogleSheetManager(credentials, spreadsheetId);
 ```
 
-**🔐 [Complete Authentication Guide](docs/AUTHENTICATION.md)**
+### OAuth2 Access Token
+```csharp
+var manager = new GoogleSheetManager(accessToken, spreadsheetId);
+```
 
-## 💡 Usage Example
+**📖 [Complete Authentication Guide](docs/AUTHENTICATION.md)**
+
+## 🏗️ Building Custom Packages
+
+RaptorSheets.Core is designed to be the foundation for domain-specific packages. Here's how to create your own:
 
 ```csharp
-using RaptorSheets.Core.Services;
-using RaptorSheets.Core.Models.Google;
-
-var service = new GoogleSheetService(credentials, spreadsheetId);
-
-// Create custom sheet structure
-var sheetModel = new SheetModel
+// 1. Define your domain entities
+public class CustomEntity
 {
-    Name = "CustomSheet",
-    Headers = new List<SheetCellModel>
-    {
-        new() { Name = "ID", Format = FormatEnum.NUMBER },
-        new() { Name = "Description", Format = FormatEnum.TEXT }
-    }
-};
+    public string Name { get; set; }
+    public decimal Value { get; set; }
+    public DateTime Date { get; set; }
+}
 
-// Generate and execute requests (see Core docs for details)
+// 2. Create a domain-specific manager
+public class CustomManager
+{
+    private readonly GoogleSheetService _service;
+    
+    public CustomManager(Dictionary<string, string> credentials, string spreadsheetId)
+    {
+        _service = new GoogleSheetService(credentials, spreadsheetId);
+    }
+    
+    public async Task<List<CustomEntity>> GetCustomData()
+    {
+        var data = await _service.GetSheetData("CustomSheet");
+        return CustomMapper.MapFromRangeData(data.Values);
+    }
+    
+    public async Task AddCustomData(List<CustomEntity> entities)
+    {
+        var rangeData = CustomMapper.MapToRangeData(entities);
+        var valueRange = new ValueRange { Values = rangeData };
+        await _service.UpdateData(valueRange, "CustomSheet!A:Z");
+    }
+}
+
+// 3. Build specialized functionality on top of Core's foundation
 ```
 
----
-
-## Looking for Gig Work Tracking?
-
-RaptorSheets.Gig is a package built on top of Core for gig work and freelance tracking. [Learn more &rarr;](https://www.nuget.org/packages/RaptorSheets.Gig/)
+**See [RaptorSheets.Gig](docs/GIG.md) as a complete example of a specialized package built on Core.**
 
 ## 🛠️ Development Setup
 
@@ -136,31 +214,18 @@ dotnet build
 dotnet test
 ```
 
-**🛠️ [Complete Development Guide](DOCUMENTATION.md#development-setup)**
-
 ## 🧪 Testing
-
-The library includes comprehensive test coverage across all packages:
 
 ```bash
 # Run all tests
 dotnet test
 
-# Run package-specific tests
+# Run Core library tests specifically  
 dotnet test RaptorSheets.Core.Tests/
-dotnet test RaptorSheets.Gig.Tests/
 
 # Run with coverage
 dotnet test --collect:"XPlat Code Coverage"
 ```
-
-**Test Coverage Areas:**
-- 🏗️ Core functionality and services
-- 📦 Package-specific implementations  
-- 🔐 Authentication methods
-- ⚠️ Error handling and validation
-- 🧩 Extension methods and utilities
-- 🔗 Real Google Sheets API integration
 
 ## 🚦 Performance & API Limits
 
@@ -176,26 +241,21 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ## 🤝 Contributing
 
-We welcome contributions to any package in the RaptorSheets suite!
+We welcome contributions to RaptorSheets.Core and the broader ecosystem!
 
 ### Development Workflow
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Choose your focus area:
-   - **Core Library**: Enhance base functionality
-   - **Gig Package**: Add gig work features
-   - **New Package**: Create a new domain-specific package
+3. Focus on Core library enhancements or create new specialized packages
 4. Write comprehensive tests
 5. Update relevant documentation
-6. Ensure all tests pass (`dotnet test`)
-7. Submit a Pull Request
+6. Submit a Pull Request
 
-### Code Standards
-- Follow existing patterns within each package
-- Maintain backward compatibility for Core library
-- Add package-specific tests for new features
-- Update package-specific documentation
-- Use appropriate XML documentation
+### Areas for Contribution
+- **Core Library**: Enhance base functionality, performance, or new Google Sheets features
+- **New Packages**: Create domain-specific packages (Stock, Real Estate, etc.)
+- **Documentation**: Improve guides, examples, and API documentation
+- **Testing**: Add test coverage or performance benchmarks
 
 ## 📄 License
 
@@ -203,43 +263,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 💬 Support & Resources
 
-### Documentation
-- 📚 [Complete Guide](DOCUMENTATION.md) - Overview and getting started
-- 🛠️ [Core Library](docs/CORE.md) - Core functionality reference  
-- 💼 [Gig Package](docs/GIG.md) - Gig work tracking guide
-- 🔐 [Authentication](docs/AUTHENTICATION.md) - Setup instructions
-
-### Community & Support
-- 🐞 [Report Issues](https://github.com/khanjal/RaptorSheets/issues) - Bug reports and feature requests
-- 💬 [Discussions](https://github.com/khanjal/RaptorSheets/discussions) - Community support and questions
-- 📖 [Google Sheets API Reference](https://googleapis.dev/dotnet/Google.Apis.Sheets.v4/latest/api/Google.Apis.Sheets.v4.html) - Official API documentation
-- 🌐 [Project Homepage](https://gig.raptorsheets.com) - Additional resources and examples
-
-## 🗺️ Roadmap
-
-### Core Library
-- 📦 Independent NuGet package release
-- 🔐 Enhanced authentication flows
-- 🧩 Plugin architecture for custom packages
-
-### Package Ecosystem
-- 📊 Advanced analytics across all packages
-- 🌍 Multi-language localization support
-- 📱 Mobile-optimized implementations
-- 🏢 Enterprise features and compliance
-
-### New Packages
-- 💸 Business expense tracking
-- 📅 Project management and time tracking
-- 🏠 Real estate portfolio management
-- 📦 Inventory management systems
+- 🐞 [Report Issues](https://github.com/khanjal/RaptorSheets/issues)
+- 💬 [Discussions](https://github.com/khanjal/RaptorSheets/discussions)
+- 📖 [Google Sheets API Reference](https://googleapis.dev/dotnet/Google.Apis.Sheets.v4/latest/api/Google.Apis.Sheets.v4.html)
+- 🌐 [Project Homepage](https://gig.raptorsheets.com)
 
 ---
 
 **Made with ❤️ by Iron Raptor Digital**
-
-## API Documentation
-
-For details on the underlying Google Sheets API concepts used in this project, see the official documentation:
-
-- [Google Sheets API Concepts Guide](https://developers.google.com/workspace/sheets/api/guides/concepts)

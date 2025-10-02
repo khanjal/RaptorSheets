@@ -13,25 +13,32 @@ namespace RaptorSheets.Gig.Constants;
 public static class SheetsConfig
 {
     /// <summary>
-    /// Sheet names
+    /// Sheet names with implicit ordering based on declaration order
     /// </summary>
     public static class SheetNames
     {
-        public const string Addresses = "Addresses";
-        public const string Daily = "Daily";
+        // Primary data entry sheets (declared first for highest priority)
+        public const string Trips = "Trips";
+        public const string Shifts = "Shifts";
         public const string Expenses = "Expenses";
-        public const string Monthly = "Monthly";
+        
+        // Reference data sheets (depend on primary data)
+        public const string Addresses = "Addresses";
         public const string Names = "Names";
         public const string Places = "Places";
         public const string Regions = "Regions";
         public const string Services = "Services";
-        public const string Setup = "Setup";
-        public const string Shifts = "Shifts";
-        public const string Trips = "Trips";
         public const string Types = "Types";
+        
+        // Analysis/summary sheets (depend on primary and reference data)
+        public const string Daily = "Daily";
         public const string Weekdays = "Weekdays";
         public const string Weekly = "Weekly";
+        public const string Monthly = "Monthly";
         public const string Yearly = "Yearly";
+        
+        // Administrative sheets (lowest priority, declared last)
+        public const string Setup = "Setup";
     }
 
     /// <summary>
@@ -116,11 +123,34 @@ public static class SheetsConfig
     /// </summary>
     public static class SheetUtilities
     {
+        /// <summary>
+        /// Gets all sheet names in declaration order from SheetNames constants.
+        /// The order is determined by the declaration order in the SheetNames class.
+        /// </summary>
         public static List<string> GetAllSheetNames() =>
-            EntitySheetOrderHelper.GetSheetOrderFromEntity<SheetEntity>();
+            ConstantsOrderHelper.GetOrderFromConstants(typeof(SheetNames));
         
+        /// <summary>
+        /// Validates that a sheet name is recognized by the system
+        /// </summary>
         public static bool IsValidSheetName(string name) =>
             GetAllSheetNames().Any(sheet => string.Equals(sheet, name, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>
+        /// Gets the order index of a sheet name (zero-based).
+        /// </summary>
+        /// <param name="sheetName">Sheet name to get index for</param>
+        /// <returns>Zero-based index, or -1 if not found</returns>
+        public static int GetSheetIndex(string sheetName) =>
+            ConstantsOrderHelper.GetSheetIndex(typeof(SheetNames), sheetName);
+
+        /// <summary>
+        /// Validates that all provided sheet names are valid.
+        /// </summary>
+        /// <param name="sheetNames">Sheet names to validate</param>
+        /// <returns>List of validation errors (empty if valid)</returns>
+        public static List<string> ValidateSheetNames(IEnumerable<string> sheetNames) =>
+            ConstantsOrderHelper.ValidateSheetNames(typeof(SheetNames), sheetNames);
 
         /// <summary>
         /// Gets all sheet names in uppercase for case-insensitive switch statements

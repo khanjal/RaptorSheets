@@ -273,14 +273,82 @@ public class GoogleSheetManager : IGoogleSheetManager
                 return sheetEntity;
             }
 
-            // Use the helper to create delete sheet requests
-            var deleteRequests = GoogleRequestHelpers.GenerateDeleteSheetRequests(sheetProperties);
+            // Filter out sheets that don't have valid IDs (they may not exist)
+            var existingSheetProperties = sheetProperties
+                .Where(p => !string.IsNullOrEmpty(p.Id))
+                .ToList();
+
+            if (existingSheetProperties.Count == 0)
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage("No existing sheets to delete", MessageTypeEnum.DELETE_SHEET));
+                return sheetEntity;
+            }
+
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Found {existingSheetProperties.Count} sheets to delete: {string.Join(", ", existingSheetProperties.Select(p => $"{p.Name}({p.Id})"))} ", MessageTypeEnum.DELETE_SHEET));
+
+            // Check if we're trying to delete all sheets in the spreadsheet
+            var spreadsheetInfo = await GetSpreadsheetInfo();
+            var totalSheetsInSpreadsheet = spreadsheetInfo?.Sheets?.Count ?? 0;
+            
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Total sheets in spreadsheet: {totalSheetsInSpreadsheet}, attempting to delete: {existingSheetProperties.Count}", MessageTypeEnum.DELETE_SHEET));
+
+            // If we're deleting all or most sheets, create a temporary placeholder first
+            bool needsPlaceholder = existingSheetProperties.Count >= totalSheetsInSpreadsheet;
+            string? placeholderSheetId = null;
+
+            if (needsPlaceholder)
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage("Creating placeholder sheet to allow deletion of all sheets", MessageTypeEnum.DELETE_SHEET));
+                
+                // Create a temporary placeholder sheet so we can delete all the target sheets
+                var placeholderName = $"TempPlaceholder_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+                var placeholderRequest = new BatchUpdateSpreadsheetRequest
+                {
+                    Requests = new List<Request>
+                    {
+                        new Request
+                        {
+                            AddSheet = new AddSheetRequest
+                            {
+                                Properties = new SheetProperties
+                                {
+                                    Title = placeholderName
+                                }
+                            }
+                        }
+                    }
+                };
+
+                var placeholderResult = await _googleSheetService.BatchUpdateSpreadsheet(placeholderRequest);
+                if (placeholderResult?.Replies?.Count > 0 && placeholderResult.Replies[0].AddSheet != null)
+                {
+                    placeholderSheetId = placeholderResult.Replies[0].AddSheet.Properties.SheetId.ToString();
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Created temporary placeholder sheet: {placeholderName} (ID: {placeholderSheetId})", MessageTypeEnum.DELETE_SHEET));
+                }
+                else
+                {
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage("Failed to create placeholder sheet for deletion", MessageTypeEnum.DELETE_SHEET));
+                    return sheetEntity;
+                }
+            }
+
+            // Sort sheets by their order in the entity definition to ensure consistent deletion order
+            var entitySheetOrder = SheetsConfig.SheetUtilities.GetAllSheetNames();
+            var orderedSheetProperties = existingSheetProperties
+                .OrderBy(p => entitySheetOrder.IndexOf(p.Name))
+                .ToList();
+
+            // Use the helper to create delete sheet requests in reverse order (delete from end to beginning)
+            // This prevents index shifting issues during batch deletion
+            var deleteRequests = GoogleRequestHelpers.GenerateDeleteSheetRequests(orderedSheetProperties.AsEnumerable().Reverse().ToList());
 
             if (deleteRequests.Count == 0)
             {
                 sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No valid sheet IDs found for deletion", MessageTypeEnum.DELETE_SHEET));
                 return sheetEntity;
             }
+
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Preparing to delete {deleteRequests.Count} sheets", MessageTypeEnum.DELETE_SHEET));
 
             var batchRequest = new BatchUpdateSpreadsheetRequest
             {
@@ -292,20 +360,27 @@ public class GoogleSheetManager : IGoogleSheetManager
 
             if (result != null)
             {
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Batch delete request completed successfully", MessageTypeEnum.DELETE_SHEET));
+                
                 // Get the names of successfully processed sheets
-                var validSheetNames = sheetProperties
-                    .Where(p => !string.IsNullOrEmpty(p.Id))
-                    .Select(p => p.Name)
-                    .ToList();
+                var validSheetNames = orderedSheetProperties.Select(p => p.Name).ToList();
 
                 foreach (var sheetName in validSheetNames)
                 {
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Sheet {sheetName} deleted successfully", MessageTypeEnum.DELETE_SHEET));
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Sheet {sheetName} deletion requested", MessageTypeEnum.DELETE_SHEET));
+                }
+
+                // Clean up placeholder if we created one and it hasn't been deleted
+                if (needsPlaceholder && !string.IsNullOrEmpty(placeholderSheetId))
+                {
+                    // We'll let the calling code handle placeholder cleanup after creating new sheets
+                    // Store the placeholder ID in a message for later cleanup
+                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"PlaceholderSheetId:{placeholderSheetId}", MessageTypeEnum.DELETE_SHEET));
                 }
             }
             else
             {
-                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage("Failed to delete sheets", MessageTypeEnum.DELETE_SHEET));
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage("Failed to delete sheets - batch request returned null", MessageTypeEnum.DELETE_SHEET));
             }
         }
         catch (Exception ex)
