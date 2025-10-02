@@ -97,27 +97,10 @@ jobs:
         
         echo "Packing $PACKAGE version $VERSION"
         
-        # Debug: Check file existence
-        echo "Checking file structure..."
-        ls -la docs/ || echo "docs/ directory not found"
-        ls -la docs/GIG.md || echo "docs/GIG.md not found"
-        ls -la $PACKAGE/ || echo "$PACKAGE/ directory not found"
-        
-        # If GIG.md doesn't exist, temporarily disable PackageReadmeFile
-        if [ ! -f "docs/GIG.md" ]; then
-          echo "GIG.md not found, packing without readme..."
-          dotnet pack $PACKAGE/$PACKAGE.csproj \
-            -c Release \
-            -p:PackageVersion=$VERSION \
-            -p:PackageReadmeFile="" \
-            --output .
-        else
-          echo "GIG.md found, packing with readme..."
-          dotnet pack $PACKAGE/$PACKAGE.csproj \
-            -c Release \
-            -p:PackageVersion=$VERSION \
-            --output .
-        fi
+        dotnet pack $PACKAGE/$PACKAGE.csproj \
+          -c Release \
+          -p:PackageVersion=$VERSION \
+          --output .
           
     - name: Push to NuGet
       env:
