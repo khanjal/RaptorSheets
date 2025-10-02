@@ -49,19 +49,22 @@ jobs:
           echo "Processing release tag: $TAG_NAME"
           
           # Extract package and version from tag
-          # Expected formats: gig/v1.2.0, stock/v1.2.0, core/v1.2.0
+          # Expected formats: gig/v1.2.0, gig/1.2.0, stock/v1.2.0, stock/1.2.0, core/v1.2.0, core/1.2.0
           if [[ "$TAG_NAME" == gig/* ]]; then
             PACKAGE="RaptorSheets.Gig"
-            VERSION=${TAG_NAME#gig/v}
+            VERSION=${TAG_NAME#gig/}
+            VERSION=${VERSION#v}  # Remove 'v' prefix if present
           elif [[ "$TAG_NAME" == stock/* ]]; then
             PACKAGE="RaptorSheets.Stock"
-            VERSION=${TAG_NAME#stock/v}
+            VERSION=${TAG_NAME#stock/}
+            VERSION=${VERSION#v}  # Remove 'v' prefix if present
           elif [[ "$TAG_NAME" == core/* ]]; then
             PACKAGE="RaptorSheets.Core"
-            VERSION=${TAG_NAME#core/v}
+            VERSION=${TAG_NAME#core/}
+            VERSION=${VERSION#v}  # Remove 'v' prefix if present
           else
             echo "Unknown tag format: $TAG_NAME"
-            echo "Expected formats: gig/v1.2.0, stock/v1.2.0, core/v1.2.0"
+            echo "Expected formats: gig/v1.2.0, gig/1.2.0, stock/v1.2.0, stock/1.2.0, core/v1.2.0, core/1.2.0"
             exit 1
           fi
         else
@@ -94,10 +97,27 @@ jobs:
         
         echo "Packing $PACKAGE version $VERSION"
         
-        dotnet pack $PACKAGE/$PACKAGE.csproj \
-          -c Release \
-          -p:PackageVersion=$VERSION \
-          --output .
+        # Debug: Check file existence
+        echo "Checking file structure..."
+        ls -la docs/ || echo "docs/ directory not found"
+        ls -la docs/GIG.md || echo "docs/GIG.md not found"
+        ls -la $PACKAGE/ || echo "$PACKAGE/ directory not found"
+        
+        # If GIG.md doesn't exist, temporarily disable PackageReadmeFile
+        if [ ! -f "docs/GIG.md" ]; then
+          echo "GIG.md not found, packing without readme..."
+          dotnet pack $PACKAGE/$PACKAGE.csproj \
+            -c Release \
+            -p:PackageVersion=$VERSION \
+            -p:PackageReadmeFile="" \
+            --output .
+        else
+          echo "GIG.md found, packing with readme..."
+          dotnet pack $PACKAGE/$PACKAGE.csproj \
+            -c Release \
+            -p:PackageVersion=$VERSION \
+            --output .
+        fi
           
     - name: Push to NuGet
       env:

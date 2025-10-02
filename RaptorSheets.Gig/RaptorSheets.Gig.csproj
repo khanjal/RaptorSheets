@@ -20,8 +20,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-  <None Include="..\README.md" Pack="true" PackagePath="\" />
-  <None Include="..\docs\GIG.md" Pack="true" PackagePath="\" />
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\docs\GIG.md" Pack="true" PackagePath="\" Condition="Exists('..\docs\GIG.md')" />
     <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
