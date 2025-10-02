@@ -467,52 +467,106 @@ public class GoogleSheetManager : IGoogleSheetManager
     public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets)
     {
         var properties = new List<PropertyEntity>();
-        var sheetInfo = await _googleSheetService.GetSheetInfo(sheets);
+        
+        // Get both headers and first column in a single call for efficiency
+        var combinedRanges = sheets.SelectMany(sheet => new[]
+        {
+            $"{sheet}!{GoogleConfig.HeaderRange}",  // Headers (1:1)
+            $"{sheet}!{GoogleConfig.RowRange}"      // First column data (A:A)
+        }).ToList();
+        
+        var sheetInfo = await _googleSheetService.GetSheetInfo(combinedRanges);
 
         foreach (var sheet in sheets)
         {
             var property = new PropertyEntity();
-            var sheetProperties = sheetInfo?.Sheets.FirstOrDefault(x => x.Properties.Title == sheet);
-
+            
             var sheetHeaderValues = "";
             int maxRow = 0;
-            int maxRowValue = 0;
-            var sheetId = sheetProperties?.Properties.SheetId.ToString() ?? "";
+            int maxRowValue = 1; // Default to header row
+            var sheetId = "";
 
-            if (sheetProperties != null)
+            // Find the sheet in the response
+            var sheetData = sheetInfo?.Sheets.FirstOrDefault(x => x.Properties.Title == sheet);
+            
+            if (sheetData != null)
             {
-                // Get the total number of rows in the sheet (default 1000, or as set in the sheet)
-                maxRow = sheetProperties.Properties.GridProperties.RowCount ?? 0;
+                sheetId = sheetData.Properties.SheetId.ToString() ?? "";
+                maxRow = sheetData.Properties.GridProperties.RowCount ?? 1000;
 
-                // Get header values from the first row
-                if (sheetProperties.Data != null && sheetProperties.Data.Count > 0)
+                // The Google Sheets API should return data for both ranges we requested
+                // We need to process each GridData in the Data collection
+                if (sheetData.Data != null && sheetData.Data.Count > 0)
                 {
-                    var headerData = sheetProperties.Data[0];
-                    if (headerData?.RowData != null && headerData.RowData.Count > 0 && headerData.RowData[0]?.Values != null)
+                    foreach (var dataRange in sheetData.Data)
                     {
-                        sheetHeaderValues = string.Join(",", headerData.RowData[0].Values
-                            .Where(x => x.FormattedValue != null)
-                            .Select(x => x.FormattedValue)
-                            .ToList());
-
-                        // Find the last row with a value in the first column (excluding header)
-                        var rowData = headerData.RowData;
-                        if (rowData != null)
+                        if (dataRange?.RowData != null && dataRange.RowData.Count > 0)
                         {
-                            for (int i = rowData.Count - 1; i > 0; i--) // start from the end, skip header (i=0)
+                            // Determine if this is header data or column data based on structure
+                            var firstRow = dataRange.RowData[0];
+                            var hasMultipleColumns = firstRow?.Values?.Count > 1;
+                            var hasMultipleRows = dataRange.RowData.Count > 1;
+
+                            if (!hasMultipleRows && hasMultipleColumns)
                             {
-                                var cell = rowData[i]?.Values?.FirstOrDefault();
-                                if (cell != null && !string.IsNullOrEmpty(cell.FormattedValue))
+                                // This is likely the headers (1:1 range) - single row, multiple columns
+                                sheetHeaderValues = string.Join(",", firstRow.Values
+                                    .Where(x => x.FormattedValue != null)
+                                    .Select(x => x.FormattedValue)
+                                    .ToList());
+                            }
+                            else if (hasMultipleRows && !hasMultipleColumns)
+                            {
+                                // This is likely the A:A column data - multiple rows, single column
+                                // Find the last row with a value (excluding header at index 0)
+                                for (int i = dataRange.RowData.Count - 1; i > 0; i--)
                                 {
-                                    maxRowValue = i + 1; // +1 because row index is zero-based
-                                    break;
+                                    var cell = dataRange.RowData[i]?.Values?.FirstOrDefault();
+                                    if (cell != null && !string.IsNullOrEmpty(cell.FormattedValue))
+                                    {
+                                        maxRowValue = i + 1; // +1 because row index is zero-based
+                                        break;
+                                    }
                                 }
                             }
-                            if (maxRowValue == 0 && rowData.Count > 1)
-                                maxRowValue = 1; // Only header exists
+                            else if (hasMultipleRows && hasMultipleColumns)
+                            {
+                                // This might be a full range response - check if first row looks like headers
+                                var possibleHeaders = firstRow?.Values;
+                                if (possibleHeaders != null && possibleHeaders.Count > 1)
+                                {
+                                    // Extract headers from first row
+                                    sheetHeaderValues = string.Join(",", possibleHeaders
+                                        .Where(x => x.FormattedValue != null)
+                                        .Select(x => x.FormattedValue)
+                                        .ToList());
+                                }
+
+                                // Find last row with data in first column
+                                for (int i = dataRange.RowData.Count - 1; i > 0; i--)
+                                {
+                                    var cell = dataRange.RowData[i]?.Values?.FirstOrDefault();
+                                    if (cell != null && !string.IsNullOrEmpty(cell.FormattedValue))
+                                    {
+                                        maxRowValue = i + 1;
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+                else
+                {
+                    // If we don't get data, there might be an issue - log this for debugging
+                    // but don't fail completely
+                    Console.WriteLine($"Warning: No data returned for sheet '{sheet}' ranges");
+                }
+            }
+            else
+            {
+                // Sheet not found in response - this is an issue that should be logged
+                Console.WriteLine($"Warning: Sheet '{sheet}' not found in API response");
             }
 
             property.Id = sheetId;
