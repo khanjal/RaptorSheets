@@ -1,6 +1,6 @@
 # RaptorSheets.Core
 
-A comprehensive .NET 8 library that simplifies Google Sheets API interactions for developers who need powerful spreadsheet integration without the complexity. Build custom Google Sheets solutions or use our specialized packages for common use cases.
+A comprehensive .NET 8 library that simplifies Google Sheets API interactions for developers who need powerful spread| **[📋 Gig Package](RaptorSheets.Gig/README.md)** | Complete gig work tracking guide |heet integration without the complexity. Build custom Google Sheets solutions or use our specialized packages for common use cases.
 
 | Badge Name | Status | Site |
 | ---------- | :------------: | :------------: |
@@ -83,10 +83,10 @@ Built on RaptorSheets.Core, these packages provide domain-specific functionality
 
 | Package | Version | Purpose | Documentation |
 |---------|---------|---------|---------------|
-| **[RaptorSheets.Gig](https://www.nuget.org/packages/RaptorSheets.Gig/)** | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) | Complete gig work tracking with automated analytics | **[📖 Gig Guide](docs/GIG.md)** |
+| **[RaptorSheets.Gig](https://www.nuget.org/packages/RaptorSheets.Gig/)** | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) | Complete gig work tracking with automated analytics | **[📖 Gig Guide](RaptorSheets.Gig/README.md)** |
 | **RaptorSheets.Stock** *(Coming Soon)* | - | Investment portfolio tracking | - |
 
-> **Looking for gig work tracking?** Check out **[RaptorSheets.Gig](docs/GIG.md)** - a complete solution for freelancers and gig workers with pre-built sheets for trips, shifts, earnings, and comprehensive analytics.
+> **Looking for gig work tracking?** Check out **[RaptorSheets.Gig](RaptorSheets.Gig/README.md)** - a complete solution for freelancers and gig workers with pre-built sheets for trips, shifts, earnings, and comprehensive analytics.
 
 ## 📚 Core Library Overview
 
@@ -203,7 +203,7 @@ public class CustomManager
 // 3. Build specialized functionality on top of Core's foundation
 ```
 
-**See [RaptorSheets.Gig](docs/GIG.md) as a complete example of a specialized package built on Core.**
+**See [RaptorSheets.Gig](RaptorSheets.Gig/README.md) as a complete example of a specialized package built on Core.**
 
 ## 🛠️ Development Setup
 
