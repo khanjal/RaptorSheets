@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
   <PackageId>RaptorSheets.Gig</PackageId>
-  <PackageReadmeFile>docs\GIG.md</PackageReadmeFile>
+  <PackageReadmeFile>docs/GIG.md</PackageReadmeFile>
   <Authors>Iron Raptor Digital</Authors>
   <Description>A specialized library built on RaptorSheets.Core for gig work and freelance tracking. Provides pre-configured sheets for trips, shifts, expenses, and comprehensive analytics for gig economy workers.</Description>
   <PackageLicenseExpression>MIT</PackageLicenseExpression>
