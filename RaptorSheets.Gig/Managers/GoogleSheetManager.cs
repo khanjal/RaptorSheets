@@ -482,7 +482,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             var property = new PropertyEntity();
             
             var sheetHeaderValues = "";
-            int maxRow = 0;
+            int maxRow = 1000; // Default fallback value
             int maxRowValue = 1; // Default to header row
             var sheetId = "";
 
@@ -492,7 +492,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             if (sheetData != null)
             {
                 sheetId = sheetData.Properties.SheetId.ToString() ?? "";
-                maxRow = sheetData.Properties.GridProperties.RowCount ?? 1000;
+                maxRow = sheetData.Properties.GridProperties?.RowCount ?? 1000; // Use null-conditional and keep default fallback
 
                 // The Google Sheets API should return data for both ranges we requested
                 // We need to process each GridData in the Data collection

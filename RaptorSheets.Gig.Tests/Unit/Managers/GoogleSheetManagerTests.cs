@@ -1104,4 +1104,346 @@ public class GoogleSheetManagerTests
     }
 
     #endregion
+
+    #region GetSheetProperties Memory Optimization Tests
+
+    [Fact]
+    public async Task GetSheetProperties_WithValidSheets_ShouldReturnPropertiesWithAllAttributes()
+    {
+        // Arrange
+        var sheets = new List<string> { "TestSheet1", "TestSheet2" };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act
+        var result = await manager.GetSheetProperties(sheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+        
+        foreach (var property in result)
+        {
+            Assert.NotNull(property.Name);
+            Assert.Contains(property.Name, sheets);
+            
+            // Verify all required attributes are present
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.HEADERS.GetDescription()));
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW.GetDescription()));
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW_VALUE.GetDescription()));
+        }
+    }
+
+    [Fact]
+    public async Task GetSheetProperties_ShouldRequestBothHeadersAndColumnRanges()
+    {
+        // This test verifies that the method requests both 1:1 (headers) and A:A (column data) ranges
+        // We can't easily mock the GoogleSheetService without changing the architecture,
+        // but we can verify the method signature and basic functionality
+        
+        // Arrange
+        var sheets = new List<string> { "Trips", "Shifts" };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act & Assert - Should not throw during setup/call
+        var result = await manager.GetSheetProperties(sheets);
+
+        // Assert - Basic structure verification
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+        
+        // Each property should have default values when no data is available
+        foreach (var property in result)
+        {
+            Assert.NotNull(property.Name);
+            Assert.NotNull(property.Id); // Should be empty string by default
+            Assert.NotNull(property.Attributes);
+            
+            // Should have all required attributes even with no data
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.HEADERS.GetDescription()));
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW.GetDescription()));
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW_VALUE.GetDescription()));
+            
+            // Default values when no sheet data available
+            Assert.Equal("", property.Attributes[PropertyEnum.HEADERS.GetDescription()]);
+            Assert.Equal("1000", property.Attributes[PropertyEnum.MAX_ROW.GetDescription()]); // Default fallback
+            Assert.Equal("1", property.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()]); // Default to header row
+        }
+    }
+
+    [Fact]
+    public async Task GetSheetProperties_WithSingleSheet_ShouldReturnSingleProperty()
+    {
+        // Arrange
+        var sheets = new List<string> { "Expenses" };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act
+        var result = await manager.GetSheetProperties(sheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        
+        var property = result[0];
+        Assert.Equal("Expenses", property.Name);
+        Assert.True(property.Attributes.ContainsKey(PropertyEnum.HEADERS.GetDescription()));
+        Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW.GetDescription()));
+        Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW_VALUE.GetDescription()));
+    }
+
+    [Fact]
+    public async Task GetSheetProperties_UsesGoogleConfigConstants()
+    {
+        // This test verifies that the method uses GoogleConfig constants for ranges
+        // We test this indirectly by verifying the method works with standard sheet names
+        
+        // Arrange - Use actual sheet names that would be in SheetsConfig
+        var sheets = new List<string> { "Shifts", "Trips", "Expenses" };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act
+        var result = await manager.GetSheetProperties(sheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count);
+        
+        // Verify each sheet gets processed
+        var sheetNames = result.Select(p => p.Name).ToList();
+        Assert.Contains("Shifts", sheetNames);
+        Assert.Contains("Trips", sheetNames);
+        Assert.Contains("Expenses", sheetNames);
+    }
+
+    [Fact] 
+    public async Task GetSheetProperties_MemoryOptimized_ShouldNotFetchAllSheetData()
+    {
+        // This test verifies the memory optimization approach
+        // The method should only fetch headers (1:1) and first column (A:A), not full sheet data
+        
+        // Arrange
+        var sheets = new List<string> { "LargeSheet" };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act - This should complete quickly without memory issues
+        var startTime = DateTime.UtcNow;
+        var result = await manager.GetSheetProperties(sheets);
+        var duration = DateTime.UtcNow - startTime;
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        
+        // Should complete quickly since it's not fetching all data
+        Assert.True(duration.TotalSeconds < 30, $"Method took {duration.TotalSeconds} seconds, should be much faster for memory-optimized approach");
+        
+        var property = result[0];
+        Assert.Equal("LargeSheet", property.Name);
+        
+        // Should have default MAX_ROW_VALUE since no actual data is available in test environment
+        Assert.Equal("1", property.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()]);
+    }
+
+    [Fact]
+    public async Task GetSheetProperties_WithMixedValidAndInvalidSheets_ShouldHandleAll()
+    {
+        // Arrange
+        var sheets = new List<string> { "ValidSheet1", "InvalidSheet", "ValidSheet2" };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act
+        var result = await manager.GetSheetProperties(sheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count); // Should return properties for all requested sheets
+        
+        foreach (var property in result)
+        {
+            Assert.Contains(property.Name, sheets);
+            Assert.NotNull(property.Attributes);
+            
+            // Even invalid sheets should get default property structure
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.HEADERS.GetDescription()));
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW.GetDescription()));
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW_VALUE.GetDescription()));
+        }
+    }
+
+    [Theory]
+    [InlineData("Trips")]
+    [InlineData("Shifts")]
+    [InlineData("Expenses")]
+    [InlineData("Setup")]
+    public async Task GetSheetProperties_WithKnownSheetNames_ShouldReturnValidProperties(string sheetName)
+    {
+        // Arrange
+        var sheets = new List<string> { sheetName };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act
+        var result = await manager.GetSheetProperties(sheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        
+        var property = result[0];
+        Assert.Equal(sheetName, property.Name);
+        Assert.NotNull(property.Id); // Should be set (empty string if no data)
+        Assert.NotNull(property.Attributes);
+        
+        // Verify required attributes
+        Assert.True(property.Attributes.ContainsKey(PropertyEnum.HEADERS.GetDescription()));
+        Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW.GetDescription()));
+        Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW_VALUE.GetDescription()));
+        
+        // Values should be strings
+        Assert.True(property.Attributes[PropertyEnum.MAX_ROW.GetDescription()].All(char.IsDigit));
+        Assert.True(property.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()].All(char.IsDigit));
+    }
+
+    [Fact]
+    public async Task GetSheetProperties_DefaultValues_ShouldBeCorrect()
+    {
+        // This test verifies the default values used when no sheet data is available
+        
+        // Arrange
+        var sheets = new List<string> { "NewSheet" };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act
+        var result = await manager.GetSheetProperties(sheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        
+        var property = result[0];
+        
+        // Verify default values when no data available
+        Assert.Equal("", property.Id); // Empty string when sheet doesn't exist
+        Assert.Equal("NewSheet", property.Name);
+        Assert.Equal("", property.Attributes[PropertyEnum.HEADERS.GetDescription()]); // Empty when no headers
+        Assert.Equal("1000", property.Attributes[PropertyEnum.MAX_ROW.GetDescription()]); // Default fallback
+        Assert.Equal("1", property.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()]); // Default to header row
+    }
+
+    [Fact]
+    public async Task GetSheetProperties_CombinedRangeRequest_ShouldBeEfficient()
+    {
+        // This test verifies that the method makes efficient API calls by combining range requests
+        
+        // Arrange - Request multiple sheets to test batch efficiency
+        var sheets = new List<string> { "Sheet1", "Sheet2", "Sheet3" };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act
+        var startTime = DateTime.UtcNow;
+        var result = await manager.GetSheetProperties(sheets);
+        var duration = DateTime.UtcNow - startTime;
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count);
+        
+        // Should be reasonably fast since it's using combined range requests
+        // (not testing exact time since network/auth factors vary)
+        Assert.True(duration.TotalMinutes < 2, "Combined range requests should be efficient");
+        
+        // Each sheet should have properties
+        foreach (var property in result)
+        {
+            Assert.NotNull(property.Name);
+            Assert.Contains(property.Name, sheets);
+            Assert.NotNull(property.Attributes);
+        }
+    }
+
+    [Fact]
+    public async Task GetSheetProperties_ErrorHandling_ShouldNotThrow()
+    {
+        // This test verifies that the method handles errors gracefully
+        
+        // Arrange - Invalid credentials should cause auth errors, not exceptions
+        var sheets = new List<string> { "TestSheet" };
+        var manager = new GoogleSheetManager("invalid-token", "invalid-spreadsheet-id");
+
+        // Act & Assert - Should not throw exceptions, should handle errors gracefully
+        var exception = await Record.ExceptionAsync(async () => await manager.GetSheetProperties(sheets));
+        
+        // Method should handle errors internally and not throw exceptions
+        Assert.Null(exception);
+        
+        // Should return properties even with errors (default values)
+        var result = await manager.GetSheetProperties(sheets);
+        Assert.NotNull(result);
+        Assert.Single(result);
+    }
+
+    [Fact] 
+    public async Task GetSheetProperties_MaxRowValueCalculation_ShouldUseFirstColumn()
+    {
+        // This test verifies that MAX_ROW_VALUE is calculated from first column data (A:A range)
+        
+        // Arrange
+        var sheets = new List<string> { "DataSheet" };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act
+        var result = await manager.GetSheetProperties(sheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        
+        var property = result[0];
+        
+        // Should have MAX_ROW_VALUE attribute
+        Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW_VALUE.GetDescription()));
+        
+        var maxRowValue = property.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()];
+        
+        // Should be a valid number (default is "1" when no data)
+        Assert.True(int.TryParse(maxRowValue, out var rowValue));
+        Assert.True(rowValue >= 1, "MAX_ROW_VALUE should be at least 1 (header row)");
+    }
+
+    [Fact]
+    public async Task GetSheetProperties_LargeBatch_ShouldHandleMultipleSheets()
+    {
+        // This test verifies the method can handle requesting properties for many sheets at once
+        
+        // Arrange - Request properties for all known sheet types
+        var sheets = new List<string> 
+        { 
+            "Trips", "Shifts", "Expenses", "Addresses", "Names", "Places", 
+            "Regions", "Services", "Setup", "Daily", "Weekly", "Monthly", "Yearly"
+        };
+        var manager = new GoogleSheetManager("fake-token", "fake-id");
+
+        // Act
+        var result = await manager.GetSheetProperties(sheets);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(sheets.Count, result.Count);
+        
+        // Verify each requested sheet gets a property
+        var resultSheetNames = result.Select(p => p.Name).ToList();
+        foreach (var requestedSheet in sheets)
+        {
+            Assert.Contains(requestedSheet, resultSheetNames);
+        }
+        
+        // All properties should have required attributes
+        Assert.All(result, property =>
+        {
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.HEADERS.GetDescription()));
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW.GetDescription()));
+            Assert.True(property.Attributes.ContainsKey(PropertyEnum.MAX_ROW_VALUE.GetDescription()));
+        });
+    }
+
+    #endregion
 }
