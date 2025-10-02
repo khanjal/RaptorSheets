@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
   <PackageId>RaptorSheets.Gig</PackageId>
-  <PackageReadmeFile>GIG.md</PackageReadmeFile>
+  <PackageReadmeFile>docs/GIG.md</PackageReadmeFile>
   <Authors>Iron Raptor Digital</Authors>
   <Description>A specialized library built on RaptorSheets.Core for gig work and freelance tracking. Provides pre-configured sheets for trips, shifts, expenses, and comprehensive analytics for gig economy workers.</Description>
   <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\docs\GIG.md" Pack="true" PackagePath="\" Condition="Exists('..\docs\GIG.md')" />
+    <None Include="..\docs\GIG.md" Pack="true" PackagePath="docs\" Condition="Exists('..\docs\GIG.md')" />
     <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
