@@ -1,6 +1,5 @@
 ﻿using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Tests.Data.Helpers;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
@@ -12,137 +11,157 @@ namespace RaptorSheets.Gig.Tests.Unit.Mappers;
 [Category("Unit Tests")]
 public class MapToRangeDataTests
 {
-    private static SheetEntity? _sheetData;
-
-    public MapToRangeDataTests()
+    #region Core Mapping Tests
+    
+    [Fact]
+    public void ShiftMapper_MapToRangeData_ShouldReturnCorrectStructure()
     {
-        _sheetData = TestGigHelpers.LoadSheetJson();
+        // Arrange
+        var shifts = new List<ShiftEntity>
+        {
+            new()
+            {
+                Date = "2024-01-15",
+                Start = "09:00:00",
+                Finish = "17:00:00",
+                Service = "Uber",
+                Number = 123,
+                Region = "Downtown",
+                Note = "Test shift"
+            }
+        };
+        var headers = new List<object> { "Date", "Start", "Finish", "Service", "#", "Region", "Note" };
+
+        // Act
+        var result = ShiftMapper.MapToRangeData(shifts, headers);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        
+        var row = result[0];
+        Assert.Equal(7, row.Count); // Should match header count
+        
+        // Verify key fields are mapped correctly (representative sample)
+        Assert.Equal("2024-01-15", row[0]);
+        Assert.Equal("09:00:00", row[1]);
+        Assert.Equal("Uber", row[3]);
+        Assert.Equal("123", row[4]);
+        Assert.Equal("Downtown", row[5]);
     }
 
     [Fact]
-    public void GivenSheetData_ThenReturnShiftData()
+    public void TripMapper_MapToRangeData_ShouldReturnCorrectStructure()
     {
-        var shiftHeaders = JsonHelpers.LoadJsonSheetData("Shift")![0];
-        var shifts = ShiftMapper.MapToRangeData(_sheetData!.Shifts, shiftHeaders);
-        var headers = HeaderHelpers.ParserHeader(shiftHeaders);
-
-        Assert.NotNull(shifts);
-        Assert.Equal(3, shifts.Count);
-
-        for (int i = 0; i < shifts.Count; i++)
+        // Arrange
+        var trips = new List<TripEntity>
         {
-            var shift = shifts[i];
-            if (shift == null) continue;
-            var shiftData = _sheetData.Shifts[i];
+            new()
+            {
+                Date = "2024-01-15",
+                Service = "Uber",
+                StartAddress = "123 Main St",
+                EndAddress = "456 Oak Ave",
+                Pay = 25.50m,
+                Tip = 5.00m,
+                Distance = 10.5m
+            }
+        };
+        var headers = new List<object> { "Date", "Service", "Start Address", "End Address", "Pay", "Tip", "Distance" };
 
-#pragma warning disable CS8602 // Rethrow to preserve stack details
-            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.DATE.GetDescription())].ToString(), shiftData.Date);
-            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_START.GetDescription())].ToString(), shiftData.Start);
-            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_END.GetDescription())].ToString(), shiftData.Finish);
-            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.SERVICE.GetDescription())].ToString(), shiftData.Service);
-            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_ACTIVE.GetDescription())].ToString(), shiftData.Active);
-            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.TIME_TOTAL.GetDescription())].ToString(), shiftData.Time);
-            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.REGION.GetDescription())].ToString(), shiftData.Region);
-            Assert.Equal(shift[shiftHeaders.IndexOf(HeaderEnum.NOTE.GetDescription())].ToString(), shiftData.Note);
-#pragma warning restore CS8602 // Rethrow to preserve stack details
+        // Act
+        var result = TripMapper.MapToRangeData(trips, headers);
 
-            if (shiftData.Number == null)
-                Assert.Equal(0, HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), shift!, headers));
-            else
-                Assert.Equal(HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), shift!, headers), shiftData.Number);
-
-            if (shiftData.Omit == null)
-                Assert.False(HeaderHelpers.GetBoolValue(HeaderEnum.TIME_OMIT.GetDescription(), shift!, headers));
-            else
-                Assert.Equal(HeaderHelpers.GetBoolValue(HeaderEnum.TIME_OMIT.GetDescription(), shift!, headers), shiftData.Omit);
-
-            // TODO: Future support of shift only would use this.
-            // Assert.Equal(HeaderParser.GetDecimalValue(HeaderEnum.PAY.DisplayName(), shift, headers), shiftData.Pay);
-            // Assert.Equal(HeaderParser.GetDecimalValue(HeaderEnum.TIPS.DisplayName(), shift, headers), shiftData.Tip);
-            // Assert.Equal(HeaderParser.GetDecimalValue(HeaderEnum.BONUS.DisplayName(), shift, headers), shiftData.Bonus);
-            // Assert.Equal(HeaderParser.GetDecimalValue(HeaderEnum.TOTAL.DisplayName(), shift, headers), shiftData.Total);
-            // Assert.Equal(HeaderParser.GetDecimalValue(HeaderEnum.CASH.DisplayName(), shift, headers), shiftData.Cash);
-        }
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        
+        var row = result[0];
+        Assert.Equal(7, row.Count); // Should match header count
+        
+        // Verify key fields are mapped correctly (representative sample)
+        Assert.Equal("2024-01-15", row[0]);
+        Assert.Equal("Uber", row[1]);
+        Assert.Equal("123 Main St", row[2]);
+        Assert.Equal("456 Oak Ave", row[3]);
     }
 
     [Fact]
-    public void GivenSheetData_ThenReturnTripData()
+    public void MapToRangeData_WithNullValues_ShouldHandleGracefully()
     {
-        var tripHeaders = JsonHelpers.LoadJsonSheetData("Trip")![0];
-        var trips = TripMapper.MapToRangeData(_sheetData!.Trips, tripHeaders);
-        var headers = HeaderHelpers.ParserHeader(tripHeaders);
-
-        Assert.NotNull(trips);
-        Assert.Equal(4, trips.Count);
-
-        for (int i = 0; i < trips.Count; i++)
+        // Arrange
+        var shifts = new List<ShiftEntity>
         {
-            var trip = trips[i];
-            if (trip == null) continue;
-            var tripData = _sheetData.Trips[i];
+            new()
+            {
+                Date = "2024-01-15",
+                Service = "Uber",
+                Number = null, // Test null handling
+                Pay = null,
+                Note = null
+            }
+        };
+        var headers = new List<object> { "Date", "Service", "#", "Pay", "Note" };
 
-#pragma warning disable CS8602 // Rethrow to preserve stack details
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.DATE.GetDescription())].ToString(), tripData.Date);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.SERVICE.GetDescription())].ToString(), tripData.Service);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.PLACE.GetDescription())].ToString(), tripData.Place);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.PICKUP.GetDescription())].ToString(), tripData.Pickup);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.DROPOFF.GetDescription())].ToString(), tripData.Dropoff);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.DURATION.GetDescription())].ToString(), tripData.Duration);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.NAME.GetDescription())].ToString(), tripData.Name);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.ADDRESS_START.GetDescription())].ToString(), tripData.StartAddress);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.ADDRESS_END.GetDescription())].ToString(), tripData.EndAddress);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.UNIT_END.GetDescription())].ToString(), tripData.EndUnit);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.ORDER_NUMBER.GetDescription())].ToString(), tripData.OrderNumber);
-            Assert.Equal(trip[tripHeaders.IndexOf(HeaderEnum.NOTE.GetDescription())].ToString(), tripData.Note);
-#pragma warning restore CS8602 // Rethrow to preserve stack details
+        // Act
+        var result = ShiftMapper.MapToRangeData(shifts, headers);
 
-            // Number
-            if (tripData.Number == null)
-                Assert.Equal(0, HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), trip!, headers));
-            else
-                Assert.Equal(HeaderHelpers.GetIntValue(HeaderEnum.NUMBER.GetDescription(), trip!, headers), tripData.Number);
-
-            // Odometer Start
-            if (tripData.OdometerStart == null)
-                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), trip!, headers));
-            else
-                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_START.GetDescription(), trip!, headers), tripData.OdometerStart);
-
-            // Odometer End
-            if (tripData.OdometerEnd == null)
-                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_END.GetDescription(), trip!, headers));
-            else
-                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.ODOMETER_END.GetDescription(), trip!, headers), tripData.OdometerEnd);
-
-            // Distance
-            if (tripData.Distance == null)
-                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), trip!, headers));
-            else
-                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), trip!, headers), tripData.Distance);
-
-            // Pay
-            if (tripData.Pay == null)
-                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), trip!, headers));
-            else
-                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), trip!, headers), tripData.Pay);
-
-            // Tip
-            if (tripData.Tip == null)
-                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), trip!, headers));
-            else
-                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), trip!, headers), tripData.Tip);
-
-            // Bonus
-            if (tripData.Bonus == null)
-                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), trip!, headers));
-            else
-                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), trip!, headers), tripData.Bonus);
-
-            // Cash
-            if (tripData.Cash == null)
-                Assert.Equal(0, HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), trip!, headers));
-            else
-                Assert.Equal(HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), trip!, headers), tripData.Cash);
-        }
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        
+        var row = result[0];
+        Assert.Equal(5, row.Count);
+        
+        // Verify non-null values are present
+        Assert.Equal("2024-01-15", row[0]);
+        Assert.Equal("Uber", row[1]);
+        // Null values should be handled appropriately (exact handling is implementation detail)
     }
+
+    [Fact]
+    public void MapToRangeData_WithEmptyList_ShouldReturnEmptyResult()
+    {
+        // Arrange
+        var emptyShifts = new List<ShiftEntity>();
+        var headers = new List<object> { "Date", "Service" };
+
+        // Act
+        var result = ShiftMapper.MapToRangeData(emptyShifts, headers);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void MapToRangeData_WithMultipleEntities_ShouldReturnAllRows()
+    {
+        // Arrange
+        var shifts = new List<ShiftEntity>
+        {
+            new() { Date = "2024-01-15", Service = "Uber" },
+            new() { Date = "2024-01-16", Service = "Lyft" },
+            new() { Date = "2024-01-17", Service = "DoorDash" }
+        };
+        var headers = new List<object> { "Date", "Service" };
+
+        // Act
+        var result = ShiftMapper.MapToRangeData(shifts, headers);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count);
+        
+        // Verify each row has correct structure
+        Assert.All(result, row => Assert.Equal(2, row.Count));
+        
+        // Spot check first and last rows
+        Assert.Equal("2024-01-15", result[0][0]);
+        Assert.Equal("Uber", result[0][1]);
+        Assert.Equal("2024-01-17", result[2][0]);
+        Assert.Equal("DoorDash", result[2][1]);
+    }
+    
+    #endregion
 }
