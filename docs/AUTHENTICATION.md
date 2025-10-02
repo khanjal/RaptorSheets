@@ -471,5 +471,5 @@ If you're still having authentication issues:
 
 For more specific implementation guidance, see the package-specific documentation:
 - [Core Library](CORE.md) - For custom implementations
-- [Gig Package](GIG.md) - For gig work tracking
+- [Gig Package](../RaptorSheets.Gig/README.md) - For gig work tracking
 - [Stock Package](STOCK.md) - For portfolio management

@@ -185,9 +185,9 @@ var allData = await manager.GetSheets();
 - **[🧪 Testing](CORE.md#testing)** - Unit testing your integrations
 
 ### For RaptorSheets.Gig Users
-- **[📖 Gig Documentation](GIG.md)** - Complete feature guide
-- **[📊 Sheet Types](GIG.md#sheet-types)** - Understanding all available sheets
-- **[💡 Examples](GIG.md#examples)** - Real-world usage scenarios
+- **[📖 Gig Documentation](../RaptorSheets.Gig/README.md)** - Complete feature guide
+- **[📊 Sheet Types](../RaptorSheets.Gig/README.md#sheet-types)** - Understanding all available sheets
+- **[💡 Examples](../RaptorSheets.Gig/README.md#examples)** - Real-world usage scenarios
 
 ### For All Users
 - **[🔐 Authentication Details](AUTHENTICATION.md)** - Complete setup guide
