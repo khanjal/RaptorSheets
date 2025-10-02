@@ -20,7 +20,14 @@ dotnet add package RaptorSheets.Core
 dotnet add package RaptorSheets.Gig    # For gig work tracking
 ```
 
-## 🚀 Quick Start
+## � Project Documentation
+
+| Project | Description | Documentation |
+|---------|-------------|---------------|
+| **RaptorSheets.Core** | Core library with Google Sheets integration | [View Docs](docs/CORE.md) |
+| **RaptorSheets.Gig** | Specialized library for gig work tracking | [View Docs](RaptorSheets.Gig/README.md) |
+
+## �🚀 Quick Start
 
 ```csharp
 using RaptorSheets.Core.Services;
