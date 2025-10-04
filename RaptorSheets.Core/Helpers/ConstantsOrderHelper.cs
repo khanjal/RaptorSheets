@@ -19,15 +19,10 @@ public static class ConstantsOrderHelper
             .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
             .ToList();
 
-        var result = new List<string>();
-        foreach (var field in fields)
-        {
-            if (field.GetValue(null) is string value)
-            {
-                result.Add(value);
-            }
-        }
-
+        var result = fields
+            .Select(field => field.GetValue(null))
+            .OfType<string>()
+            .ToList();
         return result;
     }
 

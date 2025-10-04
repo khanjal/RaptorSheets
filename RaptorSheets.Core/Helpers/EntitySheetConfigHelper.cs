@@ -52,12 +52,9 @@ public static class EntitySheetConfigHelper
         var entityHeaderNames = entityHeaders.Select(h => h.Name).ToHashSet();
 
         // Add additional headers that aren't already in the entity
-        foreach (var additionalHeader in additionalHeaders)
+        foreach (var additionalHeader in additionalHeaders.Where(h => !entityHeaderNames.Contains(h.Name)))
         {
-            if (!entityHeaderNames.Contains(additionalHeader.Name))
-            {
-                entityHeaders.Add(additionalHeader);
-            }
+            entityHeaders.Add(additionalHeader);
         }
 
         return entityHeaders;
@@ -77,13 +74,10 @@ public static class EntitySheetConfigHelper
         // Add headers from common patterns that aren't already in the entity
         foreach (var pattern in commonHeaderPatterns)
         {
-            foreach (var header in pattern)
+            foreach (var header in pattern.Where(h => !entityHeaderNames.Contains(h.Name)))
             {
-                if (!entityHeaderNames.Contains(header.Name))
-                {
-                    entityHeaders.Add(header);
-                    entityHeaderNames.Add(header.Name);
-                }
+                entityHeaders.Add(header);
+                entityHeaderNames.Add(header.Name);
             }
         }
 
@@ -115,12 +109,9 @@ public static class EntitySheetConfigHelper
         if (requiredHeaders != null)
         {
             var entityHeaderSet = entityHeaders.ToHashSet();
-            foreach (var requiredHeader in requiredHeaders)
+            foreach (var requiredHeader in requiredHeaders.Where(rh => !entityHeaderSet.Contains(rh)))
             {
-                if (!entityHeaderSet.Contains(requiredHeader))
-                {
-                    errors.Add($"Entity '{entityType.Name}' is missing required header '{requiredHeader}' with ColumnOrder attribute.");
-                }
+                errors.Add($"Entity '{entityType.Name}' is missing required header '{requiredHeader}' with ColumnOrder attribute.");
             }
         }
 
@@ -151,16 +142,12 @@ public static class EntitySheetConfigHelper
         // Process properties from base classes first
         foreach (var type in typeHierarchy)
         {
-            var properties = type.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
-            
+            var properties = type.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => !processedProperties.Contains(property.Name));
             foreach (var property in properties)
             {
-                // Skip if we've already processed this property name
-                if (!processedProperties.Contains(property.Name))
-                {
-                    orderedProperties.Add(property);
-                    processedProperties.Add(property.Name);
-                }
+                orderedProperties.Add(property);
+                processedProperties.Add(property.Name);
             }
         }
 

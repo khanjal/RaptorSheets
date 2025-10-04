@@ -12,7 +12,7 @@ public static class SheetValidationHelpers
     /// <summary>
     /// Validate that required parameters are not null or empty
     /// </summary>
-    public static List<MessageEntity> ValidateRequiredParameters(params (string value, string paramName)[] parameters)
+    public static List<MessageEntity> ValidateRequiredParameters(params (string? value, string paramName)[] parameters)
     {
         var messages = new List<MessageEntity>();
 

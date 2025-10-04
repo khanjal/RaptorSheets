@@ -30,7 +30,7 @@ public static class EntityColumnOrderHelper
         var allProperties = GetPropertiesInInheritanceOrder(entityType);
 
         // Process properties with ColumnOrder attributes
-        foreach (var property in allProperties)
+        foreach (var property in allProperties.Where(p => p.GetCustomAttribute<ColumnOrderAttribute>() != null))
         {
             var columnOrderAttr = property.GetCustomAttribute<ColumnOrderAttribute>();
             if (columnOrderAttr != null && processedHeaders.Add(columnOrderAttr.HeaderName))
@@ -97,7 +97,7 @@ public static class EntityColumnOrderHelper
 
         var allProperties = GetPropertiesInInheritanceOrder(entityType);
 
-        foreach (var property in allProperties)
+        foreach (var property in allProperties.Where(p => p.GetCustomAttribute<ColumnOrderAttribute>() != null))
         {
             var columnOrderAttr = property.GetCustomAttribute<ColumnOrderAttribute>();
             if (columnOrderAttr != null && !availableHeadersSet.Contains(columnOrderAttr.HeaderName))
@@ -137,16 +137,12 @@ public static class EntityColumnOrderHelper
         // Process properties from base classes first
         foreach (var type in typeHierarchy)
         {
-            var properties = type.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
-            
+            var properties = type.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => !processedProperties.Contains(property.Name));
             foreach (var property in properties)
             {
-                // Skip if we've already processed this property name (handles overrides)
-                if (!processedProperties.Contains(property.Name))
-                {
-                    orderedProperties.Add(property);
-                    processedProperties.Add(property.Name);
-                }
+                orderedProperties.Add(property);
+                processedProperties.Add(property.Name);
             }
         }
 
