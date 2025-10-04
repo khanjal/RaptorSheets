@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Core.Entities;
-using RaptorSheets.Core.Enums;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Managers;
 using Xunit;

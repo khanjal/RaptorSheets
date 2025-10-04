@@ -1,6 +1,5 @@
 using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Integration.Base;
-using System.ComponentModel;
 
 namespace RaptorSheets.Gig.Tests.Integration;
 
