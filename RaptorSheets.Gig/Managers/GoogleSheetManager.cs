@@ -490,6 +490,17 @@ public class GoogleSheetManager : IGoogleSheetManager
                     var processedProperty = SheetPropertyHelper.ProcessSheetData(property.Name, sheetInfo);
                     properties[i] = processedProperty;
                 }
+                else
+                {
+                    // If we don't get data, there might be an issue - log this for debugging
+                    // but don't fail completely
+                    Console.WriteLine($"Warning: No data returned for sheet '{sheet}' ranges");
+                }
+            }
+            else
+            {
+                // Sheet not found in response - this is an issue that should be logged
+                Console.WriteLine($"Warning: Sheet '{sheet}' not found in API response");
             }
         }
 
