@@ -11,6 +11,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Common.Mappers;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Enums;
+using RaptorSheets.Core.Models.Google;
 
 namespace RaptorSheets.Gig.Managers;
 
@@ -29,6 +30,8 @@ public interface IGoogleSheetManager
     public Task<List<string>> GetAllSheetTabNames();
     public Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null);
     public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
+    public SheetModel? GetSheetLayout(string sheet);
+    public List<SheetModel> GetSheetLayouts(List<string> sheets);
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -542,5 +545,79 @@ public class GoogleSheetManager : IGoogleSheetManager
     public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets)
     {
         return await _googleSheetService.GetBatchData(sheets);
+    }
+
+    /// <summary>
+    /// Gets the strongly-typed sheet layout/configuration for a specific sheet.
+    /// This includes formulas, colors, notes, formats, and all other sheet properties.
+    /// Useful for examining what the expected sheet structure should be.
+    /// </summary>
+    /// <param name="sheet">The name of the sheet to get configuration for</param>
+    /// <returns>SheetModel containing the complete sheet configuration, or null if sheet not found</returns>
+    public SheetModel? GetSheetLayout(string sheet)
+    {
+        try
+        {
+            // Use the existing helper to get the appropriate mapper's sheet model
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase))
+                return AddressMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase))
+                return DailyMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase))
+                return ExpenseMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase))
+                return MonthlyMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase))
+                return NameMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase))
+                return PlaceMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase))
+                return RegionMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase))
+                return ServiceMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase))
+                return SetupMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase))
+                return ShiftMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase))
+                return TripMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase))
+                return TypeMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase))
+                return WeekdayMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase))
+                return WeeklyMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase))
+                return YearlyMapper.GetSheet();
+
+            return null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets the strongly-typed sheet layouts/configurations for multiple sheets.
+    /// This includes formulas, colors, notes, formats, and all other sheet properties.
+    /// Useful for examining what the expected sheet structure should be.
+    /// </summary>
+    /// <param name="sheets">List of sheet names to get configurations for</param>
+    /// <returns>List of SheetModels containing complete sheet configurations (excludes sheets not found)</returns>
+    public List<SheetModel> GetSheetLayouts(List<string> sheets)
+    {
+        var sheetModels = new List<SheetModel>();
+
+        foreach (var sheet in sheets)
+        {
+            var sheetModel = GetSheetLayout(sheet);
+            if (sheetModel != null)
+            {
+                sheetModels.Add(sheetModel);
+            }
+        }
+
+        return sheetModels;
     }
 }

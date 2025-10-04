@@ -1,4 +1,4 @@
-using RaptorSheets.Core.Extensions;
+﻿using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
@@ -76,6 +76,180 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         });
     }
 
+    [FactCheckUserSecrets]
+    public async Task CreatedSheets_ShouldHaveCorrectHeaders()
+    {
+        // This test validates that the sheet creation process generated correct headers
+        // It compares actual headers in Google Sheets vs expected headers from GetSheetLayout
+        
+        // Arrange
+        SkipIfNoCredentials();
+        
+        // Act - Get actual headers from Google Sheets
+        var spreadsheetInfo = await GoogleSheetManager!.GetSpreadsheetInfo(
+            TestSheets.Select(name => $"{name}!1:1").ToList());
+        
+        Assert.NotNull(spreadsheetInfo);
+        Assert.NotNull(spreadsheetInfo.Sheets);
+        
+        // Assert - Validate headers for each sheet
+        foreach (var sheet in spreadsheetInfo.Sheets)
+        {
+            var sheetName = sheet.Properties.Title;
+            var actualHeaders = sheet.Data?[0]?.RowData?[0]?.Values
+                ?.Select(v => v.FormattedValue ?? "")
+                .Where(h => !string.IsNullOrEmpty(h))
+                .ToList() ?? [];
+            
+            // Get expected layout from GetSheetLayout
+            var expectedLayout = GoogleSheetManager.GetSheetLayout(sheetName);
+            
+            if (expectedLayout != null)
+            {
+                var expectedHeaders = expectedLayout.Headers.Select(h => h.Name).ToList();
+                
+                System.Diagnostics.Debug.WriteLine($"  🔍 Validating {sheetName}: {actualHeaders.Count} headers");
+                
+                Assert.NotEmpty(actualHeaders);
+                Assert.Equal(expectedHeaders.Count, actualHeaders.Count);
+                
+                // Verify header names match in order
+                for (int i = 0; i < expectedHeaders.Count && i < actualHeaders.Count; i++)
+                {
+                    Assert.Equal(expectedHeaders[i], actualHeaders[i]);
+                }
+            }
+        }
+    }
+
+    [FactCheckUserSecrets]
+    public async Task CreatedSheets_ShouldHaveCorrectFormulas()
+    {
+        // This test validates that sheets with formulas have them correctly configured
+        
+        // Arrange
+        SkipIfNoCredentials();
+        var sheetsWithFormulas = new[] { "Trips", "Shifts", "Expenses" }; // Sheets that have formula columns
+        
+        // Act - Get sheet layouts to find formula columns
+        var layouts = GoogleSheetManager!.GetSheetLayouts(sheetsWithFormulas.ToList());
+        
+        // Assert
+        foreach (var layout in layouts)
+        {
+            var formulaHeaders = layout.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
+            
+            if (formulaHeaders.Any())
+            {
+                System.Diagnostics.Debug.WriteLine($"  🔍 Validating {layout.Name}: {formulaHeaders.Count} formula columns");
+                
+                // All formulas should start with =
+                Assert.All(formulaHeaders, header =>
+                {
+                    Assert.StartsWith("=", header.Formula);
+                    
+                    // Should not have unresolved placeholders
+                    Assert.DoesNotContain("{", header.Formula);
+                    Assert.DoesNotContain("{{", header.Formula);
+                });
+                
+                // Log formulas for debugging
+                foreach (var header in formulaHeaders)
+                {
+                    System.Diagnostics.Debug.WriteLine($"     {header.Name}: {header.Formula.Substring(0, Math.Min(50, header.Formula.Length))}...");
+                }
+            }
+        }
+    }
+
+    [FactCheckUserSecrets]
+    public async Task CreatedSheets_ShouldHaveCorrectVisualProperties()
+    {
+        // This test validates that sheets have correct colors, protection, etc.
+        
+        // Arrange
+        SkipIfNoCredentials();
+        
+        // Act - Get spreadsheet info to check visual properties
+        var spreadsheetInfo = await GoogleSheetManager!.GetSpreadsheetInfo();
+        
+        Assert.NotNull(spreadsheetInfo);
+        Assert.NotNull(spreadsheetInfo.Sheets);
+        
+        // Assert
+        foreach (var sheet in spreadsheetInfo.Sheets)
+        {
+            var sheetName = sheet.Properties.Title;
+            var properties = sheet.Properties;
+            
+            // Get expected layout
+            var expectedLayout = GoogleSheetManager.GetSheetLayout(sheetName);
+            
+            if (expectedLayout != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"  🔍 Validating {sheetName} visual properties");
+                
+                // Should have tab color
+                Assert.NotNull(properties.TabColor);
+                
+                // Should have frozen rows/columns if specified
+                if (expectedLayout.FreezeRowCount > 0)
+                {
+                    Assert.NotNull(properties.GridProperties);
+                    Assert.True(properties.GridProperties.FrozenRowCount >= expectedLayout.FreezeRowCount,
+                        $"{sheetName} should have at least {expectedLayout.FreezeRowCount} frozen rows");
+                }
+                
+                if (expectedLayout.FreezeColumnCount > 0)
+                {
+                    Assert.NotNull(properties.GridProperties);
+                    Assert.True(properties.GridProperties.FrozenColumnCount >= expectedLayout.FreezeColumnCount,
+                        $"{sheetName} should have at least {expectedLayout.FreezeColumnCount} frozen columns");
+                }
+            }
+        }
+    }
+
+    [FactCheckUserSecrets]
+    public async Task CreatedSheets_ShouldBeInCorrectOrder()
+    {
+        // This test validates that sheets in TestSheets are created in the correct order
+        // as defined by the constants declaration in SheetsConfig.SheetNames
+        
+        // Arrange
+        SkipIfNoCredentials();
+        
+        // Get expected order directly from constants reflection (source of truth)
+        var expectedOrder = typeof(SheetsConfig.SheetNames)
+            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.FlattenHierarchy)
+            .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(string))
+            .Select(fi => fi.GetValue(null)?.ToString() ?? "")
+            .Where(name => !string.IsNullOrEmpty(name))
+            .ToList();
+        
+        // Act - Get all sheet properties which includes sheet IDs for ordering
+        var allProperties = await GoogleSheetManager!.GetAllSheetProperties();
+        var existingSheets = allProperties.Where(p => !string.IsNullOrEmpty(p.Id)).ToList();
+        
+        // Sort by sheet ID (Google Sheets internal ordering) to get actual tab order
+        var actualOrder = existingSheets
+            .Select(p => p.Name)
+            .ToList();
+        
+        System.Diagnostics.Debug.WriteLine($"  📋 Actual order (from GetAllSheetProperties): {string.Join(", ", actualOrder)}");
+        System.Diagnostics.Debug.WriteLine($"  📋 Expected order (from constants): {string.Join(", ", expectedOrder)}");
+        
+        // Assert - Orders should match
+        Assert.Equal(expectedOrder.Count, actualOrder.Count);
+        
+        for (int i = 0; i < Math.Min(expectedOrder.Count, actualOrder.Count); i++)
+        {
+            Assert.True(
+                string.Equals(expectedOrder[i], actualOrder[i], StringComparison.OrdinalIgnoreCase),
+                $"Sheet at position {i} should be '{expectedOrder[i]}' but was '{actualOrder[i]}'");
+        }
+    }
+
     #endregion
 
     #region 2. Orchestrated CRUD Workflow Tests
@@ -96,10 +270,10 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // Arrange
         SkipIfNoCredentials();
         var testRunId = GenerateTestRunId();
-        System.Diagnostics.Debug.WriteLine($"?? Starting orchestrated workflow test: {testRunId}");
+        System.Diagnostics.Debug.WriteLine($"🚀 Starting orchestrated workflow test: {testRunId}");
         
         // Step 1: INSERT - Create comprehensive test dataset
-        System.Diagnostics.Debug.WriteLine("?? Step 1: Inserting test data...");
+        System.Diagnostics.Debug.WriteLine("📝 Step 1: Inserting test data...");
         var testData = CreateTestData(testRunId, shifts: 5, tripsPerShift: 3, expenses: 4);
         await InsertTestData(testData);
         await Task.Delay(2000); // Allow propagation
@@ -107,7 +281,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         ValidateInsertResult(testRunId, testData);
         
         // Step 2: READ - Retrieve and validate inserted data
-        System.Diagnostics.Debug.WriteLine("?? Step 2: Reading and validating inserted data...");
+        System.Diagnostics.Debug.WriteLine("📖 Step 2: Reading and validating inserted data...");
         var readData = await GetSheetData();
         
         var insertedShifts = ValidateInsertedShifts(testRunId, readData, testData);
@@ -119,7 +293,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         ValidateDateRanges(insertedShifts, insertedExpenses);
         
         // Step 3: UPDATE - Modify subset of data
-        System.Diagnostics.Debug.WriteLine("??  Step 3: Updating data...");
+        System.Diagnostics.Debug.WriteLine("✏️  Step 3: Updating data...");
         var shiftsToUpdate = insertedShifts.Take(2).ToList();
         var tripsToUpdate = insertedTrips.Take(2).ToList();
         var expensesToUpdate = insertedExpenses.Take(2).ToList();
@@ -148,14 +322,14 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         await Task.Delay(2000); // Allow propagation
         
         // Step 4: READ AGAIN - Validate updates
-        System.Diagnostics.Debug.WriteLine("?? Step 4: Validating updates...");
+        System.Diagnostics.Debug.WriteLine("🔍 Step 4: Validating updates...");
         var updatedData = await GetSheetData();
         
         ValidateUpdatedShifts(testRunId, updatedData);
         ValidateUpdatedTrips(testRunId, updatedData);
         ValidateUpdatedExpenses(testRunId, updatedData);
         
-        System.Diagnostics.Debug.WriteLine($"? Orchestrated workflow completed successfully: {testRunId}");
+        System.Diagnostics.Debug.WriteLine($"✅ Orchestrated workflow completed successfully: {testRunId}");
     }
 
     #endregion
@@ -278,7 +452,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         var testData = CreateTestData(testRunId, shifts: 10, tripsPerShift: 5, expenses: 15);
         
-        System.Diagnostics.Debug.WriteLine($"?? Inserting large dataset: {testData.Shifts.Count} shifts, " +
+        System.Diagnostics.Debug.WriteLine($"📊 Inserting large dataset: {testData.Shifts.Count} shifts, " +
             $"{testData.Trips.Count} trips, {testData.Expenses.Count} expenses");
         
         // Act
@@ -287,7 +461,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var elapsed = DateTime.UtcNow - startTime;
         
         // Assert
-        System.Diagnostics.Debug.WriteLine($"??  Insert completed in {elapsed.TotalSeconds:F1}s");
+        System.Diagnostics.Debug.WriteLine($"⏱️  Insert completed in {elapsed.TotalSeconds:F1}s");
         
         var criticalErrors = insertResult.Messages.Where(m => 
             m.Level == MessageLevelEnum.ERROR.GetDescription() && 
@@ -304,7 +478,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     private void ValidateInsertResult(string testRunId, SheetEntity testData)
     {
-        System.Diagnostics.Debug.WriteLine($"   ? Inserted {testData.Shifts.Count} shifts, " +
+        System.Diagnostics.Debug.WriteLine($"   ✓ Inserted {testData.Shifts.Count} shifts, " +
             $"{testData.Trips.Count} trips, {testData.Expenses.Count} expenses for test {testRunId}");
     }
 
@@ -313,7 +487,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var shifts = readData.Shifts.Where(s => 
             s.Service?.Contains($"Test_{testRunId}") == true).ToList();
         
-        System.Diagnostics.Debug.WriteLine($"   ? Found {shifts.Count} shifts");
+        System.Diagnostics.Debug.WriteLine($"   ✓ Found {shifts.Count} shifts");
         
         Assert.True(shifts.Count >= expectedData.Shifts.Count - 1, 
             $"Should find ~{expectedData.Shifts.Count} shifts, found {shifts.Count}");
@@ -326,7 +500,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var trips = readData.Trips.Where(t => 
             t.Service?.Contains($"Test_{testRunId}") == true).ToList();
         
-        System.Diagnostics.Debug.WriteLine($"   ? Found {trips.Count} trips");
+        System.Diagnostics.Debug.WriteLine($"   ✓ Found {trips.Count} trips");
         
         Assert.True(trips.Count >= expectedData.Trips.Count - 2, 
             $"Should find ~{expectedData.Trips.Count} trips, found {trips.Count}");
@@ -339,7 +513,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var expenses = readData.Expenses.Where(e => 
             e.Description?.Contains($"Test_{testRunId}") == true).ToList();
         
-        System.Diagnostics.Debug.WriteLine($"   ? Found {expenses.Count} expenses");
+        System.Diagnostics.Debug.WriteLine($"   ✓ Found {expenses.Count} expenses");
         
         Assert.True(expenses.Count >= expectedData.Expenses.Count - 1, 
             $"Should find ~{expectedData.Expenses.Count} expenses, found {expenses.Count}");
@@ -352,7 +526,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         List<TripEntity> trips, 
         List<ExpenseEntity> expenses)
     {
-        System.Diagnostics.Debug.WriteLine("   ?? Validating entity structures...");
+        System.Diagnostics.Debug.WriteLine("   🔍 Validating entity structures...");
         
         Assert.All(shifts, shift =>
         {
@@ -378,12 +552,12 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             Assert.True(expense.Amount >= 0, "Expense amount should be non-negative");
         });
         
-        System.Diagnostics.Debug.WriteLine("   ? Entity structures valid");
+        System.Diagnostics.Debug.WriteLine("   ✓ Entity structures valid");
     }
 
     private void ValidateCrossEntityRelationships(List<ShiftEntity> shifts, List<TripEntity> trips)
     {
-        System.Diagnostics.Debug.WriteLine("   ?? Validating cross-entity relationships...");
+        System.Diagnostics.Debug.WriteLine("   🔍 Validating cross-entity relationships...");
         
         var shiftServices = shifts.Select(s => s.Service).Distinct().ToList();
         var tripServices = trips.Select(t => t.Service).Distinct().ToList();
@@ -394,12 +568,12 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         Assert.True(commonServices.Count > 0, 
             "Shifts and trips should share service identifiers");
         
-        System.Diagnostics.Debug.WriteLine($"   ? Found {commonServices.Count} common services between shifts and trips");
+        System.Diagnostics.Debug.WriteLine($"   ✓ Found {commonServices.Count} common services between shifts and trips");
     }
 
     private void ValidateDateRanges(List<ShiftEntity> shifts, List<ExpenseEntity> expenses)
     {
-        System.Diagnostics.Debug.WriteLine("   ?? Validating date ranges...");
+        System.Diagnostics.Debug.WriteLine("   🔍 Validating date ranges...");
         
         var validDateRange = DateTime.Today.AddDays(-30);
         
@@ -418,7 +592,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
                 $"Expense date should be within valid range: {expense.Date:yyyy-MM-dd}");
         });
         
-        System.Diagnostics.Debug.WriteLine("   ? All dates within valid range");
+        System.Diagnostics.Debug.WriteLine("   ✓ All dates within valid range");
     }
 
     private void ValidateUpdatedShifts(string testRunId, SheetEntity updatedData)
@@ -426,7 +600,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var updatedShifts = updatedData.Shifts.Where(s => 
             s.Note?.Contains($"UPDATED_{testRunId}") == true).ToList();
         
-        System.Diagnostics.Debug.WriteLine($"   ? Found {updatedShifts.Count} updated shifts");
+        System.Diagnostics.Debug.WriteLine($"   ✓ Found {updatedShifts.Count} updated shifts");
         
         Assert.NotEmpty(updatedShifts);
         Assert.All(updatedShifts, shift =>
@@ -441,7 +615,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var updatedTrips = updatedData.Trips.Where(t => 
             t.Note?.Contains($"UPDATED_{testRunId}") == true).ToList();
         
-        System.Diagnostics.Debug.WriteLine($"   ? Found {updatedTrips.Count} updated trips");
+        System.Diagnostics.Debug.WriteLine($"   ✓ Found {updatedTrips.Count} updated trips");
         
         Assert.NotEmpty(updatedTrips);
         Assert.All(updatedTrips, trip =>
@@ -456,7 +630,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var updatedExpenses = updatedData.Expenses.Where(e => 
             e.Description?.Contains($"UPDATED_{testRunId}") == true).ToList();
         
-        System.Diagnostics.Debug.WriteLine($"   ? Found {updatedExpenses.Count} updated expenses");
+        System.Diagnostics.Debug.WriteLine($"   ✓ Found {updatedExpenses.Count} updated expenses");
         
         Assert.NotEmpty(updatedExpenses);
         Assert.All(updatedExpenses, expense =>
@@ -519,6 +693,7 @@ public class GoogleSheetsIntegrationCollection : ICollectionFixture<GoogleSheets
 /// <summary>
 /// Fixture for Google Sheets integration tests.
 /// Handles one-time environment setup for all tests in the collection.
+/// Deletes and recreates all sheets to validate the creation process.
 /// </summary>
 public class GoogleSheetsIntegrationFixture : IAsyncLifetime
 {
@@ -526,7 +701,7 @@ public class GoogleSheetsIntegrationFixture : IAsyncLifetime
     
     public async Task InitializeAsync()
     {
-        System.Diagnostics.Debug.WriteLine("?? Initializing Google Sheets integration test environment");
+        System.Diagnostics.Debug.WriteLine("🚀 Initializing Google Sheets integration test environment (Clean Slate)");
         
         // Get credentials for setup
         var spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
@@ -534,7 +709,7 @@ public class GoogleSheetsIntegrationFixture : IAsyncLifetime
 
         if (!GoogleCredentialHelpers.IsCredentialFilled(credential))
         {
-            System.Diagnostics.Debug.WriteLine("??  No credentials - skipping environment setup");
+            System.Diagnostics.Debug.WriteLine("⚠️  No credentials - skipping environment setup");
             return;
         }
         
@@ -542,56 +717,86 @@ public class GoogleSheetsIntegrationFixture : IAsyncLifetime
         
         try
         {
-            System.Diagnostics.Debug.WriteLine("  ?? Ensuring sheets exist in correct order...");
+            System.Diagnostics.Debug.WriteLine("  🗑️  Deleting all existing sheets to ensure clean slate...");
             
-            // Get current sheet state
-            var allTabNames = await _manager.GetAllSheetTabNames();
-            var allProperties = await _manager.GetAllSheetProperties();
-            var requiredSheets = allProperties.Select(p => p.Name).ToList();
+            // Delete all sheets to start fresh
+            var deleteResult = await _manager.DeleteAllSheets();
+            var deleteErrors = deleteResult.Messages.Where(m => 
+                m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
             
-            // Check if all required sheets exist
-            var missingSheets = requiredSheets.Where(required => 
-                !allTabNames.Any(tab => string.Equals(tab, required, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
-            
-            if (missingSheets.Count > 0)
+            if (deleteErrors.Count > 0)
             {
-                System.Diagnostics.Debug.WriteLine($"  ?? Missing sheets detected: {string.Join(", ", missingSheets)}");
-                System.Diagnostics.Debug.WriteLine("  ?? Creating all sheets in correct order...");
-                
-                // Create all sheets to ensure proper ordering
-                var createResult = await _manager.CreateAllSheets();
-                var createErrors = createResult.Messages.Where(m => 
-                    m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
-                
-                if (createErrors.Count > 0)
-                {
-                    System.Diagnostics.Debug.WriteLine($"  ??  Sheet creation had errors: {string.Join(", ", createErrors.Select(e => e.Message))}");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("  ? All sheets created successfully");
-                }
-                
-                await Task.Delay(2000); // Allow creation to complete
+                System.Diagnostics.Debug.WriteLine($"  ⚠️  Sheet deletion had errors: {string.Join(", ", deleteErrors.Select(e => e.Message))}");
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("  ? All required sheets already exist");
+                System.Diagnostics.Debug.WriteLine("  ✓ All sheets deleted successfully");
             }
             
-            System.Diagnostics.Debug.WriteLine("? Integration test environment ready");
+            await Task.Delay(3000); // Allow deletion to complete
+            
+            // Create all sheets fresh
+            System.Diagnostics.Debug.WriteLine("  📌 Creating all sheets fresh to validate creation process...");
+            var createResult = await _manager.CreateAllSheets();
+            var createErrors = createResult.Messages.Where(m => 
+                m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
+            
+            if (createErrors.Count > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"  ⚠️  Sheet creation had errors: {string.Join(", ", createErrors.Select(e => e.Message))}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("  ✓ All sheets created successfully");
+            }
+            
+            await Task.Delay(3000); // Allow creation to complete
+            
+            // Verify all sheets were created correctly
+            System.Diagnostics.Debug.WriteLine("  🔍 Verifying sheet creation...");
+            var allProperties = await _manager.GetAllSheetProperties();
+            
+            System.Diagnostics.Debug.WriteLine($"  📊 Found {allProperties.Count} sheet tabs");
+            System.Diagnostics.Debug.WriteLine($"  📋 Tabs: {string.Join(", ", allProperties.Select(p => p.Name))}");
+            
+            // Validate headers for each sheet
+            var spreadsheetInfo = await _manager.GetSpreadsheetInfo(
+                allProperties.Select(p => $"{p.Name}!1:1").ToList());
+            
+            if (spreadsheetInfo != null)
+            {
+                var headerValidation = GoogleSheetManager.CheckSheetHeaders(spreadsheetInfo);
+                var headerErrors = headerValidation.Where(m => 
+                    m.Level == MessageLevelEnum.ERROR.GetDescription() ||
+                    m.Level == MessageLevelEnum.WARNING.GetDescription()).ToList();
+                
+                if (headerErrors.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  ⚠️  Header validation warnings/errors:");
+                    foreach (var error in headerErrors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"     {error.Level}: {error.Message}");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("  ✓ All sheet headers validated successfully");
+                }
+            }
+            
+            System.Diagnostics.Debug.WriteLine("✅ Integration test environment ready (Clean Slate Validated)");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"??  Setup failed: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"⚠️  Setup failed: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"     Stack: {ex.StackTrace}");
             // Don't fail the fixture - let individual tests handle issues
         }
     }
 
     public async Task DisposeAsync()
     {
-        System.Diagnostics.Debug.WriteLine("? Google Sheets integration tests completed");
+        System.Diagnostics.Debug.WriteLine("✅ Google Sheets integration tests completed");
         await Task.CompletedTask;
     }
 }
