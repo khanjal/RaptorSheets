@@ -277,7 +277,34 @@ public class GoogleSheetManager : IGoogleSheetManager
             var needsTempSheet = NeedsTempSheet(existingSheetsToDelete, allTabNames);
             var tempSheetName = needsTempSheet ? "TempSheet" : null;
             
-            await ExecuteSheetDeletion(existingSheetsToDelete, allTabNames, tempSheetName, sheetEntity);
+            var requests = BuildDeletionRequests(existingSheetsToDelete, tempSheetName);
+            
+            if (!string.IsNullOrEmpty(tempSheetName))
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                    $"Creating '{tempSheetName}' as safety sheet to maintain spreadsheet integrity",
+                    MessageTypeEnum.DELETE_SHEET));
+            }
+            
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                $"Deleting {existingSheetsToDelete.Count} of {allTabNames.Count} sheets", 
+                MessageTypeEnum.DELETE_SHEET));
+
+            var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
+            var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest);
+
+            if (result != null)
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                    "Sheet deletion completed successfully", 
+                    MessageTypeEnum.DELETE_SHEET));
+            }
+            else
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage(
+                    "Sheet deletion failed - unable to execute batch request",
+                    MessageTypeEnum.DELETE_SHEET));
+            }
         }
         catch (Exception ex)
         {
@@ -308,72 +335,6 @@ public class GoogleSheetManager : IGoogleSheetManager
         return existingSheets;
     }
 
-    private async Task ExecuteSheetDeletion(List<PropertyEntity> sheetsToDelete, List<string> allTabNames,
-        string? tempSheetName, SheetEntity sheetEntity)
-    {
-        // Clean up any existing TempSheet before proceeding
-        await CleanupExistingTempSheet(allTabNames, sheetsToDelete, sheetEntity);
-        
-        var requests = BuildDeletionRequests(sheetsToDelete, tempSheetName);
-        
-        if (!string.IsNullOrEmpty(tempSheetName))
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
-                $"Creating temporary sheet '{tempSheetName}' and deleting sheets in single batch",
-                MessageTypeEnum.DELETE_SHEET));
-        }
-        
-        sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
-            $"Deleting {sheetsToDelete.Count} of {allTabNames.Count} sheets", 
-            MessageTypeEnum.DELETE_SHEET));
-
-        var success = await TryBatchDeletion(requests, sheetEntity);
-        
-        if (!success)
-        {
-            await FallbackToIndividualDeletion(sheetsToDelete, tempSheetName, sheetEntity);
-        }
-    }
-
-    private async Task CleanupExistingTempSheet(List<string> allTabNames, List<PropertyEntity> sheetsToDelete, SheetEntity sheetEntity)
-    {
-        // Check if TempSheet exists and is not already in the delete list
-        var existingTempSheet = allTabNames.FirstOrDefault(name => 
-            name.Equals("TempSheet", StringComparison.OrdinalIgnoreCase));
-        
-        if (existingTempSheet != null && !sheetsToDelete.Any(s => 
-            s.Name.Equals("TempSheet", StringComparison.OrdinalIgnoreCase)))
-        {
-            // Get all properties to find the TempSheet ID
-            var allProperties = await GetAllSheetProperties();
-            var tempSheetProperty = allProperties.FirstOrDefault(p => 
-                p.Name.Equals("TempSheet", StringComparison.OrdinalIgnoreCase) && 
-                !string.IsNullOrEmpty(p.Id));
-            
-            if (tempSheetProperty != null)
-            {
-                try
-                {
-                    var deleteRequests = GoogleRequestHelpers.GenerateDeleteSheetRequests([tempSheetProperty]);
-                    var request = new BatchUpdateSpreadsheetRequest { Requests = deleteRequests };
-                    var result = await _googleSheetService.BatchUpdateSpreadsheet(request);
-                    
-                    if (result != null)
-                    {
-                        sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
-                            "Cleaned up existing TempSheet from previous run",
-                            MessageTypeEnum.DELETE_SHEET));
-                        await Task.Delay(500); // Allow deletion to propagate
-                    }
-                }
-                catch
-                {
-                    // Silently ignore cleanup errors - not critical
-                }
-            }
-        }
-    }
-
     private List<Request> BuildDeletionRequests(List<PropertyEntity> sheetsToDelete, string? tempSheetName)
     {
         var requests = new List<Request>();
@@ -388,78 +349,6 @@ public class GoogleSheetManager : IGoogleSheetManager
         requests.AddRange(deleteRequests);
 
         return requests;
-    }
-
-    private async Task<bool> TryBatchDeletion(List<Request> requests, SheetEntity sheetEntity)
-    {
-        var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-        var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest);
-
-        if (result != null)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
-                "Batch deletion completed successfully", 
-                MessageTypeEnum.DELETE_SHEET));
-            return true;
-        }
-
-        sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
-            "Batch deletion failed, trying individual operations...",
-            MessageTypeEnum.DELETE_SHEET));
-        return false;
-    }
-
-    private async Task FallbackToIndividualDeletion(List<PropertyEntity> sheetsToDelete, 
-        string? tempSheetName, SheetEntity sheetEntity)
-    {
-        await CreateTempSheetIfNeeded(tempSheetName, sheetEntity);
-        
-        var successCount = await DeleteSheetsIndividually(sheetsToDelete);
-        
-        sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
-            $"Successfully deleted {successCount} of {sheetsToDelete.Count} sheets individually",
-            MessageTypeEnum.DELETE_SHEET));
-    }
-
-    private async Task CreateTempSheetIfNeeded(string? tempSheetName, SheetEntity sheetEntity)
-    {
-        if (string.IsNullOrEmpty(tempSheetName)) return;
-
-        var tempRequest = GenerateSheetsHelpers.Generate([tempSheetName]);
-        var result = await _googleSheetService.BatchUpdateSpreadsheet(tempRequest);
-        
-        if (result == null)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage(
-                "Failed to create temporary sheet for individual deletion",
-                MessageTypeEnum.DELETE_SHEET));
-        }
-        else
-        {
-            await Task.Delay(1000); // Allow creation to propagate
-        }
-    }
-
-    private async Task<int> DeleteSheetsIndividually(List<PropertyEntity> sheetsToDelete)
-    {
-        var successCount = 0;
-        
-        foreach (var sheet in sheetsToDelete)
-        {
-            // Use existing helper that creates proper delete sheet request
-            var deleteRequests = GoogleRequestHelpers.GenerateDeleteSheetRequests([sheet]);
-            var request = new BatchUpdateSpreadsheetRequest { Requests = deleteRequests };
-            
-            var result = await _googleSheetService.BatchUpdateSpreadsheet(request);
-            
-            if (result != null)
-            {
-                successCount++;
-                await Task.Delay(500); // Rate limiting
-            }
-        }
-
-        return successCount;
     }
 
     private static bool NeedsTempSheet(List<PropertyEntity> sheetsToDelete, List<string> allTabNames)
