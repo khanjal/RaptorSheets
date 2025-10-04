@@ -11,6 +11,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Common.Mappers;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Enums;
+using RaptorSheets.Core.Models.Google;
 
 namespace RaptorSheets.Gig.Managers;
 
@@ -19,14 +20,18 @@ public interface IGoogleSheetManager
     public Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
     public Task<SheetEntity> CreateAllSheets();
     public Task<SheetEntity> CreateSheets(List<string> sheets);
+    public Task<SheetEntity> DeleteAllSheets();
     public Task<SheetEntity> DeleteSheets(List<string> sheets);
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetAllSheets();
     public Task<SheetEntity> GetSheets(List<string> sheets);
     public Task<List<PropertyEntity>> GetAllSheetProperties();
     public Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
+    public Task<List<string>> GetAllSheetTabNames();
     public Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null);
     public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
+    public SheetModel? GetSheetLayout(string sheet);
+    public List<SheetModel> GetSheetLayouts(List<string> sheets);
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -258,145 +263,108 @@ public class GoogleSheetManager : IGoogleSheetManager
         return sheetEntity;
     }
 
+    public async Task<SheetEntity> DeleteAllSheets()
+    {
+        return await DeleteSheets(SheetsConfig.SheetUtilities.GetAllSheetNames());
+    }
+
     public async Task<SheetEntity> DeleteSheets(List<string> sheets)
     {
         var sheetEntity = new SheetEntity();
-        
         try
         {
-            // Get sheet properties to find sheet IDs
-            var sheetProperties = await GetSheetProperties(sheets);
+            var existingSheetsToDelete = await GetExistingSheetsToDelete(sheets, sheetEntity);
+            if (existingSheetsToDelete.Count == 0) return sheetEntity;
+
+            var allTabNames = await GetAllSheetTabNames();
+            var needsTempSheet = NeedsTempSheet(existingSheetsToDelete, allTabNames);
+            var tempSheetName = needsTempSheet ? "TempSheet" : null;
             
-            if (sheetProperties.Count == 0)
-            {
-                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No sheets found to delete", MessageTypeEnum.DELETE_SHEET));
-                return sheetEntity;
-            }
-
-            // Filter out sheets that don't have valid IDs (they may not exist)
-            var existingSheetProperties = sheetProperties
-                .Where(p => !string.IsNullOrEmpty(p.Id))
-                .ToList();
-
-            if (existingSheetProperties.Count == 0)
-            {
-                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage("No existing sheets to delete", MessageTypeEnum.DELETE_SHEET));
-                return sheetEntity;
-            }
-
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Found {existingSheetProperties.Count} sheets to delete: {string.Join(", ", existingSheetProperties.Select(p => $"{p.Name}({p.Id})"))} ", MessageTypeEnum.DELETE_SHEET));
-
-            // Check if we're trying to delete all sheets in the spreadsheet
-            var spreadsheetInfo = await GetSpreadsheetInfo();
-            var totalSheetsInSpreadsheet = spreadsheetInfo?.Sheets?.Count ?? 0;
+            var requests = BuildDeletionRequests(existingSheetsToDelete, tempSheetName);
             
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Total sheets in spreadsheet: {totalSheetsInSpreadsheet}, attempting to delete: {existingSheetProperties.Count}", MessageTypeEnum.DELETE_SHEET));
-
-            // If we're deleting all or most sheets, create a temporary placeholder first
-            bool needsPlaceholder = existingSheetProperties.Count >= totalSheetsInSpreadsheet;
-            string? placeholderSheetId = null;
-
-            if (needsPlaceholder)
+            if (!string.IsNullOrEmpty(tempSheetName))
             {
-                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage("Creating placeholder sheet to allow deletion of all sheets", MessageTypeEnum.DELETE_SHEET));
-                
-                // Create a temporary placeholder sheet so we can delete all the target sheets
-                var placeholderName = $"TempPlaceholder_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-                var placeholderRequest = new BatchUpdateSpreadsheetRequest
-                {
-                    Requests = new List<Request>
-                    {
-                        new Request
-                        {
-                            AddSheet = new AddSheetRequest
-                            {
-                                Properties = new SheetProperties
-                                {
-                                    Title = placeholderName
-                                }
-                            }
-                        }
-                    }
-                };
-
-                var placeholderResult = await _googleSheetService.BatchUpdateSpreadsheet(placeholderRequest);
-                if (placeholderResult?.Replies?.Count > 0 && placeholderResult.Replies[0].AddSheet != null)
-                {
-                    placeholderSheetId = placeholderResult.Replies[0].AddSheet.Properties.SheetId.ToString();
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Created temporary placeholder sheet: {placeholderName} (ID: {placeholderSheetId})", MessageTypeEnum.DELETE_SHEET));
-                }
-                else
-                {
-                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage("Failed to create placeholder sheet for deletion", MessageTypeEnum.DELETE_SHEET));
-                    return sheetEntity;
-                }
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                    $"Creating '{tempSheetName}' as safety sheet to maintain spreadsheet integrity",
+                    MessageTypeEnum.DELETE_SHEET));
             }
+            
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                $"Deleting {existingSheetsToDelete.Count} of {allTabNames.Count} sheets", 
+                MessageTypeEnum.DELETE_SHEET));
 
-            // Sort sheets by their order in the entity definition to ensure consistent deletion order
-            var entitySheetOrder = SheetsConfig.SheetUtilities.GetAllSheetNames();
-            var orderedSheetProperties = existingSheetProperties
-                .OrderBy(p => entitySheetOrder.IndexOf(p.Name))
-                .ToList();
-
-            // Use the helper to create delete sheet requests in reverse order (delete from end to beginning)
-            // This prevents index shifting issues during batch deletion
-            var deleteRequests = GoogleRequestHelpers.GenerateDeleteSheetRequests(orderedSheetProperties.AsEnumerable().Reverse().ToList());
-
-            if (deleteRequests.Count == 0)
-            {
-                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No valid sheet IDs found for deletion", MessageTypeEnum.DELETE_SHEET));
-                return sheetEntity;
-            }
-
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Preparing to delete {deleteRequests.Count} sheets", MessageTypeEnum.DELETE_SHEET));
-
-            var batchRequest = new BatchUpdateSpreadsheetRequest
-            {
-                Requests = deleteRequests
-            };
-
-            // Execute the deletion
+            var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
             var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest);
 
             if (result != null)
             {
-                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Batch delete request completed successfully", MessageTypeEnum.DELETE_SHEET));
-                
-                // Get the names of successfully processed sheets
-                var validSheetNames = orderedSheetProperties.Select(p => p.Name).ToList();
-
-                foreach (var sheetName in validSheetNames)
-                {
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Sheet {sheetName} deletion requested", MessageTypeEnum.DELETE_SHEET));
-                }
-
-                // Clean up placeholder if we created one and it hasn't been deleted
-                if (needsPlaceholder && !string.IsNullOrEmpty(placeholderSheetId))
-                {
-                    // We'll let the calling code handle placeholder cleanup after creating new sheets
-                    // Store the placeholder ID in a message for later cleanup
-                    sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"PlaceholderSheetId:{placeholderSheetId}", MessageTypeEnum.DELETE_SHEET));
-                }
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                    "Sheet deletion completed successfully", 
+                    MessageTypeEnum.DELETE_SHEET));
             }
             else
             {
-                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage("Failed to delete sheets - batch request returned null", MessageTypeEnum.DELETE_SHEET));
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage(
+                    "Sheet deletion failed - unable to execute batch request",
+                    MessageTypeEnum.DELETE_SHEET));
             }
         }
         catch (Exception ex)
         {
-            // Handle specific Google API errors
-            if (ex.Message.Contains("Cannot delete") || ex.Message.Contains("permission"))
-            {
-                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"Unable to delete sheets: {ex.Message}", MessageTypeEnum.DELETE_SHEET));
-            }
-            else
-            {
-                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Error deleting sheets: {ex.Message}", MessageTypeEnum.DELETE_SHEET));
-            }
+            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage(
+                $"Error deleting sheets: {ex.Message}", 
+                MessageTypeEnum.DELETE_SHEET));
+        }
+        
+        return sheetEntity;
+    }
+
+    private async Task<List<PropertyEntity>> GetExistingSheetsToDelete(List<string> sheets, SheetEntity sheetEntity)
+    {
+        var allSheetProperties = await GetAllSheetProperties();
+        var existingSheets = allSheetProperties
+            .Where(p => !string.IsNullOrEmpty(p.Id) && 
+                       int.TryParse(p.Id, out _) && 
+                       sheets.Contains(p.Name, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
+        if (existingSheets.Count == 0)
+        {
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                "No sheets found to delete", 
+                MessageTypeEnum.DELETE_SHEET));
         }
 
-        return sheetEntity;
+        return existingSheets;
+    }
+
+    private List<Request> BuildDeletionRequests(List<PropertyEntity> sheetsToDelete, string? tempSheetName)
+    {
+        var requests = new List<Request>();
+
+        if (!string.IsNullOrEmpty(tempSheetName))
+        {
+            var tempRequests = GenerateSheetsHelpers.Generate([tempSheetName]).Requests;
+            requests.AddRange(tempRequests);
+        }
+
+        var deleteRequests = GoogleRequestHelpers.GenerateDeleteSheetRequests(sheetsToDelete);
+        requests.AddRange(deleteRequests);
+
+        return requests;
+    }
+
+    private static bool NeedsTempSheet(List<PropertyEntity> sheetsToDelete, List<string> allTabNames)
+    {
+        var sheetsToDeleteNames = sheetsToDelete.Select(s => s.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        
+        // Check if we're deleting all existing sheets (excluding any existing TempSheet)
+        var remainingSheets = allTabNames.Where(tabName => 
+            !sheetsToDeleteNames.Contains(tabName) && 
+            !tabName.Equals("TempSheet", StringComparison.OrdinalIgnoreCase)).ToList();
+            
+        // Only need a temp sheet if we're deleting all non-temp sheets
+        return remainingSheets.Count == 0;
     }
 
     public async Task<SheetEntity> GetSheet(string sheet)
@@ -460,125 +428,91 @@ public class GoogleSheetManager : IGoogleSheetManager
 
     public async Task<List<PropertyEntity>> GetAllSheetProperties()
     {
-        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
-        return await GetSheetProperties(sheets.Select(t => t.GetDescription()).ToList());
+        return await GetSheetProperties(SheetsConfig.SheetUtilities.GetAllSheetNames());
     }
 
     public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets)
     {
         var properties = new List<PropertyEntity>();
         
-        // Get both headers and first column in a single call for efficiency
-        var combinedRanges = sheets.SelectMany(sheet => new[]
-        {
-            $"{sheet}!{GoogleConfig.HeaderRange}",  // Headers (1:1)
-            $"{sheet}!{GoogleConfig.RowRange}"      // First column data (A:A)
-        }).ToList();
+        // STEP 1: Get all existing sheet tab names first (no ranges parameter)
+        var existingTabNames = await GetAllSheetTabNames();
         
-        var sheetInfo = await _googleSheetService.GetSheetInfo(combinedRanges);
-
+        // STEP 2: Filter requested sheets to only those that exist
+        var existingSheets = sheets.Where(requestedSheet => 
+            existingTabNames.Any(existingTab => 
+                string.Equals(requestedSheet, existingTab, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+        
+        // STEP 3: Build properties for all requested sheets
         foreach (var sheet in sheets)
         {
-            var property = new PropertyEntity();
+            var sheetExists = existingSheets.Any(s => 
+                string.Equals(s, sheet, StringComparison.OrdinalIgnoreCase));
             
-            var sheetHeaderValues = "";
-            int maxRow = 1000; // Default fallback value
-            int maxRowValue = 1; // Default to header row
-            var sheetId = "";
-
-            // Find the sheet in the response
-            var sheetData = sheetInfo?.Sheets.FirstOrDefault(x => x.Properties.Title == sheet);
-            
-            if (sheetData != null)
+            if (sheetExists)
             {
-                sheetId = sheetData.Properties.SheetId.ToString() ?? "";
-                maxRow = sheetData.Properties.GridProperties?.RowCount ?? 1000; // Use null-conditional and keep default fallback
-
-                // The Google Sheets API should return data for both ranges we requested
-                // We need to process each GridData in the Data collection
-                if (sheetData.Data != null && sheetData.Data.Count > 0)
-                {
-                    foreach (var dataRange in sheetData.Data)
-                    {
-                        if (dataRange?.RowData != null && dataRange.RowData.Count > 0)
-                        {
-                            // Determine if this is header data or column data based on structure
-                            var firstRow = dataRange.RowData[0];
-                            var hasMultipleColumns = firstRow?.Values?.Count > 1;
-                            var hasMultipleRows = dataRange.RowData.Count > 1;
-
-                            if (!hasMultipleRows && hasMultipleColumns)
-                            {
-                                // This is likely the headers (1:1 range) - single row, multiple columns
-                                sheetHeaderValues = string.Join(",", firstRow.Values
-                                    .Where(x => x.FormattedValue != null)
-                                    .Select(x => x.FormattedValue)
-                                    .ToList());
-                            }
-                            else if (hasMultipleRows && !hasMultipleColumns)
-                            {
-                                // This is likely the A:A column data - multiple rows, single column
-                                // Find the last row with a value (excluding header at index 0)
-                                for (int i = dataRange.RowData.Count - 1; i > 0; i--)
-                                {
-                                    var cell = dataRange.RowData[i]?.Values?.FirstOrDefault();
-                                    if (cell != null && !string.IsNullOrEmpty(cell.FormattedValue))
-                                    {
-                                        maxRowValue = i + 1; // +1 because row index is zero-based
-                                        break;
-                                    }
-                                }
-                            }
-                            else if (hasMultipleRows && hasMultipleColumns)
-                            {
-                                // This might be a full range response - check if first row looks like headers
-                                var possibleHeaders = firstRow?.Values;
-                                if (possibleHeaders != null && possibleHeaders.Count > 1)
-                                {
-                                    // Extract headers from first row
-                                    sheetHeaderValues = string.Join(",", possibleHeaders
-                                        .Where(x => x.FormattedValue != null)
-                                        .Select(x => x.FormattedValue)
-                                        .ToList());
-                                }
-
-                                // Find last row with data in first column
-                                for (int i = dataRange.RowData.Count - 1; i > 0; i--)
-                                {
-                                    var cell = dataRange.RowData[i]?.Values?.FirstOrDefault();
-                                    if (cell != null && !string.IsNullOrEmpty(cell.FormattedValue))
-                                    {
-                                        maxRowValue = i + 1;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // If we don't get data, there might be an issue - log this for debugging
-                    // but don't fail completely
-                    Console.WriteLine($"Warning: No data returned for sheet '{sheet}' ranges");
-                }
+                // Sheet exists - will process it below
+                properties.Add(new PropertyEntity { Name = sheet });
             }
             else
             {
-                // Sheet not found in response - this is an issue that should be logged
-                Console.WriteLine($"Warning: Sheet '{sheet}' not found in API response");
+                // Sheet doesn't exist - return default property structure
+                properties.Add(new PropertyEntity
+                {
+                    Name = sheet,
+                    Id = "",  // Empty ID indicates sheet doesn't exist
+                    Attributes = new Dictionary<string, string>
+                    {
+                        { PropertyEnum.HEADERS.GetDescription(), "" },
+                        { PropertyEnum.MAX_ROW.GetDescription(), "1000" },
+                        { PropertyEnum.MAX_ROW_VALUE.GetDescription(), "1" }
+                    }
+                });
             }
+        }
+        
+        // STEP 4: Only request ranges for existing sheets
+        if (existingSheets.Count > 0)
+        {
+            var combinedRanges = SheetPropertyHelper.BuildCombinedRanges(existingSheets);
+            var sheetInfo = await _googleSheetService.GetSheetInfo(combinedRanges);
 
-            property.Id = sheetId;
-            property.Name = sheet;
-            property.Attributes.Add(PropertyEnum.HEADERS.GetDescription(), sheetHeaderValues);
-            property.Attributes.Add(PropertyEnum.MAX_ROW.GetDescription(), maxRow.ToString());
-            property.Attributes.Add(PropertyEnum.MAX_ROW_VALUE.GetDescription(), maxRowValue.ToString());
-
-            properties.Add(property);
+            // STEP 5: Process data for existing sheets only
+            for (int i = 0; i < properties.Count; i++)
+            {
+                var property = properties[i];
+                
+                // Only process sheets that exist
+                if (!string.IsNullOrEmpty(property.Id) || existingSheets.Any(s => 
+                    string.Equals(s, property.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    var processedProperty = SheetPropertyHelper.ProcessSheetData(property.Name, sheetInfo);
+                    properties[i] = processedProperty;
+                }
+            }
         }
 
         return properties;
+    }
+
+    /// <summary>
+    /// Gets all sheet tab names directly from Google Sheets API.
+    /// Uses spreadsheets.get method to retrieve sheet metadata efficiently.
+    /// </summary>
+    public async Task<List<string>> GetAllSheetTabNames()
+    {
+        var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+        
+        if (spreadsheetInfo?.Sheets == null)
+        {
+            return new List<string>();
+        }
+
+        return spreadsheetInfo.Sheets
+            .Select(sheet => sheet.Properties.Title)
+            .Where(title => !string.IsNullOrEmpty(title))
+            .ToList();
     }
 
     private async Task<List<MessageEntity>> HandleMissingSheets(Spreadsheet? spreadsheet)
@@ -611,5 +545,79 @@ public class GoogleSheetManager : IGoogleSheetManager
     public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets)
     {
         return await _googleSheetService.GetBatchData(sheets);
+    }
+
+    /// <summary>
+    /// Gets the strongly-typed sheet layout/configuration for a specific sheet.
+    /// This includes formulas, colors, notes, formats, and all other sheet properties.
+    /// Useful for examining what the expected sheet structure should be.
+    /// </summary>
+    /// <param name="sheet">The name of the sheet to get configuration for</param>
+    /// <returns>SheetModel containing the complete sheet configuration, or null if sheet not found</returns>
+    public SheetModel? GetSheetLayout(string sheet)
+    {
+        try
+        {
+            // Use the existing helper to get the appropriate mapper's sheet model
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase))
+                return AddressMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase))
+                return DailyMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase))
+                return ExpenseMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase))
+                return MonthlyMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase))
+                return NameMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase))
+                return PlaceMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase))
+                return RegionMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase))
+                return ServiceMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase))
+                return SetupMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase))
+                return ShiftMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase))
+                return TripMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase))
+                return TypeMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase))
+                return WeekdayMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase))
+                return WeeklyMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase))
+                return YearlyMapper.GetSheet();
+
+            return null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets the strongly-typed sheet layouts/configurations for multiple sheets.
+    /// This includes formulas, colors, notes, formats, and all other sheet properties.
+    /// Useful for examining what the expected sheet structure should be.
+    /// </summary>
+    /// <param name="sheets">List of sheet names to get configurations for</param>
+    /// <returns>List of SheetModels containing complete sheet configurations (excludes sheets not found)</returns>
+    public List<SheetModel> GetSheetLayouts(List<string> sheets)
+    {
+        var sheetModels = new List<SheetModel>();
+
+        foreach (var sheet in sheets)
+        {
+            var sheetModel = GetSheetLayout(sheet);
+            if (sheetModel != null)
+            {
+                sheetModels.Add(sheetModel);
+            }
+        }
+
+        return sheetModels;
     }
 }

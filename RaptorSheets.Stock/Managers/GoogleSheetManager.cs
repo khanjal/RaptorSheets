@@ -8,6 +8,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Stock.Helpers;
+using RaptorSheets.Core.Models.Google;
 using SheetEnum = RaptorSheets.Stock.Enums.SheetEnum;
 
 namespace RaptorSheets.Stock.Managers;
@@ -20,6 +21,8 @@ public interface IGoogleSheetManager
     public Task<SheetEntity> GetSheet(string sheet);
     public Task<SheetEntity> GetSheets();
     public Task<SheetEntity> GetSheets(List<Enums.SheetEnum> sheets);
+    public SheetModel? GetSheetLayout(string sheet);
+    public List<SheetModel> GetSheetLayouts(List<string> sheets);
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -221,5 +224,63 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         data!.Messages = messages;
         return data;
+    }
+
+    /// <summary>
+    /// Gets the strongly-typed sheet layout/configuration for a specific sheet.
+    /// This includes formulas, colors, notes, formats, and all other sheet properties.
+    /// Useful for examining what the expected sheet structure should be.
+    /// </summary>
+    /// <param name="sheet">The name of the sheet to get configuration for</param>
+    /// <returns>SheetModel containing the complete sheet configuration, or null if sheet not found</returns>
+    public SheetModel? GetSheetLayout(string sheet)
+    {
+        try
+        {
+            // Try to parse as enum
+            var sheetExists = Enum.TryParse(sheet.ToUpper(), out Enums.SheetEnum sheetEnum) 
+                && Enum.IsDefined(typeof(Enums.SheetEnum), sheetEnum);
+
+            if (!sheetExists)
+            {
+                return null;
+            }
+
+            // Get the appropriate mapper's sheet model
+            return sheetEnum switch
+            {
+                Enums.SheetEnum.ACCOUNTS => AccountMapper.GetSheet(),
+                Enums.SheetEnum.STOCKS => StockMapper.GetSheet(),
+                Enums.SheetEnum.TICKERS => TickerMapper.GetSheet(),
+                _ => null
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets the strongly-typed sheet layouts/configurations for multiple sheets.
+    /// This includes formulas, colors, notes, formats, and all other sheet properties.
+    /// Useful for examining what the expected sheet structure should be.
+    /// </summary>
+    /// <param name="sheets">List of sheet names to get configurations for</param>
+    /// <returns>List of SheetModels containing complete sheet configurations (excludes sheets not found)</returns>
+    public List<SheetModel> GetSheetLayouts(List<string> sheets)
+    {
+        var sheetModels = new List<SheetModel>();
+
+        foreach (var sheet in sheets)
+        {
+            var sheetModel = GetSheetLayout(sheet);
+            if (sheetModel != null)
+            {
+                sheetModels.Add(sheetModel);
+            }
+        }
+
+        return sheetModels;
     }
 }

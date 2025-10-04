@@ -27,37 +27,44 @@ public class IntegrationTestFixture : IAsyncLifetime
             System.Diagnostics.Debug.WriteLine("?? Setting up clean integration test environment...");
             
             // Step 1: Delete all existing sheets to ensure clean slate
-            var deleteResult = await testBase.GoogleSheetManager!.DeleteSheets(testBase.TestSheets);
+            var deleteResult = await testBase.GoogleSheetManager!.DeleteAllSheets();
             
-            // Allow warnings but log any hard errors
-            var deleteErrors = deleteResult.Messages.Where(m => m.Level == "ERROR").ToList();
-            if (deleteErrors.Count > 0)
-            {
-                // Log but don't fail - sheets might not exist or deletion might not be supported
-                System.Diagnostics.Debug.WriteLine($"Delete warnings (expected): {string.Join(", ", deleteErrors.Select(e => e.Message))}");
-            }
-
-            // Wait for deletion to propagate
-            await Task.Delay(4000);
-
-            // Step 2: Recreate fresh sheets
-            var recreateSuccess = await testBase.EnsureSheetsExist(testBase.TestSheets);
+            // Check if deletion was skipped due to limitations
+            var cannotDeleteWarning = deleteResult.Messages.Any(m => 
+                m.Message.Contains("Cannot delete all sheets") ||
+                m.Message.Contains("Google Sheets requires at least one sheet"));
             
-            if (recreateSuccess)
+            if (cannotDeleteWarning)
             {
-                System.Diagnostics.Debug.WriteLine("? Clean integration test environment prepared successfully");
+                System.Diagnostics.Debug.WriteLine("?? Cannot delete all sheets - will work with existing sheets");
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("?? Sheet setup had issues, but continuing with tests");
+                // Wait for deletion to propagate
+                await Task.Delay(3000);
+                
+                // Step 2: Create all fresh sheets
+                var createResult = await testBase.GoogleSheetManager!.CreateAllSheets();
+                var createErrors = createResult.Messages.Where(m => m.Level == "ERROR").ToList();
+                
+                if (createErrors.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"?? Sheet creation had errors: {string.Join(", ", createErrors.Select(e => e.Message))}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("? Fresh sheets created successfully");
+                }
+                
+                // Wait for creation to complete
+                await Task.Delay(2000);
             }
-
-            // Wait for creation to complete
-            await Task.Delay(3000);
+            
+            System.Diagnostics.Debug.WriteLine("?? Integration test environment ready");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"?? Integration test setup failed: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"? Integration test setup failed: {ex.Message}");
             // Don't fail the fixture - let individual tests handle missing setup
             // This allows tests to run even if cleanup fails
         }
