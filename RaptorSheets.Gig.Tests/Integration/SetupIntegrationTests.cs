@@ -6,9 +6,18 @@ using System.ComponentModel;
 namespace RaptorSheets.Gig.Tests.Integration;
 
 /// <summary>
-/// Setup integration tests that prepare clean testing environment
-/// Run these manually when you need explicit environment control
-/// Regular integration tests now use IntegrationTestFixture for automatic cleanup
+/// Setup integration tests that prepare clean testing environment.
+/// 
+/// These tests demonstrate the CORRECT way to perform full environment resets:
+/// 1. Use DeleteAllSheets() to clear ALL sheets (creates TempSheet automatically)
+/// 2. Use CreateAllSheets() to recreate all required sheets
+/// 3. Verify the environment is clean and ready
+/// 
+/// This approach properly handles Google Sheets' requirement of at least one sheet
+/// by using a temporary placeholder during the delete/recreate cycle.
+/// 
+/// Run these manually when you need explicit environment control.
+/// Regular integration tests should NOT inline test sheet creation/deletion.
 /// </summary>
 [Category("IntegrationSetup")] // Changed from "Integration" - now runs separately
 public class SetupIntegrationTests : IntegrationTestBase

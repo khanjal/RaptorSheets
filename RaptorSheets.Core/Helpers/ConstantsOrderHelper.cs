@@ -17,7 +17,6 @@ public static class ConstantsOrderHelper
     {
         var fields = constantsType.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
             .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
-            .OrderBy(f => f.MetadataToken) // This preserves source declaration order
             .ToList();
 
         var result = new List<string>();
