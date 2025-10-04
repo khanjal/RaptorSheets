@@ -26,6 +26,7 @@ namespace RaptorSheets.Gig.Tests.Integration;
 /// Run these manually when you need explicit environment control.
 /// Regular integration tests should NOT inline test sheet creation/deletion.
 /// </summary>
+[Collection("GoogleSheetsSetup")]
 [Category("IntegrationSetup")]
 public class SetupIntegrationTests : IntegrationTestBase
 {
@@ -39,7 +40,7 @@ public class SetupIntegrationTests : IntegrationTestBase
             System.Diagnostics.Debug.WriteLine("🧹 Starting clean environment setup...");
             
             // Step 1: Delete all existing sheets
-            System.Diagnostics.Debug.WriteLine("  📌 Deleting all existing sheets...");
+            System.Diagnostics.Debug.WriteLine("  📌 Deleting all Gig-managed sheets...");
             var deleteResult = await GoogleSheetManager!.DeleteAllSheets();
             
             var deleteErrors = deleteResult.Messages.Where(m => 
@@ -56,24 +57,38 @@ public class SetupIntegrationTests : IntegrationTestBase
             // Wait for deletion to propagate
             await Task.Delay(3000);
             
-            // Step 2: CRITICAL - Verify ALL sheets were deleted before creating new ones
-            System.Diagnostics.Debug.WriteLine("  📌 Verifying deletion completed...");
+            // Step 2: CRITICAL - Verify all Gig-managed sheets were deleted before creating new ones
+            System.Diagnostics.Debug.WriteLine("  📌 Verifying Gig sheets deleted...");
             var sheetsAfterDeletion = await GoogleSheetManager!.GetAllSheetTabNames();
+            var allProperties = await GoogleSheetManager!.GetAllSheetProperties();
             
-            // Should only have TempSheet remaining (safety net)
-            var unexpectedSheets = sheetsAfterDeletion
-                .Where(sheet => !sheet.Equals("TempSheet", StringComparison.OrdinalIgnoreCase))
+            // Get list of sheets that SHOULD exist (Gig-managed sheets from GetAllSheetProperties)
+            var gigManagedSheets = allProperties.Select(p => p.Name).ToList();
+            
+            // Check if any Gig-managed sheets still exist after deletion
+            var remainingGigSheets = sheetsAfterDeletion
+                .Where(sheet => gigManagedSheets.Any(gig => 
+                    string.Equals(gig, sheet, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
             
-            if (unexpectedSheets.Count > 0)
+            if (remainingGigSheets.Count > 0)
             {
-                var remaining = string.Join(", ", unexpectedSheets);
-                Assert.Fail($"STOP: Sheets still exist after deletion! Found: {remaining}. " +
+                var remaining = string.Join(", ", remainingGigSheets);
+                Assert.Fail($"STOP: Gig-managed sheets still exist after deletion! Found: {remaining}. " +
                            $"Cannot proceed with CreateAllSheets as it will cause conflicts. " +
                            $"Manual intervention required.");
             }
             
-            System.Diagnostics.Debug.WriteLine($"  ✓ Verified only TempSheet remains ({sheetsAfterDeletion.Count} total sheets)");
+            var otherSheets = sheetsAfterDeletion
+                .Where(sheet => !gigManagedSheets.Any(gig => 
+                    string.Equals(gig, sheet, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+            
+            System.Diagnostics.Debug.WriteLine($"  ✓ All Gig-managed sheets deleted");
+            if (otherSheets.Count > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"  ℹ️  Other sheets remaining: {string.Join(", ", otherSheets)}");
+            }
             
             // Step 3: Create all required sheets
             System.Diagnostics.Debug.WriteLine("  📌 Creating all required sheets...");
@@ -94,15 +109,15 @@ public class SetupIntegrationTests : IntegrationTestBase
             await Task.Delay(3000);
             
             // Step 4: Verify ALL required sheets exist (not just test sheets)
-            System.Diagnostics.Debug.WriteLine("  📌 Verifying ALL sheets exist...");
+            System.Diagnostics.Debug.WriteLine("  📌 Verifying ALL required sheets exist...");
             var allTabNames = await GoogleSheetManager!.GetAllSheetTabNames();
-            var allProperties = await GoogleSheetManager!.GetAllSheetProperties();
+            allProperties = await GoogleSheetManager!.GetAllSheetProperties();
             
             // Get list of ALL required sheets (from GetAllSheetProperties)
             var requiredSheets = allProperties.Select(p => p.Name).ToList();
             
-            System.Diagnostics.Debug.WriteLine($"  📊 Found {allTabNames.Count} total sheets");
-            System.Diagnostics.Debug.WriteLine($"  📊 Expected {requiredSheets.Count} required sheets");
+            System.Diagnostics.Debug.WriteLine($"  📊 Found {allTabNames.Count} total sheets in spreadsheet");
+            System.Diagnostics.Debug.WriteLine($"  📊 Expected {requiredSheets.Count} Gig-managed sheets");
             
             // Check that ALL required sheets exist
             var missingSheets = requiredSheets.Where(required => 
@@ -128,8 +143,8 @@ public class SetupIntegrationTests : IntegrationTestBase
             
             System.Diagnostics.Debug.WriteLine($"\n     📊 Formula/Analysis Sheets (read-only, contain formulas):");
             var formulaSheets = allTabNames
-                .Where(tab => !TestSheets.Contains(tab, StringComparer.OrdinalIgnoreCase) && 
-                             !tab.Equals("TempSheet", StringComparison.OrdinalIgnoreCase))
+                .Where(tab => requiredSheets.Contains(tab, StringComparer.OrdinalIgnoreCase) &&
+                             !TestSheets.Contains(tab, StringComparer.OrdinalIgnoreCase))
                 .OrderBy(s => s);
             
             foreach (var formulaSheet in formulaSheets)
@@ -137,10 +152,18 @@ public class SetupIntegrationTests : IntegrationTestBase
                 System.Diagnostics.Debug.WriteLine($"        • {formulaSheet}");
             }
             
-            if (allTabNames.Any(t => t.Equals("TempSheet", StringComparison.OrdinalIgnoreCase)))
+            var nonGigSheets = allTabNames
+                .Where(tab => !requiredSheets.Contains(tab, StringComparer.OrdinalIgnoreCase))
+                .OrderBy(s => s)
+                .ToList();
+            
+            if (nonGigSheets.Count > 0)
             {
-                System.Diagnostics.Debug.WriteLine($"\n     🛡️  Safety Sheet:");
-                System.Diagnostics.Debug.WriteLine($"        • TempSheet (persistent safety net)");
+                System.Diagnostics.Debug.WriteLine($"\n     🔧 Other Sheets (not managed by Gig):");
+                foreach (var otherSheet in nonGigSheets)
+                {
+                    System.Diagnostics.Debug.WriteLine($"        • {otherSheet}");
+                }
             }
             
             System.Diagnostics.Debug.WriteLine("\n✅ Clean test environment prepared successfully");
@@ -212,5 +235,32 @@ public class SetupIntegrationTests : IntegrationTestBase
             SkipIfApiError(ex);
             throw;
         }
+    }
+}
+
+/// <summary>
+/// Collection definition for Google Sheets setup tests.
+/// Separate collection to prevent interference with regular integration tests.
+/// </summary>
+[CollectionDefinition("GoogleSheetsSetup", DisableParallelization = true)]
+public class GoogleSheetsSetupCollection : ICollectionFixture<GoogleSheetsSetupFixture>
+{
+}
+
+/// <summary>
+/// Fixture for Google Sheets setup tests.
+/// </summary>
+public class GoogleSheetsSetupFixture : IAsyncLifetime
+{
+    public async Task InitializeAsync()
+    {
+        System.Diagnostics.Debug.WriteLine("🔧 Initializing Google Sheets setup test environment");
+        await Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        System.Diagnostics.Debug.WriteLine("✅ Google Sheets setup tests completed");
+        await Task.CompletedTask;
     }
 }
