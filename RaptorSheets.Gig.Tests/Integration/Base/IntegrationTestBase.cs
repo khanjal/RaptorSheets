@@ -15,7 +15,7 @@ namespace RaptorSheets.Gig.Tests.Integration.Base;
 /// <summary>
 /// Base class for integration tests with modular, reusable operations
 /// </summary>
-public abstract class IntegrationTestBase : IAsyncLifetime
+public abstract class IntegrationTestBase
 {
     protected readonly GoogleSheetManager? GoogleSheetManager;
     protected readonly List<string> TestSheets;
@@ -34,9 +34,6 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         if (GoogleCredentialHelpers.IsCredentialFilled(credential))
             GoogleSheetManager = new GoogleSheetManager(credential, spreadsheetId);
     }
-
-    public Task InitializeAsync() => Task.CompletedTask;
-    public Task DisposeAsync() => Task.CompletedTask;
 
     #region Skip Helpers
     
@@ -129,8 +126,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     
     protected async Task<SheetEntity> InsertTestData(SheetEntity testData)
     {
-        // Ensure sheets exist before attempting insert
-        await EnsureSheetsExist(TestSheets);
+        // Fixture ensures sheets exist before tests run, so no need to check here
         
         // Only pass sheets that actually have data to avoid "not supported" errors
         var sheetsWithData = new List<string>();
