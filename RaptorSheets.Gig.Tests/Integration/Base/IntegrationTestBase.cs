@@ -9,6 +9,7 @@ using RaptorSheets.Gig.Tests.Data.Helpers;
 using RaptorSheets.Test.Common.Helpers;
 using RaptorSheets.Gig.Constants;
 using System.ComponentModel;
+using Xunit;
 
 namespace RaptorSheets.Gig.Tests.Integration.Base;
 
@@ -41,15 +42,7 @@ public abstract class IntegrationTestBase
     {
         if (GoogleSheetManager == null)
         {
-            throw new SkipException("Google Sheets credentials not available");
-        }
-    }
-    
-    protected static void SkipIfApiError(Exception ex)
-    {
-        if (IsApiRelatedError(ex))
-        {
-            throw new SkipException($"API/Authentication issue: {ex.Message}");
+            Assert.Fail("Google Sheets credentials not available. Configure user secrets to run integration tests.");
         }
     }
     
@@ -158,7 +151,7 @@ public abstract class IntegrationTestBase
             // Check if this might be a missing sheets issue
             if (criticalErrors.Any(e => e.Message.Contains("Unable to save data")))
             {
-                throw new SkipException($"Insert failed due to sheet configuration issue: {errorDetails}");
+                throw new InvalidOperationException($"Insert failed due to sheet configuration issue: {errorDetails}");
             }
             
             throw new InvalidOperationException($"Insert failed: {errorDetails}");
@@ -307,9 +300,4 @@ public abstract class IntegrationTestBase
         message.Contains("No data to change"); // Expected when trying to change empty data
     
     #endregion
-}
-
-public class SkipException : Exception
-{
-    public SkipException(string message) : base(message) { }
 }
