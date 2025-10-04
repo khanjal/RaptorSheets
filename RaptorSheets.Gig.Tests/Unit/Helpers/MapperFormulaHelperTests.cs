@@ -139,7 +139,7 @@ public class MapperFormulaHelperTests
 
         // Assert
         Assert.Contains("SORT(UNIQUE(", header.Formula);
-        Assert.Null(header.Validation);
+        Assert.True(string.IsNullOrEmpty(header.Validation));
     }
 
     #endregion
