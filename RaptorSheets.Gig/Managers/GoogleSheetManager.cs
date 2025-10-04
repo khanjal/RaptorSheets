@@ -543,13 +543,62 @@ public class GoogleSheetManager : IGoogleSheetManager
     {
         var properties = new List<PropertyEntity>();
         
-        var combinedRanges = SheetPropertyHelper.BuildCombinedRanges(sheets);
-        var sheetInfo = await _googleSheetService.GetSheetInfo(combinedRanges);
-
+        // STEP 1: Get all existing sheet tab names first (no ranges parameter)
+        var existingTabNames = await GetAllSheetTabNames();
+        
+        // STEP 2: Filter requested sheets to only those that exist
+        var existingSheets = sheets.Where(requestedSheet => 
+            existingTabNames.Any(existingTab => 
+                string.Equals(requestedSheet, existingTab, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+        
+        // STEP 3: Build properties for all requested sheets
         foreach (var sheet in sheets)
         {
-            var property = SheetPropertyHelper.ProcessSheetData(sheet, sheetInfo);
-            properties.Add(property);
+            var sheetExists = existingSheets.Any(s => 
+                string.Equals(s, sheet, StringComparison.OrdinalIgnoreCase));
+            
+            if (sheetExists)
+            {
+                // Sheet exists - will process it below
+                properties.Add(new PropertyEntity { Name = sheet });
+            }
+            else
+            {
+                // Sheet doesn't exist - return default property structure
+                properties.Add(new PropertyEntity
+                {
+                    Name = sheet,
+                    Id = "",  // Empty ID indicates sheet doesn't exist
+                    Attributes = new Dictionary<string, string>
+                    {
+                        { PropertyEnum.HEADERS.GetDescription(), "" },
+                        { PropertyEnum.MAX_ROW.GetDescription(), "1000" },
+                        { PropertyEnum.MAX_ROW_VALUE.GetDescription(), "1" }
+                    }
+                });
+            }
+        }
+        
+        // STEP 4: Only request ranges for existing sheets
+        if (existingSheets.Count > 0)
+        {
+            var combinedRanges = SheetPropertyHelper.BuildCombinedRanges(existingSheets);
+            var sheetInfo = await _googleSheetService.GetSheetInfo(combinedRanges);
+
+            // STEP 5: Process data for existing sheets only
+            for (int i = 0; i < properties.Count; i++)
+            {
+                var property = properties[i];
+                
+                // Only process sheets that exist
+                if (!string.IsNullOrEmpty(property.Id) || existingSheets.Any(s => 
+                    string.Equals(s, property.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    var processedProperty = SheetPropertyHelper.ProcessSheetData(property.Name, sheetInfo);
+                    properties[i] = processedProperty;
+                }
+            }
         }
 
         return properties;

@@ -30,7 +30,7 @@ public class SetupIntegrationTests : IntegrationTestBase
         try
         {
             // Step 1: Delete all existing sheets to ensure clean slate
-            var deleteResult = await GoogleSheetManager!.DeleteSheets(TestSheets);
+            var deleteResult = await GoogleSheetManager!.DeleteAllSheets();
             
             // Allow warnings but log any hard errors
             var deleteErrors = deleteResult.Messages.Where(m => m.Level == "ERROR").ToList();
@@ -42,8 +42,9 @@ public class SetupIntegrationTests : IntegrationTestBase
             
             // Wait for deletion to propagate
             await Task.Delay(4000);
-            
+
             // Step 2: Recreate fresh sheets
+            var createResult = await GoogleSheetManager!.CreateAllSheets();
             var recreateSuccess = await EnsureSheetsExist(TestSheets);
             Assert.True(recreateSuccess, "Should successfully create fresh sheets");
             
