@@ -3,6 +3,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Entities;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace RaptorSheets.Gig.Constants;
 
@@ -124,17 +125,46 @@ public static class SheetsConfig
     public static class SheetUtilities
     {
         /// <summary>
-        /// Gets all sheet names in declaration order from SheetNames constants.
-        /// The order is determined by the declaration order in the SheetNames class.
+        /// All sheet names in explicit order. This is the definitive source of truth for sheet ordering.
+        /// Order represents the desired tab sequence in Google Sheets.
         /// </summary>
-        public static List<string> GetAllSheetNames() =>
-            ConstantsOrderHelper.GetOrderFromConstants(typeof(SheetNames));
+        private static readonly List<string> _allSheetNames = new()
+        {
+            // Primary data entry sheets (leftmost tabs for easy access)
+            SheetNames.Trips,
+            SheetNames.Shifts,
+            SheetNames.Expenses,
+            
+            // Reference data sheets (middle tabs)
+            SheetNames.Addresses,
+            SheetNames.Names,
+            SheetNames.Places,
+            SheetNames.Regions,
+            SheetNames.Services,
+            SheetNames.Types,
+            
+            // Analysis/summary sheets (right-side tabs)
+            SheetNames.Daily,
+            SheetNames.Weekdays,
+            SheetNames.Weekly,
+            SheetNames.Monthly,
+            SheetNames.Yearly,
+            
+            // Administrative sheets (rightmost tabs)
+            SheetNames.Setup
+        };
+
+        /// <summary>
+        /// Gets all sheet names in explicit order.
+        /// This is library-safe and doesn't rely on reflection.
+        /// </summary>
+        public static List<string> GetAllSheetNames() => new(_allSheetNames);
         
         /// <summary>
         /// Validates that a sheet name is recognized by the system
         /// </summary>
         public static bool IsValidSheetName(string name) =>
-            GetAllSheetNames().Any(sheet => string.Equals(sheet, name, StringComparison.OrdinalIgnoreCase));
+            _allSheetNames.Any(sheet => string.Equals(sheet, name, StringComparison.OrdinalIgnoreCase));
 
         /// <summary>
         /// Gets the order index of a sheet name (zero-based).
@@ -142,15 +172,21 @@ public static class SheetsConfig
         /// <param name="sheetName">Sheet name to get index for</param>
         /// <returns>Zero-based index, or -1 if not found</returns>
         public static int GetSheetIndex(string sheetName) =>
-            ConstantsOrderHelper.GetSheetIndex(typeof(SheetNames), sheetName);
+            _allSheetNames.FindIndex(sheet => string.Equals(sheet, sheetName, StringComparison.OrdinalIgnoreCase));
 
         /// <summary>
         /// Validates that all provided sheet names are valid.
         /// </summary>
         /// <param name="sheetNames">Sheet names to validate</param>
         /// <returns>List of validation errors (empty if valid)</returns>
-        public static List<string> ValidateSheetNames(IEnumerable<string> sheetNames) =>
-            ConstantsOrderHelper.ValidateSheetNames(typeof(SheetNames), sheetNames);
+        public static List<string> ValidateSheetNames(IEnumerable<string> sheetNames)
+        {
+            var validNames = _allSheetNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return sheetNames
+                .Where(sheetName => !validNames.Contains(sheetName))
+                .Select(sheetName => $"Sheet name '{sheetName}' is not defined in SheetNames constants")
+                .ToList();
+        }
 
         /// <summary>
         /// Gets all sheet names in uppercase for case-insensitive switch statements
@@ -172,6 +208,41 @@ public static class SheetsConfig
             public static string Weekdays => SheetNames.Weekdays.ToUpperInvariant();
             public static string Weekly => SheetNames.Weekly.ToUpperInvariant();
             public static string Yearly => SheetNames.Yearly.ToUpperInvariant();
+        }
+
+        /// <summary>
+        /// Validates that the explicit sheet order array contains all constants and no extras.
+        /// This should be called in unit tests to ensure synchronization.
+        /// </summary>
+        public static List<string> ValidateSheetOrderCompleteness()
+        {
+            var errors = new List<string>();
+            
+            // Get all constant values using reflection (safe for validation, not ordering)
+            var constantValues = typeof(SheetNames)
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
+                .Select(f => f.GetValue(null)?.ToString())
+                .Where(v => v != null)
+                .ToHashSet()!;
+
+            var explicitOrderSet = _allSheetNames.ToHashSet();
+
+            // Check for missing sheets in explicit order
+            var missingFromExplicit = constantValues.Except(explicitOrderSet);
+            foreach (var missing in missingFromExplicit)
+            {
+                errors.Add($"Sheet '{missing}' exists in SheetNames constants but is missing from explicit order array");
+            }
+
+            // Check for extra sheets in explicit order
+            var extraInExplicit = explicitOrderSet.Except(constantValues);
+            foreach (var extra in extraInExplicit)
+            {
+                errors.Add($"Sheet '{extra}' exists in explicit order array but is missing from SheetNames constants");
+            }
+
+            return errors;
         }
     }
 
