@@ -1,9 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
-using Moq;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
-using RaptorSheets.Core.Services;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Managers;

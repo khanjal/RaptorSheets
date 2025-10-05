@@ -46,7 +46,11 @@ public class GoogleSheetManager : IGoogleSheetManager
             var headers = (await _googleSheetService.GetSheetData(sheet.GetDescription()))?.Values[0];
 
             if (headers == null)
+            {
+                // Add error message if headers are missing (sheet not supported or not found)
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Adding data to {sheet.UpperName()} not supported (headers not found)", MessageTypeEnum.ADD_DATA));
                 continue;
+            }
 
             IList<IList<object?>> values = [];
 
