@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Linq;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Models.Google;
 
@@ -94,14 +95,13 @@ public static class EntitySheetConfigHelper
     {
         var entityType = typeof(T);
         var errors = new List<string>();
-        
         var allProperties = GetPropertiesInInheritanceOrder(entityType);
         var entityHeaders = allProperties
             .Select(p => p.GetCustomAttribute<ColumnOrderAttribute>()?.HeaderName)
             .Where(h => h != null)
             .ToList();
 
-        if (!entityHeaders.Any())
+        if (entityHeaders.Count == 0)
         {
             errors.Add($"Entity '{entityType.Name}' has no properties with ColumnOrder attributes. Cannot generate sheet headers.");
         }

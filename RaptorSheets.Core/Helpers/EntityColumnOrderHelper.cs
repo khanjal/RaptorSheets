@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Linq;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Models.Google;
 
@@ -43,12 +44,9 @@ public static class EntityColumnOrderHelper
         void AddHeaders(IEnumerable<SheetCellModel>? headers)
         {
             if (headers == null) return;
-            foreach (var header in headers)
+            foreach (var header in headers.Where(header => processedHeaders.Add(header.Name)))
             {
-                if (processedHeaders.Add(header.Name))
-                {
-                    columnOrder.Add(header.Name);
-                }
+                columnOrder.Add(header.Name);
             }
         }
 

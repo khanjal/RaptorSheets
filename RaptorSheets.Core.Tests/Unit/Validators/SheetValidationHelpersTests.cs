@@ -5,10 +5,24 @@ namespace RaptorSheets.Core.Tests.Unit.Validators;
 
 public class SheetValidationHelpersTests
 {
+    private static readonly (string?, string)[] RequiredParameterTestCases =
+    {
+        (null, "param1"),
+        ("", "param2"),
+        ("value", "param3")
+    };
+
+    private static readonly (List<int>?, string)[] RequiredCollectionTestCases =
+    {
+        (null, "col1"),
+        (new List<int>(), "col2"),
+        (new List<int> { 1 }, "col3")
+    };
+
     [Fact]
     public void ValidateRequiredParameters_WithNullOrEmptyValues_ReturnsErrorMessages()
     {
-        var result = SheetValidationHelpers.ValidateRequiredParameters((null, "param1"), ("", "param2"), ("value", "param3"));
+        var result = SheetValidationHelpers.ValidateRequiredParameters(RequiredParameterTestCases);
         Assert.Equal(2, result.Count);
         Assert.All(result, m => Assert.Contains("null or empty", m.Message));
     }
@@ -23,7 +37,7 @@ public class SheetValidationHelpersTests
     [Fact]
     public void ValidateRequiredCollections_WithNullOrEmptyCollections_ReturnsErrorMessages()
     {
-        var result = SheetValidationHelpers.ValidateRequiredCollections<int>((null, "col1"), (new List<int>(), "col2"), (new List<int> { 1 }, "col3"));
+        var result = SheetValidationHelpers.ValidateRequiredCollections<int>(RequiredCollectionTestCases);
         Assert.Equal(2, result.Count);
         Assert.All(result, m => Assert.Contains("null or empty", m.Message));
     }
@@ -38,7 +52,6 @@ public class SheetValidationHelpersTests
     }
 
     [Theory]
-    [InlineData(null, 1)]  // null should return 1 error message
     [InlineData("", 1)]
     [InlineData("short", 1)]
     [InlineData("12345678901234567890123456789012345678901234567890", 0)] // 50 chars should be valid

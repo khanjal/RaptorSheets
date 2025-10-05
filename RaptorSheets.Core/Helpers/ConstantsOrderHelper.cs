@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Linq;
 
 namespace RaptorSheets.Core.Helpers;
 
@@ -15,15 +16,11 @@ public static class ConstantsOrderHelper
     /// <returns>List of constant values in declaration order</returns>
     public static List<string> GetOrderFromConstants(Type constantsType)
     {
-        var fields = constantsType.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+        return constantsType.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
             .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
-            .ToList();
-
-        var result = fields
-            .Select(field => field.GetValue(null))
-            .OfType<string>()
-            .ToList();
-        return result;
+            .Select(f => f.GetValue(null) as string)
+            .Where(v => v != null)
+            .ToList()!;
     }
 
     /// <summary>
@@ -35,17 +32,10 @@ public static class ConstantsOrderHelper
     public static List<string> ValidateSheetNames(Type constantsType, IEnumerable<string> sheetNames)
     {
         var validNames = GetOrderFromConstants(constantsType).ToHashSet();
-        var errors = new List<string>();
-
-        foreach (var sheetName in sheetNames)
-        {
-            if (!validNames.Contains(sheetName))
-            {
-                errors.Add($"Sheet name '{sheetName}' is not defined in {constantsType.Name}");
-            }
-        }
-
-        return errors;
+        return sheetNames
+            .Where(sheetName => !validNames.Contains(sheetName))
+            .Select(sheetName => $"Sheet name '{sheetName}' is not defined in {constantsType.Name}")
+            .ToList();
     }
 
     /// <summary>
