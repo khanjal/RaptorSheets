@@ -14,11 +14,13 @@ public static class ConstantsOrderHelper
     /// </summary>
     /// <param name="constantsType">Type containing string constants (e.g., SheetsConfig.SheetNames)</param>
     /// <returns>List of constant values in declaration order</returns>
-    public static List<string> GetOrderFromConstants(Type constantsType)
+    public static List<string> GetOrderFromConstants(Type type)
     {
-        return constantsType.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-            .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
-            .Select(f => f.GetValue(null) as string)
+        return type
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(f => f.IsLiteral && !f.IsInitOnly) // Only constants
+            .OrderBy(f => f.MetadataToken) // Ensures declaration order
+            .Select(f => f.GetValue(null)?.ToString())
             .Where(v => v != null)
             .ToList()!;
     }
