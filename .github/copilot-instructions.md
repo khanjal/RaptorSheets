@@ -57,39 +57,57 @@ public class DataEntity
 
 ### Sheet Tab Ordering Strategy
 
-**Constants-Based Ordering**: Sheet order determined by constant declaration sequence
+**Explicit Array Ordering**: Sheet order determined by explicit array for library safety
 
 ```csharp
 /// <summary>
-/// Sheet names with implicit ordering based on declaration order
+/// Sheet names with explicit ordering in _allSheetNames array
 /// </summary>
 public static class SheetNames
 {
-    // Primary data entry sheets (declared first = leftmost tabs)
+    // Sheet name constants (order not significant)
     public const string Trips = "Trips";
     public const string Shifts = "Shifts";
     public const string Expenses = "Expenses";
+    // ... other constants
+}
+
+/// <summary>
+/// Explicit ordering - this is the definitive source of truth
+/// </summary>
+private static readonly List<string> _allSheetNames = new()
+{
+    // Primary data entry sheets (leftmost tabs)
+    SheetNames.Trips,
+    SheetNames.Shifts,
+    SheetNames.Expenses,
     
     // Reference data sheets (middle tabs)
-    public const string Addresses = "Addresses";
-    public const string Names = "Names";
-    public const string Places = "Places";
-    
-    // Analysis/summary sheets (right-side tabs)
-    public const string Daily = "Daily";
-    public const string Weekly = "Weekly";
+    SheetNames.Addresses,
+    SheetNames.Names,
+    // ... other sheets in desired order
     
     // Administrative sheets (rightmost tabs)
-    public const string Setup = "Setup";
-}
+    SheetNames.Setup
+};
 ```
 
-**Why Constants-Based Ordering?**
-- **Dual Purpose**: Constants define both names and order
-- **Single Location**: Order visible in one place
-- **No Magic Numbers**: Order is implicit from declaration
-- **Easy Maintenance**: Reordering = moving declarations
-- **Clean Code**: No attributes needed on `SheetEntity`
+**Why Explicit Array Ordering?**
+- **Library Safe**: No reflection dependencies that can break in different contexts
+- **Deterministic**: Same order every time, regardless of compilation environment
+- **AOT Compatible**: Works with ahead-of-time compilation and IL trimming
+- **Explicit Intent**: Clear, readable ordering that's easy to maintain
+- **Validation**: Simple validation ensures array stays synchronized with constants
+- **Performance**: No reflection overhead at runtime
+
+**Essential Test Coverage**:
+Only basic tests are needed to cover the core functionality:
+- Order validation (first, last, count)
+- Case-insensitive name matching
+- Invalid name handling
+- Synchronization between constants and explicit array
+
+The explicit array approach is simple and reliable enough that extensive testing is unnecessary.
 
 ---
 
@@ -403,7 +421,7 @@ public static SheetModel GetSheet()
 
 ### Sheet Tab Order Management
 
-**Constants-Based Ordering**:
+**Explicit Array Ordering**:
 ```csharp
 // GetAllSheetNames() uses constants declaration order
 var sheets = SheetsConfig.SheetUtilities.GetAllSheetNames();
