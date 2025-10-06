@@ -668,7 +668,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // Arrange
         var testRunId = GenerateTestRunId();
         var startDate = new DateTime(DateTime.Today.Year - 1, 1, 1); // Previous year
-        var endDate = new DateTime(DateTime.Today.Year - 1, 12, 31);
+        var endDate = DateTime.Today; // Up to today for at least a year of data
         System.Diagnostics.Debug.WriteLine($"📅 Generating realistic gig data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
 
         // Generate realistic gig data for a full year
