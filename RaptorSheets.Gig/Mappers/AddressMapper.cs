@@ -15,7 +15,7 @@ public static class AddressMapper
     {
         var addresses = new List<AddressEntity>();
         var headers = new Dictionary<int, string>();
-        values = values!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
+        values = values!.Where(x => x.Count > 0 && !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
         var id = 0;
 
         foreach (List<object> value in values.Cast<List<object>>())

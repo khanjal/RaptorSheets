@@ -318,6 +318,133 @@ internal class TestGigHelpers
         return sheetEntity;
     }
 
+    internal static SheetEntity GenerateRealisticGigData(ActionTypeEnum actionType, DateTime startDate, DateTime endDate)
+    {
+        var services = new List<string> { "DoorDash", "Uber Eats", "Grubhub", "Instacart", "Amazon Flex", "Shipt" };
+        var regions = new List<string> { "San Francisco", "Oakland", "Berkeley", "San Jose", "Palo Alto", "Daly City", "Fremont", "Sunnyvale", "Mountain View", "Redwood City", "Santa Clara", "Cupertino", "Milpitas", "Hayward", "Union City", "San Mateo", "Pacifica", "South San Francisco", "Emeryville", "Alameda", "Castro Valley" };
+        var random = new Random();
+        var sheetEntity = new SheetEntity();
+        var shiftId = 2; // Start at 2 because row 1 is for headers
+        var tripId = 2;  // Start at 2 because row 1 is for headers
+        var serviceDayShiftNumber = new Dictionary<(string, string), int>(); // (service, date) -> shift number
+
+        var places = JsonHelpers.LoadJsonData<List<PlaceJsonEntity>>("places")!;
+        var names = JsonHelpers.LoadJsonData<List<NameJsonEntity>>("names");
+
+        for (var date = startDate; date <= endDate; date = date.AddDays(1))
+        {
+            int numShiftsToday = random.Next(1, 4); // 1-3 shifts per day
+            var servicesToday = services.OrderBy(_ => random.Next()).Take(random.Next(1, Math.Min(numShiftsToday + 1, services.Count))).ToList();
+            var usedServices = new HashSet<string>();
+            for (int s = 0; s < numShiftsToday; s++)
+            {
+                // Pick a service for this shift (allow repeats for DoorDash, etc.)
+                string service = servicesToday[random.Next(servicesToday.Count)];
+                if (!serviceDayShiftNumber.ContainsKey((service, date.ToString("yyyy-MM-dd"))))
+                    serviceDayShiftNumber[(service, date.ToString("yyyy-MM-dd"))] = 1;
+                else
+                    serviceDayShiftNumber[(service, date.ToString("yyyy-MM-dd"))]++;
+                int shiftNumber = serviceDayShiftNumber[(service, date.ToString("yyyy-MM-dd"))];
+
+                // Pick a region
+                string region = regions[random.Next(regions.Count)];
+
+                // Random shift times
+                var shiftStart = date.AddHours(random.Next(6, 16)).AddMinutes(random.Next(0, 60));
+                var shiftDuration = TimeSpan.FromMinutes(random.Next(120, 480)); // 2-8 hours
+                var shiftFinish = shiftStart.Add(shiftDuration);
+                var activeMinutes = random.Next(30, (int)shiftDuration.TotalMinutes);
+                var activeDuration = TimeSpan.FromMinutes(activeMinutes);
+
+                // Decide if this shift will have trips (85% chance) or not (15% chance)
+                bool hasTrips = random.NextDouble() >= 0.15;
+                int tripCount = hasTrips ? random.Next(2, 10) : 0;
+                int tripsValue = tripCount;
+                if (hasTrips && random.NextDouble() < 0.2)
+                    tripsValue += random.Next(-1, 2);
+
+                decimal? odometerStart = random.NextDouble() < 0.7 ? random.Next(10000, 90000) : null;
+                decimal? odometerEnd = odometerStart.HasValue ? odometerStart + random.Next(10, 100) : (decimal?)null;
+                decimal? distance = (odometerStart.HasValue && odometerEnd.HasValue) ? odometerEnd - odometerStart : Math.Round((decimal)random.NextDouble() * 20 + 1, 2);
+
+                decimal? pay = Math.Round((decimal)random.NextDouble() * 200 + 20, 2);
+                decimal? tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 40, 2) : null;
+                decimal? bonus = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 50, 2) : null;
+                decimal? cash = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 100, 2) : null;
+
+                sheetEntity.Shifts.Add(new ShiftEntity {
+                    RowId = shiftId++,
+                    Action = actionType.GetDescription(),
+                    Date = date.ToString("yyyy-MM-dd"),
+                    Number = shiftNumber,
+                    Service = service,
+                    Start = shiftStart.ToString("T"),
+                    Finish = shiftFinish.ToString("T"),
+                    Active = activeDuration.ToString(@"hh\:mm\:ss"),
+                    Time = shiftDuration.ToString(),
+                    Region = region,
+                    Note = $"{actionType.GetDescription()} - {service} shift #{shiftNumber}",
+                    Bonus = hasTrips ? bonus : (random.NextDouble() < 0.15 ? bonus : null),
+                    Cash = hasTrips ? cash : (random.NextDouble() < 0.15 ? cash : null),
+                    OdometerStart = odometerStart,
+                    OdometerEnd = odometerEnd,
+                    Distance = distance,
+                    Pay = pay,
+                    Tip = tip,
+                    Trips = hasTrips ? Math.Max(0, tripsValue) : random.Next(1, 5),
+                    Omit = random.NextDouble() < 0.08
+                });
+
+                if (hasTrips)
+                {
+                    for (int tripIndex = 0; tripIndex < tripCount; tripIndex++)
+                    {
+                        var placesForService = places.Where(x => x.Services.Contains(service)).ToList();
+                        var place = placesForService.Any() ? placesForService.GetRandomItem() : places.GetRandomItem();
+                        var name = names!.GetRandomItem();
+                        var tripEntity = GenerateTrip();
+                        tripEntity.Action = actionType.GetDescription();
+                        tripEntity.RowId = tripId++;
+                        tripEntity.Date = date.ToString("yyyy-MM-dd");
+                        tripEntity.Number = shiftNumber;
+                        tripEntity.Service = service;
+                        tripEntity.Region = region;
+                        tripEntity.Pickup = shiftStart.AddMinutes(random.Next(0, (int)shiftDuration.TotalMinutes)).ToString("T");
+                        tripEntity.Dropoff = shiftStart.AddMinutes(random.Next(0, (int)shiftDuration.TotalMinutes)).ToString("T");
+                        tripEntity.Duration = $"00:{random.Next(5, 45):D2}:00.000";
+                        tripEntity.Place = place.Name;
+                        tripEntity.StartAddress = place.Addresses.GetRandomItem();
+                        tripEntity.Name = name.Name;
+                        tripEntity.EndAddress = name.Address;
+                        tripEntity.Note = $"{actionType.GetDescription()} - {service} trip {tripIndex + 1} of shift {shiftNumber}";
+
+                        if (random.NextDouble() < 0.7)
+                        {
+                            tripEntity.Pay = Math.Round((decimal)random.NextDouble() * 40 + 5, 2);
+                            tripEntity.Tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 10, 2) : null;
+                        }
+                        if (random.NextDouble() < 0.05)
+                            tripEntity.Exclude = true;
+                        if (random.NextDouble() < 0.1)
+                            tripEntity.Cash = Math.Round((decimal)random.NextDouble() * 30 + 1, 2);
+                        if (random.NextDouble() < 0.1)
+                            tripEntity.Bonus = Math.Round((decimal)random.NextDouble() * 20 + 1, 2);
+                        if (random.NextDouble() < 0.1)
+                        {
+                            var units = new[] { "A", "B", "C", "D", "E" };
+                            tripEntity.EndUnit = units[random.Next(units.Length)];
+                        }
+                        if (random.NextDouble() < 0.1)
+                            tripEntity.OrderNumber = random.Next(100000, 999999).ToString();
+
+                        sheetEntity.Trips.Add(tripEntity);
+                    }
+                }
+            }
+        }
+        return sheetEntity;
+    }
+
     private static TripEntity GenerateTrip()
     {
         var random = new Random();

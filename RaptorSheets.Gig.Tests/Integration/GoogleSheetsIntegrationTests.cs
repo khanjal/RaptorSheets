@@ -1,4 +1,5 @@
-﻿using RaptorSheets.Core.Extensions;
+﻿using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
@@ -656,6 +657,44 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         message.Contains("already exists") ||
         message.Contains("header issue") ||
         message.Contains("No data to change");
+
+    #endregion
+
+    #region 4. Realistic Data Upload Test
+
+    [FactCheckUserSecrets]
+    public async Task RealisticFullYearData_ShouldUploadAndValidate()
+    {
+        // Arrange
+        var testRunId = GenerateTestRunId();
+        var startDate = new DateTime(DateTime.Today.Year - 1, 1, 1); // Previous year
+        var endDate = new DateTime(DateTime.Today.Year - 1, 12, 31);
+        System.Diagnostics.Debug.WriteLine($"📅 Generating realistic gig data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+
+        // Generate realistic gig data for a full year
+        var testData = RaptorSheets.Gig.Tests.Data.Helpers.TestGigHelpers.GenerateRealisticGigData(
+            ActionTypeEnum.INSERT, startDate, endDate);
+        System.Diagnostics.Debug.WriteLine($"📊 Inserting realistic dataset: {testData.Shifts.Count} shifts, {testData.Trips.Count} trips");
+
+        // Act
+        var startTime = DateTime.UtcNow;
+        var insertResult = await InsertTestData(testData);
+        var elapsed = DateTime.UtcNow - startTime;
+
+        // Assert
+        System.Diagnostics.Debug.WriteLine($"⏱️  Insert completed in {elapsed.TotalSeconds:F1}s");
+        var criticalErrors = (insertResult.Messages ?? new List<MessageEntity>())
+            .Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription() && !IsExpectedError(m.Message))
+            .ToList();
+        Assert.Empty(criticalErrors);
+        Assert.True(elapsed.TotalSeconds < 120, $"Full year insert should complete within 2 minutes, took {elapsed.TotalSeconds:F1}s");
+
+        // Optionally, validate row counts and structure
+        var readData = await GetSheetData();
+        Assert.True(readData.Shifts.Count >= testData.Shifts.Count * 0.95, $"Should find most shifts, found {readData.Shifts.Count}");
+        Assert.True(readData.Trips.Count >= testData.Trips.Count * 0.95, $"Should find most trips, found {readData.Trips.Count}");
+        System.Diagnostics.Debug.WriteLine($"   ✓ Found {readData.Shifts.Count} shifts, {readData.Trips.Count} trips in sheet");
+    }
 
     #endregion
 }
