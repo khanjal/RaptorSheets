@@ -29,9 +29,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task Environment_ShouldHaveAllRequiredSheets()
     {
-        // Arrange
-        SkipIfNoCredentials();
-        
         // Act
         var properties = await GoogleSheetManager!.GetSheetProperties(TestSheets);
         var existingSheets = properties.Where(p => !string.IsNullOrEmpty(p.Id)).ToList();
@@ -53,9 +50,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task Environment_SheetProperties_ShouldHaveValidStructure()
     {
-        // Arrange
-        SkipIfNoCredentials();
-        
         // Act
         var properties = await GoogleSheetManager!.GetSheetProperties(TestSheets);
         
@@ -81,9 +75,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     {
         // This test validates that the sheet creation process generated correct headers
         // It compares actual headers in Google Sheets vs expected headers from GetSheetLayout
-        
-        // Arrange
-        SkipIfNoCredentials();
         
         // Act - Get actual headers from Google Sheets
         var spreadsheetInfo = await GoogleSheetManager!.GetSpreadsheetInfo(
@@ -127,8 +118,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     {
         // This test validates that sheets with formulas have them correctly configured
         
-        // Arrange
-        SkipIfNoCredentials();
         var sheetsWithFormulas = new[] { "Trips", "Shifts", "Expenses" }; // Sheets that have formula columns
         
         // Act - Get sheet layouts to find formula columns
@@ -166,9 +155,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     public async Task CreatedSheets_ShouldHaveCorrectVisualProperties()
     {
         // This test validates that sheets have correct colors, protection, etc.
-        
-        // Arrange
-        SkipIfNoCredentials();
         
         // Act - Get spreadsheet info to check visual properties
         var spreadsheetInfo = await GoogleSheetManager!.GetSpreadsheetInfo();
@@ -215,9 +201,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     {
         // This test validates that sheets in TestSheets are created in the correct order
         // as defined by the constants declaration in SheetsConfig.SheetNames
-        
-        // Arrange
-        SkipIfNoCredentials();
         
         // Get expected order directly from constants reflection (source of truth)
         var expectedOrder = typeof(SheetsConfig.SheetNames)
@@ -268,7 +251,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     public async Task FullWorkflow_InsertReadUpdate_ShouldSucceedWithConsistentData()
     {
         // Arrange
-        SkipIfNoCredentials();
         var testRunId = GenerateTestRunId();
         System.Diagnostics.Debug.WriteLine($"🚀 Starting orchestrated workflow test: {testRunId}");
         
@@ -340,7 +322,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     public async Task Workflow_DailyOperation_ShouldRecordShiftWithTrips()
     {
         // Arrange - Simulates daily workflow: start shift, record trips, end shift
-        SkipIfNoCredentials();
         var testRunId = GenerateTestRunId();
         
         var testData = new SheetEntity();
@@ -404,7 +385,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     public async Task Workflow_ExpenseTracking_ShouldRecordMultipleCategories()
     {
         // Arrange - Simulates expense tracking workflow
-        SkipIfNoCredentials();
         var testRunId = GenerateTestRunId();
         
         var testData = new SheetEntity();
@@ -447,7 +427,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     public async Task LargeDataset_ShouldHandleVolumeEfficiently()
     {
         // Arrange
-        SkipIfNoCredentials();
         var testRunId = GenerateTestRunId();
         
         var testData = CreateTestData(testRunId, shifts: 10, tripsPerShift: 5, expenses: 15);
@@ -471,7 +450,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         Assert.True(elapsed.TotalSeconds < 30, 
             $"Large insert should complete within 30 seconds, took {elapsed.TotalSeconds:F1}s");
     }
-
     #endregion
 
     #region Validation Helper Methods
