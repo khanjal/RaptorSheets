@@ -1,11 +1,14 @@
 # RaptorSheets.Core
 
-A comprehensive .NET 8 library that simplifies Google Sheets API interactions for developers who need powerful spread| **[📋 Gig Package](RaptorSheets.Gig/README.md)** | Complete gig work tracking guide |heet integration without the complexity. Build custom Google Sheets solutions or use our specialized packages for common use cases.
+A comprehensive .NET 8 library that simplifies Google Sheets API interactions for developers who need powerful sheet integration without the complexity. Build custom Google Sheets solutions or use our specialized packages for common use cases.
+
+**[📋 Gig Package](RaptorSheets.Gig/README.md)** — Complete gig work tracking guide.
 
 | Badge Name | Status | Site |
 | ---------- | :------------: | :------------: |
 | Latest Build Status | [![build status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions) | [GitHub Repo](https://github.com/khanjal/RaptorSheets/) |
-| RaptorSheets.Core NuGet | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Core)](https://www.nuget.org/packages/RaptorSheets.Core/) | [Raptor Sheets - Core](https://www.raptorsheets.com) |
+| RaptorSheets.Core NuGet | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Core)](https://www.nuget.org/packages/RaptorSheets.Core/) | [RaptorSheets.Core](https://www.raptorsheets.com) |
+| RaptorSheets.Gig NuGet | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) | [RaptorSheets.Gig](https://www.nuget.org/packages/RaptorSheets.Gig/) |
 | Test Coverage | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=khanjal_RaptorSheets&metric=coverage)](https://sonarcloud.io/summary/new_code?id=khanjal_RaptorSheets) | [SonarCloud](https://sonarcloud.io/project/overview?id=khanjal_RaptorSheets) |
 | Code Quality | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=khanjal_RaptorSheets&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=khanjal_RaptorSheets) | [SonarCloud](https://sonarcloud.io/project/overview?id=khanjal_RaptorSheets) |
 | License | [![License](https://img.shields.io/github/license/khanjal/RaptorSheets)](LICENSE) | - |
@@ -20,14 +23,14 @@ dotnet add package RaptorSheets.Core
 dotnet add package RaptorSheets.Gig    # For gig work tracking
 ```
 
-## � Project Documentation
+## 📖 Project Documentation
 
 | Project | Description | Documentation |
 |---------|-------------|---------------|
 | **RaptorSheets.Core** | Core library with Google Sheets integration | [View Docs](docs/CORE.md) |
 | **RaptorSheets.Gig** | Specialized library for gig work tracking | [View Docs](RaptorSheets.Gig/README.md) |
 
-## �🚀 Quick Start
+## 🚀 Quick Start
 
 ```csharp
 using RaptorSheets.Core.Services;
