@@ -34,9 +34,9 @@ internal class TestGigHelpers
         var shiftDuration = TimeSpan.FromMinutes(random.Next(240, 600)); // 4-10 hours
         var shiftFinish = shiftStart.Add(shiftDuration);
 
-        // Generate random active time within shift
-        var activeMinutes = random.Next(60, (int)shiftDuration.TotalMinutes + 1);
-        var activeTime = shiftStart.AddMinutes(activeMinutes);
+        // Generate random active duration less than shift duration
+        var activeMinutes = random.Next(30, (int)shiftDuration.TotalMinutes); // at least 30 min
+        var activeDuration = TimeSpan.FromMinutes(activeMinutes);
 
         // Infrequent bonus/cash
         decimal? bonus = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 50, 2) : null;
@@ -47,6 +47,17 @@ internal class TestGigHelpers
         decimal? odometerEnd = odometerStart.HasValue ? odometerStart + random.Next(10, 100) : (decimal?)null;
         decimal? distance = (odometerStart.HasValue && odometerEnd.HasValue) ? odometerEnd - odometerStart : (decimal?)null;
 
+        // Randomize pay/tip for shift
+        decimal? pay = Math.Round((decimal)random.NextDouble() * 200 + 20, 2); // $20 - $220
+        decimal? tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 40, 2) : null; // 80% chance
+
+        // Determine number of trips (random 1-4)
+        int tripCount = random.Next(1, 5);
+        // Occasionally fudge the trips count by ±1
+        int tripsValue = tripCount;
+        if (random.NextDouble() < 0.2) // 20% chance
+            tripsValue += random.Next(-1, 2); // -1, 0, or +1
+
         var sheetEntity = new SheetEntity();
         sheetEntity.Shifts.Add(new ShiftEntity {
             RowId = shiftStartId,
@@ -56,7 +67,7 @@ internal class TestGigHelpers
             Service = service!,
             Start = shiftStart.ToString("T"),
             Finish = shiftFinish.ToString("T"),
-            Active = activeTime.ToString("T"),
+            Active = activeDuration.ToString(@"hh\:mm\:ss"),
             Time = shiftDuration.ToString(),
             Region = "Test",
             Note = actionType.GetDescription(),
@@ -64,11 +75,15 @@ internal class TestGigHelpers
             Cash = cash,
             OdometerStart = odometerStart,
             OdometerEnd = odometerEnd,
-            Distance = distance
+            Distance = distance,
+            Pay = pay,
+            Tip = tip,
+            Trips = Math.Max(0, tripsValue),
+            Omit = random.NextDouble() < 0.08 // 8% chance to omit
         });
 
         // Add random amount of trips
-        for (int i = tripStartId; i < random.Next(tripStartId + 1, tripStartId + 5); i++)
+        for (int i = tripStartId; i < tripStartId + tripCount; i++)
         {
             var place = places.GetRandomItem();
             var name = names!.GetRandomItem();
@@ -88,6 +103,33 @@ internal class TestGigHelpers
             tripEntity.Name = name.Name;
             tripEntity.EndAddress = name.Address;
             tripEntity.Note = actionType.GetDescription();
+
+            // Assign pay/tip to some trips (e.g., 70% chance)
+            if (random.NextDouble() < 0.7)
+            {
+                tripEntity.Pay = Math.Round((decimal)random.NextDouble() * 40 + 5, 2); // $5 - $45
+                tripEntity.Tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 10, 2) : null;
+            }
+
+            // Rarely mark as excluded
+            if (random.NextDouble() < 0.05)
+                tripEntity.Exclude = true;
+            // Rarely assign cash
+            if (random.NextDouble() < 0.1)
+                tripEntity.Cash = Math.Round((decimal)random.NextDouble() * 30 + 1, 2);
+            // Rarely assign bonus
+            if (random.NextDouble() < 0.1)
+                tripEntity.Bonus = Math.Round((decimal)random.NextDouble() * 20 + 1, 2);
+            // Rarely assign end unit
+            if (random.NextDouble() < 0.1)
+            {
+                var units = new[] { "A", "B", "C", "D", "E" };
+                tripEntity.EndUnit = units[random.Next(units.Length)];
+            }
+            // Rarely assign order number
+            if (random.NextDouble() < 0.1)
+                tripEntity.OrderNumber = random.Next(100000, 999999).ToString();
+
             sheetEntity.Trips.Add(tripEntity);
         }
 
@@ -116,7 +158,6 @@ internal class TestGigHelpers
         var sheetEntity = new SheetEntity();
         var currentTripId = tripStartId;
 
-        // Generate multiple shifts over different days
         for (int shiftIndex = 0; shiftIndex < numberOfShifts; shiftIndex++)
         {
             var service = services?.GetRandomItem();
@@ -129,15 +170,25 @@ internal class TestGigHelpers
             var shiftStart = DateTime.Today.AddHours(random.Next(6, 16)).AddMinutes(random.Next(0, 60));
             var shiftDuration = TimeSpan.FromMinutes(random.Next(240, 600)); // 4-10 hours
             var shiftFinish = shiftStart.Add(shiftDuration);
-            var activeMinutes = random.Next(60, (int)shiftDuration.TotalMinutes + 1);
-            var activeTime = shiftStart.AddMinutes(activeMinutes);
+            var activeMinutes = random.Next(30, (int)shiftDuration.TotalMinutes); // at least 30 min
+            var activeDuration = TimeSpan.FromMinutes(activeMinutes);
             decimal? bonus = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 50, 2) : null;
             decimal? cash = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 100, 2) : null;
             decimal? odometerStart = random.NextDouble() < 0.7 ? random.Next(10000, 50000) : null;
             decimal? odometerEnd = odometerStart.HasValue ? odometerStart + random.Next(10, 100) : (decimal?)null;
             decimal? distance = (odometerStart.HasValue && odometerEnd.HasValue) ? odometerEnd - odometerStart : (decimal?)null;
 
-            // Create shift
+            // Randomize pay/tip for shift
+            decimal? pay = Math.Round((decimal)random.NextDouble() * 200 + 20, 2); // $20 - $220
+            decimal? tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 40, 2) : null; // 80% chance
+
+            // Determine number of trips for this shift
+            int tripCount = random.Next(minTripsPerShift, maxTripsPerShift + 1);
+            // Occasionally fudge the trips count by ±1
+            int tripsValue = tripCount;
+            if (random.NextDouble() < 0.2)
+                tripsValue += random.Next(-1, 2);
+
             sheetEntity.Shifts.Add(new ShiftEntity {
                 RowId = shiftStartId + shiftIndex,
                 Action = actionType.GetDescription(),
@@ -146,7 +197,7 @@ internal class TestGigHelpers
                 Service = service!,
                 Start = shiftStart.ToString("T"),
                 Finish = shiftFinish.ToString("T"),
-                Active = activeTime.ToString("T"),
+                Active = activeDuration.ToString(@"hh\:mm\:ss"),
                 Time = shiftDuration.ToString(),
                 Region = region,
                 Note = $"{actionType.GetDescription()} - Shift {shiftIndex + 1}",
@@ -154,17 +205,20 @@ internal class TestGigHelpers
                 Cash = cash,
                 OdometerStart = odometerStart,
                 OdometerEnd = odometerEnd,
-                Distance = distance
+                Distance = distance,
+                Pay = pay,
+                Tip = tip,
+                Trips = Math.Max(0, tripsValue),
+                Omit = random.NextDouble() < 0.08 // 8% chance to omit
             });
 
             // Generate trips for this shift
-            var tripsForThisShift = random.Next(minTripsPerShift, maxTripsPerShift + 1);
-            for (int tripIndex = 0; tripIndex < tripsForThisShift; tripIndex++)
+            for (int tripIndex = 0; tripIndex < tripCount; tripIndex++)
             {
                 var place = placesForService.GetRandomItem();
                 var name = names!.GetRandomItem();
                 var tripEntity = GenerateTrip();
-                
+
                 tripEntity.Action = actionType.GetDescription();
                 tripEntity.RowId = currentTripId++;
                 tripEntity.Date = date;
@@ -173,13 +227,39 @@ internal class TestGigHelpers
                 tripEntity.Region = region;
                 tripEntity.Pickup = DateTime.Now.AddHours(random.Next(6, 22)).AddMinutes(random.Next(0, 60)).ToString("T");
                 tripEntity.Dropoff = DateTime.Now.AddHours(random.Next(6, 22)).AddMinutes(random.Next(0, 60)).ToString("T");
-                tripEntity.Duration = $"00:{random.Next(5, 45):D2}:00.000"; // Random duration between 5-45 minutes
+                tripEntity.Duration = $"00:{random.Next(5, 45):D2}:00.000";
                 tripEntity.Place = place.Name;
                 tripEntity.StartAddress = place.Addresses.GetRandomItem();
                 tripEntity.Name = name.Name;
                 tripEntity.EndAddress = name.Address;
                 tripEntity.Note = $"{actionType.GetDescription()} - Trip {tripIndex + 1} of Shift {shiftIndex + 1}";
-                
+
+                // Assign pay/tip to some trips (e.g., 70% chance)
+                if (random.NextDouble() < 0.7)
+                {
+                    tripEntity.Pay = Math.Round((decimal)random.NextDouble() * 40 + 5, 2); // $5 - $45
+                    tripEntity.Tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 10, 2) : null;
+                }
+
+                // Rarely mark as excluded
+                if (random.NextDouble() < 0.05)
+                    tripEntity.Exclude = true;
+            // Rarely assign cash
+            if (random.NextDouble() < 0.1)
+                tripEntity.Cash = Math.Round((decimal)random.NextDouble() * 30 + 1, 2);
+            // Rarely assign bonus
+            if (random.NextDouble() < 0.1)
+                tripEntity.Bonus = Math.Round((decimal)random.NextDouble() * 20 + 1, 2);
+            // Rarely assign end unit
+            if (random.NextDouble() < 0.1)
+            {
+                var units = new[] { "A", "B", "C", "D", "E" };
+                tripEntity.EndUnit = units[random.Next(units.Length)];
+            }
+            // Rarely assign order number
+            if (random.NextDouble() < 0.1)
+                tripEntity.OrderNumber = random.Next(100000, 999999).ToString();
+
                 sheetEntity.Trips.Add(tripEntity);
             }
         }

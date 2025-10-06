@@ -131,6 +131,9 @@ public static class ShiftMapper
                     case HeaderEnum.ODOMETER_END:
                         cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)shift.OdometerEnd } });
                         break;
+                    case HeaderEnum.DISTANCE:
+                        cells.Add(new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double?)shift.Distance } });
+                        break;
                     default:
                         cells.Add(new CellData());
                         break;
@@ -182,6 +185,9 @@ public static class ShiftMapper
                     case HeaderEnum.TIME_OMIT:
                         objectList.Add(shift.Omit?.ToString() ?? "");
                         break;
+                    case HeaderEnum.TRIPS:
+                        objectList.Add(shift.Trips.ToString());
+                        break;
                     case HeaderEnum.PAY:
                         objectList.Add(shift.Pay?.ToString() ?? "");
                         break;
@@ -205,6 +211,9 @@ public static class ShiftMapper
                         break;
                     case HeaderEnum.ODOMETER_END:
                         objectList.Add(shift.OdometerEnd?.ToString() ?? "");
+                        break;
+                    case HeaderEnum.DISTANCE:
+                        objectList.Add(shift.Distance?.ToString() ?? "");
                         break;
                     default:
                         objectList.Add(null);
