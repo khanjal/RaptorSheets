@@ -87,7 +87,6 @@ Built on RaptorSheets.Core, these packages provide domain-specific functionality
 | Package | Version | Purpose | Documentation |
 |---------|---------|---------|---------------|
 | **[RaptorSheets.Gig](https://www.nuget.org/packages/RaptorSheets.Gig/)** | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) | Complete gig work tracking with automated analytics | **[📖 Gig Guide](RaptorSheets.Gig/README.md)** |
-| **RaptorSheets.Stock** *(Coming Soon)* | - | Investment portfolio tracking | - |
 
 > **Looking for gig work tracking?** Check out **[RaptorSheets.Gig](RaptorSheets.Gig/README.md)** - a complete solution for freelancers and gig workers with pre-built sheets for trips, shifts, earnings, and comprehensive analytics.
 
@@ -276,7 +275,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🐞 [Report Issues](https://github.com/khanjal/RaptorSheets/issues)
 - 💬 [Discussions](https://github.com/khanjal/RaptorSheets/discussions)
 - 📖 [Google Sheets API Reference](https://googleapis.dev/dotnet/Google.Apis.Sheets.v4/latest/api/Google.Apis.Sheets.v4.html)
-- 🌐 [Project Homepage](https://gig.raptorsheets.com)
+- 🌐 [Project Homepage](https://www.raptorsheets.com)
 
 ---
 
