@@ -95,16 +95,17 @@ public class ObjectExtensionsTests
     }
 
     [Fact]
-    public void ObjectExtensions_WithNullSheetModel_ShouldHandleGracefully()
+    public void ObjectExtensions_WithNullSheetModel_ShouldThrowArgumentNullException()
     {
         // Arrange
         SheetModel? nullModel = null;
 
         // Act & Assert
-        Assert.Throws<NullReferenceException>(() => nullModel!.GetColumn("Test"));
-        Assert.Throws<NullReferenceException>(() => nullModel!.GetIndex("Test"));
-        Assert.Throws<NullReferenceException>(() => nullModel!.GetRange("Test"));
-        Assert.Throws<NullReferenceException>(() => nullModel!.GetLocalRange("Test"));
+        Assert.Throws<ArgumentNullException>(() => nullModel!.GetColumn("Test"));
+        Assert.Throws<ArgumentNullException>(() => nullModel!.GetIndex("Test"));
+        Assert.Throws<ArgumentNullException>(() => nullModel!.GetRange("Test"));
+        Assert.Throws<ArgumentNullException>(() => nullModel!.GetLocalRange("Test"));
+        Assert.Throws<ArgumentNullException>(() => nullModel!.GetRangeBetweenColumns("Start", "End"));
     }
 
     [Fact]

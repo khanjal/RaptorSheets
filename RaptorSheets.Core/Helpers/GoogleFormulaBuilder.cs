@@ -11,6 +11,29 @@ namespace RaptorSheets.Core.Helpers;
 [ExcludeFromCodeCoverage]
 public static class GoogleFormulaBuilder
 {
+    // Placeholder constants
+    private const string PlaceholderHeader = "{header}";
+    private const string PlaceholderSourceRange = "{sourceRange}";
+    private const string PlaceholderKeyRange = "{keyRange}";
+    private const string PlaceholderLookupRange = "{lookupRange}";
+    private const string PlaceholderSumRange = "{sumRange}";
+    private const string PlaceholderRange1 = "{range1}";
+    private const string PlaceholderRange2 = "{range2}";
+    private const string PlaceholderNumerator = "{numerator}";
+    private const string PlaceholderDenominator = "{denominator}";
+    private const string PlaceholderFormula = "{formula}";
+    private const string PlaceholderSearchKey = "{searchKey}";
+    private const string PlaceholderSearchRange = "{searchRange}";
+    private const string PlaceholderColumnIndex = "{columnIndex}";
+    private const string PlaceholderSourceSheet = "{sourceSheet}";
+    private const string PlaceholderDateColumn = "{dateColumn}";
+    private const string PlaceholderKeyColumn = "{keyColumn}";
+    private const string PlaceholderIsFirst = "{isFirst}";
+    private const string PlaceholderDateRange = "{dateRange}";
+    private const string PlaceholderDelimiter = "{delimiter}";
+    private const string PlaceholderIndex = "{index}";
+    private const string PlaceholderOffset = "{offset}";
+
     #region Generic ARRAYFORMULA Builders
 
     /// <summary>
@@ -19,14 +42,14 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayFormulaSumIf(string keyRange, string header, string lookupRange, string sumRange)
     {
         var sumIfFormula = GoogleFormulas.SumIfAggregation
-            .Replace("{lookupRange}", lookupRange)
-            .Replace("{keyRange}", keyRange)
-            .Replace("{sumRange}", sumRange);
+            .Replace(PlaceholderLookupRange, lookupRange)
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderSumRange, sumRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", sumIfFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, sumIfFormula);
     }
 
     /// <summary>
@@ -35,13 +58,13 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayFormulaCountIf(string keyRange, string header, string lookupRange)
     {
         var countIfFormula = GoogleFormulas.CountIfAggregation
-            .Replace("{lookupRange}", lookupRange)
-            .Replace("{keyRange}", keyRange);
+            .Replace(PlaceholderLookupRange, lookupRange)
+            .Replace(PlaceholderKeyRange, keyRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", countIfFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, countIfFormula);
     }
 
     /// <summary>
@@ -50,8 +73,8 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayLiteralUnique(string header, string sourceRange)
     {
         return GoogleFormulas.ArrayLiteralUnique
-            .Replace("{header}", header)
-            .Replace("{sourceRange}", sourceRange);
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderSourceRange, sourceRange);
     }
 
     /// <summary>
@@ -60,9 +83,9 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayLiteralUniqueCombined(string header, string range1, string range2)
     {
         return GoogleFormulas.ArrayLiteralUniqueCombined
-            .Replace("{header}", header)
-            .Replace("{range1}", range1)
-            .Replace("{range2}", range2);
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderRange1, range1)
+            .Replace(PlaceholderRange2, range2);
     }
 
     /// <summary>
@@ -71,8 +94,8 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayLiteralUniqueFiltered(string header, string sourceRange)
     {
         return GoogleFormulas.ArrayLiteralUniqueFiltered
-            .Replace("{header}", header)
-            .Replace("{sourceRange}", sourceRange);
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderSourceRange, sourceRange);
     }
 
     /// <summary>
@@ -81,9 +104,9 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayFormulaUnique(string keyRange, string header, string sourceRange)
     {
         return GoogleFormulas.ArrayFormulaUnique
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{sourceRange}", sourceRange);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderSourceRange, sourceRange);
     }
 
     /// <summary>
@@ -92,9 +115,9 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayFormulaUniqueFiltered(string keyRange, string header, string sourceRange)
     {
         return GoogleFormulas.ArrayFormulaUniqueFiltered
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{sourceRange}", sourceRange);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderSourceRange, sourceRange);
     }
 
     /// <summary>
@@ -103,13 +126,22 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayFormulaSafeDivision(string keyRange, string header, string numerator, string denominator)
     {
         var divisionFormula = GoogleFormulas.SafeDivisionFormula
-            .Replace("{numerator}", numerator)
-            .Replace("{denominator}", denominator);
+            .Replace(PlaceholderNumerator, numerator)
+            .Replace(PlaceholderDenominator, denominator);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", divisionFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, divisionFormula);
+    }
+
+    /// <summary>
+    /// Builds a complete ARRAYFORMULA with number sequence
+    /// </summary>
+    public static string BuildArrayLiteralNumberSequence(string header, int count)
+    {
+        var numbers = string.Join(";", Enumerable.Range(1, count));
+        return $"={{\"{header}\";SORT({{{numbers}}})}}";
     }
 
     #endregion
@@ -122,16 +154,16 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayFormulaSortedLookup(string keyRange, string header, string sourceSheet, string dateColumn, string keyColumn, bool isFirst)
     {
         var lookupFormula = GoogleFormulas.SortedVLookup
-            .Replace("{keyRange}", keyRange)
-            .Replace("{sourceSheet}", sourceSheet)
-            .Replace("{dateColumn}", dateColumn)
-            .Replace("{keyColumn}", keyColumn)
-            .Replace("{isFirst}", isFirst.ToString().ToLower());
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderSourceSheet, sourceSheet)
+            .Replace(PlaceholderDateColumn, dateColumn)
+            .Replace(PlaceholderKeyColumn, keyColumn)
+            .Replace(PlaceholderIsFirst, isFirst.ToString().ToLower());
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", lookupFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, lookupFormula);
     }
 
     /// <summary>
@@ -140,9 +172,9 @@ public static class GoogleFormulaBuilder
     public static string BuildSafeVLookup(string searchKey, string searchRange, string columnIndex)
     {
         return GoogleFormulas.SafeVLookup
-            .Replace("{searchKey}", searchKey)
-            .Replace("{searchRange}", searchRange)
-            .Replace("{columnIndex}", columnIndex);
+            .Replace(PlaceholderSearchKey, searchKey)
+            .Replace(PlaceholderSearchRange, searchRange)
+            .Replace(PlaceholderColumnIndex, columnIndex);
     }
 
     #endregion
@@ -154,12 +186,12 @@ public static class GoogleFormulaBuilder
     /// </summary>
     public static string BuildArrayFormulaWeekday(string keyRange, string header, string dateRange)
     {
-        var weekdayFormula = GoogleFormulas.WeekdayNumber.Replace("{dateRange}", dateRange);
+        var weekdayFormula = GoogleFormulas.WeekdayNumber.Replace(PlaceholderDateRange, dateRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", weekdayFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, weekdayFormula);
     }
 
     /// <summary>
@@ -168,14 +200,14 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayFormulaSplit(string keyRange, string header, string sourceRange, string delimiter, int index)
     {
         var splitFormula = GoogleFormulas.SplitStringByIndex
-            .Replace("{sourceRange}", sourceRange)
-            .Replace("{delimiter}", delimiter)
-            .Replace("{index}", index.ToString());
+            .Replace(PlaceholderSourceRange, sourceRange)
+            .Replace(PlaceholderDelimiter, delimiter)
+            .Replace(PlaceholderIndex, index.ToString());
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", splitFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, splitFormula);
     }
 
     /// <summary>
@@ -185,9 +217,9 @@ public static class GoogleFormulaBuilder
     {
         var dayFormula = $"DAY({dateRange})";
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", dayFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, dayFormula);
     }
 
     /// <summary>
@@ -197,9 +229,9 @@ public static class GoogleFormulaBuilder
     {
         var monthFormula = $"MONTH({dateRange})";
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", monthFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, monthFormula);
     }
 
     /// <summary>
@@ -209,32 +241,21 @@ public static class GoogleFormulaBuilder
     {
         var yearFormula = $"YEAR({dateRange})";
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", yearFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, yearFormula);
     }
 
     /// <summary>
     /// Builds ARRAYFORMULA for weekday text extraction from dates
     /// </summary>
-    public static string BuildArrayFormulaWeekdayText(string keyRange, string header, string dateRange)
+    public static string BuildArrayFormulaWeekdayText(string keyRange, string header, string dateRange, int offset = 0)
     {
-        var weekdayFormula = $"TEXT({dateRange}+1,\"ddd\")";
-        return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", weekdayFormula);
-    }
-
-    /// <summary>
-    /// Builds ARRAYFORMULA for weekday text using the specific weekday text template
-    /// More efficient than BuildArrayFormulaWeekdayText for date-based ranges
-    /// </summary>
-    public static string BuildArrayFormulaWeekdayTextDirect(string keyRange, string header)
-    {
+        var offsetStr = offset >= 0 ? $"+{offset}" : offset.ToString();
         return GoogleFormulas.ArrayFormulaWeekdayText
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderOffset, offsetStr);
     }
 
     /// <summary>
@@ -244,9 +265,9 @@ public static class GoogleFormulaBuilder
     {
         var dualCountFormula = $"COUNTIF({range1},{keyRange})+COUNTIF({range2},{keyRange})";
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", dualCountFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, dualCountFormula);
     }
 
     /// <summary>
@@ -255,14 +276,14 @@ public static class GoogleFormulaBuilder
     public static string BuildArrayFormulaSplitByIndex(string keyRange, string header, string sourceRange, string delimiter, int index)
     {
         var splitFormula = GoogleFormulas.SplitStringByIndex
-            .Replace("{sourceRange}", sourceRange)
-            .Replace("{delimiter}", delimiter)
-            .Replace("{index}", index.ToString());
+            .Replace(PlaceholderSourceRange, sourceRange)
+            .Replace(PlaceholderDelimiter, delimiter)
+            .Replace(PlaceholderIndex, index.ToString());
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", splitFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, splitFormula);
     }
 
     #endregion
@@ -288,9 +309,9 @@ public static class GoogleFormulaBuilder
     public static string WrapWithArrayFormula(string keyRange, string header, string innerFormula)
     {
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", innerFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, innerFormula);
     }
 
     /// <summary>
@@ -299,8 +320,24 @@ public static class GoogleFormulaBuilder
     public static string BuildSafeDivision(string numerator, string denominator)
     {
         return GoogleFormulas.SafeDivisionFormula
-            .Replace("{numerator}", numerator)
-            .Replace("{denominator}", denominator);
+            .Replace(PlaceholderNumerator, numerator)
+            .Replace(PlaceholderDenominator, denominator);
+    }
+
+    /// <summary>
+    /// Builds ARRAYFORMULA for weekday amount current (custom logic for current week aggregation)
+    /// </summary>
+    public static string BuildArrayFormulaWeekdayAmountCurrent(string keyRange, string dailyRange)
+    {
+        return $"=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"Curr Amt\",ISBLANK({keyRange}), \"\", true, IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+{keyRange},{dailyRange},6,false),0)))";
+    }
+
+    /// <summary>
+    /// Builds ARRAYFORMULA for weekday amount (current/previous) with offset and custom column title
+    /// </summary>
+    public static string BuildArrayFormulaWeekdayAmount(string keyRange, string dailyRange, int offset, string columnTitle)
+    {
+        return $"=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{columnTitle}\",ISBLANK({keyRange}), \"\", true, IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+{keyRange}+{offset},{dailyRange},6,false),0)))";
     }
 
     #endregion

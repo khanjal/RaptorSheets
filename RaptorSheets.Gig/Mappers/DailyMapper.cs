@@ -72,11 +72,10 @@ namespace RaptorSheets.Gig.Mappers
                         header.Format = FormatEnum.DATE;
                         break;
                     case HeaderEnum.WEEKDAY:
-                        // This one is special - it uses day of week calculation
-                        header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.WEEKDAY.GetDescription()}\",ISBLANK({dateRange}), \"\", true,TEXT({dateRange}+1,\"ddd\")))";
+                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(dateRange, HeaderEnum.WEEKDAY.GetDescription(), dateRange);
                         break;
                     case HeaderEnum.DAY:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
+                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekday(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
                         header.Format = FormatEnum.NUMBER;
                         break;
                     case HeaderEnum.WEEK:

@@ -61,6 +61,7 @@ public static class WeekdayMapper
         var dailySheet = DailyMapper.GetSheet();
         var keyRange = sheet.GetLocalRange(HeaderEnum.DAY.GetDescription());
         var dailyDayRange = dailySheet.GetRange(HeaderEnum.DAY.GetDescription(), 2);
+        var dailyDateToTotalRange = dailySheet.GetRangeBetweenColumns(HeaderEnum.DATE.GetDescription(), HeaderEnum.TOTAL.GetDescription());
 
         sheet.Headers.ForEach(header =>
         {
@@ -75,7 +76,7 @@ public static class WeekdayMapper
                     break;
                 case HeaderEnum.WEEKDAY:
                     // Use weekday text formula based on day range
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayTextDirect(keyRange, HeaderEnum.WEEKDAY.GetDescription());
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(keyRange, HeaderEnum.WEEKDAY.GetDescription(), keyRange, 1);
                     break;
                 case HeaderEnum.TRIPS:
                     // Sum trips by weekday number using the existing DAY column from Daily sheet
@@ -148,28 +149,11 @@ public static class WeekdayMapper
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.AMOUNT_CURRENT:
-                    // For weekday analysis, we need to aggregate current amounts by weekday
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaCurrentAmount(
-                        keyRange,
-                        HeaderEnum.AMOUNT_CURRENT.GetDescription(),
-                        dailyDayRange,
-                        Enums.SheetEnum.DAILY.GetDescription(),
-                        dailySheet.GetColumn(HeaderEnum.DATE.GetDescription()),
-                        dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription()),
-                        (dailySheet.GetIndex(HeaderEnum.TOTAL.GetDescription()) + 1).ToString()
-                    );
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayAmount(keyRange, dailyDateToTotalRange, 0, HeaderEnum.AMOUNT_CURRENT.GetDescription());
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.AMOUNT_PREVIOUS:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaPreviousAmount(
-                        keyRange,
-                        HeaderEnum.AMOUNT_PREVIOUS.GetDescription(),
-                        dailyDayRange,
-                        Enums.SheetEnum.DAILY.GetDescription(),
-                        dailySheet.GetColumn(HeaderEnum.DATE.GetDescription()),
-                        dailySheet.GetColumn(HeaderEnum.TOTAL.GetDescription()),
-                        (dailySheet.GetIndex(HeaderEnum.TOTAL.GetDescription()) + 1).ToString()
-                    );
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayAmount(keyRange, dailyDateToTotalRange, -7, HeaderEnum.AMOUNT_PREVIOUS.GetDescription());
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.AMOUNT_PER_PREVIOUS_DAY:
