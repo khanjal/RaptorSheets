@@ -1,4 +1,4 @@
-# RaptorSheets.Gig
+﻿# RaptorSheets.Gig
 
 [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) [![Build Status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions)
 
@@ -6,14 +6,17 @@
 
 RaptorSheets.Gig is a specialized implementation of RaptorSheets.Core designed for gig work and freelance tracking. It provides pre-configured sheet types, entities, and workflows optimized for managing trips, shifts, expenses, and earnings across multiple gig platforms.
 
+**TypedField System** - Automatic type conversion between Google Sheets and .NET with minimal configuration!
+
 ## Table of Contents
 1. [Quick Start](#quick-start)
-2. [Sheet Types](#sheet-types)
-3. [Entities](#entities)
-4. [Manager Usage](#manager-usage)
-5. [Data Operations](#data-operations)
-6. [Advanced Features](#advanced-features)
-7. [Examples](#examples)
+2. [TypedField System](#typedfield-system)
+3. [Sheet Types](#sheet-types)
+4. [Entities](#entities)
+5. [Manager Usage](#manager-usage)
+6. [Data Operations](#data-operations)
+7. [Advanced Features](#advanced-features)
+8. [Examples](#examples)
 
 ## Quick Start
 
@@ -22,625 +25,655 @@ RaptorSheets.Gig is a specialized implementation of RaptorSheets.Core designed f
 dotnet add package RaptorSheets.Gig
 ```
 
-### Basic Setup
+### Basic Setup with TypedField System
 ```csharp
 using RaptorSheets.Gig.Managers;
-using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Repositories;
+using RaptorSheets.Gig.Entities;
 
-// Initialize manager
+// Initialize with automatic type conversion
 var manager = new GoogleSheetManager(credentials, spreadsheetId);
 
-// Create all gig-related sheets
+// Create all gig-related sheets with automatic formatting
 await manager.CreateSheets();
 
-// Get your data
-var data = await manager.GetSheets();
+// Get data with automatic type conversion
+var data = await manager.GetSheets(); // "$1,234.56" → decimal 1234.56
+
+// Or use repository pattern for type-safe operations
+var tripRepository = new TripRepository(sheetService);
+var todayTrips = await tripRepository.GetTripsByDateRangeAsync(DateTime.Today, DateTime.Today);
+```
+
+## TypedField System
+
+### Automatic Type Conversion
+
+The TypedField system automatically converts between Google Sheets values and .NET types:
+
+```csharp
+// Raw Google Sheets data → Strongly typed entities
+"$25.50"      → decimal 25.50     (Currency)
+"TRUE"        → bool true         (Boolean) 
+"(555) 123-4567" → long 5551234567 (PhoneNumber)
+"85%"         → decimal 0.85      (Percentage)
+"12/25/2023"  → DateTime          (DateTime)
+"1,234.56"    → decimal 1234.56   (Number)
+```
+
+### Entity Definition with ColumnAttribute
+
+The `ColumnAttribute` system provides clean, single-source configuration:
+
+```csharp
+public class TripEntity
+{
+    public int RowId { get; set; }
+
+    // Header name automatically generates JSON property name "date"
+    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.String)]
+    public string Date { get; set; } = "";
+
+    // Automatic currency conversion with default "$#,##0.00" formatting
+    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency)]
+    public decimal? Pay { get; set; }
+
+    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Currency)]
+    public decimal? Tip { get; set; }
+
+    // Custom format when different from default (1 decimal vs 2)
+    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, "#,##0.0")]
+    public decimal? Distance { get; set; }
+
+    // Override JSON name when needed
+    [Column(SheetsConfig.HeaderNames.StartAddress, FieldTypeEnum.String, jsonPropertyName: "fromAddress")]
+    public string StartAddress { get; set; } = "";
+}
+```
+
+### Repository Pattern with Auto-CRUD
+
+```csharp
+public class TripRepository : BaseEntityRepository<TripEntity>
+{
+    public TripRepository(IGoogleSheetService sheetService) 
+        : base(sheetService, "Trips", hasHeaderRow: true) { }
+
+    // Business logic with automatic type conversion
+    public async Task<List<TripEntity>> GetTripsByDateRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        var allTrips = await GetAllAsync(); // Automatic conversion
+        return allTrips
+            .Where(t => !string.IsNullOrEmpty(t.Date) && 
+                       DateTime.TryParse(t.Date, out var tripDate) &&
+                       tripDate.Date >= startDate.Date && 
+                       tripDate.Date <= endDate.Date)
+            .ToList();
+    }
+
+    public async Task<decimal> GetTotalEarningsAsync(DateTime startDate, DateTime endDate)
+    {
+        var trips = await GetTripsByDateRangeAsync(startDate, endDate);
+        return trips.Sum(t => (t.Pay ?? 0) + (t.Tip ?? 0) + (t.Bonus ?? 0));
+    }
+}
+```
+
+### Before vs After Comparison
+
+**Before: Manual Configuration**
+```csharp
+// Multiple attributes, manual conversions
+[JsonPropertyName("pay")]
+[ColumnOrder(SheetsConfig.HeaderNames.Pay)]
+[TypedField(FieldTypeEnum.Currency, "\"$\"#,##0.00")]
+public decimal? Pay { get; set; }
+
+// Manual mapper code
+var payValue = HeaderHelpers.GetStringValue("Pay", row, headers);
+trip.Pay = decimal.TryParse(payValue.Replace("$", "").Replace(",", ""), out var pay) ? pay : null;
+```
+
+**After: ColumnAttribute System**
+```csharp
+// Single attribute, automatic conversion
+[Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency)]
+public decimal? Pay { get; set; }
+
+// Automatic CRUD operations
+var trips = await repository.GetAllAsync(); // "$25.50" → decimal 25.50
+await repository.AddAsync(newTrip);         // decimal 25.50 → "$25.50"
 ```
 
 ## Sheet Types
 
 ### Core Sheets
-Track your primary gig work data:
+Track your primary gig work data with automatic type conversion:
 
 #### TRIPS
 Individual trip/delivery tracking:
-- Date, start/end times
-- Pickup and dropoff locations
-- Customer information
-- Pay, tips, and bonuses
-- Distance and duration
-- Platform/service details
+- **Date/Time Fields**: Automatic date/time parsing and formatting
+- **Location Data**: Address validation and standardization
+- **Financial Data**: Automatic currency conversion (`"$25.50"` ↔ `decimal 25.50`)
+- **Distance Tracking**: Numeric conversion with custom precision
+- **Platform Integration**: Service/platform categorization
 
 #### SHIFTS
 Work session management:
-- Shift dates and duration
-- Active vs. total time
-- Platform/service worked
-- Regional information
-- Notes and observations
+- **Time Tracking**: Duration calculations and formatting
+- **Platform Monitoring**: Multi-service shift tracking
+- **Region Analysis**: Geographic performance data
+- **Activity Metrics**: Active vs. total time tracking
 
 #### EXPENSES
 Business expense tracking:
-- Expense categories and amounts
-- Date and description
-- Mileage and gas costs
-- Equipment and maintenance
+- **Automatic Categorization**: Expense type validation
+- **Currency Handling**: Multi-currency support with conversion
+- **Mileage Tracking**: Integrated distance and cost calculations
+- **Receipt Management**: Document reference system
 
-### Auxiliary Sheets
-Supporting data for efficiency:
+## Entities with TypedField System
 
-#### ADDRESSES
-Frequently visited locations:
-- Common pickup/dropoff addresses
-- Customer locations
-- Restaurant and business addresses
-
-#### NAMES
-Customer and contact management:
-- Frequent customers
-- Business contacts
-- Driver/partner names
-
-#### PLACES
-Location categorization:
-- Restaurants and venues
-- Shopping centers
-- Common destinations
-
-#### REGIONS
-Geographic organization:
-- Work areas and zones
-- City districts
-- Delivery regions
-
-#### SERVICES
-Platform and service tracking:
-- Gig platforms (Uber, DoorDash, etc.)
-- Service types (delivery, rideshare, etc.)
-- Special services
-
-#### TYPES
-Trip and work categorization:
-- Delivery types
-- Trip categories
-- Work classifications
-
-### Analytics Sheets
-Automated reporting and statistics:
-
-#### DAILY
-Day-by-day performance:
-- Daily earnings summaries
-- Trip counts and averages
-- Time worked analysis
-
-#### WEEKDAYS
-Weekday pattern analysis:
-- Monday-Sunday comparisons
-- Best performing days
-- Time allocation patterns
-
-#### WEEKLY
-Weekly performance tracking:
-- Week-over-week comparisons
-- Weekly goals and targets
-- Trend analysis
-
-#### MONTHLY
-Monthly summaries:
-- Monthly earnings reports
-- Expense vs. income analysis
-- Growth tracking
-
-#### YEARLY
-Annual performance:
-- Year-end summaries
-- Tax preparation data
-- Annual goal tracking
-
-## Entities
-
-### Trip Entity
+### Trip Entity (Enhanced)
 ```csharp
 public class TripEntity
 {
+    public int RowId { get; set; }
+    public string Action { get; set; } = "";
+
+    // Clean syntax with automatic type handling
+    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.String)]
     public string Date { get; set; } = "";
-    public string StartTime { get; set; } = "";
-    public string EndTime { get; set; } = "";
-    public string Duration { get; set; } = "";
+
+    [Column(SheetsConfig.HeaderNames.Service, FieldTypeEnum.String)]
     public string Service { get; set; } = "";
-    public string Place { get; set; } = "";
-    public string Name { get; set; } = "";
+
+    [Column(SheetsConfig.HeaderNames.Number, FieldTypeEnum.Integer)]
+    public int? Number { get; set; }
+
+    // Currency fields with automatic formatting
+    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency)]
+    public decimal? Pay { get; set; }    // Auto: "$25.50" ↔ 25.50m
+
+    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Currency)]
+    public decimal? Tip { get; set; }    // Auto: "$5.00" ↔ 5.00m
+
+    [Column(SheetsConfig.HeaderNames.Total, FieldTypeEnum.Currency)]
+    public decimal? Total { get; set; }  // Auto: "$30.50" ↔ 30.50m
+
+    // Custom number formatting (1 decimal place)
+    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, "#,##0.0")]
+    public decimal? Distance { get; set; } // Auto: "12.5" ↔ 12.5m
+
+    // Address fields with JSON name overrides
+    [Column(SheetsConfig.HeaderNames.AddressStart, FieldTypeEnum.String, jsonPropertyName: "startAddress")]
     public string StartAddress { get; set; } = "";
+
+    [Column(SheetsConfig.HeaderNames.AddressEnd, FieldTypeEnum.String, jsonPropertyName: "endAddress")]
     public string EndAddress { get; set; } = "";
-    public string EndUnit { get; set; } = "";
-    public decimal? Pay { get; set; }
-    public decimal? Tip { get; set; }
-    public decimal? Bonus { get; set; }
-    public decimal? Cash { get; set; }
-    public decimal? Distance { get; set; }
-    public string OrderNumber { get; set; } = "";
-    public string Note { get; set; } = "";
-    // ... additional properties
+
+    public bool Saved { get; set; }
 }
 ```
 
-### Shift Entity
-```csharp
-public class ShiftEntity
-{
-    public string Date { get; set; } = "";
-    public string Start { get; set; } = "";
-    public string Finish { get; set; } = "";
-    public string Service { get; set; } = "";
-    public string Active { get; set; } = "";
-    public string Time { get; set; } = "";
-    public string Region { get; set; } = "";
-    public bool? Omit { get; set; }
-    public string Note { get; set; } = "";
-    // ... additional properties
-}
-```
-
-### Expense Entity
+### Expense Entity (Enhanced)
 ```csharp
 public class ExpenseEntity
 {
-    public string Date { get; set; } = "";
+    public int RowId { get; set; }
+
+    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.DateTime, "M/d/yyyy")]
+    public DateTime? Date { get; set; }   // Auto: "12/25/2023" ↔ DateTime
+
+    [Column(SheetsConfig.HeaderNames.Category, FieldTypeEnum.String)]
     public string Category { get; set; } = "";
+
+    [Column(SheetsConfig.HeaderNames.Description, FieldTypeEnum.String)]
     public string Description { get; set; } = "";
-    public decimal? Amount { get; set; }
-    public decimal? Mileage { get; set; }
+
+    [Column(SheetsConfig.HeaderNames.Amount, FieldTypeEnum.Currency)]
+    public decimal? Amount { get; set; }  // Auto: "$45.67" ↔ 45.67m
+
+    [Column(SheetsConfig.HeaderNames.Mileage, FieldTypeEnum.Number, "#,##0.0")]
+    public decimal? Mileage { get; set; } // Auto: "125.6" ↔ 125.6m
+
+    [Column(SheetsConfig.HeaderNames.Receipt, FieldTypeEnum.String)]
     public string Receipt { get; set; } = "";
-    public string Note { get; set; } = "";
-    // ... additional properties
+
+    public bool Saved { get; set; }
 }
 ```
 
-## Manager Usage
+## Manager Usage with TypedField System
 
-### GoogleSheetManager Interface
-```csharp
-public interface IGoogleSheetManager
-{
-    Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
-    Task<SheetEntity> CreateSheets();
-    Task<SheetEntity> GetSheet(string sheet);
-    Task<SheetEntity> GetSheets();
-    Task<SheetEntity> GetSheets(List<string> sheets);
-    Task<List<PropertyEntity>> GetSheetProperties();
-    Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
-}
-```
-
-### Initialization Options
-
-#### With Access Token
-```csharp
-var manager = new GoogleSheetManager("your-access-token", "spreadsheet-id");
-```
-
-#### With Service Account Credentials
-```csharp
-var credentials = new Dictionary<string, string>
-{
-    ["type"] = "service_account",
-    ["private_key_id"] = "key-id",
-    ["private_key"] = "private-key",
-    ["client_email"] = "service@project.iam.gserviceaccount.com",
-    ["client_id"] = "client-id"
-};
-
-var manager = new GoogleSheetManager(credentials, "spreadsheet-id");
-```
-
-## Data Operations
-
-### Creating Sheets
-```csharp
-// Create all predefined sheets
-var result = await manager.CreateSheets();
-
-// Create specific sheets
-var specificSheets = new List<string> { "Trips", "Shifts", "Expenses" };
-var result = await manager.CreateSheets(specificSheets);
-
-// Check for any issues
-foreach (var message in result.Messages)
-{
-    Console.WriteLine($"{message.Level}: {message.Text}");
-}
-```
-
-### Reading Data
-```csharp
-// Get all data
-var allData = await manager.GetSheets();
-
-// Get specific sheet
-var tripData = await manager.GetSheet("Trips");
-Console.WriteLine($"Found {tripData.Trips.Count} trips");
-
-// Get multiple sheets efficiently
-var sheets = new List<string> { "Trips", "Shifts" };
-var data = await manager.GetSheets(sheets);
-
-// Access the data
-foreach (var trip in data.Trips)
-{
-    Console.WriteLine($"Trip: {trip.Date} - ${trip.Pay} + ${trip.Tip}");
-}
-```
-
-### Updating Data
-```csharp
-// Prepare your data
-var newTrips = new List<TripEntity>
-{
-    new()
-    {
-        Date = "2024-01-15",
-        StartTime = "09:00",
-        EndTime = "09:30", 
-        Service = "DoorDash",
-        Place = "McDonald's",
-        Pay = 8.50m,
-        Tip = 3.00m,
-        Distance = 2.5m,
-        StartAddress = "123 Restaurant St",
-        EndAddress = "456 Customer Ave"
-    }
-};
-
-var sheetEntity = new SheetEntity { Trips = newTrips };
-
-// Update the sheet
-var result = await manager.ChangeSheetData(["Trips"], sheetEntity);
-
-// Handle results
-if (result.Messages.Any(m => m.Level == "Error"))
-{
-    Console.WriteLine("Errors occurred during update:");
-    foreach (var error in result.Messages.Where(m => m.Level == "Error"))
-    {
-        Console.WriteLine($"- {error.Text}");
-    }
-}
-```
-
-### Working with Multiple Data Types
-```csharp
-// Update multiple sheet types at once
-var sheetEntity = new SheetEntity
-{
-    Trips = new List<TripEntity> { /* trip data */ },
-    Shifts = new List<ShiftEntity> { /* shift data */ },
-    Expenses = new List<ExpenseEntity> { /* expense data */ }
-};
-
-var sheetsToUpdate = new List<string> { "Trips", "Shifts", "Expenses" };
-var result = await manager.ChangeSheetData(sheetsToUpdate, sheetEntity);
-```
-
-## Advanced Features
-
-### Sheet Properties and Validation
-```csharp
-// Get detailed sheet properties
-var properties = await manager.GetSheetProperties();
-
-foreach (var prop in properties)
-{
-    Console.WriteLine($"Sheet: {prop.Name}");
-    Console.WriteLine($"Headers: {prop.Attributes["Headers"]}");
-    Console.WriteLine($"Max Row: {prop.Attributes["MaxRow"]}");
-    Console.WriteLine($"Data Rows: {prop.Attributes["MaxRowValue"]}");
-}
-
-// Get properties for specific sheets
-var tripProperties = await manager.GetSheetProperties(["Trips"]);
-```
-
-### Error Handling and Messages
-```csharp
-var result = await manager.GetSheets();
-
-// Process different message types
-foreach (var message in result.Messages)
-{
-    switch (message.Type)
-    {
-        case "GET_SHEETS":
-            Console.WriteLine($"Sheet operation: {message.Text}");
-            break;
-        case "CHECK_SHEET":
-            Console.WriteLine($"Validation: {message.Text}");
-            break;
-        case "SAVE_DATA":
-            Console.WriteLine($"Save operation: {message.Text}");
-            break;
-        default:
-            Console.WriteLine($"General: {message.Text}");
-            break;
-    }
-}
-```
-
-### Header Validation
-The library automatically validates sheet headers and provides feedback:
+### Enhanced GoogleSheetManager
 
 ```csharp
-// Headers are checked automatically when retrieving data
-var data = await manager.GetSheets(["Trips"]);
-
-// Check for header validation messages
-var headerIssues = data.Messages
-    .Where(m => m.Type == "CHECK_SHEET")
-    .ToList();
-
-if (headerIssues.Any())
-{
-    Console.WriteLine("Header validation issues found:");
-    foreach (var issue in headerIssues)
-    {
-        Console.WriteLine($"- {issue.Text}");
-    }
-}
-```
-
-## Examples
-
-### Daily Workflow Example
-```csharp
-using RaptorSheets.Gig.Managers;
-using RaptorSheets.Gig.Entities;
-
-// Initialize manager
+// Initialize with automatic type conversion
 var manager = new GoogleSheetManager(credentials, spreadsheetId);
 
-// Record a new shift
-var todayShift = new ShiftEntity
-{
-    Date = DateTime.Today.ToString("yyyy-MM-dd"),
-    Start = "09:00",
-    Finish = "17:00",
-    Service = "Multi-platform",
-    Active = "7:30",
-    Time = "8:00",
-    Region = "Downtown",
-    Note = "Busy lunch rush"
-};
+// Create sheets with automatic formatting
+var result = await manager.CreateSheets();
 
-// Record trips for the day
-var todayTrips = new List<TripEntity>
-{
-    new()
-    {
-        Date = DateTime.Today.ToString("yyyy-MM-dd"),
-        StartTime = "09:15",
-        EndTime = "09:45",
-        Service = "UberEats",
-        Place = "Starbucks",
-        Pay = 6.50m,
-        Tip = 2.00m,
-        Distance = 1.8m,
-        Duration = "30 min"
-    },
-    new()
-    {
-        Date = DateTime.Today.ToString("yyyy-MM-dd"),
-        StartTime = "12:00",
-        EndTime = "12:25",
-        Service = "DoorDash", 
-        Place = "Chipotle",
-        Pay = 8.75m,
-        Tip = 5.00m,
-        Distance = 2.2m,
-        Duration = "25 min"
-    }
-};
+// TypedField system automatically:
+// 1. Applies correct number formats based on FieldTypeEnum
+// 2. Sets up data validation rules
+// 3. Configures column widths and alignment
+// 4. Handles currency, date, and percentage formatting
 
-// Record expenses
-var todayExpenses = new List<ExpenseEntity>
-{
-    new()
-    {
-        Date = DateTime.Today.ToString("yyyy-MM-dd"),
-        Category = "Fuel",
-        Description = "Gas fill-up",
-        Amount = 45.00m,
-        Mileage = 250
-    }
-};
-
-// Update all data at once
-var sheetEntity = new SheetEntity
-{
-    Shifts = [todayShift],
-    Trips = todayTrips,
-    Expenses = todayExpenses
-};
-
-var result = await manager.ChangeSheetData(
-    ["Shifts", "Trips", "Expenses"], 
-    sheetEntity
-);
-
-// Report results
-Console.WriteLine($"Updated {todayTrips.Count} trips, 1 shift, {todayExpenses.Count} expenses");
+// Verify setup
 foreach (var message in result.Messages)
 {
     Console.WriteLine($"[{message.Level}] {message.Text}");
 }
 ```
 
-### Weekly Report Example
+### Repository-Based Operations
+
 ```csharp
-// Get weekly data for analysis
-var weekData = await manager.GetSheets(["Trips", "Shifts", "Expenses", "Weekly"]);
+// Initialize repositories
+var tripRepository = new TripRepository(sheetService);
+var expenseRepository = new ExpenseRepository(sheetService);
 
-// Calculate weekly totals
-var weekTrips = weekData.Trips.Where(t => IsCurrentWeek(t.Date)).ToList();
-var totalEarnings = weekTrips.Sum(t => (t.Pay ?? 0) + (t.Tip ?? 0) + (t.Bonus ?? 0));
-var totalDistance = weekTrips.Sum(t => t.Distance ?? 0);
-var totalTrips = weekTrips.Count;
+// Type-safe operations with automatic conversion
+var todayTrips = await tripRepository.GetTripsByDateRangeAsync(DateTime.Today, DateTime.Today);
+var monthlyExpenses = await expenseRepository.GetExpensesByMonthAsync(DateTime.Today.Month);
 
-var weekExpenses = weekData.Expenses.Where(e => IsCurrentWeek(e.Date)).ToList();
-var totalExpenses = weekExpenses.Sum(e => e.Amount ?? 0);
+// Business logic with converted data
+var dailyEarnings = todayTrips.Sum(t => (t.Pay ?? 0) + (t.Tip ?? 0));
+var monthlySpent = monthlyExpenses.Sum(e => e.Amount ?? 0);
+var netIncome = dailyEarnings - monthlySpent;
 
-Console.WriteLine($"Week Summary:");
-Console.WriteLine($"- Trips: {totalTrips}");
-Console.WriteLine($"- Earnings: ${totalEarnings:F2}");
-Console.WriteLine($"- Distance: {totalDistance:F1} miles");
-Console.WriteLine($"- Expenses: ${totalExpenses:F2}");
-Console.WriteLine($"- Net: ${totalEarnings - totalExpenses:F2}");
+Console.WriteLine($"Today: ${dailyEarnings:F2} earned");
+Console.WriteLine($"Month: ${monthlySpent:F2} spent, Net: ${netIncome:F2}");
+```
 
-bool IsCurrentWeek(string dateString)
+## Data Operations with Auto-Conversion
+
+### Adding Data with Type Safety
+```csharp
+// Create strongly typed entities
+var newTrips = new List<TripEntity>
 {
-    if (DateTime.TryParse(dateString, out var date))
+    new()
     {
-        var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
-        return date >= startOfWeek && date < startOfWeek.AddDays(7);
+        Date = DateTime.Today.ToString("yyyy-MM-dd"),
+        Service = "DoorDash",
+        Pay = 8.50m,        // Automatically formatted as "$8.50"
+        Tip = 3.00m,        // Automatically formatted as "$3.00"
+        Distance = 2.5m,    // Automatically formatted as "2.5"
+        StartAddress = "123 Restaurant St",
+        EndAddress = "456 Customer Ave"
     }
-    return false;
+};
+
+// Repository handles all type conversion automatically
+foreach (var trip in newTrips)
+{
+    await tripRepository.AddAsync(trip);
+}
+
+// Or bulk operations
+await tripRepository.AddRangeAsync(newTrips);
+```
+
+### Reading Data with Auto-Conversion
+```csharp
+// All conversions happen automatically
+var allTrips = await tripRepository.GetAllAsync();
+
+foreach (var trip in allTrips)
+{
+    // All values automatically converted from Google Sheets format
+    Console.WriteLine($"Trip on {trip.Date}:");
+    Console.WriteLine($"  Service: {trip.Service}");
+    Console.WriteLine($"  Pay: ${trip.Pay:F2}");      // Already decimal
+    Console.WriteLine($"  Tip: ${trip.Tip:F2}");      // Already decimal
+    Console.WriteLine($"  Distance: {trip.Distance:F1} miles"); // Already decimal
+    Console.WriteLine($"  Total: ${(trip.Pay ?? 0) + (trip.Tip ?? 0):F2}");
 }
 ```
 
-### Bulk Data Import Example
+### Advanced Queries with Type Safety
 ```csharp
-// Import data from CSV or other sources
-var csvTrips = ReadTripsFromCsv("trips.csv"); // Your CSV reading logic
-
-var tripEntities = csvTrips.Select(csvTrip => new TripEntity
+// Repository provides type-safe business logic
+public async Task<GigPerformanceReport> GenerateWeeklyReportAsync(DateTime weekStart)
 {
-    Date = csvTrip.Date,
-    StartTime = csvTrip.StartTime,
-    EndTime = csvTrip.EndTime,
-    Service = csvTrip.Platform,
-    Pay = csvTrip.Earnings,
-    Tip = csvTrip.Tips,
-    Distance = csvTrip.Miles,
-    // ... map other fields
-}).ToList();
-
-// Batch import - the library handles efficient API usage
-var batchSize = 100; // Process in batches
-for (int i = 0; i < tripEntities.Count; i += batchSize)
-{
-    var batch = tripEntities.Skip(i).Take(batchSize).ToList();
-    var batchEntity = new SheetEntity { Trips = batch };
+    var weekEnd = weekStart.AddDays(7);
     
-    var result = await manager.ChangeSheetData(["Trips"], batchEntity);
+    // Get data with automatic type conversion
+    var weekTrips = await tripRepository.GetTripsByDateRangeAsync(weekStart, weekEnd);
+    var weekExpenses = await expenseRepository.GetExpensesByDateRangeAsync(weekStart, weekEnd);
     
-    Console.WriteLine($"Imported batch {i/batchSize + 1}: {batch.Count} trips");
-    
-    // Respect API rate limits
-    await Task.Delay(1000);
-}
-```
-
-## Best Practices
-
-### 1. Efficient Data Operations
-```csharp
-// Good: Update multiple sheets at once
-var result = await manager.ChangeSheetData(
-    ["Trips", "Shifts", "Expenses"], 
-    sheetEntity
-);
-
-// Avoid: Multiple separate calls
-await manager.ChangeSheetData(["Trips"], new SheetEntity { Trips = trips });
-await manager.ChangeSheetData(["Shifts"], new SheetEntity { Shifts = shifts });
-await manager.ChangeSheetData(["Expenses"], new SheetEntity { Expenses = expenses });
-```
-
-### 2. Data Validation
-```csharp
-// Validate data before sending to sheets
-bool IsValidTrip(TripEntity trip)
-{
-    return !string.IsNullOrEmpty(trip.Date) &&
-           !string.IsNullOrEmpty(trip.Service) &&
-           trip.Pay.HasValue &&
-           trip.Pay.Value >= 0;
-}
-
-var validTrips = tripList.Where(IsValidTrip).ToList();
-if (validTrips.Count != tripList.Count)
-{
-    Console.WriteLine($"Filtered out {tripList.Count - validTrips.Count} invalid trips");
-}
-```
-
-### 3. Error Recovery
-```csharp
-// Implement retry logic for important operations
-async Task<SheetEntity> UpdateWithRetry(List<string> sheets, SheetEntity data, int maxRetries = 3)
-{
-    for (int attempt = 1; attempt <= maxRetries; attempt++)
+    // All arithmetic operations use properly converted types
+    return new GigPerformanceReport
     {
-        try
-        {
-            return await manager.ChangeSheetData(sheets, data);
-        }
-        catch (Exception ex) when (attempt < maxRetries)
-        {
-            Console.WriteLine($"Attempt {attempt} failed: {ex.Message}. Retrying in {attempt * 1000}ms...");
-            await Task.Delay(attempt * 1000);
-        }
-    }
-    
-    throw new InvalidOperationException($"Failed to update sheets after {maxRetries} attempts");
+        WeekStart = weekStart,
+        TotalTrips = weekTrips.Count,
+        TotalEarnings = weekTrips.Sum(t => (t.Pay ?? 0) + (t.Tip ?? 0) + (t.Bonus ?? 0)),
+        TotalExpenses = weekExpenses.Sum(e => e.Amount ?? 0),
+        TotalDistance = weekTrips.Sum(t => t.Distance ?? 0),
+        AveragePerTrip = weekTrips.Count > 0 
+            ? weekTrips.Average(t => (t.Pay ?? 0) + (t.Tip ?? 0)) 
+            : 0,
+        TopService = weekTrips
+            .GroupBy(t => t.Service)
+            .OrderByDescending(g => g.Sum(t => (t.Pay ?? 0) + (t.Tip ?? 0)))
+            .FirstOrDefault()?.Key ?? "None"
+    };
 }
 ```
 
-## Troubleshooting
+## Advanced Features
 
-### Common Issues
-
-1. **Authentication Errors**
-   - Verify service account email is shared with spreadsheet
-   - Check credential format and completeness
-   - Ensure Google Sheets API is enabled
-
-2. **Header Validation Warnings**
-   - Review expected vs actual headers in messages
-   - Recreate sheets if headers are severely mismatched
-   - Check for extra spaces or different casing
-
-3. **Rate Limiting**
-   - Implement delays between large operations
-   - Use batch operations instead of individual calls
-   - Monitor API usage in Google Cloud Console
-
-4. **Data Not Appearing**
-   - Check for validation errors in Messages
-   - Verify data types match entity properties
-   - Ensure sheet names match enum descriptions exactly
-
-### Debug Information
+### Schema Validation with TypedField System
 ```csharp
-// Enable detailed logging by examining all messages
-var result = await manager.GetSheets();
+// Automatic schema validation
+var tripRepository = new TripRepository(sheetService);
+var validation = await tripRepository.ValidateSchemaAsync();
 
-Console.WriteLine("=== Operation Details ===");
-foreach (var message in result.Messages)
+if (!validation.IsValid)
 {
-    Console.WriteLine($"[{message.Level}] {message.Type}: {message.Text}");
-    Console.WriteLine($"    Time: {DateTimeOffset.FromUnixTimeSeconds(message.Time):yyyy-MM-dd HH:mm:ss}");
+    Console.WriteLine("Schema validation failed:");
+    foreach (var error in validation.Errors)
+    {
+        Console.WriteLine($"  - {error}");
+    }
+    foreach (var warning in validation.Warnings)
+    {
+        Console.WriteLine($"  Warning: {warning}");
+    }
+}
+else
+{
+    Console.WriteLine("Schema validation passed - all field types compatible!");
+}
+```
+
+### Performance Analytics
+```csharp
+public class GigAnalyticsService
+{
+    private readonly TripRepository _tripRepository;
+    private readonly ExpenseRepository _expenseRepository;
+    
+    // Automatic type conversion enables complex analytics
+    public async Task<Dictionary<string, decimal>> GetServicePerformanceAsync(DateTime startDate, DateTime endDate)
+    {
+        var trips = await _tripRepository.GetTripsByDateRangeAsync(startDate, endDate);
+        
+        return trips
+            .GroupBy(t => t.Service)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Sum(t => (t.Pay ?? 0) + (t.Tip ?? 0)) / g.Count() // Average per trip
+            );
+    }
+    
+    public async Task<decimal> GetNetProfitAsync(DateTime startDate, DateTime endDate)
+    {
+        var earnings = await _tripRepository.GetTotalEarningsAsync(startDate, endDate);
+        var expenses = await _expenseRepository.GetTotalExpensesAsync(startDate, endDate);
+        
+        return earnings - expenses; // All values properly converted
+    }
+}
+```
+
+## Examples
+
+### Daily Workflow with TypedField System
+```csharp
+using RaptorSheets.Gig.Repositories;
+using RaptorSheets.Gig.Entities;
+
+// Initialize type-safe repositories
+var tripRepository = new TripRepository(sheetService);
+var shiftRepository = new ShiftRepository(sheetService);
+var expenseRepository = new ExpenseRepository(sheetService);
+
+// Record today's shift
+var todayShift = new ShiftEntity
+{
+    Date = DateTime.Today,
+    Start = new TimeSpan(9, 0, 0),   // 9:00 AM
+    Finish = new TimeSpan(17, 0, 0), // 5:00 PM
+    Service = "Multi-platform",
+    Region = "Downtown"
+};
+await shiftRepository.AddAsync(todayShift);
+
+// Record trips with automatic conversion
+var todayTrips = new List<TripEntity>
+{
+    new()
+    {
+        Date = DateTime.Today.ToString("yyyy-MM-dd"),
+        Service = "UberEats",
+        Pay = 6.50m,      // → "$6.50" in Google Sheets
+        Tip = 2.00m,      // → "$2.00" in Google Sheets
+        Distance = 1.8m   // → "1.8" in Google Sheets
+    },
+    new()
+    {
+        Date = DateTime.Today.ToString("yyyy-MM-dd"),
+        Service = "DoorDash",
+        Pay = 8.75m,      // → "$8.75" in Google Sheets
+        Tip = 5.00m,      // → "$5.00" in Google Sheets
+        Distance = 2.2m   // → "2.2" in Google Sheets
+    }
+};
+
+await tripRepository.AddRangeAsync(todayTrips);
+
+// Record expenses
+var gasExpense = new ExpenseEntity
+{
+    Date = DateTime.Today,
+    Category = "Fuel",
+    Description = "Gas fill-up",
+    Amount = 45.00m,    // → "$45.00" in Google Sheets
+    Mileage = 250.0m    // → "250.0" in Google Sheets
+};
+await expenseRepository.AddAsync(gasExpense);
+
+// Generate daily summary
+var dailyEarnings = await tripRepository.GetTotalEarningsAsync(DateTime.Today, DateTime.Today);
+var dailyExpenses = await expenseRepository.GetTotalExpensesAsync(DateTime.Today, DateTime.Today);
+
+Console.WriteLine($"Daily Summary for {DateTime.Today:yyyy-MM-dd}:");
+Console.WriteLine($"  Trips: {todayTrips.Count}");
+Console.WriteLine($"  Earnings: ${dailyEarnings:F2}");
+Console.WriteLine($"  Expenses: ${dailyExpenses:F2}");
+Console.WriteLine($"  Net: ${dailyEarnings - dailyExpenses:F2}");
+```
+
+### Performance Analysis with Auto-Conversion
+```csharp
+public async Task AnalyzeWeeklyPerformanceAsync()
+{
+    var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+    var endOfWeek = startOfWeek.AddDays(6);
+    
+    // Get data with automatic type conversion
+    var weekTrips = await tripRepository.GetTripsByDateRangeAsync(startOfWeek, endOfWeek);
+    var weekExpenses = await expenseRepository.GetExpensesByDateRangeAsync(startOfWeek, endOfWeek);
+    
+    // All calculations use properly converted numeric types
+    var totalEarnings = weekTrips.Sum(t => (t.Pay ?? 0) + (t.Tip ?? 0) + (t.Bonus ?? 0));
+    var totalExpenses = weekExpenses.Sum(e => e.Amount ?? 0);
+    var totalDistance = weekTrips.Sum(t => t.Distance ?? 0);
+    var averagePerMile = totalDistance > 0 ? totalEarnings / totalDistance : 0;
+    
+    // Service performance analysis
+    var serviceStats = weekTrips
+        .GroupBy(t => t.Service)
+        .Select(g => new
+        {
+            Service = g.Key,
+            TripCount = g.Count(),
+            TotalEarnings = g.Sum(t => (t.Pay ?? 0) + (t.Tip ?? 0)),
+            AveragePerTrip = g.Average(t => (t.Pay ?? 0) + (t.Tip ?? 0)),
+            TotalDistance = g.Sum(t => t.Distance ?? 0)
+        })
+        .OrderByDescending(s => s.TotalEarnings)
+        .ToList();
+    
+    Console.WriteLine($"Week of {startOfWeek:MMM dd} - {endOfWeek:MMM dd}");
+    Console.WriteLine($"Total: ${totalEarnings:F2} earned, ${totalExpenses:F2} spent");
+    Console.WriteLine($"Net Profit: ${totalEarnings - totalExpenses:F2}");
+    Console.WriteLine($"Distance: {totalDistance:F1} miles @ ${averagePerMile:F2}/mile");
+    Console.WriteLine("\nService Breakdown:");
+    
+    foreach (var stat in serviceStats)
+    {
+        Console.WriteLine($"  {stat.Service}: {stat.TripCount} trips, ${stat.TotalEarnings:F2} (${stat.AveragePerTrip:F2}/trip)");
+    }
+}
+```
+
+## Migration from Manual System
+
+### Before: Manual Mappers and Conversions
+```csharp
+// Old way - lots of manual conversion code
+public static List<TripEntity> MapFromRangeData(IList<IList<object>> values, Dictionary<int, string> headers)
+{
+    var entities = new List<TripEntity>();
+    
+    foreach (var row in values)
+    {
+        var entity = new TripEntity();
+        
+        // Manual conversion for each field
+        var payValue = HeaderHelpers.GetStringValue("Pay", row, headers);
+        entity.Pay = decimal.TryParse(payValue.Replace("$", "").Replace(",", ""), out var pay) ? pay : null;
+        
+        var tipValue = HeaderHelpers.GetStringValue("Tips", row, headers);
+        entity.Tip = decimal.TryParse(tipValue.Replace("$", "").Replace(",", ""), out var tip) ? tip : null;
+        
+        var distanceValue = HeaderHelpers.GetStringValue("Distance", row, headers);
+        entity.Distance = decimal.TryParse(distanceValue.Replace(",", ""), out var distance) ? distance : null;
+        
+        // ... dozens more manual conversions
+        
+        entities.Add(entity);
+    }
+    
+    return entities;
+}
+```
+
+### After: TypedField System
+```csharp
+// New way - automatic conversion
+public class TripRepository : BaseEntityRepository<TripEntity>
+{
+    public TripRepository(IGoogleSheetService sheetService) 
+        : base(sheetService, "Trips", hasHeaderRow: true) { }
+    
+    // No manual mapping needed - all automatic!
+    // GetAllAsync() handles all conversions based on ColumnAttribute configuration
 }
 
-Console.WriteLine($"\n=== Data Summary ===");
-Console.WriteLine($"Trips: {result.Trips?.Count ?? 0}");
-Console.WriteLine($"Shifts: {result.Shifts?.Count ?? 0}");
-Console.WriteLine($"Expenses: {result.Expenses?.Count ?? 0}");
+// Usage: One line replaces dozens of manual conversion code
+var trips = await tripRepository.GetAllAsync();
+```
+
+## Best Practices with TypedField System
+
+### 1. Use Sensible Defaults
+```csharp
+// Good: Let defaults handle common patterns
+[Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency)]
+public decimal? Pay { get; set; } // Uses default "$#,##0.00"
+
+// Only specify format when different from default
+[Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, "#,##0.0")]
+public decimal? Distance { get; set; } // 1 decimal instead of 2
+```
+
+### 2. Repository Pattern for Business Logic
+```csharp
+// Good: Encapsulate business logic in repositories
+public class TripRepository : BaseEntityRepository<TripEntity>
+{
+    public async Task<List<TripEntity>> GetProfitableTripsAsync(decimal minProfit)
+    {
+        var trips = await GetAllAsync();
+        return trips.Where(t => (t.Pay ?? 0) + (t.Tip ?? 0) >= minProfit).ToList();
+    }
+}
+
+// Avoid: Direct manager usage for complex queries
+```
+
+### 3. Schema Validation
+```csharp
+// Good: Validate schema before operations
+var validation = await repository.ValidateSchemaAsync();
+if (!validation.IsValid)
+{
+    // Handle validation errors
+    throw new InvalidOperationException($"Schema invalid: {string.Join(", ", validation.Errors)}");
+}
+```
+
+## Troubleshooting TypedField System
+
+### Common Type Conversion Issues
+
+1. **Currency Conversion Failures**
+   ```csharp
+   // Problem: Non-standard currency format in sheets
+   // Solution: Check format patterns in Google Sheets match FieldTypeEnum.Currency defaults
+   
+   // Custom currency format if needed
+   [Column(SheetsConfig.HeaderNames.EuroAmount, FieldTypeEnum.Currency, "\"€\"#,##0.00")]
+   public decimal? EuroAmount { get; set; }
+   ```
+
+2. **Date/Time Parsing Issues**
+   ```csharp
+   // Problem: Date format doesn't match default
+   // Solution: Specify custom format pattern
+   
+   [Column(SheetsConfig.HeaderNames.EuropeanDate, FieldTypeEnum.DateTime, "dd/MM/yyyy")]
+   public DateTime? EuropeanDate { get; set; }
+   ```
+
+3. **Schema Validation Warnings**
+   ```csharp
+   // Enable detailed schema validation
+   var validation = await repository.ValidateSchemaAsync();
+   foreach (var warning in validation.Warnings)
+   {
+       Console.WriteLine($"Schema Warning: {warning}");
+   }
+   ```
+
+### Debug Type Conversion
+```csharp
+// Enable conversion logging for troubleshooting
+public async Task<List<TripEntity>> GetTripsWithDebugAsync()
+{
+    try
+    {
+        return await repository.GetAllAsync();
+    }
+    catch (TypedFieldConversionException ex)
+    {
+        Console.WriteLine($"Conversion failed for field {ex.FieldName}: {ex.Message}");
+        Console.WriteLine($"Raw value: '{ex.RawValue}', Target type: {ex.TargetType}");
+        throw;
+    }
+}
 ```
 
 ## Support
 
 For Gig-specific issues and questions:
-- [Report Issues](https://github.com/khanjal/RaptorSheets/issues) with label `gig`
-- [Community Discussions](https://github.com/khanjal/RaptorSheets/discussions)
-- [Core Documentation](CORE.md) for underlying functionality
-- [Authentication Guide](AUTHENTICATION.md) for setup help
+- 🐞 [Report Issues](https://github.com/khanjal/RaptorSheets/issues) with label `gig`
+- 💬 [Community Discussions](https://github.com/khanjal/RaptorSheets/discussions)
+- 📖 [Core Documentation](../README.md) for underlying TypedField system functionality
+- 🔐 [Authentication Guide](docs/AUTHENTICATION.md) for setup help

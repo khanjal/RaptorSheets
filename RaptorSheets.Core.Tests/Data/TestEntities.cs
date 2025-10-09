@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Enums;
 
 namespace RaptorSheets.Core.Tests.Data;
 
@@ -23,72 +24,72 @@ public static class TestHeaderNames
 // Base test entity
 public class TestAmountEntity
 {
-    [ColumnOrder(TestHeaderNames.Pay)]
+    [Column(TestHeaderNames.Pay, FieldTypeEnum.Currency)]
     public decimal? Pay { get; set; }
 
-    [ColumnOrder(TestHeaderNames.Tips)]
+    [Column(TestHeaderNames.Tips, FieldTypeEnum.Currency)]
     public decimal? Tips { get; set; }
 
-    [ColumnOrder(TestHeaderNames.Bonus)]
+    [Column(TestHeaderNames.Bonus, FieldTypeEnum.Currency)]
     public decimal? Bonus { get; set; }
 
-    [ColumnOrder(TestHeaderNames.Total)]
+    [Column(TestHeaderNames.Total, FieldTypeEnum.Currency)]
     public decimal? Total { get; set; }
 
-    [ColumnOrder(TestHeaderNames.Cash)]
+    [Column(TestHeaderNames.Cash, FieldTypeEnum.Currency)]
     public decimal? Cash { get; set; }
 }
 
 // Middle test entity
 public class TestVisitEntity : TestAmountEntity
 {
-    [ColumnOrder(TestHeaderNames.Trips)]
+    [Column(TestHeaderNames.Trips, FieldTypeEnum.Integer)]
     public int Trips { get; set; }
 
-    [ColumnOrder(TestHeaderNames.FirstTrip)]
+    [Column(TestHeaderNames.FirstTrip, FieldTypeEnum.String)]
     public string FirstTrip { get; set; } = "";
 
-    [ColumnOrder(TestHeaderNames.LastTrip)]
+    [Column(TestHeaderNames.LastTrip, FieldTypeEnum.String)]
     public string LastTrip { get; set; } = "";
 }
 
 // Derived test entity
 public class TestAddressEntity : TestVisitEntity
 {
-    public int RowId { get; set; } // No ColumnOrder - should be ignored
+    public int RowId { get; set; } // No Column attribute - should be ignored
 
-    [ColumnOrder(TestHeaderNames.Address)]
+    [Column(TestHeaderNames.Address, FieldTypeEnum.String)]
     public string Address { get; set; } = "";
 
-    [ColumnOrder(TestHeaderNames.Distance)]
+    [Column(TestHeaderNames.Distance, FieldTypeEnum.Number)]
     public decimal Distance { get; set; }
 
-    public bool Saved { get; set; } // No ColumnOrder - should be ignored
+    public bool Saved { get; set; } // No Column attribute - should be ignored
 }
 
 // Simple entity without inheritance
 public class TestSimpleEntity
 {
-    [ColumnOrder(TestHeaderNames.Name)]
+    [Column(TestHeaderNames.Name, FieldTypeEnum.String)]
     public string Name { get; set; } = "";
 
-    [ColumnOrder(TestHeaderNames.Date)]
+    [Column(TestHeaderNames.Date, FieldTypeEnum.String)]
     public string Date { get; set; } = "";
 
-    public int Id { get; set; } // No ColumnOrder - should be ignored
+    public int Id { get; set; } // No Column attribute - should be ignored
 }
 
 // Entity with invalid header reference (for error testing)
 public class TestInvalidEntity
 {
-    [ColumnOrder("Invalid Header Name")]
+    [Column("Invalid Header Name", FieldTypeEnum.String)]
     public string InvalidProperty { get; set; } = "";
 
-    [ColumnOrder(TestHeaderNames.Name)]
+    [Column(TestHeaderNames.Name, FieldTypeEnum.String)]
     public string ValidProperty { get; set; } = "";
 }
 
-// Entity with no ColumnOrder attributes
+// Entity with no Column attributes
 public class TestNoAttributesEntity
 {
     public string Name { get; set; } = "";

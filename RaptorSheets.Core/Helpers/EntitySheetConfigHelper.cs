@@ -2,31 +2,69 @@ using System.Reflection;
 using System.Linq;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Core.Utilities;
 
 namespace RaptorSheets.Core.Helpers;
 
 /// <summary>
-/// Helper class for generating sheet headers directly from entity ColumnOrder attributes.
-/// This eliminates the need for manual header definition in SheetsConfig.
+/// Helper class for generating sheet headers directly from entity ColumnOrder and Column attributes.
+/// This eliminates the need for manual header definition in SheetsConfig and provides automatic formatting.
 /// </summary>
 public static class EntitySheetConfigHelper
 {
     /// <summary>
-    /// Generates sheet headers from an entity type based on ColumnOrder attributes.
-    /// Headers are created in inheritance order (base class properties first).
+    /// Generates sheet headers from an entity type based on ColumnOrder and Column attributes.
+    /// Headers are created in inheritance order (base class properties first) with automatic formatting applied.
     /// </summary>
     /// <typeparam name="T">The entity type to generate headers from</typeparam>
-    /// <returns>List of SheetCellModel headers in entity-defined order</returns>
+    /// <returns>List of SheetCellModel headers in entity-defined order with automatic formatting</returns>
     public static List<SheetCellModel> GenerateHeadersFromEntity<T>()
     {
         var entityType = typeof(T);
         var headers = new List<SheetCellModel>();
         var processedHeaders = new HashSet<string>();
 
-        // Get all properties from the inheritance hierarchy (base class first)
-        var allProperties = GetPropertiesInInheritanceOrder(entityType);
+        // Get column properties first (these have comprehensive configuration)
+        var columnProperties = TypedFieldUtils.GetColumnProperties<T>();
+        
+        foreach (var (property, columnAttr) in columnProperties)
+        {
+            var headerName = columnAttr.GetEffectiveHeaderName();
+            if (!processedHeaders.Contains(headerName))
+            {
+                var header = new SheetCellModel 
+                { 
+                    Name = headerName,
+                    // Auto-apply format based on Column attribute
+                    Format = TypedFieldUtils.GetFormatFromFieldType(columnAttr.FieldType)
+                };
+                
+                // Apply custom number format pattern if specified or use default
+                var numberPattern = TypedFieldUtils.GetNumberFormatPattern(columnAttr);
+                if (!string.IsNullOrEmpty(numberPattern) && numberPattern != "@")
+                {
+                    // Store the number format pattern for later use in sheet generation
+                    header.Note = $"NumberFormat:{numberPattern}";
+                }
+                
+                // Apply validation if specified
+                if (columnAttr.EnableValidation)
+                {
+                    var validationPattern = columnAttr.ValidationPattern ?? 
+                        Constants.TypedFieldPatterns.GetDefaultValidationPattern(columnAttr.FieldType);
+                    if (!string.IsNullOrEmpty(validationPattern))
+                    {
+                        header.Validation = validationPattern;
+                    }
+                }
+                
+                headers.Add(header);
+                processedHeaders.Add(headerName);
+            }
+        }
 
-        // Process properties with ColumnOrder attributes
+        // Fall back to ColumnOrder attributes for properties without Column attributes
+        var allProperties = GetPropertiesInInheritanceOrder(entityType);
         foreach (var property in allProperties)
         {
             var columnOrderAttr = property.GetCustomAttribute<ColumnOrderAttribute>();
@@ -46,7 +84,7 @@ public static class EntitySheetConfigHelper
     /// </summary>
     /// <typeparam name="T">The entity type to generate headers from</typeparam>
     /// <param name="additionalHeaders">Additional headers to include (e.g., calculated columns)</param>
-    /// <returns>List of SheetCellModel headers with entity headers first</returns>
+    /// <returns>List of SheetCellModel headers with entity headers first and automatic formatting applied</returns>
     public static List<SheetCellModel> GenerateHeadersFromEntity<T>(params SheetCellModel[] additionalHeaders)
     {
         var entityHeaders = GenerateHeadersFromEntity<T>();
@@ -66,7 +104,7 @@ public static class EntitySheetConfigHelper
     /// </summary>
     /// <typeparam name="T">The entity type to generate headers from</typeparam>
     /// <param name="commonHeaderPatterns">Common header patterns to merge (e.g., CommonIncomeHeaders)</param>
-    /// <returns>List of SheetCellModel headers with entity ordering prioritized</returns>
+    /// <returns>List of SheetCellModel headers with entity ordering prioritized and automatic formatting applied</returns>
     public static List<SheetCellModel> GenerateHeadersFromEntity<T>(params IEnumerable<SheetCellModel>[] commonHeaderPatterns)
     {
         var entityHeaders = GenerateHeadersFromEntity<T>();
@@ -86,7 +124,8 @@ public static class EntitySheetConfigHelper
     }
 
     /// <summary>
-    /// Validates that an entity has the required ColumnOrder attributes for sheet generation.
+    /// Validates that an entity has the required ColumnOrder or Column attributes for sheet generation
+    /// and validates Column attributes for consistency.
     /// </summary>
     /// <typeparam name="T">The entity type to validate</typeparam>
     /// <param name="requiredHeaders">Optional list of required header names</param>
@@ -95,15 +134,39 @@ public static class EntitySheetConfigHelper
     {
         var entityType = typeof(T);
         var errors = new List<string>();
+        
+        var columnProperties = TypedFieldUtils.GetColumnProperties<T>();
         var allProperties = GetPropertiesInInheritanceOrder(entityType);
-        var entityHeaders = allProperties
+        
+        var entityHeaders = new List<string>();
+        
+        // Collect headers from Column attributes
+        entityHeaders.AddRange(columnProperties.Select(p => p.Column.GetEffectiveHeaderName()));
+        
+        // Collect headers from ColumnOrder attributes (for properties without Column attributes)
+        var columnOrderHeaders = allProperties
+            .Where(p => p.GetCustomAttribute<ColumnAttribute>() == null) // Not already covered by Column attribute
             .Select(p => p.GetCustomAttribute<ColumnOrderAttribute>()?.HeaderName)
             .Where(h => h != null)
-            .ToList();
+            .Cast<string>();
+        entityHeaders.AddRange(columnOrderHeaders);
 
         if (entityHeaders.Count == 0)
         {
-            errors.Add($"Entity '{entityType.Name}' has no properties with ColumnOrder attributes. Cannot generate sheet headers.");
+            errors.Add($"Entity '{entityType.Name}' has no properties with Column or ColumnOrder attributes. Cannot generate sheet headers.");
+        }
+
+        // Validate Column attributes for consistency
+        foreach (var (property, columnAttr) in columnProperties)
+        {
+            // Validate that the Column attribute matches the property type
+            var propertyType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+            var isValidType = ValidateFieldTypeMatchesProperty(columnAttr.FieldType, propertyType);
+            
+            if (!isValidType)
+            {
+                errors.Add($"Property '{property.Name}' in entity '{entityType.Name}' has Column attribute '{columnAttr.FieldType}' that doesn't match property type '{propertyType.Name}'.");
+            }
         }
 
         if (requiredHeaders != null)
@@ -111,11 +174,32 @@ public static class EntitySheetConfigHelper
             var entityHeaderSet = entityHeaders.ToHashSet();
             foreach (var requiredHeader in requiredHeaders.Where(rh => !entityHeaderSet.Contains(rh)))
             {
-                errors.Add($"Entity '{entityType.Name}' is missing required header '{requiredHeader}' with ColumnOrder attribute.");
+                errors.Add($"Entity '{entityType.Name}' is missing required header '{requiredHeader}' with Column or ColumnOrder attribute.");
             }
         }
 
         return errors;
+    }
+
+    /// <summary>
+    /// Validates that a Column attribute matches the property type
+    /// </summary>
+    private static bool ValidateFieldTypeMatchesProperty(Enums.FieldTypeEnum fieldType, Type propertyType)
+    {
+        return fieldType switch
+        {
+            Enums.FieldTypeEnum.String => propertyType == typeof(string),
+            Enums.FieldTypeEnum.Currency => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
+            Enums.FieldTypeEnum.DateTime => propertyType == typeof(DateTime) || propertyType == typeof(DateTimeOffset),
+            Enums.FieldTypeEnum.Boolean => propertyType == typeof(bool),
+            Enums.FieldTypeEnum.Number => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
+            Enums.FieldTypeEnum.Integer => propertyType == typeof(int) || propertyType == typeof(long) || propertyType == typeof(short),
+            Enums.FieldTypeEnum.PhoneNumber => propertyType == typeof(long) || propertyType == typeof(string),
+            Enums.FieldTypeEnum.Email => propertyType == typeof(string),
+            Enums.FieldTypeEnum.Url => propertyType == typeof(string),
+            Enums.FieldTypeEnum.Percentage => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
+            _ => true // Allow unknown types
+        };
     }
 
     /// <summary>

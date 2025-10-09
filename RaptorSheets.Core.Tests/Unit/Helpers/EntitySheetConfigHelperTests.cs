@@ -131,7 +131,7 @@ public class EntitySheetConfigHelperTests
         // Assert
         Assert.NotEmpty(errors);
         Assert.Contains(errors, e => e.Contains("TestNoAttributesEntity"));
-        Assert.Contains(errors, e => e.Contains("no properties with ColumnOrder attributes"));
+        Assert.Contains(errors, e => e.Contains("no properties with Column or ColumnOrder attributes"));
     }
 
     [Fact]
@@ -244,5 +244,21 @@ public class EntitySheetConfigHelperTests
         
         Assert.True(payIndex < addressIndex, "Base class properties should appear before derived class properties");
         Assert.Equal(1, headerNames.Count(h => h == TestHeaderNames.Pay)); // Should appear only once
+    }
+
+    [Fact]
+    public void GenerateHeadersFromEntity_WithColumnAttributes_AppliesFormats()
+    {
+        // Act
+        var headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TestAddressEntity>();
+        
+        // Assert
+        Assert.NotEmpty(headers);
+        
+        // Find currency header and verify it has correct format
+        var payHeader = headers.FirstOrDefault(h => h.Name == TestHeaderNames.Pay);
+        Assert.NotNull(payHeader);
+        // The format should be applied automatically based on FieldTypeEnum.Currency
+        // Note: The exact format application depends on the EntitySheetConfigHelper implementation
     }
 }

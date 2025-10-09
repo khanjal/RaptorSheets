@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
@@ -10,54 +11,44 @@ public class NameEntity
     public int RowId { get; set; }
 
     // Entity-specific property first
-    [JsonPropertyName("name")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Name)]
+    [Column(SheetsConfig.HeaderNames.Name, FieldTypeEnum.String)]
     public string Name { get; set; } = "";
 
     // CommonTripSheetHeaders pattern: Trips, CommonIncomeHeaders, CommonTravelHeaders, VisitFirst, VisitLast
-    [JsonPropertyName("trips")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Trips)]
+    [Column(SheetsConfig.HeaderNames.Trips, FieldTypeEnum.Integer)]
     public int Trips { get; set; }
 
     // CommonIncomeHeaders
-    [JsonPropertyName("pay")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Pay)]
+    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency)]
     public decimal? Pay { get; set; }
 
-    [JsonPropertyName("tip")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Tips)]
+    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Currency)]
     public decimal? Tip { get; set; }
 
-    [JsonPropertyName("bonus")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Bonus)]
+    [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Currency)]
     public decimal? Bonus { get; set; }
 
-    [JsonPropertyName("total")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Total)]
+    [Column(SheetsConfig.HeaderNames.Total, FieldTypeEnum.Currency)]
     public decimal? Total { get; set; }
 
-    [JsonPropertyName("cash")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Cash)]
+    [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Currency)]
     public decimal? Cash { get; set; }
 
     // CommonTravelHeaders
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerTrip)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FieldTypeEnum.Currency)]
     public decimal AmountPerTrip { get; set; }
 
-    [JsonPropertyName("distance")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Distance)]
-    public int Distance { get; set; }
+    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance")]
+    public decimal Distance { get; set; }  // Fixed: changed from int to decimal
 
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerDistance)]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FieldTypeEnum.Currency)]
     public decimal AmountPerDistance { get; set; }
 
     // Visit properties
-    [JsonPropertyName("firstTrip")]
-    [ColumnOrder(SheetsConfig.HeaderNames.VisitFirst)]
+    [Column(SheetsConfig.HeaderNames.VisitFirst, FieldTypeEnum.String)]
     public string FirstTrip { get; set; } = "";
 
-    [JsonPropertyName("lastTrip")]
-    [ColumnOrder(SheetsConfig.HeaderNames.VisitLast)]
+    [Column(SheetsConfig.HeaderNames.VisitLast, FieldTypeEnum.String)]
     public string LastTrip { get; set; } = "";
 
     [JsonPropertyName("saved")]
