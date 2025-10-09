@@ -97,6 +97,14 @@ public static class GigFormulas
     /// </summary>
     public const string MultipleFieldVisitLookup = "IFERROR(MIN(IF({sourceSheet}!{keyColumn1}:{keyColumn1}={keyRange},IF({sourceSheet}!{keyColumn2}:{keyColumn2}={keyRange},{sourceSheet}!{dateColumn}:{dateColumn}))),\"\")";
 
+    /// <summary>
+    /// Dual field visit lookup using VLOOKUP with QUERY and SORT for addresses
+    /// Formula: IFERROR(VLOOKUP({keyRange},SORT(QUERY({sourceSheet}!A:{keyColumn1Letter},"SELECT {keyColumn1Letter}, A"),{sortColumn},{sortOrder}),2,0),IFERROR(VLOOKUP({keyRange},SORT(QUERY({sourceSheet}!A:{keyColumn2Letter},"SELECT {keyColumn2Letter}, A"),{sortColumn},{sortOrder}),2,0),""))
+    /// Placeholders: {keyRange}, {sourceSheet}, {keyColumn1Letter}, {keyColumn2Letter}, {sortColumn}, {sortOrder}
+    /// Note: sortColumn is typically 1 (sort by key) for first visit or 2 (sort by date) for last visit
+    /// </summary>
+    public const string DualFieldVisitLookup = "IFERROR(VLOOKUP({keyRange},SORT(QUERY({sourceSheet}!A:{keyColumn1Letter},\"SELECT {keyColumn1Letter}, A\"),{sortColumn},{sortOrder}),2,0),IFERROR(VLOOKUP({keyRange},SORT(QUERY({sourceSheet}!A:{keyColumn2Letter},\"SELECT {keyColumn2Letter}, A\"),{sortColumn},{sortOrder}),2,0),\"\"))";
+
     #endregion
 
     #region Shift-Specific Business Logic

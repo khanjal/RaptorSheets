@@ -226,58 +226,29 @@ public static class GigFormulaBuilder
             .Replace("{formula}", multipleVisitFormula);
     }
 
-    #endregion
-
-    #region Convenient Combo Methods
-
     /// <summary>
-    /// Builds complete gig summary formulas (wraps generic builders with gig logic)
+    /// Builds ARRAYFORMULA with dual field visit lookup for addresses
+    /// Uses VLOOKUP with QUERY and SORT to find first/last visit from two possible key columns
     /// </summary>
-    public static class Common
+    public static string BuildArrayFormulaDualFieldVisit(string keyRange, string header, string sourceSheet, string dateColumnLetter, string keyColumn1Letter, string keyColumn2Letter, string dateIndex, bool isFirst)
     {
-        /// <summary>
-        /// Builds sum aggregation using generic builder
-        /// </summary>
-        public static string BuildSumAggregation(string keyRange, string header, string lookupRange, string sumRange)
-        {
-            return GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, header, lookupRange, sumRange);
-        }
+        // For first visit: sort by column 1 (the key) ascending to get alphabetically first match
+        // For last visit: sort by column 2 (the date) descending to get most recent date
+        var sortColumn = isFirst ? "1" : "2";
+        var sortOrder = isFirst ? "True" : "False";
 
-        /// <summary>
-        /// Builds count aggregation using generic builder
-        /// </summary>
-        public static string BuildCountAggregation(string keyRange, string header, string lookupRange)
-        {
-            return GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, header, lookupRange);
-        }
+        var dualFieldFormula = GigFormulas.DualFieldVisitLookup
+            .Replace("{keyRange}", keyRange)
+            .Replace("{sourceSheet}", sourceSheet)
+            .Replace("{keyColumn1Letter}", keyColumn1Letter)
+            .Replace("{keyColumn2Letter}", keyColumn2Letter)
+            .Replace("{sortColumn}", sortColumn)
+            .Replace("{sortOrder}", sortOrder);
 
-        /// <summary>
-        /// Builds visit date lookup using generic sorted lookup
-        /// </summary>
-        public static string BuildVisitDateLookup(string keyRange, string header, string sourceSheet, string dateColumn, string keyColumn, bool isFirst)
-        {
-            return GoogleFormulaBuilder.BuildArrayFormulaSortedLookup(keyRange, header, sourceSheet, dateColumn, keyColumn, isFirst);
-        }
-
-        /// <summary>
-        /// Builds multiple field visit lookup for address tracking (checks multiple fields for matching)
-        /// </summary>
-        public static string BuildMultipleFieldVisitLookup(string keyRange, string header, string sourceSheet, string dateColumn, string keyColumn1, string keyColumn2, string dateIndex, bool isFirst)
-        {
-            var functionName = isFirst ? "MIN" : "MAX";
-            var multipleVisitFormula = GigFormulas.MultipleFieldVisitLookup
-                .Replace("MIN", functionName)
-                .Replace("{keyRange}", keyRange)
-                .Replace("{sourceSheet}", sourceSheet)
-                .Replace("{keyColumn1}", keyColumn1)
-                .Replace("{keyColumn2}", keyColumn2)
-                .Replace("{dateColumn}", dateColumn);
-
-            return GoogleFormulas.ArrayFormulaBase
-                .Replace("{keyRange}", keyRange)
-                .Replace("{header}", header)
-                .Replace("{formula}", multipleVisitFormula);
-        }
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace("{keyRange}", keyRange)
+            .Replace("{header}", header)
+            .Replace("{formula}", dualFieldFormula);
     }
 
     #endregion
@@ -424,6 +395,69 @@ public static class GigFormulaBuilder
             .Replace("{keyRange}", keyRange)
             .Replace("{header}", header)
             .Replace("{formula}", endFormula);
+    }
+
+    #endregion
+
+    #region Convenient Combo Methods
+
+    /// <summary>
+    /// Builds complete gig summary formulas (wraps generic builders with gig logic)
+    /// </summary>
+    public static class Common
+    {
+        /// <summary>
+        /// Builds sum aggregation using generic builder
+        /// </summary>
+        public static string BuildSumAggregation(string keyRange, string header, string lookupRange, string sumRange)
+        {
+            return GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, header, lookupRange, sumRange);
+        }
+
+        /// <summary>
+        /// Builds count aggregation using generic builder
+        /// </summary>
+        public static string BuildCountAggregation(string keyRange, string header, string lookupRange)
+        {
+            return GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, header, lookupRange);
+        }
+
+        /// <summary>
+        /// Builds visit date lookup using generic sorted lookup
+        /// </summary>
+        public static string BuildVisitDateLookup(string keyRange, string header, string sourceSheet, string dateColumn, string keyColumn, bool isFirst)
+        {
+            return GoogleFormulaBuilder.BuildArrayFormulaSortedLookup(keyRange, header, sourceSheet, dateColumn, keyColumn, isFirst);
+        }
+
+        /// <summary>
+        /// Builds dual field visit lookup for address tracking (checks two possible key columns)
+        /// Uses VLOOKUP with QUERY and SORT for optimized performance
+        /// </summary>
+        public static string BuildDualFieldVisitLookup(string keyRange, string header, string sourceSheet, string dateColumnLetter, string keyColumn1Letter, string keyColumn2Letter, string dateIndex, bool isFirst)
+        {
+            return BuildArrayFormulaDualFieldVisit(keyRange, header, sourceSheet, dateColumnLetter, keyColumn1Letter, keyColumn2Letter, dateIndex, isFirst);
+        }
+
+        /// <summary>
+        /// Builds multiple field visit lookup for address tracking (checks multiple fields for matching)
+        /// </summary>
+        public static string BuildMultipleFieldVisitLookup(string keyRange, string header, string sourceSheet, string dateColumn, string keyColumn1, string keyColumn2, string dateIndex, bool isFirst)
+        {
+            var functionName = isFirst ? "MIN" : "MAX";
+            var multipleVisitFormula = GigFormulas.MultipleFieldVisitLookup
+                .Replace("MIN", functionName)
+                .Replace("{keyRange}", keyRange)
+                .Replace("{sourceSheet}", sourceSheet)
+                .Replace("{keyColumn1}", keyColumn1)
+                .Replace("{keyColumn2}", keyColumn2)
+                .Replace("{dateColumn}", dateColumn);
+
+            return GoogleFormulas.ArrayFormulaBase
+                .Replace("{keyRange}", keyRange)
+                .Replace("{header}", header)
+                .Replace("{formula}", multipleVisitFormula);
+        }
     }
 
     #endregion
