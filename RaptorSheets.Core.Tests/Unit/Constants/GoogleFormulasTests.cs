@@ -195,7 +195,7 @@ public class GoogleFormulasTests
         var formula = GoogleFormulas.ArrayLiteralUniqueFiltered;
 
         // Assert
-        Assert.Contains("{\"{header}\";SORT(UNIQUE(IFERROR(FILTER({sourceRange}", GoogleFormulas.ArrayLiteralUniqueFiltered); // Updated to include IFERROR
+        Assert.Contains("{\"{header}\";UNIQUE(IFERROR(FILTER({sourceRange}", GoogleFormulas.ArrayLiteralUniqueFiltered); // Updated to include IFERROR
         Assert.Contains("{header}", formula);
         Assert.Contains("{sourceRange}", formula);
         Assert.Contains("<>\"\"", formula);

@@ -289,7 +289,7 @@ public class GoogleFormulaBuilderTests
     }
 
     [Fact]
-    public void BuildArrayLiteralUniqueFiltered_ShouldFilterEmptyValues()
+    public void BuildArrayLiteralUniqueFiltered_ShouldFilterWithoutSorting()
     {
         // Arrange
         var header = "TestHeader";
@@ -298,8 +298,26 @@ public class GoogleFormulaBuilderTests
         // Act
         var result = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(header, sourceRange);
 
-        // Assert
-        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(IFERROR(FILTER(", result); // Updated to include IFERROR
+        // Assert - Default is unsorted (preserves source order)
+        Assert.Contains("={\"TestHeader\";UNIQUE(IFERROR(FILTER(", result);
+        Assert.DoesNotContain("SORT(", result); // Should NOT contain SORT
+        Assert.Contains(sourceRange, result);
+        Assert.Contains("<>\"\"", result);
+    }
+
+    [Fact]
+    public void BuildArrayLiteralUniqueFilteredSorted_ShouldFilterAndSort()
+    {
+        // Arrange
+        var header = "TestHeader";
+        var sourceRange = "Sheet!$B$2:$B";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(header, sourceRange);
+
+        // Assert - Sorted version explicitly includes SORT
+        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(IFERROR(FILTER(", result);
+        Assert.Contains("SORT(", result); // Sorted version includes SORT
         Assert.Contains(sourceRange, result);
         Assert.Contains("<>\"\"", result);
     }

@@ -259,9 +259,10 @@ public class MapperGetSheetTests
         if (averageHeader != null)
         {
             Assert.NotNull(averageHeader.Formula);
-            Assert.Contains("AVERAGE(", averageHeader.Formula);
-            Assert.Contains("OFFSET(", averageHeader.Formula);
-            Assert.Contains("INDIRECT(", averageHeader.Formula);
+            Assert.Contains("DAVERAGE(", averageHeader.Formula);
+            Assert.Contains("transpose(", averageHeader.Formula);
+            Assert.Contains("TRANSPOSE(", averageHeader.Formula);
+            Assert.Contains("sequence(", averageHeader.Formula);
         }
 
         if (numberHeader != null)

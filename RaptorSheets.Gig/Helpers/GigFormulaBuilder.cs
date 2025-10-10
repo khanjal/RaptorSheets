@@ -370,11 +370,12 @@ public static class GigFormulaBuilder
     }
 
     /// <summary>
-    /// Builds week begin date calculation from week number
+    /// Builds week begin date calculation from year and week number
     /// </summary>
-    public static string BuildArrayFormulaWeekBeginDate(string keyRange, string header, string weekRange)
+    public static string BuildArrayFormulaWeekBeginDate(string keyRange, string header, string yearRange, string weekRange)
     {
         var beginFormula = GigFormulas.WeekBeginDate
+            .Replace("{yearRange}", yearRange)
             .Replace("{weekRange}", weekRange);
 
         return GoogleFormulas.ArrayFormulaBase
@@ -384,11 +385,12 @@ public static class GigFormulaBuilder
     }
 
     /// <summary>
-    /// Builds week end date calculation from week number
+    /// Builds week end date calculation from year and week number
     /// </summary>
-    public static string BuildArrayFormulaWeekEndDate(string keyRange, string header, string weekRange)
+    public static string BuildArrayFormulaWeekEndDate(string keyRange, string header, string yearRange, string weekRange)
     {
         var endFormula = GigFormulas.WeekEndDate
+            .Replace("{yearRange}", yearRange)
             .Replace("{weekRange}", weekRange);
 
         return GoogleFormulas.ArrayFormulaBase

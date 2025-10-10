@@ -192,7 +192,7 @@ public class GigFormulasTests
     public void AllGigFormulas_ShouldContainValidGoogleSheetsFunction()
     {
         // Arrange
-        var expectedFunctions = new[] { "WEEKNUM", "MONTH", "YEAR", "DATE", "WEEKDAY", "TODAY", "VLOOKUP", "MIN", "MAX", "IF", "SUMIF", "COUNTIF", "AVERAGE", "OFFSET", "INDIRECT" };
+        var expectedFunctions = new[] { "WEEKNUM", "MONTH", "YEAR", "DATE", "WEEKDAY", "TODAY", "VLOOKUP", "MIN", "MAX", "IF", "SUMIF", "COUNTIF", "AVERAGE", "DAVERAGE", "OFFSET", "INDIRECT", "TRANSPOSE", "sequence", "transpose", "rows" };
         var allFormulas = new[]
         {
             GigFormulas.TotalIncomeFormula,
@@ -338,9 +338,11 @@ public class GigFormulasTests
         var formula = GigFormulas.RollingAverageFormula;
 
         // Assert
-        Assert.Contains("AVERAGE(", formula);
-        Assert.Contains("OFFSET(", formula);
-        Assert.Contains("INDIRECT(", formula);
+        Assert.Contains("DAVERAGE(", formula);
+        Assert.Contains("transpose(", formula);
+        Assert.Contains("TRANSPOSE(", formula);
+        Assert.Contains("sequence(", formula);
+        Assert.Contains("rows({totalRange})", formula);
         Assert.Contains("ROW({totalRange})", formula);
         Assert.Contains("{totalRange}", formula);
     }

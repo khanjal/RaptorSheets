@@ -99,6 +99,16 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
+    /// Builds a simple array literal for unique filtered values with sorting
+    /// </summary>
+    public static string BuildArrayLiteralUniqueFilteredSorted(string header, string sourceRange)
+    {
+        return GoogleFormulas.ArrayLiteralUniqueFilteredSorted
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderSourceRange, sourceRange);
+    }
+
+    /// <summary>
     /// Builds a complete ARRAYFORMULA for unique values
     /// </summary>
     public static string BuildArrayFormulaUnique(string keyRange, string header, string sourceRange)

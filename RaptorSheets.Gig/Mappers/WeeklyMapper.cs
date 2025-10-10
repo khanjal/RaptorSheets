@@ -34,7 +34,7 @@ namespace RaptorSheets.Gig.Mappers
                     Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                     Days = HeaderHelpers.GetIntValue(HeaderEnum.DAYS.GetDescription(), value, headers),
                     Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
-                    Tip = HeaderHelpers.GetDecimalValue(HeaderEnum.TIP.GetDescription(), value, headers),
+                    Tip = HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), value, headers),
                     Bonus = HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
                     Total = HeaderHelpers.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
                     Cash = HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
@@ -92,11 +92,19 @@ namespace RaptorSheets.Gig.Mappers
                         header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.YEAR.GetDescription(), keyRange, "-", 2);
                         break;
                     case HeaderEnum.DATE_BEGIN:
-                        header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekBeginDate(keyRange, HeaderEnum.DATE_BEGIN.GetDescription(), keyRange);
+                        header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekBeginDate(
+                            keyRange, 
+                            HeaderEnum.DATE_BEGIN.GetDescription(), 
+                            sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription()),
+                            sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()));
                         header.Format = FormatEnum.DATE;
                         break;
                     case HeaderEnum.DATE_END:
-                        header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekEndDate(keyRange, HeaderEnum.DATE_END.GetDescription(), keyRange);
+                        header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekEndDate(
+                            keyRange, 
+                            HeaderEnum.DATE_END.GetDescription(), 
+                            sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription()),
+                            sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()));
                         header.Format = FormatEnum.DATE;
                         break;
                 }

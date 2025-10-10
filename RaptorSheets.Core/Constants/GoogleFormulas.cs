@@ -36,8 +36,17 @@ public static class GoogleFormulas
     /// Simple array literal for unique filtered values: ="{header}";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>""))))
     /// Placeholders: {header}, {sourceRange}
     /// More efficient than ArrayFormulaBase for filtered unique values
+    /// Sorted alphabetically/numerically
     /// </summary>
-    public const string ArrayLiteralUniqueFiltered = "={\"{header}\";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\"))))}";
+    public const string ArrayLiteralUniqueFilteredSorted = "={\"{header}\";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\"))))}";
+
+    /// <summary>
+    /// Simple array literal for unique filtered values: ="{header}";UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>"")))
+    /// Placeholders: {header}, {sourceRange}
+    /// Preserves source order - useful for chronological data like weeks, months
+    /// This is the default - use ArrayLiteralUniqueFilteredSorted for alphabetical sorting
+    /// </summary>
+    public const string ArrayLiteralUniqueFiltered = "={\"{header}\";UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\")))}";
 
     /// <summary>
     /// ARRAYFORMULA for unique values: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true, SORT(UNIQUE({sourceRange}))))

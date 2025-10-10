@@ -150,11 +150,13 @@ public static class GigFormulas
     #region Mapper-Specific Formulas
 
     /// <summary>
-    /// Complex rolling average for time series analysis: AVERAGE(OFFSET({totalRange},0,0,ROW(INDIRECT("1:"&ROW({totalRange})-ROW({totalRange})+1)),1))
-    /// A simplified rolling average that calculates the average of all values up to the current row
+    /// Complex rolling average for time series analysis using DAVERAGE with transpose matrix
+    /// Formula: DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})
+    /// This creates a cumulative average by building a growing dataset for each row
+    /// The DAVERAGE function with empty criteria averages all rows up to the current position
     /// Placeholders: {totalRange}
     /// </summary>
-    public const string RollingAverageFormula = "AVERAGE(OFFSET({totalRange},0,0,ROW(INDIRECT(\"1:\"&ROW({totalRange})-ROW({totalRange})+1)),1))";
+    public const string RollingAverageFormula = "DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})";
 
     #endregion
 }
