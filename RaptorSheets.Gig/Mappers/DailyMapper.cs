@@ -68,7 +68,7 @@ namespace RaptorSheets.Gig.Mappers
                 switch (headerEnum)
                 {
                     case HeaderEnum.DATE:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUnique(HeaderEnum.DATE.GetDescription(), shiftSheet.GetRange(HeaderEnum.DATE.GetDescription(), 2));
+                        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.DATE.GetDescription(), shiftSheet.GetRange(HeaderEnum.DATE.GetDescription(), 2));
                         header.Format = FormatEnum.DATE;
                         break;
                     case HeaderEnum.WEEKDAY:

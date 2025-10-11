@@ -39,14 +39,16 @@ public static class GigFormulaBuilder
             .Replace("{totalRange}", totalRange)
             .Replace("{tripsRange}", tripsRange);
 
-        return GoogleFormulas.ArrayFormulaBase
+        return GoogleFormulas.ArrayFormulaBaseWithBlankCheck
             .Replace("{keyRange}", keyRange)
+            .Replace("{blankCheckRange}", tripsRange)
             .Replace("{header}", header)
             .Replace("{formula}", amountPerTripFormula);
     }
 
     /// <summary>
     /// Builds ARRAYFORMULA with amount per distance calculation
+    /// Uses separate range for blank check (typically the distance column)
     /// </summary>
     public static string BuildArrayFormulaAmountPerDistance(string keyRange, string header, string totalRange, string distanceRange)
     {
@@ -54,14 +56,16 @@ public static class GigFormulaBuilder
             .Replace("{totalRange}", totalRange)
             .Replace("{distanceRange}", distanceRange);
 
-        return GoogleFormulas.ArrayFormulaBase
+        return GoogleFormulas.ArrayFormulaBaseWithBlankCheck
             .Replace("{keyRange}", keyRange)
+            .Replace("{blankCheckRange}", distanceRange)
             .Replace("{header}", header)
             .Replace("{formula}", amountPerDistanceFormula);
     }
 
     /// <summary>
     /// Builds ARRAYFORMULA with amount per time calculation (hourly rate)
+    /// Uses separate range for blank check (typically the time/duration column)
     /// </summary>
     public static string BuildArrayFormulaAmountPerTime(string keyRange, string header, string totalRange, string timeRange)
     {
@@ -69,8 +73,9 @@ public static class GigFormulaBuilder
             .Replace("{totalRange}", totalRange)
             .Replace("{timeRange}", timeRange);
 
-        return GoogleFormulas.ArrayFormulaBase
+        return GoogleFormulas.ArrayFormulaBaseWithBlankCheck
             .Replace("{keyRange}", keyRange)
+            .Replace("{blankCheckRange}", timeRange)
             .Replace("{header}", header)
             .Replace("{formula}", amountPerTimeFormula);
     }

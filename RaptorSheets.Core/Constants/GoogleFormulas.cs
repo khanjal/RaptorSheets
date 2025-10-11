@@ -67,6 +67,13 @@ public static class GoogleFormulas
     /// </summary>
     public const string ArrayFormulaWeekdayText = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true,TEXT({keyRange}+{offset},\"ddd\")))";
 
+    /// <summary>
+    /// ARRAYFORMULA with separate blank check range: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({blankCheckRange}), "", true, {formula}))
+    /// Placeholders: {keyRange}, {blankCheckRange}, {header}, {formula}
+    /// Use when the row check and blank check need different columns
+    /// </summary>
+    public const string ArrayFormulaBaseWithBlankCheck = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true, IF(ISBLANK({blankCheckRange}), \"\", {formula})))";
+
     #endregion
 
     #region Generic Aggregation Formulas
