@@ -61,10 +61,10 @@ public class MapperFormulaHelperTests
     }
 
     [Theory]
-    [InlineData(true, "SUMIF(")]
-    [InlineData(false, "SUMIF(")]
-    public void ConfigureCommonAggregationHeaders_WithTripsHeader_ShouldUseCorrectFormula(
-        bool useShiftTotals, string expectedFormula)
+    [InlineData(true, "SourceSheet!M1:M")]  // TOTAL_TRIPS column
+    [InlineData(false, "SourceSheet!N1:N")] // TRIPS column
+    public void ConfigureCommonAggregationHeaders_WithTripsHeader_ShouldUseCorrectSourceRange(
+        bool useShiftTotals, string expectedSourceRange)
     {
         // Arrange
         var sheet = CreateTestSheet(HeaderEnum.TRIPS.GetDescription());
@@ -75,7 +75,8 @@ public class MapperFormulaHelperTests
 
         // Assert
         var header = sheet.Headers.First();
-        Assert.Contains(expectedFormula, header.Formula);
+        Assert.Contains("SUMIF(", header.Formula);
+        Assert.Contains(expectedSourceRange, header.Formula);
         Assert.Equal(FormatEnum.NUMBER, header.Format);
     }
 
@@ -252,7 +253,8 @@ public class MapperFormulaHelperTests
                 new SheetCellModel { Name = HeaderEnum.TOTAL_CASH.GetDescription(), Index = 9, Column = "J" },
                 new SheetCellModel { Name = HeaderEnum.TOTAL_DISTANCE.GetDescription(), Index = 10, Column = "K" },
                 new SheetCellModel { Name = HeaderEnum.TOTAL_TIME.GetDescription(), Index = 11, Column = "L" },
-                new SheetCellModel { Name = HeaderEnum.TOTAL_TRIPS.GetDescription(), Index = 12, Column = "M" }
+                new SheetCellModel { Name = HeaderEnum.TOTAL_TRIPS.GetDescription(), Index = 12, Column = "M" },
+                new SheetCellModel { Name = HeaderEnum.TRIPS.GetDescription(), Index = 13, Column = "N" }
             }
         };
     }
