@@ -59,7 +59,11 @@ public static class AddressMapper
         // Configure common aggregation patterns for address-based trip analysis
         // Note: AddressMapper uses trip data with end address as the key
         var tripStartAddressRange = tripSheet.GetRange(HeaderEnum.ADDRESS_END.GetDescription());
-        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, tripSheet, tripStartAddressRange, useShiftTotals: false);
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(
+            sheet, 
+            keyRange, 
+            tripSheet, 
+            tripStartAddressRange);
         
         // Configure common ratio calculations
         MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);

@@ -61,22 +61,23 @@ public class MapperFormulaHelperTests
     }
 
     [Theory]
-    [InlineData(true, "SourceSheet!M1:M")]  // TOTAL_TRIPS column
-    [InlineData(false, "SourceSheet!N1:N")] // TRIPS column
+    [InlineData(true, false, "SUMIF(", "SourceSheet!M1:M")]   // Scenario 1: Sum TOTAL_TRIPS (shift-level)
+    [InlineData(false, false, "SUMIF(", "SourceSheet!N1:N")]  // Scenario 2: Sum TRIPS column (daily/monthly)
+    [InlineData(false, true, "COUNTIF(", "SourceSheet!B1:B")] // Scenario 3: Count occurrences (trip-level)
     public void ConfigureCommonAggregationHeaders_WithTripsHeader_ShouldUseCorrectSourceRange(
-        bool useShiftTotals, string expectedSourceRange)
+        bool useShiftTotals, bool countTrips, string expectedFormula, string expectedRange)
     {
         // Arrange
         var sheet = CreateTestSheet(HeaderEnum.TRIPS.GetDescription());
         var sourceSheet = CreateSourceSheet();
 
         // Act
-        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, "$A:$A", sourceSheet, "$B:$B", useShiftTotals);
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, "$A:$A", sourceSheet, "$B:$B", useShiftTotals, countTrips);
 
         // Assert
         var header = sheet.Headers.First();
-        Assert.Contains("SUMIF(", header.Formula);
-        Assert.Contains(expectedSourceRange, header.Formula);
+        Assert.Contains(expectedFormula, header.Formula);
+        Assert.Contains(expectedRange, header.Formula);
         Assert.Equal(FormatEnum.NUMBER, header.Format);
     }
 
