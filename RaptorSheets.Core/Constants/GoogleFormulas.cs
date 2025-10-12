@@ -34,7 +34,7 @@ public static class GoogleFormulas
     public const string ArrayLiteralUniqueCombined = "={\"{header}\";SORT(UNIQUE({{range1};{range2}}))}";
 
     /// <summary>
-    /// Simple array literal for unique values with combined ranges (filtered): ="{header}";SORT(UNIQUE(FILTER({range1};{range2}},{range1};{range2}<>"")));
+    /// Simple array literal for unique values with combined ranges (filtered): ="{header}";SORT(UNIQUE(FILTER({range1};{range2}},{range1};{range2}<>"")))
     /// Placeholders: {header}, {range1}, {range2}
     /// Used when combining multiple source ranges for unique values, excluding empty values
     /// This is the recommended version for most use cases to avoid blank entries
