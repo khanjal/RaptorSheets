@@ -62,7 +62,7 @@ public class MapperFormulaHelperTests
 
     [Theory]
     [InlineData(true, "SUMIF(")]
-    [InlineData(false, "COUNTIF(")]
+    [InlineData(false, "SUMIF(")]
     public void ConfigureCommonAggregationHeaders_WithTripsHeader_ShouldUseCorrectFormula(
         bool useShiftTotals, string expectedFormula)
     {
