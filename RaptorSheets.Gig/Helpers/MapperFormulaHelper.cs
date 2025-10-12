@@ -93,8 +93,8 @@ public static class MapperFormulaHelper
                     {
                         SetHeaderFormulaAndFormat(
                             header,
-                            GoogleFormulaBuilder.BuildArrayFormulaCountIf(
-                                keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange),
+                            GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                                keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange, sourceSheet.GetRange(HeaderEnum.TRIPS.GetDescription())),
                             FormatEnum.NUMBER);
                     }
                     break;

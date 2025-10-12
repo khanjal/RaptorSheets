@@ -36,8 +36,17 @@ public static class GoogleFormulas
     /// Simple array literal for unique filtered values: ="{header}";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>""))))
     /// Placeholders: {header}, {sourceRange}
     /// More efficient than ArrayFormulaBase for filtered unique values
+    /// Sorted alphabetically/numerically
     /// </summary>
-    public const string ArrayLiteralUniqueFiltered = "={\"{header}\";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\"))))}";
+    public const string ArrayLiteralUniqueFilteredSorted = "={\"{header}\";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\"))))}";
+
+    /// <summary>
+    /// Simple array literal for unique filtered values: ="{header}";UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>"")))
+    /// Placeholders: {header}, {sourceRange}
+    /// Preserves source order - useful for chronological data like weeks, months
+    /// This is the default - use ArrayLiteralUniqueFilteredSorted for alphabetical sorting
+    /// </summary>
+    public const string ArrayLiteralUniqueFiltered = "={\"{header}\";UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\")))}";
 
     /// <summary>
     /// ARRAYFORMULA for unique values: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true, SORT(UNIQUE({sourceRange}))))
@@ -52,11 +61,18 @@ public static class GoogleFormulas
     public const string ArrayFormulaUniqueFiltered = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true, SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\")), 1))))";
 
     /// <summary>
-    /// ARRAYFORMULA for weekday text formatting from dates: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true,TEXT({keyRange}+1,"ddd")))
-    /// Placeholders: {keyRange}, {header}
+    /// ARRAYFORMULA for weekday text formatting from dates: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true,TEXT({keyRange}{offset},"ddd")))
+    /// Placeholders: {keyRange}, {header}, {offset}
     /// Used for converting date ranges to weekday abbreviations (Mon, Tue, Wed, etc.)
     /// </summary>
-    public const string ArrayFormulaWeekdayText = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true,TEXT({keyRange}+1,\"ddd\")))";
+    public const string ArrayFormulaWeekdayText = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true,TEXT({keyRange}+{offset},\"ddd\")))";
+
+    /// <summary>
+    /// ARRAYFORMULA with separate blank check range: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({blankCheckRange}), "", true, {formula}))
+    /// Placeholders: {keyRange}, {blankCheckRange}, {header}, {formula}
+    /// Use when the row check and blank check need different columns
+    /// </summary>
+    public const string ArrayFormulaBaseWithBlankCheck = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true, IF(ISBLANK({blankCheckRange}), \"\", {formula})))";
 
     #endregion
 

@@ -289,7 +289,7 @@ public class GoogleFormulaBuilderTests
     }
 
     [Fact]
-    public void BuildArrayLiteralUniqueFiltered_ShouldFilterEmptyValues()
+    public void BuildArrayLiteralUniqueFiltered_ShouldFilterWithoutSorting()
     {
         // Arrange
         var header = "TestHeader";
@@ -298,8 +298,26 @@ public class GoogleFormulaBuilderTests
         // Act
         var result = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(header, sourceRange);
 
-        // Assert
-        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(IFERROR(FILTER(", result); // Updated to include IFERROR
+        // Assert - Default is unsorted (preserves source order)
+        Assert.Contains("={\"TestHeader\";UNIQUE(IFERROR(FILTER(", result);
+        Assert.DoesNotContain("SORT(", result); // Should NOT contain SORT
+        Assert.Contains(sourceRange, result);
+        Assert.Contains("<>\"\"", result);
+    }
+
+    [Fact]
+    public void BuildArrayLiteralUniqueFilteredSorted_ShouldFilterAndSort()
+    {
+        // Arrange
+        var header = "TestHeader";
+        var sourceRange = "Sheet!$B$2:$B";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(header, sourceRange);
+
+        // Assert - Sorted version explicitly includes SORT
+        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(IFERROR(FILTER(", result);
+        Assert.Contains("SORT(", result); // Sorted version includes SORT
         Assert.Contains(sourceRange, result);
         Assert.Contains("<>\"\"", result);
     }
@@ -360,23 +378,31 @@ public class GoogleFormulaBuilderTests
 
         // Assert
         Assert.Contains("=ARRAYFORMULA(", result);
-        Assert.Contains("TEXT(", result);
-        Assert.Contains("+1,\"ddd\")", result);
-        Assert.Contains(dateRange, result);
+        Assert.Contains("TEXT(", result); // Expect text formula
+        Assert.Contains("\"ddd\"", result); // Expect weekday abbreviation
+        Assert.Contains(TestKeyRange, result);
+        Assert.Contains(TestHeader, result);
+        Assert.Contains(dateRange, result, StringComparison.OrdinalIgnoreCase); // Should include dateRange
     }
 
     [Fact]
     public void BuildArrayFormulaWeekdayTextDirect_ShouldGenerateWeekdayTextFormula()
     {
+        // Arrange
+        var keyRange = "$A:$A";
+        var header = "Test Header";
+        var dateRange = "$A:$A";
+        var offset = 1;
+
         // Act
-        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekdayTextDirect(TestKeyRange, TestHeader);
+        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(keyRange, header, dateRange, offset);
 
         // Assert
         Assert.Contains("=ARRAYFORMULA(IFS(ROW(", result);
         Assert.Contains("TEXT(", result);
         Assert.Contains("+1,\"ddd\")", result);
-        Assert.Contains(TestKeyRange, result);
-        Assert.Contains(TestHeader, result);
+        Assert.Contains(keyRange, result);
+        Assert.Contains(header, result);
     }
 
     [Fact]
@@ -414,6 +440,19 @@ public class GoogleFormulaBuilderTests
         Assert.Contains(sourceRange, result);
         Assert.Contains(delimiter, result);
         Assert.Contains(index.ToString(), result);
+    }
+
+    [Theory]
+    [InlineData("A1:A", "Daily!A:F", 0, "Curr Amt", "=ARRAYFORMULA(IFS(ROW(A1:A)=1,\"Curr Amt\",ISBLANK(A1:A), \"\", true, IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+A1:A+0,Daily!A:F,6,false),0)))")]
+    [InlineData("A1:A", "Daily!A:F", -7, "Prev Amt", "=ARRAYFORMULA(IFS(ROW(A1:A)=1,\"Prev Amt\",ISBLANK(A1:A), \"\", true, IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+A1:A+-7,Daily!A:F,6,false),0)))")]
+    [InlineData("B2:B", "Sheet!C:H", 5, "Custom", "=ARRAYFORMULA(IFS(ROW(B2:B)=1,\"Custom\",ISBLANK(B2:B), \"\", true, IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+B2:B+5,Sheet!C:H,6,false),0)))")]
+    public void BuildArrayFormulaWeekdayAmount_ShouldGenerateExpectedFormula(string keyRange, string dailyRange, int offset, string columnTitle, string expected)
+    {
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekdayAmount(keyRange, dailyRange, offset, columnTitle);
+
+        // Assert
+        Assert.Equal(expected, result);
     }
 
     #endregion

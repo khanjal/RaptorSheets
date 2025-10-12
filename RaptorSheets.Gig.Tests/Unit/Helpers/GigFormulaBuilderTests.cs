@@ -470,11 +470,206 @@ public class GigFormulaBuilderTests
 
         // Assert
         Assert.Contains("=ARRAYFORMULA(", result);
-        Assert.Contains("AVERAGE(", result);
-        Assert.Contains("OFFSET(", result);
-        Assert.Contains("INDIRECT(", result);
+        Assert.Contains("DAVERAGE(", result);
+        Assert.Contains("transpose(", result);
+        Assert.Contains("TRANSPOSE(", result);
+        Assert.Contains("sequence(", result);
+        Assert.Contains("rows(" + totalRange + ")", result);
         Assert.Contains("ROW(" + totalRange + ")", result);
         Assert.Contains(totalRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaDualFieldVisit_WithFirstVisit_ShouldUseTrueSortOrder()
+    {
+        // Arrange
+        var sourceSheet = "Trips";
+        var dateColumnLetter = "A";
+        var keyColumn1Letter = "S";
+        var keyColumn2Letter = "T";
+        var dateIndex = "2";
+        var isFirst = true;
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaDualFieldVisit(
+            TestKeyRange, TestHeader, sourceSheet, dateColumnLetter, keyColumn1Letter, keyColumn2Letter, dateIndex, isFirst);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("IFERROR(VLOOKUP(", result);
+        Assert.Contains($"SORT(QUERY({sourceSheet}!A:{keyColumn1Letter}", result);
+        Assert.Contains($"\"SELECT {keyColumn1Letter}, A\"", result);
+        Assert.Contains("1,True", result); // First visit: sort by column 1 (key) ascending
+        Assert.Contains(",2,0)", result); // VLOOKUP returns 2nd column
+        Assert.Contains($"SORT(QUERY({sourceSheet}!A:{keyColumn2Letter}", result);
+        Assert.Contains($"\"SELECT {keyColumn2Letter}, A\"", result);
+        Assert.Contains(TestKeyRange, result);
+        Assert.Contains(TestHeader, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaDualFieldVisit_WithLastVisit_ShouldUseFalseSortOrder()
+    {
+        // Arrange
+        var sourceSheet = "Trips";
+        var dateColumnLetter = "A";
+        var keyColumn1Letter = "S";
+        var keyColumn2Letter = "T";
+        var dateIndex = "2";
+        var isFirst = false;
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaDualFieldVisit(
+            TestKeyRange, TestHeader, sourceSheet, dateColumnLetter, keyColumn1Letter, keyColumn2Letter, dateIndex, isFirst);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("2,False", result); // Last visit: sort by column 2 (date) descending
+        Assert.Contains($"SORT(QUERY({sourceSheet}!A:{keyColumn1Letter}", result);
+        Assert.Contains($"SORT(QUERY({sourceSheet}!A:{keyColumn2Letter}", result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaDualFieldVisit_ShouldHaveNestedIferrorStructure()
+    {
+        // Arrange
+        var sourceSheet = "Trips";
+        var dateColumnLetter = "A";
+        var keyColumn1Letter = "S";
+        var keyColumn2Letter = "T";
+        var dateIndex = "2";
+        var isFirst = true;
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaDualFieldVisit(
+            TestKeyRange, TestHeader, sourceSheet, dateColumnLetter, keyColumn1Letter, keyColumn2Letter, dateIndex, isFirst);
+
+        // Assert
+        // Should have nested IFERROR for fallback from keyColumn1 to keyColumn2
+        var iferrorCount = result.Split("IFERROR").Length - 1;
+        Assert.True(iferrorCount >= 2, "Should have at least 2 IFERROR calls (one for each field lookup)");
+        
+        // Should contain both column lookups
+        Assert.Contains(keyColumn1Letter, result);
+        Assert.Contains(keyColumn2Letter, result);
+        
+        // Should have proper VLOOKUP structure
+        var vlookupCount = result.Split("VLOOKUP").Length - 1;
+        Assert.True(vlookupCount >= 2, "Should have at least 2 VLOOKUP calls");
+    }
+
+    [Theory]
+    [InlineData("Trips", "A", "B", "C", "2")]
+    [InlineData("Shifts", "D", "E", "F", "3")]
+    [InlineData("Orders", "G", "H", "I", "1")]
+    public void BuildArrayFormulaDualFieldVisit_WithVariousParameters_ShouldGenerateValidFormula(
+        string sourceSheet, string dateColumnLetter, string keyColumn1Letter, string keyColumn2Letter, string dateIndex)
+    {
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaDualFieldVisit(
+            TestKeyRange, TestHeader, sourceSheet, dateColumnLetter, keyColumn1Letter, keyColumn2Letter, dateIndex, true);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains(sourceSheet, result);
+        // Note: dateIndex is not used in formula anymore, sortColumn is determined by isFirst
+        Assert.Contains(keyColumn1Letter, result);
+        Assert.Contains(keyColumn2Letter, result);
+        Assert.Contains("1,True", result); // First visit always uses column 1, True
+        Assert.Contains("QUERY", result);
+        Assert.Contains("SORT", result);
+        Assert.Contains("VLOOKUP", result);
+    }
+
+    [Fact]
+    public void CommonBuildDualFieldVisitLookup_WithFirstVisit_ShouldCallUnderlyingMethod()
+    {
+        // Arrange
+        var sourceSheet = "Trips";
+        var dateColumnLetter = "A";
+        var keyColumn1Letter = "S";
+        var keyColumn2Letter = "T";
+        var dateIndex = "2";
+        var isFirst = true;
+
+        // Act
+        var result = GigFormulaBuilder.Common.BuildDualFieldVisitLookup(
+            TestKeyRange, TestHeader, sourceSheet, dateColumnLetter, keyColumn1Letter, keyColumn2Letter, dateIndex, isFirst);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("IFERROR(VLOOKUP(", result);
+        Assert.Contains($"SORT(QUERY({sourceSheet}!A:{keyColumn1Letter}", result);
+        Assert.Contains($"\"SELECT {keyColumn1Letter}, A\"", result);
+        Assert.Contains("1,True", result); // First visit: sort by column 1 ascending
+        Assert.Contains(TestKeyRange, result);
+        Assert.Contains(TestHeader, result);
+    }
+
+    [Fact]
+    public void CommonBuildDualFieldVisitLookup_WithLastVisit_ShouldCallUnderlyingMethod()
+    {
+        // Arrange
+        var sourceSheet = "Trips";
+        var dateColumnLetter = "A";
+        var keyColumn1Letter = "S";
+        var keyColumn2Letter = "T";
+        var dateIndex = "2";
+        var isFirst = false;
+
+        // Act
+        var result = GigFormulaBuilder.Common.BuildDualFieldVisitLookup(
+            TestKeyRange, TestHeader, sourceSheet, dateColumnLetter, keyColumn1Letter, keyColumn2Letter, dateIndex, isFirst);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("2,False", result); // Last visit: sort by column 2 descending
+        Assert.Contains($"SORT(QUERY({sourceSheet}!A:{keyColumn1Letter}", result);
+        Assert.Contains($"SORT(QUERY({sourceSheet}!A:{keyColumn2Letter}", result);
+    }
+
+    [Fact]
+    public void CommonBuildDualFieldVisitLookup_ShouldMatchArrayFormulaBase()
+    {
+        // Arrange
+        var sourceSheet = "Trips";
+        var dateColumnLetter = "A";
+        var keyColumn1Letter = "S";
+        var keyColumn2Letter = "T";
+        var dateIndex = "2";
+        var isFirst = true;
+
+        // Act
+        var result = GigFormulaBuilder.Common.BuildDualFieldVisitLookup(
+            TestKeyRange, TestHeader, sourceSheet, dateColumnLetter, keyColumn1Letter, keyColumn2Letter, dateIndex, isFirst);
+
+        // Assert
+        // Should follow ARRAYFORMULA pattern with IFS
+        Assert.Contains("IFS(", result);
+        Assert.Contains($"ROW({TestKeyRange})=1", result);
+        Assert.Contains($"\"{TestHeader}\"", result);
+        Assert.Contains($"ISBLANK({TestKeyRange})", result);
+    }
+
+    [Theory]
+    [InlineData(true, "1", "True")]
+    [InlineData(false, "2", "False")]
+    public void BuildArrayFormulaDualFieldVisit_ShouldUseCorrectSortColumnParameter(bool isFirst, string expectedSortColumn, string expectedSortOrder)
+    {
+        // Arrange
+        var sourceSheet = "Trips";
+        var dateColumnLetter = "A";
+        var keyColumn1Letter = "S";
+        var keyColumn2Letter = "T";
+        var dateIndex = "2";
+
+        // Act
+        var result = GigFormulaBuilder.BuildArrayFormulaDualFieldVisit(
+            TestKeyRange, TestHeader, sourceSheet, dateColumnLetter, keyColumn1Letter, keyColumn2Letter, dateIndex, isFirst);
+
+        // Assert
+        // Check for sort column (1 for first, 2 for last) and sort order
+        Assert.Contains($"{expectedSortColumn},{expectedSortOrder}", result);
     }
 
     #endregion

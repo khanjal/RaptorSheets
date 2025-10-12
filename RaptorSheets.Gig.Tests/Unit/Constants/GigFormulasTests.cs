@@ -192,7 +192,7 @@ public class GigFormulasTests
     public void AllGigFormulas_ShouldContainValidGoogleSheetsFunction()
     {
         // Arrange
-        var expectedFunctions = new[] { "WEEKNUM", "MONTH", "YEAR", "DATE", "WEEKDAY", "TODAY", "VLOOKUP", "MIN", "MAX", "IF", "SUMIF", "COUNTIF", "AVERAGE", "OFFSET", "INDIRECT" };
+        var expectedFunctions = new[] { "WEEKNUM", "MONTH", "YEAR", "DATE", "WEEKDAY", "TODAY", "VLOOKUP", "MIN", "MAX", "IF", "SUMIF", "COUNTIF", "AVERAGE", "DAVERAGE", "OFFSET", "INDIRECT", "TRANSPOSE", "sequence", "transpose", "rows" };
         var allFormulas = new[]
         {
             GigFormulas.TotalIncomeFormula,
@@ -338,11 +338,51 @@ public class GigFormulasTests
         var formula = GigFormulas.RollingAverageFormula;
 
         // Assert
-        Assert.Contains("AVERAGE(", formula);
-        Assert.Contains("OFFSET(", formula);
-        Assert.Contains("INDIRECT(", formula);
+        Assert.Contains("DAVERAGE(", formula);
+        Assert.Contains("transpose(", formula);
+        Assert.Contains("TRANSPOSE(", formula);
+        Assert.Contains("sequence(", formula);
+        Assert.Contains("rows({totalRange})", formula);
         Assert.Contains("ROW({totalRange})", formula);
         Assert.Contains("{totalRange}", formula);
+    }
+
+    [Fact]
+    public void DualFieldVisitLookup_ShouldContainDualVlookupLogic()
+    {
+        // Act
+        var formula = GigFormulas.DualFieldVisitLookup;
+
+        // Assert
+        Assert.Contains("IFERROR(VLOOKUP({keyRange}", formula);
+        Assert.Contains("SORT(QUERY({sourceSheet}!A:{keyColumn1Letter}", formula);
+        Assert.Contains("\"SELECT {keyColumn1Letter}, A\"", formula);
+        Assert.Contains("{sortColumn},{sortOrder}", formula);
+        Assert.Contains(",2,0)", formula); // VLOOKUP column index and exact match
+        Assert.Contains("IFERROR(VLOOKUP({keyRange}", formula); // Second VLOOKUP
+        Assert.Contains("SORT(QUERY({sourceSheet}!A:{keyColumn2Letter}", formula);
+        Assert.Contains("\"SELECT {keyColumn2Letter}, A\"", formula);
+        Assert.Contains("{keyRange}", formula);
+        Assert.Contains("{sourceSheet}", formula);
+        Assert.Contains("{keyColumn1Letter}", formula);
+        Assert.Contains("{keyColumn2Letter}", formula);
+        Assert.Contains("{sortColumn}", formula);
+        Assert.Contains("{sortOrder}", formula);
+    }
+
+    [Fact]
+    public void DualFieldVisitLookup_ShouldHaveNestedIferrorStructure()
+    {
+        // Act
+        var formula = GigFormulas.DualFieldVisitLookup;
+
+        // Assert
+        // Should have nested IFERROR structure for fallback logic
+        var iferrorCount = formula.Split("IFERROR").Length - 1;
+        Assert.Equal(2, iferrorCount); // Two IFERROR calls (one for each field)
+        
+        // Should end with empty string fallback
+        Assert.EndsWith(",\"\"))", formula);
     }
 
     #endregion
