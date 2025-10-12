@@ -289,6 +289,27 @@ public class GoogleFormulaBuilderTests
     }
 
     [Fact]
+    public void BuildArrayLiteralUniqueCombinedFiltered_ShouldCombineAndFilterRanges()
+    {
+        // Arrange
+        var header = "TestHeader";
+        var range1 = "Sheet1!$B$2:$B";
+        var range2 = "Sheet2!$C$2:$C";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombinedFiltered(header, range1, range2);
+
+        // Assert
+        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(FILTER({", result);
+        Assert.Contains(range1, result);
+        Assert.Contains(range2, result);
+        Assert.Contains(";", result); // Range separator
+        Assert.Contains("<>\"\"", result); // Empty value filter
+        // Verify it contains FILTER to exclude empty values
+        Assert.Contains("FILTER(", result);
+    }
+
+    [Fact]
     public void BuildArrayLiteralUniqueFiltered_ShouldFilterWithoutSorting()
     {
         // Arrange

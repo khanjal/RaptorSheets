@@ -63,7 +63,12 @@ public static class NameMapper
         var tripKeyRange = tripSheet.GetRange(HeaderEnum.NAME.GetDescription(), 2);
 
         // Configure common aggregation patterns (for trip-based data)
-        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, tripSheet, tripKeyRange, useShiftTotals: false);
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(
+            sheet, 
+            keyRange, 
+            tripSheet, 
+            tripKeyRange,
+            countTrips: true);  // Count individual trip occurrences
         
         // Configure common ratio calculations
         MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);

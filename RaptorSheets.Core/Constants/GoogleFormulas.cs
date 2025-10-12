@@ -29,8 +29,17 @@ public static class GoogleFormulas
     /// Simple array literal for unique values with combined ranges: ="{header}";SORT(UNIQUE({range1};{range2}))
     /// Placeholders: {header}, {range1}, {range2}
     /// Used when combining multiple source ranges for unique values
+    /// Note: This includes empty values. Use ArrayLiteralUniqueCombinedFiltered to exclude empty values.
     /// </summary>
     public const string ArrayLiteralUniqueCombined = "={\"{header}\";SORT(UNIQUE({{range1};{range2}}))}";
+
+    /// <summary>
+    /// Simple array literal for unique values with combined ranges (filtered): ="{header}";SORT(UNIQUE(FILTER({range1};{range2}},{range1};{range2}<>"")))
+    /// Placeholders: {header}, {range1}, {range2}
+    /// Used when combining multiple source ranges for unique values, excluding empty values
+    /// This is the recommended version for most use cases to avoid blank entries
+    /// </summary>
+    public const string ArrayLiteralUniqueCombinedFiltered = "={\"{header}\";SORT(UNIQUE(FILTER({{range1};{range2}},{{range1};{range2}}<>\"\")))}";
 
     /// <summary>
     /// Simple array literal for unique filtered values: ="{header}";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>""))))

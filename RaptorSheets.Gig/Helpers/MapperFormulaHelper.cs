@@ -15,7 +15,19 @@ public static class MapperFormulaHelper
     /// <summary>
     /// Configure common aggregation headers with flexible source handling
     /// </summary>
-    public static void ConfigureCommonAggregationHeaders(SheetModel sheet, string keyRange, SheetModel sourceSheet, string sourceKeyRange, bool useShiftTotals = true)
+    /// <param name="sheet">Target sheet to configure</param>
+    /// <param name="keyRange">Key range in target sheet</param>
+    /// <param name="sourceSheet">Source sheet to aggregate from</param>
+    /// <param name="sourceKeyRange">Key range in source sheet</param>
+    /// <param name="useShiftTotals">When true: use TOTAL_* columns (shift-level). When false: use base columns (trip-level). Default: false</param>
+    /// <param name="countTrips">When true: count trip occurrences instead of summing. When false: sum values. Default: false</param>
+    public static void ConfigureCommonAggregationHeaders(
+        SheetModel sheet,
+        string keyRange,
+        SheetModel sourceSheet,
+        string sourceKeyRange,
+        bool useShiftTotals = false,
+        bool countTrips = false)
     {
         void SetHeaderFormulaAndFormat(SheetCellModel header, string formula, FormatEnum format)
         {
@@ -81,21 +93,36 @@ public static class MapperFormulaHelper
                     break;
 
                 case HeaderEnum.TRIPS:
-                    if (useShiftTotals)
+                    if (countTrips)
                     {
+                        // Scenario 3: Count trip occurrences (trip-level data with no TRIPS column)
                         SetHeaderFormulaAndFormat(
                             header,
-                            GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-                                keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange, sourceSheet.GetRange(HeaderEnum.TOTAL_TRIPS.GetDescription())),
+                            GoogleFormulaBuilder.BuildArrayFormulaCountIf(
+                                keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange),
                             FormatEnum.NUMBER);
                     }
                     else
                     {
-                        SetHeaderFormulaAndFormat(
-                            header,
-                            GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-                                keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange, sourceSheet.GetRange(HeaderEnum.TRIPS.GetDescription())),
-                            FormatEnum.NUMBER);
+                        // Sum scenarios: check if using shift totals or daily/monthly data
+                        if (useShiftTotals)
+                        {
+                            // Scenario 1: Sum shift-level TOTAL_TRIPS column
+                            SetHeaderFormulaAndFormat(
+                                header,
+                                GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                                    keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange, sourceSheet.GetRange(HeaderEnum.TOTAL_TRIPS.GetDescription())),
+                                FormatEnum.NUMBER);
+                        }
+                        else
+                        {
+                            // Scenario 2: Sum TRIPS column (daily/monthly aggregated data)
+                            SetHeaderFormulaAndFormat(
+                                header,
+                                GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                                    keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange, sourceSheet.GetRange(HeaderEnum.TRIPS.GetDescription())),
+                                FormatEnum.NUMBER);
+                        }
                     }
                     break;
 
@@ -173,7 +200,7 @@ public static class MapperFormulaHelper
         var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
         var headerName = headerEnum.GetDescription();
         
-        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUnique(headerName, sourceRange);
+        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(headerName, sourceRange);
         
         // Set validation if this is a dropdown source
         switch (headerEnum)
@@ -192,13 +219,14 @@ public static class MapperFormulaHelper
 
     /// <summary>
     /// Configure combined unique value headers for dual-source dropdowns (Start+End Address, etc.)
+    /// Uses filtered version to exclude empty values by default
     /// </summary>
     public static void ConfigureCombinedUniqueValueHeader(SheetCellModel header, string range1, string range2)
     {
         var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
         var headerName = headerEnum.GetDescription();
         
-        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombined(headerName, range1, range2);
+        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombinedFiltered(headerName, range1, range2);
     }
 
     /// <summary>

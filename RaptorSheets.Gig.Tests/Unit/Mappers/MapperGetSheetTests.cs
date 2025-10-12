@@ -201,7 +201,7 @@ public class MapperGetSheetTests
 
         // Assert
         Assert.NotNull(addressHeader.Formula);
-        Assert.Contains("SORT(UNIQUE({", addressHeader.Formula);
+        Assert.Contains("SORT(UNIQUE(FILTER({", addressHeader.Formula);
         Assert.Contains(";", addressHeader.Formula); // Range combination
 
         Assert.NotNull(tripsHeader.Formula);
