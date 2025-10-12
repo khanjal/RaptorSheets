@@ -261,7 +261,7 @@ public static class GoogleFormulaBuilder
     /// </summary>
     public static string BuildArrayFormulaWeekdayText(string keyRange, string header, string dateRange, int offset = 0)
     {
-        var offsetStr = offset >= 0 ? $"{offset}" : offset.ToString();
+        var offsetStr = offset.ToString();
         return GoogleFormulas.ArrayFormulaWeekdayText
             .Replace(PlaceholderKeyRange, keyRange)
             .Replace(PlaceholderHeader, header)
