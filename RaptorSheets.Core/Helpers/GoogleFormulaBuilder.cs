@@ -89,6 +89,18 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
+    /// Builds a simple array literal for unique values from combined ranges with empty value filtering
+    /// This is the recommended version for most use cases to avoid blank entries
+    /// </summary>
+    public static string BuildArrayLiteralUniqueCombinedFiltered(string header, string range1, string range2)
+    {
+        return GoogleFormulas.ArrayLiteralUniqueCombinedFiltered
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderRange1, range1)
+            .Replace(PlaceholderRange2, range2);
+    }
+
+    /// <summary>
     /// Builds a simple array literal for unique filtered values
     /// </summary>
     public static string BuildArrayLiteralUniqueFiltered(string header, string sourceRange)

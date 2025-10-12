@@ -157,7 +157,7 @@ public class MapperFormulaHelperTests
         MapperFormulaHelper.ConfigureCombinedUniqueValueHeader(header, "A:A", "B:B");
 
         // Assert
-        Assert.Contains("SORT(UNIQUE({", header.Formula);
+        Assert.Contains("SORT(UNIQUE(FILTER({", header.Formula);
         Assert.Contains(";", header.Formula); // Array separator
         Assert.Contains("A:A", header.Formula);
         Assert.Contains("B:B", header.Formula);

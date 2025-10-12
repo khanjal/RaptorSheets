@@ -64,7 +64,7 @@ public static class AddressMapper
             keyRange, 
             tripSheet, 
             tripStartAddressRange);
-        
+
         // Configure common ratio calculations
         MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);
 
