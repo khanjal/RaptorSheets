@@ -300,13 +300,15 @@ public class GoogleFormulaBuilderTests
         var result = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombinedFiltered(header, range1, range2);
 
         // Assert
-        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(FILTER({", result);
+        Assert.Contains("={\"TestHeader\";SORT(UNIQUE(IFERROR(FILTER({", result);
         Assert.Contains(range1, result);
         Assert.Contains(range2, result);
         Assert.Contains(";", result); // Range separator
         Assert.Contains("<>\"\"", result); // Empty value filter
         // Verify it contains FILTER to exclude empty values
         Assert.Contains("FILTER(", result);
+        // Verify IFERROR wrapper for error handling
+        Assert.Contains("IFERROR(", result);
     }
 
     [Fact]
