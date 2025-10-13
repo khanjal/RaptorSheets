@@ -60,7 +60,7 @@ public static class NameMapper
 
         var tripSheet = TripMapper.GetSheet();
         var keyRange = sheet.GetLocalRange(HeaderEnum.NAME.GetDescription());
-        var tripKeyRange = tripSheet.GetRange(HeaderEnum.NAME.GetDescription(), 2);
+        var tripKeyRange = tripSheet.GetRange(HeaderEnum.NAME.GetDescription());
 
         // Configure common aggregation patterns (for trip-based data)
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(
