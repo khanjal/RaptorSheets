@@ -40,7 +40,7 @@ public static class GoogleFormulas
     /// This is the recommended version for most use cases to avoid blank entries
     /// IFERROR handles cases where FILTER returns no results
     /// </summary>
-    public const string ArrayLiteralUniqueCombinedFiltered = "={\"{header}\";SORT(UNIQUE(IFERROR(FILTER({{range1};{range2}},{{range1};{range2}}<>\"\"))),\"\")}";
+    public const string ArrayLiteralUniqueCombinedFiltered = "={\"{header}\";SORT(UNIQUE(IFERROR(FILTER({{range1};{range2}},{{range1};{range2}}<>\"\"))))}";
 
     /// <summary>
     /// Simple array literal for unique filtered values: ="{header}";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>""))))

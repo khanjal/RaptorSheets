@@ -322,7 +322,7 @@ public static class ShiftMapper
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TOTAL_CASH:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(dateRange, HeaderEnum.TOTAL_CASH.GetDescription(), tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), tripSheet.GetRange(HeaderEnum.CASH.GetDescription()));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TOTAL_CASH.GetDescription(), tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), tripSheet.GetRange(HeaderEnum.CASH.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.TOTAL_DISTANCE:

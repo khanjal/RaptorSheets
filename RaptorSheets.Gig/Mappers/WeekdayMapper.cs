@@ -71,7 +71,7 @@ public static class WeekdayMapper
             {
                 case HeaderEnum.DAY:
                     // Use filtered unique formula for weekday numbers from Daily sheet
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(HeaderEnum.DAY.GetDescription(), dailyDayRange);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.DAY.GetDescription(), dailyDayRange);
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.WEEKDAY:
