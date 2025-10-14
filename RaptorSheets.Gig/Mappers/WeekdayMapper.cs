@@ -60,7 +60,7 @@ public static class WeekdayMapper
 
         var dailySheet = DailyMapper.GetSheet();
         var keyRange = sheet.GetLocalRange(HeaderEnum.DAY.GetDescription());
-        var dailyDayRange = dailySheet.GetRange(HeaderEnum.DAY.GetDescription(), 2);
+        var dailyDayRange = dailySheet.GetRange(HeaderEnum.DAY.GetDescription());
         var dailyDateToTotalRange = dailySheet.GetRangeBetweenColumns(HeaderEnum.DATE.GetDescription(), HeaderEnum.TOTAL.GetDescription());
 
         sheet.Headers.ForEach(header =>
@@ -71,7 +71,7 @@ public static class WeekdayMapper
             {
                 case HeaderEnum.DAY:
                     // Use filtered unique formula for weekday numbers from Daily sheet
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.DAY.GetDescription(), dailyDayRange);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.DAY.GetDescription(), dailySheet.GetRange(HeaderEnum.DAY.GetDescription(), 2));
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.WEEKDAY:

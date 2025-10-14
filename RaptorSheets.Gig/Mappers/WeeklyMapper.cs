@@ -63,7 +63,7 @@ namespace RaptorSheets.Gig.Mappers
 
             var dailySheet = DailyMapper.GetSheet();
             var keyRange = sheet.GetLocalRange(HeaderEnum.WEEK.GetDescription());
-            var dailyKeyRange = dailySheet.GetRange(HeaderEnum.WEEK.GetDescription(), 2);
+            var dailyKeyRange = dailySheet.GetRange(HeaderEnum.WEEK.GetDescription());
 
             // Configure common aggregation patterns (eliminates major duplication)
             MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, dailySheet, dailyKeyRange, useShiftTotals: false);
