@@ -32,6 +32,8 @@ public interface IGoogleSheetManager
     public Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
     public SheetModel? GetSheetLayout(string sheet);
     public List<SheetModel> GetSheetLayouts(List<string> sheets);
+    public Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null);
+    public Task<SheetEntity> PopulateDemoData(DateTime? startDate = null, DateTime? endDate = null);
 }
 
 public class GoogleSheetManager : IGoogleSheetManager
@@ -620,4 +622,72 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         return sheetModels;
     }
+
+    #region Demo Methods
+
+    /// <summary>
+    /// Creates a complete demo spreadsheet with all sheets and sample data.
+    /// This method creates all sheet tabs and populates them with realistic demo data.
+    /// Use this for creating a brand new demo spreadsheet from scratch.
+    /// </summary>
+    /// <param name="startDate">Start date for demo data (defaults to 30 days ago)</param>
+    /// <param name="endDate">End date for demo data (defaults to today)</param>
+    /// <returns>SheetEntity with messages about the setup process</returns>
+    public async Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null)
+    {
+        var result = new SheetEntity();
+        
+        // Step 1: Create all sheets
+        result.Messages.Add(MessageHelpers.CreateInfoMessage("Creating all sheets for demo", MessageTypeEnum.CREATE_SHEET));
+        var createResult = await CreateAllSheets();
+        result.Messages.AddRange(createResult.Messages);
+        
+        // Wait for sheet creation to complete
+        await Task.Delay(3000);
+        
+        // Step 2: Populate with demo data
+        result.Messages.Add(MessageHelpers.CreateInfoMessage("Populating demo data", MessageTypeEnum.GENERAL));
+        var populateResult = await PopulateDemoData(startDate, endDate);
+        result.Messages.AddRange(populateResult.Messages);
+        
+        result.Messages.Add(MessageHelpers.CreateInfoMessage("Demo setup completed", MessageTypeEnum.GENERAL));
+        return result;
+    }
+
+    /// <summary>
+    /// Populates an existing spreadsheet with demo data.
+    /// Use this when you already have sheet tabs created and just want to add sample data.
+    /// This is useful for integration tests where sheets are created separately.
+    /// </summary>
+    /// <param name="startDate">Start date for demo data (defaults to 30 days ago)</param>
+    /// <param name="endDate">End date for demo data (defaults to today)</param>
+    /// <returns>SheetEntity with messages about the population process</returns>
+    public async Task<SheetEntity> PopulateDemoData(DateTime? startDate = null, DateTime? endDate = null)
+    {
+        var start = startDate ?? DateTime.Today.AddDays(-30);
+        var end = endDate ?? DateTime.Today;
+        
+        // Generate demo data
+        var demoData = DemoHelpers.GenerateDemoData(start, end);
+        
+        // Determine which sheets have data
+        var sheetsWithData = new List<string>();
+        if (demoData.Shifts.Count > 0)
+            sheetsWithData.Add(SheetsConfig.SheetNames.Shifts);
+        if (demoData.Trips.Count > 0)
+            sheetsWithData.Add(SheetsConfig.SheetNames.Trips);
+        if (demoData.Expenses.Count > 0)
+            sheetsWithData.Add(SheetsConfig.SheetNames.Expenses);
+        
+        // Insert the demo data
+        var result = await ChangeSheetData(sheetsWithData, demoData);
+        
+        result.Messages.Insert(0, MessageHelpers.CreateInfoMessage(
+            $"Generated demo data: {demoData.Shifts.Count} shifts, {demoData.Trips.Count} trips, {demoData.Expenses.Count} expenses", 
+            MessageTypeEnum.GENERAL));
+        
+        return result;
+    }
+
+    #endregion
 }
