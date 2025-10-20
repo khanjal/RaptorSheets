@@ -711,38 +711,42 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     }
 
     /// <summary>
-    /// Tests PopulateDemoData method - validates the public API works correctly.
+    /// Tests GenerateDemoData method - validates demo data generation works correctly.
     /// </summary>
-    [FactCheckUserSecrets]
-    public async Task DemoData_PopulateMethod_ShouldCreateRealisticData()
+    [Fact]
+    public void DemoData_GenerateMethod_ShouldCreateRealisticData()
     {
         // Arrange
         var startDate = DateTime.Today.AddDays(-30);
         var endDate = DateTime.Today;
         
-        System.Diagnostics.Debug.WriteLine($"📝 Populating demo data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+        System.Diagnostics.Debug.WriteLine($"📝 Generating demo data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
         
-        // Act - Use the public PopulateDemoData method
-        var result = await GoogleSheetManager!.PopulateDemoData(startDate, endDate);
+        // Act - Use the public GenerateDemoData method
+        var demoData = GoogleSheetManager!.GenerateDemoData(startDate, endDate);
         
-        // Assert - Verify the method completed successfully
-        Assert.NotNull(result);
-        Assert.NotEmpty(result.Messages);
+        // Assert - Verify the data was generated
+        Assert.NotNull(demoData);
+        Assert.NotEmpty(demoData.Shifts);
+        Assert.NotEmpty(demoData.Trips);
         
-        var errors = result.Messages.Where(m => m.Level == "ERROR").ToList();
-        Assert.Empty(errors);
+        // Verify data structure
+        Assert.All(demoData.Shifts, shift =>
+        {
+            Assert.NotNull(shift.Date);
+            Assert.NotNull(shift.Service);
+            Assert.True(shift.RowId > 0);
+        });
         
-        // Verify data was created
-        System.Diagnostics.Debug.WriteLine("🔍 Verifying demo data was created...");
-        await Task.Delay(2000); // Allow data to propagate
+        Assert.All(demoData.Trips, trip =>
+        {
+            Assert.NotNull(trip.Date);
+            Assert.NotNull(trip.Service);
+            Assert.True(trip.RowId > 0);
+        });
         
-        var readData = await GetSheetData();
-        
-        Assert.NotEmpty(readData.Shifts);
-        Assert.NotEmpty(readData.Trips);
-        
-        System.Diagnostics.Debug.WriteLine($"✅ Demo data created: {readData.Shifts.Count} shifts, " +
-            $"{readData.Trips.Count} trips, {readData.Expenses.Count} expenses");
+        System.Diagnostics.Debug.WriteLine($"✅ Demo data generated: {demoData.Shifts.Count} shifts, " +
+            $"{demoData.Trips.Count} trips, {demoData.Expenses.Count} expenses");
     }
 
     /// <summary>
