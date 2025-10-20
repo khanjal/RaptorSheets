@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
@@ -22,8 +23,8 @@ public static class DemoHelpers
         var services = new List<string> { "DoorDash", "Uber Eats", "Grubhub", "Instacart", "Amazon Flex", "Shipt" };
         var regions = new List<string> 
         { 
-            "Downtown", "Suburbs", "Airport", "University", "Shopping District", 
-            "Business District", "Residential Area", "Industrial Zone" 
+            "San Francisco", "Oakland", "Berkeley", "San Jose", "Palo Alto", 
+            "Sunnyvale", "Mountain View", "Redwood City", "Fremont", "Hayward"
         };
         var expenseCategories = new List<string> { "Fuel", "Maintenance", "Car Wash", "Supplies", "Parking", "Tolls", "Phone" };
         
@@ -222,18 +223,35 @@ public static class DemoHelpers
         decimal? bonus = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 20 + 1, 2) : (decimal?)null;
         decimal? cash = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 30 + 1, 2) : (decimal?)null;
 
-        // Sample addresses
-        var samplePlaces = new[] { "Restaurant Row", "Shopping Center", "Downtown Hub", "Retail District", "Food Court", "Plaza Mall" };
+        // Real restaurant and fast food places
+        var restaurantPlaces = new[] 
+        { 
+            "McDonald's", "Chipotle", "Starbucks", "Panera Bread", "Taco Bell", 
+            "Subway", "Panda Express", "In-N-Out Burger", "Chick-fil-A", "Olive Garden",
+            "Red Lobster", "The Cheesecake Factory", "P.F. Chang's", "Five Guys", "Shake Shack",
+            "Wendy's", "KFC", "Popeyes", "Buffalo Wild Wings", "Applebee's"
+        };
+
+        // Realistic street addresses
         var sampleAddresses = new[] 
         { 
-            "123 Main St", "456 Oak Ave", "789 Elm Dr", "321 Pine Rd", "654 Maple Ln", 
-            "987 Cedar Ct", "147 Birch Way", "258 Ash Blvd", "369 Walnut St", "741 Cherry Ave" 
+            "123 Market St", "456 Mission St", "789 Main St", "321 Broadway", "654 University Ave", 
+            "987 El Camino Real", "147 Castro St", "258 Valencia St", "369 Geary St", "741 Post St",
+            "852 Van Ness Ave", "963 Divisadero St", "159 Hayes St", "753 Polk St", "951 Columbus Ave"
         };
-        var sampleNames = new[] 
+
+        // First name + Last initial format
+        var firstNames = new[] 
         { 
-            "John Smith", "Jane Doe", "Mike Johnson", "Sarah Williams", "David Brown", 
-            "Emily Davis", "Chris Wilson", "Ashley Martinez", "Ryan Anderson", "Jessica Taylor" 
+            "John", "Sarah", "Michael", "Emily", "David", "Jessica", "Chris", "Ashley", 
+            "Ryan", "Amanda", "Kevin", "Jennifer", "Brian", "Lauren", "Daniel", "Rachel",
+            "Matthew", "Michelle", "James", "Nicole", "Andrew", "Stephanie", "Jason", "Megan"
         };
+        
+        // Use GoogleConfig.ColumnLetters for last initial
+        var columnLetters = GoogleConfig.ColumnLetters;
+        var lastInitial = columnLetters[random.Next(columnLetters.Length)].ToString();
+        var customerName = $"{firstNames[random.Next(firstNames.Length)]} {lastInitial}.";
 
         var tripEntity = new TripEntity
         {
@@ -247,9 +265,9 @@ public static class DemoHelpers
             Pickup = tripStart.ToString("T"),
             Dropoff = tripEnd.ToString("T"),
             Duration = tripDuration.ToString(@"hh\:mm\:ss\.fff"),
-            Place = samplePlaces[random.Next(samplePlaces.Length)],
+            Place = restaurantPlaces[random.Next(restaurantPlaces.Length)],
             StartAddress = sampleAddresses[random.Next(sampleAddresses.Length)],
-            Name = sampleNames[random.Next(sampleNames.Length)],
+            Name = customerName,
             EndAddress = sampleAddresses[random.Next(sampleAddresses.Length)],
             Pay = pay,
             Tip = tip,
@@ -266,7 +284,7 @@ public static class DemoHelpers
         // Occasionally add unit numbers
         if (random.NextDouble() < 0.1)
         {
-            var units = new[] { "A", "B", "C", "D", "E", "101", "202", "303" };
+            var units = new[] { "A", "B", "C", "D", "E", "101", "202", "303", "Apt 5", "Suite 12" };
             tripEntity.EndUnit = units[random.Next(units.Length)];
         }
 

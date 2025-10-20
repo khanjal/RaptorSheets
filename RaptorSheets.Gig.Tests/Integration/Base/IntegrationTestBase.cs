@@ -5,6 +5,7 @@ using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Data.Helpers;
 using RaptorSheets.Test.Common.Helpers;
 using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Integration.Base;
 
@@ -47,21 +48,35 @@ public abstract class IntegrationTestBase
     
     protected static SheetEntity CreateSimpleTestData(int shifts = 2, int tripsPerShift = 2, int expenses = 3)
     {
-        const int startingRowId = 2;
-        
-        var testData = TestGigHelpers.GenerateMultipleShifts(
-            ActionTypeEnum.INSERT,
-            startingRowId,
-            startingRowId,
-            shifts,
-            tripsPerShift,
-            tripsPerShift
-        );
+        // Use demo helpers for simple test data
+        var start = DateTime.Today.AddDays(-shifts);
+        var end = DateTime.Today;
+        var testData = DemoHelpers.GenerateDemoData(start, end);
 
-        var expenseData = GenerateSimpleExpenses(startingRowId, expenses);
-        testData.Expenses.AddRange(expenseData.Expenses);
+        // Optionally trim to requested count
+        if (testData.Shifts.Count > shifts)
+            testData.Shifts = testData.Shifts.Take(shifts).ToList();
+        if (testData.Trips.Count > shifts * tripsPerShift)
+            testData.Trips = testData.Trips.Take(shifts * tripsPerShift).ToList();
+        if (testData.Expenses.Count > expenses)
+            testData.Expenses = testData.Expenses.Take(expenses).ToList();
 
         return testData;
+    }
+    
+    /// <summary>
+    /// Generates demo data using the production DemoHelpers.
+    /// This ensures consistency between demo data and test data.
+    /// </summary>
+    /// <param name="startDate">Start date for demo data</param>
+    /// <param name="endDate">End date for demo data</param>
+    /// <returns>SheetEntity with realistic demo data</returns>
+    protected static SheetEntity CreateDemoData(DateTime? startDate = null, DateTime? endDate = null)
+    {
+        var start = startDate ?? DateTime.Today.AddDays(-30);
+        var end = endDate ?? DateTime.Today;
+        
+        return DemoHelpers.GenerateDemoData(start, end);
     }
     
     private static SheetEntity GenerateSimpleExpenses(int startingId, int count)
@@ -293,6 +308,6 @@ public abstract class IntegrationTestBase
         message.Contains("already exists") ||  // Expected when trying to create existing sheets
         message.Contains("header issue") ||    // Expected when headers don't match exactly
         message.Contains("No data to change"); // Expected when trying to change empty data
-    
+
     #endregion
 }
