@@ -18,6 +18,7 @@ jobs:
   test:
     name: Build & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
     - uses: actions/checkout@v4
@@ -50,13 +51,20 @@ jobs:
         google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
         google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
         google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
-      run: |
-        dotnet test --no-build --configuration Release --logger trx --verbosity normal
-        echo "(Coverage collected only in code-quality job for SonarCloud)"
+      run: dotnet test --no-build --configuration Release --logger trx --verbosity normal
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: '**/TestResults/*.trx'
+        retention-days: 30
 
   code-quality:
     name: Code Quality Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: test
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     steps:
@@ -72,7 +80,7 @@ jobs:
     - name: Cache SonarCloud packages
       uses: actions/cache@v4
       with:
-        path: ~\sonar\cache
+        path: ~/.sonar/cache
         key: ${{ runner.os }}-sonar
         restore-keys: ${{ runner.os }}-sonar
 
@@ -80,7 +88,7 @@ jobs:
       id: cache-sonar-scanner
       uses: actions/cache@v4
       with:
-        path: .\.sonar\scanner
+        path: ./.sonar/scanner
         key: ${{ runner.os }}-sonar-scanner
         restore-keys: ${{ runner.os }}-sonar-scanner
 
@@ -138,7 +146,16 @@ jobs:
           --verbosity normal \
           -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
+    - name: Upload Coverage Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-results
+        path: '**/TestResults/**/coverage.opencover.xml'
+        retention-days: 30
+
     - name: End SonarCloud Scan
+      if: always()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
