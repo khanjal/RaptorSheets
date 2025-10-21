@@ -1,4 +1,4 @@
-# RaptorSheets.Gig
+﻿# RaptorSheets.Gig
 
 [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) [![Build Status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions)
 
@@ -52,7 +52,7 @@ var manager = new GoogleSheetManager(credentials, spreadsheetId);
 // Creates all sheets and adds sample data
 var result = await manager.SetupDemo();
 
-Console.WriteLine("? Demo spreadsheet ready!");
+Console.WriteLine("✅ Demo spreadsheet ready!");
 ```
 
 ### Option 2: Populate an Existing Spreadsheet
@@ -134,7 +134,7 @@ public async Task CreateDemoSpreadsheet()
     var result = await manager.SetupDemo();
     
     // 3. View your demo
-    Console.WriteLine($"? Demo ready at: https://docs.google.com/spreadsheets/d/{spreadsheetId}");
+    Console.WriteLine($"✅ Demo ready at: https://docs.google.com/spreadsheets/d/{spreadsheetId}");
 }
 ```
 
