@@ -43,13 +43,13 @@ jobs:
 
     - name: Run Tests
       env:
-        spreadsheets:gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets:stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
-        google_credentials:type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
-        google_credentials:private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
-        google_credentials:private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
-        google_credentials:client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
-        google_credentials:client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+        spreadsheets__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
+        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
       run: |
         dotnet test --no-build --configuration Release --logger trx --verbosity normal
         echo "(Coverage collected only in code-quality job for SonarCloud)"
@@ -122,6 +122,14 @@ jobs:
       run: dotnet build --configuration Release
 
     - name: Test with Coverage for SonarCloud
+      env:
+        spreadsheets__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
+        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
       run: |
         dotnet test --no-build --configuration Release \
           --collect:"XPlat Code Coverage" \
