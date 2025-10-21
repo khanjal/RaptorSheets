@@ -9,6 +9,7 @@ namespace RaptorSheets.Gig.Managers;
 /// <summary>
 /// Main interface for Google Sheet operations in the Gig domain.
 /// Provides CRUD operations, metadata access, and demo data functionality.
+/// Implemented across partial classes (Crud, Metadata, Demo, Helpers).
 /// </summary>
 public interface IGoogleSheetManager
 {
@@ -32,7 +33,7 @@ public interface IGoogleSheetManager
     List<SheetModel> GetSheetLayouts(List<string> sheets);
     
     // Demo Data Generation
-    SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null);
+    SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null);
 }
 
 /// <summary>

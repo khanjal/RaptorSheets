@@ -55,12 +55,14 @@ public static class DemoHelpers
     /// </summary>
     /// <param name="startDate">Start date for the demo data</param>
     /// <param name="endDate">End date for the demo data</param>
+    /// <param name="seed">Optional seed for Random to enable deterministic/reproducible demo data (useful for testing)</param>
     /// <returns>SheetEntity populated with realistic demo data</returns>
-    public static SheetEntity GenerateDemoData(DateTime startDate, DateTime endDate)
+    public static SheetEntity GenerateDemoData(DateTime startDate, DateTime endDate, int? seed = null)
     {
         // SonarQube S2245: Using Random is safe here - this generates demo/sample data, not security-sensitive values
+        // Optional seed parameter allows deterministic generation for testing
         #pragma warning disable S2245
-        var random = new Random();
+        var random = seed.HasValue ? new Random(seed.Value) : new Random();
         #pragma warning restore S2245
         
         var sheetEntity = new SheetEntity();

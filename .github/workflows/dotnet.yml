@@ -60,7 +60,7 @@ jobs:
             exit 0
           fi
           if [ $i -lt 3 ]; then
-            SLEEP_TIME=$((10 * 2 ** ($i - 1)))
+            SLEEP_TIME=$((10 * (1 << ($i - 1))))
             echo "Tests failed, retrying in $SLEEP_TIME seconds..."
             sleep $SLEEP_TIME
           fi
@@ -167,7 +167,7 @@ jobs:
             exit 0
           fi
           if [ $i -lt 3 ]; then
-            SLEEP_TIME=$((10 * 2 ** ($i - 1)))
+            SLEEP_TIME=$((10 * (1 << ($i - 1))))
             echo "Tests failed, retrying in $SLEEP_TIME seconds..."
             sleep $SLEEP_TIME
           fi

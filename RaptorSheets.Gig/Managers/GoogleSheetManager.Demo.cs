@@ -5,8 +5,10 @@ namespace RaptorSheets.Gig.Managers;
 
 /// <summary>
 /// Demo data generation for Google Sheets.
-/// Handles creation of realistic sample data without inserting it.
-/// Use GenerateDemoData() to create sample data, then use ChangeSheetData() to insert it.
+/// Generates realistic sample data for testing, demos, and initial setup.
+/// Use GenerateDemoData() to create sample data, then ChangeSheetData() to insert it.
+/// For convenience, consider creating wrapper methods like SetupDemo() or PopulateDemoData()
+/// in consuming applications to combine creation + insertion.
 /// </summary>
 public partial class GoogleSheetManager
 {
@@ -15,14 +17,19 @@ public partial class GoogleSheetManager
     /// <summary>
     /// Generates demo data without inserting it into the spreadsheet.
     /// Allows inspection, modification, or testing before insertion.
+    /// This is the core method - consuming applications can wrap this with convenience methods.
     /// </summary>
     /// <param name="startDate">Start date for demo data (defaults to 30 days ago)</param>
     /// <param name="endDate">End date for demo data (defaults to today)</param>
+    /// <param name="seed">Optional seed for deterministic/reproducible demo data (useful for testing)</param>
     /// <returns>SheetEntity populated with realistic demo data (Shifts, Trips, Expenses)</returns>
     /// <example>
     /// <code>
     /// // Generate demo data
     /// var demoData = manager.GenerateDemoData();
+    /// 
+    /// // Generate deterministic demo data for testing
+    /// var testData = manager.GenerateDemoData(seed: 42);
     /// 
     /// // Optionally modify it
     /// demoData.Shifts = demoData.Shifts.Take(10).ToList();
@@ -30,14 +37,22 @@ public partial class GoogleSheetManager
     /// // Insert it
     /// var sheets = new List&lt;string&gt; { "Shifts", "Trips", "Expenses" };
     /// await manager.ChangeSheetData(sheets, demoData);
+    /// 
+    /// // Or wrap it in a convenience method:
+    /// public async Task&lt;SheetEntity&gt; SetupDemo(DateTime? start = null, DateTime? end = null)
+    /// {
+    ///     await CreateAllSheets();
+    ///     var demoData = GenerateDemoData(start, end);
+    ///     return await ChangeSheetData(new[] { "Shifts", "Trips", "Expenses" }, demoData);
+    /// }
     /// </code>
     /// </example>
-    public SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null)
+    public SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null)
     {
         var start = startDate ?? DateTime.Today.AddDays(-30);
         var end = endDate ?? DateTime.Today;
         
-        return DemoHelpers.GenerateDemoData(start, end);
+        return DemoHelpers.GenerateDemoData(start, end, seed);
     }
 
     #endregion
