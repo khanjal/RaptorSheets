@@ -79,29 +79,6 @@ public abstract class IntegrationTestBase
         return DemoHelpers.GenerateDemoData(start, end);
     }
     
-    private static SheetEntity GenerateSimpleExpenses(int startingId, int count)
-    {
-        var sheetEntity = new SheetEntity();
-        var baseDate = DateTime.Today;
-        
-        for (int i = 0; i < count; i++)
-        {
-            var expense = new ExpenseEntity
-            {
-                RowId = startingId + i,
-                Action = ActionTypeEnum.INSERT.GetDescription(),
-                Date = baseDate.AddDays(-i),
-                Amount = 25.50m + i * 10,
-                Category = "Test",
-                Name = $"Test Expense {i + 1}",
-                Description = $"Integration test expense {i + 1}"
-            };
-            sheetEntity.Expenses.Add(expense);
-        }
-        
-        return sheetEntity;
-    }
-    
     #endregion
 
     #region Operations
