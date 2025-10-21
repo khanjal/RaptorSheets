@@ -12,6 +12,44 @@ namespace RaptorSheets.Gig.Helpers;
 public static class DemoHelpers
 {
     /// <summary>
+    /// Context object for managing ID generation during demo data creation.
+    /// </summary>
+    private class DemoIdContext
+    {
+        public int ShiftId { get; set; } = 2;  // Start at 2 because row 1 is for headers
+        public int TripId { get; set; } = 2;   // Start at 2 because row 1 is for headers
+        public int ExpenseId { get; set; } = 2; // Start at 2 because row 1 is for headers
+    }
+
+    /// <summary>
+    /// Context object for shift generation parameters.
+    /// </summary>
+    private class ShiftGenerationContext
+    {
+        public required Random Random { get; init; }
+        public required SheetEntity SheetEntity { get; init; }
+        public required DateTime Date { get; init; }
+        public required List<string> Services { get; init; }
+        public required List<string> Regions { get; init; }
+        public required Dictionary<(string, string), int> ServiceDayShiftNumber { get; init; }
+    }
+
+    /// <summary>
+    /// Context object for trip generation parameters.
+    /// </summary>
+    private record TripGenerationContext
+    {
+        public required Random Random { get; init; }
+        public required DateTime Date { get; init; }
+        public required int ShiftNumber { get; init; }
+        public required string Service { get; init; }
+        public required string Region { get; init; }
+        public required DateTime ShiftStart { get; init; }
+        public required TimeSpan ShiftDuration { get; init; }
+        public required int TripNumber { get; init; }
+    }
+
+    /// <summary>
     /// Generates realistic sample gig data for demonstration purposes.
     /// Creates shifts, trips, and expenses across a date range.
     /// </summary>
@@ -26,14 +64,12 @@ public static class DemoHelpers
         #pragma warning restore S2245
         
         var sheetEntity = new SheetEntity();
-        var shiftId = 2; // Start at 2 because row 1 is for headers
-        var tripId = 2;  // Start at 2 because row 1 is for headers
-        var expenseId = 2; // Start at 2 because row 1 is for headers
+        var idContext = new DemoIdContext();
 
         for (var date = startDate; date <= endDate; date = date.AddDays(1))
         {
-            GenerateDailyShiftsAndTrips(random, sheetEntity, date, ref shiftId, ref tripId);
-            GenerateDailyExpenses(random, sheetEntity, date, ref expenseId);
+            GenerateDailyShiftsAndTrips(random, sheetEntity, date, idContext);
+            GenerateDailyExpenses(random, sheetEntity, date, idContext);
         }
         
         return sheetEntity;
@@ -45,11 +81,10 @@ public static class DemoHelpers
     private static void GenerateDailyShiftsAndTrips(
         Random random, 
         SheetEntity sheetEntity, 
-        DateTime date, 
-        ref int shiftId, 
-        ref int tripId)
+        DateTime date,
+        DemoIdContext idContext)
     {
-        var services = new List<string> { "DoorDash", "Uber Eats", "Grubhub", "Instacart", "Amazon Flex", "Shipt" };
+        var services = new List<string> { "DoorDash", "Uber Eats", "Grubhub", "Instacart", "Shipt" };
         var regions = new List<string> 
         { 
             "San Francisco", "Oakland", "Berkeley", "San Jose", "Palo Alto", 
@@ -64,17 +99,19 @@ public static class DemoHelpers
         var servicesToday = services.OrderBy(_ => random.Next())
             .Take(random.Next(1, Math.Min(numShiftsToday + 1, services.Count))).ToList();
         
+        var context = new ShiftGenerationContext
+        {
+            Random = random,
+            SheetEntity = sheetEntity,
+            Date = date,
+            Services = servicesToday,
+            Regions = regions,
+            ServiceDayShiftNumber = serviceDayShiftNumber
+        };
+
         for (int s = 0; s < numShiftsToday; s++)
         {
-            GenerateSingleShiftWithTrips(
-                random, 
-                sheetEntity, 
-                date, 
-                servicesToday, 
-                regions, 
-                serviceDayShiftNumber, 
-                ref shiftId, 
-                ref tripId);
+            GenerateSingleShiftWithTrips(context, idContext);
         }
     }
 
@@ -82,36 +119,30 @@ public static class DemoHelpers
     /// Generates a single shift with associated trips.
     /// </summary>
     private static void GenerateSingleShiftWithTrips(
-        Random random,
-        SheetEntity sheetEntity,
-        DateTime date,
-        List<string> servicesToday,
-        List<string> regions,
-        Dictionary<(string, string), int> serviceDayShiftNumber,
-        ref int shiftId,
-        ref int tripId)
+        ShiftGenerationContext context,
+        DemoIdContext idContext)
     {
         // Pick a service for this shift
-        string service = servicesToday[random.Next(servicesToday.Count)];
-        int shiftNumber = GetOrIncrementShiftNumber(serviceDayShiftNumber, service, date);
+        string service = context.Services[context.Random.Next(context.Services.Count)];
+        int shiftNumber = GetOrIncrementShiftNumber(context.ServiceDayShiftNumber, service, context.Date);
 
         // Pick a region
-        string region = regions[random.Next(regions.Count)];
+        string region = context.Regions[context.Random.Next(context.Regions.Count)];
 
         // Generate shift timing data
-        var (shiftStart, shiftDuration, shiftFinish, activeDuration) = GenerateShiftTiming(random, date);
+        var (shiftStart, shiftDuration, shiftFinish, activeDuration) = GenerateShiftTiming(context.Random, context.Date);
 
         // Determine trip configuration
-        var (hasTrips, tripCount, tripsValue) = DetermineShiftTrips(random);
+        var (hasTrips, tripCount, tripsValue) = DetermineShiftTrips(context.Random);
 
         // Generate shift financial and travel data
-        var shiftData = GenerateShiftData(random, hasTrips);
+        var shiftData = GenerateShiftData(context.Random, hasTrips);
 
-        sheetEntity.Shifts.Add(new ShiftEntity 
+        context.SheetEntity.Shifts.Add(new ShiftEntity 
         {
-            RowId = shiftId++,
+            RowId = idContext.ShiftId++,
             Action = ActionTypeEnum.INSERT.GetDescription(),
-            Date = date.ToString("yyyy-MM-dd"),
+            Date = context.Date.ToString("yyyy-MM-dd"),
             Number = shiftNumber,
             Service = service,
             Start = shiftStart.ToString("T"),
@@ -128,26 +159,29 @@ public static class DemoHelpers
             Pay = shiftData.Pay,
             Tip = shiftData.Tip,
             Trips = tripsValue,
-            Omit = random.NextDouble() < 0.08 // 8% chance to omit
+            Omit = context.Random.NextDouble() < 0.08 // 8% chance to omit
         });
 
         // Generate trips for this shift if applicable
         if (hasTrips)
         {
+            var tripContext = new TripGenerationContext
+            {
+                Random = context.Random,
+                Date = context.Date,
+                ShiftNumber = shiftNumber,
+                Service = service,
+                Region = region,
+                ShiftStart = shiftStart,
+                ShiftDuration = shiftDuration,
+                TripNumber = 0 // Will be set in loop
+            };
+
             for (int tripIndex = 0; tripIndex < tripCount; tripIndex++)
             {
-                var tripEntity = GenerateDemoTrip(
-                    random,
-                    tripId++, 
-                    date, 
-                    shiftNumber, 
-                    service, 
-                    region, 
-                    shiftStart, 
-                    shiftDuration, 
-                    tripIndex + 1);
-                
-                sheetEntity.Trips.Add(tripEntity);
+                tripContext = tripContext with { TripNumber = tripIndex + 1 };
+                var tripEntity = GenerateDemoTrip(tripContext, idContext.TripId++);
+                context.SheetEntity.Trips.Add(tripEntity);
             }
         }
     }
@@ -268,8 +302,8 @@ public static class DemoHelpers
     private static void GenerateDailyExpenses(
         Random random, 
         SheetEntity sheetEntity, 
-        DateTime date, 
-        ref int expenseId)
+        DateTime date,
+        DemoIdContext idContext)
     {
         var expenseCategories = new List<string> { "Fuel", "Maintenance", "Car Wash", "Supplies", "Parking", "Tolls", "Phone" };
         
@@ -293,7 +327,7 @@ public static class DemoHelpers
             
             sheetEntity.Expenses.Add(new ExpenseEntity
             {
-                RowId = expenseId++,
+                RowId = idContext.ExpenseId++,
                 Action = ActionTypeEnum.INSERT.GetDescription(),
                 Date = date,
                 Category = category,
@@ -308,39 +342,32 @@ public static class DemoHelpers
     /// Generates a single demo trip with realistic data.
     /// </summary>
     private static TripEntity GenerateDemoTrip(
-        Random random,
-        int rowId, 
-        DateTime date, 
-        int shiftNumber, 
-        string service, 
-        string region, 
-        DateTime shiftStart, 
-        TimeSpan shiftDuration,
-        int tripNumber)
+        TripGenerationContext context,
+        int rowId)
     {
         // Trip types vary by service
-        var tripType = DetermineTripType(random, service);
+        var tripType = DetermineTripType(context.Service);
 
         // Trip timing within the shift
-        var (tripStart, tripDuration, tripEnd) = GenerateTripTiming(random, shiftStart, shiftDuration);
+        var (tripStart, tripDuration, tripEnd) = GenerateTripTiming(context.Random, context.ShiftStart, context.ShiftDuration);
 
         // Generate trip travel data
-        var travelData = GenerateTripTravelData(random);
+        var travelData = GenerateTripTravelData(context.Random);
 
         // Generate trip earnings
-        var earnings = GenerateTripEarnings(random, service);
+        var earnings = GenerateTripEarnings(context.Random, context.Service);
 
         // Generate trip location data
-        var locationData = GenerateTripLocationData(random);
+        var locationData = GenerateTripLocationData(context.Random);
 
         var tripEntity = new TripEntity
         {
             RowId = rowId,
             Action = ActionTypeEnum.INSERT.GetDescription(),
-            Date = date.ToString("yyyy-MM-dd"),
-            Number = shiftNumber,
-            Service = service,
-            Region = region,
+            Date = context.Date.ToString("yyyy-MM-dd"),
+            Number = context.ShiftNumber,
+            Service = context.Service,
+            Region = context.Region,
             Type = tripType,
             Pickup = tripStart.ToString("T"),
             Dropoff = tripEnd.ToString("T"),
@@ -356,16 +383,16 @@ public static class DemoHelpers
             OdometerStart = travelData.OdometerStart,
             OdometerEnd = travelData.OdometerEnd,
             Distance = travelData.Distance,
-            Note = $"Demo trip {tripNumber}",
-            Exclude = random.NextDouble() < 0.05, // 5% chance to exclude
-            OrderNumber = random.NextDouble() < 0.1 ? random.Next(100000, 999999).ToString() : null
+            Note = $"Demo trip {context.TripNumber}",
+            Exclude = context.Random.NextDouble() < 0.05, // 5% chance to exclude
+            OrderNumber = context.Random.NextDouble() < 0.1 ? context.Random.Next(100000, 999999).ToString() : string.Empty
         };
 
         // Occasionally add unit numbers
-        if (random.NextDouble() < 0.1)
+        if (context.Random.NextDouble() < 0.1)
         {
             var units = new[] { "A", "B", "C", "D", "E", "101", "202", "303", "Apt 5", "Suite 12" };
-            tripEntity.EndUnit = units[random.Next(units.Length)];
+            tripEntity.EndUnit = units[context.Random.Next(units.Length)];
         }
 
         return tripEntity;
@@ -374,14 +401,13 @@ public static class DemoHelpers
     /// <summary>
     /// Determines the trip type based on the service.
     /// </summary>
-    private static string DetermineTripType(Random random, string service)
+    private static string DetermineTripType(string service)
     {
         return service switch
         {
-            "Uber Eats" or "DoorDash" or "Grubhub" => random.NextDouble() < 0.7 ? "Delivery" : "Pickup",
-            "Instacart" or "Shipt" => "Delivery",
-            "Amazon Flex" => "Delivery",
-            _ => random.NextDouble() < 0.5 ? "Pickup" : "Delivery"
+            "Uber Eats" or "DoorDash" or "Grubhub" => "Pickup",
+            "Instacart" or "Shipt" => "Shop",
+            _ => "Pickup"
         };
     }
 
