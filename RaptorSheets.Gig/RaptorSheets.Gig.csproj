@@ -34,4 +34,19 @@
     <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" PrivateAssets="All" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Managers\GoogleSheetManager.Crud.cs">
+      <DependentUpon>GoogleSheetManager.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Managers\GoogleSheetManager.Demo.cs">
+      <DependentUpon>GoogleSheetManager.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Managers\GoogleSheetManager.Helpers.cs">
+      <DependentUpon>GoogleSheetManager.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Managers\GoogleSheetManager.Metadata.cs">
+      <DependentUpon>GoogleSheetManager.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

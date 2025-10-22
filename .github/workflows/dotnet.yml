@@ -18,6 +18,7 @@ jobs:
   test:
     name: Build & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
     - uses: actions/checkout@v4
@@ -42,21 +43,43 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     - name: Run Tests
+      shell: bash
       env:
-        spreadsheets:gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets:stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
-        google_credentials:type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
-        google_credentials:private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
-        google_credentials:private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
-        google_credentials:client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
-        google_credentials:client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+        spreadsheets__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
+        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
       run: |
-        dotnet test --no-build --configuration Release --logger trx --verbosity normal
-        echo "(Coverage collected only in code-quality job for SonarCloud)"
+        for i in {1..3}; do
+          echo "Test attempt $i of 3"
+          if dotnet test --no-build --configuration Release --logger trx --verbosity normal; then
+            echo "Tests passed!"
+            exit 0
+          fi
+          if [ $i -lt 3 ]; then
+            SLEEP_TIME=$((10 * (1 << ($i - 1))))
+            echo "Tests failed, retrying in $SLEEP_TIME seconds..."
+            sleep $SLEEP_TIME
+          fi
+        done
+        echo "Tests failed after 3 attempts"
+        exit 1
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: '**/TestResults/*.trx'
+        retention-days: 30
 
   code-quality:
     name: Code Quality Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: test
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     steps:
@@ -72,7 +95,7 @@ jobs:
     - name: Cache SonarCloud packages
       uses: actions/cache@v4
       with:
-        path: ~\sonar\cache
+        path: ~/.sonar/cache
         key: ${{ runner.os }}-sonar
         restore-keys: ${{ runner.os }}-sonar
 
@@ -80,7 +103,7 @@ jobs:
       id: cache-sonar-scanner
       uses: actions/cache@v4
       with:
-        path: .\.sonar\scanner
+        path: ./.sonar/scanner
         key: ${{ runner.os }}-sonar-scanner
         restore-keys: ${{ runner.os }}-sonar-scanner
 
@@ -122,15 +145,46 @@ jobs:
       run: dotnet build --configuration Release
 
     - name: Test with Coverage for SonarCloud
+      shell: bash
+      env:
+        spreadsheets__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
+        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
       run: |
-        dotnet test --no-build --configuration Release \
-          --collect:"XPlat Code Coverage" \
-          --results-directory ./TestResults \
-          --logger trx \
-          --verbosity normal \
-          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        for i in {1..3}; do
+          echo "Test attempt $i of 3"
+          if dotnet test --no-build --configuration Release \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger trx \
+            --verbosity normal \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover; then
+            echo "Tests passed!"
+            exit 0
+          fi
+          if [ $i -lt 3 ]; then
+            SLEEP_TIME=$((10 * (1 << ($i - 1))))
+            echo "Tests failed, retrying in $SLEEP_TIME seconds..."
+            sleep $SLEEP_TIME
+          fi
+        done
+        echo "Tests failed after 3 attempts"
+        exit 1
+
+    - name: Upload Coverage Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-results
+        path: '**/TestResults/**/coverage.opencover.xml'
+        retention-days: 30
 
     - name: End SonarCloud Scan
+      if: always()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

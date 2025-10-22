@@ -15,7 +15,7 @@ namespace RaptorSheets.Common.Constants.SheetConfigs
             FontColor = ColorEnum.WHITE,
             FreezeColumnCount = 1,
             FreezeRowCount = 1,
-            ProtectSheet = false,
+            ProtectSheet = true,
             Headers = [
                 new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
                 new SheetCellModel { Name = HeaderEnum.VALUE.GetDescription() }

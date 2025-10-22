@@ -1,4 +1,4 @@
-# RaptorSheets.Gig
+﻿# RaptorSheets.Gig
 
 [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) [![Build Status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions)
 
@@ -8,12 +8,13 @@ RaptorSheets.Gig is a specialized implementation of RaptorSheets.Core designed f
 
 ## Table of Contents
 1. [Quick Start](#quick-start)
-2. [Sheet Types](#sheet-types)
-3. [Entities](#entities)
-4. [Manager Usage](#manager-usage)
-5. [Data Operations](#data-operations)
-6. [Advanced Features](#advanced-features)
-7. [Examples](#examples)
+2. [Demo Setup](#demo-setup)
+3. [Sheet Types](#sheet-types)
+4. [Entities](#entities)
+5. [Manager Usage](#manager-usage)
+6. [Data Operations](#data-operations)
+7. [Advanced Features](#advanced-features)
+8. [Examples](#examples)
 
 ## Quick Start
 
@@ -31,11 +32,123 @@ using RaptorSheets.Gig.Enums;
 var manager = new GoogleSheetManager(credentials, spreadsheetId);
 
 // Create all gig-related sheets
-await manager.CreateSheets();
+await manager.CreateAllSheets();
 
 // Get your data
 var data = await manager.GetSheets();
 ```
+
+## Demo Setup
+
+Create a demo spreadsheet with realistic sample data to explore RaptorSheets.Gig capabilities or set up test environments.
+
+### Option 1: Create a Complete Demo Spreadsheet
+
+Perfect for new users or demos. Creates all sheets and populates with 30 days of realistic gig data:
+
+```csharp
+var manager = new GoogleSheetManager(credentials, spreadsheetId);
+
+// Creates all sheets and adds sample data
+var result = await manager.SetupDemo();
+
+Console.WriteLine("✅ Demo spreadsheet ready!");
+```
+
+### Option 2: Populate an Existing Spreadsheet
+
+If you already have sheets created, just add sample data:
+
+```csharp
+// Populate existing sheets with demo data
+var result = await manager.PopulateDemoData();
+
+Console.WriteLine($"Added demo data: {result.Shifts.Count} shifts, {result.Trips.Count} trips");
+```
+
+### Custom Date Ranges
+
+Specify custom date ranges for your demo data:
+
+```csharp
+// Last 90 days
+await manager.SetupDemo(
+    startDate: DateTime.Today.AddDays(-90),
+    endDate: DateTime.Today
+);
+
+// Specific quarter
+await manager.SetupDemo(
+    startDate: new DateTime(2024, 1, 1),
+    endDate: new DateTime(2024, 3, 31)
+);
+
+// Full year
+await manager.PopulateDemoData(
+    startDate: new DateTime(2024, 1, 1),
+    endDate: new DateTime(2024, 12, 31)
+);
+```
+
+### What Demo Data Includes
+
+The demo system generates realistic gig economy data:
+
+**Shifts** - 1-3 per day (85% of days)
+- Services: DoorDash, Uber Eats, Grubhub, Instacart, Amazon Flex, Shipt
+- Realistic shift times: 2-8 hours per shift
+- Varied regions: Downtown, Suburbs, Airport, University, etc.
+- Pay: $20-$220 per shift with tips, bonuses, and cash
+- 85% of shifts have trips, 15% are "no-trip" shifts
+
+**Trips** - 2-10 per shift
+- Trip types vary by service (Delivery, Pickup)
+- Realistic pickup/dropoff times within shift duration
+- Pay varies by service ($2-$35 per trip)
+- 80% of trips include tips
+- Sample addresses, customer names, and places
+
+**Expenses** - 0-2 per day (40% of days)
+- Categories: Fuel, Maintenance, Car Wash, Supplies, Parking, Tolls, Phone
+- Realistic amounts based on category (Fuel: $20-$60, Maintenance: $30-$130, etc.)
+
+### Complete Demo Creation Example
+
+```csharp
+using Google.Apis.Sheets.v4;
+using RaptorSheets.Gig.Managers;
+
+public async Task CreateDemoSpreadsheet()
+{
+    // 1. Create a new Google Spreadsheet
+    var sheetsService = new SheetsService(/* credentials */);
+    var spreadsheet = await sheetsService.Spreadsheets.Create(new Spreadsheet
+    {
+        Properties = new SpreadsheetProperties { Title = "RaptorGig Demo" }
+    }).ExecuteAsync();
+    
+    var spreadsheetId = spreadsheet.SpreadsheetId;
+    
+    // 2. Set up demo with sample data
+    var manager = new GoogleSheetManager(credentials, spreadsheetId);
+    var result = await manager.SetupDemo();
+    
+    // 3. View your demo
+    Console.WriteLine($"✅ Demo ready at: https://docs.google.com/spreadsheets/d/{spreadsheetId}");
+}
+```
+
+### Demo Troubleshooting
+
+**"Unable to save data" Error**
+- Ensure spreadsheet exists and has write permissions
+- Use `SetupDemo()` for new spreadsheets (creates sheets first)
+- Use `PopulateDemoData()` only when sheets already exist
+
+**No Data Appearing**
+- Verify date range is valid (startDate < endDate)
+- Check Google Sheets API permissions
+- Review result messages for errors
 
 ## Sheet Types
 
@@ -204,12 +317,15 @@ public class ExpenseEntity
 public interface IGoogleSheetManager
 {
     Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
-    Task<SheetEntity> CreateSheets();
+    Task<SheetEntity> CreateAllSheets();
+    Task<SheetEntity> CreateSheets(List<string> sheets);
     Task<SheetEntity> GetSheet(string sheet);
-    Task<SheetEntity> GetSheets();
+    Task<SheetEntity> GetAllSheets();
     Task<SheetEntity> GetSheets(List<string> sheets);
-    Task<List<PropertyEntity>> GetSheetProperties();
+    Task<List<PropertyEntity>> GetAllSheetProperties();
     Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
+    Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null);
+    Task<SheetEntity> PopulateDemoData(DateTime? startDate = null, DateTime? endDate = null);
 }
 ```
 
@@ -239,7 +355,7 @@ var manager = new GoogleSheetManager(credentials, "spreadsheet-id");
 ### Creating Sheets
 ```csharp
 // Create all predefined sheets
-var result = await manager.CreateSheets();
+var result = await manager.CreateAllSheets();
 
 // Create specific sheets
 var specificSheets = new List<string> { "Trips", "Shifts", "Expenses" };
@@ -255,7 +371,7 @@ foreach (var message in result.Messages)
 ### Reading Data
 ```csharp
 // Get all data
-var allData = await manager.GetSheets();
+var allData = await manager.GetAllSheets();
 
 // Get specific sheet
 var tripData = await manager.GetSheet("Trips");
@@ -327,7 +443,7 @@ var result = await manager.ChangeSheetData(sheetsToUpdate, sheetEntity);
 ### Sheet Properties and Validation
 ```csharp
 // Get detailed sheet properties
-var properties = await manager.GetSheetProperties();
+var properties = await manager.GetAllSheetProperties();
 
 foreach (var prop in properties)
 {
