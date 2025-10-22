@@ -7,8 +7,8 @@ namespace RaptorSheets.Gig.Managers;
 /// Demo data generation for Google Sheets.
 /// Generates realistic sample data for testing, demos, and initial setup.
 /// Use GenerateDemoData() to create sample data, then ChangeSheetData() to insert it.
-/// For convenience, consider creating wrapper methods like SetupDemo() or PopulateDemoData()
-/// in consuming applications to combine creation + insertion.
+/// For convenience, the manager provides wrapper methods like SetupDemo() and PopulateDemoData()
+/// to combine creation and insertion of demo data.
 /// </summary>
 public partial class GoogleSheetManager
 {
