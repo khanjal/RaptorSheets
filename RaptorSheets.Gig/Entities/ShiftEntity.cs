@@ -4,14 +4,8 @@ using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class ShiftEntity
+public class ShiftEntity : SheetRowEntityBase
 {
-    [JsonPropertyName("rowId")]
-    public int RowId { get; set; }
-
-    [JsonPropertyName("action")]
-    public string Action { get; set; } = "";
-
     [JsonPropertyName("date")]
     [ColumnOrder(SheetsConfig.HeaderNames.Date)]
     public string Date { get; set; } = "";
@@ -148,7 +142,4 @@ public class ShiftEntity
 
     [ColumnOrder(SheetsConfig.HeaderNames.Year)]
     public string Year { get; set; } = "";
-
-    [JsonPropertyName("saved")]
-    public bool Saved { get; set; }
 }
