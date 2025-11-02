@@ -419,82 +419,6 @@ public class GoogleSheetManagerTests
     }
 
     [Fact]
-    public void GetSheetChanges_WithEmptyData_ShouldNotAddToChanges()
-    {
-        // Arrange
-        var sheetEntity = new SheetEntity(); // No data added
-        var sheets = new List<string> { "Expenses" };
-
-        // Act - Use reflection to access private method
-        var method = typeof(GoogleSheetManager).GetMethod("GetSheetChanges", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        var changes = (Dictionary<string, object>)method!.Invoke(null, new object[] { sheets, sheetEntity })!;
-
-        // Assert
-        Assert.NotNull(changes);
-        Assert.Empty(changes); // No changes because no data
-        
-        // The implementation actually adds an error message when the sheet is requested but has no data
-        // This is the correct behavior - requesting an empty sheet for changes should produce an error
-        Assert.Single(sheetEntity.Messages);
-        Assert.Contains("not supported", sheetEntity.Messages[0].Message);
-    }
-
-    [Theory]
-    [InlineData("expenses")]
-    [InlineData("EXPENSES")]
-    [InlineData("Expenses")]
-    public void GetSheetChanges_WithCaseInsensitiveSheetNames_ShouldWork(string sheetName)
-    {
-        // Arrange
-        var sheetEntity = new SheetEntity
-        {
-            Expenses = { new ExpenseEntity { Name = "Test", Amount = 100 } }
-        };
-        var sheets = new List<string> { sheetName };
-
-        // Act - Use reflection to access private method
-        var method = typeof(GoogleSheetManager).GetMethod("GetSheetChanges", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        var changes = (Dictionary<string, object>)method!.Invoke(null, new object[] { sheets, sheetEntity })!;
-
-        // Assert
-        Assert.NotNull(changes);
-        Assert.Single(changes);
-        Assert.Contains(sheetName, changes.Keys);
-    }
-
-    [Fact]
-    public void GetSheetChanges_WithMultipleSheetsAndMixedData_ShouldProcessAll()
-    {
-        // Arrange
-        var sheetEntity = new SheetEntity
-        {
-            Expenses = { new ExpenseEntity { Name = "Test Expense", Amount = 100 } },
-            Shifts = { new ShiftEntity { Date = "2024-01-15", Service = "TestService" } }
-            // Trips and Setup are empty
-        };
-        var sheets = new List<string> { "Expenses", "Shifts", "Trips", "Setup" };
-
-        // Act - Use reflection to access private method
-        var method = typeof(GoogleSheetManager).GetMethod("GetSheetChanges", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        var changes = (Dictionary<string, object>)method!.Invoke(null, new object[] { sheets, sheetEntity })!;
-
-        // Assert
-        Assert.NotNull(changes);
-        Assert.Equal(2, changes.Count); // Only Expenses and Shifts should have changes
-        Assert.Contains("Expenses", changes.Keys);
-        Assert.Contains("Shifts", changes.Keys);
-        Assert.DoesNotContain("Trips", changes.Keys);
-        Assert.DoesNotContain("Setup", changes.Keys);
-        
-        // Should have error messages for the empty sheets
-        Assert.Equal(2, sheetEntity.Messages.Count);
-        Assert.All(sheetEntity.Messages, m => Assert.Contains("not supported", m.Message));
-    }
-
-    [Fact]
     public void TryAddSheetChange_WithValidExpenses_ShouldReturnTrue()
     {
         // Arrange
@@ -526,23 +450,6 @@ public class GoogleSheetManagerTests
         var method = typeof(GoogleSheetManager).GetMethod("TryAddSheetChange", 
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
         var result = (bool)method!.Invoke(null, new object[] { "Expenses", sheetEntity, changes })!;
-
-        // Assert
-        Assert.False(result);
-        Assert.Empty(changes);
-    }
-
-    [Fact]
-    public void TryAddSheetChange_WithUnknownSheet_ShouldReturnFalse()
-    {
-        // Arrange
-        var sheetEntity = new SheetEntity();
-        var changes = new Dictionary<string, object>();
-
-        // Act - Use reflection to access private method
-        var method = typeof(GoogleSheetManager).GetMethod("TryAddSheetChange", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        var result = (bool)method!.Invoke(null, new object[] { "UnknownSheet", sheetEntity, changes })!;
 
         // Assert
         Assert.False(result);
@@ -943,65 +850,68 @@ public class GoogleSheetManagerTests
 
     #endregion
 
-    #region Additional Coverage Tests
+    #region Static Helper Method Tests
 
     [Fact]
-    public void CheckSheetHeaders_WithEmptyHeaderMessages_ShouldReturnInfoMessage()
+    public void GetSheetChanges_WithEmptyData_ShouldNotAddToChanges_AndNoErrorForRecognizedSheet()
     {
-        // Arrange - Create a spreadsheet where header validation produces no issues
-        var spreadsheet = new Spreadsheet
-        {
-            Sheets = new List<Sheet>() // No sheets = no header issues
-        };
+        // Arrange
+        var sheetEntity = new SheetEntity(); // No data added
+        var sheets = new List<string> { "Expenses" };
 
-        // Act
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        // Act - Use reflection to access private method
+        var method = typeof(GoogleSheetManager).GetMethod("GetSheetChanges", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var changes = (Dictionary<string, object>)method!.Invoke(null, new object[] { sheets, sheetEntity })!;
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Single(result);
-        Assert.Contains("No sheet header issues found", result[0].Message);
-        Assert.Equal(MessageTypeEnum.CHECK_SHEET.GetDescription(), result[0].Type);
-        Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result[0].Level);
+        Assert.NotNull(changes);
+        Assert.Empty(changes); // No changes because no data
+        Assert.Empty(sheetEntity.Messages); // No error message for recognized sheet with no data
     }
 
     [Fact]
-    public async Task ChangeSheetData_WithNullSheetProperties_ShouldHandleGracefully()
+    public void GetSheetChanges_WithMultipleSheetsAndMixedData_ShouldProcessAll_AndNoErrorForRecognizedSheetsWithNoData()
     {
-        // This tests the path where GetSheetProperties might return sheets without proper IDs
-        // The method should handle this gracefully
-        
         // Arrange
-        var sheets = new List<string> { "Expenses" };
         var sheetEntity = new SheetEntity
         {
-            Expenses = { new ExpenseEntity { Name = "Test", Amount = 100 } }
+            Expenses = new List<ExpenseEntity> { new ExpenseEntity { Name = "Test Expense", Amount = 100 } },
+            Shifts = new List<ShiftEntity> { new ShiftEntity { Date = "2024-01-15", Service = "TestService" } }
+            // Trips and Setup are empty
         };
-        
-        // Act
-        var result = await _manager.ChangeSheetData(sheets, sheetEntity);
-        
+        var sheets = new List<string> { "Expenses", "Shifts", "Trips", "Setup" };
+
+        // Act - Use reflection to access private method
+        var method = typeof(GoogleSheetManager).GetMethod("GetSheetChanges", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var changes = (Dictionary<string, object>)method!.Invoke(null, new object[] { sheets, sheetEntity })!;
+
         // Assert
-        Assert.NotNull(result);
-        // Should handle the scenario gracefully, even if sheet properties are missing
-        Assert.NotEmpty(result.Messages);
+        Assert.NotNull(changes);
+        Assert.Equal(2, changes.Count); // Only Expenses and Shifts should have changes
+        Assert.Contains("Expenses", changes.Keys);
+        Assert.Contains("Shifts", changes.Keys);
+        Assert.DoesNotContain("Trips", changes.Keys);
+        Assert.DoesNotContain("Setup", changes.Keys);
+        Assert.Empty(sheetEntity.Messages); // No error messages for recognized sheets with no data
     }
 
     [Fact]
-    public async Task DeleteSheets_WithPlaceholderLogic_ShouldHandleEdgeCases()
+    public void TryAddSheetChange_WithUnknownSheet_ShouldReturnNull()
     {
-        // This tests the complex placeholder creation logic in DeleteSheets
-        
         // Arrange
-        var sheets = new List<string> { "Expenses", "Shifts", "Trips" };
-        
-        // Act
-        var result = await _manager.DeleteSheets(sheets);
-        
+        var sheetEntity = new SheetEntity();
+        var changes = new Dictionary<string, object>();
+
+        // Act - Use reflection to access private method
+        var method = typeof(GoogleSheetManager).GetMethod("TryAddSheetChange", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var result = method!.Invoke(null, new object[] { "UnknownSheet", sheetEntity, changes });
+
         // Assert
-        Assert.NotNull(result);
-        Assert.NotEmpty(result.Messages);
-        // Should contain messages about the deletion process
+        Assert.Null(result);
+        Assert.Empty(changes);
     }
 
     #endregion

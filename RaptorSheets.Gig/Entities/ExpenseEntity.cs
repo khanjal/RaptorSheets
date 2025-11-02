@@ -6,13 +6,8 @@ using RaptorSheets.Gig.Constants;
 namespace RaptorSheets.Gig.Entities;
 
 [ExcludeFromCodeCoverage]
-public class ExpenseEntity
+public class ExpenseEntity : SheetRowEntityBase
 {
-    public int RowId { get; set; }
-    
-    [JsonPropertyName("action")]
-    public string Action { get; set; } = string.Empty;
-    
     [ColumnOrder(SheetsConfig.HeaderNames.Date)]
     public DateTime Date { get; set; }
     

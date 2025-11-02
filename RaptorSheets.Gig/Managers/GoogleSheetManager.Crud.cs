@@ -127,6 +127,16 @@ public partial class GoogleSheetManager
 
     #region Update Operations
 
+    // Static readonly dictionary to avoid recreation on every call
+    private static readonly Dictionary<string, (Func<SheetEntity, int> GetCount, Func<SheetEntity, object> GetData)> _sheetAccessors =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            [SheetsConfig.SheetNames.Expenses] = (entity => entity.Expenses.Count, entity => entity.Expenses),
+            [SheetsConfig.SheetNames.Setup] = (entity => entity.Setup.Count, entity => entity.Setup),
+            [SheetsConfig.SheetNames.Shifts] = (entity => entity.Shifts.Count, entity => entity.Shifts),
+            [SheetsConfig.SheetNames.Trips] = (entity => entity.Trips.Count, entity => entity.Trips)
+        };
+
     public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity)
     {
         var changes = GetSheetChanges(sheets, sheetEntity);
@@ -163,37 +173,44 @@ public partial class GoogleSheetManager
         var changes = new Dictionary<string, object>();
         foreach (var sheet in sheets)
         {
-            if (TryAddSheetChange(sheet, sheetEntity, changes))
-                continue;
-
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
+            var result = TryAddSheetChange(sheet, sheetEntity, changes);
+            if (result == null)
+            {
+                // Only add error if the sheet is not recognized at all
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
+            }
+            // If result is false (recognized but no data), do nothing
         }
         return changes;
     }
 
-    private static bool TryAddSheetChange(string sheet, SheetEntity sheetEntity, Dictionary<string, object> changes)
+    /// <summary>
+    /// Attempts to add sheet data to the changes dictionary if the sheet is recognized and contains data.
+    /// </summary>
+    /// <param name="sheet">The name of the sheet to check (case-insensitive)</param>
+    /// <param name="sheetEntity">The entity containing all sheet data</param>
+    /// <param name="changes">Dictionary to add changes to if data exists</param>
+    /// <returns>
+    /// true if the sheet was recognized and data was added to changes;
+    /// false if the sheet was recognized but contains no data;
+    /// null if the sheet name is not recognized
+    /// </returns>
+    private static bool? TryAddSheetChange(string sheet, SheetEntity sheetEntity, Dictionary<string, object> changes)
     {
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) && sheetEntity.Expenses.Count > 0)
+        // Check if the sheet is recognized
+        if (!_sheetAccessors.TryGetValue(sheet, out var accessor))
         {
-            changes.Add(sheet, sheetEntity.Expenses);
-            return true;
+            return null; // Sheet not recognized
         }
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) && sheetEntity.Setup.Count > 0)
+
+        // Check if the sheet has data
+        if (accessor.GetCount(sheetEntity) > 0)
         {
-            changes.Add(sheet, sheetEntity.Setup);
-            return true;
+            changes.Add(sheet, accessor.GetData(sheetEntity));
+            return true; // Data added successfully
         }
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) && sheetEntity.Shifts.Count > 0)
-        {
-            changes.Add(sheet, sheetEntity.Shifts);
-            return true;
-        }
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) && sheetEntity.Trips.Count > 0)
-        {
-            changes.Add(sheet, sheetEntity.Trips);
-            return true;
-        }
-        return false;
+
+        return false; // Recognized but no data
     }
 
     private static List<Request> BuildBatchUpdateRequests(Dictionary<string, object> changes, List<PropertyEntity> sheetInfo, SheetEntity sheetEntity)
@@ -203,24 +220,23 @@ public partial class GoogleSheetManager
         {
             var sheetName = change.Key;
             var properties = sheetInfo.FirstOrDefault(x => x.Name == sheetName);
-            
-            if (string.Equals(sheetName, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase))
+
+            switch (sheetName)
             {
-                requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], properties));
+                case SheetsConfig.SheetNames.Expenses:
+                    requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], properties));
+                    break;
+                case SheetsConfig.SheetNames.Setup:
+                    requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], properties));
+                    break;
+                case SheetsConfig.SheetNames.Shifts:
+                    requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], properties));
+                    break;
+                case SheetsConfig.SheetNames.Trips:
+                    requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], properties));
+                    break;
             }
-            else if (string.Equals(sheetName, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase))
-            {
-                requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], properties));
-            }
-            else if (string.Equals(sheetName, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase))
-            {
-                requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], properties));
-            }
-            else if (string.Equals(sheetName, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase))
-            {
-                requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], properties));
-            }
-            
+
             sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {sheetName.ToUpperInvariant()}", MessageTypeEnum.SAVE_DATA));
         }
         return requests;

@@ -35,7 +35,8 @@ public static class ExpenseMapper
                 Name = HeaderHelpers.GetStringValue(HeaderEnum.NAME.GetDescription(), value, headers),
                 Description = HeaderHelpers.GetStringValue(HeaderEnum.DESCRIPTION.GetDescription(), value, headers),
                 Amount = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT.GetDescription(), value, headers),
-                Category = HeaderHelpers.GetStringValue(HeaderEnum.CATEGORY.GetDescription(), value, headers)
+                Category = HeaderHelpers.GetStringValue(HeaderEnum.CATEGORY.GetDescription(), value, headers),
+                Saved = true
             };
 
             expenses.Add(expense);

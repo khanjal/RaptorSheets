@@ -86,11 +86,12 @@ public static class DemoHelpers
         DateTime date,
         DemoIdContext idContext)
     {
+        // Services from CSV data: DoorDash (most common), Uber, Instacart
         var services = new List<string> { "DoorDash", "Uber Eats", "Grubhub", "Instacart", "Shipt" };
         var regions = new List<string> 
         { 
-            "San Francisco", "Oakland", "Berkeley", "San Jose", "Palo Alto", 
-            "Sunnyvale", "Mountain View", "Redwood City", "Fremont", "Hayward"
+            "Bay Area", "North Bay", "East Bay", "South Bay", "Peninsula", 
+            "Central Valley", "North County", "South County", "Metro", "Downtown"
         };
         
         var serviceDayShiftNumber = new Dictionary<(string, string), int>();
@@ -252,18 +253,18 @@ public static class DemoHelpers
     /// </summary>
     private static ShiftDataResult GenerateShiftData(Random random, bool hasTrips)
     {
-        // Odometer and distance
+        // Odometer and distance - based on CSV data showing 10-80 mile shifts
         decimal? odometerStart = random.NextDouble() < 0.7 ? random.Next(10000, 90000) : null;
-        decimal? odometerEnd = odometerStart.HasValue ? odometerStart + random.Next(10, 100) : null;
+        decimal? odometerEnd = odometerStart.HasValue ? odometerStart + random.Next(10, 80) : null;
         decimal? distance = (odometerStart.HasValue && odometerEnd.HasValue) 
             ? odometerEnd - odometerStart 
-            : Math.Round((decimal)random.NextDouble() * 20 + 1, 2);
+            : Math.Round((decimal)random.NextDouble() * 70 + 10, 1);
 
-        // Earnings
-        decimal? pay = Math.Round((decimal)random.NextDouble() * 200 + 20, 2);
-        decimal? tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 40, 2) : null;
-        decimal? bonus = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 50, 2) : null;
-        decimal? cash = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 100, 2) : null;
+        // Earnings - based on CSV showing $15-120 pay per shift, $5-50 tips
+        decimal? pay = Math.Round((decimal)random.NextDouble() * 105 + 15, 2);
+        decimal? tip = random.NextDouble() < 0.85 ? Math.Round((decimal)random.NextDouble() * 45 + 5, 2) : null;
+        decimal? bonus = random.NextDouble() < 0.15 ? Math.Round((decimal)random.NextDouble() * 3 + 1, 2) : null;
+        decimal? cash = random.NextDouble() < 0.05 ? Math.Round((decimal)random.NextDouble() * 10 + 2, 2) : null;
 
         // Adjust bonus and cash for non-trip shifts
         if (!hasTrips)
@@ -317,13 +318,13 @@ public static class DemoHelpers
             var category = expenseCategories[random.Next(expenseCategories.Count)];
             var amount = category switch
             {
-                "Fuel" => Math.Round((decimal)random.NextDouble() * 40 + 20, 2),
-                "Maintenance" => Math.Round((decimal)random.NextDouble() * 100 + 30, 2),
-                "Car Wash" => Math.Round((decimal)random.NextDouble() * 15 + 10, 2),
-                "Supplies" => Math.Round((decimal)random.NextDouble() * 30 + 5, 2),
-                "Parking" => Math.Round((decimal)random.NextDouble() * 10 + 3, 2),
-                "Tolls" => Math.Round((decimal)random.NextDouble() * 8 + 2, 2),
-                "Phone" => Math.Round((decimal)random.NextDouble() * 50 + 30, 2),
+                "Fuel" => Math.Round((decimal)random.NextDouble() * 30 + 25, 2),      // $25-$55
+                "Maintenance" => Math.Round((decimal)random.NextDouble() * 150 + 50, 2), // $50-$200
+                "Car Wash" => Math.Round((decimal)random.NextDouble() * 10 + 8, 2),   // $8-$18
+                "Supplies" => Math.Round((decimal)random.NextDouble() * 20 + 5, 2),   // $5-$25
+                "Parking" => Math.Round((decimal)random.NextDouble() * 12 + 3, 2),    // $3-$15
+                "Tolls" => Math.Round((decimal)random.NextDouble() * 6 + 2, 2),       // $2-$8
+                "Phone" => Math.Round((decimal)random.NextDouble() * 40 + 40, 2),     // $40-$80 (monthly)
                 _ => Math.Round((decimal)random.NextDouble() * 50 + 10, 2)
             };
             
@@ -431,9 +432,9 @@ public static class DemoHelpers
     /// </summary>
     private static TripTravelData GenerateTripTravelData(Random random)
     {
-        // Odometer logic: 30% chance to have odometer values
+        // Odometer logic: 30% chance to have odometer values (rare in CSV)
         decimal? odometerStart = random.NextDouble() < 0.3 ? random.Next(10000, 50000) : null;
-        decimal? odometerEnd = odometerStart.HasValue ? odometerStart + random.Next(1, 20) : null;
+        decimal? odometerEnd = odometerStart.HasValue ? odometerStart + random.Next(1, 16) : null;
         decimal? distance = null;
 
         if (odometerStart.HasValue && odometerEnd.HasValue) 
@@ -441,12 +442,12 @@ public static class DemoHelpers
             // 80% chance to use odometer diff as distance, 20% chance to override
             distance = random.NextDouble() < 0.8 
                 ? odometerEnd - odometerStart 
-                : Math.Round((decimal)random.NextDouble() * 20, 1);
+                : Math.Round((decimal)random.NextDouble() * 14.5m + 0.6m, 1); // 0.6–15.1 miles (from CSV)
         } 
         else 
         {
-            // 70% chance to have distance even if no odometer
-            distance = random.NextDouble() < 0.7 ? Math.Round((decimal)random.NextDouble() * 20, 1) : null;
+            // 90% chance to have distance even if no odometer (most trips have distance in CSV)
+            distance = random.NextDouble() < 0.9 ? Math.Round((decimal)random.NextDouble() * 14.5m + 0.6m, 1) : null;
         }
 
         return new TripTravelData
@@ -462,20 +463,52 @@ public static class DemoHelpers
     /// </summary>
     private static TripEarningsData GenerateTripEarnings(Random random, string service)
     {
-        // Earnings vary by service
-        var basePay = service switch
-        {
-            "DoorDash" or "Uber Eats" => (decimal)random.NextDouble() * 8 + 2,
-            "Grubhub" => (decimal)random.NextDouble() * 10 + 3,
-            "Instacart" or "Shipt" => (decimal)random.NextDouble() * 15 + 7,
-            "Amazon Flex" => (decimal)random.NextDouble() * 20 + 15,
-            _ => (decimal)random.NextDouble() * 10 + 5
-        };
+        // Earnings vary by service and type - based on CSV data patterns
+        decimal pay;
+        decimal? tip = null;
+        decimal? bonus = null;
+        decimal? cash = null;
 
-        var pay = Math.Round(basePay, 2);
-        decimal? tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 10, 2) : null;
-        decimal? bonus = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 20 + 1, 2) : null;
-        decimal? cash = random.NextDouble() < 0.1 ? Math.Round((decimal)random.NextDouble() * 30 + 1, 2) : null;
+        if (service == "DoorDash" || service == "Uber Eats" || service == "Grubhub")
+        {
+            // CSV shows DoorDash pay: $2.00-$10.75 in $0.25 increments (36 steps from $2.00)
+            var basePay = 2.00m + 0.25m * random.Next(0, 36); // $2.00 to $10.75 (0-35 * $0.25)
+            pay = Math.Round(basePay, 2);
+            
+            // Tips: 85% have tips, range $0.50-$16.25, most in $1-$10 range
+            if (random.NextDouble() < 0.85)
+            {
+                tip = random.NextDouble() < 0.7 
+                    ? Math.Round((decimal)random.NextDouble() * 9 + 1, 2)      // 70%: $1-$10
+                    : Math.Round((decimal)random.NextDouble() * 6.25m + 10, 2); // 15%: $10-$16.25
+            }
+            
+            // Bonus: very rare, usually $1.00 when present
+            bonus = random.NextDouble() < 0.08 ? 1.00m : null;
+        }
+        else if (service == "Instacart" || service == "Shipt")
+        {
+            // Shop types: CSV shows higher pay $5-$9, tips $0-$10
+            pay = Math.Round((decimal)random.NextDouble() * 4 + 5, 2); // $5–$9
+            tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 10 + 0.5m, 2) : null;
+            bonus = random.NextDouble() < 0.05 ? 1.00m : null;
+        }
+        else if (service == "Amazon Flex")
+        {
+            pay = Math.Round((decimal)random.NextDouble() * 20 + 15, 2);
+            tip = random.NextDouble() < 0.7 ? Math.Round((decimal)random.NextDouble() * 10, 2) : null;
+            bonus = random.NextDouble() < 0.05 ? 1.00m : null;
+        }
+        else
+        {
+            // Default: same as DoorDash - $2.00 to $10.75 in $0.25 increments
+            pay = Math.Round(2.00m + 0.25m * random.Next(0, 36), 2); // $2.00 to $10.75 (0-35 * $0.25)
+            tip = random.NextDouble() < 0.7 ? Math.Round((decimal)random.NextDouble() * 8 + 1, 2) : null;
+            bonus = random.NextDouble() < 0.05 ? 1.00m : null;
+        }
+        
+        // Cash tips: very rare, $2-$10 when present (CSV shows ~3% occurrence)
+        cash = random.NextDouble() < 0.03 ? Math.Round((decimal)random.NextDouble() * 8 + 2, 2) : null;
 
         return new TripEarningsData
         {
