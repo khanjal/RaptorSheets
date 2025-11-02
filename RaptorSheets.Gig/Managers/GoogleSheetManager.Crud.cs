@@ -175,52 +175,41 @@ public partial class GoogleSheetManager
     }
 
     /// <summary>
-    /// Returns true if data was added, false if recognized but no data, null if not recognized.
+    /// Attempts to add sheet data to the changes dictionary if the sheet is recognized and contains data.
     /// </summary>
+    /// <param name="sheet">The name of the sheet to check (case-insensitive)</param>
+    /// <param name="sheetEntity">The entity containing all sheet data</param>
+    /// <param name="changes">Dictionary to add changes to if data exists</param>
+    /// <returns>
+    /// true if the sheet was recognized and data was added to changes;
+    /// false if the sheet was recognized but contains no data;
+    /// null if the sheet name is not recognized
+    /// </returns>
     private static bool? TryAddSheetChange(string sheet, SheetEntity sheetEntity, Dictionary<string, object> changes)
     {
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) && sheetEntity.Expenses.Count > 0)
+        // Define sheet data accessors for all supported sheets
+        var sheetAccessors = new Dictionary<string, (Func<int> GetCount, Func<object> GetData)>(StringComparer.OrdinalIgnoreCase)
         {
-            changes.Add(sheet, sheetEntity.Expenses);
-            return true;
-        }
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase))
+            [SheetsConfig.SheetNames.Expenses] = (() => sheetEntity.Expenses.Count, () => sheetEntity.Expenses),
+            [SheetsConfig.SheetNames.Setup] = (() => sheetEntity.Setup.Count, () => sheetEntity.Setup),
+            [SheetsConfig.SheetNames.Shifts] = (() => sheetEntity.Shifts.Count, () => sheetEntity.Shifts),
+            [SheetsConfig.SheetNames.Trips] = (() => sheetEntity.Trips.Count, () => sheetEntity.Trips)
+        };
+
+        // Check if the sheet is recognized
+        if (!sheetAccessors.TryGetValue(sheet, out var accessor))
         {
-            return false;
+            return null; // Sheet not recognized
         }
-        
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) && sheetEntity.Setup.Count > 0)
+
+        // Check if the sheet has data
+        if (accessor.GetCount() > 0)
         {
-            changes.Add(sheet, sheetEntity.Setup);
-            return true;
+            changes.Add(sheet, accessor.GetData());
+            return true; // Data added successfully
         }
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-        
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) && sheetEntity.Shifts.Count > 0)
-        {
-            changes.Add(sheet, sheetEntity.Shifts);
-            return true;
-        }
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-        
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) && sheetEntity.Trips.Count > 0)
-        {
-            changes.Add(sheet, sheetEntity.Trips);
-            return true;
-        }
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-        
-        // Not recognized
-        return null;
+
+        return false; // Recognized but no data
     }
 
     private static List<Request> BuildBatchUpdateRequests(Dictionary<string, object> changes, List<PropertyEntity> sheetInfo, SheetEntity sheetEntity)
