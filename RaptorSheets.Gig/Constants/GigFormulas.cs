@@ -97,6 +97,14 @@ public static class GigFormulas
     /// </summary>
     public const string MultipleFieldVisitLookup = "IFERROR(MIN(IF({sourceSheet}!{keyColumn1}:{keyColumn1}={keyRange},IF({sourceSheet}!{keyColumn2}:{keyColumn2}={keyRange},{sourceSheet}!{dateColumn}:{dateColumn}))),\"\")";
 
+    /// <summary>
+    /// Dual field visit lookup using VLOOKUP with QUERY and SORT for addresses
+    /// Formula: IFERROR(VLOOKUP({keyRange},SORT(QUERY({sourceSheet}!A:{keyColumn1Letter},"SELECT {keyColumn1Letter}, A"),{sortColumn},{sortOrder}),2,0),IFERROR(VLOOKUP({keyRange},SORT(QUERY({sourceSheet}!A:{keyColumn2Letter},"SELECT {keyColumn2Letter}, A"),{sortColumn},{sortOrder}),2,0),""))
+    /// Placeholders: {keyRange}, {sourceSheet}, {keyColumn1Letter}, {keyColumn2Letter}, {sortColumn}, {sortOrder}
+    /// Note: sortColumn is typically 1 (sort by key) for first visit or 2 (sort by date) for last visit
+    /// </summary>
+    public const string DualFieldVisitLookup = "IFERROR(VLOOKUP({keyRange},SORT(QUERY({sourceSheet}!A:{keyColumn1Letter},\"SELECT {keyColumn1Letter}, A\"),{sortColumn},{sortOrder}),2,0),IFERROR(VLOOKUP({keyRange},SORT(QUERY({sourceSheet}!A:{keyColumn2Letter},\"SELECT {keyColumn2Letter}, A\"),{sortColumn},{sortOrder}),2,0),\"\"))";
+
     #endregion
 
     #region Shift-Specific Business Logic
@@ -142,11 +150,13 @@ public static class GigFormulas
     #region Mapper-Specific Formulas
 
     /// <summary>
-    /// Complex rolling average for time series analysis: AVERAGE(OFFSET({totalRange},0,0,ROW(INDIRECT("1:"&ROW({totalRange})-ROW({totalRange})+1)),1))
-    /// A simplified rolling average that calculates the average of all values up to the current row
+    /// Complex rolling average for time series analysis using DAVERAGE with transpose matrix
+    /// Formula: DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})
+    /// This creates a cumulative average by building a growing dataset for each row
+    /// The DAVERAGE function with empty criteria averages all rows up to the current position
     /// Placeholders: {totalRange}
     /// </summary>
-    public const string RollingAverageFormula = "AVERAGE(OFFSET({totalRange},0,0,ROW(INDIRECT(\"1:\"&ROW({totalRange})-ROW({totalRange})+1)),1))";
+    public const string RollingAverageFormula = "DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})";
 
     #endregion
 }

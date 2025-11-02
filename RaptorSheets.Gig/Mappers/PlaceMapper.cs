@@ -59,7 +59,12 @@ public static class PlaceMapper
         var tripKeyRange = tripSheet.GetRange(HeaderEnum.PLACE.GetDescription());
 
         // Configure common aggregation patterns (for trip-based data)
-        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, tripSheet, tripKeyRange, useShiftTotals: false);
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(
+            sheet, 
+            keyRange, 
+            tripSheet, 
+            tripKeyRange,
+            countTrips: true);  // Count individual trip occurrences
         
         // Configure common ratio calculations
         MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);
@@ -72,7 +77,7 @@ public static class PlaceMapper
             switch (headerEnum)
             {
                 case HeaderEnum.PLACE:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUnique(HeaderEnum.PLACE.GetDescription(), tripSheet.GetRange(HeaderEnum.PLACE.GetDescription(), 2));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.PLACE.GetDescription(), tripSheet.GetRange(HeaderEnum.PLACE.GetDescription(), 2));
                     break;
                 case HeaderEnum.VISIT_FIRST:
                     header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), 

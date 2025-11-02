@@ -55,10 +55,10 @@ namespace RaptorSheets.Gig.Mappers
 
             var tripSheet = TripMapper.GetSheet();
             var keyRange = sheet.GetLocalRange(HeaderEnum.TYPE.GetDescription());
-            var tripKeyRange = tripSheet.GetRange(HeaderEnum.TYPE.GetDescription(), 2);
+            var tripKeyRange = tripSheet.GetRange(HeaderEnum.TYPE.GetDescription());
 
             // Configure common aggregation patterns (for trip-based data)
-            MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, tripSheet, tripKeyRange, useShiftTotals: false);
+            MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, tripSheet, tripKeyRange, countTrips: true);
             
             // Configure common ratio calculations
             MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);

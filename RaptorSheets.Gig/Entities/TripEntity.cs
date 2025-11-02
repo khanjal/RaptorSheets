@@ -4,12 +4,10 @@ using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class TripEntity
+public class TripEntity : SheetRowEntityBase
 {
-    public int RowId { get; set; }
-    public string Action { get; set; } = "";
-
-    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.String)]
+    [JsonPropertyName("date")]
+    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Service, FieldTypeEnum.String)]
@@ -98,6 +96,4 @@ public class TripEntity
 
     [Column(SheetsConfig.HeaderNames.AmountPerDistance, FieldTypeEnum.Currency, jsonPropertyName: "amountPerDistance")]
     public decimal? AmountPerDistance { get; set; }
-
-    public bool Saved { get; set; }
 }

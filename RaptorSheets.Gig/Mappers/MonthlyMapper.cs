@@ -34,7 +34,7 @@ namespace RaptorSheets.Gig.Mappers
                     Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
                     Days = HeaderHelpers.GetIntValue(HeaderEnum.DAYS.GetDescription(), value, headers),
                     Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
-                    Tip = HeaderHelpers.GetDecimalValue(HeaderEnum.TIP.GetDescription(), value, headers),
+                    Tip = HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), value, headers),
                     Bonus = HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
                     Total = HeaderHelpers.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
                     Cash = HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
@@ -61,7 +61,7 @@ namespace RaptorSheets.Gig.Mappers
 
             var dailySheet = DailyMapper.GetSheet();
             var keyRange = sheet.GetLocalRange(HeaderEnum.MONTH.GetDescription());
-            var dailyKeyRange = dailySheet.GetRange(HeaderEnum.MONTH.GetDescription(), 2);
+            var dailyKeyRange = dailySheet.GetRange(HeaderEnum.MONTH.GetDescription());
 
             // Configure common aggregation patterns (eliminates major duplication)
             MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, dailySheet, dailyKeyRange, useShiftTotals: false);

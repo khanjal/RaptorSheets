@@ -58,7 +58,7 @@ public static class RegionMapper
         var shiftKeyRange = shiftSheet.GetRange(HeaderEnum.REGION.GetDescription());
 
         // Configure common aggregation patterns (eliminates ~80% of duplication)
-        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, shiftSheet, shiftKeyRange);
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, shiftSheet, shiftKeyRange, useShiftTotals: true);
         
         // Configure common ratio calculations  
         MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);
@@ -71,7 +71,7 @@ public static class RegionMapper
             switch (headerEnum)
             {
                 case HeaderEnum.REGION:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombined(
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombinedFiltered(
                         HeaderEnum.REGION.GetDescription(), 
                         TripMapper.GetSheet().GetRange(HeaderEnum.REGION.GetDescription(), 2), 
                         ShiftMapper.GetSheet().GetRange(HeaderEnum.REGION.GetDescription(), 2));

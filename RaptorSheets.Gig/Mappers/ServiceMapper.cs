@@ -58,7 +58,7 @@ public static class ServiceMapper
         var shiftKeyRange = shiftSheet.GetRange(HeaderEnum.SERVICE.GetDescription());
 
         // Configure common aggregation patterns
-        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, shiftSheet, shiftKeyRange);
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, shiftSheet, shiftKeyRange, useShiftTotals: true);
         
         // Configure common ratio calculations
         MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);

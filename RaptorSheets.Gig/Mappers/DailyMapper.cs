@@ -61,6 +61,13 @@ namespace RaptorSheets.Gig.Mappers
             var dateRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
             var shiftKeyRange = shiftSheet.GetRange(HeaderEnum.DATE.GetDescription());
 
+            // Configure common aggregation patterns from shift data
+            MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, dateRange, shiftSheet, shiftKeyRange, useShiftTotals: true);
+            
+            // Configure common ratio calculations
+            MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, dateRange);
+
+            // Configure specific headers unique to DailyMapper
             sheet.Headers.ForEach(header =>
             {
                 var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
@@ -68,15 +75,14 @@ namespace RaptorSheets.Gig.Mappers
                 switch (headerEnum)
                 {
                     case HeaderEnum.DATE:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUnique(HeaderEnum.DATE.GetDescription(), shiftSheet.GetRange(HeaderEnum.DATE.GetDescription(), 2));
+                        header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.DATE.GetDescription(), shiftSheet.GetRange(HeaderEnum.DATE.GetDescription(), 2));
                         header.Format = FormatEnum.DATE;
                         break;
                     case HeaderEnum.WEEKDAY:
-                        // This one is special - it uses day of week calculation
-                        header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.WEEKDAY.GetDescription()}\",ISBLANK({dateRange}), \"\", true,TEXT({dateRange}+1,\"ddd\")))";
+                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(dateRange, HeaderEnum.WEEKDAY.GetDescription(), dateRange);
                         break;
                     case HeaderEnum.DAY:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
+                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekday(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
                         header.Format = FormatEnum.NUMBER;
                         break;
                     case HeaderEnum.WEEK:
@@ -87,54 +93,6 @@ namespace RaptorSheets.Gig.Mappers
                         break;
                     case HeaderEnum.YEAR:
                         header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.YEAR.GetDescription()}\",ISBLANK({dateRange}), \"\",true,YEAR({dateRange})))";
-                        break;
-                    case HeaderEnum.TRIPS:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(dateRange, HeaderEnum.TRIPS.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TRIPS.GetDescription()));
-                        header.Format = FormatEnum.NUMBER;
-                        break;
-                    case HeaderEnum.DAYS:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(dateRange, HeaderEnum.DAYS.GetDescription(), shiftKeyRange);
-                        header.Format = FormatEnum.NUMBER;
-                        break;
-                    case HeaderEnum.PAY:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(dateRange, HeaderEnum.PAY.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_PAY.GetDescription()));
-                        header.Format = FormatEnum.ACCOUNTING;
-                        break;
-                    case HeaderEnum.TIPS:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(dateRange, HeaderEnum.TIPS.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TIPS.GetDescription()));
-                        header.Format = FormatEnum.ACCOUNTING;
-                        break;
-                    case HeaderEnum.BONUS:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(dateRange, HeaderEnum.BONUS.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_BONUS.GetDescription()));
-                        header.Format = FormatEnum.ACCOUNTING;
-                        break;
-                    case HeaderEnum.TOTAL:
-                        header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(dateRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()));
-                        header.Format = FormatEnum.ACCOUNTING;
-                        break;
-                    case HeaderEnum.CASH:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(dateRange, HeaderEnum.CASH.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_CASH.GetDescription()));
-                        header.Format = FormatEnum.ACCOUNTING;
-                        break;
-                    case HeaderEnum.AMOUNT_PER_TRIP:
-                        header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(dateRange, HeaderEnum.AMOUNT_PER_TRIP.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.TRIPS.GetDescription()));
-                        header.Format = FormatEnum.ACCOUNTING;
-                        break;
-                    case HeaderEnum.DISTANCE:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(dateRange, HeaderEnum.DISTANCE.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_DISTANCE.GetDescription()));
-                        header.Format = FormatEnum.DISTANCE;
-                        break;
-                    case HeaderEnum.AMOUNT_PER_DISTANCE:
-                        header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(dateRange, HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()));
-                        header.Format = FormatEnum.ACCOUNTING;
-                        break;
-                    case HeaderEnum.TIME_TOTAL:
-                        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(dateRange, HeaderEnum.TIME_TOTAL.GetDescription(), shiftKeyRange, shiftSheet.GetRange(HeaderEnum.TOTAL_TIME.GetDescription()));
-                        header.Format = FormatEnum.DURATION;
-                        break;
-                    case HeaderEnum.AMOUNT_PER_TIME:
-                        header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(dateRange, HeaderEnum.AMOUNT_PER_TIME.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIME_TOTAL.GetDescription()));
-                        header.Format = FormatEnum.ACCOUNTING;
                         break;
                     default:
                         break;

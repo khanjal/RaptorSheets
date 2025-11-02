@@ -25,8 +25,8 @@ public class MapperFormulaHelperTests
         // Arrange
         var sheet = CreateTestSheet(headerName);
         var sourceSheet = CreateSourceSheet();
-        var keyRange = "$A:$A";
-        var sourceKeyRange = "$B:$B";
+        var keyRange = "A:A";
+        var sourceKeyRange = "B:B";
 
         // Act
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, sourceSheet, sourceKeyRange);
@@ -52,7 +52,7 @@ public class MapperFormulaHelperTests
         var sourceSheet = CreateSourceSheet();
 
         // Act
-        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, "$A:$A", sourceSheet, "$B:$B");
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, "A:A", sourceSheet, "B:B");
 
         // Assert
         var totalHeader = sheet.Headers.First(h => h.Name == HeaderEnum.TOTAL.GetDescription());
@@ -61,21 +61,23 @@ public class MapperFormulaHelperTests
     }
 
     [Theory]
-    [InlineData(true, "SUMIF(")]
-    [InlineData(false, "COUNTIF(")]
-    public void ConfigureCommonAggregationHeaders_WithTripsHeader_ShouldUseCorrectFormula(
-        bool useShiftTotals, string expectedFormula)
+    [InlineData(true, false, "SUMIF(", "SourceSheet!M1:M")]   // Scenario 1: Sum TOTAL_TRIPS (shift-level)
+    [InlineData(false, false, "SUMIF(", "SourceSheet!N1:N")]  // Scenario 2: Sum TRIPS column (daily/monthly)
+    [InlineData(false, true, "COUNTIF(", "B:B")] // Scenario 3: Count occurrences (trip-level, uses sourceKeyRange)
+    public void ConfigureCommonAggregationHeaders_WithTripsHeader_ShouldUseCorrectSourceRange(
+        bool useShiftTotals, bool countTrips, string expectedFormula, string expectedRange)
     {
         // Arrange
         var sheet = CreateTestSheet(HeaderEnum.TRIPS.GetDescription());
         var sourceSheet = CreateSourceSheet();
 
         // Act
-        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, "$A:$A", sourceSheet, "$B:$B", useShiftTotals);
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, "A:A", sourceSheet, "B:B", useShiftTotals, countTrips);
 
         // Assert
         var header = sheet.Headers.First();
         Assert.Contains(expectedFormula, header.Formula);
+        Assert.Contains(expectedRange, header.Formula);
         Assert.Equal(FormatEnum.NUMBER, header.Format);
     }
 
@@ -96,7 +98,7 @@ public class MapperFormulaHelperTests
         sheet.Headers.UpdateColumns();
 
         // Act
-        MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, "$A:$A");
+        MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, "A:A");
 
         // Assert
         var header = sheet.Headers.First(h => h.Name == ratioHeader);
@@ -120,7 +122,7 @@ public class MapperFormulaHelperTests
         var header = new SheetCellModel { Name = headerName };
 
         // Act
-        MapperFormulaHelper.ConfigureUniqueValueHeader(header, "Source!$A:$A");
+        MapperFormulaHelper.ConfigureUniqueValueHeader(header, "Source!A:A");
 
         // Assert
         Assert.Contains("SORT(UNIQUE(", header.Formula);
@@ -134,7 +136,7 @@ public class MapperFormulaHelperTests
         var header = new SheetCellModel { Name = "CustomField" };
 
         // Act
-        MapperFormulaHelper.ConfigureUniqueValueHeader(header, "Source!$A:$A");
+        MapperFormulaHelper.ConfigureUniqueValueHeader(header, "Source!A:A");
 
         // Assert
         Assert.Contains("SORT(UNIQUE(", header.Formula);
@@ -155,7 +157,7 @@ public class MapperFormulaHelperTests
         MapperFormulaHelper.ConfigureCombinedUniqueValueHeader(header, "A:A", "B:B");
 
         // Assert
-        Assert.Contains("SORT(UNIQUE({", header.Formula);
+        Assert.Contains("SORT(UNIQUE(IFERROR(FILTER({", header.Formula);
         Assert.Contains(";", header.Formula); // Array separator
         Assert.Contains("A:A", header.Formula);
         Assert.Contains("B:B", header.Formula);
@@ -172,7 +174,7 @@ public class MapperFormulaHelperTests
         var header = new SheetCellModel { Name = "Trips" };
 
         // Act
-        MapperFormulaHelper.ConfigureDualCountHeader(header, "$A:$A", "Range1", "Range2");
+        MapperFormulaHelper.ConfigureDualCountHeader(header, "A:A", "Range1", "Range2");
 
         // Assert
         Assert.Contains("COUNTIF(", header.Formula);
@@ -252,7 +254,8 @@ public class MapperFormulaHelperTests
                 new SheetCellModel { Name = HeaderEnum.TOTAL_CASH.GetDescription(), Index = 9, Column = "J" },
                 new SheetCellModel { Name = HeaderEnum.TOTAL_DISTANCE.GetDescription(), Index = 10, Column = "K" },
                 new SheetCellModel { Name = HeaderEnum.TOTAL_TIME.GetDescription(), Index = 11, Column = "L" },
-                new SheetCellModel { Name = HeaderEnum.TOTAL_TRIPS.GetDescription(), Index = 12, Column = "M" }
+                new SheetCellModel { Name = HeaderEnum.TOTAL_TRIPS.GetDescription(), Index = 12, Column = "M" },
+                new SheetCellModel { Name = HeaderEnum.TRIPS.GetDescription(), Index = 13, Column = "N" }
             }
         };
     }

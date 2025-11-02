@@ -57,10 +57,14 @@ public static class AddressMapper
         var keyRange = sheet.GetLocalRange(HeaderEnum.ADDRESS.GetDescription());
 
         // Configure common aggregation patterns for address-based trip analysis
-        // Note: AddressMapper uses trip data with start address as the key
-        var tripStartAddressRange = tripSheet.GetRange(HeaderEnum.ADDRESS_START.GetDescription());
-        MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, tripSheet, tripStartAddressRange, useShiftTotals: false);
-        
+        // Note: AddressMapper uses trip data with end address as the key
+        var tripStartAddressRange = tripSheet.GetRange(HeaderEnum.ADDRESS_END.GetDescription());
+        MapperFormulaHelper.ConfigureCommonAggregationHeaders(
+            sheet, 
+            keyRange, 
+            tripSheet, 
+            tripStartAddressRange);
+
         // Configure common ratio calculations
         MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);
 
@@ -84,21 +88,29 @@ public static class AddressMapper
                         tripSheet.GetRange(HeaderEnum.ADDRESS_END.GetDescription()));
                     break;
                 case HeaderEnum.VISIT_FIRST:
-                    header.Formula = GigFormulaBuilder.Common.BuildMultipleFieldVisitLookup(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), 
-                        Enums.SheetEnum.TRIPS.GetDescription(), 
-                        tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
-                        tripSheet.GetColumn(HeaderEnum.ADDRESS_START.GetDescription()), 
-                        tripSheet.GetColumn(HeaderEnum.ADDRESS_END.GetDescription()), 
-                        (tripSheet.GetIndex(HeaderEnum.DATE.GetDescription()) + 1).ToString(), true);
+                    header.Formula = GigFormulaBuilder.Common.BuildDualFieldVisitLookup(
+                        keyRange,
+                        HeaderEnum.VISIT_FIRST.GetDescription(),
+                        SheetEnum.TRIPS.GetDescription(),
+                        tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()),
+                        tripSheet.GetColumn(HeaderEnum.ADDRESS_START.GetDescription()),
+                        tripSheet.GetColumn(HeaderEnum.ADDRESS_END.GetDescription()),
+                        (tripSheet.GetIndex(HeaderEnum.DATE.GetDescription()) + 1).ToString(),
+                        true
+                    );
                     header.Format = FormatEnum.DATE;
                     break;
                 case HeaderEnum.VISIT_LAST:
-                    header.Formula = GigFormulaBuilder.Common.BuildMultipleFieldVisitLookup(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), 
-                        Enums.SheetEnum.TRIPS.GetDescription(), 
-                        tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
-                        tripSheet.GetColumn(HeaderEnum.ADDRESS_START.GetDescription()), 
-                        tripSheet.GetColumn(HeaderEnum.ADDRESS_END.GetDescription()), 
-                        (tripSheet.GetIndex(HeaderEnum.DATE.GetDescription()) + 1).ToString(), false);
+                    header.Formula = GigFormulaBuilder.Common.BuildDualFieldVisitLookup(
+                        keyRange,
+                        HeaderEnum.VISIT_LAST.GetDescription(),
+                        SheetEnum.TRIPS.GetDescription(),
+                        tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()),
+                        tripSheet.GetColumn(HeaderEnum.ADDRESS_START.GetDescription()),
+                        tripSheet.GetColumn(HeaderEnum.ADDRESS_END.GetDescription()),
+                        (tripSheet.GetIndex(HeaderEnum.DATE.GetDescription()) + 1).ToString(),
+                        false
+                    );
                     header.Format = FormatEnum.DATE;
                     break;
             }
