@@ -85,7 +85,7 @@ public static class TypedFieldUtils
             return columnAttr.FieldType switch
             {
                 FieldTypeEnum.String => stringValue, // Already handled above, but kept for completeness
-                FieldTypeEnum.Currency => ParseCurrency(stringValue),
+                FieldTypeEnum.Currency or FieldTypeEnum.Accounting => ParseCurrency(stringValue),
                 FieldTypeEnum.PhoneNumber => ParsePhoneNumber(stringValue),
                 FieldTypeEnum.DateTime => ParseDateTime(cellValue),
                 FieldTypeEnum.Boolean => Convert.ToBoolean(cellValue, CultureInfo.InvariantCulture),
@@ -120,7 +120,7 @@ public static class TypedFieldUtils
         return columnAttr.FieldType switch
         {
             FieldTypeEnum.String => value.ToString(),
-            FieldTypeEnum.Currency => ConvertCurrencyToSheet(value),
+            FieldTypeEnum.Currency or FieldTypeEnum.Accounting => ConvertCurrencyToSheet(value),
             FieldTypeEnum.PhoneNumber => ConvertPhoneNumberToSheet(value),
             FieldTypeEnum.DateTime => ConvertDateTimeToSheet(value),
             FieldTypeEnum.Boolean => Convert.ToBoolean(value, CultureInfo.InvariantCulture),
@@ -143,6 +143,7 @@ public static class TypedFieldUtils
         return fieldType switch
         {
             FieldTypeEnum.Currency => FormatEnum.CURRENCY,
+            FieldTypeEnum.Accounting => FormatEnum.ACCOUNTING,
             FieldTypeEnum.DateTime => FormatEnum.DATE,
             FieldTypeEnum.Number => FormatEnum.NUMBER,
             FieldTypeEnum.Integer => FormatEnum.NUMBER,

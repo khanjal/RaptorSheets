@@ -16,9 +16,15 @@ public enum FieldTypeEnum
     Number,
     
     /// <summary>
-    /// Currency field with currency symbol and formatting
+    /// Currency field with currency symbol and formatting ($#,##0.00)
     /// </summary>
     Currency,
+    
+    /// <summary>
+    /// Accounting format with aligned currency symbols and negative number handling
+    /// Often used for financial statements where alignment is important
+    /// </summary>
+    Accounting,
     
     /// <summary>
     /// Date and time field with proper serialization for Google Sheets

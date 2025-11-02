@@ -6,79 +6,81 @@ namespace RaptorSheets.Gig.Entities;
 
 public class TripEntity : SheetRowEntityBase
 {
-    [JsonPropertyName("date")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
+    // Input columns (user-entered data)
+    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.String, isInput: true)]
     public string Date { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Service, FieldTypeEnum.String)]
+    [Column(SheetsConfig.HeaderNames.Service, FieldTypeEnum.String, isInput: true)]
     public string Service { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Number, FieldTypeEnum.Integer, jsonPropertyName: "number")]
+    [Column(SheetsConfig.HeaderNames.Number, FieldTypeEnum.Integer, jsonPropertyName: "number", isInput: true)]
     public int? Number { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Exclude, FieldTypeEnum.Boolean, jsonPropertyName: "exclude")]
+    [Column(SheetsConfig.HeaderNames.Exclude, FieldTypeEnum.Boolean, jsonPropertyName: "exclude", isInput: true)]
     public bool Exclude { get; set; } = false;
 
-    [Column(SheetsConfig.HeaderNames.Type, FieldTypeEnum.String)]
+    [Column(SheetsConfig.HeaderNames.Type, FieldTypeEnum.String, isInput: true)]
     public string Type { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Place, FieldTypeEnum.String)]
+    [Column(SheetsConfig.HeaderNames.Place, FieldTypeEnum.String, isInput: true)]
     public string Place { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Pickup, FieldTypeEnum.String, jsonPropertyName: "pickupTime")]
+    [Column(SheetsConfig.HeaderNames.Pickup, FieldTypeEnum.String, jsonPropertyName: "pickupTime", isInput: true)]
     public string Pickup { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Dropoff, FieldTypeEnum.String, jsonPropertyName: "dropoffTime")]
+    [Column(SheetsConfig.HeaderNames.Dropoff, FieldTypeEnum.String, jsonPropertyName: "dropoffTime", isInput: true)]
     public string Dropoff { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Duration, FieldTypeEnum.String)]
+    [Column(SheetsConfig.HeaderNames.Duration, FieldTypeEnum.String, isInput: true)]
     public string Duration { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency)]
+    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency, isInput: true)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Currency)]
+    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Currency, isInput: true)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Currency)]
+    [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Currency, isInput: true)]
     public decimal? Bonus { get; set; }
 
+    // Output column (formula: Pay + Tips + Bonus) - defaults to isInput: false
     [Column(SheetsConfig.HeaderNames.Total, FieldTypeEnum.Currency)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Currency)]
+    [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Currency, isInput: true)]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerStart, FieldTypeEnum.Number, "#,##0.0", jsonPropertyName: "startOdometer")]
+    [Column(SheetsConfig.HeaderNames.OdometerStart, FieldTypeEnum.Number, formatPattern: "#,##0.0", jsonPropertyName: "startOdometer", isInput: true)]
     public decimal? OdometerStart { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerEnd, FieldTypeEnum.Number, "#,##0.0", jsonPropertyName: "endOdometer")]
+    [Column(SheetsConfig.HeaderNames.OdometerEnd, FieldTypeEnum.Number, formatPattern: "#,##0.0", jsonPropertyName: "endOdometer", isInput: true)]
     public decimal? OdometerEnd { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance")]
+    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance", isInput: true)]
     public decimal? Distance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Name, FieldTypeEnum.String)]
+    [Column(SheetsConfig.HeaderNames.Name, FieldTypeEnum.String, isInput: true)]
     public string Name { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AddressStart, FieldTypeEnum.String, jsonPropertyName: "startAddress")]
+    [Column(SheetsConfig.HeaderNames.AddressStart, FieldTypeEnum.String, jsonPropertyName: "startAddress", isInput: true)]
     public string StartAddress { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AddressEnd, FieldTypeEnum.String, jsonPropertyName: "endAddress")]
+    [Column(SheetsConfig.HeaderNames.AddressEnd, FieldTypeEnum.String, jsonPropertyName: "endAddress", isInput: true)]
     public string EndAddress { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.UnitEnd, FieldTypeEnum.String, jsonPropertyName: "endUnit")]
+    [Column(SheetsConfig.HeaderNames.UnitEnd, FieldTypeEnum.String, jsonPropertyName: "endUnit", isInput: true)]
     public string EndUnit { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.OrderNumber, FieldTypeEnum.String, jsonPropertyName: "orderNumber")]
+    [Column(SheetsConfig.HeaderNames.OrderNumber, FieldTypeEnum.String, jsonPropertyName: "orderNumber", isInput: true)]
     public string OrderNumber { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Region, FieldTypeEnum.String)]
+    [Column(SheetsConfig.HeaderNames.Region, FieldTypeEnum.String, isInput: true)]
     public string Region { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Note, FieldTypeEnum.String)]
+    [Column(SheetsConfig.HeaderNames.Note, FieldTypeEnum.String, isInput: true)]
     public string Note { get; set; } = "";
 
+    // Output columns (formulas/calculated) - default to isInput: false
     [Column(SheetsConfig.HeaderNames.Key, FieldTypeEnum.String)]
     public string Key { get; set; } = "";
 

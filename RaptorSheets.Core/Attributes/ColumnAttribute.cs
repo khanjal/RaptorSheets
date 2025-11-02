@@ -48,7 +48,16 @@ public class ColumnAttribute : Attribute
     public int Order { get; }
 
     /// <summary>
-    /// Initializes a column configuration using header name as JSON property name with default formatting
+    /// Gets whether this is an input column (user-entered data that should be written to sheets).
+    /// Default is false (output/formula column that is read-only from write perspective).
+    /// Set to true for columns where user data should be written back to Google Sheets.
+    /// </summary>
+    public bool IsInput { get; }
+
+    /// <summary>
+    /// Initializes a column configuration for an OUTPUT column (formula/calculated).
+    /// This is the most common case - use this constructor for columns with formulas.
+    /// For input columns (user-entered data), use the 3-parameter constructor with isInput: true.
     /// </summary>
     /// <param name="headerName">Header name for sheet column (also used for JSON property name)</param>
     /// <param name="fieldType">Field type for automatic conversion and formatting</param>
@@ -57,23 +66,26 @@ public class ColumnAttribute : Attribute
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
         FieldType = fieldType;
-        NumberFormatPattern = null; // Will use default pattern
+        NumberFormatPattern = null;
         Order = -1;
+        IsInput = false; // Default to output/formula column
     }
 
     /// <summary>
-    /// Initializes a column configuration with custom format pattern (only when different from default)
+    /// Initializes a column configuration using header name as JSON property name with default formatting.
+    /// Explicitly requires specifying whether this is an input or output column.
     /// </summary>
-    /// <param name="headerName">Header name for sheet column</param>
+    /// <param name="headerName">Header name for sheet column (also used for JSON property name)</param>
     /// <param name="fieldType">Field type for automatic conversion and formatting</param>
-    /// <param name="formatPattern">Custom number format pattern (specify only when different from default)</param>
-    public ColumnAttribute(string headerName, FieldTypeEnum fieldType, string formatPattern)
+    /// <param name="isInput">True if this is a user-input column that should be written to sheets, false for output/formula columns</param>
+    public ColumnAttribute(string headerName, FieldTypeEnum fieldType, bool isInput)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
         FieldType = fieldType;
-        NumberFormatPattern = formatPattern;
+        NumberFormatPattern = null; // Will use default pattern
         Order = -1;
+        IsInput = isInput;
     }
 
     /// <summary>
@@ -84,14 +96,16 @@ public class ColumnAttribute : Attribute
     /// <param name="formatPattern">Custom number format pattern (null = use default)</param>
     /// <param name="jsonPropertyName">Custom JSON property name (null = auto-generate from header)</param>
     /// <param name="order">Column order priority (-1 = use declaration order)</param>
+    /// <param name="isInput">True if this is a user-input column that should be written to sheets (default: false for output/formula columns)</param>
     /// <param name="enableValidation">Enable field validation (default: false)</param>
     /// <param name="validationPattern">Custom validation pattern (null = use default for field type)</param>
     public ColumnAttribute(
-        string headerName, 
+        string headerName,
         FieldTypeEnum fieldType,
         string? formatPattern = null,
         string? jsonPropertyName = null,
         int order = -1,
+        bool isInput = false,
         bool enableValidation = false,
         string? validationPattern = null)
     {
@@ -100,6 +114,7 @@ public class ColumnAttribute : Attribute
         FieldType = fieldType;
         NumberFormatPattern = formatPattern;
         Order = order;
+        IsInput = isInput;
         EnableValidation = enableValidation;
         ValidationPattern = validationPattern;
     }
@@ -113,6 +128,11 @@ public class ColumnAttribute : Attribute
     /// Gets whether this column has an explicit order (Order >= 0)
     /// </summary>
     public bool HasExplicitOrder => Order >= 0;
+
+    /// <summary>
+    /// Gets whether this is an output column (formula/calculated field that should NOT be written to sheets)
+    /// </summary>
+    public bool IsOutput => !IsInput;
 
     /// <summary>
     /// Gets the effective number format pattern (custom pattern or default for field type)

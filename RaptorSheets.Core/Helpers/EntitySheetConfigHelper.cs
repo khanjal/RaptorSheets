@@ -189,7 +189,7 @@ public static class EntitySheetConfigHelper
         return fieldType switch
         {
             Enums.FieldTypeEnum.String => propertyType == typeof(string),
-            Enums.FieldTypeEnum.Currency => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
+            Enums.FieldTypeEnum.Currency or Enums.FieldTypeEnum.Accounting => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
             Enums.FieldTypeEnum.DateTime => propertyType == typeof(DateTime) || propertyType == typeof(DateTimeOffset),
             Enums.FieldTypeEnum.Boolean => propertyType == typeof(bool),
             Enums.FieldTypeEnum.Number => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),

@@ -10,15 +10,12 @@ public class NameEntity
     [JsonPropertyName("rowId")]
     public int RowId { get; set; }
 
-    // Entity-specific property first
     [Column(SheetsConfig.HeaderNames.Name, FieldTypeEnum.String)]
     public string Name { get; set; } = "";
 
-    // CommonTripSheetHeaders pattern: Trips, CommonIncomeHeaders, CommonTravelHeaders, VisitFirst, VisitLast
     [Column(SheetsConfig.HeaderNames.Trips, FieldTypeEnum.Integer)]
     public int Trips { get; set; }
 
-    // CommonIncomeHeaders
     [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency)]
     public decimal? Pay { get; set; }
 
@@ -34,17 +31,15 @@ public class NameEntity
     [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Currency)]
     public decimal? Cash { get; set; }
 
-    // CommonTravelHeaders
     [Column(SheetsConfig.HeaderNames.AmountPerTrip, FieldTypeEnum.Currency)]
     public decimal AmountPerTrip { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance")]
-    public decimal Distance { get; set; }  // Fixed: changed from int to decimal
+    public decimal Distance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.AmountPerDistance, FieldTypeEnum.Currency)]
     public decimal AmountPerDistance { get; set; }
 
-    // Visit properties
     [Column(SheetsConfig.HeaderNames.VisitFirst, FieldTypeEnum.String)]
     public string FirstTrip { get; set; } = "";
 

@@ -21,35 +21,35 @@ public static class TestHeaderNames
     public const string Service = "Service";
 }
 
-// Base test entity
+// Base test entity - mark as input for testing
 public class TestAmountEntity
 {
-    [Column(TestHeaderNames.Pay, FieldTypeEnum.Currency)]
+    [Column(TestHeaderNames.Pay, FieldTypeEnum.Currency, isInput: true)]
     public decimal? Pay { get; set; }
 
-    [Column(TestHeaderNames.Tips, FieldTypeEnum.Currency)]
+    [Column(TestHeaderNames.Tips, FieldTypeEnum.Currency, isInput: true)]
     public decimal? Tips { get; set; }
 
-    [Column(TestHeaderNames.Bonus, FieldTypeEnum.Currency)]
+    [Column(TestHeaderNames.Bonus, FieldTypeEnum.Currency, isInput: true)]
     public decimal? Bonus { get; set; }
 
-    [Column(TestHeaderNames.Total, FieldTypeEnum.Currency)]
+    [Column(TestHeaderNames.Total, FieldTypeEnum.Currency, isInput: true)]
     public decimal? Total { get; set; }
 
-    [Column(TestHeaderNames.Cash, FieldTypeEnum.Currency)]
+    [Column(TestHeaderNames.Cash, FieldTypeEnum.Currency, isInput: true)]
     public decimal? Cash { get; set; }
 }
 
 // Middle test entity
 public class TestVisitEntity : TestAmountEntity
 {
-    [Column(TestHeaderNames.Trips, FieldTypeEnum.Integer)]
+    [Column(TestHeaderNames.Trips, FieldTypeEnum.Integer, isInput: true)]
     public int Trips { get; set; }
 
-    [Column(TestHeaderNames.FirstTrip, FieldTypeEnum.String)]
+    [Column(TestHeaderNames.FirstTrip, FieldTypeEnum.String, isInput: true)]
     public string FirstTrip { get; set; } = "";
 
-    [Column(TestHeaderNames.LastTrip, FieldTypeEnum.String)]
+    [Column(TestHeaderNames.LastTrip, FieldTypeEnum.String, isInput: true)]
     public string LastTrip { get; set; } = "";
 }
 
@@ -58,10 +58,10 @@ public class TestAddressEntity : TestVisitEntity
 {
     public int RowId { get; set; } // No Column attribute - should be ignored
 
-    [Column(TestHeaderNames.Address, FieldTypeEnum.String)]
+    [Column(TestHeaderNames.Address, FieldTypeEnum.String, isInput: true)]
     public string Address { get; set; } = "";
 
-    [Column(TestHeaderNames.Distance, FieldTypeEnum.Number)]
+    [Column(TestHeaderNames.Distance, FieldTypeEnum.Number, isInput: true)]
     public decimal Distance { get; set; }
 
     public bool Saved { get; set; } // No Column attribute - should be ignored
@@ -70,10 +70,10 @@ public class TestAddressEntity : TestVisitEntity
 // Simple entity without inheritance
 public class TestSimpleEntity
 {
-    [Column(TestHeaderNames.Name, FieldTypeEnum.String)]
+    [Column(TestHeaderNames.Name, FieldTypeEnum.String, isInput: true)]
     public string Name { get; set; } = "";
 
-    [Column(TestHeaderNames.Date, FieldTypeEnum.String)]
+    [Column(TestHeaderNames.Date, FieldTypeEnum.String, isInput: true)]
     public string Date { get; set; } = "";
 
     public int Id { get; set; } // No Column attribute - should be ignored
@@ -82,10 +82,10 @@ public class TestSimpleEntity
 // Entity with invalid header reference (for error testing)
 public class TestInvalidEntity
 {
-    [Column("Invalid Header Name", FieldTypeEnum.String)]
+    [Column("Invalid Header Name", FieldTypeEnum.String, isInput: true)]
     public string InvalidProperty { get; set; } = "";
 
-    [Column(TestHeaderNames.Name, FieldTypeEnum.String)]
+    [Column(TestHeaderNames.Name, FieldTypeEnum.String, isInput: true)]
     public string ValidProperty { get; set; } = "";
 }
 
