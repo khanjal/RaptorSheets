@@ -179,42 +179,46 @@ public partial class GoogleSheetManager
     /// </summary>
     private static bool? TryAddSheetChange(string sheet, SheetEntity sheetEntity, Dictionary<string, object> changes)
     {
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) && sheetEntity.Expenses.Count > 0)
+        {
+            changes.Add(sheet, sheetEntity.Expenses);
+            return true;
+        }
         if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase))
         {
-            if (sheetEntity.Expenses.Count > 0)
-            {
-                changes.Add(sheet, sheetEntity.Expenses);
-                return true;
-            }
             return false;
+        }
+        
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) && sheetEntity.Setup.Count > 0)
+        {
+            changes.Add(sheet, sheetEntity.Setup);
+            return true;
         }
         if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase))
         {
-            if (sheetEntity.Setup.Count > 0)
-            {
-                changes.Add(sheet, sheetEntity.Setup);
-                return true;
-            }
             return false;
+        }
+        
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) && sheetEntity.Shifts.Count > 0)
+        {
+            changes.Add(sheet, sheetEntity.Shifts);
+            return true;
         }
         if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase))
         {
-            if (sheetEntity.Shifts.Count > 0)
-            {
-                changes.Add(sheet, sheetEntity.Shifts);
-                return true;
-            }
             return false;
+        }
+        
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) && sheetEntity.Trips.Count > 0)
+        {
+            changes.Add(sheet, sheetEntity.Trips);
+            return true;
         }
         if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase))
         {
-            if (sheetEntity.Trips.Count > 0)
-            {
-                changes.Add(sheet, sheetEntity.Trips);
-                return true;
-            }
             return false;
         }
+        
         // Not recognized
         return null;
     }
