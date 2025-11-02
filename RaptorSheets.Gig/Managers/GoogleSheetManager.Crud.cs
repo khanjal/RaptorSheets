@@ -163,37 +163,60 @@ public partial class GoogleSheetManager
         var changes = new Dictionary<string, object>();
         foreach (var sheet in sheets)
         {
-            if (TryAddSheetChange(sheet, sheetEntity, changes))
-                continue;
-
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
+            var result = TryAddSheetChange(sheet, sheetEntity, changes);
+            if (result == null)
+            {
+                // Only add error if the sheet is not recognized at all
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
+            }
+            // If result is false (recognized but no data), do nothing
         }
         return changes;
     }
 
-    private static bool TryAddSheetChange(string sheet, SheetEntity sheetEntity, Dictionary<string, object> changes)
+    /// <summary>
+    /// Returns true if data was added, false if recognized but no data, null if not recognized.
+    /// </summary>
+    private static bool? TryAddSheetChange(string sheet, SheetEntity sheetEntity, Dictionary<string, object> changes)
     {
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) && sheetEntity.Expenses.Count > 0)
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase))
         {
-            changes.Add(sheet, sheetEntity.Expenses);
-            return true;
+            if (sheetEntity.Expenses.Count > 0)
+            {
+                changes.Add(sheet, sheetEntity.Expenses);
+                return true;
+            }
+            return false;
         }
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) && sheetEntity.Setup.Count > 0)
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase))
         {
-            changes.Add(sheet, sheetEntity.Setup);
-            return true;
+            if (sheetEntity.Setup.Count > 0)
+            {
+                changes.Add(sheet, sheetEntity.Setup);
+                return true;
+            }
+            return false;
         }
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) && sheetEntity.Shifts.Count > 0)
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase))
         {
-            changes.Add(sheet, sheetEntity.Shifts);
-            return true;
+            if (sheetEntity.Shifts.Count > 0)
+            {
+                changes.Add(sheet, sheetEntity.Shifts);
+                return true;
+            }
+            return false;
         }
-        if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) && sheetEntity.Trips.Count > 0)
+        if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase))
         {
-            changes.Add(sheet, sheetEntity.Trips);
-            return true;
+            if (sheetEntity.Trips.Count > 0)
+            {
+                changes.Add(sheet, sheetEntity.Trips);
+                return true;
+            }
+            return false;
         }
-        return false;
+        // Not recognized
+        return null;
     }
 
     private static List<Request> BuildBatchUpdateRequests(Dictionary<string, object> changes, List<PropertyEntity> sheetInfo, SheetEntity sheetEntity)
