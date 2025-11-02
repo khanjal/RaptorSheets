@@ -35,16 +35,29 @@ public static class EntitySheetConfigHelper
                 var header = new SheetCellModel 
                 { 
                     Name = headerName,
-                    // Auto-apply format based on Column attribute
-                    Format = TypedFieldUtils.GetFormatFromFieldType(columnAttr.FieldType)
+                    // Apply format from attribute (override or default from field type)
+                    Format = columnAttr.GetEffectiveFormat()
                 };
+                
+                // Apply note if specified
+                if (!string.IsNullOrEmpty(columnAttr.Note))
+                {
+                    header.Note = columnAttr.Note;
+                }
                 
                 // Apply custom number format pattern if specified or use default
                 var numberPattern = TypedFieldUtils.GetNumberFormatPattern(columnAttr);
                 if (!string.IsNullOrEmpty(numberPattern) && numberPattern != "@")
                 {
-                    // Store the number format pattern for later use in sheet generation
-                    header.Note = $"NumberFormat:{numberPattern}";
+                    // If note is already set, append number format info; otherwise just store it
+                    if (string.IsNullOrEmpty(header.Note))
+                    {
+                        header.Note = $"NumberFormat:{numberPattern}";
+                    }
+                    else
+                    {
+                        header.Note += $"\nNumberFormat:{numberPattern}";
+                    }
                 }
                 
                 // Apply validation if specified

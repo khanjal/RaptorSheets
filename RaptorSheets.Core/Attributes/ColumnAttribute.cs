@@ -55,6 +55,12 @@ public class ColumnAttribute : Attribute
     public bool IsInput { get; }
 
     /// <summary>
+    /// Gets the note/comment to display for this column in Google Sheets.
+    /// Useful for providing instructions or context to users.
+    /// </summary>
+    public string? Note { get; }
+
+    /// <summary>
     /// Initializes a column configuration for an OUTPUT column (formula/calculated).
     /// This is the most common case - use this constructor for columns with formulas.
     /// For input columns (user-entered data), use the 3-parameter constructor with isInput: true.
@@ -69,6 +75,7 @@ public class ColumnAttribute : Attribute
         NumberFormatPattern = null;
         Order = -1;
         IsInput = false; // Default to output/formula column
+        Note = null;
     }
 
     /// <summary>
@@ -86,6 +93,7 @@ public class ColumnAttribute : Attribute
         NumberFormatPattern = null; // Will use default pattern
         Order = -1;
         IsInput = isInput;
+        Note = null;
     }
 
     /// <summary>
@@ -99,6 +107,7 @@ public class ColumnAttribute : Attribute
     /// <param name="isInput">True if this is a user-input column that should be written to sheets (default: false for output/formula columns)</param>
     /// <param name="enableValidation">Enable field validation (default: false)</param>
     /// <param name="validationPattern">Custom validation pattern (null = use default for field type)</param>
+    /// <param name="note">Note/comment to display in Google Sheets (default: null)</param>
     public ColumnAttribute(
         string headerName,
         FieldTypeEnum fieldType,
@@ -107,7 +116,8 @@ public class ColumnAttribute : Attribute
         int order = -1,
         bool isInput = false,
         bool enableValidation = false,
-        string? validationPattern = null)
+        string? validationPattern = null,
+        string? note = null)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = jsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
@@ -117,6 +127,7 @@ public class ColumnAttribute : Attribute
         IsInput = isInput;
         EnableValidation = enableValidation;
         ValidationPattern = validationPattern;
+        Note = note;
     }
 
     /// <summary>
@@ -146,6 +157,32 @@ public class ColumnAttribute : Attribute
     /// Gets whether this column uses a custom format pattern (not the default)
     /// </summary>
     public bool HasCustomFormatPattern => NumberFormatPattern != null;
+
+    /// <summary>
+    /// Gets the effective format enum (default from field type)
+    /// </summary>
+    public FormatEnum? GetEffectiveFormat()
+    {
+        return GetDefaultFormatFromFieldType(FieldType);
+    }
+
+    /// <summary>
+    /// Gets the default FormatEnum for a given field type
+    /// </summary>
+    private static FormatEnum? GetDefaultFormatFromFieldType(FieldTypeEnum fieldType)
+    {
+        return fieldType switch
+        {
+            FieldTypeEnum.Currency => FormatEnum.CURRENCY,
+            FieldTypeEnum.Accounting => FormatEnum.ACCOUNTING,
+            FieldTypeEnum.DateTime => FormatEnum.DATE,
+            FieldTypeEnum.Time => FormatEnum.TIME,
+            FieldTypeEnum.Duration => FormatEnum.DURATION,
+            FieldTypeEnum.Number => FormatEnum.NUMBER,
+            FieldTypeEnum.Percentage => FormatEnum.PERCENT,
+            _ => null
+        };
+    }
 
     /// <summary>
     /// Converts a header name to a camelCase JSON property name

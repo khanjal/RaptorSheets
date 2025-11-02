@@ -120,6 +120,38 @@ public static class SheetsConfig
     }
 
     /// <summary>
+    /// Validation pattern name constants that map to ValidationEnum values.
+    /// These are used in ColumnAttribute validationPattern parameters.
+    /// The string values match the ValidationEnum member names.
+    /// </summary>
+    public static class ValidationNames
+    {
+        /// <summary>Maps to ValidationEnum.BOOLEAN</summary>
+        public const string Boolean = "BOOLEAN";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_ADDRESS</summary>
+        public const string RangeAddress = "RANGE_ADDRESS";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_NAME</summary>
+        public const string RangeName = "RANGE_NAME";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_PLACE</summary>
+        public const string RangePlace = "RANGE_PLACE";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_REGION</summary>
+        public const string RangeRegion = "RANGE_REGION";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_SERVICE</summary>
+        public const string RangeService = "RANGE_SERVICE";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_TYPE</summary>
+        public const string RangeType = "RANGE_TYPE";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_SELF</summary>
+        public const string RangeSelf = "RANGE_SELF";
+    }
+
+    /// <summary>
     /// Utility methods for working with sheet names
     /// </summary>
     public static class SheetUtilities

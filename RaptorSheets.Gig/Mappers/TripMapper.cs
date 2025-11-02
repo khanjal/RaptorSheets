@@ -61,7 +61,9 @@ public static class TripMapper
     }
 
     /// <summary>
-    /// Configures formulas, validations, notes, and formatting specific to the Trips sheet.
+    /// Configures formulas specific to the Trips sheet.
+    /// Notes, validations, and formatting are now handled by ColumnAttribute on the entity.
+    /// This method only adds formulas that can't be defined at the entity level.
     /// </summary>
     private static void ConfigureTripFormulas(SheetModel sheet)
     {
@@ -73,87 +75,57 @@ public static class TripMapper
 
             switch (headerEnum)
             {
-                case HeaderEnum.DATE:
-                    header.Note = ColumnNotes.DateFormat;
-                    header.Format = FormatEnum.DATE;
-                    break;
-                case HeaderEnum.SERVICE:
-                    header.Validation = ValidationEnum.RANGE_SERVICE.GetDescription();
-                    break;
-                case HeaderEnum.NUMBER:
-                    header.Note = ColumnNotes.ShiftNumber;
-                    break;
-                case HeaderEnum.EXCLUDE:
-                    header.Note = ColumnNotes.Exclude;
-                    header.Validation = ValidationEnum.BOOLEAN.GetDescription();
-                    break;
-                case HeaderEnum.TYPE:
-                    header.Note = ColumnNotes.Types;
-                    header.Validation = ValidationEnum.RANGE_TYPE.GetDescription();
-                    break;
-                case HeaderEnum.PLACE:
-                    header.Note = ColumnNotes.Place;
-                    header.Validation = ValidationEnum.RANGE_PLACE.GetDescription();
-                    break;
-                case HeaderEnum.PICKUP:
-                    header.Note = ColumnNotes.Pickup;
-                    header.Format = FormatEnum.TIME;
-                    break;
-                case HeaderEnum.DROPOFF:
-                    header.Format = FormatEnum.TIME;
-                    break;
-                case HeaderEnum.DURATION:
-                    header.Note = ColumnNotes.Duration;
-                    header.Format = FormatEnum.DURATION;
-                    break;
-                case HeaderEnum.PAY:
-                case HeaderEnum.TIPS:
-                case HeaderEnum.BONUS:
-                case HeaderEnum.CASH:
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
                 case HeaderEnum.TOTAL:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(dateRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
-                    break;
-                case HeaderEnum.DISTANCE:
-                    header.Note = ColumnNotes.TripDistance;
-                    break;
-                case HeaderEnum.NAME:
-                    header.Validation = ValidationEnum.RANGE_NAME.GetDescription();
-                    break;
-                case HeaderEnum.ADDRESS_START:
-                case HeaderEnum.ADDRESS_END:
-                    header.Validation = ValidationEnum.RANGE_ADDRESS.GetDescription();
-                    break;
-                case HeaderEnum.UNIT_END:
-                    header.Note = ColumnNotes.UnitTypes;
-                    break;
-                case HeaderEnum.REGION:
-                    header.Validation = ValidationEnum.RANGE_REGION.GetDescription();
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(
+                        dateRange, 
+                        HeaderEnum.TOTAL.GetDescription(), 
+                        sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), 
+                        sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), 
+                        sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()));
                     break;
                 case HeaderEnum.KEY:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTripKey(dateRange, HeaderEnum.KEY.GetDescription(), dateRange, sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription()), sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()), sheet.GetLocalRange(HeaderEnum.EXCLUDE.GetDescription()));
-                    header.Note = ColumnNotes.TripKey;
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTripKey(
+                        dateRange, 
+                        HeaderEnum.KEY.GetDescription(), 
+                        dateRange, 
+                        sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription()), 
+                        sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()), 
+                        sheet.GetLocalRange(HeaderEnum.EXCLUDE.GetDescription()));
                     break;
                 case HeaderEnum.DAY:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(
+                        dateRange, 
+                        HeaderEnum.DAY.GetDescription(), 
+                        dateRange);
                     break;
                 case HeaderEnum.MONTH:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonth(dateRange, HeaderEnum.MONTH.GetDescription(), dateRange);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonth(
+                        dateRange, 
+                        HeaderEnum.MONTH.GetDescription(), 
+                        dateRange);
                     break;
                 case HeaderEnum.YEAR:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(dateRange, HeaderEnum.YEAR.GetDescription(), dateRange);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(
+                        dateRange, 
+                        HeaderEnum.YEAR.GetDescription(), 
+                        dateRange);
                     break;
                 case HeaderEnum.AMOUNT_PER_TIME:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(dateRange, HeaderEnum.AMOUNT_PER_TIME.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(
+                        dateRange, 
+                        HeaderEnum.AMOUNT_PER_TIME.GetDescription(), 
+                        sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), 
+                        sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription()));
                     break;
                 case HeaderEnum.AMOUNT_PER_DISTANCE:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(dateRange, HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(
+                        dateRange, 
+                        HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), 
+                        sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), 
+                        sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()));
                     break;
                 default:
+                    // All other configuration (notes, validations, formatting) handled by ColumnAttribute
                     break;
             }
         });
