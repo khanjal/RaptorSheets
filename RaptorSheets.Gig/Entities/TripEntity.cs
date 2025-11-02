@@ -7,7 +7,7 @@ namespace RaptorSheets.Gig.Entities;
 public class TripEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
-    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.String, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.DateTime, isInput: true)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Service, FieldTypeEnum.String, isInput: true)]
@@ -25,13 +25,13 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Place, FieldTypeEnum.String, isInput: true)]
     public string Place { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Pickup, FieldTypeEnum.String, jsonPropertyName: "pickupTime", isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Pickup, FieldTypeEnum.Time, jsonPropertyName: "pickupTime", isInput: true)]
     public string Pickup { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Dropoff, FieldTypeEnum.String, jsonPropertyName: "dropoffTime", isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Dropoff, FieldTypeEnum.Time, jsonPropertyName: "dropoffTime", isInput: true)]
     public string Dropoff { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Duration, FieldTypeEnum.String, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Duration, FieldTypeEnum.Duration, isInput: true)]
     public string Duration { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency, isInput: true)]

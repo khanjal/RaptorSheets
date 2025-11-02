@@ -249,6 +249,8 @@ public static class GenericSheetMapper<T> where T : class, new()
             FieldTypeEnum.Percentage => HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers),
             FieldTypeEnum.Boolean => HeaderHelpers.GetBoolValue(headerName, values, headers),
             FieldTypeEnum.DateTime => HeaderHelpers.GetDateValue(headerName, values, headers),
+            FieldTypeEnum.Time => HeaderHelpers.GetStringValue(headerName, values, headers),
+            FieldTypeEnum.Duration => HeaderHelpers.GetStringValue(headerName, values, headers),
             FieldTypeEnum.PhoneNumber => HeaderHelpers.GetStringValue(headerName, values, headers),
             FieldTypeEnum.Email => HeaderHelpers.GetStringValue(headerName, values, headers),
             FieldTypeEnum.Url => HeaderHelpers.GetStringValue(headerName, values, headers),
@@ -338,6 +340,14 @@ public static class GenericSheetMapper<T> where T : class, new()
             FieldTypeEnum.DateTime => new CellData 
             { 
                 UserEnteredValue = new ExtendedValue { NumberValue = value.ToString()!.ToSerialDate() } 
+            },
+            FieldTypeEnum.Time => new CellData 
+            { 
+                UserEnteredValue = new ExtendedValue { NumberValue = value.ToString()!.ToSerialTime() } 
+            },
+            FieldTypeEnum.Duration => new CellData 
+            { 
+                UserEnteredValue = new ExtendedValue { NumberValue = value.ToString()!.ToSerialDuration() } 
             },
             _ => new CellData 
             { 

@@ -28,8 +28,21 @@ public enum FieldTypeEnum
     
     /// <summary>
     /// Date and time field with proper serialization for Google Sheets
+    /// Uses ToSerialDate() conversion for date values
     /// </summary>
     DateTime,
+    
+    /// <summary>
+    /// Time-only field with proper serialization for Google Sheets
+    /// Uses ToSerialTime() conversion for time-of-day values
+    /// </summary>
+    Time,
+    
+    /// <summary>
+    /// Duration/elapsed time field with proper serialization for Google Sheets
+    /// Uses ToSerialDuration() conversion for time span values
+    /// </summary>
+    Duration,
     
     /// <summary>
     /// Phone number field with standardized formatting
