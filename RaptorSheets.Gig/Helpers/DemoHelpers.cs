@@ -471,8 +471,8 @@ public static class DemoHelpers
 
         if (service == "DoorDash" || service == "Uber Eats" || service == "Grubhub")
         {
-            // CSV shows DoorDash pay: $2.00-$10.75 in $0.25 increments, tips: $0.50-$16.25
-            var basePay = 2.00m + 0.25m * random.Next(0, 36); // $2.00 to $10.75
+            // CSV shows DoorDash pay: $2.00-$10.75 in $0.25 increments (36 steps from $2.00)
+            var basePay = 2.00m + 0.25m * random.Next(0, 36); // $2.00 to $10.75 (0-35 * $0.25)
             pay = Math.Round(basePay, 2);
             
             // Tips: 85% have tips, range $0.50-$16.25, most in $1-$10 range
@@ -501,7 +501,8 @@ public static class DemoHelpers
         }
         else
         {
-            pay = Math.Round(2.00m + 0.25m * random.Next(0, 36), 2);
+            // Default: same as DoorDash - $2.00 to $10.75 in $0.25 increments
+            pay = Math.Round(2.00m + 0.25m * random.Next(0, 36), 2); // $2.00 to $10.75 (0-35 * $0.25)
             tip = random.NextDouble() < 0.7 ? Math.Round((decimal)random.NextDouble() * 8 + 1, 2) : null;
             bonus = random.NextDouble() < 0.05 ? 1.00m : null;
         }

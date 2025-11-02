@@ -127,6 +127,16 @@ public partial class GoogleSheetManager
 
     #region Update Operations
 
+    // Static readonly dictionary to avoid recreation on every call
+    private static readonly Dictionary<string, (Func<SheetEntity, int> GetCount, Func<SheetEntity, object> GetData)> _sheetAccessors =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            [SheetsConfig.SheetNames.Expenses] = (entity => entity.Expenses.Count, entity => entity.Expenses),
+            [SheetsConfig.SheetNames.Setup] = (entity => entity.Setup.Count, entity => entity.Setup),
+            [SheetsConfig.SheetNames.Shifts] = (entity => entity.Shifts.Count, entity => entity.Shifts),
+            [SheetsConfig.SheetNames.Trips] = (entity => entity.Trips.Count, entity => entity.Trips)
+        };
+
     public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity)
     {
         var changes = GetSheetChanges(sheets, sheetEntity);
@@ -187,25 +197,16 @@ public partial class GoogleSheetManager
     /// </returns>
     private static bool? TryAddSheetChange(string sheet, SheetEntity sheetEntity, Dictionary<string, object> changes)
     {
-        // Define sheet data accessors for all supported sheets
-        var sheetAccessors = new Dictionary<string, (Func<int> GetCount, Func<object> GetData)>(StringComparer.OrdinalIgnoreCase)
-        {
-            [SheetsConfig.SheetNames.Expenses] = (() => sheetEntity.Expenses.Count, () => sheetEntity.Expenses),
-            [SheetsConfig.SheetNames.Setup] = (() => sheetEntity.Setup.Count, () => sheetEntity.Setup),
-            [SheetsConfig.SheetNames.Shifts] = (() => sheetEntity.Shifts.Count, () => sheetEntity.Shifts),
-            [SheetsConfig.SheetNames.Trips] = (() => sheetEntity.Trips.Count, () => sheetEntity.Trips)
-        };
-
         // Check if the sheet is recognized
-        if (!sheetAccessors.TryGetValue(sheet, out var accessor))
+        if (!_sheetAccessors.TryGetValue(sheet, out var accessor))
         {
             return null; // Sheet not recognized
         }
 
         // Check if the sheet has data
-        if (accessor.GetCount() > 0)
+        if (accessor.GetCount(sheetEntity) > 0)
         {
-            changes.Add(sheet, accessor.GetData());
+            changes.Add(sheet, accessor.GetData(sheetEntity));
             return true; // Data added successfully
         }
 
