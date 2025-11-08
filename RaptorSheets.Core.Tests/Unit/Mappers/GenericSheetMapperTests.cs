@@ -197,7 +197,7 @@ public class GenericSheetMapperTests
     }
 
     [Fact]
-    public void MapToRangeData_WithUnknownHeaders_ShouldReturnEmptyString()
+    public void MapToRangeData_WithUnknownHeaders_ShouldReturnNull()
     {
         // Arrange
         var entities = new List<TestEntity> { new() { Name = "John" } };
@@ -210,7 +210,7 @@ public class GenericSheetMapperTests
         Assert.Single(result);
         Assert.Equal(2, result[0].Count);
         Assert.Equal("John", result[0][0]);
-        Assert.Equal("", result[0][1]); // Unknown header returns empty string (treated as output column)
+        Assert.Null(result[0][1]); // Unknown header returns null (treated as output column)
     }
 
     [Fact]

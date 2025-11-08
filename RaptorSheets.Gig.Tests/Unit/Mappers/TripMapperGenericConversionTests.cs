@@ -190,10 +190,10 @@ public class TripMapperGenericConversionTests
         Assert.Equal("5.00", row[2]); // Tip (input)
         Assert.Equal("2.00", row[3]); // Bonus (input)
         
-        // Output columns (formulas) should be empty
-        Assert.Equal("", row[4]); // Total (output/formula)
-        Assert.Equal("", row[5]); // Key (output/formula)
-        Assert.Equal("", row[6]); // AmountPerTime (output/formula)
+        // Output columns (formulas) should be null to preserve formula
+        Assert.Null(row[4]); // Total (output/formula)
+        Assert.Null(row[5]); // Key (output/formula)
+        Assert.Null(row[6]); // AmountPerTime (output/formula)
     }
 
     [Fact]

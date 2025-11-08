@@ -108,7 +108,7 @@ public class TripMapperColumnPositionTests
         Assert.Equal("2024-01-15", row[0]);  // Date
         Assert.Equal("Uber", row[1]);        // Service
         Assert.Equal("1", row[2]);           // Number
-        Assert.Equal("False", row[3]);       // Exclude
+        Assert.Equal(false, row[3]);         // Exclude (boolean, not string)
         Assert.Equal("UberX", row[4]);       // Type
         Assert.Equal("Restaurant", row[5]);  // Place
         Assert.Equal("18:30:00", row[6]);    // Pickup
@@ -189,16 +189,20 @@ public class TripMapperColumnPositionTests
         Assert.NotNull(row.Values[3]); // Tips
         Assert.NotNull(row.Values[4]); // Bonus
 
-        // Verify OUTPUT column is NULL but position reserved
-        Assert.Null(row.Values[5]); // Total - OUTPUT
+        // Verify OUTPUT column is empty CellData (not null) but position reserved
+        Assert.NotNull(row.Values[5]); // Total - OUTPUT (empty CellData)
+        Assert.Null(row.Values[5].UserEnteredValue); // But no value
 
         // Verify subsequent INPUT column is in correct position
         Assert.NotNull(row.Values[6]); // Cash
         Assert.Equal(3.00, row.Values[6]!.UserEnteredValue?.NumberValue);
 
-        // Verify remaining OUTPUT columns are NULL
-        Assert.Null(row.Values[7]); // Key - OUTPUT
-        Assert.Null(row.Values[8]); // AmountPerTime - OUTPUT
+        // Verify remaining OUTPUT columns are empty CellData
+        Assert.NotNull(row.Values[7]); // Key - OUTPUT (empty CellData)
+        Assert.Null(row.Values[7].UserEnteredValue); // But no value
+        
+        Assert.NotNull(row.Values[8]); // AmountPerTime - OUTPUT (empty CellData)
+        Assert.Null(row.Values[8].UserEnteredValue); // But no value
     }
 
     [Fact]

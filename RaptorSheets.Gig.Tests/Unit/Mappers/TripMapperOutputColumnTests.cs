@@ -63,7 +63,7 @@ public class TripMapperOutputColumnTests
     }
 
     [Fact]
-    public void MapToRowData_WithTotalColumn_ShouldReserveSpotWithNull()
+    public void MapToRowData_WithTotalColumn_ShouldReserveSpotWithEmptyCellData()
     {
         // Arrange
         var trips = new List<TripEntity>
@@ -108,11 +108,13 @@ public class TripMapperOutputColumnTests
         Assert.NotNull(row.Values[3]); // Tips
         Assert.NotNull(row.Values[4]); // Bonus
 
-        // Total is output - should be NULL
-        Assert.Null(row.Values[5]); // Total (OUTPUT)
+        // Total is output - should be empty CellData (not null) to preserve position
+        Assert.NotNull(row.Values[5]); // Total (OUTPUT) - empty CellData
+        Assert.Null(row.Values[5].UserEnteredValue); // But no value
 
         // Cash is input
         Assert.NotNull(row.Values[6]); // Cash
+        Assert.NotNull(row.Values[6].UserEnteredValue); // With value
     }
 
     [Fact]
