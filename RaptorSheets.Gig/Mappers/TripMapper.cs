@@ -10,13 +10,14 @@ using RaptorSheets.Gig.Helpers;
 namespace RaptorSheets.Gig.Mappers;
 
 /// <summary>
-/// Trip mapper for Trips sheet configuration and formulas.
-/// For data mapping operations, use GenericSheetMapper&lt;TripEntity&gt; directly.
+/// Trip mapper for configuring the Trips sheet with formulas, validations, and formatting.
+/// This mapper leverages the GenericSheetMapper for entity-driven configuration.
 /// </summary>
 public static class TripMapper
 {
     /// <summary>
-    /// Gets the configured Trips sheet with formulas, validations, and formatting.
+    /// Retrieves the configured Trips sheet.
+    /// Includes formulas, validations, and formatting specific to the Trips sheet.
     /// </summary>
     public static SheetModel GetSheet()
     {
@@ -28,9 +29,9 @@ public static class TripMapper
 
     /// <summary>
     /// Configures formulas specific to the Trips sheet.
-    /// Notes, validations, and formatting are handled by ColumnAttribute on the entity.
-    /// This method only adds formulas that can't be defined at the entity level.
+    /// This method handles formulas that cannot be defined at the entity level.
     /// </summary>
+    /// <param name="sheet">The Trips sheet model to configure.</param>
     private static void ConfigureTripFormulas(SheetModel sheet)
     {
         var dateRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
@@ -42,6 +43,7 @@ public static class TripMapper
             switch (headerEnum)
             {
                 case HeaderEnum.TOTAL:
+                    // Formula to calculate the total amount, including pay, tips, and bonus.
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(
                         dateRange, 
                         HeaderEnum.TOTAL.GetDescription(), 

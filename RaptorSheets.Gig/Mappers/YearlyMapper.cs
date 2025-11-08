@@ -9,11 +9,15 @@ using RaptorSheets.Gig.Helpers;
 namespace RaptorSheets.Gig.Mappers;
 
 /// <summary>
-/// Yearly mapper for Yearly sheet configuration and formulas.
-/// For data mapping operations, use GenericSheetMapper&lt;YearlyEntity&gt; directly.
+/// Yearly mapper for configuring the Yearly sheet with formulas, validations, and formatting.
+/// This mapper focuses on yearly data aggregation and ratio calculations.
 /// </summary>
 public static class YearlyMapper
 {
+    /// <summary>
+    /// Retrieves the configured Yearly sheet.
+    /// Includes formulas, validations, and formatting specific to the Yearly sheet.
+    /// </summary>
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.YearlySheet;
@@ -23,13 +27,13 @@ public static class YearlyMapper
         var keyRange = sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription());
         var monthlyKeyRange = monthlySheet.GetRange(HeaderEnum.YEAR.GetDescription());
 
-        // Configure common aggregation patterns from monthly data
+        // Configure common aggregation patterns from monthly data.
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, monthlySheet, monthlyKeyRange, useShiftTotals: false);
         
-        // Configure common ratio calculations
+        // Configure common ratio calculations.
         MapperFormulaHelper.ConfigureCommonRatioHeaders(sheet, keyRange);
 
-        // Configure specific headers unique to YearlyMapper
+        // Configure specific headers unique to YearlyMapper.
         sheet.Headers.ForEach(header =>
         {
             var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
@@ -37,19 +41,21 @@ public static class YearlyMapper
             switch (headerEnum)
             {
                 case HeaderEnum.YEAR:
+                    // Formula to generate unique yearly values from the Monthly sheet.
                     header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(HeaderEnum.YEAR.GetDescription(), monthlySheet.GetRange(HeaderEnum.YEAR.GetDescription(), 2));
                     break;
                 case HeaderEnum.DAYS:
-                    // Override common helper: For yearly, we sum days instead of counting
+                    // Formula to sum days for yearly data.
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.DAYS.GetDescription(), monthlyKeyRange, monthlySheet.GetRange(HeaderEnum.DAYS.GetDescription()));
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.AVERAGE:
+                    // Formula to calculate rolling averages for yearly data.
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, HeaderEnum.AVERAGE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
-                default:
-                    break;
+
+                // Additional cases for other headers can be added here.
             }
         });
 

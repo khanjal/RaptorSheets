@@ -23,6 +23,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// <returns>List of trips in the date range</returns>
     public async Task<List<TripEntity>> GetTripsByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
+        ValidateDateRange(startDate, endDate);
         var allTrips = await GetAllAsync();
         return allTrips
             .Where(t => !string.IsNullOrEmpty(t.Date) && 
@@ -40,6 +41,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// <returns>List of trips for the service</returns>
     public async Task<List<TripEntity>> GetTripsByServiceAsync(string service)
     {
+        ValidateService(service);
         var allTrips = await GetAllAsync();
         return allTrips
             .Where(t => string.Equals(t.Service, service, StringComparison.OrdinalIgnoreCase))
@@ -116,5 +118,24 @@ public class TripRepository : BaseEntityRepository<TripEntity>
         }
 
         return await UpdateAsync(trip, rowIndex);
+    }
+
+    /// <summary>
+    /// Validates the input parameters for the repository methods.
+    /// </summary>
+    private void ValidateDateRange(DateTime startDate, DateTime endDate)
+    {
+        if (startDate > endDate)
+        {
+            throw new ArgumentException("Start date must be earlier than or equal to the end date.");
+        }
+    }
+
+    private void ValidateService(string service)
+    {
+        if (string.IsNullOrWhiteSpace(service))
+        {
+            throw new ArgumentException("Service name cannot be null or empty.", nameof(service));
+        }
     }
 }

@@ -9,15 +9,15 @@ using RaptorSheets.Gig.Helpers;
 namespace RaptorSheets.Gig.Mappers;
 
 /// <summary>
-/// Weekday mapper for Weekday sheet configuration and formulas.
-/// For data mapping operations, use GenericSheetMapper<WeekdayEntity> directly.
-/// </summary>
-/// <summary>
-/// Weekday mapper for Weekday sheet configuration and formulas.
-/// For data mapping operations, use GenericSheetMapper<WeekdayEntity> directly.
+/// Weekday mapper for configuring the Weekday sheet with formulas, validations, and formatting.
+/// This mapper is designed for weekday-specific data aggregation and calculations.
 /// </summary>
 public static class WeekdayMapper
 {
+    /// <summary>
+    /// Retrieves the configured Weekday sheet.
+    /// Includes formulas, validations, and formatting specific to the Weekday sheet.
+    /// </summary>
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.WeekdaySheet;
@@ -28,6 +28,7 @@ public static class WeekdayMapper
         var dailyDayRange = dailySheet.GetRange(HeaderEnum.DAY.GetDescription());
         var dailyDateToTotalRange = dailySheet.GetRangeBetweenColumns(HeaderEnum.DATE.GetDescription(), HeaderEnum.TOTAL.GetDescription());
 
+        // Configure specific headers unique to WeekdayMapper.
         sheet.Headers.ForEach(header =>
         {
             var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
@@ -35,29 +36,29 @@ public static class WeekdayMapper
             switch (headerEnum)
             {
                 case HeaderEnum.DAY:
-                    // Use filtered unique formula for weekday numbers from Daily sheet
+                    // Formula to generate unique weekday numbers from the Daily sheet.
                     header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.DAY.GetDescription(), dailySheet.GetRange(HeaderEnum.DAY.GetDescription(), 2));
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.WEEKDAY:
-                    // Use weekday text formula based on day range
+                    // Formula to generate weekday text based on day range.
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(keyRange, HeaderEnum.WEEKDAY.GetDescription(), keyRange, 1);
                     break;
                 case HeaderEnum.TRIPS:
-                    // Sum trips by weekday number using the existing DAY column from Daily sheet
+                    // Formula to sum trips by weekday number using the Daily sheet.
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), 
                         dailyDayRange, 
                         dailySheet.GetRange(HeaderEnum.TRIPS.GetDescription()));
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.DAYS:
-                    // Count days by weekday number using the existing DAY column from Daily sheet
+                    // Formula to count days by weekday number using the Daily sheet.
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, HeaderEnum.DAYS.GetDescription(), 
                         dailyDayRange);
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.PAY:
-                    // Sum pay by weekday number using the existing DAY column from Daily sheet
+                    // Formula to sum pay by weekday number using the Daily sheet.
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), 
                         dailyDayRange, 
                         dailySheet.GetRange(HeaderEnum.PAY.GetDescription()));
