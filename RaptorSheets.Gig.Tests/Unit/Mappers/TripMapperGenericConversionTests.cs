@@ -21,7 +21,7 @@ public class TripMapperGenericConversionTests
         };
 
         // Act
-        var trips = TripMapper.MapFromRangeData(values);
+        var trips = GenericSheetMapper<TripEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(trips);
@@ -65,7 +65,7 @@ public class TripMapperGenericConversionTests
         var headers = new List<object> { "Date", "Service", "#", "Pay", "Tips", "Bonus" };
 
         // Act
-        var result = TripMapper.MapToRangeData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRangeData(trips, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -101,7 +101,7 @@ public class TripMapperGenericConversionTests
         var headers = new List<object> { "Date", "Service", "#", "Exclude", "Pickup", "Dropoff", "Duration", "Pay" };
 
         // Act
-        var result = TripMapper.MapToRowData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRowData(trips, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -143,7 +143,7 @@ public class TripMapperGenericConversionTests
         var headers = new List<object> { "Date", "Pay", "Tips", "Pickup", "Duration" };
 
         // Act
-        var result = TripMapper.MapToRowFormat(headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRowFormat(headers);
 
         // Assert
         Assert.NotNull(result);
@@ -176,7 +176,7 @@ public class TripMapperGenericConversionTests
         var headers = new List<object> { "Date", "Pay", "Tips", "Bonus", "Total", "Key", "Amount/Time" };
 
         // Act
-        var result = TripMapper.MapToRangeData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRangeData(trips, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -226,3 +226,4 @@ public class TripMapperGenericConversionTests
         Assert.StartsWith("=", keyHeader.Formula);
     }
 }
+

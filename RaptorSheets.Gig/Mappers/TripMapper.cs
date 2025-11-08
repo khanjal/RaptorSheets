@@ -1,5 +1,3 @@
-using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Mappers;
@@ -12,43 +10,11 @@ using RaptorSheets.Gig.Helpers;
 namespace RaptorSheets.Gig.Mappers;
 
 /// <summary>
-/// Trip mapper using GenericSheetMapper for data mapping operations.
-/// Provides formula configuration specific to the Trips sheet.
+/// Trip mapper for Trips sheet configuration and formulas.
+/// For data mapping operations, use GenericSheetMapper&lt;TripEntity&gt; directly.
 /// </summary>
 public static class TripMapper
 {
-    /// <summary>
-    /// Maps Google Sheets range data to TripEntity list.
-    /// </summary>
-    public static List<TripEntity> MapFromRangeData(IList<IList<object>> values)
-    {
-        return GenericSheetMapper<TripEntity>.MapFromRangeData(values);
-    }
-
-    /// <summary>
-    /// Maps TripEntity list to Google Sheets range data (simple object arrays).
-    /// </summary>
-    public static IList<IList<object?>> MapToRangeData(List<TripEntity> trips, IList<object> tripHeaders)
-    {
-        return GenericSheetMapper<TripEntity>.MapToRangeData(trips, tripHeaders);
-    }
-
-    /// <summary>
-    /// Maps TripEntity list to Google Sheets RowData (structured format with types).
-    /// </summary>
-    public static IList<RowData> MapToRowData(List<TripEntity> tripEntities, IList<object> headers)
-    {
-        return GenericSheetMapper<TripEntity>.MapToRowData(tripEntities, headers);
-    }
-
-    /// <summary>
-    /// Creates a format row for applying number formats to the Trips sheet.
-    /// </summary>
-    public static RowData MapToRowFormat(IList<object> headers)
-    {
-        return GenericSheetMapper<TripEntity>.MapToRowFormat(headers);
-    }
-
     /// <summary>
     /// Gets the configured Trips sheet with formulas, validations, and formatting.
     /// </summary>
@@ -62,7 +28,7 @@ public static class TripMapper
 
     /// <summary>
     /// Configures formulas specific to the Trips sheet.
-    /// Notes, validations, and formatting are now handled by ColumnAttribute on the entity.
+    /// Notes, validations, and formatting are handled by ColumnAttribute on the entity.
     /// This method only adds formulas that can't be defined at the entity level.
     /// </summary>
     private static void ConfigureTripFormulas(SheetModel sheet)

@@ -1,8 +1,7 @@
+using RaptorSheets.Core.Mappers;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
-using RaptorSheets.Gig.Mappers;
 using System.ComponentModel;
-using Xunit;
 
 namespace RaptorSheets.Gig.Tests.Unit.Mappers;
 
@@ -39,7 +38,7 @@ public class TripMapperOutputColumnTests
         };
 
         // Act
-        var result = TripMapper.MapToRangeData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRangeData(trips, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -91,7 +90,7 @@ public class TripMapperOutputColumnTests
         };
 
         // Act
-        var result = TripMapper.MapToRowData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRowData(trips, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -160,7 +159,7 @@ public class TripMapperOutputColumnTests
         };
 
         // Act
-        var result = TripMapper.MapToRangeData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRangeData(trips, headers);
 
         // Assert
         var row = result[0];
@@ -209,7 +208,7 @@ public class TripMapperOutputColumnTests
         };
 
         // Act
-        var result = TripMapper.MapToRangeData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRangeData(trips, headers);
 
         // Assert
         var row = result[0];
@@ -223,3 +222,4 @@ public class TripMapperOutputColumnTests
         // This would break the column alignment in Google Sheets
     }
 }
+

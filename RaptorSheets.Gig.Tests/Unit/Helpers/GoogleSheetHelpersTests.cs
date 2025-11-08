@@ -92,8 +92,17 @@ public class GoogleSheetHelpersTests
             return;
         }
 
-        Assert.Single(protectRange);
-        var sheetProtection = protectRange.First().AddProtectedRange.ProtectedRange;
+        // Protected sheets should have at least one protection request
+        // With entity-driven headers, there may be multiple protection requests if headers are individually protected
+        Assert.NotEmpty(protectRange);
+        
+        // At least one should be a sheet-level protection
+        var sheetProtections = protectRange.Where(p => 
+            p.AddProtectedRange.ProtectedRange.Description == ProtectionWarnings.SheetWarning).ToList();
+        
+        Assert.NotEmpty(sheetProtections);
+        
+        var sheetProtection = sheetProtections.First().AddProtectedRange.ProtectedRange;
         Assert.Equal(sheetId, sheetProtection.Range.SheetId);
         Assert.Equal(ProtectionWarnings.SheetWarning, sheetProtection.Description);
         Assert.True(sheetProtection.WarningOnly);

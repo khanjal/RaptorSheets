@@ -4,8 +4,8 @@ using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Mappers;
 using RaptorSheets.Gig.Entities;
-using RaptorSheets.Gig.Mappers;
 
 namespace RaptorSheets.Gig.Helpers;
 
@@ -112,7 +112,7 @@ public static class GigRequestHelpers
 
     public static IEnumerable<Request> CreateUpdateCellTripRequests(List<TripEntity> trips, PropertyEntity? sheetProperties)
     {
-        return CreateUpdateCellRequests(trips, sheetProperties, TripMapper.MapToRowData);
+        return CreateUpdateCellRequests(trips, sheetProperties, GenericSheetMapper<TripEntity>.MapToRowData);
     }
 
     // SHIFT
@@ -123,7 +123,7 @@ public static class GigRequestHelpers
 
     public static IEnumerable<Request> CreateUpdateCellShiftRequests(List<ShiftEntity> shifts, PropertyEntity? sheetProperties)
     {
-        return CreateUpdateCellRequests(shifts, sheetProperties, ShiftMapper.MapToRowData);
+        return CreateUpdateCellRequests(shifts, sheetProperties, GenericSheetMapper<ShiftEntity>.MapToRowData);
     }
 
     // SETUP
@@ -145,6 +145,6 @@ public static class GigRequestHelpers
 
     public static IEnumerable<Request> CreateUpdateCellExpenseRequests(List<ExpenseEntity> expenses, PropertyEntity? sheetProperties)
     {
-        return CreateUpdateCellRequests(expenses, sheetProperties, ExpenseMapper.MapToRowData);
+        return CreateUpdateCellRequests(expenses, sheetProperties, GenericSheetMapper<ExpenseEntity>.MapToRowData);
     }
 }

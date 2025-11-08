@@ -1,5 +1,6 @@
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Mappers;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
@@ -24,7 +25,7 @@ public class TripMapperTests
         };
 
         // Act
-        var result = TripMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<TripEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(result);
@@ -62,7 +63,7 @@ public class TripMapperTests
         };
 
         // Act
-        var result = TripMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<TripEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.Equal(2, result.Count); // Empty row filtered out
@@ -90,7 +91,7 @@ public class TripMapperTests
         var headers = new List<object> { "Date", "Service", "#", "Type", "Pay", "Tips", "Name" };
 
         // Act
-        var result = TripMapper.MapToRangeData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRangeData(trips, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -179,7 +180,7 @@ public class TripMapperTests
         };
 
         // Act
-        var result = TripMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<TripEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(result);

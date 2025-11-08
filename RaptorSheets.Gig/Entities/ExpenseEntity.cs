@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
@@ -10,7 +9,7 @@ namespace RaptorSheets.Gig.Entities;
 public class ExpenseEntity : SheetRowEntityBase
 {
     [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.DateTime, isInput: true, note: ColumnNotes.DateFormat)]
-    public DateTime Date { get; set; }
+    public string Date { get; set; } = string.Empty;  // Changed from DateTime to string to match TripEntity/ShiftEntity pattern
     
     [Column(SheetsConfig.HeaderNames.Name, FieldTypeEnum.String, isInput: true)]
     public string Name { get; set; } = string.Empty;

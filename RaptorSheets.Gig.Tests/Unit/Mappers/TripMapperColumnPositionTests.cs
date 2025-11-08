@@ -1,8 +1,7 @@
+using RaptorSheets.Core.Mappers;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
-using RaptorSheets.Gig.Mappers;
 using System.ComponentModel;
-using Xunit;
 
 namespace RaptorSheets.Gig.Tests.Unit.Mappers;
 
@@ -97,7 +96,7 @@ public class TripMapperColumnPositionTests
         };
 
         // Act
-        var result = TripMapper.MapToRangeData(new List<TripEntity> { trip }, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRangeData(new List<TripEntity> { trip }, headers);
 
         // Assert
         Assert.Single(result);
@@ -174,7 +173,7 @@ public class TripMapperColumnPositionTests
         };
 
         // Act
-        var result = TripMapper.MapToRowData(new List<TripEntity> { trip }, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRowData(new List<TripEntity> { trip }, headers);
 
         // Assert
         Assert.Single(result);
@@ -247,7 +246,7 @@ public class TripMapperColumnPositionTests
         };
 
         // Act
-        var result = TripMapper.MapToRangeData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRangeData(trips, headers);
 
         // Assert
         Assert.Equal(3, result.Count);
@@ -303,7 +302,7 @@ public class TripMapperColumnPositionTests
         };
 
         // Act
-        var result = TripMapper.MapToRangeData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRangeData(trips, headers);
 
         // Assert
         var row = result[0];
@@ -313,3 +312,4 @@ public class TripMapperColumnPositionTests
         Assert.All(row, value => Assert.Null(value));
     }
 }
+

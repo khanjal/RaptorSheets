@@ -2,7 +2,6 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Managers;
-using RaptorSheets.Gig.Tests.Data.Helpers;
 using RaptorSheets.Test.Common.Helpers;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Helpers;

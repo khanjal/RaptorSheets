@@ -1,5 +1,7 @@
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Mappers;
+using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
 using System.ComponentModel;
@@ -17,13 +19,13 @@ public class AddressMapperTests
         // Arrange
         var values = new List<IList<object>>
         {
-            new List<object> { "Address", "Trips", "Pay", "Tip", "Dist" },
+            new List<object> { "Address", "Trips", "Pay", "Tips", "Dist" },  // Changed "Tip" to "Tips"
             new List<object> { "123 Main St", "5", "125.50", "25.00", "45.5" },
             new List<object> { "456 Oak Ave", "3", "75.25", "15.00", "32.1" }
         };
 
         // Act
-        var result = AddressMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<AddressEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(result);
@@ -56,7 +58,7 @@ public class AddressMapperTests
         };
 
         // Act
-        var result = AddressMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<AddressEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -74,7 +76,7 @@ public class AddressMapperTests
         };
 
         // Act
-        var result = AddressMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<AddressEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(result);

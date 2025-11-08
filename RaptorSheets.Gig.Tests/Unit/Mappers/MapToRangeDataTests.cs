@@ -1,5 +1,5 @@
-﻿using RaptorSheets.Gig.Entities;
-using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Core.Mappers;
+using RaptorSheets.Gig.Entities;
 using System.ComponentModel;
 
 namespace RaptorSheets.Gig.Tests.Unit.Mappers;
@@ -29,7 +29,7 @@ public class MapToRangeDataTests
         var headers = new List<object> { "Date", "Start", "Finish", "Service", "#", "Region", "Note" };
 
         // Act
-        var result = ShiftMapper.MapToRangeData(shifts, headers);
+        var result = GenericSheetMapper<ShiftEntity>.MapToRangeData(shifts, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -66,7 +66,7 @@ public class MapToRangeDataTests
         var headers = new List<object> { "Date", "Service", "Start Address", "End Address", "Pay", "Tip", "Distance" };
 
         // Act
-        var result = TripMapper.MapToRangeData(trips, headers);
+        var result = GenericSheetMapper<TripEntity>.MapToRangeData(trips, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -100,7 +100,7 @@ public class MapToRangeDataTests
         var headers = new List<object> { "Date", "Service", "#", "Pay", "Note" };
 
         // Act
-        var result = ShiftMapper.MapToRangeData(shifts, headers);
+        var result = GenericSheetMapper<ShiftEntity>.MapToRangeData(shifts, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -123,7 +123,7 @@ public class MapToRangeDataTests
         var headers = new List<object> { "Date", "Service" };
 
         // Act
-        var result = ShiftMapper.MapToRangeData(emptyShifts, headers);
+        var result = GenericSheetMapper<ShiftEntity>.MapToRangeData(emptyShifts, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -143,7 +143,7 @@ public class MapToRangeDataTests
         var headers = new List<object> { "Date", "Service" };
 
         // Act
-        var result = ShiftMapper.MapToRangeData(shifts, headers);
+        var result = GenericSheetMapper<ShiftEntity>.MapToRangeData(shifts, headers);
 
         // Assert
         Assert.NotNull(result);

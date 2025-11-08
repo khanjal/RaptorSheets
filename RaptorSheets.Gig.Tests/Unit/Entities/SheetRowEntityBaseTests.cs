@@ -1,6 +1,5 @@
 using System.Text.Json;
 using RaptorSheets.Gig.Entities;
-using Xunit;
 
 namespace RaptorSheets.Gig.Tests.Unit.Entities;
 
@@ -69,7 +68,7 @@ public class SheetRowEntityBaseTests
             RowId = 5,
             Action = "DELETE",
             Saved = true,
-            Date = new DateTime(2024, 1, 15),
+            Date = "2024-01-15",  // Changed to string to match entity definition
             Category = "Fuel"
         };
 

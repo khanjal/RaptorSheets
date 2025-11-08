@@ -3,56 +3,21 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
-using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
 
 namespace RaptorSheets.Gig.Mappers;
 
+/// <summary>
+/// Weekday mapper for Weekday sheet configuration and formulas.
+/// For data mapping operations, use GenericSheetMapper<WeekdayEntity> directly.
+/// </summary>
+/// <summary>
+/// Weekday mapper for Weekday sheet configuration and formulas.
+/// For data mapping operations, use GenericSheetMapper<WeekdayEntity> directly.
+/// </summary>
 public static class WeekdayMapper
 {
-    public static List<WeekdayEntity> MapFromRangeData(IList<IList<object>> values)
-    {
-        var weekdays = new List<WeekdayEntity>();
-        var headers = new Dictionary<int, string>();
-        values = values!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
-        var id = 0;
-
-        foreach (var value in values)
-        {
-            id++;
-            if (id == 1)
-            {
-                headers = HeaderHelpers.ParserHeader(value);
-                continue;
-            }
-
-            // Console.Write(JsonSerializer.Serialize(value));
-            WeekdayEntity weekday = new()
-            {
-                RowId = id,
-                Day = HeaderHelpers.GetIntValue(HeaderEnum.DAY.GetDescription(), value, headers),
-                Weekday = HeaderHelpers.GetStringValue(HeaderEnum.WEEKDAY.GetDescription(), value, headers),
-                Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
-                Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
-                Tip = HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), value, headers),
-                Bonus = HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
-                Total = HeaderHelpers.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
-                Cash = HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
-                Distance = HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
-                Time = HeaderHelpers.GetStringValue(HeaderEnum.TIME_TOTAL.GetDescription(), value, headers),
-                Days = HeaderHelpers.GetIntValue(HeaderEnum.DAYS.GetDescription(), value, headers),
-                DailyAverage = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PER_DAY.GetDescription(), value, headers),
-                PreviousDailyAverage = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PER_PREVIOUS_DAY.GetDescription(), value, headers),
-                CurrentAmount = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_CURRENT.GetDescription(), value, headers),
-                PreviousAmount = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PREVIOUS.GetDescription(), value, headers),
-            };
-
-            weekdays.Add(weekday);
-        }
-        return weekdays;
-    }
-
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.WeekdaySheet;
@@ -174,3 +139,4 @@ public static class WeekdayMapper
         return sheet;
     }
 }
+

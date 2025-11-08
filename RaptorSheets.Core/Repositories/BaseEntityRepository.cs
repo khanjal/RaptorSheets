@@ -2,7 +2,6 @@ using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models;
-using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Core.Validators;
 
