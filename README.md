@@ -166,28 +166,14 @@ Google Sheets API v4
 
 ## 💼 TypedField System Benefits
 
-### Before: Manual Configuration
+### Simplified Configuration
 ```csharp
-// Multiple attributes, manual conversions, repetitive patterns
-[JsonPropertyName("pay")]
-[ColumnOrder(SheetsConfig.HeaderNames.Pay)]
-[TypedField(FieldTypeEnum.Currency, "\"$\"#,##0.00")]
+// Single attribute, automated mapping
+[Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency, "\"$\"#,##0.00")]
 public decimal? Pay { get; set; }
 
-// Manual conversion in mappers
-var payValue = HeaderHelpers.GetStringValue("Pay", row, headers);
-entity.Pay = decimal.TryParse(payValue.Replace("$", "").Replace(",", ""), out var p) ? p : null;
-```
-
-### After: ColumnAttribute System
-```csharp
-// Single attribute, automatic conversion, smart defaults
-[Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency)]
-public decimal? Pay { get; set; }
-
-// Automatic CRUD operations
-var trips = await repository.GetAllAsync(); // Automatic: "$1,234.56" → decimal 1234.56
-await repository.AddAsync(newTrip);         // Automatic: decimal 1234.56 → "$1,234.56"
+// Automated conversion in mappers
+entity.Pay = MapperHelper.MapField<decimal?>("Pay", row, headers);
 ```
 
 ### Supported Field Types with Auto-Conversion

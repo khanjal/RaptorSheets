@@ -232,9 +232,9 @@ public class SheetEntity
 
 ### 4. Mapper Classes
 
-**Purpose**: Translate between entities and Google Sheets data with automatic ordering
+**Purpose**: Translate between entities and Google Sheets data with automatic ordering and simplified configuration.
 
-**Simplified Configuration**:
+**Updated Configuration**:
 ```csharp
 public static class ExampleMapper
 {
@@ -242,19 +242,30 @@ public static class ExampleMapper
     {
         var sheet = SheetsConfig.ExampleSheet;  // Headers auto-generated
         sheet.Headers.UpdateColumns();         // Set column indexes
-        
+
         ConfigureFormulas(sheet);
-        
+
         return sheet;
     }
-    
+
     // Google Sheets → Entity
     public static List<ExampleEntity> MapFromRangeData(IList<IList<object>> values)
-    
+    {
+        return MapperHelper.MapFromRangeData<ExampleEntity>(values);
+    }
+
     // Entity → Google Sheets
     public static IList<IList<object?>> MapToRangeData(
         List<ExampleEntity> entities, 
         IList<object> headers)
+    {
+        return MapperHelper.MapToRangeData(entities, headers);
+    }
+
+    private static void ConfigureFormulas(SheetModel sheet)
+    {
+        // Add formulas, formatting, validation
+    }
 }
 ```
 
