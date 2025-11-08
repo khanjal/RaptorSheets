@@ -1,75 +1,58 @@
 using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class DailyEntity
+public class DailyEntity : SheetRowEntityBase
 {
-    [JsonPropertyName("rowId")]
-    public int RowId { get; set; }
-
-    [JsonPropertyName("date")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
+    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.DateTime, jsonPropertyName: "date")]
     public string Date { get; set; } = "";
 
-    [JsonPropertyName("trips")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Trips)]
+    [Column(SheetsConfig.HeaderNames.Trips, FieldTypeEnum.Integer, jsonPropertyName: "trips")]
     public int Trips { get; set; }
 
-    // Financial properties in correct position (after Trips)
-    [JsonPropertyName("pay")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Pay)]
+    // Financial properties
+    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency, jsonPropertyName: "pay")]
     public decimal? Pay { get; set; }
 
-    [JsonPropertyName("tip")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Tips)]
+    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Currency, jsonPropertyName: "tip")]
     public decimal? Tip { get; set; }
 
-    [JsonPropertyName("bonus")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Bonus)]
+    [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Currency, jsonPropertyName: "bonus")]
     public decimal? Bonus { get; set; }
 
-    [JsonPropertyName("total")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Total)]
+    [Column(SheetsConfig.HeaderNames.Total, FieldTypeEnum.Currency, jsonPropertyName: "total")]
     public decimal? Total { get; set; }
 
-    [JsonPropertyName("cash")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Cash)]
+    [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Currency, jsonPropertyName: "cash")]
     public decimal? Cash { get; set; }
 
-    [JsonPropertyName("amt/trip")]
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerTrip)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FieldTypeEnum.Currency, jsonPropertyName: "amt/trip")]
     public decimal AmountPerTrip { get; set; }
 
-    [JsonPropertyName("distance")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Distance)]
+    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance")]
     public decimal Distance { get; set; }
 
-    [JsonPropertyName("amt/dist")]
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerDistance)]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FieldTypeEnum.Currency, jsonPropertyName: "amt/dist")]
     public decimal AmountPerDistance { get; set; }
 
-    [JsonPropertyName("time")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TimeTotal)]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, FieldTypeEnum.Duration, jsonPropertyName: "time")]
     public string Time { get; set; } = "";
 
-    [JsonPropertyName("amt/hour")]
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerTime)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, FieldTypeEnum.Currency, jsonPropertyName: "amt/hour")]
     public decimal AmountPerTime { get; set; }
 
-    [JsonPropertyName("day")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Day)]
+    [Column(SheetsConfig.HeaderNames.Day, FieldTypeEnum.String, jsonPropertyName: "day")]
     public string Day { get; set; } = "";
 
-    [ColumnOrder(SheetsConfig.HeaderNames.Weekday)]
+    [Column(SheetsConfig.HeaderNames.Weekday, FieldTypeEnum.String)]
     public string Weekday { get; set; } = "";
 
-    [JsonPropertyName("week")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Week)]
+    [Column(SheetsConfig.HeaderNames.Week, FieldTypeEnum.String, jsonPropertyName: "week")]
     public string Week { get; set; } = "";
 
-    [JsonPropertyName("month")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Month)]
+    [Column(SheetsConfig.HeaderNames.Month, FieldTypeEnum.String, jsonPropertyName: "month")]
     public string Month { get; set; } = "";
 }

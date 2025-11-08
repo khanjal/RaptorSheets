@@ -1,15 +1,11 @@
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
-using System.Text.Json.Serialization;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class AddressEntity 
+public class AddressEntity : SheetRowEntityBase
 {
-    [JsonPropertyName("rowId")]
-    public int RowId { get; set; }
-
     [Column(SheetsConfig.HeaderNames.Address, FieldTypeEnum.String, jsonPropertyName: "address")]
     public string Address { get; set; } = "";
 
@@ -45,7 +41,4 @@ public class AddressEntity
 
     [Column(SheetsConfig.HeaderNames.VisitLast, FieldTypeEnum.String, jsonPropertyName: "last trip")]
     public string LastTrip { get; set; } = "";
-
-    [JsonPropertyName("saved")]
-    public bool Saved { get; set; }
 }

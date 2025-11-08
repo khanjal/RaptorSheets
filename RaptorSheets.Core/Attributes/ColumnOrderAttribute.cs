@@ -5,7 +5,7 @@ namespace RaptorSheets.Core.Attributes;
 /// ColumnAttribute supports field types, formatting, validation, ordering, and input/output distinction.
 /// This attribute is kept for backward compatibility but will be removed in a future version.
 /// </summary>
-[Obsolete("Use ColumnAttribute instead. ColumnAttribute provides comprehensive column configuration including field types, formatting, validation, and ordering.", error: true)]
+//[Obsolete("Use ColumnAttribute instead. ColumnAttribute provides comprehensive column configuration including field types, formatting, validation, and ordering.", error: true)]
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
 public class ColumnOrderAttribute : Attribute
 {

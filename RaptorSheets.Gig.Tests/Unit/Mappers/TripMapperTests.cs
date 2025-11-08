@@ -129,7 +129,7 @@ public class TripMapperTests
         
         var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
         Assert.NotNull(payHeader);
-        Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
+        Assert.Equal(FormatEnum.CURRENCY, payHeader.Format);
         
         // Verify all headers have proper column assignments
         Assert.All(result.Headers, header => 

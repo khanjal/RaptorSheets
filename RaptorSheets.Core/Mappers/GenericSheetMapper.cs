@@ -134,8 +134,8 @@ public static class GenericSheetMapper<T> where T : class, new()
                 }
                 else
                 {
-                    // Output column or unknown column - write empty string
-                    objectList.Add("");
+                    // Output column or unknown column - write null
+                    objectList.Add(null);
                 }
             }
 
@@ -177,8 +177,10 @@ public static class GenericSheetMapper<T> where T : class, new()
                 }
                 else
                 {
-                    // Output column or unknown column - write empty cell
-                    cells.Add(new CellData { UserEnteredValue = new ExtendedValue { StringValue = "" } });
+                    // Output column or unknown column - write empty CellData to preserve position
+                    // IMPORTANT: Use empty CellData (not null) - Google Sheets API needs explicit
+                    // placeholder to maintain column positions. Null would be skipped/optimized away.
+                    cells.Add(new CellData());
                 }
             }
 

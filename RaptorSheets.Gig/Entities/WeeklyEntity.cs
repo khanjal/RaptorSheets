@@ -1,87 +1,67 @@
 using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
-public class WeeklyEntity
+public class WeeklyEntity : SheetRowEntityBase
 {
-    [JsonPropertyName("rowId")]
-    public int RowId { get; set; }
-
-    [JsonPropertyName("week")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Week)]
+    [Column(SheetsConfig.HeaderNames.Week, FieldTypeEnum.String, jsonPropertyName: "week")]
     public string Week { get; set; } = "";
 
-    [JsonPropertyName("trips")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Trips)]
+    [Column(SheetsConfig.HeaderNames.Trips, FieldTypeEnum.Integer, jsonPropertyName: "trips")]
     public int Trips { get; set; }
 
-    [JsonPropertyName("days")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Days)]
+    [Column(SheetsConfig.HeaderNames.Days, FieldTypeEnum.Integer, jsonPropertyName: "days")]
     public int Days { get; set; }
 
-    // Financial properties in correct position
-    [JsonPropertyName("pay")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Pay)]
+    // Financial properties
+    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency, jsonPropertyName: "pay")]
     public decimal? Pay { get; set; }
 
-    [JsonPropertyName("tip")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Tips)]
+    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Currency, jsonPropertyName: "tip")]
     public decimal? Tip { get; set; }
 
-    [JsonPropertyName("bonus")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Bonus)]
+    [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Currency, jsonPropertyName: "bonus")]
     public decimal? Bonus { get; set; }
 
-    [JsonPropertyName("total")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Total)]
+    [Column(SheetsConfig.HeaderNames.Total, FieldTypeEnum.Currency, jsonPropertyName: "total")]
     public decimal? Total { get; set; }
 
-    [JsonPropertyName("cash")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Cash)]
+    [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Currency, jsonPropertyName: "cash")]
     public decimal? Cash { get; set; }
 
-    [JsonPropertyName("amt/trip")]
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerTrip)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FieldTypeEnum.Currency, jsonPropertyName: "amt/trip")]
     public decimal AmountPerTrip { get; set; }
 
-    [JsonPropertyName("distance")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Distance)]
+    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance")]
     public decimal Distance { get; set; }
 
-    [JsonPropertyName("amt/dist")]
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerDistance)]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FieldTypeEnum.Currency, jsonPropertyName: "amt/dist")]
     public decimal AmountPerDistance { get; set; }
 
-    [JsonPropertyName("time")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TimeTotal)]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, FieldTypeEnum.Duration, jsonPropertyName: "time")]
     public string Time { get; set; } = "";
 
-    [JsonPropertyName("amt/hour")]
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerTime)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, FieldTypeEnum.Currency, jsonPropertyName: "amt/hour")]
     public decimal AmountPerTime { get; set; }
 
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerDay)]
+    [Column(SheetsConfig.HeaderNames.AmountPerDay, FieldTypeEnum.Currency)]
     public decimal AmountPerDay { get; set; }
 
-    [JsonPropertyName("average")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Average)]
+    [Column(SheetsConfig.HeaderNames.Average, FieldTypeEnum.Currency, jsonPropertyName: "average")]
     public decimal Average { get; set; }
 
-    [JsonPropertyName("#")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Number)]
+    [Column(SheetsConfig.HeaderNames.Number, FieldTypeEnum.Integer, jsonPropertyName: "#")]
     public int Number { get; set; }
 
-    [JsonPropertyName("year")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Year)]
+    [Column(SheetsConfig.HeaderNames.Year, FieldTypeEnum.Integer, jsonPropertyName: "year")]
     public int Year { get; set; }
 
-    [JsonPropertyName("begin")]
-    [ColumnOrder(SheetsConfig.HeaderNames.DateBegin)]
+    [Column(SheetsConfig.HeaderNames.DateBegin, FieldTypeEnum.DateTime, jsonPropertyName: "begin")]
     public string Begin { get; set; } = "";
 
-    [JsonPropertyName("end")]
-    [ColumnOrder(SheetsConfig.HeaderNames.DateEnd)]
+    [Column(SheetsConfig.HeaderNames.DateEnd, FieldTypeEnum.DateTime, jsonPropertyName: "end")]
     public string End { get; set; } = "";
 }
