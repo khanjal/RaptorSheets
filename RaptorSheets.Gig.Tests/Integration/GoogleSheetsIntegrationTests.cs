@@ -713,23 +713,27 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     /// <summary>
     /// Tests GenerateDemoData method - validates demo data generation works correctly.
     /// </summary>
-    [Fact]
+    [FactCheckUserSecrets]
     public void DemoData_GenerateMethod_ShouldCreateRealisticData()
     {
         // Arrange
         var startDate = DateTime.Today.AddDays(-30);
         var endDate = DateTime.Today;
-        
-        System.Diagnostics.Debug.WriteLine($"📝 Generating demo data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
-        
+        var seed = 42; // Fixed seed for deterministic data generation
+
+        System.Diagnostics.Debug.WriteLine($"📝 Generating demo data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd} with seed {seed}");
+
         // Act - Use the public GenerateDemoData method
-        var demoData = GoogleSheetManager!.GenerateDemoData(startDate, endDate);
-        
+        var demoData = GoogleSheetManager!.GenerateDemoData(startDate, endDate, seed);
+
         // Assert - Verify the data was generated
         Assert.NotNull(demoData);
         Assert.NotEmpty(demoData.Shifts);
         Assert.NotEmpty(demoData.Trips);
-        
+
+        // Log generated data for debugging
+        System.Diagnostics.Debug.WriteLine($"✅ Generated {demoData.Shifts.Count} shifts, {demoData.Trips.Count} trips, {demoData.Expenses.Count} expenses");
+
         // Verify data structure
         Assert.All(demoData.Shifts, shift =>
         {
@@ -737,16 +741,15 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             Assert.NotNull(shift.Service);
             Assert.True(shift.RowId > 0);
         });
-        
+
         Assert.All(demoData.Trips, trip =>
         {
             Assert.NotNull(trip.Date);
             Assert.NotNull(trip.Service);
             Assert.True(trip.RowId > 0);
         });
-        
-        System.Diagnostics.Debug.WriteLine($"✅ Demo data generated: {demoData.Shifts.Count} shifts, " +
-            $"{demoData.Trips.Count} trips, {demoData.Expenses.Count} expenses");
+
+        System.Diagnostics.Debug.WriteLine($"✅ Demo data validation passed.");
     }
 
     /// <summary>
