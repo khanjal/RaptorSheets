@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Enums;
+using System.Collections.Immutable;
 
 namespace RaptorSheets.Core.Constants;
 
@@ -10,7 +11,7 @@ public static class TypedFieldPatterns
     /// <summary>
     /// Default format patterns for each field type
     /// </summary>
-    public static readonly Dictionary<FieldTypeEnum, string> DefaultPatterns = new()
+    private static readonly ImmutableDictionary<FieldTypeEnum, string> _defaultPatterns = new Dictionary<FieldTypeEnum, string>
     {
         { FieldTypeEnum.String, "@" },
         { FieldTypeEnum.Number, "#,##0.00" },
@@ -22,12 +23,12 @@ public static class TypedFieldPatterns
         { FieldTypeEnum.Email, "@" },
         { FieldTypeEnum.Url, "@" },
         { FieldTypeEnum.Percentage, "0.00%" }
-    };
+    }.ToImmutableDictionary();
 
     /// <summary>
     /// Google Sheets number format types for each field type
     /// </summary>
-    public static readonly Dictionary<FieldTypeEnum, string> NumberFormatTypes = new()
+    private static readonly ImmutableDictionary<FieldTypeEnum, string> _numberFormatTypes = new Dictionary<FieldTypeEnum, string>
     {
         { FieldTypeEnum.String, "TEXT" },
         { FieldTypeEnum.Number, "NUMBER" },
@@ -39,7 +40,17 @@ public static class TypedFieldPatterns
         { FieldTypeEnum.Email, "TEXT" },
         { FieldTypeEnum.Url, "TEXT" },
         { FieldTypeEnum.Percentage, "PERCENT" }
-    };
+    }.ToImmutableDictionary();
+
+    /// <summary>
+    /// Validation patterns for different field types
+    /// </summary>
+    private static readonly ImmutableDictionary<FieldTypeEnum, string> _validationPatterns = new Dictionary<FieldTypeEnum, string>
+    {
+        { FieldTypeEnum.Email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" },
+        { FieldTypeEnum.PhoneNumber, @"^\+?1?\d{9,15}$" },
+        { FieldTypeEnum.Url, @"^https?://.+$" }
+    }.ToImmutableDictionary();
 
     /// <summary>
     /// Gets the default format pattern for a field type
@@ -48,7 +59,7 @@ public static class TypedFieldPatterns
     /// <returns>Default format pattern</returns>
     public static string GetDefaultPattern(FieldTypeEnum fieldType)
     {
-        return DefaultPatterns.TryGetValue(fieldType, out var pattern) ? pattern : "@";
+        return _defaultPatterns.TryGetValue(fieldType, out var pattern) ? pattern : "@";
     }
 
     /// <summary>
@@ -58,18 +69,8 @@ public static class TypedFieldPatterns
     /// <returns>Google Sheets format type</returns>
     public static string GetNumberFormatType(FieldTypeEnum fieldType)
     {
-        return NumberFormatTypes.TryGetValue(fieldType, out var type) ? type : "TEXT";
+        return _numberFormatTypes.TryGetValue(fieldType, out var type) ? type : "TEXT";
     }
-
-    /// <summary>
-    /// Validation patterns for different field types
-    /// </summary>
-    public static readonly Dictionary<FieldTypeEnum, string> ValidationPatterns = new()
-    {
-        { FieldTypeEnum.Email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" },
-        { FieldTypeEnum.PhoneNumber, @"^\+?1?\d{9,15}$" },
-        { FieldTypeEnum.Url, @"^https?://.+$" }
-    };
 
     /// <summary>
     /// Gets the default validation pattern for a field type
@@ -78,6 +79,6 @@ public static class TypedFieldPatterns
     /// <returns>Validation pattern or null if none exists</returns>
     public static string? GetDefaultValidationPattern(FieldTypeEnum fieldType)
     {
-        return ValidationPatterns.TryGetValue(fieldType, out var pattern) ? pattern : null;
+        return _validationPatterns.TryGetValue(fieldType, out var pattern) ? pattern : null;
     }
 }
