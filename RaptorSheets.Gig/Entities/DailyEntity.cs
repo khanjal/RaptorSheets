@@ -6,7 +6,8 @@ namespace RaptorSheets.Gig.Entities;
 
 public class DailyEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.DateTime, jsonPropertyName: "date")]
+    // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
+    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.String, jsonPropertyName: "date", formatType: FormatEnum.DATE)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Trips, FieldTypeEnum.Integer, jsonPropertyName: "trips")]

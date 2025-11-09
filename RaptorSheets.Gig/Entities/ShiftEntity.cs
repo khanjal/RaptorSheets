@@ -7,7 +7,8 @@ namespace RaptorSheets.Gig.Entities;
 public class ShiftEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
-    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.DateTime, jsonPropertyName: "date", isInput: true, note: ColumnNotes.DateFormat)]
+    // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
+    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.String, jsonPropertyName: "date", isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.TimeStart, FieldTypeEnum.Time, jsonPropertyName: "start", isInput: true)]

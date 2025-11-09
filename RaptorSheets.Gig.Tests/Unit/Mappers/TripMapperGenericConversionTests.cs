@@ -111,8 +111,8 @@ public class TripMapperGenericConversionTests
         Assert.NotNull(row.Values);
         Assert.Equal(8, row.Values.Count);
         
-        // Verify Date uses serial date conversion (DateTime field type)
-        Assert.NotNull(row.Values[0].UserEnteredValue?.NumberValue);
+        // Verify Date is string (FieldTypeEnum.String), not serial number
+        Assert.Equal("2024-01-15", row.Values[0].UserEnteredValue?.StringValue);
         
         // Verify Service is string
         Assert.Equal("Uber", row.Values[1].UserEnteredValue?.StringValue);

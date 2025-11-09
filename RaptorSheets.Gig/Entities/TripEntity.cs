@@ -7,7 +7,8 @@ namespace RaptorSheets.Gig.Entities;
 public class TripEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
-    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.DateTime, isInput: true, note: ColumnNotes.DateFormat)]
+    // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
+    [Column(SheetsConfig.HeaderNames.Date, FieldTypeEnum.String, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Service, FieldTypeEnum.String, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]

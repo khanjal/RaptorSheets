@@ -4,9 +4,9 @@ using RaptorSheets.Core.Constants;
 namespace RaptorSheets.Core.Attributes;
 
 /// <summary>
-/// Comprehensive attribute that defines column configuration for Google Sheets
-/// Uses header name as default JSON property name with optional override
-/// Automatically applies default format patterns based on field type
+/// Comprehensive attribute that defines column configuration for Google Sheets.
+/// Separates data conversion logic (FieldType) from display formatting (FormatType).
+/// Uses header name as default JSON property name with optional override.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
 public class ColumnAttribute : Attribute
@@ -22,9 +22,19 @@ public class ColumnAttribute : Attribute
     public string JsonPropertyName { get; }
 
     /// <summary>
-    /// Gets the field type for automatic conversion and formatting
+    /// Gets the field type for data conversion between C# and Google Sheets.
+    /// This should match the C# property type (e.g., String for string properties, Currency for decimal properties).
+    /// Controls how data is parsed when reading from sheets and formatted when writing to sheets.
     /// </summary>
     public FieldTypeEnum FieldType { get; }
+
+    /// <summary>
+    /// Gets the format type for Google Sheets display formatting.
+    /// This controls how the cell is visually formatted in Google Sheets (e.g., DATE, CURRENCY, TEXT).
+    /// Can differ from FieldType (e.g., FieldType=String but FormatType=DATE for date strings).
+    /// If DEFAULT, uses format matching FieldType.
+    /// </summary>
+    public FormatEnum FormatType { get; }
 
     /// <summary>
     /// Gets the custom number format pattern for Google Sheets (uses default if not specified)
@@ -65,12 +75,13 @@ public class ColumnAttribute : Attribute
     /// For input columns (user-entered data), use the 3-parameter constructor with isInput: true.
     /// </summary>
     /// <param name="headerName">Header name for sheet column (also used for JSON property name)</param>
-    /// <param name="fieldType">Field type for automatic conversion and formatting</param>
+    /// <param name="fieldType">Field type for data conversion (should match C# property type)</param>
     public ColumnAttribute(string headerName, FieldTypeEnum fieldType)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
         FieldType = fieldType;
+        FormatType = FormatEnum.DEFAULT;
         NumberFormatPattern = null;
         Order = -1;
         IsInput = false; // Default to output/formula column
@@ -82,13 +93,14 @@ public class ColumnAttribute : Attribute
     /// Explicitly requires specifying whether this is an input or output column.
     /// </summary>
     /// <param name="headerName">Header name for sheet column (also used for JSON property name)</param>
-    /// <param name="fieldType">Field type for automatic conversion and formatting</param>
+    /// <param name="fieldType">Field type for data conversion (should match C# property type)</param>
     /// <param name="isInput">True if this is a user-input column that should be written to sheets, false for output/formula columns</param>
     public ColumnAttribute(string headerName, FieldTypeEnum fieldType, bool isInput)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
         FieldType = fieldType;
+        FormatType = FormatEnum.DEFAULT;
         NumberFormatPattern = null; // Will use default pattern
         Order = -1;
         IsInput = isInput;
@@ -96,10 +108,11 @@ public class ColumnAttribute : Attribute
     }
 
     /// <summary>
-    /// Initializes a column configuration with full customization options
+    /// Initializes a column configuration with full customization options.
+    /// Use named parameters to specify formatType: formatType: FormatEnum.DATE
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
-    /// <param name="fieldType">Field type for automatic conversion and formatting</param>
+    /// <param name="fieldType">Field type for data conversion (should match C# property type)</param>
     /// <param name="formatPattern">Custom number format pattern (null = use default)</param>
     /// <param name="jsonPropertyName">Custom JSON property name (null = auto-generate from header)</param>
     /// <param name="order">Column order priority (-1 = use declaration order)</param>
@@ -107,6 +120,7 @@ public class ColumnAttribute : Attribute
     /// <param name="enableValidation">Enable field validation (default: false)</param>
     /// <param name="validationPattern">Custom validation pattern (null = use default for field type)</param>
     /// <param name="note">Note/comment to display in Google Sheets (default: null)</param>
+    /// <param name="formatType">Format type for Google Sheets display (DEFAULT = use default from fieldType)</param>
     public ColumnAttribute(
         string headerName,
         FieldTypeEnum fieldType,
@@ -116,11 +130,13 @@ public class ColumnAttribute : Attribute
         bool isInput = false,
         bool enableValidation = false,
         string? validationPattern = null,
-        string? note = null)
+        string? note = null,
+        FormatEnum formatType = FormatEnum.DEFAULT)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = jsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
         FieldType = fieldType;
+        FormatType = formatType;
         NumberFormatPattern = formatPattern;
         Order = order;
         IsInput = isInput;
@@ -158,15 +174,18 @@ public class ColumnAttribute : Attribute
     public bool HasCustomFormatPattern => NumberFormatPattern != null;
 
     /// <summary>
-    /// Gets the effective format enum (default from field type)
+    /// Gets the effective format enum for Google Sheets display.
+    /// Returns the explicit FormatType if specified (not DEFAULT), otherwise defaults to format matching FieldType.
     /// </summary>
     public FormatEnum? GetEffectiveFormat()
     {
-        return GetDefaultFormatFromFieldType(FieldType);
+        // Use explicit FormatType if provided (not DEFAULT), otherwise derive from FieldType
+        return FormatType != FormatEnum.DEFAULT ? FormatType : GetDefaultFormatFromFieldType(FieldType);
     }
 
     /// <summary>
-    /// Gets the default FormatEnum for a given field type
+    /// Gets the default FormatEnum for a given field type.
+    /// Used when FormatType is DEFAULT.
     /// </summary>
     private static FormatEnum? GetDefaultFormatFromFieldType(FieldTypeEnum fieldType)
     {

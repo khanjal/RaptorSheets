@@ -7,6 +7,7 @@ using Moq;
 using RaptorSheets.Gig.Repositories;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Core.Services;
+using Google.Apis.Sheets.v4.Data;
 
 namespace RaptorSheets.Gig.Tests.Unit.Repositories
 {
@@ -24,14 +25,22 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
         [Fact]
         public async Task GetTripsByDateRangeAsync_ReturnsTripsWithinRange()
         {
-            // Arrange
-            var trips = new List<TripEntity>
+            // Arrange - Create header row and data rows with ALL string values
+            // Important: Date field in TripEntity is a string, not DateTime
+            var headerRow = (IList<object>)new List<object> { "Date", "Pay" };
+            var dataRows = new List<IList<object>>
             {
-                new TripEntity { Date = "2025-11-01", Pay = 100 },
-                new TripEntity { Date = "2025-11-05", Pay = 200 },
-                new TripEntity { Date = "2025-11-10", Pay = 300 }
+                (IList<object>)new List<object> { "2025-11-01", "100" },  // All values must be strings or string-compatible
+                (IList<object>)new List<object> { "2025-11-05", "200" },
+                (IList<object>)new List<object> { "2025-11-10", "300" }
             };
-            _mockSheetService.Setup(s => s.GetAllAsync<TripEntity>()).ReturnsAsync(trips);
+            
+            // Combine header and data rows
+            var allRows = new List<IList<object>> { headerRow };
+            allRows.AddRange(dataRows);
+            
+            _mockSheetService.Setup(s => s.GetSheetData("Trips"))
+                .ReturnsAsync(new ValueRange { Values = allRows });
 
             // Act
             var result = await _repository.GetTripsByDateRangeAsync(DateTime.Parse("2025-11-01"), DateTime.Parse("2025-11-05"));
@@ -43,14 +52,21 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
         [Fact]
         public async Task GetTripsByServiceAsync_ReturnsTripsForService()
         {
-            // Arrange
-            var trips = new List<TripEntity>
+            // Arrange - Create header row and data rows
+            var headerRow = (IList<object>)new List<object> { "Date", "Service" };  // Add Date column for proper mapping
+            var dataRows = new List<IList<object>>
             {
-                new TripEntity { Service = "Uber" },
-                new TripEntity { Service = "Lyft" },
-                new TripEntity { Service = "Uber" }
+                (IList<object>)new List<object> { "2025-11-01", "Uber" },
+                (IList<object>)new List<object> { "2025-11-02", "Lyft" },
+                (IList<object>)new List<object> { "2025-11-03", "Uber" }
             };
-            _mockSheetService.Setup(s => s.GetAllAsync<TripEntity>()).ReturnsAsync(trips);
+            
+            // Combine header and data rows
+            var allRows = new List<IList<object>> { headerRow };
+            allRows.AddRange(dataRows);
+            
+            _mockSheetService.Setup(s => s.GetSheetData("Trips"))
+                .ReturnsAsync(new ValueRange { Values = allRows });
 
             // Act
             var result = await _repository.GetTripsByServiceAsync("Uber");
@@ -62,13 +78,20 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
         [Fact]
         public async Task GetTotalEarningsAsync_CalculatesCorrectTotal()
         {
-            // Arrange
-            var trips = new List<TripEntity>
+            // Arrange - Create header row and data rows with ALL string values
+            var headerRow = (IList<object>)new List<object> { "Date", "Pay", "Tips", "Bonus" };
+            var dataRows = new List<IList<object>>
             {
-                new TripEntity { Date = "2025-11-01", Pay = 100, Tip = 20, Bonus = 10 },
-                new TripEntity { Date = "2025-11-05", Pay = 200, Tip = 30, Bonus = 20 }
+                (IList<object>)new List<object> { "2025-11-01", "100", "20", "10" }, // All values as strings
+                (IList<object>)new List<object> { "2025-11-05", "200", "30", "20" }
             };
-            _mockSheetService.Setup(s => s.GetAllAsync<TripEntity>()).ReturnsAsync(trips);
+            
+            // Combine header and data rows
+            var allRows = new List<IList<object>> { headerRow };
+            allRows.AddRange(dataRows);
+            
+            _mockSheetService.Setup(s => s.GetSheetData("Trips"))
+                .ReturnsAsync(new ValueRange { Values = allRows });
 
             // Act
             var result = await _repository.GetTotalEarningsAsync(DateTime.Parse("2025-11-01"), DateTime.Parse("2025-11-05"));
