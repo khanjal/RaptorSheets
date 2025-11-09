@@ -119,9 +119,11 @@ public static class GenericSheetMapper<T> where T : class, new()
         {
             var objectList = new List<object?>();
 
-            foreach (var header in headers)
+            // Map headers explicitly using .Select(...) before iterating
+            var mappedHeaders = headers.Select(header => header.ToString()!.Trim());
+
+            foreach (var headerName in mappedHeaders)
             {
-                var headerName = header.ToString()!.Trim();
                 var propertyInfo = _columnProperties.FirstOrDefault(
                     p => p.Column.GetEffectiveHeaderName() == headerName);
 
@@ -162,9 +164,10 @@ public static class GenericSheetMapper<T> where T : class, new()
             var rowData = new RowData();
             var cells = new List<CellData>();
 
-            foreach (var header in headers)
+            // Map headers explicitly using .Select(...) before iterating
+            var mappedHeadersForRowData = headers.Select(header => header.ToString()!.Trim());
+            foreach (var headerName in mappedHeadersForRowData)
             {
-                var headerName = header.ToString()!.Trim();
                 var propertyInfo = _columnProperties.FirstOrDefault(
                     p => p.Column.GetEffectiveHeaderName() == headerName);
 
@@ -202,9 +205,10 @@ public static class GenericSheetMapper<T> where T : class, new()
         var rowData = new RowData();
         var cells = new List<CellData>();
 
-        foreach (var header in headers)
+        // Map headers explicitly using .Select(...) before iterating
+        var mappedHeadersForRowFormat = headers.Select(header => header.ToString()!.Trim());
+        foreach (var headerName in mappedHeadersForRowFormat)
         {
-            var headerName = header.ToString()!.Trim();
             var cellData = GetFormatForHeader(headerName);
             cells.Add(cellData);
         }

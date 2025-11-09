@@ -37,22 +37,22 @@ public static class SchemaValidator
         }
 
         // Check if all expected headers are present
-        foreach (var expectedHeader in expectedHeaders)
+        var missingHeaders = expectedHeaders
+            .Where(expectedHeader => !actualHeaders.Contains(expectedHeader.Name, StringComparer.OrdinalIgnoreCase));
+
+        foreach (var missingHeader in missingHeaders)
         {
-            if (!actualHeaders.Contains(expectedHeader.Name, StringComparer.OrdinalIgnoreCase))
-            {
-                result.AddError($"Missing expected header: '{expectedHeader.Name}'");
-            }
+            result.AddError($"Missing expected header: '{missingHeader.Name}'");
         }
 
         // Check for unexpected headers (warnings only)
         var expectedHeaderNames = expectedHeaders.Select(h => h.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        foreach (var actualHeader in actualHeaders.Where(h => !string.IsNullOrWhiteSpace(h)))
+        var unexpectedHeaders = actualHeaders
+            .Where(actualHeader => !string.IsNullOrWhiteSpace(actualHeader) && !expectedHeaderNames.Contains(actualHeader));
+
+        foreach (var unexpectedHeader in unexpectedHeaders)
         {
-            if (!expectedHeaderNames.Contains(actualHeader))
-            {
-                result.AddWarning($"Unexpected header found: '{actualHeader}'");
-            }
+            result.AddWarning($"Unexpected header found: '{unexpectedHeader}'");
         }
 
         // Validate column order if strict ordering is required

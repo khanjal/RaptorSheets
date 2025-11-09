@@ -1,5 +1,6 @@
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Constants;
+using System.Text;
 
 namespace RaptorSheets.Core.Attributes;
 
@@ -225,17 +226,17 @@ public class ColumnAttribute : Attribute
             return headerName.ToLowerInvariant();
         }
 
-        // First word lowercase, subsequent words title case
-        var result = words[0].ToLowerInvariant();
+        // Use StringBuilder for efficient concatenation
+        var result = new StringBuilder(words[0].ToLowerInvariant());
         for (int i = 1; i < words.Length; i++)
         {
             var word = words[i];
             if (word.Length > 0)
             {
-                result += char.ToUpperInvariant(word[0]) + word[1..].ToLowerInvariant();
+                result.Append(char.ToUpperInvariant(word[0])).Append(word[1..].ToLowerInvariant());
             }
         }
 
-        return result;
+        return result.ToString();
     }
 }

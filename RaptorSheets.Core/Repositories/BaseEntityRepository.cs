@@ -4,6 +4,7 @@ using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Core.Validators;
+using System.Text;
 
 namespace RaptorSheets.Core.Repositories;
 
@@ -275,14 +276,14 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// </summary>
     protected virtual string GetLastColumn(int columnCount)
     {
-        var column = "";
+        var columnBuilder = new StringBuilder();
         while (columnCount > 0)
         {
             columnCount--;
-            column = (char)('A' + columnCount % 26) + column;
+            columnBuilder.Insert(0, (char)('A' + columnCount % 26));
             columnCount /= 26;
         }
-        return column;
+        return columnBuilder.ToString();
     }
 
     #endregion

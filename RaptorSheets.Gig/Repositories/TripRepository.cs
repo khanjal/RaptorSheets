@@ -71,12 +71,9 @@ public class TripRepository : BaseEntityRepository<TripEntity>
         if (trip == null) throw new ArgumentNullException(nameof(trip));
 
         // Generate key if not provided
-        if (string.IsNullOrEmpty(trip.Key) && !string.IsNullOrEmpty(trip.Date))
+        if (string.IsNullOrEmpty(trip.Key) && !string.IsNullOrEmpty(trip.Date) && DateTime.TryParse(trip.Date, out var tripDate))
         {
-            if (DateTime.TryParse(trip.Date, out var tripDate))
-            {
-                trip.Key = $"{tripDate:yyyyMMdd}_{trip.Service}_{trip.Number}";
-            }
+            trip.Key = $"{tripDate:yyyyMMdd}_{trip.Service}_{trip.Number}";
         }
 
         // Auto-calculate total if not provided
