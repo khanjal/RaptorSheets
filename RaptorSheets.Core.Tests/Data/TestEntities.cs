@@ -1,5 +1,6 @@
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Core.Tests.Data;
 
@@ -22,6 +23,7 @@ public static class TestHeaderNames
 }
 
 // Base test entity - mark as input for testing
+[ExcludeFromCodeCoverage]
 public class TestAmountEntity
 {
     [Column(TestHeaderNames.Pay, FieldTypeEnum.Currency, isInput: true)]
@@ -41,6 +43,7 @@ public class TestAmountEntity
 }
 
 // Middle test entity
+[ExcludeFromCodeCoverage]
 public class TestVisitEntity : TestAmountEntity
 {
     [Column(TestHeaderNames.Trips, FieldTypeEnum.Integer, isInput: true)]
@@ -54,6 +57,7 @@ public class TestVisitEntity : TestAmountEntity
 }
 
 // Derived test entity
+[ExcludeFromCodeCoverage]
 public class TestAddressEntity : TestVisitEntity
 {
     public int RowId { get; set; } // No Column attribute - should be ignored
@@ -68,6 +72,7 @@ public class TestAddressEntity : TestVisitEntity
 }
 
 // Simple entity without inheritance
+[ExcludeFromCodeCoverage]
 public class TestSimpleEntity
 {
     [Column(TestHeaderNames.Name, FieldTypeEnum.String, isInput: true)]
@@ -80,6 +85,7 @@ public class TestSimpleEntity
 }
 
 // Entity with invalid header reference (for error testing)
+[ExcludeFromCodeCoverage]
 public class TestInvalidEntity
 {
     [Column("Invalid Header Name", FieldTypeEnum.String, isInput: true)]
@@ -90,6 +96,7 @@ public class TestInvalidEntity
 }
 
 // Entity with no Column attributes
+[ExcludeFromCodeCoverage]
 public class TestNoAttributesEntity
 {
     public string Name { get; set; } = "";
