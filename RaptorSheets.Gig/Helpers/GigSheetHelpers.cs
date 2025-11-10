@@ -1,13 +1,13 @@
 using Google.Apis.Sheets.v4.Data;
+using RaptorSheets.Common.Constants.SheetConfigs;
+using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
-using RaptorSheets.Gig.Entities;
-using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Entities;
-using RaptorSheets.Core.Mappers;
-using RaptorSheets.Common.Mappers;
-using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Helpers;
 
@@ -62,7 +62,7 @@ public static class GigSheetHelpers
                     sheetData.Add(DailyMapper.GetSheet());
                     break;
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
-                    sheetData.Add(ExpenseMapper.GetSheet());
+                    sheetData.Add(GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet));
                     break;
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(MonthlyMapper.GetSheet());
@@ -77,7 +77,7 @@ public static class GigSheetHelpers
                     sheetData.Add(RegionMapper.GetSheet());
                     break;
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
-                    sheetData.Add(SetupMapper.GetSheet());
+                    sheetData.Add(SetupSheetConfig.SetupSheet);
                     break;
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(ServiceMapper.GetSheet());
@@ -210,7 +210,7 @@ public static class GigSheetHelpers
                 sheetEntity.Daily = GenericSheetMapper<DailyEntity>.MapFromRangeData(values);
                 break;
             case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
-                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ExpenseMapper.GetSheet()));
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet)));
                 sheetEntity.Expenses = GenericSheetMapper<ExpenseEntity>.MapFromRangeData(values);
                 break;
             case var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase):
@@ -234,8 +234,8 @@ public static class GigSheetHelpers
                 sheetEntity.Services = GenericSheetMapper<ServiceEntity>.MapFromRangeData(values);
                 break;
             case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
-                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, SetupMapper.GetSheet()));
-                sheetEntity.Setup = SetupMapper.MapFromRangeData(values);
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, SetupSheetConfig.SetupSheet));
+                sheetEntity.Setup = GenericSheetMapper<SetupEntity>.MapFromRangeData(values);
                 break;
             case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ShiftMapper.GetSheet()));

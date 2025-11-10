@@ -1,5 +1,4 @@
 ﻿using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Common.Mappers;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
@@ -134,7 +133,7 @@ public static class GigRequestHelpers
 
     public static IEnumerable<Request> CreateUpdateCellSetupRequests(List<SetupEntity> setup, PropertyEntity? sheetProperties)
     {
-        return CreateUpdateCellRequests(setup, sheetProperties, SetupMapper.MapToRowData);
+        return CreateUpdateCellRequests(setup, sheetProperties, GenericSheetMapper<SetupEntity>.MapToRowData);
     }
 
     // EXPENSE
