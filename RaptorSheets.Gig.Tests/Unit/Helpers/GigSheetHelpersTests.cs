@@ -284,4 +284,206 @@ public class GigSheetHelpersTests
     }
     
     #endregion
+
+    #region Extended Data Validation Tests
+    
+    [Theory]
+    [InlineData(ValidationEnum.RANGE_ADDRESS)]
+    [InlineData(ValidationEnum.RANGE_NAME)]
+    [InlineData(ValidationEnum.RANGE_PLACE)]
+    [InlineData(ValidationEnum.RANGE_REGION)]
+    [InlineData(ValidationEnum.RANGE_SERVICE)]
+    [InlineData(ValidationEnum.RANGE_TYPE)]
+    public void GetDataValidation_WithRangeValidations_ShouldReturnCorrectSheetReference(ValidationEnum validation)
+    {
+        // Act
+        var result = GigSheetHelpers.GetDataValidation(validation);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Condition);
+        Assert.Equal("ONE_OF_RANGE", result.Condition.Type);
+        Assert.NotNull(result.Condition.Values);
+        Assert.Single(result.Condition.Values);
+        Assert.Contains("!A2:A", result.Condition.Values[0].UserEnteredValue);
+        Assert.True(result.ShowCustomUi);
+        Assert.False(result.Strict);
+    }
+
+    [Fact]
+    public void GetDataValidation_WithRangeSelf_ShouldUseProvidedRange()
+    {
+        // Arrange
+        var customRange = "B2:B100";
+
+        // Act
+        var result = GigSheetHelpers.GetDataValidation(ValidationEnum.RANGE_SELF, customRange);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Condition);
+        Assert.Equal("ONE_OF_RANGE", result.Condition.Type);
+        Assert.NotNull(result.Condition.Values);
+        Assert.Single(result.Condition.Values);
+        Assert.Equal($"={customRange}", result.Condition.Values[0].UserEnteredValue);
+        Assert.True(result.ShowCustomUi);
+        Assert.False(result.Strict);
+    }
+
+    [Fact]
+    public void GetDataValidation_WithRangeSelfEmptyRange_ShouldHandleEmptyString()
+    {
+        // Act
+        var result = GigSheetHelpers.GetDataValidation(ValidationEnum.RANGE_SELF, "");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Condition);
+        Assert.Equal("ONE_OF_RANGE", result.Condition.Type);
+        Assert.NotNull(result.Condition.Values);
+        Assert.Single(result.Condition.Values);
+        Assert.Equal("=", result.Condition.Values[0].UserEnteredValue);
+    }
+    
+    #endregion
+
+    #region Comprehensive Missing Sheets Tests
+    
+    [Theory]
+    [InlineData(nameof(SheetsConfig.SheetNames.Addresses))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Daily))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Expenses))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Monthly))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Names))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Places))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Regions))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Services))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Setup))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Types))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Weekdays))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Weekly))]
+    [InlineData(nameof(SheetsConfig.SheetNames.Yearly))]
+    public void GetMissingSheets_WithSpecificMissingSheet_ShouldIncludeThatSheet(string sheetPropertyName)
+    {
+        // Arrange - Get the actual sheet name value from the constant
+        var sheetName = typeof(SheetsConfig.SheetNames)
+            .GetField(sheetPropertyName)
+            ?.GetValue(null)?.ToString() ?? string.Empty;
+
+        // Create a spreadsheet with all sheets EXCEPT the one we're testing
+        var allSheetNames = GigSheetHelpers.GetSheetNames();
+        var existingSheets = allSheetNames
+            .Where(name => !string.Equals(name, sheetName, StringComparison.OrdinalIgnoreCase))
+            .Select(name => new Sheet { Properties = new SheetProperties { Title = name } })
+            .ToList();
+
+        var spreadsheet = new Spreadsheet { Sheets = existingSheets };
+
+        // Act
+        var result = GigSheetHelpers.GetMissingSheets(spreadsheet);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal(sheetName, result[0].Name);
+    }
+    
+    #endregion
+
+    #region ProcessSheetData Coverage Tests
+    
+    [Theory]
+    [InlineData(nameof(SheetsConfig.SheetNames.Addresses), "AddressEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Daily), "DailyEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Monthly), "MonthlyEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Names), "NameEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Places), "PlaceEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Regions), "RegionEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Services), "ServiceEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Types), "TypeEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Weekdays), "WeekdayEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Weekly), "WeeklyEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Yearly), "YearlyEntity")]
+    public void MapData_WithBatchResponse_ShouldMapSpecificSheet(string sheetPropertyName, string entityType)
+    {
+        // Arrange - Get the actual sheet name value from the constant
+        var sheetName = typeof(SheetsConfig.SheetNames)
+            .GetField(sheetPropertyName)
+            ?.GetValue(null)?.ToString() ?? string.Empty;
+
+        var response = new BatchGetValuesByDataFilterResponse
+        {
+            ValueRanges = new List<MatchedValueRange>
+            {
+                new()
+                {
+                    DataFilters = new List<DataFilter>
+                    {
+                        new() { A1Range = sheetName }
+                    },
+                    ValueRange = new ValueRange
+                    {
+                        Values = new List<IList<object>>
+                        {
+                            // Generic header row
+                            new List<object> { "Column1", "Column2", "Column3" }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Act
+        var result = GigSheetHelpers.MapData(response);
+
+        // Assert
+        Assert.NotNull(result);
+        // Verify the sheet entity was created (we can't easily check the specific property without reflection)
+        // The fact that it doesn't throw is sufficient for coverage
+    }
+
+    [Fact]
+    public void MapData_WithSpreadsheet_AllSheetTypes_ShouldProcessAll()
+    {
+        // Arrange - Create a spreadsheet with all sheet types
+        var allSheetNames = GigSheetHelpers.GetSheetNames();
+        var sheets = allSheetNames.Select(name => new Sheet
+        {
+            Properties = new SheetProperties { Title = name },
+            Data = new List<GridData>
+            {
+                new()
+                {
+                    RowData = new List<RowData>
+                    {
+                        new()
+                        {
+                            Values = new List<CellData>
+                            {
+                                new() { FormattedValue = "Header1" },
+                                new() { FormattedValue = "Header2" }
+                            }
+                        }
+                    }
+                }
+            }
+        }).ToList();
+
+        var spreadsheet = new Spreadsheet
+        {
+            Properties = new SpreadsheetProperties { Title = "Complete Test Spreadsheet" },
+            Sheets = sheets
+        };
+
+        // Act
+        var result = GigSheetHelpers.MapData(spreadsheet);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Properties);
+        Assert.Equal("Complete Test Spreadsheet", result.Properties.Name);
+        // The fact that it processes all sheets without throwing is the test
+    }
+    
+    #endregion
 }

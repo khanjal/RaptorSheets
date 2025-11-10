@@ -467,4 +467,76 @@ public class EntitySheetOrderHelperTests
         Assert.Equal("Trips", sheetOrder[1]);    // Property index 1  
         Assert.Equal("Setup", sheetOrder[2]);    // Property index 2
     }
+
+    [Fact]
+    public void GetSheetOrderFromEntity_EntityWithNoProperties_ReturnsEmptyList()
+    {
+        // Act
+        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestNoAttributesEntity>();
+
+        // Assert
+        Assert.Empty(sheetOrder);
+    }
+
+    [Fact]
+    public void GetSheetOrderFromEntity_EntityWithDuplicateSheetOrders_ReturnsInconsistentOrder()
+    {
+        // Act
+        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestDuplicateOrderEntity>();
+
+        // Assert
+        Assert.Equal(2, sheetOrder.Count);
+        Assert.Contains("Trips", sheetOrder);
+        Assert.Contains("Shifts", sheetOrder);
+    }
+
+    [Fact]
+    public void GetSheetOrderFromEntity_EntityWithNegativeSheetOrder_UsesPropertyOrder()
+    {
+        // Arrange - Negative order (-1) is valid and means "use property order"
+        // This is the same as optional ordering
+
+        // Act
+        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestNegativeSheetOrderEntity>();
+
+        // Assert - Should return the sheet in property order since Order = -1
+        Assert.Single(sheetOrder);
+        Assert.Equal("NegativeOrderSheet", sheetOrder[0]);
+    }
+
+    [Fact]
+    public void ValidateEntitySheetMapping_EmptyAvailableSheets_ReturnsErrors()
+    {
+        // Arrange
+        var availableSheets = Array.Empty<string>();
+
+        // Act
+        var errors = EntitySheetOrderHelper.ValidateEntitySheetMapping<TestSheetOrderEntity>(availableSheets);
+
+        // Assert
+        Assert.NotEmpty(errors);
+        Assert.Contains(errors, e => e.Contains("Trips"));
+    }
+
+    [Fact]
+    public void ValidateEntitySheetMapping_PartialAvailableSheets_ReturnsErrors()
+    {
+        // Arrange - Only provide some of the required sheets
+        var availableSheets = new[] { "Trips", "Shifts" }; // Missing "Expenses" and "Setup"
+
+        // Act
+        var errors = EntitySheetOrderHelper.ValidateEntitySheetMapping<TestSheetOrderEntity>(availableSheets);
+
+        // Assert - Should have errors for missing sheets
+        Assert.NotEmpty(errors);
+        Assert.Contains(errors, e => e.Contains("Expenses"));
+        Assert.Contains(errors, e => e.Contains("Setup"));
+    }
+}
+
+[ExcludeFromCodeCoverage]
+public class TestNegativeSheetOrderEntity
+{
+    [SheetOrder(-1, "NegativeOrderSheet")]
+    public bool NegativeOrderSheet { get; set; } = true;
 }

@@ -465,6 +465,24 @@ public class GoogleFormulaBuilderTests
         Assert.Contains(index.ToString(), result);
     }
 
+    [Fact]
+    public void BuildArrayFormulaWeekdayAmountCurrent_ShouldGenerateCurrentAmountFormula()
+    {
+        // Arrange
+        var keyRange = "A1:A";
+        var dailyRange = "Daily!A:F";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekdayAmountCurrent(keyRange, dailyRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(IFS(ROW(", result);
+        Assert.Contains("\"Curr Amt\"", result);
+        Assert.Contains("VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+", result);
+        Assert.Contains(keyRange, result);
+        Assert.Contains(dailyRange, result);
+    }
+
     [Theory]
     [InlineData("A1:A", "Daily!A:F", 0, "Curr Amt", "=ARRAYFORMULA(IFS(ROW(A1:A)=1,\"Curr Amt\",ISBLANK(A1:A), \"\", true, IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+A1:A+0,Daily!A:F,6,false),0)))")]
     [InlineData("A1:A", "Daily!A:F", -7, "Prev Amt", "=ARRAYFORMULA(IFS(ROW(A1:A)=1,\"Prev Amt\",ISBLANK(A1:A), \"\", true, IFERROR(VLOOKUP(TODAY()-WEEKDAY(TODAY(),2)+A1:A+-7,Daily!A:F,6,false),0)))")]
@@ -476,6 +494,94 @@ public class GoogleFormulaBuilderTests
 
         // Assert
         Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void BuildArrayLiteralNumberSequence_ShouldGenerateSequence()
+    {
+        // Arrange
+        var header = "Number";
+        var count = 5;
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayLiteralNumberSequence(header, count);
+
+        // Assert
+        Assert.Contains("={\"Number\";SORT({1;2;3;4;5})}", result);
+        Assert.StartsWith("=", result);
+        Assert.Contains("SORT(", result);
+    }
+
+    [Theory]
+    [InlineData(1, "={\"Number\";SORT({1})}")]
+    [InlineData(3, "={\"Number\";SORT({1;2;3})}")]
+    [InlineData(7, "={\"Number\";SORT({1;2;3;4;5;6;7})}")]
+    public void BuildArrayLiteralNumberSequence_WithDifferentCounts_ShouldGenerateCorrectSequence(int count, string expected)
+    {
+        // Arrange
+        var header = "Number";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayLiteralNumberSequence(header, count);
+
+        // Assert
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void BuildCustomFormula_WithNoReplacements_ShouldReturnOriginal()
+    {
+        // Arrange
+        var template = "Test formula without placeholders";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildCustomFormula(template);
+
+        // Assert
+        Assert.Equal(template, result);
+    }
+
+    [Fact]
+    public void BuildCustomFormula_WithEmptyTemplate_ShouldReturnEmpty()
+    {
+        // Arrange
+        var template = "";
+        var replacements = new[] { ("{placeholder}", "value") };
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildCustomFormula(template, replacements);
+
+        // Assert
+        Assert.Equal("", result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaWeekdayText_WithZeroOffset_ShouldUseDefaultOffset()
+    {
+        // Arrange
+        var dateRange = "$A:$A";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(TestKeyRange, TestHeader, dateRange, 0);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("+0,\"ddd\")", result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaWeekdayText_WithNegativeOffset_ShouldHandleNegative()
+    {
+        // Arrange
+        var dateRange = "$A:$A";
+        var offset = -1;
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(TestKeyRange, TestHeader, dateRange, offset);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("+-1,\"ddd\")", result);
     }
 
     #endregion
