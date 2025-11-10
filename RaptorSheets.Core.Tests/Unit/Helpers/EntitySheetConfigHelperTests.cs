@@ -1,3 +1,5 @@
+using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Tests.Data;
@@ -260,5 +262,24 @@ public class EntitySheetConfigHelperTests
         Assert.NotNull(payHeader);
         // The format should be applied automatically based on FieldTypeEnum.Currency
         // Note: The exact format application depends on the EntitySheetConfigHelper implementation
+    }
+
+    private class TestNoPropertiesEntity
+    {
+    }
+
+    private class TestDuplicateColumnEntity
+    {
+        [Column("DuplicateHeader", FieldTypeEnum.String)]
+        public string Property1 { get; set; } = "";
+
+        [Column("DuplicateHeader", FieldTypeEnum.String)]
+        public string Property2 { get; set; } = "";
+    }
+
+    private class TestInvalidColumnEntity
+    {
+        [Column("InvalidColumn", FieldTypeEnum.Currency)]
+        public string InvalidProperty { get; set; } = "";
     }
 }

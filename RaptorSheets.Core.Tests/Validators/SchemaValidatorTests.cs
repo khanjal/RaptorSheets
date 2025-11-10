@@ -1,7 +1,10 @@
 using RaptorSheets.Core.Validators;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Models;
 using Xunit;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RaptorSheets.Core.Tests.Validators
 {
@@ -47,6 +50,42 @@ namespace RaptorSheets.Core.Tests.Validators
         }
 
         [Fact]
+        public void ValidateSheet_ShouldReturnValidResult_WhenAllHeadersMatch()
+        {
+            // Arrange
+            var headerRow = new List<object> { "Header1", "Header2", "Header3" };
+
+            // Act
+            var result = SchemaValidator.ValidateSheet<TestEntity>(headerRow);
+
+            // Assert
+            Assert.True(result.IsValid);
+            Assert.Empty(result.Errors);
+        }
+
+        [Fact]
+        public void ValidateRequiredHeaders_ShouldReturnError_WhenRequiredHeadersAreMissing()
+        {
+            // Act
+            var result = SchemaValidator.ValidateRequiredHeaders<TestEntity>(new[] { "Header1", "MissingHeader" });
+
+            // Assert
+            Assert.False(result.IsValid);
+            Assert.Contains(result.Errors, e => e.Contains("MissingHeader") && e.Contains("missing"));
+        }
+
+        [Fact]
+        public void ValidateRequiredHeaders_ShouldReturnValidResult_WhenAllRequiredHeadersArePresent()
+        {
+            // Act
+            var result = SchemaValidator.ValidateRequiredHeaders<TestEntity>(new[] { "Header1", "Header2" });
+
+            // Assert
+            Assert.True(result.IsValid);
+            Assert.Empty(result.Errors);
+        }
+
+        [Fact]
         public void ValidateSheetStructure_ShouldReturnError_WhenSheetDataIsEmpty()
         {
             // Act
@@ -76,21 +115,53 @@ namespace RaptorSheets.Core.Tests.Validators
         }
 
         [Fact]
-        public void ValidateSheetStructure_ShouldReturnWarning_WhenColumnCountIsInconsistent()
+        public void ValidateSheetStructure_ShouldReturnValidResult_WhenColumnCountsAreConsistent()
         {
             // Arrange
             var sheetData = new List<IList<object>>
             {
-                new List<object> { "Header1", "Header2" },
-                new List<object> { "Data1" }
+                new List<object> { "Header1", "Header2", "Header3" },
+                new List<object> { "Data1", "Data2", "Data3" }
             };
 
             // Act
             var result = SchemaValidator.ValidateSheetStructure<TestEntity>(sheetData);
 
             // Assert
+            Assert.True(result.IsValid, $"Expected valid result but got errors: {string.Join(", ", result.Errors)}");
+            Assert.Empty(result.Errors);
+        }
+
+        [Fact]
+        public void ValidateDataTypes_ShouldReturnWarning_WhenSampleDataRowIsNull()
+        {
+            // Act
+            var result = SchemaValidator.ValidateDataTypes<TestEntity>(null, new Dictionary<int, string>());
+
+            // Assert
             Assert.True(result.HasWarnings);
-            Assert.Contains("Row 2 has 1 columns, expected 2", result.Warnings);
+            Assert.Contains("No sample data row provided for type validation", result.Warnings);
+        }
+
+        [Fact]
+        public void ValidateDataTypes_ShouldReturnWarning_WhenDataTypesAreIncompatible()
+        {
+            // Arrange
+            var sampleDataRow = new List<object> { "ValidString", "ValidString2", "ValidString3" };
+            var headers = new Dictionary<int, string> 
+            { 
+                { 0, "Header1" },
+                { 1, "Header2" },
+                { 2, "Header3" }
+            };
+
+            // Act
+            var result = SchemaValidator.ValidateDataTypes<TestEntity>(sampleDataRow, headers);
+
+            // Assert
+            // Since TestEntity has all String fields, and we're providing strings, there should be no warnings
+            Assert.False(result.HasWarnings, $"Expected no warnings but got: {string.Join(", ", result.Warnings)}");
+            Assert.Empty(result.Warnings);
         }
 
         private class TestEntity

@@ -20,6 +20,8 @@ public class SmartFieldAttributeTests
 
         [SmartField(FieldTypeEnum.DateTime, "Date Header")]
         public DateTime DateField { get; set; }
+
+        public int UnsupportedField { get; set; }
     }
 
     [Fact]
@@ -33,6 +35,7 @@ public class SmartFieldAttributeTests
         Assert.Equal(FieldTypeEnum.Currency, FieldConventions.InferFieldType(properties.First(p => p.Name == "Amount")));
         Assert.Equal(FieldTypeEnum.String, FieldConventions.InferFieldType(properties.First(p => p.Name == "CustomField")));
         Assert.Equal(FieldTypeEnum.DateTime, FieldConventions.InferFieldType(properties.First(p => p.Name == "DateField")));
+        Assert.Equal(FieldTypeEnum.Integer, FieldConventions.InferFieldType(properties.First(p => p.Name == "UnsupportedField"))); // int should infer as Integer
     }
 
     [Fact]
@@ -46,6 +49,7 @@ public class SmartFieldAttributeTests
         Assert.Equal("Amount", FieldConventions.InferHeaderName(properties.First(p => p.Name == "Amount")));
         Assert.Equal("Custom Header", FieldConventions.InferHeaderName(properties.First(p => p.Name == "CustomField")));
         Assert.Equal("Date Header", FieldConventions.InferHeaderName(properties.First(p => p.Name == "DateField")));
+        Assert.Equal("Unsupported Field", FieldConventions.InferHeaderName(properties.First(p => p.Name == "UnsupportedField")));
     }
 
     [Fact]
@@ -59,6 +63,7 @@ public class SmartFieldAttributeTests
         Assert.Equal("amount", FieldConventions.InferJsonPropertyName(properties.First(p => p.Name == "Amount")));
         Assert.Equal("customField", FieldConventions.InferJsonPropertyName(properties.First(p => p.Name == "CustomField")));
         Assert.Equal("dateField", FieldConventions.InferJsonPropertyName(properties.First(p => p.Name == "DateField")));
+        Assert.Equal("unsupportedField", FieldConventions.InferJsonPropertyName(properties.First(p => p.Name == "UnsupportedField")));
     }
 
     [Fact]
@@ -77,6 +82,9 @@ public class SmartFieldAttributeTests
         Assert.NotNull(nameAttribute);
         Assert.Null(nameAttribute.FieldType);
         Assert.Null(nameAttribute.HeaderName);
+        Assert.Null(nameAttribute.FormatPattern);
+        Assert.Null(nameAttribute.Order);
+        Assert.False(nameAttribute.EnableValidation);
 
         Assert.NotNull(amountAttribute);
         Assert.Equal(FieldTypeEnum.Currency, amountAttribute.FieldType);

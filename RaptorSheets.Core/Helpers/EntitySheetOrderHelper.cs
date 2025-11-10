@@ -32,6 +32,12 @@ public static class EntitySheetOrderHelper
             var sheetOrderAttr = property.GetCustomAttribute<SheetOrderAttribute>();
             if (sheetOrderAttr != null)
             {
+                // Validate order is not negative (except -1 which means unordered)
+                if (sheetOrderAttr.Order < -1)
+                {
+                    throw new InvalidOperationException($"Invalid order value {sheetOrderAttr.Order} for property '{property.Name}' in entity '{entityType.Name}'. Order must be -1 (unordered) or >= 0.");
+                }
+
                 sheetInfos.Add((sheetOrderAttr.Order, sheetOrderAttr.SheetName, i));
             }
         }
@@ -85,23 +91,24 @@ public static class EntitySheetOrderHelper
     public static List<string> ValidateEntitySheetMapping<T>(IEnumerable<string> availableSheets)
     {
         var entityType = typeof(T);
-        var availableSheetsSet = availableSheets.ToHashSet();
+        // Filter out null values from available sheets
+        var availableSheetsSet = availableSheets.Where(s => s != null).ToHashSet();
         var errors = new List<string>();
         var usedOrders = new HashSet<int>();
         var usedSheetNames = new HashSet<string>();
 
         var properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-        
+
         foreach (var property in properties)
         {
             var sheetOrderAttr = property.GetCustomAttribute<SheetOrderAttribute>();
             if (sheetOrderAttr != null)
             {
                 // Validate sheet name exists
-                if (!availableSheetsSet.Contains(sheetOrderAttr.SheetName))
+                if (string.IsNullOrEmpty(sheetOrderAttr.SheetName) || !availableSheetsSet.Contains(sheetOrderAttr.SheetName))
                 {
                     errors.Add($"Property '{property.Name}' in entity '{entityType.Name}' " +
-                              $"references sheet '{sheetOrderAttr.SheetName}' which is not available in " +
+                              $"references sheet '{sheetOrderAttr.SheetName ?? "null"}' which is not available in " +
                               $"SheetsConfig.SheetNames. Please add this sheet to the constants or " +
                               $"update the SheetOrder attribute.");
                 }
