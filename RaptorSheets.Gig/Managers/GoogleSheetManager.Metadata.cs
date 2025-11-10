@@ -1,5 +1,4 @@
 using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Common.Constants.SheetConfigs;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
@@ -159,7 +158,7 @@ public partial class GoogleSheetManager
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
                     break;
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, SetupSheetConfig.SetupSheet));
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet)));
                     break;
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
@@ -231,7 +230,7 @@ public partial class GoogleSheetManager
             if (string.Equals(sheet, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase))
                 return ServiceMapper.GetSheet();
             if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase))
-                return SetupSheetConfig.SetupSheet;
+                return GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet);
             if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase))
                 return ShiftMapper.GetSheet();
             if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase))

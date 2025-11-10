@@ -1,5 +1,4 @@
 using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Common.Constants.SheetConfigs;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Mappers;
@@ -77,7 +76,7 @@ public static class GigSheetHelpers
                     sheetData.Add(RegionMapper.GetSheet());
                     break;
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
-                    sheetData.Add(SetupSheetConfig.SetupSheet);
+                    sheetData.Add(GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet));
                     break;
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(ServiceMapper.GetSheet());
@@ -234,7 +233,7 @@ public static class GigSheetHelpers
                 sheetEntity.Services = GenericSheetMapper<ServiceEntity>.MapFromRangeData(values);
                 break;
             case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
-                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, SetupSheetConfig.SetupSheet));
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet)));
                 sheetEntity.Setup = GenericSheetMapper<SetupEntity>.MapFromRangeData(values);
                 break;
             case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):

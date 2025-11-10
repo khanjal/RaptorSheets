@@ -2,8 +2,8 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
-using RaptorSheets.Gig.Mappers;
 using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
+using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Tests.Unit.Mappers;
 
@@ -104,7 +104,7 @@ public class ExpenseMapperTests
     public void GetSheet_ShouldReturnCorrectSheetConfiguration()
     {
         // Act
-        var result = ExpenseMapper.GetSheet();
+        var result = GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet);
 
         // Assert
         Assert.NotNull(result);

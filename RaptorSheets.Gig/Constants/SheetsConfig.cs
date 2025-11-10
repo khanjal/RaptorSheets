@@ -111,6 +111,7 @@ public static class SheetsConfig
         public const string TripsPerHour = "Trips/Hour";
         public const string Type = "Type";
         public const string UnitEnd = "End Unit";
+        public const string Value = "Value";
         public const string VisitFirst = "First Trip";
         public const string VisitLast = "Last Trip";
         public const string Visits = "Visits";
@@ -352,6 +353,18 @@ public static class SheetsConfig
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<RegionEntity>()
+    };
+
+    public static SheetModel SetupSheet => new()
+    {
+        Name = SheetNames.Setup,
+        CellColor = ColorEnum.LIGHT_PURPLE,
+        TabColor = ColorEnum.PURPLE,
+        FontColor = ColorEnum.WHITE,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = true,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<SetupEntity>()
     };
 
     public static SheetModel ServiceSheet => new()

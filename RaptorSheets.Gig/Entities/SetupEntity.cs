@@ -1,5 +1,6 @@
+using RaptorSheets.Core.Attributes;
+using RaptorSheets.Gig.Constants;
 using System.Diagnostics.CodeAnalysis;
-using RaptorSheets.Shared.Attributes;
 
 namespace RaptorSheets.Gig.Entities;
 
@@ -9,10 +10,10 @@ public class SetupEntity
     public int RowId { get; set; }
     public string Action { get; set; } = "";
 
-    [ColumnOrder("Name")]
+    [Column(SheetsConfig.HeaderNames.Name, Core.Enums.FieldTypeEnum.String)]
     public string Name { get; set; } = "";
 
-    [ColumnOrder("Value")]
+    [Column(SheetsConfig.HeaderNames.Value, Core.Enums.FieldTypeEnum.String)]
     public string Value { get; set; } = "";
 
     public bool Saved { get; set; }
