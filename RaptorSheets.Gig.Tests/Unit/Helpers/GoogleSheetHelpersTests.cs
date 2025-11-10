@@ -97,13 +97,21 @@ public class GoogleSheetHelpersTests
         // Protected sheets should have at least one protection request
         // With entity-driven headers, there may be multiple protection requests if headers are individually protected
         Assert.NotEmpty(protectRange);
-        
+
+        // Log protectRange for debugging
+        foreach (var protection in protectRange)
+        {
+            var protectedRange = protection.AddProtectedRange.ProtectedRange;
+            Console.WriteLine($"Protected Range: SheetId={protectedRange.Range.SheetId}, Description={protectedRange.Description}");
+        }
+
         // At least one should be a sheet-level protection
-        var sheetProtections = protectRange.Where(p => 
-            p.AddProtectedRange.ProtectedRange.Description == ProtectionWarnings.SheetWarning).ToList();
-        
+        var sheetProtections = protectRange.Where(p =>
+            p.AddProtectedRange.ProtectedRange.Description == ProtectionWarnings.SheetWarning &&
+            p.AddProtectedRange.ProtectedRange.Range.SheetId == sheetId).ToList();
+
         Assert.NotEmpty(sheetProtections);
-        
+
         var sheetProtection = sheetProtections.First().AddProtectedRange.ProtectedRange;
         Assert.Equal(sheetId, sheetProtection.Range.SheetId);
         Assert.Equal(ProtectionWarnings.SheetWarning, sheetProtection.Description);

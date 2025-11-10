@@ -97,6 +97,13 @@ public static class FieldConventions
 
     public static string InferHeaderName(PropertyInfo property)
     {
+        // Check if the property has a SmartFieldAttribute with a custom HeaderName
+        var smartFieldAttribute = property.GetCustomAttribute<SmartFieldAttribute>();
+        if (smartFieldAttribute?.HeaderName != null)
+        {
+            return smartFieldAttribute.HeaderName;
+        }
+
         // Convert PascalCase to "Title Case" with spaces
         var name = property.Name;
         return string.Concat(name.Select((c, i) => 
