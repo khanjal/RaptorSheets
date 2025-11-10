@@ -1,10 +1,12 @@
-﻿using RaptorSheets.Core.Enums;
+﻿using System.Diagnostics.CodeAnalysis;
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Tests.Data.Helpers;
 using RaptorSheets.Gig.Entities;
 
 namespace RaptorSheets.Gig.Tests.Data.Helpers;
 
+[ExcludeFromCodeCoverage]
 internal class TestGigHelpers
 {
     /// <summary>
