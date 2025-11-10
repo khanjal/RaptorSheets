@@ -1,9 +1,12 @@
-﻿using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Gig.Constants;
-using RaptorSheets.Gig.Mappers;
-using RaptorSheets.Gig.Enums;
-using RaptorSheets.Core.Enums;
+﻿using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Helpers;
+using RaptorSheets.Gig.Mappers;
 using System.ComponentModel;
 
 namespace RaptorSheets.Gig.Tests.Unit.Mappers;
@@ -16,12 +19,13 @@ public class MapperGetSheetTests
     {
         new object[] { AddressMapper.GetSheet(), SheetsConfig.AddressSheet },
         new object[] { DailyMapper.GetSheet(), SheetsConfig.DailySheet },
-        new object[] { ExpenseMapper.GetSheet(), SheetsConfig.ExpenseSheet },
+        new object[] { GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet), SheetsConfig.ExpenseSheet },
         new object[] { MonthlyMapper.GetSheet(), SheetsConfig.MonthlySheet },
         new object[] { NameMapper.GetSheet(), SheetsConfig.NameSheet },
         new object[] { PlaceMapper.GetSheet(), SheetsConfig.PlaceSheet },
         new object[] { RegionMapper.GetSheet(), SheetsConfig.RegionSheet },
         new object[] { ServiceMapper.GetSheet(), SheetsConfig.ServiceSheet },
+        new object[] { GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet), SheetsConfig.SetupSheet },
         new object[] { ShiftMapper.GetSheet(), SheetsConfig.ShiftSheet },
         new object[] { TripMapper.GetSheet(), SheetsConfig.TripSheet },
         new object[] { TypeMapper.GetSheet(), SheetsConfig.TypeSheet },
@@ -67,11 +71,10 @@ public class MapperGetSheetTests
         // Act - Get headers with formulas
         var formulaHeaders = sheet.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
 
-        // Assert - Only verify that protected sheets have formulas (simple sheets may not have formulas)
-        if (sheet.ProtectSheet)
+        // Assert - Protected sheets may or may not have formulas
+        // Some protected sheets (like Setup) are protected for data integrity, not because they have formulas
+        if (formulaHeaders.Any())
         {
-            Assert.NotEmpty(formulaHeaders);
-            
             // All formulas should start with =
             Assert.All(formulaHeaders, header => Assert.StartsWith("=", header.Formula));
             
@@ -85,6 +88,13 @@ public class MapperGetSheetTests
                 Assert.DoesNotContain("{lookupRange}", header.Formula);
                 // Note: Other { } might be valid Google Sheets syntax (like array literals)
             });
+        }
+        else if (sheet.ProtectSheet)
+        {
+            // If a protected sheet has no formulas, it's likely a simple data entry sheet
+            // like Setup that's protected for data integrity reasons
+            // This is valid - just verify it has headers
+            Assert.NotEmpty(sheet.Headers);
         }
     }
 

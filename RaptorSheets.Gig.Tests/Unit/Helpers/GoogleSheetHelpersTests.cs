@@ -1,12 +1,14 @@
 ﻿using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Gig.Enums;
-using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Core.Constants;
-using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Gig.Helpers;
-using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Extensions;
-using RaptorSheets.Common.Mappers;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Helpers;
+using RaptorSheets.Gig.Mappers;
 
 namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
@@ -17,13 +19,13 @@ public class GoogleSheetHelpersTests
     {
         new object[] { AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.ADDRESSES.GetDescription() }) },
         new object[] { DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.DAILY.GetDescription() }) },
-        new object[] { ExpenseMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.EXPENSES.GetDescription() }) },
+        new object[] { GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.EXPENSES.GetDescription() }) },
         new object[] { MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.MONTHLY.GetDescription() }) },
         new object[] { NameMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.NAMES.GetDescription() }) },
         new object[] { PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.PLACES.GetDescription() }) },
         new object[] { RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.REGIONS.GetDescription() }) },
         new object[] { ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.SERVICES.GetDescription() }) },
-        new object[] { SetupMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { Common.Enums.SheetEnum.SETUP.GetDescription() }) },
+        new object[] { GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.SETUP.GetDescription() }) },
         new object[] { ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.SHIFTS.GetDescription() }) },
         new object[] { TripMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.TRIPS.GetDescription() }) },
         new object[] { TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.TYPES.GetDescription() }) },
