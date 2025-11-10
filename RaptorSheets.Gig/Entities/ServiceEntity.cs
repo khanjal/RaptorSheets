@@ -1,9 +1,11 @@
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Gig.Entities;
 
+[ExcludeFromCodeCoverage]
 public class ServiceEntity : SheetRowEntityBase
 {
     // Entity-specific property first

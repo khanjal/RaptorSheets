@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
@@ -5,6 +6,7 @@ using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
+[ExcludeFromCodeCoverage]
 public class MonthlyEntity 
 {
     [JsonPropertyName("rowId")]
