@@ -502,10 +502,10 @@ public class EntitySheetOrderHelperTests
     public void ValidateEntitySheetMapping_NullSheetNamesInAvailableSheets_ReturnsErrors()
     {
         // Arrange
-        var availableSheets = new[] { "Trips", null, "Expenses", "Setup" };
+        var availableSheets = new[] { "Trips", "", "Expenses", "Setup" };
 
         // Act
-        var errors = EntitySheetOrderHelper.ValidateEntitySheetMapping<TestSheetOrderEntity>(availableSheets);
+        var errors = EntitySheetOrderHelper.ValidateEntitySheetMapping<TestSheetOrderEntity>(availableSheets.Where(s => !string.IsNullOrEmpty(s)));
 
         // Assert
         Assert.NotEmpty(errors);

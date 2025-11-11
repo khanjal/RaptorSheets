@@ -18,6 +18,12 @@ public static class GenerateSheetsHelpers
 
     public static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
+        if (sheets.Count == 0)
+        {
+            // Skip unnecessary processing when the collection is empty
+            return new BatchUpdateSpreadsheetRequest { Requests = new List<Request>() };
+        }
+
         _batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
         _batchUpdateSpreadsheetRequest.Requests = [];
         _repeatCellRequests = [];

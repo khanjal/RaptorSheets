@@ -108,8 +108,7 @@ public class GenericSheetMapperTests
         Assert.Single(result);
         Assert.Equal("John", result[0].Name);
         Assert.Null(result[0].Amount); // Nullable decimal with empty string becomes null
-        // NOTE: GetIntValue returns 0 for empty strings, so nullable int becomes 0, not null
-        Assert.Equal(0, result[0].Count); // GetIntValue converts empty string to 0
+        Assert.Equal(0, result[0].Count); // Nullable int defaults to 0
     }
 
     [Fact]

@@ -2,6 +2,7 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
+using System.Globalization;
 
 namespace RaptorSheets.Gig.Helpers;
 
@@ -11,6 +12,18 @@ namespace RaptorSheets.Gig.Helpers;
 /// </summary>
 public static class DemoHelpers
 {
+    private const string DateFormat = "yyyy-MM-dd"; // Define constant for repeated date format
+
+    public static string FormatDate(DateTime date)
+    {
+        return date.ToString(DateFormat);
+    }
+
+    public static DateTime ParseDate(string date)
+    {
+        return DateTime.ParseExact(date, DateFormat, CultureInfo.InvariantCulture);
+    }
+
     /// <summary>
     /// Context object for managing ID generation during demo data creation.
     /// </summary>

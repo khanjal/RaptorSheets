@@ -14,7 +14,7 @@ namespace RaptorSheets.Core.Tests.Validators
         public void ValidateSheet_ShouldReturnError_WhenHeaderRowIsNull()
         {
             // Act
-            var result = SchemaValidator.ValidateSheet<TestEntity>(null);
+            var result = SchemaValidator.ValidateSheet<TestEntity>(null!);
 
             // Assert
             Assert.False(result.IsValid);

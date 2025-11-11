@@ -18,7 +18,7 @@ public class TypedFieldUtilsTests
         Assert.All(properties, p => Assert.NotNull(p.Column));
         
         // Should include properties like TestDateTime, TestCurrency, etc.
-        var dateProperty = properties.FirstOrDefault(p => p.Column.GetEffectiveHeaderName().Contains("TestDateTime"));
+        var dateProperty = properties.FirstOrDefault(p => p.Column.GetEffectiveHeaderName().Contains(TypedFieldUtilsTestHelper.TestDateTimeHeader));
         Assert.NotNull(dateProperty);
         Assert.Equal(FieldTypeEnum.DateTime, dateProperty.Column.FieldType);
     }
@@ -110,4 +110,12 @@ public class TypedFieldUtilsTests
     {
         public string NoAttributeProperty { get; set; } = "";
     }
+}
+
+public static class TypedFieldUtilsTestHelper
+{
+    public const string TestDateTimeHeader = "TestDateTime";
+    public const string TestCurrencyHeader = "TestCurrency";
+    public const string TestIntegerHeader = "TestInteger";
+    public const string TestBooleanHeader = "TestBoolean";
 }

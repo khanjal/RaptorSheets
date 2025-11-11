@@ -1,6 +1,7 @@
 using RaptorSheets.Core.Repositories;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Gig.Entities;
+using System.Globalization;
 
 namespace RaptorSheets.Gig.Repositories;
 
@@ -27,10 +28,10 @@ public class TripRepository : BaseEntityRepository<TripEntity>
         var allTrips = await GetAllAsync();
         return allTrips
             .Where(t => !string.IsNullOrEmpty(t.Date) && 
-                       DateTime.TryParse(t.Date, out var tripDate) &&
+                       DateTime.TryParse(t.Date, CultureInfo.InvariantCulture, out var tripDate) &&
                        tripDate.Date >= startDate.Date && 
                        tripDate.Date <= endDate.Date)
-            .OrderBy(t => DateTime.TryParse(t.Date, out var d) ? d : DateTime.MinValue)
+            .OrderBy(t => DateTime.TryParse(t.Date, CultureInfo.InvariantCulture, out var d) ? d : DateTime.MinValue)
             .ToList();
     }
 
@@ -45,7 +46,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
         var allTrips = await GetAllAsync();
         return allTrips
             .Where(t => string.Equals(t.Service, service, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(t => DateTime.TryParse(t.Date, out var d) ? d : DateTime.MinValue)
+            .OrderBy(t => DateTime.TryParse(t.Date, CultureInfo.InvariantCulture, out var d) ? d : DateTime.MinValue)
             .ToList();
     }
 
@@ -71,7 +72,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
         if (trip == null) throw new ArgumentNullException(nameof(trip));
 
         // Generate key if not provided
-        if (string.IsNullOrEmpty(trip.Key) && !string.IsNullOrEmpty(trip.Date) && DateTime.TryParse(trip.Date, out var tripDate))
+        if (string.IsNullOrEmpty(trip.Key) && !string.IsNullOrEmpty(trip.Date) && DateTime.TryParse(trip.Date, CultureInfo.InvariantCulture, out var tripDate))
         {
             trip.Key = $"{tripDate:yyyyMMdd}_{trip.Service}_{trip.Number}";
         }
@@ -83,7 +84,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
         }
 
         // Extract date components for formulas
-        if (!string.IsNullOrEmpty(trip.Date) && DateTime.TryParse(trip.Date, out var parsedDate))
+        if (!string.IsNullOrEmpty(trip.Date) && DateTime.TryParse(trip.Date, CultureInfo.InvariantCulture, out var parsedDate))
         {
             trip.Day = parsedDate.Day.ToString();
             trip.Month = parsedDate.Month.ToString();
@@ -107,7 +108,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
         trip.Total = (trip.Pay ?? 0) + (trip.Tip ?? 0) + (trip.Bonus ?? 0);
 
         // Update date components
-        if (!string.IsNullOrEmpty(trip.Date) && DateTime.TryParse(trip.Date, out var parsedDate))
+        if (!string.IsNullOrEmpty(trip.Date) && DateTime.TryParse(trip.Date, CultureInfo.InvariantCulture, out var parsedDate))
         {
             trip.Day = parsedDate.Day.ToString();
             trip.Month = parsedDate.Month.ToString();
@@ -133,6 +134,23 @@ public class TripRepository : BaseEntityRepository<TripEntity>
         if (string.IsNullOrWhiteSpace(service))
         {
             throw new ArgumentException("Service name cannot be null or empty.", nameof(service));
+        }
+    }
+
+    public DateTime ParseDate(string date)
+    {
+        return DemoHelpers.ParseDate(date); // Use DemoHelpers for date parsing
+    }
+
+    public DateTime? TryParseDate(string date)
+    {
+        try
+        {
+            return DemoHelpers.ParseDate(date);
+        }
+        catch (FormatException)
+        {
+            return null;
         }
     }
 }
