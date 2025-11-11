@@ -224,10 +224,33 @@ public static class GenericSheetMapper<T> where T : class, new()
     {
         // Headers are already generated from entity in SheetsConfig
         sheetModel.Headers.UpdateColumns();
-        
+
+        // Set default formats based on ColumnAttribute configuration
+        foreach (var header in sheetModel.Headers)
+        {
+            var columnProperty = _columnProperties.FirstOrDefault(
+                p => p.Column.GetEffectiveHeaderName() == header.Name);
+                
+            if (columnProperty.Property != null)
+            {
+                var column = columnProperty.Column;
+
+                // Use the attribute's built-in method to get the effective format
+                var effectiveFormat = column.GetEffectiveFormat();
+                if (effectiveFormat.HasValue && effectiveFormat.Value != FormatEnum.DEFAULT)
+                {
+                    header.Format = effectiveFormat.Value;
+                }
+
+                // Note: NumberFormatPattern is handled separately in the sheet formatting logic
+                // SheetCellModel doesn't have a NumberFormatPattern property
+                // Custom patterns would need to be applied through the NumberFormat in CellFormat
+            }
+        }
+
         // Apply any formula/validation configuration
         configureFormulas?.Invoke(sheetModel);
-        
+
         return sheetModel;
     }
 
@@ -371,14 +394,15 @@ public static class GenericSheetMapper<T> where T : class, new()
             return new CellData();
         }
 
-        var format = TypedFieldUtils.GetFormatFromFieldType(propertyInfo.Column.FieldType);
+        // Use the same logic as GetSheet - get effective format from attribute
+        var effectiveFormat = propertyInfo.Column.GetEffectiveFormat();
         
-        if (!format.HasValue || format.Value == FormatEnum.DEFAULT)
+        if (!effectiveFormat.HasValue || effectiveFormat.Value == FormatEnum.DEFAULT)
         {
             return new CellData();
         }
 
-        return new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(format.Value) };
+        return new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(effectiveFormat.Value) };
     }
 
     #endregion
