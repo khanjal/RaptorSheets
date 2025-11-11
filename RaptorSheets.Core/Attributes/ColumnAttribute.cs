@@ -199,6 +199,7 @@ public class ColumnAttribute : Attribute
             FieldTypeEnum.Duration => FormatEnum.DURATION,
             FieldTypeEnum.Number => FormatEnum.NUMBER,
             FieldTypeEnum.Percentage => FormatEnum.PERCENT,
+            FieldTypeEnum.String => FormatEnum.TEXT,
             _ => null
         };
     }

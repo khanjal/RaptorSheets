@@ -391,15 +391,18 @@ public static class GenericSheetMapper<T> where T : class, new()
 
         if (propertyInfo.Property == null)
         {
-            return new CellData();
+            return new CellData(); // Return CellData with null UserEnteredFormat for unknown headers
         }
 
         // Use the same logic as GetSheet - get effective format from attribute
         var effectiveFormat = propertyInfo.Column.GetEffectiveFormat();
-        
+
         if (!effectiveFormat.HasValue || effectiveFormat.Value == FormatEnum.DEFAULT)
         {
-            return new CellData();
+            return new CellData
+            {
+                UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.TEXT) // Default to TEXT format
+            };
         }
 
         return new CellData { UserEnteredFormat = SheetHelpers.GetCellFormat(effectiveFormat.Value) };

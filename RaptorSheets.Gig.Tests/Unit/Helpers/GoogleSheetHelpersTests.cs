@@ -53,12 +53,14 @@ public class GoogleSheetHelpersTests
     [MemberData(nameof(Sheets))]
     public void GivenSheetHeaders_ThenReturnSheetHeaders(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
     {
+        // Get the SheetId from the batch request (which has the randomly generated ID)
         var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
 
         // Check on if it had to expand the number of rows (headers > 26)
         if (config.Headers.Count > 26)
         {
-            var appendDimension = batchRequest.Requests.First(x => x.AppendDimension != null).AppendDimension;
+            var appendDimension = batchRequest.Requests.FirstOrDefault(x => x.AppendDimension != null)?.AppendDimension;
+            Assert.NotNull(appendDimension);
             Assert.Equal("COLUMNS", appendDimension.Dimension);
             Assert.Equal(config.Headers.Count - 26, appendDimension.Length);
             Assert.Equal(sheetId, appendDimension.SheetId);

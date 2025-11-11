@@ -22,6 +22,8 @@ public static class GenerateSheetsHelpers
         _batchUpdateSpreadsheetRequest.Requests = [];
         _repeatCellRequests = [];
 
+        var additionalRequests = new List<Request>(); // Collect additional requests here
+
         sheets.ForEach(sheet =>
         {
             var sheetModel = GetSheetModel(sheet);
@@ -33,14 +35,17 @@ public static class GenerateSheetsHelpers
             var appendDimension = GoogleRequestHelpers.GenerateAppendDimension(sheetModel);
             if (appendDimension != null)
             {
-                _batchUpdateSpreadsheetRequest!.Requests.Add(appendDimension);
+                additionalRequests.Add(appendDimension);
             }
 
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
+            additionalRequests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
             GenerateHeadersFormatAndProtection(sheetModel);
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
+            additionalRequests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
+            additionalRequests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
         });
+
+        // Add all collected requests after the loop
+        additionalRequests.ForEach(request => _batchUpdateSpreadsheetRequest.Requests.Add(request));
 
         _repeatCellRequests.ForEach(request =>
         {

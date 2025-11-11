@@ -130,7 +130,8 @@ public class TripMapperTests
         
         var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
         Assert.NotNull(payHeader);
-        Assert.Equal(FormatEnum.CURRENCY, payHeader.Format);
+        // TripEntity uses FieldTypeEnum.Currency which maps to ACCOUNTING format
+        Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
         
         // Verify all headers have proper column assignments
         Assert.All(result.Headers, header => 

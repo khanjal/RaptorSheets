@@ -119,8 +119,8 @@ public class ExpenseMapperTests
         
         var amountHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.AMOUNT.GetDescription());
         Assert.NotNull(amountHeader);
-        // ExpenseEntity uses FieldTypeEnum.Currency which maps to CURRENCY format
-        Assert.Equal(FormatEnum.CURRENCY, amountHeader.Format);
+        // ExpenseEntity uses FieldTypeEnum.Currency which maps to ACCOUNTING format
+        Assert.Equal(FormatEnum.ACCOUNTING, amountHeader.Format);
         
         // Verify all headers have proper column assignments
         Assert.All(result.Headers, header => 

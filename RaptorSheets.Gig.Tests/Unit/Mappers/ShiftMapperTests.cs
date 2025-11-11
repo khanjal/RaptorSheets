@@ -123,8 +123,8 @@ public class ShiftMapperTests
         
         var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
         Assert.NotNull(payHeader);
-        // ShiftEntity uses FieldTypeEnum.Currency which maps to CURRENCY format
-        Assert.Equal(FormatEnum.CURRENCY, payHeader.Format);
+        // ShiftEntity uses FieldTypeEnum.Currency which maps to ACCOUNTING format
+        Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
         
         // Verify all headers have proper column assignments
         Assert.All(result.Headers, header => 
