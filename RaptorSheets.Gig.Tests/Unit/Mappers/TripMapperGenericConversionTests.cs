@@ -181,15 +181,15 @@ public class TripMapperGenericConversionTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        
+
         var row = result[0];
-        
+
         // Input columns should have values
         Assert.Equal("2024-01-15", row[0]); // Date (input)
         Assert.Equal("25.50", row[1]); // Pay (input)
         Assert.Equal("5.00", row[2]); // Tip (input)
         Assert.Equal("2.00", row[3]); // Bonus (input)
-        
+
         // Output columns (formulas) should be null to preserve formula
         Assert.Null(row[4]); // Total (output/formula)
         Assert.Null(row[5]); // Key (output/formula)

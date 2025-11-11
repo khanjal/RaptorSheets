@@ -1,6 +1,7 @@
 using RaptorSheets.Core.Repositories;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Helpers;
 using System.Globalization;
 
 namespace RaptorSheets.Gig.Repositories;
@@ -134,23 +135,6 @@ public class TripRepository : BaseEntityRepository<TripEntity>
         if (string.IsNullOrWhiteSpace(service))
         {
             throw new ArgumentException("Service name cannot be null or empty.", nameof(service));
-        }
-    }
-
-    public DateTime ParseDate(string date)
-    {
-        return DemoHelpers.ParseDate(date); // Use DemoHelpers for date parsing
-    }
-
-    public DateTime? TryParseDate(string date)
-    {
-        try
-        {
-            return DemoHelpers.ParseDate(date);
-        }
-        catch (FormatException)
-        {
-            return null;
         }
     }
 }

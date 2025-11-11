@@ -30,32 +30,12 @@ public class TypedFieldAttribute : Attribute
     public string? ValidationPattern { get; }
 
     /// <summary>
-    /// Initializes a new instance of the TypedFieldAttribute with basic field type
+    /// Initializes a new instance of the TypedFieldAttribute with optional parameters.
     /// </summary>
     /// <param name="fieldType">The field type for automatic conversion and formatting</param>
-    public TypedFieldAttribute(FieldTypeEnum fieldType)
-    {
-        FieldType = fieldType;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the TypedFieldAttribute with custom format pattern
-    /// </summary>
-    /// <param name="fieldType">The field type for automatic conversion and formatting</param>
-    /// <param name="formatPattern">Custom number format pattern for Google Sheets</param>
-    public TypedFieldAttribute(FieldTypeEnum fieldType, string formatPattern)
-    {
-        FieldType = fieldType;
-        NumberFormatPattern = formatPattern;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the TypedFieldAttribute with validation
-    /// </summary>
-    /// <param name="fieldType">The field type for automatic conversion and formatting</param>
-    /// <param name="formatPattern">Custom number format pattern for Google Sheets</param>
-    /// <param name="enableValidation">Whether to enable validation for this field</param>
-    /// <param name="validationPattern">Custom validation pattern</param>
+    /// <param name="formatPattern">Custom number format pattern for Google Sheets (optional)</param>
+    /// <param name="enableValidation">Whether to enable validation for this field (optional)</param>
+    /// <param name="validationPattern">Custom validation pattern (optional)</param>
     public TypedFieldAttribute(FieldTypeEnum fieldType, string? formatPattern = null, bool enableValidation = false, string? validationPattern = null)
     {
         FieldType = fieldType;
