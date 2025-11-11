@@ -12,10 +12,6 @@ namespace RaptorSheets.Gig.Mappers;
 /// Service mapper for Service sheet configuration and formulas.
 /// For data mapping operations, use GenericSheetMapper<ServiceEntity> directly.
 /// </summary>
-/// <summary>
-/// Service mapper for Service sheet configuration and formulas.
-/// For data mapping operations, use GenericSheetMapper<ServiceEntity> directly.
-/// </summary>
 public static class ServiceMapper
 {
     public static SheetModel GetSheet()

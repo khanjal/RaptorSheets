@@ -99,11 +99,9 @@ public class GoogleSheetHelpersTests
         Assert.NotEmpty(protectRange);
 
         // Log protectRange for debugging
-        foreach (var protection in protectRange)
-        {
-            var protectedRange = protection.AddProtectedRange.ProtectedRange;
-            Console.WriteLine($"Protected Range: SheetId={protectedRange.Range.SheetId}, Description={protectedRange.Description}");
-        }
+        protectRange.Select(protection => protection.AddProtectedRange.ProtectedRange)
+            .ToList()
+            .ForEach(protectedRange => Console.WriteLine($"Protected Range: SheetId={protectedRange.Range.SheetId}, Description={protectedRange.Description}"));
 
         // At least one should be a sheet-level protection
         var sheetProtections = protectRange.Where(p =>

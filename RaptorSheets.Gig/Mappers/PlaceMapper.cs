@@ -12,10 +12,6 @@ namespace RaptorSheets.Gig.Mappers;
 /// Place mapper for Place sheet configuration and formulas.
 /// For data mapping operations, use GenericSheetMapper<PlaceEntity> directly.
 /// </summary>
-/// <summary>
-/// Place mapper for Place sheet configuration and formulas.
-/// For data mapping operations, use GenericSheetMapper<PlaceEntity> directly.
-/// </summary>
 public static class PlaceMapper
 {
     public static SheetModel GetSheet()

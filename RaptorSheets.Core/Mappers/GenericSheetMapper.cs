@@ -207,11 +207,7 @@ public static class GenericSheetMapper<T> where T : class, new()
 
         // Map headers explicitly using .Select(...) before iterating
         var mappedHeadersForRowFormat = headers.Select(header => header.ToString()!.Trim());
-        foreach (var headerName in mappedHeadersForRowFormat)
-        {
-            var cellData = GetFormatForHeader(headerName);
-            cells.Add(cellData);
-        }
+        cells.AddRange(mappedHeadersForRowFormat.Select(GetFormatForHeader));
 
         rowData.Values = cells;
         return rowData;

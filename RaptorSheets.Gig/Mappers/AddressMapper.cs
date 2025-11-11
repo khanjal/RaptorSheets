@@ -11,10 +11,6 @@ namespace RaptorSheets.Gig.Mappers;
 /// Address mapper for Address sheet configuration and formulas.
 /// For data mapping operations, use GenericSheetMapper<AddressEntity> directly.
 /// </summary>
-/// <summary>
-/// Address mapper for Address sheet configuration and formulas.
-/// For data mapping operations, use GenericSheetMapper<AddressEntity> directly.
-/// </summary>
 public static class AddressMapper
 {
     public static SheetModel GetSheet()

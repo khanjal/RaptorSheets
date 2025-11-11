@@ -57,8 +57,22 @@ public static class WeeklyMapper
                     // Formula to extract year from weekly data.
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.YEAR.GetDescription(), keyRange, "-", 2);
                     break;
-
-                // Additional cases for other headers can be added here.
+                case HeaderEnum.DATE_BEGIN:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekBeginDate(
+                        keyRange, 
+                        HeaderEnum.DATE_BEGIN.GetDescription(), 
+                        sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription()),
+                        sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()));
+                    header.Format = FormatEnum.DATE;
+                    break;
+                case HeaderEnum.DATE_END:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekEndDate(
+                        keyRange, 
+                        HeaderEnum.DATE_END.GetDescription(), 
+                        sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription()),
+                        sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()));
+                    header.Format = FormatEnum.DATE;
+                    break;
             }
         });
 

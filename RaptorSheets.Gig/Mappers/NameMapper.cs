@@ -11,10 +11,6 @@ namespace RaptorSheets.Gig.Mappers;
 /// Name mapper for Name sheet configuration and formulas.
 /// For data mapping operations, use GenericSheetMapper<NameEntity> directly.
 /// </summary>
-/// <summary>
-/// Name mapper for Name sheet configuration and formulas.
-/// For data mapping operations, use GenericSheetMapper<NameEntity> directly.
-/// </summary>
 public static class NameMapper
 {
     public static SheetModel GetSheet()

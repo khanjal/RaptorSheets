@@ -12,10 +12,6 @@ namespace RaptorSheets.Gig.Mappers;
 /// Region mapper for Region sheet configuration and formulas.
 /// For data mapping operations, use GenericSheetMapper<RegionEntity> directly.
 /// </summary>
-/// <summary>
-/// Region mapper for Region sheet configuration and formulas.
-/// For data mapping operations, use GenericSheetMapper<RegionEntity> directly.
-/// </summary>
 public static class RegionMapper
 {
     public static SheetModel GetSheet()
