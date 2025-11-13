@@ -6,6 +6,7 @@ namespace RaptorSheets.Core.Constants;
 public static class CellFormatPatterns
 {
     public static string Accounting => "_(\"$\"* #,##0.00_);_(\"$\"* \\(#,##0.00\\);_(\"$\"* \"-\"??_);_(@_)";
+    public static string Currency => "$#,##0.00";
     public static string Date => "yyyy-mm-dd";
     public static string Distance => "#,##0.0";
     public static string Duration => "[h]:mm";

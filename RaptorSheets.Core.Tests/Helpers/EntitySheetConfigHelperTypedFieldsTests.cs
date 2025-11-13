@@ -18,7 +18,7 @@ public class EntitySheetConfigHelperColumnTests
         
         var currencyHeader = headers.FirstOrDefault(h => h.Name == "Currency");
         Assert.NotNull(currencyHeader);
-        Assert.Equal(FormatEnum.ACCOUNTING, currencyHeader.Format);
+        Assert.Equal(FormatEnum.CURRENCY, currencyHeader.Format);
         
         var dateHeader = headers.FirstOrDefault(h => h.Name == "Date");
         Assert.NotNull(dateHeader);

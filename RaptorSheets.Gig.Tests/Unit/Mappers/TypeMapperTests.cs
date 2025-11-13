@@ -19,9 +19,9 @@ public class TypeMapperTests
         // Arrange
         var values = new List<IList<object>>
         {
-            new List<object> { "Type", "Trips" },
-            new List<object> { "UberX", "10" },
-            new List<object> { "Standard", "5" }
+            new List<object> { "Type", "Trips", "Pay", "Tips", "Bonus" },
+            new List<object> { "UberX", "10", "25.50", "5.00", "2.00" }, // Ensure string values for Pay, Tip, Bonus
+            new List<object> { "Standard", "5", "15.75", "3.00", "1.00" } // Ensure string values for Pay, Tip, Bonus
         };
 
         // Act
@@ -34,10 +34,16 @@ public class TypeMapperTests
         var firstType = result[0];
         Assert.Equal("UberX", firstType.Type);
         Assert.Equal(10, firstType.Trips);
+        Assert.Equal(25.50m, firstType.Pay);
+        Assert.Equal(5.00m, firstType.Tips);
+        Assert.Equal(2.00m, firstType.Bonus);
 
         var secondType = result[1];
         Assert.Equal("Standard", secondType.Type);
         Assert.Equal(5, secondType.Trips);
+        Assert.Equal(15.75m, secondType.Pay);
+        Assert.Equal(3.00m, secondType.Tips);
+        Assert.Equal(1.00m, secondType.Bonus);
     }
 
     [Fact]
@@ -46,10 +52,10 @@ public class TypeMapperTests
         // Arrange
         var values = new List<IList<object>>
         {
-            new List<object> { "Type", "Trips" },
-            new List<object> { "UberX", "10" },
-            new List<object> { "", "" }, // Empty row
-            new List<object> { "Standard", "5" }
+            new List<object> { "Type", "Trips", "Pay", "Tip", "Bonus" },
+            new List<object> { "UberX", "10", "25.50", "5.00", "2.00" }, // Ensure string values for Pay, Tip, Bonus
+            new List<object> { "", "", "", "", "" }, // Empty row
+            new List<object> { "Standard", "5", "15.75", "3.00", "1.00" } // Ensure string values for Pay, Tip, Bonus
         };
 
         // Act

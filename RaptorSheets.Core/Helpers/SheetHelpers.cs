@@ -218,6 +218,7 @@ public static class SheetHelpers
             NumberFormat = format switch
             {
                 FormatEnum.ACCOUNTING => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Accounting },
+                FormatEnum.CURRENCY => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Currency },
                 FormatEnum.DATE => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Date },
                 FormatEnum.DISTANCE => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Distance },
                 FormatEnum.DURATION => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Duration },

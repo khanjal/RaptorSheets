@@ -265,12 +265,14 @@ public static class GenericSheetMapper<T> where T : class, new()
         Dictionary<int, string> headers, 
         FieldTypeEnum fieldType)
     {
-        return fieldType switch
+        Console.WriteLine($"Mapping header: {headerName}, FieldType: {fieldType}");
+        object? value = fieldType switch
         {
             FieldTypeEnum.String => HeaderHelpers.GetStringValue(headerName, values, headers),
             FieldTypeEnum.Integer => HeaderHelpers.GetIntValue(headerName, values, headers),
             FieldTypeEnum.Number => HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers),
             FieldTypeEnum.Currency => HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers),
+            FieldTypeEnum.Accounting => HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers),
             FieldTypeEnum.Percentage => HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers),
             FieldTypeEnum.Boolean => HeaderHelpers.GetBoolValue(headerName, values, headers),
             FieldTypeEnum.DateTime => HeaderHelpers.GetDateValue(headerName, values, headers),
@@ -281,6 +283,9 @@ public static class GenericSheetMapper<T> where T : class, new()
             FieldTypeEnum.Url => HeaderHelpers.GetStringValue(headerName, values, headers),
             _ => HeaderHelpers.GetStringValue(headerName, values, headers)
         };
+
+        Console.WriteLine($"Raw value for header '{headerName}': {value}");
+        return value;
     }
 
     /// <summary>

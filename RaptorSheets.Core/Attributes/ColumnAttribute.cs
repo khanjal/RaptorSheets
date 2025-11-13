@@ -192,7 +192,7 @@ public class ColumnAttribute : Attribute
     {
         return fieldType switch
         {
-            FieldTypeEnum.Currency => FormatEnum.ACCOUNTING,  // Use ACCOUNTING format for currency (standard for financial data)
+            FieldTypeEnum.Currency => FormatEnum.CURRENCY,
             FieldTypeEnum.Accounting => FormatEnum.ACCOUNTING,
             FieldTypeEnum.DateTime => FormatEnum.DATE,
             FieldTypeEnum.Time => FormatEnum.TIME,

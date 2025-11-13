@@ -37,10 +37,10 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Duration, FieldTypeEnum.Duration, isInput: true, note: ColumnNotes.Duration)]
     public string Duration { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Accounting, isInput: true)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Currency, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Accounting, isInput: true)]
     public decimal? Tip { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Currency, isInput: true)]

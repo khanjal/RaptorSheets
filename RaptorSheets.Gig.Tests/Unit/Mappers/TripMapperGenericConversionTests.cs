@@ -132,8 +132,8 @@ public class TripMapperGenericConversionTests
         // Verify Duration uses serial duration conversion (Duration field type)
         Assert.NotNull(row.Values[6].UserEnteredValue?.NumberValue);
         
-        // Verify Pay is numeric (Currency field type)
-        Assert.Equal(25.50, row.Values[7].UserEnteredValue?.NumberValue);
+        // Verify Pay is string (Currency field type)
+        Assert.Equal("25.50", row.Values[7].UserEnteredValue?.StringValue);
     }
 
     [Fact]
