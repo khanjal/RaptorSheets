@@ -14,7 +14,7 @@ public class ExpenseEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Name, FieldTypeEnum.String, isInput: true)]
     public string Name { get; set; } = string.Empty;
     
-    [Column(SheetsConfig.HeaderNames.Amount, FieldTypeEnum.Currency, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Amount, FieldTypeEnum.Accounting, isInput: true)]
     public decimal Amount { get; set; }
     
     [Column(SheetsConfig.HeaderNames.Category, FieldTypeEnum.String, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeSelf)]

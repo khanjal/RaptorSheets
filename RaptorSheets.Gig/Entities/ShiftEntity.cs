@@ -38,16 +38,16 @@ public class ShiftEntity : SheetRowEntityBase
     public int Trips { get; set; }
 
     // Financial properties
-    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency, jsonPropertyName: "pay", isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Accounting, jsonPropertyName: "pay", isInput: true)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Currency, jsonPropertyName: "tip", isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Accounting, jsonPropertyName: "tip", isInput: true)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Currency, jsonPropertyName: "bonus", isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Accounting, jsonPropertyName: "bonus", isInput: true)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Currency, jsonPropertyName: "cash", isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Accounting, jsonPropertyName: "cash", isInput: true)]
     public decimal? Cash { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerStart, FieldTypeEnum.Number, formatPattern: "#,##0.0", jsonPropertyName: "startOdometer", isInput: true)]
@@ -78,31 +78,31 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.TotalTrips, FieldTypeEnum.Integer, jsonPropertyName: "totalTrips", note: ColumnNotes.TotalTrips)]
     public int TotalTrips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalPay, FieldTypeEnum.Currency, jsonPropertyName: "totalPay")]
+    [Column(SheetsConfig.HeaderNames.TotalPay, FieldTypeEnum.Accounting, jsonPropertyName: "totalPay")]
     public decimal? TotalPay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalTips, FieldTypeEnum.Currency, jsonPropertyName: "totalTips")]
+    [Column(SheetsConfig.HeaderNames.TotalTips, FieldTypeEnum.Accounting, jsonPropertyName: "totalTips")]
     public decimal? TotalTips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalBonus, FieldTypeEnum.Currency, jsonPropertyName: "totalBonus")]
+    [Column(SheetsConfig.HeaderNames.TotalBonus, FieldTypeEnum.Accounting, jsonPropertyName: "totalBonus")]
     public decimal? TotalBonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalGrand, FieldTypeEnum.Currency, jsonPropertyName: "grandTotal")]
+    [Column(SheetsConfig.HeaderNames.TotalGrand, FieldTypeEnum.Accounting, jsonPropertyName: "grandTotal")]
     public decimal? GrandTotal { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalCash, FieldTypeEnum.Currency, jsonPropertyName: "totalCash")]
+    [Column(SheetsConfig.HeaderNames.TotalCash, FieldTypeEnum.Accounting, jsonPropertyName: "totalCash")]
     public decimal? TotalCash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FieldTypeEnum.Currency, jsonPropertyName: "amountPerTrip")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FieldTypeEnum.Accounting, jsonPropertyName: "amountPerTrip")]
     public decimal? AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, FieldTypeEnum.Currency, jsonPropertyName: "amountPerTime")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, FieldTypeEnum.Accounting, jsonPropertyName: "amountPerTime")]
     public decimal? AmountPerTime { get; set; }
 
     [Column(SheetsConfig.HeaderNames.TotalDistance, FieldTypeEnum.Number, jsonPropertyName: "totalDistance", note: ColumnNotes.TotalDistance)]
     public decimal? TotalDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FieldTypeEnum.Currency, jsonPropertyName: "amountPerDistance")]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FieldTypeEnum.Accounting, jsonPropertyName: "amountPerDistance")]
     public decimal? AmountPerDistance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.TripsPerHour, FieldTypeEnum.Number)]

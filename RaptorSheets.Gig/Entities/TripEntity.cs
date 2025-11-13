@@ -43,14 +43,14 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Accounting, isInput: true)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Currency, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Accounting, isInput: true)]
     public decimal? Bonus { get; set; }
 
     // Output column (formula: Pay + Tips + Bonus) - defaults to isInput: false
-    [Column(SheetsConfig.HeaderNames.Total, FieldTypeEnum.Currency)]
+    [Column(SheetsConfig.HeaderNames.Total, FieldTypeEnum.Accounting)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Currency, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Accounting, isInput: true)]
     public decimal? Cash { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerStart, FieldTypeEnum.Number, formatPattern: "#,##0.0", jsonPropertyName: "startOdometer", isInput: true)]
@@ -96,9 +96,9 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Year, FieldTypeEnum.String)]
     public string Year { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, FieldTypeEnum.Currency, jsonPropertyName: "amountPerTime")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, FieldTypeEnum.Accounting, jsonPropertyName: "amountPerTime")]
     public decimal? AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FieldTypeEnum.Currency, jsonPropertyName: "amountPerDistance")]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FieldTypeEnum.Accounting, jsonPropertyName: "amountPerDistance")]
     public decimal? AmountPerDistance { get; set; }
 }
