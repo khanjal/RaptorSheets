@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 using System.Diagnostics.CodeAnalysis;
@@ -53,13 +54,13 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Accounting, isInput: true)]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerStart, FieldTypeEnum.Number, formatPattern: "#,##0.0", jsonPropertyName: "startOdometer", isInput: true)]
+    [Column(SheetsConfig.HeaderNames.OdometerStart, FieldTypeEnum.Number, formatPattern: CellFormatPatterns.Distance, jsonPropertyName: "startOdometer", isInput: true)]
     public decimal? OdometerStart { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerEnd, FieldTypeEnum.Number, formatPattern: "#,##0.0", jsonPropertyName: "endOdometer", isInput: true)]
     public decimal? OdometerEnd { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance", isInput: true, note: ColumnNotes.TripDistance)]
+    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance", isInput: true, note: ColumnNotes.TripDistance, formatPattern: CellFormatPatterns.Distance)]
     public decimal? Distance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Name, FieldTypeEnum.String, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeName)]

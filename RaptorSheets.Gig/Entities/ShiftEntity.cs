@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 using System.Diagnostics.CodeAnalysis;
@@ -53,10 +54,10 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.OdometerStart, FieldTypeEnum.Number, formatPattern: "#,##0.0", jsonPropertyName: "startOdometer", isInput: true)]
     public decimal? OdometerStart { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerEnd, FieldTypeEnum.Number, formatPattern: "#,##0.0", jsonPropertyName: "endOdometer", isInput: true)]
+    [Column(SheetsConfig.HeaderNames.OdometerEnd, FieldTypeEnum.Number, formatPattern: CellFormatPatterns.Distance, jsonPropertyName: "endOdometer", isInput: true)]
     public decimal? OdometerEnd { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance", isInput: true, note: ColumnNotes.ShiftDistance)]
+    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance", isInput: true, note: ColumnNotes.ShiftDistance, formatPattern: CellFormatPatterns.Distance)]
     public decimal? Distance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Region, FieldTypeEnum.String, jsonPropertyName: "region", isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion)]
