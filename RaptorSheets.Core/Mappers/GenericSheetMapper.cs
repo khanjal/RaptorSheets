@@ -363,7 +363,7 @@ public static class GenericSheetMapper<T> where T : class, new()
             { 
                 UserEnteredValue = new ExtendedValue { NumberValue = Convert.ToDouble(value) } 
             },
-            FieldTypeEnum.Number or FieldTypeEnum.Currency or FieldTypeEnum.Percentage => new CellData 
+            FieldTypeEnum.Number or FieldTypeEnum.Currency or FieldTypeEnum.Accounting or FieldTypeEnum.Percentage => new CellData 
             { 
                 UserEnteredValue = new ExtendedValue { NumberValue = Convert.ToDouble(value) } 
             },
