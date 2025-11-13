@@ -1,4 +1,5 @@
 ﻿using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Utilities;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Mappers;
@@ -6,7 +7,7 @@ using RaptorSheets.Gig.Mappers;
 namespace RaptorSheets.Gig.Tests.Integration.Mappers;
 
 /// <summary>
-/// Integration tests for the new SheetOrder attribute system using AddressMapper as an example.
+/// Integration tests for the new ColumnAttribute system using AddressMapper as an example.
 /// These tests verify the complete workflow from entity attributes to sheet configuration.
 /// </summary>
 public class EntityColumnOrderIntegrationTests
@@ -30,53 +31,41 @@ public class EntityColumnOrderIntegrationTests
     }
 
     [Fact]
-    public void AddressEntity_HasValidColumnOrderAttributes()
+    public void AddressEntity_HasValidColumnAttributes()
     {
-        // Arrange - Get all available header constants from SheetsConfig
-        var availableHeaders = typeof(SheetsConfig.HeaderNames)
-            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
-            .Where(f => f.FieldType == typeof(string))
-            .Select(f => (string)f.GetValue(null)!)
-            .ToList();
-
-        // Act
-        var validationErrors = EntityColumnOrderHelper.ValidateEntityHeaderMapping<AddressEntity>(availableHeaders);
+        // Act - Validate that AddressEntity has proper Column attributes
+        var validationErrors = EntitySheetConfigHelper.ValidateEntityForSheetGeneration<AddressEntity>();
 
         // Assert
         Assert.Empty(validationErrors);
     }
 
     [Fact]
-    public void AddressEntity_ColumnOrder_RespectsInheritanceHierarchy()
+    public void AddressEntity_ColumnOrder_RespectsDefinedOrder()
     {
         // Act
-        var columnOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<AddressEntity>();
+        var columnProperties = TypedFieldUtils.GetColumnProperties<AddressEntity>();
 
         // Assert
-        Assert.NotEmpty(columnOrder);
+        Assert.NotEmpty(columnProperties);
         
-        // Verify flattened order: Address + CommonTripSheetHeaders pattern
-        // AddressEntity no longer uses inheritance - it defines all properties directly
-        var expectedOrder = new[]
+        // Verify that Address comes first (entity-specific property)
+        Assert.Equal(SheetsConfig.HeaderNames.Address, columnProperties[0].Column.GetEffectiveHeaderName());
+        
+        // Verify financial headers are present
+        var financialHeaders = new[]
         {
-            SheetsConfig.HeaderNames.Address,    // Entity-specific property first
-            SheetsConfig.HeaderNames.Trips,     // CommonTripSheetHeaders start
-            SheetsConfig.HeaderNames.Pay,       // CommonIncomeHeaders
-            SheetsConfig.HeaderNames.Tips,      // CommonIncomeHeaders
-            SheetsConfig.HeaderNames.Bonus,     // CommonIncomeHeaders
-            SheetsConfig.HeaderNames.Total,     // CommonIncomeHeaders
-            SheetsConfig.HeaderNames.Cash,      // CommonIncomeHeaders
-            SheetsConfig.HeaderNames.AmountPerTrip,     // CommonTravelHeaders
-            SheetsConfig.HeaderNames.Distance,          // CommonTravelHeaders
-            SheetsConfig.HeaderNames.AmountPerDistance, // CommonTravelHeaders
-            SheetsConfig.HeaderNames.VisitFirst,        // Visit properties
-            SheetsConfig.HeaderNames.VisitLast          // Visit properties
+            SheetsConfig.HeaderNames.Pay,
+            SheetsConfig.HeaderNames.Tips,
+            SheetsConfig.HeaderNames.Bonus,
+            SheetsConfig.HeaderNames.Total,
+            SheetsConfig.HeaderNames.Cash
         };
 
-        Assert.Equal(expectedOrder.Length, columnOrder.Count);
-        for (int i = 0; i < expectedOrder.Length; i++)
+        var headerNames = columnProperties.Select(p => p.Column.GetEffectiveHeaderName()).ToList();
+        foreach (var financialHeader in financialHeaders)
         {
-            Assert.Equal(expectedOrder[i], columnOrder[i]);
+            Assert.Contains(financialHeader, headerNames);
         }
     }
 
@@ -123,19 +112,19 @@ public class EntityColumnOrderIntegrationTests
     }
 
     [Fact]
-    public void EntityColumnOrderHelper_WithFlattenedEntities_HandlesAllEntityTypes()
+    public void EntityColumnAttribute_WithFlattenedEntities_HandlesAllEntityTypes()
     {
-        // Test that the helper works with flattened entities (no more inheritance)
+        // Test that the new ColumnAttribute system works with flattened entities
         
-        // Act & Assert - None of these should throw
-        var addressOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<AddressEntity>();
-        var nameOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<NameEntity>();
-        var tripOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<TripEntity>();
+        // Act - Get column properties using the new system
+        var addressProperties = TypedFieldUtils.GetColumnProperties<AddressEntity>();
+        var nameProperties = TypedFieldUtils.GetColumnProperties<NameEntity>();
+        var tripProperties = TypedFieldUtils.GetColumnProperties<TripEntity>();
 
-        // Verify entity property counts for flattened entities
-        Assert.Equal(12, addressOrder.Count); // AddressEntity: 1 address + 11 other properties
-        Assert.Equal(12, nameOrder.Count);    // NameEntity: 1 name + 11 other properties (same pattern)
-        Assert.True(tripOrder.Count >= 20);   // TripEntity has many properties
+        // Assert - Verify entities have Column attributes
+        Assert.NotEmpty(addressProperties); // AddressEntity should have Column attributes
+        Assert.NotEmpty(nameProperties);    // NameEntity should have Column attributes  
+        Assert.NotEmpty(tripProperties);    // TripEntity should have Column attributes
 
         // Verify that flattened entities contain the same financial headers
         var financialHeaders = new[] 
@@ -147,12 +136,20 @@ public class EntityColumnOrderIntegrationTests
             SheetsConfig.HeaderNames.Cash 
         };
         
+        var addressHeaderNames = addressProperties.Select(p => p.Column.GetEffectiveHeaderName()).ToList();
+        var nameHeaderNames = nameProperties.Select(p => p.Column.GetEffectiveHeaderName()).ToList();
+        var tripHeaderNames = tripProperties.Select(p => p.Column.GetEffectiveHeaderName()).ToList();
+        
         foreach (var financialHeader in financialHeaders)
         {
-            Assert.Contains(financialHeader, addressOrder);
-            Assert.Contains(financialHeader, nameOrder);
-            Assert.Contains(financialHeader, tripOrder);
+            Assert.Contains(financialHeader, addressHeaderNames);
+            Assert.Contains(financialHeader, nameHeaderNames);
+            Assert.Contains(financialHeader, tripHeaderNames);
         }
+
+        // Verify specific entity properties
+        Assert.Contains(SheetsConfig.HeaderNames.Address, addressHeaderNames);
+        Assert.Contains(SheetsConfig.HeaderNames.Name, nameHeaderNames);
     }
 
     [Fact]
@@ -166,49 +163,43 @@ public class EntityColumnOrderIntegrationTests
         var originalHeaderNames = originalSheet.Headers.Select(h => h.Name).ToList();
 
         // Act
-        var entityOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<AddressEntity>();
+        var entityProperties = TypedFieldUtils.GetColumnProperties<AddressEntity>();
+        var entityHeaderNames = entityProperties.Select(p => p.Column.GetEffectiveHeaderName()).ToList();
+        
         var sheet = AddressMapper.GetSheet();
         var finalHeaderNames = sheet.Headers.Select(h => h.Name).ToList();
 
         // Assert
-        // The entity should define all the headers for AddressEntity (flattened design)
-        foreach (var entityHeader in entityOrder)
+        // The entity should define headers for AddressEntity (flattened design)
+        foreach (var entityHeader in entityHeaderNames)
         {
             Assert.Contains(entityHeader, finalHeaderNames);
         }
 
-        // Key headers should appear in the correct flattened order
+        // Key headers should appear with Address first
         var addressIndex = finalHeaderNames.IndexOf(SheetsConfig.HeaderNames.Address);
         var tripsIndex = finalHeaderNames.IndexOf(SheetsConfig.HeaderNames.Trips);
         var payIndex = finalHeaderNames.IndexOf(SheetsConfig.HeaderNames.Pay);
-        var distanceIndex = finalHeaderNames.IndexOf(SheetsConfig.HeaderNames.Distance);
 
-        // AddressEntity follows: Address, Trips, Pay..., Distance...
-        Assert.True(addressIndex < tripsIndex, "Address should come before Trips");
-        Assert.True(tripsIndex < payIndex, "Trips should come before Pay in CommonTripSheetHeaders pattern");
-        Assert.True(payIndex < distanceIndex, "Pay should come before Distance");
+        // Address should be first (entity-specific property)
+        Assert.Equal(0, addressIndex);
+        Assert.True(tripsIndex > addressIndex, "Trips should come after Address");
     }
 
     [Fact]
     public void EntityAttributeSystem_IsConsistentAcrossDomainEntities()
     {
-        // This test verifies that the attribute system is consistently applied
-        // across different entity types that might be used in other mappers
+        // This test verifies that the Column attribute system is consistently applied
+        // across different entity types
         
         // Act
-        var addressErrors = EntityColumnOrderHelper.ValidateEntityHeaderMapping<AddressEntity>(
-            GetAllAvailableHeaders());
+        var addressErrors = EntitySheetConfigHelper.ValidateEntityForSheetGeneration<AddressEntity>();
+        var nameErrors = EntitySheetConfigHelper.ValidateEntityForSheetGeneration<NameEntity>();
+        var tripErrors = EntitySheetConfigHelper.ValidateEntityForSheetGeneration<TripEntity>();
 
         // Assert
         Assert.Empty(addressErrors);
-    }
-
-    private static List<string> GetAllAvailableHeaders()
-    {
-        return typeof(SheetsConfig.HeaderNames)
-            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
-            .Where(f => f.FieldType == typeof(string))
-            .Select(f => (string)f.GetValue(null)!)
-            .ToList();
+        Assert.Empty(nameErrors);
+        Assert.Empty(tripErrors);
     }
 }

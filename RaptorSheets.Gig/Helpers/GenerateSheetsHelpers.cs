@@ -1,12 +1,13 @@
 ﻿using Google.Apis.Sheets.v4.Data;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
-using RaptorSheets.Core.Enums;
-using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Extensions;
-using RaptorSheets.Common.Mappers;
-using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Helpers;
 
@@ -17,9 +18,17 @@ public static class GenerateSheetsHelpers
 
     public static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
+        if (sheets.Count == 0)
+        {
+            // Skip unnecessary processing when the collection is empty
+            return new BatchUpdateSpreadsheetRequest { Requests = new List<Request>() };
+        }
+
         _batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
         _batchUpdateSpreadsheetRequest.Requests = [];
         _repeatCellRequests = [];
+
+        var additionalRequests = new List<Request>(); // Collect additional requests here
 
         sheets.ForEach(sheet =>
         {
@@ -32,14 +41,17 @@ public static class GenerateSheetsHelpers
             var appendDimension = GoogleRequestHelpers.GenerateAppendDimension(sheetModel);
             if (appendDimension != null)
             {
-                _batchUpdateSpreadsheetRequest!.Requests.Add(appendDimension);
+                additionalRequests.Add(appendDimension);
             }
 
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
+            additionalRequests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
             GenerateHeadersFormatAndProtection(sheetModel);
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
+            additionalRequests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
+            additionalRequests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
         });
+
+        // Add all collected requests after the loop
+        additionalRequests.ForEach(request => _batchUpdateSpreadsheetRequest.Requests.Add(request));
 
         _repeatCellRequests.ForEach(request =>
         {
@@ -60,13 +72,13 @@ public static class GenerateSheetsHelpers
         {
             var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase) => AddressMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase) => DailyMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) => ExpenseMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet),
             var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) => MonthlyMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) => NameMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) => PlaceMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) => RegionMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) => ServiceMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => SetupMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet),
             var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) => ShiftMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) => TripMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase) => TypeMapper.GetSheet(),

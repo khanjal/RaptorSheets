@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Mappers;
@@ -22,7 +23,7 @@ public class ShiftMapperTests
         };
 
         // Act
-        var result = ShiftMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<ShiftEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(result);
@@ -57,7 +58,7 @@ public class ShiftMapperTests
         };
 
         // Act
-        var result = ShiftMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<ShiftEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.Equal(2, result.Count); // Empty row filtered out
@@ -84,7 +85,7 @@ public class ShiftMapperTests
         var headers = new List<object> { "Date", "Start", "Finish", "Service", "#", "Region" };
 
         // Act
-        var result = ShiftMapper.MapToRangeData(shifts, headers);
+        var result = GenericSheetMapper<ShiftEntity>.MapToRangeData(shifts, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -150,7 +151,7 @@ public class ShiftMapperTests
         };
 
         // Act
-        var result = ShiftMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<ShiftEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(result);
@@ -188,7 +189,7 @@ public class ShiftMapperTests
         var headers = new List<object> { "Date", "Start", "Service", "#" };
 
         // Act
-        var result = ShiftMapper.MapToRowData(shifts, headers);
+        var result = GenericSheetMapper<ShiftEntity>.MapToRowData(shifts, headers);
 
         // Assert
         Assert.NotNull(result);

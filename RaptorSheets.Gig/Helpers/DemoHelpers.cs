@@ -2,6 +2,8 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
+using System.Globalization;
+using RaptorSheets.Gig.Helpers;
 
 namespace RaptorSheets.Gig.Helpers;
 
@@ -332,7 +334,7 @@ public static class DemoHelpers
             {
                 RowId = idContext.ExpenseId++,
                 Action = ActionTypeEnum.INSERT.GetDescription(),
-                Date = date,
+                Date = date.ToString("yyyy-MM-dd"),  // Convert DateTime to string format
                 Category = category,
                 Name = $"{category} - Demo",
                 Amount = amount,

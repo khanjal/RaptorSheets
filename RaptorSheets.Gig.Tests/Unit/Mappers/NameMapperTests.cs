@@ -1,5 +1,7 @@
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Mappers;
+using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
 using System.ComponentModel;
@@ -17,13 +19,13 @@ public class NameMapperTests
         // Arrange
         var values = new List<IList<object>>
         {
-            new List<object> { "Name", "Trips", "Pay", "Tip", "Bonus", "Total" },
+            new List<object> { "Name", "Trips", "Pay", "Tips", "Bonus", "Total" },  // Changed "Tip" to "Tips"
             new List<object> { "John Doe", "5", "125.50", "25.00", "10.00", "160.50" },
             new List<object> { "Jane Smith", "3", "75.25", "15.00", "5.00", "95.25" }
         };
 
         // Act
-        var result = NameMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<NameEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(result);
@@ -57,7 +59,7 @@ public class NameMapperTests
         };
 
         // Act
-        var result = NameMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<NameEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.Equal(2, result.Count); // Empty row filtered out
@@ -91,6 +93,7 @@ public class NameMapperTests
         
         var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
         Assert.NotNull(payHeader);
+        // MapperFormulaHelper sets ACCOUNTING format for aggregation sheets
         Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
         
         // Verify all headers have proper column assignments
@@ -141,7 +144,7 @@ public class NameMapperTests
         };
 
         // Act
-        var result = NameMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<NameEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(result);

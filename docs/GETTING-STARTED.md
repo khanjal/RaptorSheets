@@ -181,7 +181,7 @@ var allData = await manager.GetSheets();
 
 ### For RaptorSheets.Core Users
 - **[📖 Core Documentation](CORE.md)** - Detailed API reference
-- **[🏗️ Advanced Usage](CORE.md#advanced-features)** - Custom mappers and complex scenarios
+- **[🏗️ Advanced Usage](CORE.md#advanced-features)** - Simplified mappers with automated field mapping
 - **[🧪 Testing](CORE.md#testing)** - Unit testing your integrations
 
 ### For RaptorSheets.Gig Users

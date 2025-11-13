@@ -7,7 +7,7 @@ namespace RaptorSheets.Gig.Tests.Integration.Mappers;
 
 /// <summary>
 /// Integration tests demonstrating the complete entity-driven sheet configuration workflow.
-/// Shows how SheetsConfig now generates headers directly from entity SheetOrder attributes.
+/// Shows how SheetsConfig now generates headers directly from entity ColumnAttribute attributes.
 /// </summary>
 public class EntityDrivenSheetsConfigIntegrationTests
 {
@@ -21,7 +21,7 @@ public class EntityDrivenSheetsConfigIntegrationTests
         Assert.NotNull(sheet);
         Assert.NotEmpty(sheet.Headers);
         
-        // Verify that headers match the entity's SheetOrder attributes
+        // Verify that headers match the entity's ColumnAttribute attributes
         var entityHeaders = EntitySheetConfigHelper.GenerateHeadersFromEntity<AddressEntity>();
         Assert.Equal(entityHeaders.Count, sheet.Headers.Count);
         
@@ -69,7 +69,7 @@ public class EntityDrivenSheetsConfigIntegrationTests
     public void EntityDrivenConfig_EliminatesManualHeaderDefinition()
     {
         // This test demonstrates that we no longer need manual header definition
-        // in SheetsConfig - the headers are generated from entity attributes
+        // in SheetsConfig - the headers are generated from entity ColumnAttribute attributes
         
         // Before: Manual header definition in SheetsConfig
         // Headers = [
@@ -80,13 +80,13 @@ public class EntityDrivenSheetsConfigIntegrationTests
         // After: Entity-driven header generation
         var sheet = SheetsConfig.AddressSheet;
         
-        // Verify that all entity properties with ColumnOrder attributes are included
-        var entityOrder = EntityColumnOrderHelper.GetColumnOrderFromEntity<AddressEntity>();
+        // Verify that all entity properties with ColumnAttribute are included
+        var entityHeaders = EntitySheetConfigHelper.GenerateHeadersFromEntity<AddressEntity>();
         var sheetHeaderNames = sheet.Headers.Select(h => h.Name).ToList();
         
-        foreach (var entityHeader in entityOrder)
+        foreach (var entityHeader in entityHeaders)
         {
-            Assert.Contains(entityHeader, sheetHeaderNames);
+            Assert.Contains(entityHeader.Name, sheetHeaderNames);
         }
     }
 
@@ -154,11 +154,11 @@ public class EntityDrivenSheetsConfigIntegrationTests
     public void NewApproach_SimplifiesMaintenanceWorkflow()
     {
         // This test documents the simplified workflow:
-        // 1. Add ColumnOrder attributes to entity properties
+        // 1. Add ColumnAttribute to entity properties
         // 2. SheetsConfig automatically generates headers
         // 3. No manual header maintenance needed
         
-        // Verify entity has ColumnOrder attributes
+        // Verify entity has ColumnAttribute attributes
         var entityHeaders = EntitySheetConfigHelper.GenerateHeadersFromEntity<AddressEntity>();
         Assert.NotEmpty(entityHeaders);
         

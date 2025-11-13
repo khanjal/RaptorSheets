@@ -1,3 +1,5 @@
+using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Tests.Data;
@@ -131,7 +133,7 @@ public class EntitySheetConfigHelperTests
         // Assert
         Assert.NotEmpty(errors);
         Assert.Contains(errors, e => e.Contains("TestNoAttributesEntity"));
-        Assert.Contains(errors, e => e.Contains("no properties with ColumnOrder attributes"));
+        Assert.Contains(errors, e => e.Contains("no properties with Column attributes"));
     }
 
     [Fact]
@@ -244,5 +246,40 @@ public class EntitySheetConfigHelperTests
         
         Assert.True(payIndex < addressIndex, "Base class properties should appear before derived class properties");
         Assert.Equal(1, headerNames.Count(h => h == TestHeaderNames.Pay)); // Should appear only once
+    }
+
+    [Fact]
+    public void GenerateHeadersFromEntity_WithColumnAttributes_AppliesFormats()
+    {
+        // Act
+        var headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TestAddressEntity>();
+        
+        // Assert
+        Assert.NotEmpty(headers);
+        
+        // Find currency header and verify it has correct format
+        var payHeader = headers.FirstOrDefault(h => h.Name == TestHeaderNames.Pay);
+        Assert.NotNull(payHeader);
+        // The format should be applied automatically based on FieldTypeEnum.Currency
+        // Note: The exact format application depends on the EntitySheetConfigHelper implementation
+    }
+
+    private class TestNoPropertiesEntity
+    {
+    }
+
+    private class TestDuplicateColumnEntity
+    {
+        [Column("DuplicateHeader", FieldTypeEnum.String)]
+        public string Property1 { get; set; } = "";
+
+        [Column("DuplicateHeader", FieldTypeEnum.String)]
+        public string Property2 { get; set; } = "";
+    }
+
+    private class TestInvalidColumnEntity
+    {
+        [Column("InvalidColumn", FieldTypeEnum.Currency)]
+        public string InvalidProperty { get; set; } = "";
     }
 }

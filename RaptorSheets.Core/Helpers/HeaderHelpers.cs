@@ -98,17 +98,17 @@ public static class HeaderHelpers
         }
 
         var value = values[columnId]?.ToString()?.Trim();
-        
+
         // If the string contains a decimal point, it's not a valid integer
         if (value?.Contains('.') == true)
         {
             return 0;
         }
-        
+
         // Handle negative numbers - preserve the minus sign but remove other non-digit characters
         var isNegative = value?.StartsWith("-") == true;
         value = NonDigitRegex.Replace(value!, ""); // Remove all non-digit characters with timeout
-        
+
         if (string.IsNullOrEmpty(value))
         {
             return 0; // Make empty into 0s.
@@ -131,27 +131,36 @@ public static class HeaderHelpers
     {
         var columnId = GetHeaderKey(headers, columnName);
 
-        // TODO: Look into this closer. had to change to >= values.count. Does this need to be on other ones?
         if (columnId >= values.Count || columnId < 0 || values[columnId] == null)
         {
+            Console.WriteLine($"Column '{columnName}' is out of range or null.");
             return null;
         }
 
         var value = values[columnId]?.ToString()?.Trim();
-        value = NonDecimalRegex.Replace(value!, ""); // Remove all special currency symbols except for .'s and -'s with timeout
+
+        // Log the raw value for debugging purposes
+        Console.WriteLine($"Raw value for column '{columnName}': {value}");
+
+        value = NonDecimalRegex.Replace(value ?? string.Empty, ""); // Remove all special currency symbols except for .'s and -'s with timeout
+
+        // Log the filtered value for debugging purposes
+        Console.WriteLine($"Filtered value for column '{columnName}': {value}");
+
         if (value == "-" || value == "")
         {
+            Console.WriteLine($"Column '{columnName}' has an empty or invalid value after filtering.");
             return null;  // Make account -'s into nulls.
         }
 
         if (decimal.TryParse(value, out decimal result))
         {
+            Console.WriteLine($"Parsed value for column '{columnName}': {result}");
             return result;
         }
-        else
-        {
-            return null;
-        }
+
+        Console.WriteLine($"Failed to parse value for column '{columnName}': {value}");
+        return null;
     }
 
     private static int GetHeaderKey(Dictionary<int, string> header, string value)

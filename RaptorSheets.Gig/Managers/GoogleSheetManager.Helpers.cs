@@ -20,7 +20,6 @@ public partial class GoogleSheetManager
         if (spreadsheet != null)
         {
             var missingSheets = SheetHelpers.CheckSheets<SheetEnum>(spreadsheet);
-            missingSheets.AddRange(SheetHelpers.CheckSheets<Common.Enums.SheetEnum>(spreadsheet));
 
             if (missingSheets.Count != 0)
             {
