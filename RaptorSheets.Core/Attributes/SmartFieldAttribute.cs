@@ -33,7 +33,7 @@ public class SmartFieldAttribute : Attribute
     /// <summary>
     /// Explicit column order (optional - uses declaration order by default)
     /// </summary>
-    public int? Order { get; set; }
+    public int Order { get; set; } = 0;
 
     /// <summary>
     /// Enable validation (default: false)
@@ -66,6 +66,8 @@ public static class FieldConventions
 {
     public static FieldTypeEnum InferFieldType(PropertyInfo property)
     {
+        ArgumentNullException.ThrowIfNull(property);
+        
         var type = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
         
         return Type.GetTypeCode(type) switch
@@ -90,6 +92,8 @@ public static class FieldConventions
 
     public static string InferJsonPropertyName(PropertyInfo property)
     {
+        ArgumentNullException.ThrowIfNull(property);
+        
         // Convert PascalCase to camelCase
         var name = property.Name;
         return char.ToLowerInvariant(name[0]) + name[1..];
@@ -97,6 +101,8 @@ public static class FieldConventions
 
     public static string InferHeaderName(PropertyInfo property)
     {
+        ArgumentNullException.ThrowIfNull(property);
+        
         // Check if the property has a SmartFieldAttribute with a custom HeaderName
         var smartFieldAttribute = property.GetCustomAttribute<SmartFieldAttribute>();
         if (smartFieldAttribute?.HeaderName != null)
