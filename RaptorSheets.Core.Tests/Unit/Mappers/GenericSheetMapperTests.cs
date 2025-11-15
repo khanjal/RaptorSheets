@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
@@ -28,7 +29,7 @@ public class GenericSheetMapperTests
         [Column("Active", FieldTypeEnum.Boolean, isInput: true)]
         public bool Active { get; set; }
 
-        [Column("Distance", FieldTypeEnum.Number, formatPattern: "#,##0.0", isInput: true)]
+        [Column("Distance", FieldTypeEnum.Number, formatPattern: CellFormatPatterns.Distance, isInput: true)]
         public decimal? Distance { get; set; }
 
         public bool Saved { get; set; }

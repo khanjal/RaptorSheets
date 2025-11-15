@@ -51,7 +51,7 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Accounting, jsonPropertyName: "cash", isInput: true)]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerStart, FieldTypeEnum.Number, formatPattern: "#,##0.0", jsonPropertyName: "startOdometer", isInput: true)]
+    [Column(SheetsConfig.HeaderNames.OdometerStart, FieldTypeEnum.Number, formatPattern: CellFormatPatterns.Distance, jsonPropertyName: "startOdometer", isInput: true)]
     public decimal? OdometerStart { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerEnd, FieldTypeEnum.Number, formatPattern: CellFormatPatterns.Distance, jsonPropertyName: "endOdometer", isInput: true)]

@@ -28,35 +28,30 @@ public static class GenerateSheetsHelpers
         _batchUpdateSpreadsheetRequest.Requests = [];
         _repeatCellRequests = [];
 
-        var additionalRequests = new List<Request>(); // Collect additional requests here
-
-        sheets.ForEach(sheet =>
+        foreach (var sheet in sheets)
         {
             var sheetModel = GetSheetModel(sheet);
             var random = new Random();
             sheetModel.Id = random.Next();
 
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
 
             var appendDimension = GoogleRequestHelpers.GenerateAppendDimension(sheetModel);
             if (appendDimension != null)
             {
-                additionalRequests.Add(appendDimension);
+                _batchUpdateSpreadsheetRequest.Requests.Add(appendDimension);
             }
 
-            additionalRequests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
             GenerateHeadersFormatAndProtection(sheetModel);
-            additionalRequests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
-            additionalRequests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
-        });
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
+        }
 
-        // Add all collected requests after the loop
-        additionalRequests.ForEach(request => _batchUpdateSpreadsheetRequest.Requests.Add(request));
-
-        _repeatCellRequests.ForEach(request =>
+        foreach (var request in _repeatCellRequests)
         {
             _batchUpdateSpreadsheetRequest.Requests.Add(new Request { RepeatCell = request });
-        });
+        }
 
         return _batchUpdateSpreadsheetRequest;
     }
@@ -95,7 +90,7 @@ public static class GenerateSheetsHelpers
         sheet.Headers.UpdateColumns();
 
         // Format/Protect Column Cells
-        sheet!.Headers.ForEach(header =>
+        foreach (var header in sheet.Headers)
         {
             var range = new GridRange
             {
@@ -114,7 +109,7 @@ public static class GenerateSheetsHelpers
             // If there's no format or validation then go to next header
             if (header.Format == null && string.IsNullOrEmpty(header.Validation))
             {
-                return;
+                continue;
             }
 
             var repeatCellModel = new RepeatCellModel
@@ -134,6 +129,6 @@ public static class GenerateSheetsHelpers
             }
 
             _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
-        });
+        }
     }  
 }

@@ -105,12 +105,56 @@ public class ColumnAttribute : Attribute
         NumberFormatPattern = null; // Will use default pattern
         Order = -1;
         IsInput = isInput;
+        EnableValidation = false;
+        ValidationPattern = null;
         Note = null;
     }
 
     /// <summary>
-    /// Initializes a column configuration with full customization options.
-    /// Use named parameters to specify formatType: formatType: FormatEnum.DATE
+    /// Initializes a column configuration with advanced options using ColumnOptions.
+    /// This constructor is recommended when you need to customize multiple optional parameters.
+    /// Use ColumnOptions.Builder() for a fluent API, or pass named parameters directly.
+    /// </summary>
+    /// <param name="headerName">Header name for sheet column</param>
+    /// <param name="fieldType">Field type for data conversion (should match C# property type)</param>
+    /// <param name="options">Configuration options for advanced customization</param>
+    /// <example>
+    /// Using the builder pattern:
+    /// <code>
+    /// [Column("Pay", FieldTypeEnum.Currency, 
+    ///     ColumnOptions.Builder()
+    ///         .AsInput()
+    ///         .WithNote("Payment amount")
+    ///         .WithValidation(SheetsConfig.ValidationNames.RangeService)]
+    /// </code>
+    /// Using object initializer:
+    /// <code>
+    /// [Column("Pay", FieldTypeEnum.Currency, new ColumnOptions { 
+    ///     IsInput = true, 
+    ///     Note = "Payment amount",
+    ///     ValidationPattern = SheetsConfig.ValidationNames.RangeService
+    /// })]
+    /// </code>
+    /// </example>
+    public ColumnAttribute(string headerName, FieldTypeEnum fieldType, ColumnOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        
+        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
+        JsonPropertyName = options.JsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
+        FieldType = fieldType;
+        FormatType = options.FormatType;
+        NumberFormatPattern = options.FormatPattern;
+        Order = options.Order;
+        IsInput = options.IsInput;
+        EnableValidation = options.EnableValidation;
+        ValidationPattern = options.ValidationPattern;
+        Note = options.Note;
+    }
+
+    /// <summary>
+    /// Initializes a column configuration with full customization options using named parameters.
+    /// RECOMMENDED: Use ColumnAttribute(headerName, fieldType, ColumnOptions) instead for better readability when using many parameters.
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
     /// <param name="fieldType">Field type for data conversion (should match C# property type)</param>
