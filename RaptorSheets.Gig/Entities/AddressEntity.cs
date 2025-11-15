@@ -1,5 +1,4 @@
 using RaptorSheets.Core.Attributes;
-using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 using System.Diagnostics.CodeAnalysis;
 
@@ -8,39 +7,39 @@ namespace RaptorSheets.Gig.Entities;
 [ExcludeFromCodeCoverage]
 public class AddressEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Address, FieldTypeEnum.String, jsonPropertyName: "address")]
+    [Column(SheetsConfig.HeaderNames.Address, jsonPropertyName: "address")]
     public string Address { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Trips, FieldTypeEnum.Integer, jsonPropertyName: "trips")]
+    [Column(SheetsConfig.HeaderNames.Trips, jsonPropertyName: "trips")]
     public int Trips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Accounting, jsonPropertyName: "pay")]
+    [Column(SheetsConfig.HeaderNames.Pay, jsonPropertyName: "pay")]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, FieldTypeEnum.Accounting, jsonPropertyName: "tip")]
+    [Column(SheetsConfig.HeaderNames.Tips, jsonPropertyName: "tip")]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, FieldTypeEnum.Accounting, jsonPropertyName: "bonus")]
+    [Column(SheetsConfig.HeaderNames.Bonus, jsonPropertyName: "bonus")]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Total, FieldTypeEnum.Accounting, jsonPropertyName: "total")]
+    [Column(SheetsConfig.HeaderNames.Total, jsonPropertyName: "total")]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, FieldTypeEnum.Accounting, jsonPropertyName: "cash")]
+    [Column(SheetsConfig.HeaderNames.Cash, jsonPropertyName: "cash")]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FieldTypeEnum.Accounting)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip)]
     public decimal AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, FieldTypeEnum.Number, jsonPropertyName: "distance")]
+    [Column(SheetsConfig.HeaderNames.Distance, jsonPropertyName: "distance")]
     public decimal Distance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FieldTypeEnum.Accounting)]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance)]
     public decimal AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.VisitFirst, FieldTypeEnum.String, jsonPropertyName: "first trip")]
+    [Column(SheetsConfig.HeaderNames.VisitFirst, jsonPropertyName: "firstTrip")]
     public string FirstTrip { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.VisitLast, FieldTypeEnum.String, jsonPropertyName: "last trip")]
+    [Column(SheetsConfig.HeaderNames.VisitLast, jsonPropertyName: "lastTrip")]
     public string LastTrip { get; set; } = "";
 }

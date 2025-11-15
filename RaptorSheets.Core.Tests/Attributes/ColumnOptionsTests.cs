@@ -90,12 +90,11 @@ public class ColumnOptionsTests
         };
 
         // Act
-        var attribute = new ColumnAttribute("Pay", FieldTypeEnum.Currency, options);
+        var attribute = new ColumnAttribute("Pay", options);
 
         // Assert
         Assert.Equal("Pay", attribute.HeaderName);
         Assert.Equal("payAmount", attribute.JsonPropertyName);
-        Assert.Equal(FieldTypeEnum.Currency, attribute.FieldType);
         Assert.Equal(FormatEnum.ACCOUNTING, attribute.FormatType);
         Assert.Equal("\"£\"#,##0.00", attribute.NumberFormatPattern);
         Assert.Equal(3, attribute.Order);
@@ -109,7 +108,7 @@ public class ColumnOptionsTests
     public void ColumnAttribute_WithOptionsBuilder_ShouldWork()
     {
         // Act
-        var attribute = new ColumnAttribute("Pay", FieldTypeEnum.Currency,
+        var attribute = new ColumnAttribute("Pay",
             ColumnOptions.Builder()
                 .AsInput()
                 .WithNote("Payment amount")
@@ -131,7 +130,7 @@ public class ColumnOptionsTests
         var options = new ColumnOptions { IsInput = true };
 
         // Act
-        var attribute = new ColumnAttribute("Test", FieldTypeEnum.String, options);
+        var attribute = new ColumnAttribute("Test", options);
 
         // Assert
         Assert.Equal("Test", attribute.HeaderName);
@@ -153,7 +152,7 @@ public class ColumnOptionsTests
         };
 
         // Act
-        var attribute = new ColumnAttribute("Start Address", FieldTypeEnum.String, options);
+        var attribute = new ColumnAttribute("Start Address", options);
 
         // Assert
         Assert.Equal("Start Address", attribute.HeaderName);
@@ -178,6 +177,6 @@ public class ColumnOptionsTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => 
-            new ColumnAttribute("Test", FieldTypeEnum.String, (ColumnOptions)null!));
+            new ColumnAttribute("Test", (ColumnOptions)null!));
     }
 }

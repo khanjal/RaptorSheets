@@ -1,12 +1,13 @@
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Helpers;
 using System.Text;
 
 namespace RaptorSheets.Core.Attributes;
 
 /// <summary>
 /// Comprehensive attribute that defines column configuration for Google Sheets.
-/// Separates data conversion logic (FieldType) from display formatting (FormatType).
+/// Automatically infers FieldType from property type - you only need to specify FormatType for special formatting.
 /// Uses header name as default JSON property name with optional override.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
@@ -24,10 +25,15 @@ public class ColumnAttribute : Attribute
 
     /// <summary>
     /// Gets the field type for data conversion between C# and Google Sheets.
-    /// This should match the C# property type (e.g., String for string properties, Currency for decimal properties).
+    /// This is automatically inferred from the property type unless explicitly specified.
     /// Controls how data is parsed when reading from sheets and formatted when writing to sheets.
     /// </summary>
-    public FieldTypeEnum FieldType { get; }
+    public FieldTypeEnum FieldType { get; private set; }
+
+    /// <summary>
+    /// Gets whether the FieldType was explicitly set (true) or auto-inferred (false).
+    /// </summary>
+    internal bool IsFieldTypeExplicit { get; private set; }
 
     /// <summary>
     /// Gets the format type for Google Sheets display formatting.
@@ -72,37 +78,60 @@ public class ColumnAttribute : Attribute
 
     /// <summary>
     /// Initializes a column configuration for an OUTPUT column (formula/calculated).
+    /// FieldType is automatically inferred from the property type.
     /// This is the most common case - use this constructor for columns with formulas.
-    /// For input columns (user-entered data), use the 3-parameter constructor with isInput: true.
+    /// For input columns (user-entered data), use the constructor with isInput: true.
     /// </summary>
     /// <param name="headerName">Header name for sheet column (also used for JSON property name)</param>
-    /// <param name="fieldType">Field type for data conversion (should match C# property type)</param>
-    public ColumnAttribute(string headerName, FieldTypeEnum fieldType)
+    public ColumnAttribute(string headerName)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = fieldType;
+        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        IsFieldTypeExplicit = false;
         FormatType = FormatEnum.DEFAULT;
         NumberFormatPattern = null;
         Order = -1;
-        IsInput = false; // Default to output/formula column
+        IsInput = false;
+        Note = null;
+    }
+
+    /// <summary>
+    /// Initializes a column configuration with format type override.
+    /// FieldType is automatically inferred from the property type.
+    /// Use this when you need to override the default format (e.g., string date with DATE format).
+    /// </summary>
+    /// <param name="headerName">Header name for sheet column</param>
+    /// <param name="formatType">Format type for Google Sheets display</param>
+    /// <param name="isInput">True if this is a user-input column (default: false)</param>
+    public ColumnAttribute(string headerName, FormatEnum formatType, bool isInput = false)
+    {
+        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
+        JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
+        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        IsFieldTypeExplicit = false;
+        FormatType = formatType;
+        NumberFormatPattern = null;
+        Order = -1;
+        IsInput = isInput;
         Note = null;
     }
 
     /// <summary>
     /// Initializes a column configuration using header name as JSON property name with default formatting.
     /// Explicitly requires specifying whether this is an input or output column.
+    /// FieldType is automatically inferred from the property type.
     /// </summary>
     /// <param name="headerName">Header name for sheet column (also used for JSON property name)</param>
-    /// <param name="fieldType">Field type for data conversion (should match C# property type)</param>
     /// <param name="isInput">True if this is a user-input column that should be written to sheets, false for output/formula columns</param>
-    public ColumnAttribute(string headerName, FieldTypeEnum fieldType, bool isInput)
+    public ColumnAttribute(string headerName, bool isInput)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = fieldType;
+        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        IsFieldTypeExplicit = false;
         FormatType = FormatEnum.DEFAULT;
-        NumberFormatPattern = null; // Will use default pattern
+        NumberFormatPattern = null;
         Order = -1;
         IsInput = isInput;
         EnableValidation = false;
@@ -112,37 +141,20 @@ public class ColumnAttribute : Attribute
 
     /// <summary>
     /// Initializes a column configuration with advanced options using ColumnOptions.
+    /// FieldType is automatically inferred from the property type.
     /// This constructor is recommended when you need to customize multiple optional parameters.
     /// Use ColumnOptions.Builder() for a fluent API, or pass named parameters directly.
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
-    /// <param name="fieldType">Field type for data conversion (should match C# property type)</param>
     /// <param name="options">Configuration options for advanced customization</param>
-    /// <example>
-    /// Using the builder pattern:
-    /// <code>
-    /// [Column("Pay", FieldTypeEnum.Currency, 
-    ///     ColumnOptions.Builder()
-    ///         .AsInput()
-    ///         .WithNote("Payment amount")
-    ///         .WithValidation(SheetsConfig.ValidationNames.RangeService)]
-    /// </code>
-    /// Using object initializer:
-    /// <code>
-    /// [Column("Pay", FieldTypeEnum.Currency, new ColumnOptions { 
-    ///     IsInput = true, 
-    ///     Note = "Payment amount",
-    ///     ValidationPattern = SheetsConfig.ValidationNames.RangeService
-    /// })]
-    /// </code>
-    /// </example>
-    public ColumnAttribute(string headerName, FieldTypeEnum fieldType, ColumnOptions options)
+    public ColumnAttribute(string headerName, ColumnOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
         
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = options.JsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = fieldType;
+        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        IsFieldTypeExplicit = false;
         FormatType = options.FormatType;
         NumberFormatPattern = options.FormatPattern;
         Order = options.Order;
@@ -153,19 +165,89 @@ public class ColumnAttribute : Attribute
     }
 
     /// <summary>
-    /// Initializes a column configuration with full customization options using named parameters.
-    /// RECOMMENDED: Use ColumnAttribute(headerName, fieldType, ColumnOptions) instead for better readability when using many parameters.
+    /// Initializes a column configuration with advanced named parameters.
+    /// FieldType is automatically inferred from the property type.
+    /// Use this when you need jsonPropertyName, formatPattern, or other advanced options.
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
-    /// <param name="fieldType">Field type for data conversion (should match C# property type)</param>
-    /// <param name="formatPattern">Custom number format pattern (null = use default)</param>
+    /// <param name="isInput">True if this is a user-input column (default: false)</param>
     /// <param name="jsonPropertyName">Custom JSON property name (null = auto-generate from header)</param>
-    /// <param name="order">Column order priority (-1 = use declaration order)</param>
-    /// <param name="isInput">True if this is a user-input column that should be written to sheets (default: false for output/formula columns)</param>
+    /// <param name="formatPattern">Custom number format pattern (null = use default)</param>
+    /// <param name="note">Note/comment to display in Google Sheets</param>
     /// <param name="enableValidation">Enable field validation (default: false)</param>
     /// <param name="validationPattern">Custom validation pattern (null = use default for field type)</param>
-    /// <param name="note">Note/comment to display in Google Sheets (default: null)</param>
+    /// <param name="order">Column order priority (-1 = use declaration order)</param>
     /// <param name="formatType">Format type for Google Sheets display (DEFAULT = use default from fieldType)</param>
+    public ColumnAttribute(
+        string headerName,
+        bool isInput = false,
+        string? jsonPropertyName = null,
+        string? formatPattern = null,
+        string? note = null,
+        bool enableValidation = false,
+        string? validationPattern = null,
+        int order = -1,
+        FormatEnum formatType = FormatEnum.DEFAULT)
+    {
+        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
+        JsonPropertyName = jsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
+        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        IsFieldTypeExplicit = false;
+        FormatType = formatType;
+        NumberFormatPattern = formatPattern;
+        Order = order;
+        IsInput = isInput;
+        EnableValidation = enableValidation;
+        ValidationPattern = validationPattern;
+        Note = note;
+    }
+
+    // LEGACY CONSTRUCTORS - Kept for backward compatibility
+
+    /// <summary>
+    /// LEGACY: Initializes a column configuration for an OUTPUT column with explicit FieldType.
+    /// NOTE: FieldType is now automatically inferred from property type. Use new constructors without FieldType parameter.
+    /// </summary>
+    /// <param name="headerName">Header name for sheet column</param>
+    /// <param name="fieldType">Field type (LEGACY - auto-inferred in new constructors)</param>
+    [Obsolete("FieldType is now automatically inferred from property type. Use ColumnAttribute(headerName) instead.")]
+    public ColumnAttribute(string headerName, FieldTypeEnum fieldType)
+    {
+        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
+        JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
+        FieldType = fieldType;
+        IsFieldTypeExplicit = true;
+        FormatType = FormatEnum.DEFAULT;
+        NumberFormatPattern = null;
+        Order = -1;
+        IsInput = false;
+        Note = null;
+    }
+
+    /// <summary>
+    /// LEGACY: Initializes a column configuration with explicit FieldType and input flag.
+    /// NOTE: FieldType is now automatically inferred from property type. Use new constructors without FieldType parameter.
+    /// </summary>
+    [Obsolete("FieldType is now automatically inferred from property type. Use ColumnAttribute(headerName, isInput) instead.")]
+    public ColumnAttribute(string headerName, FieldTypeEnum fieldType, bool isInput)
+    {
+        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
+        JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
+        FieldType = fieldType;
+        IsFieldTypeExplicit = true;
+        FormatType = FormatEnum.DEFAULT;
+        NumberFormatPattern = null;
+        Order = -1;
+        IsInput = isInput;
+        Note = null;
+    }
+
+    /// <summary>
+    /// LEGACY: Initializes a column configuration with full customization options.
+    /// NOTE: This constructor has many parameters AND FieldType is now auto-inferred. 
+    /// Use ColumnAttribute(headerName, ColumnOptions) instead for better readability.
+    /// </summary>
+    [Obsolete("FieldType is now automatically inferred. Use ColumnAttribute(headerName, ColumnOptions) for complex scenarios.")]
     public ColumnAttribute(
         string headerName,
         FieldTypeEnum fieldType,
@@ -181,6 +263,7 @@ public class ColumnAttribute : Attribute
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = jsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
         FieldType = fieldType;
+        IsFieldTypeExplicit = true;
         FormatType = formatType;
         NumberFormatPattern = formatPattern;
         Order = order;
@@ -188,6 +271,21 @@ public class ColumnAttribute : Attribute
         EnableValidation = enableValidation;
         ValidationPattern = validationPattern;
         Note = note;
+    }
+
+    /// <summary>
+    /// Sets the FieldType based on the property's C# type.
+    /// Called by reflection helpers to auto-infer the field type.
+    /// If FieldType was explicitly set, this method respects that and doesn't override.
+    /// </summary>
+    /// <param name="propertyType">The C# property type to infer from</param>
+    internal void SetFieldTypeFromProperty(Type propertyType)
+    {
+        if (!IsFieldTypeExplicit)
+        {
+            // Infer field type from property type and format
+            FieldType = TypeInferenceHelper.InferFieldTypeFromFormat(propertyType, FormatType);
+        }
     }
 
     /// <summary>

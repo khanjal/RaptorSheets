@@ -13,6 +13,7 @@ public static class EntitySheetConfigHelper
     /// <summary>
     /// Generates sheet headers from an entity type based on Column attributes.
     /// Headers are created in inheritance order (base class properties first) with automatic formatting applied.
+    /// Automatically infers FieldType from property type if not explicitly specified.
     /// </summary>
     /// <typeparam name="T">The entity type to generate headers from</typeparam>
     /// <returns>List of SheetCellModel headers in entity-defined order with automatic formatting</returns>
@@ -27,6 +28,9 @@ public static class EntitySheetConfigHelper
         
         foreach (var (property, columnAttr) in columnProperties)
         {
+            // Auto-infer field type from property if not explicitly set
+            columnAttr.SetFieldTypeFromProperty(property.PropertyType);
+            
             var headerName = columnAttr.GetEffectiveHeaderName();
             if (!processedHeaders.Contains(headerName))
             {
@@ -62,7 +66,7 @@ public static class EntitySheetConfigHelper
                 if (columnAttr.EnableValidation)
                 {
                     var validationPattern = columnAttr.ValidationPattern ?? 
-                        Constants.TypedFieldPatterns.GetDefaultValidationPattern(columnAttr.FieldType);
+                        Constants.TypedFieldPatterns.GetDefaultPattern(columnAttr.FieldType);
                     if (!string.IsNullOrEmpty(validationPattern))
                     {
                         header.Validation = validationPattern;
