@@ -11,13 +11,13 @@ public class ShiftEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
     // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
-    [Column(SheetsConfig.HeaderNames.Date, FormatEnum.DATE, isInput: true, jsonPropertyName: "date", note: ColumnNotes.DateFormat)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, jsonPropertyName: "date", note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
     public string Date { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeStart, FormatEnum.TIME, isInput: true, jsonPropertyName: "start")]
+    [Column(SheetsConfig.HeaderNames.TimeStart, isInput: true, jsonPropertyName: "start", formatType: FormatEnum.TIME)]
     public string Start { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeEnd, FormatEnum.TIME, isInput: true, jsonPropertyName: "finish")]
+    [Column(SheetsConfig.HeaderNames.TimeEnd, isInput: true, jsonPropertyName: "finish", formatType: FormatEnum.TIME)]
     public string Finish { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Service, isInput: true, jsonPropertyName: "service", enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
@@ -26,10 +26,10 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Number, isInput: true, jsonPropertyName: "number", note: ColumnNotes.ShiftNumber)]
     public int? Number { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TimeActive, FormatEnum.DURATION, isInput: true, jsonPropertyName: "active", note: ColumnNotes.ActiveTime)]
+    [Column(SheetsConfig.HeaderNames.TimeActive, isInput: true, jsonPropertyName: "active", note: ColumnNotes.ActiveTime, formatType: FormatEnum.DURATION)]
     public string Active { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeTotal, FormatEnum.DURATION, isInput: true, jsonPropertyName: "time", note: ColumnNotes.TotalTime)]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, isInput: true, jsonPropertyName: "time", note: ColumnNotes.TotalTime, formatType: FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.TimeOmit, isInput: true, jsonPropertyName: "omit", note: ColumnNotes.TimeOmit, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.Boolean)]
@@ -51,23 +51,23 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Cash, isInput: true, jsonPropertyName: "cash")]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerStart, ColumnOptions.Builder()
-        .AsInput()
-        .WithFormatPattern(CellFormatPatterns.Distance)
-        .WithJsonPropertyName("startOdometer"))]
+    [Column(SheetsConfig.HeaderNames.OdometerStart,
+        isInput: true,
+        jsonPropertyName: "startOdometer",
+        formatPattern: CellFormatPatterns.Distance)]
     public decimal? OdometerStart { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerEnd, ColumnOptions.Builder()
-        .AsInput()
-        .WithFormatPattern(CellFormatPatterns.Distance)
-        .WithJsonPropertyName("endOdometer"))]
+    [Column(SheetsConfig.HeaderNames.OdometerEnd,
+        isInput: true,
+        jsonPropertyName: "endOdometer",
+        formatPattern: CellFormatPatterns.Distance)]
     public decimal? OdometerEnd { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, ColumnOptions.Builder()
-        .AsInput()
-        .WithFormatPattern(CellFormatPatterns.Distance)
-        .WithJsonPropertyName("distance")
-        .WithNote(ColumnNotes.ShiftDistance))]
+    [Column(SheetsConfig.HeaderNames.Distance,
+        isInput: true,
+        jsonPropertyName: "distance",
+        formatPattern: CellFormatPatterns.Distance,
+        note: ColumnNotes.ShiftDistance)]
     public decimal? Distance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Region, isInput: true, jsonPropertyName: "region", enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion)]
@@ -80,10 +80,10 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Key, jsonPropertyName: "key", note: ColumnNotes.ShiftKey)]
     public string Key { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TotalTimeActive, FormatEnum.DURATION, jsonPropertyName: "totalActive", note: ColumnNotes.TotalTimeActive)]
+    [Column(SheetsConfig.HeaderNames.TotalTimeActive, jsonPropertyName: "totalActive", note: ColumnNotes.TotalTimeActive, formatType: FormatEnum.DURATION)]
     public string TotalActive { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TotalTime, FormatEnum.DURATION, jsonPropertyName: "totalTime")]
+    [Column(SheetsConfig.HeaderNames.TotalTime, jsonPropertyName: "totalTime", formatType: FormatEnum.DURATION)]
     public string TotalTime { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.TotalTrips, jsonPropertyName: "totalTrips", note: ColumnNotes.TotalTrips)]
@@ -110,9 +110,9 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.AmountPerTime, jsonPropertyName: "amountPerTime")]
     public decimal? AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalDistance, ColumnOptions.Builder()
-        .WithJsonPropertyName("totalDistance")
-        .WithNote(ColumnNotes.TotalDistance))]
+    [Column(SheetsConfig.HeaderNames.TotalDistance,
+        jsonPropertyName: "totalDistance",
+        note: ColumnNotes.TotalDistance)]
     public decimal? TotalDistance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.AmountPerDistance, jsonPropertyName: "amountPerDistance")]

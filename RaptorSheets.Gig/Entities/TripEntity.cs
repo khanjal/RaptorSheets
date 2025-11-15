@@ -11,7 +11,7 @@ public class TripEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
     // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
-    [Column(SheetsConfig.HeaderNames.Date, FormatEnum.DATE, isInput: true, note: ColumnNotes.DateFormat)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
@@ -29,13 +29,13 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Place, isInput: true, note: ColumnNotes.Place, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangePlace)]
     public string Place { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Pickup, FormatEnum.TIME, isInput: true, jsonPropertyName: "pickupTime", note: ColumnNotes.Pickup)]
+    [Column(SheetsConfig.HeaderNames.Pickup, isInput: true, jsonPropertyName: "pickupTime", note: ColumnNotes.Pickup, formatType: FormatEnum.TIME)]
     public string Pickup { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Dropoff, FormatEnum.TIME, isInput: true, jsonPropertyName: "dropoffTime")]
+    [Column(SheetsConfig.HeaderNames.Dropoff, isInput: true, jsonPropertyName: "dropoffTime", formatType: FormatEnum.TIME)]
     public string Dropoff { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Duration, FormatEnum.DURATION, isInput: true, note: ColumnNotes.Duration)]
+    [Column(SheetsConfig.HeaderNames.Duration, isInput: true, note: ColumnNotes.Duration, formatType: FormatEnum.DURATION)]
     public string Duration { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Pay, isInput: true)]
@@ -54,23 +54,23 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Cash, isInput: true)]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerStart, ColumnOptions.Builder()
-        .AsInput()
-        .WithFormatPattern(CellFormatPatterns.Distance)
-        .WithJsonPropertyName("startOdometer"))]
+    [Column(SheetsConfig.HeaderNames.OdometerStart,
+        isInput: true,
+        jsonPropertyName: "startOdometer",
+        formatPattern: CellFormatPatterns.Distance)]
     public decimal? OdometerStart { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerEnd, ColumnOptions.Builder()
-        .AsInput()
-        .WithFormatPattern(CellFormatPatterns.Distance)
-        .WithJsonPropertyName("endOdometer"))]
+    [Column(SheetsConfig.HeaderNames.OdometerEnd,
+        isInput: true,
+        jsonPropertyName: "endOdometer",
+        formatPattern: CellFormatPatterns.Distance)]
     public decimal? OdometerEnd { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, ColumnOptions.Builder()
-        .AsInput()
-        .WithFormatPattern(CellFormatPatterns.Distance)
-        .WithJsonPropertyName("distance")
-        .WithNote(ColumnNotes.TripDistance))]
+    [Column(SheetsConfig.HeaderNames.Distance,
+        isInput: true,
+        jsonPropertyName: "distance",
+        formatPattern: CellFormatPatterns.Distance,
+        note: ColumnNotes.TripDistance)]
     public decimal? Distance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Name, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeName)]

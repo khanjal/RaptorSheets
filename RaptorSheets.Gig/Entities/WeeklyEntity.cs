@@ -42,7 +42,7 @@ public class WeeklyEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.AmountPerDistance, jsonPropertyName: "amt/dist")]
     public decimal AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TimeTotal, FormatEnum.DURATION, jsonPropertyName: "time")]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, jsonPropertyName: "time", formatType: FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.AmountPerTime, jsonPropertyName: "amt/hour")]
@@ -60,9 +60,9 @@ public class WeeklyEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Year, jsonPropertyName: "year")]
     public int Year { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.DateBegin, FormatEnum.DATE, jsonPropertyName: "begin")]
+    [Column(SheetsConfig.HeaderNames.DateBegin, jsonPropertyName: "begin", formatType: FormatEnum.DATE)]
     public string Begin { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.DateEnd, FormatEnum.DATE, jsonPropertyName: "end")]
+    [Column(SheetsConfig.HeaderNames.DateEnd, jsonPropertyName: "end", formatType: FormatEnum.DATE)]
     public string End { get; set; } = "";
 }

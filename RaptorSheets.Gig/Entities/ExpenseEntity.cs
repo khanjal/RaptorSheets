@@ -8,7 +8,7 @@ namespace RaptorSheets.Gig.Entities;
 [ExcludeFromCodeCoverage]
 public class ExpenseEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Date, FormatEnum.DATE, isInput: true, note: ColumnNotes.DateFormat)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
     public string Date { get; set; } = string.Empty;  // Changed from DateTime to string to match TripEntity/ShiftEntity pattern
     
     [Column(SheetsConfig.HeaderNames.Name, isInput: true)]

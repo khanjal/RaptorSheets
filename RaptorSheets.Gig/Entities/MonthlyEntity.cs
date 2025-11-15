@@ -46,7 +46,7 @@ public class MonthlyEntity
     [Column(SheetsConfig.HeaderNames.AmountPerDistance, jsonPropertyName: "amt/dist")]
     public decimal AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TimeTotal, FormatEnum.DURATION, jsonPropertyName: "time")]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, jsonPropertyName: "time", formatType: FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.AmountPerTime, jsonPropertyName: "amt/hour")]
