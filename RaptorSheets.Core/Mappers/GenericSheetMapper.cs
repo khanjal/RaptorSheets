@@ -82,7 +82,7 @@ public static class GenericSheetMapper<T> where T : class, new()
             foreach (var (property, columnAttr) in _columnProperties)
             {
                 var headerName = columnAttr.GetEffectiveHeaderName();
-                var cellValue = GetValueFromSheet(headerName, row, headers, columnAttr.FieldType);
+                var cellValue = GetValueFromSheet(headerName, row, headers, columnAttr.FieldType, property);
                 
                 if (cellValue != null && property.CanWrite)
                 {
@@ -258,22 +258,39 @@ public static class GenericSheetMapper<T> where T : class, new()
 
     /// <summary>
     /// Extracts a value from sheet data and converts it to the appropriate type.
+    /// Handles nullable types appropriately.
     /// </summary>
     private static object? GetValueFromSheet(
         string headerName, 
         IList<object> values, 
         Dictionary<int, string> headers, 
-        FieldTypeEnum fieldType)
+        FieldTypeEnum fieldType,
+        PropertyInfo property)
     {
         Console.WriteLine($"Mapping header: {headerName}, FieldType: {fieldType}");
+        
+        // Check if property is nullable
+        bool isNullable = property.PropertyType.IsGenericType && 
+                         property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>);
+        
         object? value = fieldType switch
         {
             FieldTypeEnum.String => HeaderHelpers.GetStringValue(headerName, values, headers),
-            FieldTypeEnum.Integer => HeaderHelpers.GetIntValue(headerName, values, headers),
-            FieldTypeEnum.Number => HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers),
-            FieldTypeEnum.Currency => HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers),
-            FieldTypeEnum.Accounting => HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers),
-            FieldTypeEnum.Percentage => HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers),
+            FieldTypeEnum.Integer => isNullable 
+                ? HeaderHelpers.GetIntValueOrNull(headerName, values, headers)
+                : HeaderHelpers.GetIntValue(headerName, values, headers),
+            FieldTypeEnum.Number => isNullable
+                ? HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers)
+                : (object?)HeaderHelpers.GetDecimalValue(headerName, values, headers),
+            FieldTypeEnum.Currency => isNullable
+                ? HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers)
+                : (object?)HeaderHelpers.GetDecimalValue(headerName, values, headers),
+            FieldTypeEnum.Accounting => isNullable
+                ? HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers)
+                : (object?)HeaderHelpers.GetDecimalValue(headerName, values, headers),
+            FieldTypeEnum.Percentage => isNullable
+                ? HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers)
+                : (object?)HeaderHelpers.GetDecimalValue(headerName, values, headers),
             FieldTypeEnum.Boolean => HeaderHelpers.GetBoolValue(headerName, values, headers),
             FieldTypeEnum.DateTime => HeaderHelpers.GetDateValue(headerName, values, headers),
             FieldTypeEnum.Time => HeaderHelpers.GetStringValue(headerName, values, headers),

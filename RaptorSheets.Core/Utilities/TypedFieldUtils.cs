@@ -39,6 +39,8 @@ public static class TypedFieldUtils
             var columnAttr = property.GetCustomAttribute<ColumnAttribute>();
             if (columnAttr != null)
             {
+                // Set the field type from property if not explicitly set
+                columnAttr.SetFieldTypeFromProperty(property.PropertyType);
                 properties.Add((property, columnAttr, i));
             }
         }

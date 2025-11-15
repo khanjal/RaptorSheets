@@ -90,37 +90,54 @@ public static class HeaderHelpers
 
     public static int GetIntValue(string columnName, IList<object> values, Dictionary<int, string> headers)
     {
+        return GetIntValueOrNull(columnName, values, headers) ?? 0;
+    }
+    
+    public static int? GetIntValueOrNull(string columnName, IList<object> values, Dictionary<int, string> headers)
+    {
         var columnId = GetHeaderKey(headers, columnName);
 
-        if (columnId > values.Count || columnId < 0 || values[columnId] == null)
+        if (columnId >= values.Count || columnId < 0 || values[columnId] == null)
         {
-            return 0;
+            Console.WriteLine($"Column '{columnName}' is out of range or null.");
+            return null;
         }
 
         var value = values[columnId]?.ToString()?.Trim();
 
+        // Log the raw value for debugging purposes
+        Console.WriteLine($"Raw value for column '{columnName}': {value}");
+
         // If the string contains a decimal point, it's not a valid integer
         if (value?.Contains('.') == true)
         {
-            return 0;
+            Console.WriteLine($"Column '{columnName}' contains decimal point - not a valid integer.");
+            return null;
         }
 
         // Handle negative numbers - preserve the minus sign but remove other non-digit characters
         var isNegative = value?.StartsWith("-") == true;
-        value = NonDigitRegex.Replace(value!, ""); // Remove all non-digit characters with timeout
+        value = NonDigitRegex.Replace(value ?? string.Empty, ""); // Remove all non-digit characters with timeout
 
-        if (string.IsNullOrEmpty(value))
+        // Log the filtered value for debugging purposes
+        Console.WriteLine($"Filtered value for column '{columnName}': {value}");
+
+        if (value == "-" || string.IsNullOrEmpty(value))
         {
-            return 0; // Make empty into 0s.
+            Console.WriteLine($"Column '{columnName}' has an empty or invalid value after filtering.");
+            return null;  // Make empty values into nulls.
         }
 
         if (int.TryParse(value, out int result))
         {
+            Console.WriteLine($"Parsed value for column '{columnName}': {result}");
             return isNegative ? -result : result;
         }
 
-        return 0;
+        Console.WriteLine($"Failed to parse value for column '{columnName}': {value}");
+        return null;
     }
+    
     public static decimal GetDecimalValue(string columnName, IList<object> values, Dictionary<int, string> headers)
     {
         return GetDecimalValueOrNull(columnName, values, headers) ?? 0;
