@@ -76,13 +76,13 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Name, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeName)]
     public string Name { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AddressStart, isInput: true, jsonPropertyName: "startAddress", enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeAddress)]
+    [Column(SheetsConfig.HeaderNames.AddressStart, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeAddress)]
     public string StartAddress { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AddressEnd, isInput: true, jsonPropertyName: "endAddress", enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeAddress)]
+    [Column(SheetsConfig.HeaderNames.AddressEnd, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeAddress)]
     public string EndAddress { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.UnitEnd, isInput: true, jsonPropertyName: "endUnit", note: ColumnNotes.UnitTypes)]
+    [Column(SheetsConfig.HeaderNames.UnitEnd, isInput: true, note: ColumnNotes.UnitTypes)]
     public string EndUnit { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.OrderNumber, isInput: true, jsonPropertyName: "orderNumber")]

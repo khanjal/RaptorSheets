@@ -11,44 +11,44 @@ public class ShiftEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
     // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, jsonPropertyName: "date", note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
     public string Date { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeStart, isInput: true, jsonPropertyName: "start", formatType: FormatEnum.TIME)]
+    [Column(SheetsConfig.HeaderNames.TimeStart, isInput: true, formatType: FormatEnum.TIME)]
     public string Start { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeEnd, isInput: true, jsonPropertyName: "finish", formatType: FormatEnum.TIME)]
+    [Column(SheetsConfig.HeaderNames.TimeEnd, isInput: true, formatType: FormatEnum.TIME)]
     public string Finish { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Service, isInput: true, jsonPropertyName: "service", enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
+    [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
     public string Service { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Number, isInput: true, jsonPropertyName: "number", note: ColumnNotes.ShiftNumber)]
     public int? Number { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TimeActive, isInput: true, jsonPropertyName: "active", note: ColumnNotes.ActiveTime, formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.TimeActive, isInput: true, note: ColumnNotes.ActiveTime, formatType: FormatEnum.DURATION)]
     public string Active { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeTotal, isInput: true, jsonPropertyName: "time", note: ColumnNotes.TotalTime, formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, isInput: true, note: ColumnNotes.TotalTime, formatType: FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.TimeOmit, isInput: true, jsonPropertyName: "omit", note: ColumnNotes.TimeOmit, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.Boolean)]
     public bool? Omit { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Trips, isInput: true, jsonPropertyName: "trips", note: ColumnNotes.ShiftTrips)]
+    [Column(SheetsConfig.HeaderNames.Trips, isInput: true, note: ColumnNotes.ShiftTrips)]
     public int Trips { get; set; }
 
     // Financial properties
-    [Column(SheetsConfig.HeaderNames.Pay, isInput: true, jsonPropertyName: "pay")]
+    [Column(SheetsConfig.HeaderNames.Pay, isInput: true)]
     public decimal? Pay { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Tips, isInput: true, jsonPropertyName: "tip")]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, isInput: true, jsonPropertyName: "bonus")]
+    [Column(SheetsConfig.HeaderNames.Bonus, isInput: true)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, isInput: true, jsonPropertyName: "cash")]
+    [Column(SheetsConfig.HeaderNames.Cash, isInput: true)]
     public decimal? Cash { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerStart,
@@ -70,14 +70,14 @@ public class ShiftEntity : SheetRowEntityBase
         note: ColumnNotes.ShiftDistance)]
     public decimal? Distance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Region, isInput: true, jsonPropertyName: "region", enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion)]
+    [Column(SheetsConfig.HeaderNames.Region, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion)]
     public string Region { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Note, isInput: true, jsonPropertyName: "note")]
+    [Column(SheetsConfig.HeaderNames.Note, isInput: true)]
     public string Note { get; set; } = "";
 
     // Output columns (formulas/calculated) - defaults to isInput: false
-    [Column(SheetsConfig.HeaderNames.Key, jsonPropertyName: "key", note: ColumnNotes.ShiftKey)]
+    [Column(SheetsConfig.HeaderNames.Key, note: ColumnNotes.ShiftKey)]
     public string Key { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.TotalTimeActive, jsonPropertyName: "totalActive", note: ColumnNotes.TotalTimeActive, formatType: FormatEnum.DURATION)]

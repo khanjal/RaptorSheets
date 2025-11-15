@@ -8,32 +8,32 @@ namespace RaptorSheets.Gig.Entities;
 [ExcludeFromCodeCoverage]
 public class WeekdayEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Day, jsonPropertyName: "day")]
+    [Column(SheetsConfig.HeaderNames.Day)]
     public int Day { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Weekday, jsonPropertyName: "weekday")]
+    [Column(SheetsConfig.HeaderNames.Weekday)]
     public string Weekday { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Trips, jsonPropertyName: "trips")]
+    [Column(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Days, jsonPropertyName: "days")]
+    [Column(SheetsConfig.HeaderNames.Days)]
     public int Days { get; set; }
 
     // Financial properties
-    [Column(SheetsConfig.HeaderNames.Pay, jsonPropertyName: "pay")]
+    [Column(SheetsConfig.HeaderNames.Pay)]
     public decimal? Pay { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Tips, jsonPropertyName: "tip")]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, jsonPropertyName: "bonus")]
+    [Column(SheetsConfig.HeaderNames.Bonus)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Total, jsonPropertyName: "total")]
+    [Column(SheetsConfig.HeaderNames.Total)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, jsonPropertyName: "cash")]
+    [Column(SheetsConfig.HeaderNames.Cash)]
     public decimal? Cash { get; set; }
 
     [Column(SheetsConfig.HeaderNames.AmountPerTrip)]
@@ -45,7 +45,7 @@ public class WeekdayEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.AmountPerDistance)]
     public decimal AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TimeTotal, jsonPropertyName: "time", formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.AmountPerTime)]

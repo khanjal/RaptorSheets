@@ -9,7 +9,7 @@ namespace RaptorSheets.Gig.Entities;
 public class DailyEntity : SheetRowEntityBase
 {
     // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
-    [Column(SheetsConfig.HeaderNames.Date, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Date, FormatEnum.DATE)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Trips)]
@@ -33,19 +33,19 @@ public class DailyEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.AmountPerTrip)]
     public decimal AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, jsonPropertyName: "distance")]
+    [Column(SheetsConfig.HeaderNames.Distance)]
     public decimal Distance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.AmountPerDistance)]
     public decimal AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TimeTotal, formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.AmountPerTime)]
     public decimal AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Day    )]
+    [Column(SheetsConfig.HeaderNames.Day)]
     public string Day { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Weekday)]

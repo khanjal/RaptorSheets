@@ -7,25 +7,25 @@ namespace RaptorSheets.Gig.Entities;
 [ExcludeFromCodeCoverage]
 public class AddressEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Address, jsonPropertyName: "address")]
+    [Column(SheetsConfig.HeaderNames.Address)]
     public string Address { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Trips, jsonPropertyName: "trips")]
+    [Column(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Pay, jsonPropertyName: "pay")]
+    [Column(SheetsConfig.HeaderNames.Pay)]
     public decimal? Pay { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Tips, jsonPropertyName: "tip")]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, jsonPropertyName: "bonus")]
+    [Column(SheetsConfig.HeaderNames.Bonus)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Total, jsonPropertyName: "total")]
+    [Column(SheetsConfig.HeaderNames.Total)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, jsonPropertyName: "cash")]
+    [Column(SheetsConfig.HeaderNames.Cash)]
     public decimal? Cash { get; set; }
 
     [Column(SheetsConfig.HeaderNames.AmountPerTrip)]

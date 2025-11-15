@@ -8,32 +8,32 @@ namespace RaptorSheets.Gig.Entities;
 [ExcludeFromCodeCoverage]
 public class WeeklyEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Week, jsonPropertyName: "week")]
+    [Column(SheetsConfig.HeaderNames.Week)]
     public string Week { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Trips, jsonPropertyName: "trips")]
+    [Column(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Days, jsonPropertyName: "days")]
+    [Column(SheetsConfig.HeaderNames.Days)]
     public int Days { get; set; }
 
     // Financial properties
-    [Column(SheetsConfig.HeaderNames.Pay, jsonPropertyName: "pay")]
+    [Column(SheetsConfig.HeaderNames.Pay)]
     public decimal? Pay { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Tips, jsonPropertyName: "tip")]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, jsonPropertyName: "bonus")]
+    [Column(SheetsConfig.HeaderNames.Bonus)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Total, jsonPropertyName: "total")]
+    [Column(SheetsConfig.HeaderNames.Total)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, jsonPropertyName: "cash")]
+    [Column(SheetsConfig.HeaderNames.Cash)]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, jsonPropertyName: "amt/trip")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip)]
     public decimal AmountPerTrip { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Distance, jsonPropertyName: "distance")]
@@ -42,7 +42,7 @@ public class WeeklyEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.AmountPerDistance, jsonPropertyName: "amt/dist")]
     public decimal AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TimeTotal, jsonPropertyName: "time", formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.AmountPerTime, jsonPropertyName: "amt/hour")]
@@ -51,18 +51,18 @@ public class WeeklyEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.AmountPerDay)]
     public decimal AmountPerDay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Average, jsonPropertyName: "average")]
+    [Column(SheetsConfig.HeaderNames.Average)]
     public decimal Average { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Number, jsonPropertyName: "#")]
+    [Column(SheetsConfig.HeaderNames.Number)]
     public int Number { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Year, jsonPropertyName: "year")]
+    [Column(SheetsConfig.HeaderNames.Year)]
     public int Year { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.DateBegin, jsonPropertyName: "begin", formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.DateBegin, FormatEnum.DATE)]
     public string Begin { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.DateEnd, jsonPropertyName: "end", formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.DateEnd, FormatEnum.DATE)]
     public string End { get; set; } = "";
 }

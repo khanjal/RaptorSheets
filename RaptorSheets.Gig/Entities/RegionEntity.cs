@@ -8,27 +8,27 @@ namespace RaptorSheets.Gig.Entities;
 public class RegionEntity : SheetRowEntityBase
 {
     // Entity-specific property first
-    [Column(SheetsConfig.HeaderNames.Region, jsonPropertyName: "region")]
+    [Column(SheetsConfig.HeaderNames.Region)]
     public string Region { get; set; } = "";
 
     // CommonTripSheetHeaders pattern
-    [Column(SheetsConfig.HeaderNames.Trips, jsonPropertyName: "trips")]
+    [Column(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
     // CommonIncomeHeaders
-    [Column(SheetsConfig.HeaderNames.Pay, jsonPropertyName: "pay")]
+    [Column(SheetsConfig.HeaderNames.Pay)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, jsonPropertyName: "tip")]
+    [Column(SheetsConfig.HeaderNames.Tips)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, jsonPropertyName: "bonus")]
+    [Column(SheetsConfig.HeaderNames.Bonus)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Total, jsonPropertyName: "total")]
+    [Column(SheetsConfig.HeaderNames.Total)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, jsonPropertyName: "cash")]
+    [Column(SheetsConfig.HeaderNames.Cash)]
     public decimal? Cash { get; set; }
 
     // CommonTravelHeaders
