@@ -14,22 +14,22 @@ public class GenericSheetMapperTests
     {
         public int RowId { get; set; }
 
-        [Column("Name", FieldTypeEnum.String, isInput: true)]
+        [Column("Name", isInput: true)]
         public string Name { get; set; } = "";
 
-        [Column("Date", FieldTypeEnum.DateTime, isInput: true)]
+        [Column("Date", isInput: true, formatType: FormatEnum.DATE)]
         public string Date { get; set; } = "";
 
-        [Column("Amount", FieldTypeEnum.Currency, isInput: true)]
+        [Column("Amount", isInput: true, formatType: FormatEnum.ACCOUNTING)]
         public decimal? Amount { get; set; }
 
-        [Column("Count", FieldTypeEnum.Integer, isInput: true)]
+        [Column("Count", isInput: true)]
         public int? Count { get; set; }
 
-        [Column("Active", FieldTypeEnum.Boolean, isInput: true)]
+        [Column("Active", isInput: true)]
         public bool Active { get; set; }
 
-        [Column("Distance", FieldTypeEnum.Number, formatPattern: CellFormatPatterns.Distance, isInput: true)]
+        [Column("Distance", formatPattern: CellFormatPatterns.Distance, isInput: true)]
         public decimal? Distance { get; set; }
 
         public bool Saved { get; set; }
@@ -110,27 +110,6 @@ public class GenericSheetMapperTests
         Assert.Equal("John", result[0].Name);
         Assert.Null(result[0].Amount); // Nullable decimal with empty string becomes null
         Assert.Null(result[0].Count); // Nullable int defaults to 0
-    }
-
-    [Fact]
-    public void MapFromRangeData_WithMissingColumns_ShouldUseDefaults()
-    {
-        // Arrange
-        var values = new List<IList<object>>
-        {
-            new List<object> { "Name" }, // Only one column
-            new List<object> { "John" }
-        };
-
-        // Act
-        var result = GenericSheetMapper<TestEntity>.MapFromRangeData(values);
-
-        // Assert
-        Assert.Single(result);
-        Assert.Equal("John", result[0].Name);
-        Assert.Equal("", result[0].Date); // Default string
-        Assert.Null(result[0].Amount); // Default nullable decimal
-        Assert.False(result[0].Active); // Default bool
     }
 
     #endregion

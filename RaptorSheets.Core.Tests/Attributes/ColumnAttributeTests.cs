@@ -21,7 +21,7 @@ public class ColumnAttributeTests
     public void ColumnAttribute_ShouldConvertHeaderNameToJsonPropertyName(string headerName, string expectedJsonName)
     {
         // Act
-        var attribute = new ColumnAttribute(headerName, FieldTypeEnum.String);
+        var attribute = new ColumnAttribute(headerName);
         
         // Assert
         Assert.Equal(expectedJsonName, attribute.JsonPropertyName);
@@ -38,7 +38,7 @@ public class ColumnAttributeTests
     public void ColumnAttribute_ShouldHandleSpecialCharactersInHeaderName(string headerName, string expectedJsonName)
     {
         // Act
-        var attribute = new ColumnAttribute(headerName, FieldTypeEnum.String);
+        var attribute = new ColumnAttribute(headerName);
         
         // Assert
         Assert.Equal(expectedJsonName, attribute.JsonPropertyName);
@@ -48,7 +48,7 @@ public class ColumnAttributeTests
     public void ColumnAttribute_WithCustomJsonPropertyName_ShouldUseOverride()
     {
         // Act
-        var attribute = new ColumnAttribute("Pay", FieldTypeEnum.Currency, jsonPropertyName: "paymentAmount");
+        var attribute = new ColumnAttribute("Pay", jsonPropertyName: "paymentAmount");
         
         // Assert
         Assert.Equal("paymentAmount", attribute.JsonPropertyName);
@@ -59,7 +59,7 @@ public class ColumnAttributeTests
     public void ColumnAttribute_WithFormatPattern_ShouldStorePattern()
     {
         // Act
-        var attribute = new ColumnAttribute("Pay", FieldTypeEnum.Currency, "\"$\"#,##0.00");
+        var attribute = new ColumnAttribute("Pay", formatPattern: "\"$\"#,##0.00");
         
         // Assert
         Assert.Equal("\"$\"#,##0.00", attribute.NumberFormatPattern);
@@ -73,17 +73,19 @@ public class ColumnAttributeTests
         // Act
         var attribute = new ColumnAttribute(
             headerName: "Email Address",
-            fieldType: FieldTypeEnum.Email,
-            formatPattern: null,
+            isInput: false,
             jsonPropertyName: "email",
-            order: 5,
+            formatPattern: null,
+            note: null,
             enableValidation: true,
-            validationPattern: @"^[^\s@]+@[^\s@]+\.[^\s@]+$");
+            validationPattern: @"^[^\s@]+@[^\s@]+\.[^\s@]+$",
+            order: 5,
+            formatType: FormatEnum.DEFAULT);
         
         // Assert
         Assert.Equal("Email Address", attribute.HeaderName);
         Assert.Equal("email", attribute.JsonPropertyName);
-        Assert.Equal(FieldTypeEnum.Email, attribute.FieldType);
+        // FieldType is inferred later when used with a property; do not assert FieldType here
         Assert.Equal(5, attribute.Order);
         Assert.True(attribute.HasExplicitOrder);
         Assert.True(attribute.EnableValidation);
@@ -98,7 +100,7 @@ public class ColumnAttributeTests
     public void ColumnAttribute_ShouldHandleEdgeCases(string headerName, string expectedJsonName)
     {
         // Act
-        var attribute = new ColumnAttribute(headerName, FieldTypeEnum.String);
+        var attribute = new ColumnAttribute(headerName);
         
         // Assert
         Assert.Equal(expectedJsonName, attribute.JsonPropertyName);
@@ -109,6 +111,6 @@ public class ColumnAttributeTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => 
-            new ColumnAttribute(null!, FieldTypeEnum.String));
+            new ColumnAttribute(null!));
     }
 }

@@ -55,19 +55,19 @@ public class EntitySheetConfigHelperColumnTests
     // Test entities for validation
     private class TestEntityWithColumns
     {
-        [Column("Currency", FieldTypeEnum.Currency)]
+        [Column("Currency", FormatEnum.CURRENCY)]
         public decimal? Currency { get; set; }
 
-        [Column("Date", FieldTypeEnum.DateTime)]
+        [Column("Date", FormatEnum.DATE)]
         public DateTime? Date { get; set; }
 
-        [Column("Number", FieldTypeEnum.Number)]
+        [Column("Number", FormatEnum.NUMBER)]
         public double? Number { get; set; }
 
-        [Column("CustomCurrency", FieldTypeEnum.Currency, "\"£\"#,##0.00")]
+        [Column("CustomCurrency", formatPattern: "\"£\"#,##0.00", formatType: FormatEnum.CURRENCY)]
         public decimal? CustomCurrency { get; set; }
 
-        [Column("String", FieldTypeEnum.String)]
+        [Column("String", FormatEnum.TEXT)]
         public string StringField { get; set; } = "";
     }
 }

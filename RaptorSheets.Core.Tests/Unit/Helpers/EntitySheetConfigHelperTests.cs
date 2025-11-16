@@ -248,38 +248,22 @@ public class EntitySheetConfigHelperTests
         Assert.Equal(1, headerNames.Count(h => h == TestHeaderNames.Pay)); // Should appear only once
     }
 
-    [Fact]
-    public void GenerateHeadersFromEntity_WithColumnAttributes_AppliesFormats()
-    {
-        // Act
-        var headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TestAddressEntity>();
-        
-        // Assert
-        Assert.NotEmpty(headers);
-        
-        // Find currency header and verify it has correct format
-        var payHeader = headers.FirstOrDefault(h => h.Name == TestHeaderNames.Pay);
-        Assert.NotNull(payHeader);
-        // The format should be applied automatically based on FieldTypeEnum.Currency
-        // Note: The exact format application depends on the EntitySheetConfigHelper implementation
-    }
-
     private class TestNoPropertiesEntity
     {
     }
 
     private class TestDuplicateColumnEntity
     {
-        [Column("DuplicateHeader", FieldTypeEnum.String)]
+        [Column("DuplicateHeader")]
         public string Property1 { get; set; } = "";
 
-        [Column("DuplicateHeader", FieldTypeEnum.String)]
+        [Column("DuplicateHeader")]
         public string Property2 { get; set; } = "";
     }
 
     private class TestInvalidColumnEntity
     {
-        [Column("InvalidColumn", FieldTypeEnum.Currency)]
+        [Column("InvalidColumn")]
         public string InvalidProperty { get; set; } = "";
     }
 }

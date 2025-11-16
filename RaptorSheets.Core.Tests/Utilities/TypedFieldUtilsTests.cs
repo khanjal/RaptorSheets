@@ -20,7 +20,7 @@ public class TypedFieldUtilsTests
         // Should include properties like TestDateTime, TestCurrency, etc.
         var dateProperty = properties.FirstOrDefault(p => p.Column.GetEffectiveHeaderName().Contains(TypedFieldUtilsTestHelper.TestDateTimeHeader));
         Assert.NotNull(dateProperty);
-        Assert.Equal(FieldTypeEnum.DateTime, dateProperty.Column.FieldType);
+        Assert.Equal(FormatEnum.DATE, dateProperty.Column.FormatType);
     }
 
     [Fact]
@@ -34,12 +34,14 @@ public class TypedFieldUtilsTests
     }
 
     [Theory]
-    [InlineData("InvalidData", typeof(int), FieldTypeEnum.Integer)]
-    [InlineData("NotABoolean", typeof(bool), FieldTypeEnum.Boolean)]
-    public void ConvertFromSheetValue_ShouldReturnDefaultValue_WhenDataIsInvalid(string input, Type targetType, FieldTypeEnum fieldType)
+    [InlineData("InvalidData", typeof(int))]
+    [InlineData("NotABoolean", typeof(bool))]
+    [InlineData("12/34/5678", typeof(DateTime))] // Invalid date
+    [InlineData("$12.34", typeof(decimal))]   // Invalid currency
+    public void ConvertFromSheetValue_ShouldReturnDefaultValue_WhenDataIsInvalid(string input, Type targetType)
     {
         // Arrange
-        var attribute = new ColumnAttribute("test", fieldType);
+        var attribute = new ColumnAttribute("test");
 
         // Act
         var result = TypedFieldUtils.ConvertFromSheetValue(input, targetType, attribute);
@@ -55,6 +57,14 @@ public class TypedFieldUtilsTests
         {
             Assert.Equal(false, result);
         }
+        else if (targetType == typeof(DateTime))
+        {
+            Assert.Equal(DateTime.MinValue, result);
+        }
+        else if (targetType == typeof(decimal))
+        {
+            Assert.Equal(0.0m, result);
+        }
         else
         {
             Assert.Null(result);
@@ -65,7 +75,7 @@ public class TypedFieldUtilsTests
     public void ConvertToSheetValue_ShouldReturnNull_WhenInputIsNull()
     {
         // Arrange
-        var attribute = new ColumnAttribute("test", FieldTypeEnum.String);
+        var attribute = new ColumnAttribute("test");
 
         // Act
         var result = TypedFieldUtils.ConvertToSheetValue(null, attribute);
@@ -87,19 +97,19 @@ public class TypedFieldUtilsTests
     // Test entity for validation
     private class TestEntity
     {
-        [Column("TestString", FieldTypeEnum.String)]
+        [Column("TestString")]
         public string TestString { get; set; } = "";
 
-        [Column("TestCurrency", FieldTypeEnum.Currency)]
+        [Column("TestCurrency", formatType: FormatEnum.CURRENCY)]
         public decimal? TestCurrency { get; set; }
 
-        [Column("TestDateTime", FieldTypeEnum.DateTime)]
+        [Column("TestDateTime", formatType: FormatEnum.DATE)]
         public DateTime? TestDateTime { get; set; }
 
-        [Column("TestInteger", FieldTypeEnum.Integer)]
+        [Column("TestInteger", formatType: FormatEnum.NUMBER)]
         public int? TestInteger { get; set; }
 
-        [Column("TestBoolean", FieldTypeEnum.Boolean)]
+        [Column("TestBoolean")]
         public bool TestBoolean { get; set; }
 
         // Property without Column attribute should be ignored

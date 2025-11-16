@@ -93,6 +93,8 @@ public class ColumnAttribute : Attribute
         NumberFormatPattern = null;
         Order = -1;
         IsInput = false;
+        EnableValidation = false;
+        ValidationPattern = null;
         Note = null;
     }
 
@@ -103,8 +105,7 @@ public class ColumnAttribute : Attribute
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
     /// <param name="formatType">Format type for Google Sheets display</param>
-    /// <param name="isInput">True if this is a user-input column (default: false)</param>
-    public ColumnAttribute(string headerName, FormatEnum formatType, bool isInput = false)
+    public ColumnAttribute(string headerName, FormatEnum formatType)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
@@ -113,27 +114,7 @@ public class ColumnAttribute : Attribute
         FormatType = formatType;
         NumberFormatPattern = null;
         Order = -1;
-        IsInput = isInput;
-        Note = null;
-    }
-
-    /// <summary>
-    /// Initializes a column configuration using header name as JSON property name with default formatting.
-    /// Explicitly requires specifying whether this is an input or output column.
-    /// FieldType is automatically inferred from the property type.
-    /// </summary>
-    /// <param name="headerName">Header name for sheet column (also used for JSON property name)</param>
-    /// <param name="isInput">True if this is a user-input column that should be written to sheets, false for output/formula columns</param>
-    public ColumnAttribute(string headerName, bool isInput)
-    {
-        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
-        IsFieldTypeExplicit = false;
-        FormatType = FormatEnum.DEFAULT;
-        NumberFormatPattern = null;
-        Order = -1;
-        IsInput = isInput;
+        IsInput = false;
         EnableValidation = false;
         ValidationPattern = null;
         Note = null;
@@ -165,9 +146,9 @@ public class ColumnAttribute : Attribute
     }
 
     /// <summary>
-    /// Initializes a column configuration with advanced named parameters.
+    /// Initializes a column configuration with full customization using optional named parameters.
     /// FieldType is automatically inferred from the property type.
-    /// Use this when you need jsonPropertyName, formatPattern, or other advanced options.
+    /// Use named parameters to specify only what you need.
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
     /// <param name="isInput">True if this is a user-input column (default: false)</param>
@@ -202,33 +183,13 @@ public class ColumnAttribute : Attribute
         Note = note;
     }
 
-    // LEGACY CONSTRUCTORS - Kept for backward compatibility
-
     /// <summary>
-    /// LEGACY: Initializes a column configuration for an OUTPUT column with explicit FieldType.
-    /// NOTE: FieldType is now automatically inferred from property type. Use new constructors without FieldType parameter.
+    /// Initializes a column configuration with explicit FieldType and input flag.
+    /// Use this when you need to specify both FieldType and whether the column is an input column.
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
-    /// <param name="fieldType">Field type (LEGACY - auto-inferred in new constructors)</param>
-    [Obsolete("FieldType is now automatically inferred from property type. Use ColumnAttribute(headerName) instead.")]
-    public ColumnAttribute(string headerName, FieldTypeEnum fieldType)
-    {
-        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = fieldType;
-        IsFieldTypeExplicit = true;
-        FormatType = FormatEnum.DEFAULT;
-        NumberFormatPattern = null;
-        Order = -1;
-        IsInput = false;
-        Note = null;
-    }
-
-    /// <summary>
-    /// LEGACY: Initializes a column configuration with explicit FieldType and input flag.
-    /// NOTE: FieldType is now automatically inferred from property type. Use new constructors without FieldType parameter.
-    /// </summary>
-    [Obsolete("FieldType is now automatically inferred from property type. Use ColumnAttribute(headerName, isInput) instead.")]
+    /// <param name="fieldType">Field type for data conversion</param>
+    /// <param name="isInput">True if this is a user-input column</param>
     public ColumnAttribute(string headerName, FieldTypeEnum fieldType, bool isInput)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
@@ -239,38 +200,9 @@ public class ColumnAttribute : Attribute
         NumberFormatPattern = null;
         Order = -1;
         IsInput = isInput;
+        EnableValidation = false;
+        ValidationPattern = null;
         Note = null;
-    }
-
-    /// <summary>
-    /// LEGACY: Initializes a column configuration with full customization options.
-    /// NOTE: This constructor has many parameters AND FieldType is now auto-inferred. 
-    /// Use ColumnAttribute(headerName, ColumnOptions) instead for better readability.
-    /// </summary>
-    [Obsolete("FieldType is now automatically inferred. Use ColumnAttribute(headerName, ColumnOptions) for complex scenarios.")]
-    public ColumnAttribute(
-        string headerName,
-        FieldTypeEnum fieldType,
-        string? formatPattern = null,
-        string? jsonPropertyName = null,
-        int order = -1,
-        bool isInput = false,
-        bool enableValidation = false,
-        string? validationPattern = null,
-        string? note = null,
-        FormatEnum formatType = FormatEnum.DEFAULT)
-    {
-        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = jsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = fieldType;
-        IsFieldTypeExplicit = true;
-        FormatType = formatType;
-        NumberFormatPattern = formatPattern;
-        Order = order;
-        IsInput = isInput;
-        EnableValidation = enableValidation;
-        ValidationPattern = validationPattern;
-        Note = note;
     }
 
     /// <summary>

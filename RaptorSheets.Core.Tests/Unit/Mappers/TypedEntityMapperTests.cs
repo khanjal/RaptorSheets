@@ -12,13 +12,13 @@ public class TypedEntityMapperTests
 {
     private class TestEntity
     {
-        [Column("Header1", FieldTypeEnum.String)]
+        [Column("Header1")]
         public string Header1 { get; set; } = "";
 
-        [Column("Header2", FieldTypeEnum.Integer)]
+        [Column("Header2")]
         public int Header2 { get; set; }
 
-        [Column("Header3", FieldTypeEnum.Currency)]
+        [Column("Header3")]
         public decimal Header3 { get; set; }
     }
 
@@ -63,8 +63,8 @@ public class TypedEntityMapperTests
         // Assert
         Assert.Single(result);
         Assert.Equal("Value1", result[0][0]);
-        Assert.Equal(123L, result[0][1]); // FieldTypeEnum.Integer converts to long (Int64)
-        Assert.Equal(45.67, (double)(result[0][2] ?? 0)); // FieldTypeEnum.Currency converts to double
+        Assert.Equal(123L, result[0][1]); // integers should be converted to long (Int64)
+        Assert.Equal(45.67, (double)(result[0][2] ?? 0)); // decimals convert to double
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public class TypedEntityMapperTests
 
     private class InvalidTestEntity
     {
-        [Column("InvalidHeader", FieldTypeEnum.String)]
+        [Column("InvalidHeader")]
         public string InvalidHeader { get; set; } = "";
     }
 }
