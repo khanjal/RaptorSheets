@@ -144,7 +144,7 @@ public class GenericSheetMapperTests
         Assert.Equal("2024-01-15", result[0][1]);
         Assert.Equal("100.50", result[0][2]);
         Assert.Equal("5", result[0][3]);
-        Assert.Equal(true, result[0][4]); // Boolean value
+        Assert.True((bool?)result[0][4]); // Boolean value
         Assert.Equal("10.5", result[0][5]);
     }
 
@@ -399,7 +399,7 @@ public class GenericSheetMapperTests
         Assert.Equal("2024-01-15", resultValues[0][1]);
         Assert.Equal("100.50", resultValues[0][2]);
         Assert.Equal("5", resultValues[0][3]);
-        Assert.Equal(true, resultValues[0][4]);
+        Assert.True((bool?)resultValues[0][4]);
     }
 
     [Fact]

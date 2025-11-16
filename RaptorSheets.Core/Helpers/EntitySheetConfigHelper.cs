@@ -1,4 +1,5 @@
 using System.Reflection;
+using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Utilities;
 
@@ -25,79 +26,81 @@ public static class EntitySheetConfigHelper
 
         // Get column properties (these have comprehensive configuration)
         var columnProperties = TypedFieldUtils.GetColumnProperties<T>();
-        
+
         foreach (var (property, columnAttr) in columnProperties)
         {
             // Auto-infer field type from property if not explicitly set
             columnAttr.SetFieldTypeFromProperty(property.PropertyType);
-            
+
             var headerName = columnAttr.GetEffectiveHeaderName();
             if (!processedHeaders.Contains(headerName))
             {
-                var header = new SheetCellModel 
-                { 
-                    Name = headerName,
-                    // Apply format from attribute (override or default from field type)
-                    Format = columnAttr.GetEffectiveFormat()
-                };
-                
-                // Populate FormatPattern - this becomes the single source of truth
-                // Priority: 1) Custom pattern from attribute, 2) Default pattern from FormatEnum
-                if (!string.IsNullOrEmpty(columnAttr.NumberFormatPattern))
-                {
-                    // Custom pattern explicitly provided
-                    header.FormatPattern = columnAttr.NumberFormatPattern;
-                    
-                    // If Format wasn't explicitly set, infer it from the pattern
-                    if (!header.Format.HasValue || header.Format.Value == Enums.FormatEnum.DEFAULT)
-                    {
-                        header.Format = InferFormatFromPattern(columnAttr.NumberFormatPattern);
-                    }
-                }
-                else if (header.Format.HasValue && header.Format.Value != Enums.FormatEnum.DEFAULT)
-                {
-                    // Get default pattern for the FormatEnum
-                    header.FormatPattern = GetPatternForFormat(header.Format.Value);
-                }
-                
-                // Apply note if specified
-                if (!string.IsNullOrEmpty(columnAttr.Note))
-                {
-                    header.Note = columnAttr.Note;
-                }
-                
-                // Apply custom number format pattern if specified or use default
-                var numberPattern = TypedFieldUtils.GetNumberFormatPattern(columnAttr);
-                if (!string.IsNullOrEmpty(numberPattern) && numberPattern != "@")
-                {
-                    // If note is already set, append number format info; otherwise just store it
-                    if (string.IsNullOrEmpty(header.Note))
-                    {
-                        header.Note = $"NumberFormat:{numberPattern}";
-                    }
-                    else
-                    {
-                        header.Note += $"\nNumberFormat:{numberPattern}";
-                    }
-                }
-                
-                // Apply validation if specified
-                if (columnAttr.EnableValidation)
-                {
-                    var validationPattern = columnAttr.ValidationPattern ?? 
-                        Constants.TypedFieldPatterns.GetDefaultPattern(columnAttr.FieldType);
-                    if (!string.IsNullOrEmpty(validationPattern))
-                    {
-                        header.Validation = validationPattern;
-                    }
-                }
-                
+                var header = CreateHeader(columnAttr, headerName);
+                ApplyNotesAndValidation(header, columnAttr);
+
                 headers.Add(header);
                 processedHeaders.Add(headerName);
             }
         }
 
         return headers;
+    }
+
+    private static SheetCellModel CreateHeader(ColumnAttribute columnAttr, string headerName)
+    {
+        var header = new SheetCellModel
+        {
+            Name = headerName,
+            Format = columnAttr.GetEffectiveFormat()
+        };
+
+        // Populate FormatPattern - this becomes the single source of truth
+        if (!string.IsNullOrEmpty(columnAttr.NumberFormatPattern))
+        {
+            header.FormatPattern = columnAttr.NumberFormatPattern;
+
+            if (!header.Format.HasValue || header.Format.Value == Enums.FormatEnum.DEFAULT)
+            {
+                header.Format = InferFormatFromPattern(columnAttr.NumberFormatPattern);
+            }
+        }
+        else if (header.Format.HasValue && header.Format.Value != Enums.FormatEnum.DEFAULT)
+        {
+            header.FormatPattern = GetPatternForFormat(header.Format.Value);
+        }
+
+        return header;
+    }
+
+    private static void ApplyNotesAndValidation(SheetCellModel header, ColumnAttribute columnAttr)
+    {
+        if (!string.IsNullOrEmpty(columnAttr.Note))
+        {
+            header.Note = columnAttr.Note;
+        }
+
+        var numberPattern = TypedFieldUtils.GetNumberFormatPattern(columnAttr);
+        if (!string.IsNullOrEmpty(numberPattern) && numberPattern != "@")
+        {
+            if (string.IsNullOrEmpty(header.Note))
+            {
+                header.Note = $"NumberFormat:{numberPattern}";
+            }
+            else
+            {
+                header.Note += $"\nNumberFormat:{numberPattern}";
+            }
+        }
+
+        if (columnAttr.EnableValidation)
+        {
+            var validationPattern = columnAttr.ValidationPattern ??
+                Constants.TypedFieldPatterns.GetDefaultPattern(columnAttr.FieldType);
+            if (!string.IsNullOrEmpty(validationPattern))
+            {
+                header.Validation = validationPattern;
+            }
+        }
     }
 
     /// <summary>

@@ -19,7 +19,6 @@ public class TypedFieldUtilsTests
         
         // Should include properties like TestDateTime, TestCurrency, etc.
         var dateProperty = properties.FirstOrDefault(p => p.Column.GetEffectiveHeaderName().Contains(TypedFieldUtilsTestHelper.TestDateTimeHeader));
-        Assert.NotNull(dateProperty);
         Assert.Equal(FormatEnum.DATE, dateProperty.Column.FormatType);
     }
 
@@ -48,7 +47,7 @@ public class TypedFieldUtilsTests
     [InlineData("NotACurrency", typeof(decimal?), FieldTypeEnum.Currency)] // Invalid decimal - nullable
     [InlineData("", typeof(decimal?), FieldTypeEnum.Currency)] // Empty string for decimal - nullable
     [InlineData(null, typeof(decimal?), FieldTypeEnum.Currency)] // Null value for decimal - nullable
-    public void ConvertFromSheetValue_ShouldReturnDefaultValue_WhenDataIsInvalid(string input, Type targetType, FieldTypeEnum fieldType)
+    public void ConvertFromSheetValue_ShouldReturnDefaultValue_WhenDataIsInvalid(string? input, Type targetType, FieldTypeEnum fieldType)
     {
         // Arrange
         var attribute = new ColumnAttribute("test");
@@ -75,7 +74,7 @@ public class TypedFieldUtilsTests
             if (isNullable)
                 Assert.Null(result);
             else
-                Assert.Equal(false, result);
+                Assert.False((bool?)result);
         }
         else if (actualType == typeof(DateTime))
         {
