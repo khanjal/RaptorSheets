@@ -57,19 +57,19 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.OdometerStart,
         isInput: true,
         jsonPropertyName: "startOdometer",
-        formatPattern: CellFormatPatterns.Distance)]
+        formatType: FormatEnum.DISTANCE)]
     public decimal? OdometerStart { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerEnd,
         isInput: true,
         jsonPropertyName: "endOdometer",
-        formatPattern: CellFormatPatterns.Distance)]
+        formatType: FormatEnum.DISTANCE)]
     public decimal? OdometerEnd { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Distance,
         isInput: true,
         jsonPropertyName: "distance",
-        formatPattern: CellFormatPatterns.Distance,
+        formatType: FormatEnum.DISTANCE,
         note: ColumnNotes.TripDistance)]
     public decimal? Distance { get; set; }
 

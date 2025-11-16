@@ -107,7 +107,7 @@ public static class GenerateSheetsHelpers
             }
 
             // If there's no format or validation then go to next header
-            if (header.Format == null && string.IsNullOrEmpty(header.Validation))
+            if (header.Format == null && string.IsNullOrEmpty(header.Validation) && string.IsNullOrEmpty(header.FormatPattern))
             {
                 continue;
             }
@@ -117,9 +117,16 @@ public static class GenerateSheetsHelpers
                 GridRange = range,
             };
 
-            if (header.Format != null)
+            // Apply formatting if Format or FormatPattern exists
+            if (header.Format != null || !string.IsNullOrEmpty(header.FormatPattern))
             {
-                repeatCellModel.CellFormat = SheetHelpers.GetCellFormat((FormatEnum)header.Format);
+                var formatToUse = header.Format ?? FormatEnum.NUMBER; // Default to NUMBER if only pattern provided
+
+                // FormatPattern is the single source of truth - it's always populated
+                // Either from custom pattern or derived from FormatEnum
+                repeatCellModel.CellFormat = !string.IsNullOrEmpty(header.FormatPattern)
+                    ? SheetHelpers.GetCellFormat(formatToUse, header.FormatPattern)
+                    : SheetHelpers.GetCellFormat(formatToUse);
             }
 
             if (!string.IsNullOrEmpty(header.Validation))

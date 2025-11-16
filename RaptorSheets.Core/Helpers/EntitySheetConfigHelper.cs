@@ -41,6 +41,25 @@ public static class EntitySheetConfigHelper
                     Format = columnAttr.GetEffectiveFormat()
                 };
                 
+                // Populate FormatPattern - this becomes the single source of truth
+                // Priority: 1) Custom pattern from attribute, 2) Default pattern from FormatEnum
+                if (!string.IsNullOrEmpty(columnAttr.NumberFormatPattern))
+                {
+                    // Custom pattern explicitly provided
+                    header.FormatPattern = columnAttr.NumberFormatPattern;
+                    
+                    // If Format wasn't explicitly set, infer it from the pattern
+                    if (!header.Format.HasValue || header.Format.Value == Enums.FormatEnum.DEFAULT)
+                    {
+                        header.Format = InferFormatFromPattern(columnAttr.NumberFormatPattern);
+                    }
+                }
+                else if (header.Format.HasValue && header.Format.Value != Enums.FormatEnum.DEFAULT)
+                {
+                    // Get default pattern for the FormatEnum
+                    header.FormatPattern = GetPatternForFormat(header.Format.Value);
+                }
+                
                 // Apply note if specified
                 if (!string.IsNullOrEmpty(columnAttr.Note))
                 {
@@ -226,5 +245,83 @@ public static class EntitySheetConfigHelper
         }
 
         return orderedProperties;
+    }
+
+    /// <summary>
+    /// Gets the default number format pattern for a given FormatEnum.
+    /// Returns null for formats that don't have a pattern (like TEXT).
+    /// </summary>
+    private static string? GetPatternForFormat(Enums.FormatEnum format)
+    {
+        return format switch
+        {
+            Enums.FormatEnum.ACCOUNTING => Constants.CellFormatPatterns.Accounting,
+            Enums.FormatEnum.CURRENCY => Constants.CellFormatPatterns.Currency,
+            Enums.FormatEnum.DATE => Constants.CellFormatPatterns.Date,
+            Enums.FormatEnum.DISTANCE => Constants.CellFormatPatterns.Distance,
+            Enums.FormatEnum.DURATION => Constants.CellFormatPatterns.Duration,
+            Enums.FormatEnum.NUMBER => Constants.CellFormatPatterns.Number,
+            Enums.FormatEnum.TIME => Constants.CellFormatPatterns.Time,
+            Enums.FormatEnum.WEEKDAY => Constants.CellFormatPatterns.Weekday,
+            Enums.FormatEnum.TEXT => null, // TEXT doesn't have a pattern
+            Enums.FormatEnum.DEFAULT => null,
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// Infers the FormatEnum from a number format pattern.
+    /// This allows using formatPattern alone without needing to specify formatType.
+    /// </summary>
+    private static Enums.FormatEnum InferFormatFromPattern(string pattern)
+    {
+        // Match against known patterns first
+        if (pattern == Constants.CellFormatPatterns.Accounting) return Enums.FormatEnum.ACCOUNTING;
+        if (pattern == Constants.CellFormatPatterns.Currency) return Enums.FormatEnum.CURRENCY;
+        if (pattern == Constants.CellFormatPatterns.Date) return Enums.FormatEnum.DATE;
+        if (pattern == Constants.CellFormatPatterns.Distance) return Enums.FormatEnum.DISTANCE;
+        if (pattern == Constants.CellFormatPatterns.Duration) return Enums.FormatEnum.DURATION;
+        if (pattern == Constants.CellFormatPatterns.Number) return Enums.FormatEnum.NUMBER;
+        if (pattern == Constants.CellFormatPatterns.Time) return Enums.FormatEnum.TIME;
+        if (pattern == Constants.CellFormatPatterns.Weekday) return Enums.FormatEnum.WEEKDAY;
+
+        // Pattern-based heuristics for custom patterns
+        // Duration patterns: [h]:mm or similar
+        if (pattern.Contains("[h]") || pattern.Contains("[m]")) 
+            return Enums.FormatEnum.DURATION;
+
+        // Time patterns: contain h, m, s with colons
+        if ((pattern.Contains("h") || pattern.Contains("m") || pattern.Contains("s")) && 
+            pattern.Contains(":") && !pattern.Contains("["))
+            return Enums.FormatEnum.TIME;
+
+        // Date patterns: contain y, m, d
+        if ((pattern.Contains("y") || pattern.Contains("d")) && 
+            (pattern.Contains("m") || pattern.Contains("M")) &&
+            !pattern.Contains(":"))
+            return Enums.FormatEnum.DATE;
+
+        // Weekday patterns: ddd or dddd
+        if (pattern.Contains("ddd") && !pattern.Contains("y") && !pattern.Contains("/"))
+            return Enums.FormatEnum.WEEKDAY;
+
+        // Currency patterns: start with $ or contain currency symbols
+        if (pattern.StartsWith("$") || pattern.StartsWith("\"$\""))
+            return Enums.FormatEnum.CURRENCY;
+
+        // Accounting patterns: complex with underscores and parentheses for negatives
+        if (pattern.Contains("_(") && pattern.Contains("\"$\""))
+            return Enums.FormatEnum.ACCOUNTING;
+
+        // Percentage patterns: contain %
+        if (pattern.Contains("%"))
+            return Enums.FormatEnum.PERCENT;
+
+        // Number patterns: contain # or 0 but no special formatting
+        if (pattern.Contains("#") || pattern.Contains("0"))
+            return Enums.FormatEnum.NUMBER;
+
+        // Default fallback
+        return Enums.FormatEnum.NUMBER;
     }
 }

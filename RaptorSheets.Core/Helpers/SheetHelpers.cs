@@ -233,4 +233,24 @@ public static class SheetHelpers
         return cellFormat;
     }
 
+    /// <summary>
+    /// Get cell format with a custom number format pattern.
+    /// This overload allows specifying a custom pattern that overrides the default for the FormatEnum.
+    /// </summary>
+    /// <param name="format">The format type</param>
+    /// <param name="customPattern">Custom number format pattern (e.g., "#,##0.0")</param>
+    /// <returns>CellFormat with the custom pattern applied</returns>
+    public static CellFormat GetCellFormat(FormatEnum format, string customPattern)
+    {
+        var cellFormat = GetCellFormat(format);
+        
+        // Override the pattern with the custom one if provided
+        if (!string.IsNullOrEmpty(customPattern) && cellFormat.NumberFormat != null)
+        {
+            cellFormat.NumberFormat.Pattern = customPattern;
+        }
+        
+        return cellFormat;
+    }
+
 }
