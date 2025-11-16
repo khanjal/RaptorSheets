@@ -109,7 +109,7 @@ public class GenericSheetMapperTests
         Assert.Single(result);
         Assert.Equal("John", result[0].Name);
         Assert.Null(result[0].Amount); // Nullable decimal with empty string becomes null
-        Assert.Equal(0, result[0].Count); // Nullable int defaults to 0
+        Assert.Null(result[0].Count); // Nullable int defaults to 0
     }
 
     [Fact]

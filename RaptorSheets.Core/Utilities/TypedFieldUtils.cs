@@ -72,6 +72,13 @@ public static class TypedFieldUtils
             return cellValue.ToString() ?? "";
         }
 
+        // Handle cases where FieldTypeEnum is DateTime but targetType is string
+        if (columnAttr.FieldType == FieldTypeEnum.DateTime && targetType == typeof(string))
+        {
+            var dateValue = ParseDateTime(cellValue);
+            return dateValue != null ? ((DateTime)dateValue).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "";
+        }
+
         // For other types, treat empty/whitespace as null
         if (cellValue is string str && string.IsNullOrWhiteSpace(str))
         {
