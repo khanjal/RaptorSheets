@@ -34,41 +34,88 @@ public class TypedFieldUtilsTests
     }
 
     [Theory]
-    [InlineData("InvalidData", typeof(int))]
-    [InlineData("NotABoolean", typeof(bool))]
-    [InlineData("12/34/5678", typeof(DateTime))] // Invalid date
-    [InlineData("$12.34", typeof(decimal))]   // Invalid currency
-    public void ConvertFromSheetValue_ShouldReturnDefaultValue_WhenDataIsInvalid(string input, Type targetType)
+    [InlineData("InvalidData", typeof(int), FieldTypeEnum.Integer)]
+    [InlineData("NotABoolean", typeof(bool), FieldTypeEnum.Boolean)]
+    [InlineData("12/34/5678", typeof(DateTime?), FieldTypeEnum.DateTime)] // Invalid date - nullable
+    [InlineData("", typeof(int), FieldTypeEnum.Integer)] // Empty string for int
+    [InlineData(null, typeof(int), FieldTypeEnum.Integer)] // Null value for int
+    [InlineData("NotANumber", typeof(double), FieldTypeEnum.Number)] // Invalid double
+    [InlineData("", typeof(bool), FieldTypeEnum.Boolean)] // Empty string for bool
+    [InlineData(null, typeof(bool), FieldTypeEnum.Boolean)] // Null value for bool
+    [InlineData("InvalidDate", typeof(DateTime?), FieldTypeEnum.DateTime)] // Invalid date string - nullable
+    [InlineData("", typeof(DateTime?), FieldTypeEnum.DateTime)] // Empty string for DateTime - nullable
+    [InlineData(null, typeof(DateTime?), FieldTypeEnum.DateTime)] // Null value for DateTime - nullable
+    [InlineData("NotACurrency", typeof(decimal?), FieldTypeEnum.Currency)] // Invalid decimal - nullable
+    [InlineData("", typeof(decimal?), FieldTypeEnum.Currency)] // Empty string for decimal - nullable
+    [InlineData(null, typeof(decimal?), FieldTypeEnum.Currency)] // Null value for decimal - nullable
+    public void ConvertFromSheetValue_ShouldReturnDefaultValue_WhenDataIsInvalid(string input, Type targetType, FieldTypeEnum fieldType)
     {
         // Arrange
         var attribute = new ColumnAttribute("test");
+        attribute.SetFieldTypeFromProperty(targetType);
 
         // Act
         var result = TypedFieldUtils.ConvertFromSheetValue(input, targetType, attribute);
 
         // Assert
-        // For value types, GetDefaultValue returns the default value (0 for int, false for bool)
-        // not null, so we check for the default value instead
-        if (targetType == typeof(int))
+        // Check if it's a nullable type
+        var underlyingType = Nullable.GetUnderlyingType(targetType);
+        bool isNullable = underlyingType != null;
+        var actualType = underlyingType ?? targetType;
+        
+        if (actualType == typeof(int))
         {
-            Assert.Equal(0, result);
+            if (isNullable)
+                Assert.Null(result);
+            else
+                Assert.Equal(0, result);
         }
-        else if (targetType == typeof(bool))
+        else if (actualType == typeof(bool))
         {
-            Assert.Equal(false, result);
+            if (isNullable)
+                Assert.Null(result);
+            else
+                Assert.Equal(false, result);
         }
-        else if (targetType == typeof(DateTime))
+        else if (actualType == typeof(DateTime))
         {
-            Assert.Equal(DateTime.MinValue, result);
+            if (isNullable)
+                Assert.Null(result);
+            else
+                Assert.Equal(DateTime.MinValue, result);
         }
-        else if (targetType == typeof(decimal))
+        else if (actualType == typeof(decimal))
         {
-            Assert.Equal(0.0m, result);
+            if (isNullable)
+                Assert.Null(result);
+            else
+                Assert.Equal(0.0m, result);
+        }
+        else if (actualType == typeof(double))
+        {
+            if (isNullable)
+                Assert.Null(result);
+            else
+                Assert.Equal(0.0, result);
         }
         else
         {
             Assert.Null(result);
         }
+    }
+
+    [Fact]
+    public void ConvertFromSheetValue_ShouldParseCurrencyWithDollarSign()
+    {
+        // Arrange
+        var attribute = new ColumnAttribute("test");
+        attribute.SetFieldTypeFromProperty(typeof(decimal?));
+
+        // Act
+        var result = TypedFieldUtils.ConvertFromSheetValue("$12.34", typeof(decimal?), attribute);
+
+        // Assert - Currency parsing should successfully remove the $ sign
+        Assert.Equal(12.34m, result);
     }
 
     [Fact]
