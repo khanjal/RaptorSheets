@@ -279,6 +279,19 @@ public static class EntitySheetConfigHelper
     private static Enums.FormatEnum InferFormatFromPattern(string pattern)
     {
         // Match against known patterns first
+        var exactMatch = TryGetExactPatternMatch(pattern);
+        if (exactMatch.HasValue)
+            return exactMatch.Value;
+
+        // Pattern-based heuristics for custom patterns
+        return InferFormatFromPatternHeuristics(pattern);
+    }
+
+    /// <summary>
+    /// Attempts to match the pattern against known exact patterns.
+    /// </summary>
+    private static Enums.FormatEnum? TryGetExactPatternMatch(string pattern)
+    {
         if (pattern == Constants.CellFormatPatterns.Accounting) return Enums.FormatEnum.ACCOUNTING;
         if (pattern == Constants.CellFormatPatterns.Currency) return Enums.FormatEnum.CURRENCY;
         if (pattern == Constants.CellFormatPatterns.Date) return Enums.FormatEnum.DATE;
@@ -287,44 +300,94 @@ public static class EntitySheetConfigHelper
         if (pattern == Constants.CellFormatPatterns.Number) return Enums.FormatEnum.NUMBER;
         if (pattern == Constants.CellFormatPatterns.Time) return Enums.FormatEnum.TIME;
         if (pattern == Constants.CellFormatPatterns.Weekday) return Enums.FormatEnum.WEEKDAY;
+        
+        return null;
+    }
 
-        // Pattern-based heuristics for custom patterns
+    /// <summary>
+    /// Infers format type using pattern-based heuristics when exact match is not found.
+    /// </summary>
+    private static Enums.FormatEnum InferFormatFromPatternHeuristics(string pattern)
+    {
         // Duration patterns: [h]:mm or similar
-        if (pattern.Contains("[h]") || pattern.Contains("[m]")) 
+        if (IsDurationPattern(pattern))
             return Enums.FormatEnum.DURATION;
 
         // Time patterns: contain h, m, s with colons
-        if ((pattern.Contains("h") || pattern.Contains("m") || pattern.Contains("s")) && 
-            pattern.Contains(":") && !pattern.Contains("["))
+        if (IsTimePattern(pattern))
             return Enums.FormatEnum.TIME;
 
         // Date patterns: contain y, m, d
-        if ((pattern.Contains("y") || pattern.Contains("d")) && 
-            (pattern.Contains("m") || pattern.Contains("M")) &&
-            !pattern.Contains(":"))
+        if (IsDatePattern(pattern))
             return Enums.FormatEnum.DATE;
 
         // Weekday patterns: ddd or dddd
-        if (pattern.Contains("ddd") && !pattern.Contains("y") && !pattern.Contains("/"))
+        if (IsWeekdayPattern(pattern))
             return Enums.FormatEnum.WEEKDAY;
 
         // Currency patterns: start with $ or contain currency symbols
-        if (pattern.StartsWith("$") || pattern.StartsWith("\"$\""))
+        if (IsCurrencyPattern(pattern))
             return Enums.FormatEnum.CURRENCY;
 
         // Accounting patterns: complex with underscores and parentheses for negatives
-        if (pattern.Contains("_(") && pattern.Contains("\"$\""))
+        if (IsAccountingPattern(pattern))
             return Enums.FormatEnum.ACCOUNTING;
 
         // Percentage patterns: contain %
-        if (pattern.Contains("%"))
+        if (IsPercentagePattern(pattern))
             return Enums.FormatEnum.PERCENT;
 
         // Number patterns: contain # or 0 but no special formatting
-        if (pattern.Contains("#") || pattern.Contains("0"))
+        if (IsNumberPattern(pattern))
             return Enums.FormatEnum.NUMBER;
 
         // Default fallback
         return Enums.FormatEnum.NUMBER;
+    }
+
+    private static bool IsDurationPattern(string pattern)
+    {
+        return pattern.Contains("[h]") || pattern.Contains("[m]");
+    }
+
+    private static bool IsTimePattern(string pattern)
+    {
+        return (pattern.Contains("h") || pattern.Contains("m") || pattern.Contains("s")) && 
+               pattern.Contains(":") && 
+               !pattern.Contains("[");
+    }
+
+    private static bool IsDatePattern(string pattern)
+    {
+        return (pattern.Contains("y") || pattern.Contains("d")) && 
+               (pattern.Contains("m") || pattern.Contains("M")) &&
+               !pattern.Contains(":");
+    }
+
+    private static bool IsWeekdayPattern(string pattern)
+    {
+        return pattern.Contains("ddd") && 
+               !pattern.Contains("y") && 
+               !pattern.Contains("/");
+    }
+
+    private static bool IsCurrencyPattern(string pattern)
+    {
+        return pattern.StartsWith("$") || pattern.StartsWith("\"$\"");
+    }
+
+    private static bool IsAccountingPattern(string pattern)
+    {
+        return pattern.Contains("_(") && pattern.Contains("\"$\"");
+    }
+
+    private static bool IsPercentagePattern(string pattern)
+    {
+        return pattern.Contains("%");
+    }
+
+    private static bool IsNumberPattern(string pattern)
+    {
+        return pattern.Contains("#") || pattern.Contains("0");
     }
 }

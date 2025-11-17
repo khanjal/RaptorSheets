@@ -89,34 +89,34 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.TotalTrips, jsonPropertyName: "totalTrips", note: ColumnNotes.TotalTrips)]
     public int TotalTrips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalPay, "totalPay")]
+    [Column(SheetsConfig.HeaderNames.TotalPay, FormatEnum.ACCOUNTING, "totalPay")]
     public decimal? TotalPay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalTips, "totalTips")]
+    [Column(SheetsConfig.HeaderNames.TotalTips, FormatEnum.ACCOUNTING, "totalTips")]
     public decimal? TotalTips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalBonus, "totalBonus")]
+    [Column(SheetsConfig.HeaderNames.TotalBonus, FormatEnum.ACCOUNTING, "totalBonus")]
     public decimal? TotalBonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalGrand, "grandTotal")]
+    [Column(SheetsConfig.HeaderNames.TotalGrand, FormatEnum.ACCOUNTING, "grandTotal")]
     public decimal? GrandTotal { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalCash, "totalCash")]
+    [Column(SheetsConfig.HeaderNames.TotalCash, FormatEnum.ACCOUNTING, "totalCash")]
     public decimal? TotalCash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, "amountPerTrip")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING, "amountPerTrip")]
     public decimal? AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, "amountPerTime")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING, "amountPerTime")]
     public decimal? AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalDistance, "totalDistance", ColumnNotes.TotalDistance)]
+    [Column(SheetsConfig.HeaderNames.TotalDistance, FormatEnum.DISTANCE, "totalDistance", ColumnNotes.TotalDistance)]
     public decimal? TotalDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, "amountPerDistance")]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING, "amountPerDistance")]
     public decimal? AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TripsPerHour)]
+    [Column(SheetsConfig.HeaderNames.TripsPerHour, FormatEnum.DISTANCE)]
     public decimal? TripsPerHour { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Day)]

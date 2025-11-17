@@ -42,7 +42,7 @@ public class DailyEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.TimeTotal, FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING)]
     public decimal AmountPerTime { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Day)]
