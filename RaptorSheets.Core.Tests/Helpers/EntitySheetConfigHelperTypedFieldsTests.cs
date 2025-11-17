@@ -64,7 +64,7 @@ public class EntitySheetConfigHelperColumnTests
         [Column("Number", FormatEnum.NUMBER)]
         public double? Number { get; set; }
 
-        [Column("CustomCurrency", formatPattern: "\"£\"#,##0.00", formatType: FormatEnum.CURRENCY)]
+        [Column("CustomCurrency", isInput: false, formatPattern: "\"£\"#,##0.00", formatType: FormatEnum.CURRENCY)]
         public decimal? CustomCurrency { get; set; }
 
         [Column("String", FormatEnum.TEXT)]

@@ -107,7 +107,7 @@ public class TripMapperColumnPositionTests
         Assert.Equal("2024-01-15", row[0]);  // Date
         Assert.Equal("Uber", row[1]);        // Service
         Assert.Equal("1", row[2]);           // Number
-        Assert.Equal(false, row[3]);         // Exclude (boolean, not string)
+        Assert.False((bool?)row[3]);         // Exclude (boolean, not string)
         Assert.Equal("UberX", row[4]);       // Type
         Assert.Equal("Restaurant", row[5]);  // Place
         Assert.Equal("18:30:00", row[6]);    // Pickup

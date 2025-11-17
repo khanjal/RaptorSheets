@@ -99,6 +99,28 @@ public class ColumnAttribute : Attribute
     }
 
     /// <summary>
+    /// Initializes a column configuration with custom JSON property name.
+    /// FieldType is automatically inferred from the property type.
+    /// Use this when the JSON property name differs from the auto-generated camelCase header name.
+    /// </summary>
+    /// <param name="headerName">Header name for sheet column</param>
+    /// <param name="jsonPropertyName">Custom JSON property name for serialization</param>
+    public ColumnAttribute(string headerName, string jsonPropertyName)
+    {
+        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
+        JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
+        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        IsFieldTypeExplicit = false;
+        FormatType = FormatEnum.DEFAULT;
+        NumberFormatPattern = null;
+        Order = -1;
+        IsInput = false;
+        EnableValidation = false;
+        ValidationPattern = null;
+        Note = null;
+    }
+
+    /// <summary>
     /// Initializes a column configuration with format type override.
     /// FieldType is automatically inferred from the property type.
     /// Use this when you need to override the default format (e.g., string date with DATE format).
@@ -118,6 +140,76 @@ public class ColumnAttribute : Attribute
         EnableValidation = false;
         ValidationPattern = null;
         Note = null;
+    }
+
+    /// <summary>
+    /// Initializes a column configuration with format type and custom JSON property name.
+    /// FieldType is automatically inferred from the property type.
+    /// Use this when you need to override both the format and JSON property name.
+    /// </summary>
+    /// <param name="headerName">Header name for sheet column</param>
+    /// <param name="formatType">Format type for Google Sheets display</param>
+    /// <param name="jsonPropertyName">Custom JSON property name for serialization</param>
+    public ColumnAttribute(string headerName, FormatEnum formatType, string jsonPropertyName)
+    {
+        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
+        JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
+        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        IsFieldTypeExplicit = false;
+        FormatType = formatType;
+        NumberFormatPattern = null;
+        Order = -1;
+        IsInput = false;
+        EnableValidation = false;
+        ValidationPattern = null;
+        Note = null;
+    }
+
+    /// <summary>
+    /// Initializes a column configuration with format type, custom JSON property name, and note.
+    /// FieldType is automatically inferred from the property type.
+    /// Use this when you need to override format, JSON property name, and add a note.
+    /// </summary>
+    /// <param name="headerName">Header name for sheet column</param>
+    /// <param name="formatType">Format type for Google Sheets display</param>
+    /// <param name="jsonPropertyName">Custom JSON property name for serialization</param>
+    /// <param name="note">Note/comment to display in Google Sheets</param>
+    public ColumnAttribute(string headerName, FormatEnum formatType, string jsonPropertyName, string note)
+    {
+        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
+        JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
+        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        IsFieldTypeExplicit = false;
+        FormatType = formatType;
+        NumberFormatPattern = null;
+        Order = -1;
+        IsInput = false;
+        EnableValidation = false;
+        ValidationPattern = null;
+        Note = note;
+    }
+
+    /// <summary>
+    /// Initializes a column configuration with custom JSON property name and note.
+    /// FieldType is automatically inferred from the property type.
+    /// Use this when you need to override JSON property name and add a note.
+    /// </summary>
+    /// <param name="headerName">Header name for sheet column</param>
+    /// <param name="jsonPropertyName">Custom JSON property name for serialization</param>
+    /// <param name="note">Note/comment to display in Google Sheets</param>
+    public ColumnAttribute(string headerName, string jsonPropertyName, string note)
+    {
+        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
+        JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
+        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        IsFieldTypeExplicit = false;
+        FormatType = FormatEnum.DEFAULT;
+        NumberFormatPattern = null;
+        Order = -1;
+        IsInput = false;
+        EnableValidation = false;
+        ValidationPattern = null;
+        Note = note;
     }
 
     /// <summary>
@@ -151,17 +243,17 @@ public class ColumnAttribute : Attribute
     /// Use named parameters to specify only what you need.
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
-    /// <param name="isInput">True if this is a user-input column (default: false)</param>
+    /// <param name="isInput">True if this is a user-input column</param>
     /// <param name="jsonPropertyName">Custom JSON property name (null = auto-generate from header)</param>
     /// <param name="formatPattern">Custom number format pattern (null = use default)</param>
     /// <param name="note">Note/comment to display in Google Sheets</param>
-    /// <param name="enableValidation">Enable field validation (default: false)</param>
+    /// <param name="enableValidation">Enable field validation</param>
     /// <param name="validationPattern">Custom validation pattern (null = use default for field type)</param>
     /// <param name="order">Column order priority (-1 = use declaration order)</param>
     /// <param name="formatType">Format type for Google Sheets display (DEFAULT = use default from fieldType)</param>
     public ColumnAttribute(
         string headerName,
-        bool isInput = false,
+        bool isInput,
         string? jsonPropertyName = null,
         string? formatPattern = null,
         string? note = null,

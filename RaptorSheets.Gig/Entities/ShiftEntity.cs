@@ -77,45 +77,43 @@ public class ShiftEntity : SheetRowEntityBase
     public string Note { get; set; } = "";
 
     // Output columns (formulas/calculated) - defaults to isInput: false
-    [Column(SheetsConfig.HeaderNames.Key, note: ColumnNotes.ShiftKey)]
+    [Column(SheetsConfig.HeaderNames.Key, isInput: false, note: ColumnNotes.ShiftKey)]
     public string Key { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TotalTimeActive, jsonPropertyName: "totalActive", note: ColumnNotes.TotalTimeActive, formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.TotalTimeActive, FormatEnum.DURATION, "totalActive", ColumnNotes.TotalTimeActive)]
     public string TotalActive { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TotalTime, jsonPropertyName: "totalTime", formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.TotalTime, FormatEnum.DURATION, "totalTime")]
     public string TotalTime { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.TotalTrips, jsonPropertyName: "totalTrips", note: ColumnNotes.TotalTrips)]
     public int TotalTrips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalPay, jsonPropertyName: "totalPay")]
+    [Column(SheetsConfig.HeaderNames.TotalPay, "totalPay")]
     public decimal? TotalPay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalTips, jsonPropertyName: "totalTips")]
+    [Column(SheetsConfig.HeaderNames.TotalTips, "totalTips")]
     public decimal? TotalTips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalBonus, jsonPropertyName: "totalBonus")]
+    [Column(SheetsConfig.HeaderNames.TotalBonus, "totalBonus")]
     public decimal? TotalBonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalGrand, jsonPropertyName: "grandTotal")]
+    [Column(SheetsConfig.HeaderNames.TotalGrand, "grandTotal")]
     public decimal? GrandTotal { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalCash, jsonPropertyName: "totalCash")]
+    [Column(SheetsConfig.HeaderNames.TotalCash, "totalCash")]
     public decimal? TotalCash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, jsonPropertyName: "amountPerTrip")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip, "amountPerTrip")]
     public decimal? AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, jsonPropertyName: "amountPerTime")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, "amountPerTime")]
     public decimal? AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalDistance,
-        jsonPropertyName: "totalDistance",
-        note: ColumnNotes.TotalDistance)]
+    [Column(SheetsConfig.HeaderNames.TotalDistance, "totalDistance", ColumnNotes.TotalDistance)]
     public decimal? TotalDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, jsonPropertyName: "amountPerDistance")]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, "amountPerDistance")]
     public decimal? AmountPerDistance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.TripsPerHour)]

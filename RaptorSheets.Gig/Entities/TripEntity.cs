@@ -95,7 +95,7 @@ public class TripEntity : SheetRowEntityBase
     public string Note { get; set; } = "";
 
     // Output columns (formulas/calculated) - default to isInput: false
-    [Column(SheetsConfig.HeaderNames.Key, note: ColumnNotes.TripKey)]
+    [Column(SheetsConfig.HeaderNames.Key, isInput: false, note: ColumnNotes.TripKey)]
     public string Key { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Day)]
@@ -107,9 +107,9 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Year)]
     public string Year { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, jsonPropertyName: "amountPerTime", formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING, "amountPerTime")]
     public decimal? AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, jsonPropertyName: "amountPerDistance", formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING, "amountPerDistance")]
     public decimal? AmountPerDistance { get; set; }
 }

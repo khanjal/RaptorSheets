@@ -30,7 +30,7 @@ public class ColumnAttributeHeaderToJsonTests
     public void ColumnAttribute_WithCustomJsonPropertyName_ShouldUseOverride()
     {
         // Act
-        var attribute = new ColumnAttribute("Pay", jsonPropertyName: "paymentAmount");
+        var attribute = new ColumnAttribute("Pay", "paymentAmount");
         
         // Assert
         Assert.Equal("paymentAmount", attribute.JsonPropertyName);
@@ -68,7 +68,7 @@ public class ColumnAttributeHeaderToJsonTests
     {
         // Act - Custom format pattern specified
         var customPattern = "\"?\"#,##0.00";
-        var attribute = new ColumnAttribute("Pay", formatPattern: customPattern);
+        var attribute = new ColumnAttribute("Pay", isInput: false, formatPattern: customPattern);
         
         // Assert
         Assert.Equal(customPattern, attribute.GetEffectiveNumberFormatPattern());
