@@ -19,19 +19,26 @@ public static class GenerateSheetHelpers
         _batchUpdateSpreadsheetRequest.Requests = [];
         _repeatCellRequests = [];
 
-        sheets.ForEach(sheet =>
+        var random = new Random(); // Reuse a single Random instance
+        foreach (var sheet in sheets)
         {
             var sheetModel = GetSheetModel(sheet);
-            var random = new Random();
             sheetModel.Id = random.Next();
 
+            // Add requests to the batch update
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendDimension(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
+
+            var appendDimension = GoogleRequestHelpers.GenerateAppendDimension(sheetModel);
+            if (appendDimension != null)
+            {
+                _batchUpdateSpreadsheetRequest.Requests.Add(appendDimension);
+            }
+
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
             GenerateHeadersFormatAndProtection(sheetModel);
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
-        });
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
+        }
 
         _repeatCellRequests.ForEach(request =>
         {

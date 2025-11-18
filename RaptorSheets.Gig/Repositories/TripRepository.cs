@@ -69,7 +69,10 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// <returns>True if successful</returns>
     public async Task<bool> AddTripAsync(TripEntity trip)
     {
-        if (trip == null) ArgumentNullException.ThrowIfNull(trip);
+        if (trip == null)
+        {
+            ArgumentNullException.ThrowIfNull(trip);
+        }
 
         // Generate key if not provided
         if (string.IsNullOrEmpty(trip.Key) && !string.IsNullOrEmpty(trip.Date) && DateTime.TryParse(trip.Date, CultureInfo.InvariantCulture, out var tripDate))
@@ -102,7 +105,10 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// <returns>True if successful</returns>
     public async Task<bool> UpdateTripAsync(TripEntity trip, int rowIndex)
     {
-        if (trip == null) ArgumentNullException.ThrowIfNull(trip);
+        if (trip == null)
+        {
+            ArgumentNullException.ThrowIfNull(trip);
+        }
 
         // Auto-calculate total
         trip.Total = (trip.Pay ?? 0) + (trip.Tip ?? 0) + (trip.Bonus ?? 0);
