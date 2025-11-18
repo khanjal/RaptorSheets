@@ -12,7 +12,7 @@ public class SheetHelpersTests
 {
     #region CheckSheets Tests
 
-    public enum TestSheetEnum
+    public enum TestSheet
     {
         SHEET1, // Use uppercase to match the actual behavior
         SHEET2,
@@ -25,16 +25,16 @@ public class SheetHelpersTests
         // Arrange
         var spreadsheet = new Spreadsheet
         {
-            Sheets = new List<Sheet>
-            {
-                new Sheet { Properties = new SheetProperties { Title = "SHEET1" } },
-                new Sheet { Properties = new SheetProperties { Title = "SHEET2" } },
-                new Sheet { Properties = new SheetProperties { Title = "MISSINGSHEET" } }
-            }
+            Sheets =
+            [
+                new() { Properties = new SheetProperties { Title = "SHEET1" } },
+                new() { Properties = new SheetProperties { Title = "SHEET2" } },
+                new() { Properties = new SheetProperties { Title = "MISSINGSHEET" } }
+            ]
         };
 
         // Act
-        var result = SheetHelpers.CheckSheets<TestSheetEnum>(spreadsheet);
+        var result = SheetHelpers.CheckSheets<TestSheet>(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -47,16 +47,16 @@ public class SheetHelpersTests
         // Arrange
         var spreadsheet = new Spreadsheet
         {
-            Sheets = new List<Sheet>
-            {
-                new Sheet { Properties = new SheetProperties { Title = "SHEET1" } },
-                new Sheet { Properties = new SheetProperties { Title = "SHEET2" } }
+            Sheets =
+            [
+                new() { Properties = new SheetProperties { Title = "SHEET1" } },
+                new() { Properties = new SheetProperties { Title = "SHEET2" } }
                 // MISSINGSHEET is not present
-            }
+            ]
         };
 
         // Act
-        var result = SheetHelpers.CheckSheets<TestSheetEnum>(spreadsheet);
+        var result = SheetHelpers.CheckSheets<TestSheet>(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -68,10 +68,10 @@ public class SheetHelpersTests
     public void CheckSheets_WithNullSpreadsheet_ShouldReturnAllSheetNames()
     {
         // Arrange - Test with empty spreadsheet to verify handling behavior
-        Spreadsheet spreadsheet = new Spreadsheet();
+        Spreadsheet spreadsheet = new();
 
         // Act
-        var result = SheetHelpers.CheckSheets<TestSheetEnum>(spreadsheet);
+        var result = SheetHelpers.CheckSheets<TestSheet>(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -85,12 +85,10 @@ public class SheetHelpersTests
     public void CheckSheets_WithActuallyNullSpreadsheet_ShouldReturnAllSheetNames()
     {
         // Arrange - Test with actual null to verify null handling behavior
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Spreadsheet? spreadsheet = null;
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         // Act
-        var result = SheetHelpers.CheckSheets<TestSheetEnum>(spreadsheet);
+        var result = SheetHelpers.CheckSheets<TestSheet>(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -104,10 +102,10 @@ public class SheetHelpersTests
     public void CheckSheets_WithEmptySpreadsheet_ShouldReturnAllSheetNames()
     {
         // Arrange
-        var spreadsheet = new Spreadsheet { Sheets = new List<Sheet>() };
+        var spreadsheet = new Spreadsheet { Sheets = [] };
 
         // Act
-        var result = SheetHelpers.CheckSheets<TestSheetEnum>(spreadsheet);
+        var result = SheetHelpers.CheckSheets<TestSheet>(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -124,15 +122,15 @@ public class SheetHelpersTests
         // So case actually doesn't matter because GetSpreadsheetSheets converts to uppercase
         var spreadsheet = new Spreadsheet
         {
-            Sheets = new List<Sheet>
-            {
+            Sheets =
+            [
                 new Sheet { Properties = new SheetProperties { Title = "sheet1" } }, // Will be converted to SHEET1
                 new Sheet { Properties = new SheetProperties { Title = "Sheet2" } }, // Will be converted to SHEET2
-            }
+            ]
         };
 
         // Act
-        var result = SheetHelpers.CheckSheets<TestSheetEnum>(spreadsheet);
+        var result = SheetHelpers.CheckSheets<TestSheet>(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -250,11 +248,11 @@ public class SheetHelpersTests
         // Arrange
         var sheet = new Spreadsheet
         {
-            Sheets = new List<Sheet>
-            {
+            Sheets =
+            [
                 new Sheet { Properties = new SheetProperties { Title = "Sheet1" } },
                 new Sheet { Properties = new SheetProperties { Title = "Sheet2" } }
-            }
+            ]
         };
 
         // Act
@@ -270,7 +268,7 @@ public class SheetHelpersTests
     public void GetSpreadsheetSheets_WithNullSpreadsheet_ShouldReturnEmptyList()
     {
         // Arrange - Test with empty spreadsheet to verify handling behavior
-        Spreadsheet sheet = new Spreadsheet();
+        Spreadsheet sheet = new();
 
         // Act
         var result = SheetHelpers.GetSpreadsheetSheets(sheet);
@@ -284,9 +282,7 @@ public class SheetHelpersTests
     public void GetSpreadsheetSheets_WithActuallyNullSpreadsheet_ShouldReturnEmptyList()
     {
         // Arrange - Test with actual null to verify null handling behavior
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Spreadsheet? sheet = null;
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type;
 
         // Act
         var result = SheetHelpers.GetSpreadsheetSheets(sheet);
@@ -300,7 +296,7 @@ public class SheetHelpersTests
     public void GetSpreadsheetSheets_WithEmptySheets_ShouldReturnEmptyList()
     {
         // Arrange
-        var sheet = new Spreadsheet { Sheets = new List<Sheet>() };
+        var sheet = new Spreadsheet { Sheets = [] };
 
         // Act
         var result = SheetHelpers.GetSpreadsheetSheets(sheet);
@@ -316,12 +312,12 @@ public class SheetHelpersTests
         // Arrange
         var sheet = new Spreadsheet
         {
-            Sheets = new List<Sheet>
-            {
+            Sheets =
+            [
                 new Sheet { Properties = new SheetProperties { Title = "lowercase" } },
                 new Sheet { Properties = new SheetProperties { Title = "MixedCase" } },
                 new Sheet { Properties = new SheetProperties { Title = "UPPERCASE" } }
-            }
+            ]
         };
 
         // Act
@@ -344,38 +340,38 @@ public class SheetHelpersTests
         // Arrange
         var sheet = new Spreadsheet
         {
-            Sheets = new List<Sheet>
-            {
+            Sheets =
+            [
                 new Sheet
                 {
                     Properties = new SheetProperties { Title = "TestSheet" },
-                    Data = new List<GridData>
-                    {
+                    Data =
+                    [
                         new GridData
                         {
-                            RowData = new List<RowData>
-                            {
+                            RowData =
+                            [
                                 new RowData
                                 {
-                                    Values = new List<CellData>
-                                    {
-                                        new CellData { FormattedValue = "Header1" },
-                                        new CellData { FormattedValue = "Header2" }
-                                    }
+                                    Values =
+                                    [
+                                        new() { FormattedValue = "Header1" },
+                                        new() { FormattedValue = "Header2" }
+                                    ]
                                 },
                                 new RowData
                                 {
-                                    Values = new List<CellData>
-                                    {
-                                        new CellData { FormattedValue = "Value1" },
-                                        new CellData { FormattedValue = "Value2" }
-                                    }
+                                    Values =
+                                    [
+                                        new() { FormattedValue = "Value1" },
+                                        new() { FormattedValue = "Value2" }
+                                    ]
                                 }
-                            }
+                            ]
                         }
-                    }
+                    ]
                 }
-            }
+            ]
         };
 
         // Act
@@ -396,17 +392,16 @@ public class SheetHelpersTests
         // Arrange
         var sheet = new Spreadsheet
         {
-            Sheets = new List<Sheet>
-            {
-                new Sheet
-                {
+            Sheets =
+            [
+                new() {
                     Properties = new SheetProperties { Title = "EmptySheet" },
-                    Data = new List<GridData>
-                    {
-                        new GridData { RowData = null }
-                    }
+                    Data =
+                    [
+                        new() { RowData = null }
+                    ]
                 }
-            }
+            ]
         };
 
         // Act
@@ -425,40 +420,35 @@ public class SheetHelpersTests
         // Arrange
         var sheet = new Spreadsheet
         {
-            Sheets = new List<Sheet>
-            {
-                new Sheet
-                {
+            Sheets =
+            [
+                new() {
                     Properties = new SheetProperties { Title = "TestSheet" },
-                    Data = new List<GridData>
-                    {
-                        new GridData
-                        {
-                            RowData = new List<RowData>
-                            {
-                                new RowData
-                                {
-                                    Values = new List<CellData>
-                                    {
-                                        new CellData { FormattedValue = "ValidRow" }
-                                    }
+                    Data =
+                    [
+                        new() {
+                            RowData =
+                            [
+                                new() {
+                                    Values =
+                                    [
+                                        new() { FormattedValue = "ValidRow" }
+                                    ]
                                 },
-                                new RowData
-                                {
-                                    Values = new List<CellData>
-                                    {
-                                        new CellData { FormattedValue = "" } // Empty first cell
-                                    }
+                                new() {
+                                    Values =
+                                    [
+                                        new() { FormattedValue = "" } // Empty first cell
+                                    ]
                                 },
-                                new RowData
-                                {
-                                    Values = new List<CellData>() // No values
+                                new() {
+                                    Values = [] // No values
                                 }
-                            }
+                            ]
                         }
-                    }
+                    ]
                 }
-            }
+            ]
         };
 
         // Act
@@ -562,8 +552,8 @@ public class SheetHelpersTests
         // Arrange
         var headers = new List<SheetCellModel>
         {
-            new SheetCellModel { Name = "Header1" },
-            new SheetCellModel { Name = "Header2", Formula = "=SUM(A1:A10)" }
+            new() { Name = "Header1" },
+            new() { Name = "Header2", Formula = "=SUM(A1:A10)" }
         };
 
         // Act
@@ -596,9 +586,9 @@ public class SheetHelpersTests
         // Arrange
         var headers = new List<SheetCellModel>
         {
-            new SheetCellModel { Name = "Name1", Formula = "" },
-            new SheetCellModel { Name = "Name2", Formula = "Formula2" },
-            new SheetCellModel { Name = "Name3" }
+            new() { Name = "Name1", Formula = "" },
+            new() { Name = "Name2", Formula = "Formula2" },
+            new() { Name = "Name3" }
         };
 
         // Act
@@ -618,8 +608,8 @@ public class SheetHelpersTests
         // Arrange
         var headers = new List<SheetCellModel>
         {
-            new SheetCellModel { Name = null, Formula = "Formula1" },
-            new SheetCellModel { Name = null, Formula = null }
+            new() { Name = default!, Formula = "Formula1" },
+            new() { Name = default!, Formula = default! }
         };
 
         // Act
@@ -642,11 +632,11 @@ public class SheetHelpersTests
         // Arrange
         var sheet = new SheetModel
         {
-            Headers = new List<SheetCellModel>
-            {
-                new SheetCellModel { Name = "Header1" },
-                new SheetCellModel { Name = "Header2", Formula = "=SUM(A1:A10)" }
-            },
+            Headers =
+            [
+                new() { Name = "Header1" },
+                new() { Name = "Header2", Formula = "=SUM(A1:A10)" }
+            ],
             FontColor = ColorEnum.BLACK
         };
 
@@ -668,10 +658,10 @@ public class SheetHelpersTests
         // Arrange
         var sheet = new SheetModel
         {
-            Headers = new List<SheetCellModel>
-            {
-                new SheetCellModel { Name = "Protected", Protect = true } // Formula defaults to empty string
-            },
+            Headers =
+            [
+                new() { Name = "Protected", Protect = true } // Formula defaults to empty string
+            ],
             ProtectSheet = false,
             FontColor = ColorEnum.RED
         };
@@ -697,10 +687,10 @@ public class SheetHelpersTests
         // Arrange
         var sheet = new SheetModel
         {
-            Headers = new List<SheetCellModel>
-            {
-                new SheetCellModel { Name = "Protected", Protect = true, Formula = null! } // Explicitly null
-            },
+            Headers =
+            [
+                new() { Name = "Protected", Protect = true, Formula = null! } // Explicitly null
+            ],
             ProtectSheet = false,
             FontColor = ColorEnum.RED
         };
@@ -723,10 +713,10 @@ public class SheetHelpersTests
         // Arrange
         var sheet = new SheetModel
         {
-            Headers = new List<SheetCellModel>
-            {
-                new SheetCellModel { Name = "Header1", Note = "This is a note" }
-            }
+            Headers =
+            [
+                new() { Name = "Header1", Note = "This is a note" }
+            ]
         };
 
         // Act
@@ -744,7 +734,7 @@ public class SheetHelpersTests
         // Arrange
         var sheet = new SheetModel
         {
-            Headers = new List<SheetCellModel>()
+            Headers = []
         };
 
         // Act

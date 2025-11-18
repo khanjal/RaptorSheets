@@ -86,20 +86,6 @@ public class GoogleSheetManagerTests
         Assert.NotNull(result);
     }
 
-    //[Fact]
-    //public async Task GivenAddSheetData_WithData_ThenReturnData()
-    //{
-    //    var result = await _googleSheetManager.AddSheetData([SheetEnum.TRIPS, SheetEnum.SHIFTS], GenerateShift());
-    //    result.Should().NotBeNull();
-    //    result.Messages.Count.Should().Be(4);
-
-    //    foreach (var message in result.Messages)
-    //    {
-    //        message.Level.Should().Be(MessageLevelEnum.Info.UpperName());
-    //        message.Type.Should().Be(MessageTypeEnum.AddData.GetDescription());
-    //    }
-    //}
-
     [FactCheckUserSecrets]
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnEmpty()
     {

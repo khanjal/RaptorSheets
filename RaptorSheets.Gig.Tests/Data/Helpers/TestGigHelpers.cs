@@ -8,7 +8,7 @@ using RaptorSheets.Gig.Entities;
 namespace RaptorSheets.Gig.Tests.Data.Helpers;
 
 [ExcludeFromCodeCoverage]
-internal class TestGigHelpers
+internal static class TestGigHelpers
 {
     /// <summary>
     /// Loads static test data from JSON for legacy or specific unit tests.
