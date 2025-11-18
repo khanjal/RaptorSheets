@@ -1,4 +1,5 @@
 using Google.Apis.Sheets.v4.Data;
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Models.Google;
@@ -58,12 +59,12 @@ public static class HeaderHelpers
 
         var dateString = values[columnId]!.ToString() ?? "";
         
-        if (DateTime.TryParse(dateString, out DateTime result))
+        if (DateTime.TryParse(dateString, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime result))
         {
             // If the input was in yyyy-MM-dd format, preserve it, otherwise normalize to yyyy-MM-dd
-            if (dateString.Contains("-") && dateString.Length == 10)
+            if (dateString.Contains('-') && dateString.Length == 10)
             {
-                return result.ToString("yyyy-MM-dd");
+                return result.ToString(CellFormatPatterns.Date);
             }
             else
             {

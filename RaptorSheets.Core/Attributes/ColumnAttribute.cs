@@ -28,7 +28,7 @@ public class ColumnAttribute : Attribute
     /// This is automatically inferred from the property type unless explicitly specified.
     /// Controls how data is parsed when reading from sheets and formatted when writing to sheets.
     /// </summary>
-    public FieldTypeEnum FieldType { get; private set; }
+    public FieldType FieldType { get; private set; }
 
     /// <summary>
     /// Gets whether the FieldType was explicitly set (true) or auto-inferred (false).
@@ -87,7 +87,7 @@ public class ColumnAttribute : Attribute
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = FormatEnum.DEFAULT;
         NumberFormatPattern = null;
@@ -109,7 +109,7 @@ public class ColumnAttribute : Attribute
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
-        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = FormatEnum.DEFAULT;
         NumberFormatPattern = null;
@@ -131,7 +131,7 @@ public class ColumnAttribute : Attribute
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = formatType;
         NumberFormatPattern = null;
@@ -154,7 +154,7 @@ public class ColumnAttribute : Attribute
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
-        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = formatType;
         NumberFormatPattern = null;
@@ -178,7 +178,7 @@ public class ColumnAttribute : Attribute
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
-        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = formatType;
         NumberFormatPattern = null;
@@ -201,7 +201,7 @@ public class ColumnAttribute : Attribute
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
-        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = FormatEnum.DEFAULT;
         NumberFormatPattern = null;
@@ -226,7 +226,7 @@ public class ColumnAttribute : Attribute
 
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = options.JsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = options.FormatType;
         NumberFormatPattern = options.FormatPattern;
@@ -264,7 +264,7 @@ public class ColumnAttribute : Attribute
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = jsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
+        FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = formatType;
         NumberFormatPattern = formatPattern;
@@ -282,7 +282,7 @@ public class ColumnAttribute : Attribute
     /// <param name="headerName">Header name for sheet column</param>
     /// <param name="fieldType">Field type for data conversion</param>
     /// <param name="isInput">True if this is a user-input column</param>
-    public ColumnAttribute(string headerName, FieldTypeEnum fieldType, bool isInput)
+    public ColumnAttribute(string headerName, FieldType fieldType, bool isInput)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
@@ -354,18 +354,18 @@ public class ColumnAttribute : Attribute
     /// Gets the default FormatEnum for a given field type.
     /// Used when FormatType is DEFAULT.
     /// </summary>
-    private static FormatEnum? GetDefaultFormatFromFieldType(FieldTypeEnum fieldType)
+    private static FormatEnum? GetDefaultFormatFromFieldType(FieldType fieldType)
     {
         return fieldType switch
         {
-            FieldTypeEnum.Currency => FormatEnum.CURRENCY,
-            FieldTypeEnum.Accounting => FormatEnum.ACCOUNTING,
-            FieldTypeEnum.DateTime => FormatEnum.DATE,
-            FieldTypeEnum.Time => FormatEnum.TIME,
-            FieldTypeEnum.Duration => FormatEnum.DURATION,
-            FieldTypeEnum.Number => FormatEnum.NUMBER,
-            FieldTypeEnum.Percentage => FormatEnum.PERCENT,
-            FieldTypeEnum.String => FormatEnum.TEXT,
+            FieldType.Currency => FormatEnum.CURRENCY,
+            FieldType.Accounting => FormatEnum.ACCOUNTING,
+            FieldType.DateTime => FormatEnum.DATE,
+            FieldType.Time => FormatEnum.TIME,
+            FieldType.Duration => FormatEnum.DURATION,
+            FieldType.Number => FormatEnum.NUMBER,
+            FieldType.Percentage => FormatEnum.PERCENT,
+            FieldType.String => FormatEnum.TEXT,
             _ => null
         };
     }

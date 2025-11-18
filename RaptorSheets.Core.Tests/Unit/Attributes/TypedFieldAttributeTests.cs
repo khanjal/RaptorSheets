@@ -10,10 +10,10 @@ public class TypedFieldAttributeTests
     public void Constructor_WithFieldType_ShouldSetFieldType()
     {
         // Act
-        var attribute = new TypedFieldAttribute(FieldTypeEnum.Currency);
+        var attribute = new TypedFieldAttribute(FieldType.Currency);
 
         // Assert
-        Assert.Equal(FieldTypeEnum.Currency, attribute.FieldType);
+        Assert.Equal(FieldType.Currency, attribute.FieldType);
         Assert.Null(attribute.NumberFormatPattern);
         Assert.False(attribute.EnableValidation);
         Assert.Null(attribute.ValidationPattern);
@@ -23,10 +23,10 @@ public class TypedFieldAttributeTests
     public void Constructor_WithFieldTypeAndFormatPattern_ShouldSetProperties()
     {
         // Act
-        var attribute = new TypedFieldAttribute(FieldTypeEnum.DateTime, "MM/DD/YYYY");
+        var attribute = new TypedFieldAttribute(FieldType.DateTime, "MM/DD/YYYY");
 
         // Assert
-        Assert.Equal(FieldTypeEnum.DateTime, attribute.FieldType);
+        Assert.Equal(FieldType.DateTime, attribute.FieldType);
         Assert.Equal("MM/DD/YYYY", attribute.NumberFormatPattern);
         Assert.False(attribute.EnableValidation);
         Assert.Null(attribute.ValidationPattern);
@@ -36,10 +36,10 @@ public class TypedFieldAttributeTests
     public void Constructor_WithValidation_ShouldSetAllProperties()
     {
         // Act
-        var attribute = new TypedFieldAttribute(FieldTypeEnum.Number, "#,##0.00", true, "^\\d+$");
+        var attribute = new TypedFieldAttribute(FieldType.Number, "#,##0.00", true, "^\\d+$");
 
         // Assert
-        Assert.Equal(FieldTypeEnum.Number, attribute.FieldType);
+        Assert.Equal(FieldType.Number, attribute.FieldType);
         Assert.Equal("#,##0.00", attribute.NumberFormatPattern);
         Assert.True(attribute.EnableValidation);
         Assert.Equal("^\\d+$", attribute.ValidationPattern);
@@ -64,7 +64,7 @@ public class TypedFieldAttributeTests
     public void DefaultProperties_ShouldBeNullOrFalse()
     {
         // Act
-        var attribute = new TypedFieldAttribute(FieldTypeEnum.String);
+        var attribute = new TypedFieldAttribute(FieldType.String);
 
         // Assert
         Assert.Null(attribute.NumberFormatPattern);

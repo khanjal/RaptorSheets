@@ -12,7 +12,7 @@ public class TypedFieldAttribute : Attribute
     /// <summary>
     /// Gets the field type for automatic conversion and formatting
     /// </summary>
-    public FieldTypeEnum FieldType { get; }
+    public FieldType FieldType { get; }
 
     /// <summary>
     /// Gets the custom number format pattern for Google Sheets (optional)
@@ -36,7 +36,7 @@ public class TypedFieldAttribute : Attribute
     /// <param name="formatPattern">Custom number format pattern for Google Sheets (optional)</param>
     /// <param name="enableValidation">Whether to enable validation for this field (optional)</param>
     /// <param name="validationPattern">Custom validation pattern (optional)</param>
-    public TypedFieldAttribute(FieldTypeEnum fieldType, string? formatPattern = null, bool enableValidation = false, string? validationPattern = null)
+    public TypedFieldAttribute(FieldType fieldType, string? formatPattern = null, bool enableValidation = false, string? validationPattern = null)
     {
         FieldType = fieldType;
         NumberFormatPattern = formatPattern;

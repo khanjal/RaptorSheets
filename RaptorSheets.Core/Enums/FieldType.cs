@@ -3,7 +3,7 @@ namespace RaptorSheets.Core.Enums;
 /// <summary>
 /// Defines the data types for sheet fields with automatic formatting and conversion
 /// </summary>
-public enum FieldTypeEnum
+public enum FieldType
 {
     /// <summary>
     /// Plain text field

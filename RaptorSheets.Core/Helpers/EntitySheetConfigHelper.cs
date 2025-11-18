@@ -196,20 +196,20 @@ public static class EntitySheetConfigHelper
     /// <summary>
     /// Validates that a Column attribute matches the property type
     /// </summary>
-    private static bool ValidateFieldTypeMatchesProperty(Enums.FieldTypeEnum fieldType, Type propertyType)
+    private static bool ValidateFieldTypeMatchesProperty(Enums.FieldType fieldType, Type propertyType)
     {
         return fieldType switch
         {
-            Enums.FieldTypeEnum.String => propertyType == typeof(string),
-            Enums.FieldTypeEnum.Currency or Enums.FieldTypeEnum.Accounting => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
-            Enums.FieldTypeEnum.DateTime or Enums.FieldTypeEnum.Time or Enums.FieldTypeEnum.Duration => propertyType == typeof(DateTime) || propertyType == typeof(DateTimeOffset) || propertyType == typeof(string), // Allow string for date/time fields
-            Enums.FieldTypeEnum.Boolean => propertyType == typeof(bool),
-            Enums.FieldTypeEnum.Number => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
-            Enums.FieldTypeEnum.Integer => propertyType == typeof(int) || propertyType == typeof(long) || propertyType == typeof(short),
-            Enums.FieldTypeEnum.PhoneNumber => propertyType == typeof(long) || propertyType == typeof(string),
-            Enums.FieldTypeEnum.Email => propertyType == typeof(string),
-            Enums.FieldTypeEnum.Url => propertyType == typeof(string),
-            Enums.FieldTypeEnum.Percentage => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
+            Enums.FieldType.String => propertyType == typeof(string),
+            Enums.FieldType.Currency or Enums.FieldType.Accounting => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
+            Enums.FieldType.DateTime or Enums.FieldType.Time or Enums.FieldType.Duration => propertyType == typeof(DateTime) || propertyType == typeof(DateTimeOffset) || propertyType == typeof(string), // Allow string for date/time fields
+            Enums.FieldType.Boolean => propertyType == typeof(bool),
+            Enums.FieldType.Number => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
+            Enums.FieldType.Integer => propertyType == typeof(int) || propertyType == typeof(long) || propertyType == typeof(short),
+            Enums.FieldType.PhoneNumber => propertyType == typeof(long) || propertyType == typeof(string),
+            Enums.FieldType.Email => propertyType == typeof(string),
+            Enums.FieldType.Url => propertyType == typeof(string),
+            Enums.FieldType.Percentage => propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float),
             _ => true // Allow unknown types
         };
     }

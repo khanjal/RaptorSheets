@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Reflection;
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 
 namespace RaptorSheets.Core.Utilities;
@@ -67,16 +68,16 @@ public static class TypedFieldUtils
         }
 
         // Special handling for strings - preserve empty strings and whitespace
-        if (columnAttr.FieldType == FieldTypeEnum.String)
+        if (columnAttr.FieldType == FieldType.String)
         {
             return cellValue.ToString() ?? "";
         }
 
-        // Handle cases where FieldTypeEnum is DateTime but targetType is string
-        if (columnAttr.FieldType == FieldTypeEnum.DateTime && targetType == typeof(string))
+        // Handle cases where FieldType is DateTime but targetType is string
+        if (columnAttr.FieldType == FieldType.DateTime && targetType == typeof(string))
         {
             var dateValue = ParseDateTime(cellValue);
-            return dateValue != null ? ((DateTime)dateValue).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "";
+            return dateValue != null ? ((DateTime)dateValue).ToString(CellFormatPatterns.Date, CultureInfo.InvariantCulture) : "";
         }
 
         // For other types, treat empty/whitespace as null
@@ -91,16 +92,16 @@ public static class TypedFieldUtils
         {
             return columnAttr.FieldType switch
             {
-                FieldTypeEnum.String => stringValue, // Already handled above, but kept for completeness
-                FieldTypeEnum.Currency or FieldTypeEnum.Accounting => ParseCurrency(stringValue),
-                FieldTypeEnum.PhoneNumber => ParsePhoneNumber(stringValue),
-                FieldTypeEnum.DateTime => ParseDateTime(cellValue),
-                FieldTypeEnum.Boolean => Convert.ToBoolean(cellValue, CultureInfo.InvariantCulture),
-                FieldTypeEnum.Number => ParseNumber(stringValue, targetType),
-                FieldTypeEnum.Integer => ParseInteger(stringValue, targetType),
-                FieldTypeEnum.Percentage => ParsePercentage(stringValue, targetType),
-                FieldTypeEnum.Email => ParseEmail(stringValue),
-                FieldTypeEnum.Url => ParseUrl(stringValue),
+                FieldType.String => stringValue, // Already handled above, but kept for completeness
+                FieldType.Currency or FieldType.Accounting => ParseCurrency(stringValue),
+                FieldType.PhoneNumber => ParsePhoneNumber(stringValue),
+                FieldType.DateTime => ParseDateTime(cellValue),
+                FieldType.Boolean => Convert.ToBoolean(cellValue, CultureInfo.InvariantCulture),
+                FieldType.Number => ParseNumber(stringValue, targetType),
+                FieldType.Integer => ParseInteger(stringValue, targetType),
+                FieldType.Percentage => ParsePercentage(stringValue, targetType),
+                FieldType.Email => ParseEmail(stringValue),
+                FieldType.Url => ParseUrl(stringValue),
                 _ => Convert.ChangeType(cellValue, GetNullableUnderlyingType(targetType), CultureInfo.InvariantCulture)
             };
         }
@@ -126,16 +127,16 @@ public static class TypedFieldUtils
 
         return columnAttr.FieldType switch
         {
-            FieldTypeEnum.String => value.ToString(),
-            FieldTypeEnum.Currency or FieldTypeEnum.Accounting => ConvertCurrencyToSheet(value),
-            FieldTypeEnum.PhoneNumber => ConvertPhoneNumberToSheet(value),
-            FieldTypeEnum.DateTime => ConvertDateTimeToSheet(value),
-            FieldTypeEnum.Boolean => Convert.ToBoolean(value, CultureInfo.InvariantCulture),
-            FieldTypeEnum.Number => Convert.ToDouble(value, CultureInfo.InvariantCulture),
-            FieldTypeEnum.Integer => Convert.ToInt64(value, CultureInfo.InvariantCulture),
-            FieldTypeEnum.Percentage => ConvertPercentageToSheet(value),
-            FieldTypeEnum.Email => value.ToString(),
-            FieldTypeEnum.Url => value.ToString(),
+            FieldType.String => value.ToString(),
+            FieldType.Currency or FieldType.Accounting => ConvertCurrencyToSheet(value),
+            FieldType.PhoneNumber => ConvertPhoneNumberToSheet(value),
+            FieldType.DateTime => ConvertDateTimeToSheet(value),
+            FieldType.Boolean => Convert.ToBoolean(value, CultureInfo.InvariantCulture),
+            FieldType.Number => Convert.ToDouble(value, CultureInfo.InvariantCulture),
+            FieldType.Integer => Convert.ToInt64(value, CultureInfo.InvariantCulture),
+            FieldType.Percentage => ConvertPercentageToSheet(value),
+            FieldType.Email => value.ToString(),
+            FieldType.Url => value.ToString(),
             _ => value
         };
     }
@@ -145,17 +146,17 @@ public static class TypedFieldUtils
     /// </summary>
     /// <param name="fieldType">The field type</param>
     /// <returns>Corresponding FormatEnum value</returns>
-    public static FormatEnum? GetFormatFromFieldType(FieldTypeEnum? fieldType)
+    public static FormatEnum? GetFormatFromFieldType(FieldType? fieldType)
     {
         return fieldType switch
         {
-            FieldTypeEnum.Currency => FormatEnum.CURRENCY,
-            FieldTypeEnum.Accounting => FormatEnum.ACCOUNTING,
-            FieldTypeEnum.DateTime => FormatEnum.DATE,
-            FieldTypeEnum.Number => FormatEnum.NUMBER,
-            FieldTypeEnum.Integer => FormatEnum.NUMBER,
-            FieldTypeEnum.Percentage => FormatEnum.PERCENT,
-            FieldTypeEnum.String or FieldTypeEnum.Email or FieldTypeEnum.Url or FieldTypeEnum.PhoneNumber => FormatEnum.TEXT,
+            FieldType.Currency => FormatEnum.CURRENCY,
+            FieldType.Accounting => FormatEnum.ACCOUNTING,
+            FieldType.DateTime => FormatEnum.DATE,
+            FieldType.Number => FormatEnum.NUMBER,
+            FieldType.Integer => FormatEnum.NUMBER,
+            FieldType.Percentage => FormatEnum.PERCENT,
+            FieldType.String or FieldType.Email or FieldType.Url or FieldType.PhoneNumber => FormatEnum.TEXT,
             _ => null
         };
     }

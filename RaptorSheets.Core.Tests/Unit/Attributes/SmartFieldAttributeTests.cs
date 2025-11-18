@@ -12,13 +12,13 @@ public class SmartFieldAttributeTests
         [SmartField]
         public string Name { get; set; } = "";
 
-        [SmartField(FieldTypeEnum.Currency)]
+        [SmartField(FieldType.Currency)]
         public decimal Amount { get; set; }
 
         [SmartField("Custom Header")]
         public string CustomField { get; set; } = "";
 
-        [SmartField(FieldTypeEnum.DateTime, "Date Header")]
+        [SmartField(FieldType.DateTime, "Date Header")]
         public DateTime DateField { get; set; }
 
         [SmartField(EnableValidation = true)]
@@ -58,13 +58,13 @@ public class SmartFieldAttributeTests
         var properties = typeof(TestEntity).GetProperties();
 
         // Act & Assert
-        Assert.Equal(FieldTypeEnum.String, FieldConventions.InferFieldType(properties.First(p => p.Name == "Name")));
-        Assert.Equal(FieldTypeEnum.Currency, FieldConventions.InferFieldType(properties.First(p => p.Name == "Amount")));
-        Assert.Equal(FieldTypeEnum.String, FieldConventions.InferFieldType(properties.First(p => p.Name == "CustomField")));
-        Assert.Equal(FieldTypeEnum.DateTime, FieldConventions.InferFieldType(properties.First(p => p.Name == "DateField")));
-        Assert.Equal(FieldTypeEnum.Boolean, FieldConventions.InferFieldType(properties.First(p => p.Name == "ValidatedField")));
-        Assert.Equal(FieldTypeEnum.Number, FieldConventions.InferFieldType(properties.First(p => p.Name == "FormattedField")));
-        Assert.Equal(FieldTypeEnum.Integer, FieldConventions.InferFieldType(properties.First(p => p.Name == "UnsupportedField"))); // int should infer as Integer
+        Assert.Equal(FieldType.String, FieldConventions.InferFieldType(properties.First(p => p.Name == "Name")));
+        Assert.Equal(FieldType.Currency, FieldConventions.InferFieldType(properties.First(p => p.Name == "Amount")));
+        Assert.Equal(FieldType.String, FieldConventions.InferFieldType(properties.First(p => p.Name == "CustomField")));
+        Assert.Equal(FieldType.DateTime, FieldConventions.InferFieldType(properties.First(p => p.Name == "DateField")));
+        Assert.Equal(FieldType.Boolean, FieldConventions.InferFieldType(properties.First(p => p.Name == "ValidatedField")));
+        Assert.Equal(FieldType.Number, FieldConventions.InferFieldType(properties.First(p => p.Name == "FormattedField")));
+        Assert.Equal(FieldType.Integer, FieldConventions.InferFieldType(properties.First(p => p.Name == "UnsupportedField"))); // int should infer as Integer
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class SmartFieldAttributeTests
         var properties = typeof(TestEntity).GetProperties();
 
         // Act & Assert
-        Assert.Equal(FieldTypeEnum.Email, FieldConventions.InferFieldType(properties.First(p => p.Name == "Email")));
+        Assert.Equal(FieldType.Email, FieldConventions.InferFieldType(properties.First(p => p.Name == "Email")));
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class SmartFieldAttributeTests
         var properties = typeof(TestEntity).GetProperties();
 
         // Act & Assert
-        Assert.Equal(FieldTypeEnum.PhoneNumber, FieldConventions.InferFieldType(properties.First(p => p.Name == "PhoneNumber")));
+        Assert.Equal(FieldType.PhoneNumber, FieldConventions.InferFieldType(properties.First(p => p.Name == "PhoneNumber")));
     }
 
     [Fact]
@@ -94,19 +94,19 @@ public class SmartFieldAttributeTests
         var properties = typeof(TestEntity).GetProperties();
 
         // Act & Assert
-        Assert.Equal(FieldTypeEnum.Url, FieldConventions.InferFieldType(properties.First(p => p.Name == "WebsiteUrl")));
+        Assert.Equal(FieldType.Url, FieldConventions.InferFieldType(properties.First(p => p.Name == "WebsiteUrl")));
     }
 
     [Theory]
-    [InlineData("Price", FieldTypeEnum.Currency)]
-    [InlineData("Cost", FieldTypeEnum.Currency)]
-    [InlineData("Fee", FieldTypeEnum.Currency)]
-    [InlineData("Salary", FieldTypeEnum.Currency)]
-    [InlineData("TotalAmount", FieldTypeEnum.Currency)]
-    [InlineData("TipAmount", FieldTypeEnum.Currency)]
-    [InlineData("BonusAmount", FieldTypeEnum.Currency)]
-    [InlineData("CashPayment", FieldTypeEnum.Currency)]
-    public void InferFieldType_ShouldDetectCurrencyType(string propertyName, FieldTypeEnum expectedType)
+    [InlineData("Price", FieldType.Currency)]
+    [InlineData("Cost", FieldType.Currency)]
+    [InlineData("Fee", FieldType.Currency)]
+    [InlineData("Salary", FieldType.Currency)]
+    [InlineData("TotalAmount", FieldType.Currency)]
+    [InlineData("TipAmount", FieldType.Currency)]
+    [InlineData("BonusAmount", FieldType.Currency)]
+    [InlineData("CashPayment", FieldType.Currency)]
+    public void InferFieldType_ShouldDetectCurrencyType(string propertyName, FieldType expectedType)
     {
         // Arrange
         var properties = typeof(TestEntity).GetProperties();
@@ -120,10 +120,10 @@ public class SmartFieldAttributeTests
     }
 
     [Theory]
-    [InlineData("PercentComplete", FieldTypeEnum.Percentage)]
-    [InlineData("RateOfReturn", FieldTypeEnum.Percentage)]
-    [InlineData("ScoreValue", FieldTypeEnum.Percentage)]
-    public void InferFieldType_ShouldDetectPercentageType(string propertyName, FieldTypeEnum expectedType)
+    [InlineData("PercentComplete", FieldType.Percentage)]
+    [InlineData("RateOfReturn", FieldType.Percentage)]
+    [InlineData("ScoreValue", FieldType.Percentage)]
+    public void InferFieldType_ShouldDetectPercentageType(string propertyName, FieldType expectedType)
     {
         // Arrange
         var properties = typeof(TestEntity).GetProperties();
@@ -137,9 +137,9 @@ public class SmartFieldAttributeTests
     }
 
     [Theory]
-    [InlineData("LongValue", FieldTypeEnum.Integer)]
-    [InlineData("ShortValue", FieldTypeEnum.Integer)]
-    public void InferFieldType_ShouldDetectIntegerTypes(string propertyName, FieldTypeEnum expectedType)
+    [InlineData("LongValue", FieldType.Integer)]
+    [InlineData("ShortValue", FieldType.Integer)]
+    public void InferFieldType_ShouldDetectIntegerTypes(string propertyName, FieldType expectedType)
     {
         // Arrange
         var properties = typeof(TestEntity).GetProperties();
@@ -163,13 +163,13 @@ public class SmartFieldAttributeTests
         var result = FieldConventions.InferFieldType(property);
 
         // Assert
-        Assert.Equal(FieldTypeEnum.Number, result);
+        Assert.Equal(FieldType.Number, result);
     }
 
     [Theory]
-    [InlineData("NullableDecimal", FieldTypeEnum.Number)]
-    [InlineData("NullableInt", FieldTypeEnum.Integer)]
-    public void InferFieldType_ShouldHandleNullableTypes(string propertyName, FieldTypeEnum expectedType)
+    [InlineData("NullableDecimal", FieldType.Number)]
+    [InlineData("NullableInt", FieldType.Integer)]
+    public void InferFieldType_ShouldHandleNullableTypes(string propertyName, FieldType expectedType)
     {
         // Arrange
         var properties = typeof(TestEntity).GetProperties();
@@ -273,7 +273,7 @@ public class SmartFieldAttributeTests
         Assert.False(nameAttribute.EnableValidation);
 
         Assert.NotNull(amountAttribute);
-        Assert.Equal(FieldTypeEnum.Currency, amountAttribute.FieldType);
+        Assert.Equal(FieldType.Currency, amountAttribute.FieldType);
         Assert.Null(amountAttribute.HeaderName);
 
         Assert.NotNull(customFieldAttribute);
@@ -281,7 +281,7 @@ public class SmartFieldAttributeTests
         Assert.Equal("Custom Header", customFieldAttribute.HeaderName);
 
         Assert.NotNull(dateFieldAttribute);
-        Assert.Equal(FieldTypeEnum.DateTime, dateFieldAttribute.FieldType);
+        Assert.Equal(FieldType.DateTime, dateFieldAttribute.FieldType);
         Assert.Equal("Date Header", dateFieldAttribute.HeaderName);
 
         Assert.NotNull(validatedFieldAttribute);
@@ -315,10 +315,10 @@ public class SmartFieldAttributeTests
     public void SmartFieldAttribute_FieldTypeConstructor_ShouldSetFieldType()
     {
         // Act
-        var attribute = new SmartFieldAttribute(FieldTypeEnum.String);
+        var attribute = new SmartFieldAttribute(FieldType.String);
 
         // Assert
-        Assert.Equal(FieldTypeEnum.String, attribute.FieldType);
+        Assert.Equal(FieldType.String, attribute.FieldType);
         Assert.Null(attribute.HeaderName);
     }
 
@@ -337,10 +337,10 @@ public class SmartFieldAttributeTests
     public void SmartFieldAttribute_BothParametersConstructor_ShouldSetBoth()
     {
         // Act
-        var attribute = new SmartFieldAttribute(FieldTypeEnum.Email, "Email Address");
+        var attribute = new SmartFieldAttribute(FieldType.Email, "Email Address");
 
         // Assert
-        Assert.Equal(FieldTypeEnum.Email, attribute.FieldType);
+        Assert.Equal(FieldType.Email, attribute.FieldType);
         Assert.Equal("Email Address", attribute.HeaderName);
     }
 

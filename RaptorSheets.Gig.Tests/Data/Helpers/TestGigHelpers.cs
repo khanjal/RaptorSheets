@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Tests.Data.Helpers;
@@ -27,7 +28,7 @@ internal class TestGigHelpers
     internal static SheetEntity GenerateSelectiveDeletionTestData(ActionTypeEnum actionType, int shiftStartId = 2, int tripStartId = 2)
     {
         var sheetEntity = new SheetEntity();
-        var date = DateTime.Now.ToString("yyyy-MM-dd");
+        var date = DateTime.Now.ToString(CellFormatPatterns.Date);
         // Create 3 shifts with known patterns
         var shifts = new[]
         {

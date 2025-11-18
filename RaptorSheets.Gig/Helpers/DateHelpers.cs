@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Constants;
 using System.Globalization;
 
 namespace RaptorSheets.Gig.Helpers
@@ -7,7 +8,7 @@ namespace RaptorSheets.Gig.Helpers
     /// </summary>
     public static class DateHelpers
     {
-        private const string DateFormat = "yyyy-MM-dd";
+        private const string DateFormat = CellFormatPatterns.Date;
 
         /// <summary>
         /// Formats a DateTime object to a string using the standard date format.

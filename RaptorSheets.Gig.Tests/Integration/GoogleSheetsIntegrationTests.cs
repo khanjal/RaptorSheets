@@ -8,6 +8,7 @@ using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Gig.Tests.Integration.Base;
 using RaptorSheets.Test.Common.Helpers;
 using System.ComponentModel;
+using RaptorSheets.Core.Constants;
 
 namespace RaptorSheets.Gig.Tests.Integration;
 
@@ -333,7 +334,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         {
             RowId = 2,
             Action = ActionTypeEnum.INSERT.GetDescription(),
-            Date = today.ToString("yyyy-MM-dd"),
+            Date = today.ToString(CellFormatPatterns.Date),
             Service = $"Test_{testRunId}",
             Region = "DailyWorkflow",
             Start = "09:00:00",
@@ -351,7 +352,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             {
                 RowId = 2 + i,
                 Action = ActionTypeEnum.INSERT.GetDescription(),
-                Date = today.ToString("yyyy-MM-dd"),
+                Date = today.ToString(CellFormatPatterns.Date),
                 Service = $"Test_{testRunId}",
                 Type = i % 2 == 0 ? "Pickup" : "Delivery",
                 Pay = 15m + i * 5,
@@ -399,7 +400,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             {
                 RowId = 2 + i,
                 Action = ActionTypeEnum.INSERT.GetDescription(),
-                Date = today.AddDays(-i).ToString("yyyy-MM-dd"),  // Convert to string format
+                Date = today.AddDays(-i).ToString(CellFormatPatterns.Date),  // Convert to string format
                 Category = categories[i],
                 Name = $"{categories[i]} Item",
                 Amount = 25m + i * 10,
@@ -634,19 +635,19 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         foreach (var shift in testData.Shifts)
         {
             shift.Service = $"Test_{testRunId}";
-            shift.Date = baseDate.AddDays(-testData.Shifts.IndexOf(shift)).ToString("yyyy-MM-dd");
+            shift.Date = baseDate.AddDays(-testData.Shifts.IndexOf(shift)).ToString(CellFormatPatterns.Date);
         }
         
         foreach (var trip in testData.Trips)
         {
             trip.Service = $"Test_{testRunId}";
-            trip.Date = baseDate.AddDays(-testData.Trips.IndexOf(trip) / tripsPerShift).ToString("yyyy-MM-dd");
+            trip.Date = baseDate.AddDays(-testData.Trips.IndexOf(trip) / tripsPerShift).ToString(CellFormatPatterns.Date);
         }
         
         foreach (var expense in testData.Expenses)
         {
             expense.Description = $"Test_{testRunId}_expense";
-            expense.Date = baseDate.AddDays(-testData.Expenses.IndexOf(expense)).ToString("yyyy-MM-dd");
+            expense.Date = baseDate.AddDays(-testData.Expenses.IndexOf(expense)).ToString(CellFormatPatterns.Date);
         }
         
         return testData;

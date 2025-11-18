@@ -58,19 +58,19 @@ public class ContactEntity
     public int RowId { get; set; }
 
     // Header name automatically generates JSON property name "name"
-    [Column(SheetsConfig.HeaderNames.Name, FieldTypeEnum.String)]
+    [Column(SheetsConfig.HeaderNames.Name, FieldType.String)]
     public string Name { get; set; } = "";
 
     // Automatic currency formatting with default "$#,##0.00" pattern
-    [Column(SheetsConfig.HeaderNames.Salary, FieldTypeEnum.Currency)]
+    [Column(SheetsConfig.HeaderNames.Salary, FieldType.Currency)]
     public decimal? Salary { get; set; }
 
     // Custom format when different from default
-    [Column(SheetsConfig.HeaderNames.Score, FieldTypeEnum.Percentage, "0.0%")]
+    [Column(SheetsConfig.HeaderNames.Score, FieldType.Percentage, "0.0%")]
     public decimal? Score { get; set; }
 
     // Override JSON name when needed
-    [Column(SheetsConfig.HeaderNames.EmailAddress, FieldTypeEnum.Email, jsonPropertyName: "email")]
+    [Column(SheetsConfig.HeaderNames.EmailAddress, FieldType.Email, jsonPropertyName: "email")]
     public string EmailAddress { get; set; } = "";
 }
 
@@ -169,7 +169,7 @@ Google Sheets API v4
 ### Simplified Configuration
 ```csharp
 // Single attribute, automated mapping
-[Column(SheetsConfig.HeaderNames.Pay, FieldTypeEnum.Currency, "\"$\"#,##0.00")]
+[Column(SheetsConfig.HeaderNames.Pay, FieldType.Currency, "\"$\"#,##0.00")]
 public decimal? Pay { get; set; }
 
 // Automated conversion in mappers
@@ -238,13 +238,13 @@ public class ProductEntity
 {
     public int RowId { get; set; }
     
-    [Column(SheetsConfig.HeaderNames.ProductName, FieldTypeEnum.String)]
+    [Column(SheetsConfig.HeaderNames.ProductName, FieldType.String)]
     public string Name { get; set; } = "";
     
-    [Column(SheetsConfig.HeaderNames.Price, FieldTypeEnum.Currency)]
+    [Column(SheetsConfig.HeaderNames.Price, FieldType.Currency)]
     public decimal Price { get; set; }
     
-    [Column(SheetsConfig.HeaderNames.LaunchDate, FieldTypeEnum.DateTime, "M/d/yyyy")]
+    [Column(SheetsConfig.HeaderNames.LaunchDate, FieldType.DateTime, "M/d/yyyy")]
     public DateTime? LaunchDate { get; set; }
 }
 

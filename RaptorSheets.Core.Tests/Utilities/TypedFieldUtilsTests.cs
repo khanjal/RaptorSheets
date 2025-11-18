@@ -38,21 +38,21 @@ public class TypedFieldUtilsTests
     }
 
     [Theory]
-    [InlineData("InvalidData", typeof(int), FieldTypeEnum.Integer)]
-    [InlineData("NotABoolean", typeof(bool), FieldTypeEnum.Boolean)]
-    [InlineData("12/34/5678", typeof(DateTime?), FieldTypeEnum.DateTime)] // Invalid date - nullable
-    [InlineData("", typeof(int), FieldTypeEnum.Integer)] // Empty string for int
-    [InlineData(null, typeof(int), FieldTypeEnum.Integer)] // Null value for int
-    [InlineData("NotANumber", typeof(double), FieldTypeEnum.Number)] // Invalid double
-    [InlineData("", typeof(bool), FieldTypeEnum.Boolean)] // Empty string for bool
-    [InlineData(null, typeof(bool), FieldTypeEnum.Boolean)] // Null value for bool
-    [InlineData("InvalidDate", typeof(DateTime?), FieldTypeEnum.DateTime)] // Invalid date string - nullable
-    [InlineData("", typeof(DateTime?), FieldTypeEnum.DateTime)] // Empty string for DateTime - nullable
-    [InlineData(null, typeof(DateTime?), FieldTypeEnum.DateTime)] // Null value for DateTime - nullable
-    [InlineData("NotACurrency", typeof(decimal?), FieldTypeEnum.Currency)] // Invalid decimal - nullable
-    [InlineData("", typeof(decimal?), FieldTypeEnum.Currency)] // Empty string for decimal - nullable
-    [InlineData(null, typeof(decimal?), FieldTypeEnum.Currency)] // Null value for decimal - nullable
-    public void ConvertFromSheetValue_ShouldReturnDefaultValue_WhenDataIsInvalid(string? input, Type targetType, FieldTypeEnum fieldType)
+    [InlineData("InvalidData", typeof(int), FieldType.Integer)]
+    [InlineData("NotABoolean", typeof(bool), FieldType.Boolean)]
+    [InlineData("12/34/5678", typeof(DateTime?), FieldType.DateTime)] // Invalid date - nullable
+    [InlineData("", typeof(int), FieldType.Integer)] // Empty string for int
+    [InlineData(null, typeof(int), FieldType.Integer)] // Null value for int
+    [InlineData("NotANumber", typeof(double), FieldType.Number)] // Invalid double
+    [InlineData("", typeof(bool), FieldType.Boolean)] // Empty string for bool
+    [InlineData(null, typeof(bool), FieldType.Boolean)] // Null value for bool
+    [InlineData("InvalidDate", typeof(DateTime?), FieldType.DateTime)] // Invalid date string - nullable
+    [InlineData("", typeof(DateTime?), FieldType.DateTime)] // Empty string for DateTime - nullable
+    [InlineData(null, typeof(DateTime?), FieldType.DateTime)] // Null value for DateTime - nullable
+    [InlineData("NotACurrency", typeof(decimal?), FieldType.Currency)] // Invalid decimal - nullable
+    [InlineData("", typeof(decimal?), FieldType.Currency)] // Empty string for decimal - nullable
+    [InlineData(null, typeof(decimal?), FieldType.Currency)] // Null value for decimal - nullable
+    public void ConvertFromSheetValue_ShouldReturnDefaultValue_WhenDataIsInvalid(string? input, Type targetType, FieldType fieldType)
     {
         // Arrange
         var attribute = new ColumnAttribute("test");

@@ -7,23 +7,23 @@ namespace RaptorSheets.Core.Tests.Helpers;
 public class TypeInferenceHelperTests
 {
     [Theory]
-    [InlineData(typeof(string), FieldTypeEnum.String)]
-    [InlineData(typeof(int), FieldTypeEnum.Integer)]
-    [InlineData(typeof(int?), FieldTypeEnum.Integer)]
-    [InlineData(typeof(long), FieldTypeEnum.Integer)]
-    [InlineData(typeof(long?), FieldTypeEnum.Integer)]
-    [InlineData(typeof(short), FieldTypeEnum.Integer)]
-    [InlineData(typeof(byte), FieldTypeEnum.Integer)]
-    [InlineData(typeof(decimal), FieldTypeEnum.Currency)]
-    [InlineData(typeof(decimal?), FieldTypeEnum.Currency)]
-    [InlineData(typeof(double), FieldTypeEnum.Number)]
-    [InlineData(typeof(double?), FieldTypeEnum.Number)]
-    [InlineData(typeof(float), FieldTypeEnum.Number)]
-    [InlineData(typeof(bool), FieldTypeEnum.Boolean)]
-    [InlineData(typeof(bool?), FieldTypeEnum.Boolean)]
-    [InlineData(typeof(DateTime), FieldTypeEnum.DateTime)]
-    [InlineData(typeof(DateTime?), FieldTypeEnum.DateTime)]
-    public void InferFieldType_WithVariousTypes_ReturnsCorrectFieldType(Type propertyType, FieldTypeEnum expected)
+    [InlineData(typeof(string), FieldType.String)]
+    [InlineData(typeof(int), FieldType.Integer)]
+    [InlineData(typeof(int?), FieldType.Integer)]
+    [InlineData(typeof(long), FieldType.Integer)]
+    [InlineData(typeof(long?), FieldType.Integer)]
+    [InlineData(typeof(short), FieldType.Integer)]
+    [InlineData(typeof(byte), FieldType.Integer)]
+    [InlineData(typeof(decimal), FieldType.Currency)]
+    [InlineData(typeof(decimal?), FieldType.Currency)]
+    [InlineData(typeof(double), FieldType.Number)]
+    [InlineData(typeof(double?), FieldType.Number)]
+    [InlineData(typeof(float), FieldType.Number)]
+    [InlineData(typeof(bool), FieldType.Boolean)]
+    [InlineData(typeof(bool?), FieldType.Boolean)]
+    [InlineData(typeof(DateTime), FieldType.DateTime)]
+    [InlineData(typeof(DateTime?), FieldType.DateTime)]
+    public void InferFieldType_WithVariousTypes_ReturnsCorrectFieldType(Type propertyType, FieldType expected)
     {
         // Act
         var result = TypeInferenceHelper.InferFieldType(propertyType);
@@ -42,21 +42,21 @@ public class TypeInferenceHelperTests
         var result = TypeInferenceHelper.InferFieldType(unknownType);
 
         // Assert
-        Assert.Equal(FieldTypeEnum.String, result);
+        Assert.Equal(FieldType.String, result);
     }
 
     [Theory]
-    [InlineData(FieldTypeEnum.Currency, FormatEnum.CURRENCY)]
-    [InlineData(FieldTypeEnum.Accounting, FormatEnum.ACCOUNTING)]
-    [InlineData(FieldTypeEnum.DateTime, FormatEnum.DATE)]
-    [InlineData(FieldTypeEnum.Time, FormatEnum.TIME)]
-    [InlineData(FieldTypeEnum.Duration, FormatEnum.DURATION)]
-    [InlineData(FieldTypeEnum.Number, FormatEnum.NUMBER)]
-    [InlineData(FieldTypeEnum.Percentage, FormatEnum.PERCENT)]
-    [InlineData(FieldTypeEnum.Integer, FormatEnum.NUMBER)]
-    [InlineData(FieldTypeEnum.Boolean, FormatEnum.TEXT)]
-    [InlineData(FieldTypeEnum.String, FormatEnum.TEXT)]
-    public void GetDefaultFormatForFieldType_ReturnsCorrectFormat(FieldTypeEnum fieldType, FormatEnum expected)
+    [InlineData(FieldType.Currency, FormatEnum.CURRENCY)]
+    [InlineData(FieldType.Accounting, FormatEnum.ACCOUNTING)]
+    [InlineData(FieldType.DateTime, FormatEnum.DATE)]
+    [InlineData(FieldType.Time, FormatEnum.TIME)]
+    [InlineData(FieldType.Duration, FormatEnum.DURATION)]
+    [InlineData(FieldType.Number, FormatEnum.NUMBER)]
+    [InlineData(FieldType.Percentage, FormatEnum.PERCENT)]
+    [InlineData(FieldType.Integer, FormatEnum.NUMBER)]
+    [InlineData(FieldType.Boolean, FormatEnum.TEXT)]
+    [InlineData(FieldType.String, FormatEnum.TEXT)]
+    public void GetDefaultFormatForFieldType_ReturnsCorrectFormat(FieldType fieldType, FormatEnum expected)
     {
         // Act
         var result = TypeInferenceHelper.GetDefaultFormatForFieldType(fieldType);
@@ -83,15 +83,15 @@ public class TypeInferenceHelperTests
     }
 
     [Theory]
-    [InlineData(typeof(string), FormatEnum.TIME, FieldTypeEnum.Time)]
-    [InlineData(typeof(string), FormatEnum.DURATION, FieldTypeEnum.Duration)]
-    [InlineData(typeof(string), FormatEnum.DATE, FieldTypeEnum.DateTime)]
-    [InlineData(typeof(string), FormatEnum.TEXT, FieldTypeEnum.String)]
-    [InlineData(typeof(string), FormatEnum.CURRENCY, FieldTypeEnum.String)]
-    [InlineData(typeof(decimal), FormatEnum.DATE, FieldTypeEnum.Currency)]
-    [InlineData(typeof(int), FormatEnum.TIME, FieldTypeEnum.Integer)]
+    [InlineData(typeof(string), FormatEnum.TIME, FieldType.Time)]
+    [InlineData(typeof(string), FormatEnum.DURATION, FieldType.Duration)]
+    [InlineData(typeof(string), FormatEnum.DATE, FieldType.DateTime)]
+    [InlineData(typeof(string), FormatEnum.TEXT, FieldType.String)]
+    [InlineData(typeof(string), FormatEnum.CURRENCY, FieldType.String)]
+    [InlineData(typeof(decimal), FormatEnum.DATE, FieldType.Currency)]
+    [InlineData(typeof(int), FormatEnum.TIME, FieldType.Integer)]
     public void InferFieldTypeFromFormat_WithStringAndSpecialFormat_ReturnsCorrectType(
-        Type propertyType, FormatEnum format, FieldTypeEnum expected)
+        Type propertyType, FormatEnum format, FieldType expected)
     {
         // Act
         var result = TypeInferenceHelper.InferFieldTypeFromFormat(propertyType, format);
@@ -143,7 +143,7 @@ public class TypeInferenceHelperTests
         var overriddenType = TypeInferenceHelper.InferFieldTypeFromFormat(propertyType, format);
 
         // Assert
-        Assert.Equal(FieldTypeEnum.String, baseType);
+        Assert.Equal(FieldType.String, baseType);
         Assert.NotEqual(baseType, overriddenType);
         Assert.True(TypeInferenceHelper.RequiresSpecialConversion(format));
     }
@@ -161,6 +161,6 @@ public class TypeInferenceHelperTests
 
         // Assert
         Assert.Equal(nonNullableResult, nullableResult);
-        Assert.Equal(FieldTypeEnum.Currency, nullableResult);
+        Assert.Equal(FieldType.Currency, nullableResult);
     }
 }

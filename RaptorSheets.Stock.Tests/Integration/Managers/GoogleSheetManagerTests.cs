@@ -120,42 +120,4 @@ public class GoogleSheetManagerTests
         Assert.Equal(1, result.Messages?.Count);
         Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result.Messages?[0].Level);
     }
-
-    //private static SheetEntity GenerateShift()
-    //{
-    //    // Create shift/trips
-    //    var date = DateTime.Now.ToString("yyyy-MM-dd");
-    //    var random = new Random();
-    //    var number = random.Next();
-    //    var service = $"Test {number}";
-
-    //    var sheetEntity = new SheetEntity();
-    //    sheetEntity.Shifts.Add(new ShiftEntity { Date = date, Number = 1, Service = service });
-
-    //    // Add random amount of trips
-    //    for (int i = 0; i < random.Next(1, 5); i++)
-    //    {
-    //        var tripEntity = GenerateTrip();
-    //        tripEntity.Date = date;
-    //        tripEntity.Number = 1;
-    //        tripEntity.Service = service;
-    //        sheetEntity.Trips.Add(tripEntity);
-    //    }
-
-    //    return sheetEntity;
-    //}
-
-    //private static TripEntity GenerateTrip()
-    //{
-    //    var random = new Random();
-    //    var pay = Math.Round(random.Next(1, 10) + new decimal(random.NextDouble()), 2);
-    //    var distance = Math.Round(random.Next(0, 20) + new decimal(random.NextDouble()), 1);
-    //    var tip = random.Next(1, 5);
-    //    var place = $"Test Place {random.Next(1, 25)}";
-    //    var name = $"Test Name {random.Next(1, 25)}";
-    //    var startAddress = $"Start Address {random.Next(1, 25)}";
-    //    var endAddress = $"End Address {random.Next(1, 25)}";
-
-    //    return new TripEntity { Type = "Pickup", Place = place, Pay = pay, Tip = tip, Distance = distance, Name = name, StartAddress = startAddress, EndAddress = endAddress };
-    //}
 }

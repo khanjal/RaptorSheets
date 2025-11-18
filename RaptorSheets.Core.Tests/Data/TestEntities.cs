@@ -26,19 +26,19 @@ public static class TestHeaderNames
 [ExcludeFromCodeCoverage]
 public class TestAmountEntity
 {
-    [Column(TestHeaderNames.Pay, FieldTypeEnum.Currency, isInput: true)]
+    [Column(TestHeaderNames.Pay, FieldType.Currency, isInput: true)]
     public decimal? Pay { get; set; }
 
-    [Column(TestHeaderNames.Tips, FieldTypeEnum.Currency, isInput: true)]
+    [Column(TestHeaderNames.Tips, FieldType.Currency, isInput: true)]
     public decimal? Tips { get; set; }
 
-    [Column(TestHeaderNames.Bonus, FieldTypeEnum.Currency, isInput: true)]
+    [Column(TestHeaderNames.Bonus, FieldType.Currency, isInput: true)]
     public decimal? Bonus { get; set; }
 
-    [Column(TestHeaderNames.Total, FieldTypeEnum.Currency, isInput: true)]
+    [Column(TestHeaderNames.Total, FieldType.Currency, isInput: true)]
     public decimal? Total { get; set; }
 
-    [Column(TestHeaderNames.Cash, FieldTypeEnum.Currency, isInput: true)]
+    [Column(TestHeaderNames.Cash, FieldType.Currency, isInput: true)]
     public decimal? Cash { get; set; }
 }
 
@@ -46,13 +46,13 @@ public class TestAmountEntity
 [ExcludeFromCodeCoverage]
 public class TestVisitEntity : TestAmountEntity
 {
-    [Column(TestHeaderNames.Trips, FieldTypeEnum.Integer, isInput: true)]
+    [Column(TestHeaderNames.Trips, FieldType.Integer, isInput: true)]
     public int Trips { get; set; }
 
-    [Column(TestHeaderNames.FirstTrip, FieldTypeEnum.String, isInput: true)]
+    [Column(TestHeaderNames.FirstTrip, FieldType.String, isInput: true)]
     public string FirstTrip { get; set; } = "";
 
-    [Column(TestHeaderNames.LastTrip, FieldTypeEnum.String, isInput: true)]
+    [Column(TestHeaderNames.LastTrip, FieldType.String, isInput: true)]
     public string LastTrip { get; set; } = "";
 }
 
@@ -62,10 +62,10 @@ public class TestAddressEntity : TestVisitEntity
 {
     public int RowId { get; set; } // No Column attribute - should be ignored
 
-    [Column(TestHeaderNames.Address, FieldTypeEnum.String, isInput: true)]
+    [Column(TestHeaderNames.Address, FieldType.String, isInput: true)]
     public string Address { get; set; } = "";
 
-    [Column(TestHeaderNames.Distance, FieldTypeEnum.Number, isInput: true)]
+    [Column(TestHeaderNames.Distance, FieldType.Number, isInput: true)]
     public decimal Distance { get; set; }
 
     public bool Saved { get; set; } // No Column attribute - should be ignored
@@ -75,10 +75,10 @@ public class TestAddressEntity : TestVisitEntity
 [ExcludeFromCodeCoverage]
 public class TestSimpleEntity
 {
-    [Column(TestHeaderNames.Name, FieldTypeEnum.String, isInput: true)]
+    [Column(TestHeaderNames.Name, FieldType.String, isInput: true)]
     public string Name { get; set; } = "";
 
-    [Column(TestHeaderNames.Date, FieldTypeEnum.String, isInput: true)]
+    [Column(TestHeaderNames.Date, FieldType.String, isInput: true)]
     public string Date { get; set; } = "";
 
     public int Id { get; set; } // No Column attribute - should be ignored
@@ -88,10 +88,10 @@ public class TestSimpleEntity
 [ExcludeFromCodeCoverage]
 public class TestInvalidEntity
 {
-    [Column("Invalid Header Name", FieldTypeEnum.String, isInput: true)]
+    [Column("Invalid Header Name", FieldType.String, isInput: true)]
     public string InvalidProperty { get; set; } = "";
 
-    [Column(TestHeaderNames.Name, FieldTypeEnum.String, isInput: true)]
+    [Column(TestHeaderNames.Name, FieldType.String, isInput: true)]
     public string ValidProperty { get; set; } = "";
 }
 

@@ -264,7 +264,7 @@ public static class GenericSheetMapper<T> where T : class, new()
         string headerName, 
         IList<object> values, 
         Dictionary<int, string> headers, 
-        FieldTypeEnum fieldType,
+        FieldType fieldType,
         PropertyInfo property)
     {
         Console.WriteLine($"Mapping header: {headerName}, FieldType: {fieldType}");
@@ -275,29 +275,29 @@ public static class GenericSheetMapper<T> where T : class, new()
         
         object? value = fieldType switch
         {
-            FieldTypeEnum.String => HeaderHelpers.GetStringValue(headerName, values, headers),
-            FieldTypeEnum.Integer => isNullable 
+            FieldType.String => HeaderHelpers.GetStringValue(headerName, values, headers),
+            FieldType.Integer => isNullable 
                 ? HeaderHelpers.GetIntValueOrNull(headerName, values, headers)
                 : HeaderHelpers.GetIntValue(headerName, values, headers),
-            FieldTypeEnum.Number => isNullable
+            FieldType.Number => isNullable
                 ? HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers)
                 : (object?)HeaderHelpers.GetDecimalValue(headerName, values, headers),
-            FieldTypeEnum.Currency => isNullable
+            FieldType.Currency => isNullable
                 ? HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers)
                 : (object?)HeaderHelpers.GetDecimalValue(headerName, values, headers),
-            FieldTypeEnum.Accounting => isNullable
+            FieldType.Accounting => isNullable
                 ? HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers)
                 : (object?)HeaderHelpers.GetDecimalValue(headerName, values, headers),
-            FieldTypeEnum.Percentage => isNullable
+            FieldType.Percentage => isNullable
                 ? HeaderHelpers.GetDecimalValueOrNull(headerName, values, headers)
                 : (object?)HeaderHelpers.GetDecimalValue(headerName, values, headers),
-            FieldTypeEnum.Boolean => HeaderHelpers.GetBoolValue(headerName, values, headers),
-            FieldTypeEnum.DateTime => HeaderHelpers.GetDateValue(headerName, values, headers),
-            FieldTypeEnum.Time => HeaderHelpers.GetStringValue(headerName, values, headers),
-            FieldTypeEnum.Duration => HeaderHelpers.GetStringValue(headerName, values, headers),
-            FieldTypeEnum.PhoneNumber => HeaderHelpers.GetStringValue(headerName, values, headers),
-            FieldTypeEnum.Email => HeaderHelpers.GetStringValue(headerName, values, headers),
-            FieldTypeEnum.Url => HeaderHelpers.GetStringValue(headerName, values, headers),
+            FieldType.Boolean => HeaderHelpers.GetBoolValue(headerName, values, headers),
+            FieldType.DateTime => HeaderHelpers.GetDateValue(headerName, values, headers),
+            FieldType.Time => HeaderHelpers.GetStringValue(headerName, values, headers),
+            FieldType.Duration => HeaderHelpers.GetStringValue(headerName, values, headers),
+            FieldType.PhoneNumber => HeaderHelpers.GetStringValue(headerName, values, headers),
+            FieldType.Email => HeaderHelpers.GetStringValue(headerName, values, headers),
+            FieldType.Url => HeaderHelpers.GetStringValue(headerName, values, headers),
             _ => HeaderHelpers.GetStringValue(headerName, values, headers)
         };
 
@@ -333,7 +333,7 @@ public static class GenericSheetMapper<T> where T : class, new()
         }
 
         // For boolean, return the value directly (not as string)
-        if (propertyInfo.Column.FieldType == FieldTypeEnum.Boolean)
+        if (propertyInfo.Column.FieldType == FieldType.Boolean)
         {
             return value;
         }
@@ -363,7 +363,7 @@ public static class GenericSheetMapper<T> where T : class, new()
     /// <summary>
     /// Creates CellData with appropriate ExtendedValue based on field type.
     /// </summary>
-    private static CellData CreateCellData(object? value, FieldTypeEnum fieldType)
+    private static CellData CreateCellData(object? value, FieldType fieldType)
     {
         if (value == null)
         {
@@ -372,27 +372,27 @@ public static class GenericSheetMapper<T> where T : class, new()
 
         return fieldType switch
         {
-            FieldTypeEnum.Boolean => new CellData 
+            FieldType.Boolean => new CellData 
             { 
                 UserEnteredValue = new ExtendedValue { BoolValue = (bool)value } 
             },
-            FieldTypeEnum.Integer => new CellData 
+            FieldType.Integer => new CellData 
             { 
                 UserEnteredValue = new ExtendedValue { NumberValue = Convert.ToDouble(value) } 
             },
-            FieldTypeEnum.Number or FieldTypeEnum.Currency or FieldTypeEnum.Accounting or FieldTypeEnum.Percentage => new CellData 
+            FieldType.Number or FieldType.Currency or FieldType.Accounting or FieldType.Percentage => new CellData 
             { 
                 UserEnteredValue = new ExtendedValue { NumberValue = Convert.ToDouble(value) } 
             },
-            FieldTypeEnum.DateTime => new CellData 
+            FieldType.DateTime => new CellData 
             { 
                 UserEnteredValue = new ExtendedValue { NumberValue = value.ToString()!.ToSerialDate() } 
             },
-            FieldTypeEnum.Time => new CellData 
+            FieldType.Time => new CellData 
             { 
                 UserEnteredValue = new ExtendedValue { NumberValue = value.ToString()!.ToSerialTime() } 
             },
-            FieldTypeEnum.Duration => new CellData 
+            FieldType.Duration => new CellData 
             { 
                 UserEnteredValue = new ExtendedValue { NumberValue = value.ToString()!.ToSerialDuration() } 
             },

@@ -13,7 +13,7 @@ public class SmartFieldAttribute : Attribute
     /// <summary>
     /// Override the inferred field type (optional)
     /// </summary>
-    public FieldTypeEnum? FieldType { get; set; }
+    public FieldType? FieldType { get; set; }
 
     /// <summary>
     /// Override the inferred header name (optional)
@@ -42,7 +42,7 @@ public class SmartFieldAttribute : Attribute
 
     public SmartFieldAttribute() { }
 
-    public SmartFieldAttribute(FieldTypeEnum fieldType)
+    public SmartFieldAttribute(FieldType fieldType)
     {
         FieldType = fieldType;
     }
@@ -52,7 +52,7 @@ public class SmartFieldAttribute : Attribute
         HeaderName = headerName;
     }
 
-    public SmartFieldAttribute(FieldTypeEnum fieldType, string headerName)
+    public SmartFieldAttribute(FieldType fieldType, string headerName)
     {
         FieldType = fieldType;
         HeaderName = headerName;
@@ -64,7 +64,7 @@ public class SmartFieldAttribute : Attribute
 /// </summary>
 public static class FieldConventions
 {
-    public static FieldTypeEnum InferFieldType(PropertyInfo property)
+    public static FieldType InferFieldType(PropertyInfo property)
     {
         ArgumentNullException.ThrowIfNull(property);
         
@@ -72,21 +72,21 @@ public static class FieldConventions
         
         return Type.GetTypeCode(type) switch
         {
-            TypeCode.String when IsEmail(property.Name) => FieldTypeEnum.Email,
-            TypeCode.String when IsPhone(property.Name) => FieldTypeEnum.PhoneNumber,
-            TypeCode.String when IsUrl(property.Name) => FieldTypeEnum.Url,
-            TypeCode.String => FieldTypeEnum.String,
-            TypeCode.DateTime => FieldTypeEnum.DateTime,
-            TypeCode.Boolean => FieldTypeEnum.Boolean,
-            TypeCode.Decimal when IsCurrency(property.Name) => FieldTypeEnum.Currency,
-            TypeCode.Decimal when IsPercentage(property.Name) => FieldTypeEnum.Percentage,
-            TypeCode.Decimal => FieldTypeEnum.Number,
-            TypeCode.Double => FieldTypeEnum.Number,
-            TypeCode.Single => FieldTypeEnum.Number,
-            TypeCode.Int32 => FieldTypeEnum.Integer,
-            TypeCode.Int64 => FieldTypeEnum.Integer,
-            TypeCode.Int16 => FieldTypeEnum.Integer,
-            _ => FieldTypeEnum.String
+            TypeCode.String when IsEmail(property.Name) => FieldType.Email,
+            TypeCode.String when IsPhone(property.Name) => FieldType.PhoneNumber,
+            TypeCode.String when IsUrl(property.Name) => FieldType.Url,
+            TypeCode.String => FieldType.String,
+            TypeCode.DateTime => FieldType.DateTime,
+            TypeCode.Boolean => FieldType.Boolean,
+            TypeCode.Decimal when IsCurrency(property.Name) => FieldType.Currency,
+            TypeCode.Decimal when IsPercentage(property.Name) => FieldType.Percentage,
+            TypeCode.Decimal => FieldType.Number,
+            TypeCode.Double => FieldType.Number,
+            TypeCode.Single => FieldType.Number,
+            TypeCode.Int32 => FieldType.Integer,
+            TypeCode.Int64 => FieldType.Integer,
+            TypeCode.Int16 => FieldType.Integer,
+            _ => FieldType.String
         };
     }
 

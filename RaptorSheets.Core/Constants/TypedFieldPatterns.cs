@@ -11,45 +11,45 @@ public static class TypedFieldPatterns
     /// <summary>
     /// Default format patterns for each field type
     /// </summary>
-    private static readonly ImmutableDictionary<FieldTypeEnum, string> _defaultPatterns = new Dictionary<FieldTypeEnum, string>
+    private static readonly ImmutableDictionary<FieldType, string> _defaultPatterns = new Dictionary<FieldType, string>
     {
-        { FieldTypeEnum.String, "@" },
-        { FieldTypeEnum.Number, "#,##0.00" },
-        { FieldTypeEnum.Currency, "\"$\"#,##0.00" },
-        { FieldTypeEnum.DateTime, "M/d/yyyy H:mm:ss" },
-        { FieldTypeEnum.PhoneNumber, "(###) ###-####" },
-        { FieldTypeEnum.Boolean, "@" },
-        { FieldTypeEnum.Integer, "0" },
-        { FieldTypeEnum.Email, "@" },
-        { FieldTypeEnum.Url, "@" },
-        { FieldTypeEnum.Percentage, "0.00%" }
+        { FieldType.String, "@" },
+        { FieldType.Number, "#,##0.00" },
+        { FieldType.Currency, "\"$\"#,##0.00" },
+        { FieldType.DateTime, "M/d/yyyy H:mm:ss" },
+        { FieldType.PhoneNumber, "(###) ###-####" },
+        { FieldType.Boolean, "@" },
+        { FieldType.Integer, "0" },
+        { FieldType.Email, "@" },
+        { FieldType.Url, "@" },
+        { FieldType.Percentage, "0.00%" }
     }.ToImmutableDictionary();
 
     /// <summary>
     /// Google Sheets number format types for each field type
     /// </summary>
-    private static readonly ImmutableDictionary<FieldTypeEnum, string> _numberFormatTypes = new Dictionary<FieldTypeEnum, string>
+    private static readonly ImmutableDictionary<FieldType, string> _numberFormatTypes = new Dictionary<FieldType, string>
     {
-        { FieldTypeEnum.String, "TEXT" },
-        { FieldTypeEnum.Number, "NUMBER" },
-        { FieldTypeEnum.Currency, "CURRENCY" },
-        { FieldTypeEnum.DateTime, "DATE_TIME" },
-        { FieldTypeEnum.PhoneNumber, "NUMBER" },
-        { FieldTypeEnum.Boolean, "TEXT" },
-        { FieldTypeEnum.Integer, "NUMBER" },
-        { FieldTypeEnum.Email, "TEXT" },
-        { FieldTypeEnum.Url, "TEXT" },
-        { FieldTypeEnum.Percentage, "PERCENT" }
+        { FieldType.String, "TEXT" },
+        { FieldType.Number, "NUMBER" },
+        { FieldType.Currency, "CURRENCY" },
+        { FieldType.DateTime, "DATE_TIME" },
+        { FieldType.PhoneNumber, "NUMBER" },
+        { FieldType.Boolean, "TEXT" },
+        { FieldType.Integer, "NUMBER" },
+        { FieldType.Email, "TEXT" },
+        { FieldType.Url, "TEXT" },
+        { FieldType.Percentage, "PERCENT" }
     }.ToImmutableDictionary();
 
     /// <summary>
     /// Validation patterns for different field types
     /// </summary>
-    private static readonly ImmutableDictionary<FieldTypeEnum, string> _validationPatterns = new Dictionary<FieldTypeEnum, string>
+    private static readonly ImmutableDictionary<FieldType, string> _validationPatterns = new Dictionary<FieldType, string>
     {
-        { FieldTypeEnum.Email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" },
-        { FieldTypeEnum.PhoneNumber, @"^\+?1?\d{9,15}$" },
-        { FieldTypeEnum.Url, @"^https?://.+$" }
+        { FieldType.Email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" },
+        { FieldType.PhoneNumber, @"^\+?1?\d{9,15}$" },
+        { FieldType.Url, @"^https?://.+$" }
     }.ToImmutableDictionary();
 
     /// <summary>
@@ -57,7 +57,7 @@ public static class TypedFieldPatterns
     /// </summary>
     /// <param name="fieldType">The field type</param>
     /// <returns>Default format pattern</returns>
-    public static string GetDefaultPattern(FieldTypeEnum fieldType)
+    public static string GetDefaultPattern(FieldType fieldType)
     {
         return _defaultPatterns.TryGetValue(fieldType, out var pattern) ? pattern : "@";
     }
@@ -67,7 +67,7 @@ public static class TypedFieldPatterns
     /// </summary>
     /// <param name="fieldType">The field type</param>
     /// <returns>Google Sheets format type</returns>
-    public static string GetNumberFormatType(FieldTypeEnum fieldType)
+    public static string GetNumberFormatType(FieldType fieldType)
     {
         return _numberFormatTypes.TryGetValue(fieldType, out var type) ? type : "TEXT";
     }
@@ -77,7 +77,7 @@ public static class TypedFieldPatterns
     /// </summary>
     /// <param name="fieldType">The field type</param>
     /// <returns>Validation pattern or null if none exists</returns>
-    public static string? GetDefaultValidationPattern(FieldTypeEnum fieldType)
+    public static string? GetDefaultValidationPattern(FieldType fieldType)
     {
         return _validationPatterns.TryGetValue(fieldType, out var pattern) ? pattern : null;
     }
