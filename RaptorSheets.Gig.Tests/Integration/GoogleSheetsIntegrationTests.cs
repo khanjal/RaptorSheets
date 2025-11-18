@@ -115,34 +115,34 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     }
 
     [FactCheckUserSecrets]
-    public async Task CreatedSheets_ShouldHaveCorrectFormulas()
+    public void CreatedSheets_ShouldHaveCorrectFormulas()
     {
         // This test validates that sheets with formulas have them correctly configured
-        
+
         var sheetsWithFormulas = new[] { "Trips", "Shifts", "Expenses" }; // Sheets that have formula columns
-        
+
         // Act - Get sheet layouts to find formula columns
         var layouts = GoogleSheetManager!.GetSheetLayouts(sheetsWithFormulas.ToList());
-        
+
         // Assert
         foreach (var layout in layouts)
         {
             var formulaHeaders = layout.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
-            
+
             if (formulaHeaders.Any())
             {
                 System.Diagnostics.Debug.WriteLine($"  🔍 Validating {layout.Name}: {formulaHeaders.Count} formula columns");
-                
+
                 // All formulas should start with =
                 Assert.All(formulaHeaders, header =>
                 {
                     Assert.StartsWith("=", header.Formula);
-                    
+
                     // Should not have unresolved placeholders
                     Assert.DoesNotContain("{", header.Formula);
                     Assert.DoesNotContain("{{", header.Formula);
                 });
-                
+
                 // Log formulas for debugging
                 foreach (var header in formulaHeaders)
                 {
@@ -557,7 +557,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         Assert.All(shifts, shift =>
         {
-            if (DateTime.TryParse(shift.Date, out var shiftDate))
+            if (DateTime.TryParse(shift.Date, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var shiftDate))
             {
                 Assert.True(shiftDate >= validDateRange, 
                     $"Shift date should be within valid range: {shiftDate:yyyy-MM-dd}");
@@ -670,8 +670,8 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     public async Task DemoData_FullYear_ShouldUploadAndValidate()
     {
         // Arrange - Use demo system for realistic year of data
-        var startDate = new DateTime(DateTime.Today.Year - 1, 1, 1);
-        var endDate = DateTime.Today;
+        var startDate = new DateTime(DateTime.Today.Year - 1, 1, 1, 0, 0, 0, DateTimeKind.Local);
+        var endDate = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local);
         
         System.Diagnostics.Debug.WriteLine($"📅 Generating demo data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
         

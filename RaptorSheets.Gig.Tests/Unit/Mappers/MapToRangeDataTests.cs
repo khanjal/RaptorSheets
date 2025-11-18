@@ -94,7 +94,7 @@ public class MapToRangeDataTests
                 Service = "Uber",
                 Number = null, // Test null handling
                 Pay = null,
-                Note = null
+                Note = ""
             }
         };
         var headers = new List<object> { "Date", "Service", "#", "Pay", "Note" };

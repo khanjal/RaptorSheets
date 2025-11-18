@@ -105,7 +105,7 @@ public static class EntitySheetOrderHelper
             if (sheetOrderAttr != null)
             {
                 // Validate sheet name exists
-                if (string.IsNullOrEmpty(sheetOrderAttr.SheetName) || !availableSheetsSet.Contains(sheetOrderAttr.SheetName))
+                if (string.IsNullOrEmpty(sheetOrderAttr.SheetName) || !availableSheetsSet.Contains(sheetOrderAttr.SheetName!))
                 {
                     errors.Add($"Property '{property.Name}' in entity '{entityType.Name}' " +
                               $"references sheet '{sheetOrderAttr.SheetName ?? "null"}' which is not available in " +
@@ -128,14 +128,14 @@ public static class EntitySheetOrderHelper
                 }
 
                 // Validate sheet name is unique
-                if (usedSheetNames.Contains(sheetOrderAttr.SheetName))
+                if (usedSheetNames.Contains(sheetOrderAttr.SheetName!))
                 {
                     errors.Add($"Sheet name '{sheetOrderAttr.SheetName}' is used multiple times in entity '{entityType.Name}'. " +
                               $"Each SheetOrder attribute must reference a unique sheet name.");
                 }
                 else
                 {
-                    usedSheetNames.Add(sheetOrderAttr.SheetName);
+                    usedSheetNames.Add(sheetOrderAttr.SheetName!);
                 }
             }
         }

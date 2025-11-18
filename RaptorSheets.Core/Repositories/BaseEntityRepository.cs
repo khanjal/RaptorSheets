@@ -26,7 +26,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// <param name="sheetService">The Google Sheets service</param>
     /// <param name="sheetName">The name of the sheet to operate on</param>
     /// <param name="hasHeaderRow">Whether the sheet has a header row (default: true)</param>
-    public BaseEntityRepository(IGoogleSheetService sheetService, string sheetName, bool hasHeaderRow = true)
+    protected BaseEntityRepository(IGoogleSheetService sheetService, string sheetName, bool hasHeaderRow = true)
     {
         ArgumentNullException.ThrowIfNull(sheetService);
         ArgumentNullException.ThrowIfNull(sheetName);

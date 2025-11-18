@@ -100,7 +100,7 @@ public class IntegrationCollectionDefinition : ICollectionFixture<IntegrationTes
 internal class TestableIntegrationBase : IntegrationTestBase
 {
     // Expose protected members for the fixture
-    public new bool HasCredentials() => base.GoogleSheetManager != null;
+    public bool HasCredentials() => base.GoogleSheetManager != null;
     public new IGoogleSheetManager? GoogleSheetManager => base.GoogleSheetManager;
     public new List<string> TestSheets => base.TestSheets;
     public new async Task<bool> EnsureSheetsExist(List<string> sheets) => await base.EnsureSheetsExist(sheets);

@@ -132,7 +132,7 @@ namespace RaptorSheets.Core.Tests.Validators
         public void ValidateDataTypes_ShouldReturnWarning_WhenSampleDataRowIsNull()
         {
             // Act
-            var result = SchemaValidator.ValidateDataTypes<TestEntity>(null, new Dictionary<int, string>());
+            var result = SchemaValidator.ValidateDataTypes<TestEntity>(default!, []);
 
             // Assert
             Assert.True(result.HasWarnings);

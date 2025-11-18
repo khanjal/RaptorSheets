@@ -17,9 +17,10 @@ public class GigSheetHelpersTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.NotEmpty(result); // Ensure the collection is not empty
         
         // Updated expectation: After architecture changes, may have more than 2 sheets
-        Assert.True(result.Count >= 2, $"Expected at least 2 sheets, got {result.Count}");
+        Assert.True(result.Count > 1, $"Expected at least 2 sheets, got {result.Count}");
         
         // Verify core sheets exist (order may vary)
         var sheetNames = result.Select(s => s.Name).ToList();
@@ -234,7 +235,7 @@ public class GigSheetHelpersTests
         
         // Updated expectation: Should handle the mapping gracefully
         // (may be empty if headers don't match exactly, but shouldn't crash)
-        Assert.True(result.Shifts.Count >= 0, "Should handle shift mapping without crashing");
+        Assert.True(result.Shifts.Count > 0, "Should handle shift mapping without crashing");
     }
 
     [Fact]

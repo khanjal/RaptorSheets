@@ -223,7 +223,7 @@ public class ColumnAttribute : Attribute
     public ColumnAttribute(string headerName, ColumnOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        
+
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         JsonPropertyName = options.JsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
         FieldType = FieldTypeEnum.String; // Default, will be set by SetFieldTypeFromProperty
@@ -406,6 +406,4 @@ public class ColumnAttribute : Attribute
 
         return result.ToString();
     }
-
-    private static readonly string[] DefaultHeaders = { "Header1", "Header2", "Header3" };
 }
