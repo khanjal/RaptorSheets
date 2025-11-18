@@ -1,5 +1,4 @@
 using RaptorSheets.Core.Attributes;
-using RaptorSheets.Core.Enums;
 using Xunit;
 
 namespace RaptorSheets.Core.Tests.Attributes;

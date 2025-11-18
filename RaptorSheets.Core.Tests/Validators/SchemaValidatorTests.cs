@@ -1,10 +1,6 @@
 using RaptorSheets.Core.Validators;
 using RaptorSheets.Core.Attributes;
-using RaptorSheets.Core.Enums;
-using RaptorSheets.Core.Models;
 using Xunit;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace RaptorSheets.Core.Tests.Validators
 {
@@ -67,7 +63,7 @@ namespace RaptorSheets.Core.Tests.Validators
         public void ValidateRequiredHeaders_ShouldReturnError_WhenRequiredHeadersAreMissing()
         {
             // Act
-            var result = SchemaValidator.ValidateRequiredHeaders<TestEntity>(new[] { "Header1", "MissingHeader" });
+            var result = SchemaValidator.ValidateRequiredHeaders<TestEntity>(["Header1", "MissingHeader"]);
 
             // Assert
             Assert.False(result.IsValid);
@@ -78,7 +74,7 @@ namespace RaptorSheets.Core.Tests.Validators
         public void ValidateRequiredHeaders_ShouldReturnValidResult_WhenAllRequiredHeadersArePresent()
         {
             // Act
-            var result = SchemaValidator.ValidateRequiredHeaders<TestEntity>(new[] { "Header1", "Header2" });
+            var result = SchemaValidator.ValidateRequiredHeaders<TestEntity>(["Header1", "Header2"]);
 
             // Assert
             Assert.True(result.IsValid);
@@ -89,7 +85,7 @@ namespace RaptorSheets.Core.Tests.Validators
         public void ValidateSheetStructure_ShouldReturnError_WhenSheetDataIsEmpty()
         {
             // Act
-            var result = SchemaValidator.ValidateSheetStructure<TestEntity>(null);
+            var result = SchemaValidator.ValidateSheetStructure<TestEntity>(default!);
 
             // Assert
             Assert.False(result.IsValid);

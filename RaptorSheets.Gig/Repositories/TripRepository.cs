@@ -1,7 +1,6 @@
 using RaptorSheets.Core.Repositories;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Gig.Entities;
-using RaptorSheets.Gig.Helpers;
 using System.Globalization;
 
 namespace RaptorSheets.Gig.Repositories;

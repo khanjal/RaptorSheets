@@ -2,11 +2,7 @@ using Google.Apis.Sheets.v4.Data;
 using Moq;
 using RaptorSheets.Core.Repositories;
 using RaptorSheets.Core.Services;
-using RaptorSheets.Core.Models;
 using Xunit;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace RaptorSheets.Core.Tests.Repositories
 {
@@ -130,7 +126,7 @@ namespace RaptorSheets.Core.Tests.Repositories
         public async Task AddAsync_ShouldThrowArgumentNullException_WhenEntityIsNull()
         {
             // Act & Assert
-            await Assert.ThrowsAsync<ArgumentNullException>(() => _repository.AddAsync(null));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => _repository.AddAsync(default!));
         }
 
         [Fact]

@@ -1,5 +1,4 @@
 using RaptorSheets.Core.Attributes;
-using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Mappers;
 using Xunit;
 

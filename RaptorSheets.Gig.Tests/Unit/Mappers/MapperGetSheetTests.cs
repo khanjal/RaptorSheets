@@ -5,7 +5,6 @@ using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
-using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Gig.Mappers;
 using System.ComponentModel;
 
