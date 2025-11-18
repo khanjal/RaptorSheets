@@ -28,8 +28,10 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// <param name="hasHeaderRow">Whether the sheet has a header row (default: true)</param>
     public BaseEntityRepository(IGoogleSheetService sheetService, string sheetName, bool hasHeaderRow = true)
     {
-        _sheetService = sheetService ?? throw new ArgumentNullException(nameof(sheetService));
-        _sheetName = sheetName ?? throw new ArgumentNullException(nameof(sheetName));
+        ArgumentNullException.ThrowIfNull(sheetService);
+        ArgumentNullException.ThrowIfNull(sheetName);
+        _sheetService = sheetService;
+        _sheetName = sheetName;
         _hasHeaderRow = hasHeaderRow;
     }
 

@@ -25,7 +25,7 @@ namespace RaptorSheets.Core.Tests.Repositories
         public async Task GetAllAsync_ShouldReturnEmptyList_WhenSheetDataIsNull()
         {
             // Arrange
-            _mockSheetService.Setup(s => s.GetSheetData("TestSheet")).ReturnsAsync((ValueRange?)null);
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet")).ReturnsAsync((ValueRange?)default);
 
             // Act
             var result = await _repository.GetAllAsync();

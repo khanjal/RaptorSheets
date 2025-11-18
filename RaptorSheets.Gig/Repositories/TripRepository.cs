@@ -70,7 +70,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// <returns>True if successful</returns>
     public async Task<bool> AddTripAsync(TripEntity trip)
     {
-        if (trip == null) throw new ArgumentNullException(nameof(trip));
+        if (trip == null) ArgumentNullException.ThrowIfNull(trip);
 
         // Generate key if not provided
         if (string.IsNullOrEmpty(trip.Key) && !string.IsNullOrEmpty(trip.Date) && DateTime.TryParse(trip.Date, CultureInfo.InvariantCulture, out var tripDate))
@@ -103,7 +103,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// <returns>True if successful</returns>
     public async Task<bool> UpdateTripAsync(TripEntity trip, int rowIndex)
     {
-        if (trip == null) throw new ArgumentNullException(nameof(trip));
+        if (trip == null) ArgumentNullException.ThrowIfNull(trip);
 
         // Auto-calculate total
         trip.Total = (trip.Pay ?? 0) + (trip.Tip ?? 0) + (trip.Bonus ?? 0);
@@ -122,7 +122,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// <summary>
     /// Validates the input parameters for the repository methods.
     /// </summary>
-    private void ValidateDateRange(DateTime startDate, DateTime endDate)
+    private static void ValidateDateRange(DateTime startDate, DateTime endDate)
     {
         if (startDate > endDate)
         {
@@ -130,7 +130,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
         }
     }
 
-    private void ValidateService(string service)
+    private static void ValidateService(string service)
     {
         if (string.IsNullOrWhiteSpace(service))
         {

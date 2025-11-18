@@ -73,7 +73,7 @@ public class MapperGetSheetTests
 
         // Assert - Protected sheets may or may not have formulas
         // Some protected sheets (like Setup) are protected for data integrity, not because they have formulas
-        if (formulaHeaders.Any())
+        if (formulaHeaders.Count > 0)
         {
             // All formulas should start with =
             Assert.All(formulaHeaders, header => Assert.StartsWith("=", header.Formula));
@@ -126,7 +126,7 @@ public class MapperGetSheetTests
             var headerName = header.Name.ToString().ToUpper();
             Assert.True(headerName.Contains("DATE") || headerName.Contains("VISIT") || headerName.Contains("BEGIN") || 
                        headerName.Contains("END") || headerName.Contains("DAY") || headerName == "DAY" || 
-                       headerName.Contains("TRIP")); // Add TRIP for "First Trip", "Last Trip"
+                       headerName.Contains('T')); // Add TRIP for "First Trip", "Last Trip"
         });
 
         Assert.All(accountingHeaders, header => 

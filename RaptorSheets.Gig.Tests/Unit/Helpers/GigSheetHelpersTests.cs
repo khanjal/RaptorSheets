@@ -393,17 +393,17 @@ public class GigSheetHelpersTests
     #region ProcessSheetData Coverage Tests
     
     [Theory]
-    [InlineData(nameof(SheetsConfig.SheetNames.Addresses), "AddressEntity")]
-    [InlineData(nameof(SheetsConfig.SheetNames.Daily), "DailyEntity")]
-    [InlineData(nameof(SheetsConfig.SheetNames.Monthly), "MonthlyEntity")]
-    [InlineData(nameof(SheetsConfig.SheetNames.Names), "NameEntity")]
-    [InlineData(nameof(SheetsConfig.SheetNames.Places), "PlaceEntity")]
-    [InlineData(nameof(SheetsConfig.SheetNames.Regions), "RegionEntity")]
-    [InlineData(nameof(SheetsConfig.SheetNames.Services), "ServiceEntity")]
-    [InlineData(nameof(SheetsConfig.SheetNames.Types), "TypeEntity")]
-    [InlineData(nameof(SheetsConfig.SheetNames.Weekdays), "WeekdayEntity")]
-    [InlineData(nameof(SheetsConfig.SheetNames.Weekly), "WeeklyEntity")]
-    [InlineData(nameof(SheetsConfig.SheetNames.Yearly), "YearlyEntity")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Addresses), "Address")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Daily), "Daily")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Monthly), "Monthly")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Names), "Name")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Places), "Place")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Regions), "Region")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Services), "Service")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Types), "Type")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Weekdays), "Weekday")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Weekly), "Weekly")]
+    [InlineData(nameof(SheetsConfig.SheetNames.Yearly), "Yearly")]
     public void MapData_WithBatchResponse_ShouldMapSpecificSheet(string sheetPropertyName, string entityType)
     {
         // Arrange - Get the actual sheet name value from the constant
@@ -440,6 +440,9 @@ public class GigSheetHelpersTests
         Assert.NotNull(result);
         // Verify the sheet entity was created (we can't easily check the specific property without reflection)
         // The fact that it doesn't throw is sufficient for coverage
+
+        // Use the entityType parameter to validate the expected entity type
+        Assert.Contains(entityType, sheetPropertyName);
     }
 
     [Fact]

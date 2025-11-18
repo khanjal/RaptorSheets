@@ -13,12 +13,17 @@ public class TypedFieldUtilsTests
         // Act
         var properties = TypedFieldUtils.GetColumnProperties<TestEntity>();
         
+        // Log retrieved headers for debugging
+        var retrievedHeaders = properties.Select(p => p.Column.GetEffectiveHeaderName()).ToList();
+        Assert.NotEmpty(retrievedHeaders);
+        
         // Assert
-        Assert.NotEmpty(properties);
         Assert.All(properties, p => Assert.NotNull(p.Column));
         
         // Should include properties like TestDateTime, TestCurrency, etc.
-        var dateProperty = properties.FirstOrDefault(p => p.Column.GetEffectiveHeaderName().Contains(TypedFieldUtilsTestHelper.TestDateTimeHeader));
+        var dateProperty = properties.FirstOrDefault(p => 
+            p.Column.GetEffectiveHeaderName().Equals(TypedFieldUtilsTestHelper.TestDateTimeHeader, StringComparison.OrdinalIgnoreCase));
+        
         Assert.Equal(FormatEnum.DATE, dateProperty.Column.FormatType);
     }
 
@@ -101,6 +106,9 @@ public class TypedFieldUtilsTests
         {
             Assert.Null(result);
         }
+
+        // Use the fieldType parameter to validate the expected field type
+        Assert.Equal(fieldType, attribute.FieldType);
     }
 
     [Fact]

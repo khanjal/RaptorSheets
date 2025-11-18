@@ -406,4 +406,6 @@ public class ColumnAttribute : Attribute
 
         return result.ToString();
     }
+
+    private static readonly string[] DefaultHeaders = { "Header1", "Header2", "Header3" };
 }
