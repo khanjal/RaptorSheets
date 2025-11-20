@@ -12,6 +12,7 @@ public static class GenerateSheetHelpers
 {
     private static BatchUpdateSpreadsheetRequest? _batchUpdateSpreadsheetRequest;
     private static List<RepeatCellRequest>? _repeatCellRequests;
+    private static readonly Random _random = new();
 
     public static BatchUpdateSpreadsheetRequest Generate(List<Enums.SheetEnum> sheets)
     {
@@ -19,11 +20,10 @@ public static class GenerateSheetHelpers
         _batchUpdateSpreadsheetRequest.Requests = [];
         _repeatCellRequests = [];
 
-        var random = new Random(); // Reuse a single Random instance
         foreach (var sheet in sheets)
         {
             var sheetModel = GetSheetModel(sheet);
-            sheetModel.Id = random.Next();
+            sheetModel.Id = _random.Next(); // Use the static Random instance
 
             // Add requests to the batch update
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
