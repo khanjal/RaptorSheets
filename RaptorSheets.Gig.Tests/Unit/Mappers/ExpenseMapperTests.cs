@@ -1,8 +1,9 @@
 using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
-using RaptorSheets.Gig.Mappers;
 using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
+using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Tests.Unit.Mappers;
 
@@ -22,7 +23,7 @@ public class ExpenseMapperTests
         };
 
         // Act
-        var result = ExpenseMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<ExpenseEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(result);
@@ -30,7 +31,7 @@ public class ExpenseMapperTests
         
         var firstExpense = result[0];
         Assert.Equal(2, firstExpense.RowId);
-        Assert.Equal(new DateTime(2024, 1, 15), firstExpense.Date);
+        Assert.Equal("2024-01-15", firstExpense.Date);  // Now string, not DateTime
         Assert.Equal("Gas", firstExpense.Name);
         Assert.Equal("Fuel for vehicle", firstExpense.Description);
         Assert.Equal(45.67m, firstExpense.Amount);
@@ -38,7 +39,7 @@ public class ExpenseMapperTests
         
         var secondExpense = result[1];
         Assert.Equal(3, secondExpense.RowId);
-        Assert.Equal(new DateTime(2024, 1, 16), secondExpense.Date);
+        Assert.Equal("2024-01-16", secondExpense.Date);  // Now string, not DateTime
         Assert.Equal("Food", secondExpense.Name);
     }
 
@@ -55,7 +56,7 @@ public class ExpenseMapperTests
         };
 
         // Act
-        var result = ExpenseMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<ExpenseEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.Equal(2, result.Count); // Empty row filtered out
@@ -71,7 +72,7 @@ public class ExpenseMapperTests
         {
             new()
             {
-                Date = new DateTime(2024, 1, 15),
+                Date = "2024-01-15",  // Now string, not DateTime
                 Name = "Gas",
                 Description = "Fuel for vehicle",
                 Amount = 45.67m,
@@ -81,7 +82,7 @@ public class ExpenseMapperTests
         var headers = new List<object> { "Date", "Name", "Description", "Amount", "Category" };
 
         // Act
-        var result = ExpenseMapper.MapToRangeData(expenses, headers);
+        var result = GenericSheetMapper<ExpenseEntity>.MapToRangeData(expenses, headers);
 
         // Assert
         Assert.NotNull(result);
@@ -103,7 +104,7 @@ public class ExpenseMapperTests
     public void GetSheet_ShouldReturnCorrectSheetConfiguration()
     {
         // Act
-        var result = ExpenseMapper.GetSheet();
+        var result = GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet);
 
         // Assert
         Assert.NotNull(result);
@@ -146,7 +147,7 @@ public class ExpenseMapperTests
         };
 
         // Act
-        var result = ExpenseMapper.MapFromRangeData(values);
+        var result = GenericSheetMapper<ExpenseEntity>.MapFromRangeData(values);
 
         // Assert
         Assert.NotNull(result);
@@ -156,7 +157,7 @@ public class ExpenseMapperTests
         switch (headerName)
         {
             case "Date":
-                Assert.Equal(new DateTime(2024, 1, 15), expense.Date);
+                Assert.Equal(testValue, expense.Date);  // Now string comparison
                 break;
             case "Name":
                 Assert.Equal(testValue, expense.Name);
@@ -175,7 +176,7 @@ public class ExpenseMapperTests
         {
             new()
             {
-                Date = new DateTime(2024, 1, 15),
+                Date = "2024-01-15",  // Now string, not DateTime
                 Name = "Gas",
                 Amount = 45.67m
             }
@@ -183,7 +184,7 @@ public class ExpenseMapperTests
         var headers = new List<object> { "Date", "Name", "Amount" };
 
         // Act
-        var result = ExpenseMapper.MapToRowData(expenses, headers);
+        var result = GenericSheetMapper<ExpenseEntity>.MapToRowData(expenses, headers);
 
         // Assert
         Assert.NotNull(result);

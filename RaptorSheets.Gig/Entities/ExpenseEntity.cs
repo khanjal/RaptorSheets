@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
@@ -8,18 +8,18 @@ namespace RaptorSheets.Gig.Entities;
 [ExcludeFromCodeCoverage]
 public class ExpenseEntity : SheetRowEntityBase
 {
-    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
-    public DateTime Date { get; set; }
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
+    public string Date { get; set; } = string.Empty;  // Changed from DateTime to string to match TripEntity/ShiftEntity pattern
     
-    [ColumnOrder(SheetsConfig.HeaderNames.Name)]
+    [Column(SheetsConfig.HeaderNames.Name, isInput: true)]
     public string Name { get; set; } = string.Empty;
     
-    [ColumnOrder(SheetsConfig.HeaderNames.Amount)]
+    [Column(SheetsConfig.HeaderNames.Amount, isInput: true, formatType: FormatEnum.ACCOUNTING)]
     public decimal Amount { get; set; }
     
-    [ColumnOrder(SheetsConfig.HeaderNames.Category)]
+    [Column(SheetsConfig.HeaderNames.Category, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeSelf)]
     public string Category { get; set; } = string.Empty;
     
-    [ColumnOrder(SheetsConfig.HeaderNames.Description)]
+    [Column(SheetsConfig.HeaderNames.Description, isInput: true)]
     public string Description { get; set; } = string.Empty;
 }

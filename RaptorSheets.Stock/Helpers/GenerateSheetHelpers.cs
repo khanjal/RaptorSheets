@@ -12,6 +12,7 @@ public static class GenerateSheetHelpers
 {
     private static BatchUpdateSpreadsheetRequest? _batchUpdateSpreadsheetRequest;
     private static List<RepeatCellRequest>? _repeatCellRequests;
+    private static readonly Random _random = new();
 
     public static BatchUpdateSpreadsheetRequest Generate(List<Enums.SheetEnum> sheets)
     {
@@ -19,19 +20,25 @@ public static class GenerateSheetHelpers
         _batchUpdateSpreadsheetRequest.Requests = [];
         _repeatCellRequests = [];
 
-        sheets.ForEach(sheet =>
+        foreach (var sheet in sheets)
         {
             var sheetModel = GetSheetModel(sheet);
-            var random = new Random();
-            sheetModel.Id = random.Next();
+            sheetModel.Id = _random.Next(); // Use the static Random instance
 
+            // Add requests to the batch update
             _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendDimension(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
+
+            var appendDimension = GoogleRequestHelpers.GenerateAppendDimension(sheetModel);
+            if (appendDimension != null)
+            {
+                _batchUpdateSpreadsheetRequest.Requests.Add(appendDimension);
+            }
+
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
             GenerateHeadersFormatAndProtection(sheetModel);
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
-        });
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
+        }
 
         _repeatCellRequests.ForEach(request =>
         {

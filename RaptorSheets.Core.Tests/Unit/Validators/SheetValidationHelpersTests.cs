@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using RaptorSheets.Core.Entities;
-using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Validators;
 using Xunit;
 
@@ -9,10 +5,41 @@ namespace RaptorSheets.Core.Tests.Unit.Validators;
 
 public class SheetValidationHelpersTests
 {
+    // Use static readonly arrays for repeated method calls
+    private static readonly (string? value, string paramName)[] RequiredParamsWithNullOrEmpty =
+    [
+        (null, "param1"),
+        ("", "param2"),
+        ("value", "param3")
+    ];
+
+    private static readonly (string? value, string paramName)[] RequiredParamsAllValid =
+    [
+        ("a", "param1"),
+        ("b", "param2")
+    ];
+
+    private static readonly (IEnumerable<int>? collection, string collectionName)[] RequiredCollectionsWithNullOrEmpty =
+    [
+        (null, "col1"),
+        (new List<int>(), "col2"),
+        (new List<int> { 1 }, "col3")
+    ];
+
+    private static readonly (IEnumerable<int>? collection, string collectionName)[] RequiredCollectionsAllValid =
+    [
+        (new List<int> { 1 }, "col1")
+    ];
+
+    private static readonly (IEnumerable<string>? collection, string collectionName)[] RequiredCollectionsAllValidString =
+    [
+        (new[] { "a" }, "col2")
+    ];
+
     [Fact]
     public void ValidateRequiredParameters_WithNullOrEmptyValues_ReturnsErrorMessages()
     {
-        var result = SheetValidationHelpers.ValidateRequiredParameters((null, "param1"), ("", "param2"), ("value", "param3"));
+        var result = SheetValidationHelpers.ValidateRequiredParameters(RequiredParamsWithNullOrEmpty);
         Assert.Equal(2, result.Count);
         Assert.All(result, m => Assert.Contains("null or empty", m.Message));
     }
@@ -20,14 +47,14 @@ public class SheetValidationHelpersTests
     [Fact]
     public void ValidateRequiredParameters_WithAllValidValues_ReturnsEmptyList()
     {
-        var result = SheetValidationHelpers.ValidateRequiredParameters(("a", "param1"), ("b", "param2"));
+        var result = SheetValidationHelpers.ValidateRequiredParameters(RequiredParamsAllValid);
         Assert.Empty(result);
     }
 
     [Fact]
     public void ValidateRequiredCollections_WithNullOrEmptyCollections_ReturnsErrorMessages()
     {
-        var result = SheetValidationHelpers.ValidateRequiredCollections<int>((null, "col1"), (new List<int>(), "col2"), (new List<int> { 1 }, "col3"));
+        var result = SheetValidationHelpers.ValidateRequiredCollections<int>(RequiredCollectionsWithNullOrEmpty);
         Assert.Equal(2, result.Count);
         Assert.All(result, m => Assert.Contains("null or empty", m.Message));
     }
@@ -35,8 +62,8 @@ public class SheetValidationHelpersTests
     [Fact]
     public void ValidateRequiredCollections_WithAllValidCollections_ReturnsEmptyList()
     {
-        var result = SheetValidationHelpers.ValidateRequiredCollections<int>((new List<int> { 1 }, "col1"));
-        var result2 = SheetValidationHelpers.ValidateRequiredCollections<string>((new[] { "a" }, "col2"));
+        var result = SheetValidationHelpers.ValidateRequiredCollections<int>(RequiredCollectionsAllValid);
+        var result2 = SheetValidationHelpers.ValidateRequiredCollections<string>(RequiredCollectionsAllValidString);
         Assert.Empty(result);
         Assert.Empty(result2);
     }
@@ -50,9 +77,9 @@ public class SheetValidationHelpersTests
     [InlineData("1234567890123456789012345678901234567890123456789", 0)] // 49 chars should be valid
     [InlineData("1234567890123456789012345678901234567890", 0)] // 40 chars should be valid
     [InlineData("123456789012345678901234567890123456789", 1)] // 39 chars should be invalid
-    public void ValidateSpreadsheetId_VariousInputs_ReturnsExpectedCount(string id, int expectedCount)
+    public void ValidateSpreadsheetId_VariousInputs_ReturnsExpectedCount(string? id, int expectedCount)
     {
-        var result = SheetValidationHelpers.ValidateSpreadsheetId(id);
+        var result = SheetValidationHelpers.ValidateSpreadsheetId(id!);
         Assert.Equal(expectedCount, result.Count);
     }
 

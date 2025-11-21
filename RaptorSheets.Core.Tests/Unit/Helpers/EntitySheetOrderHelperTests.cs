@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Tests.Data;
@@ -5,6 +6,7 @@ using Xunit;
 
 namespace RaptorSheets.Core.Tests.Unit.Helpers;
 
+[ExcludeFromCodeCoverage] // Exclude the entire file from code coverage
 // Test entity for sheet ordering
 public class TestSheetOrderEntity
 {
@@ -22,6 +24,7 @@ public class TestSheetOrderEntity
 }
 
 // Test entity with invalid sheet references
+[ExcludeFromCodeCoverage]
 public class TestInvalidSheetOrderEntity
 {
     [SheetOrder(0, "InvalidSheet")]
@@ -32,6 +35,7 @@ public class TestInvalidSheetOrderEntity
 }
 
 // Test entity with duplicate orders
+[ExcludeFromCodeCoverage]
 public class TestDuplicateOrderEntity
 {
     [SheetOrder(0, "Trips")]
@@ -42,6 +46,7 @@ public class TestDuplicateOrderEntity
 }
 
 // Test entity with duplicate sheet names
+[ExcludeFromCodeCoverage]
 public class TestDuplicateSheetEntity
 {
     [SheetOrder(0, "Trips")]
@@ -52,6 +57,7 @@ public class TestDuplicateSheetEntity
 }
 
 // Test entity with optional order numbers (property order used)
+[ExcludeFromCodeCoverage]
 public class TestOptionalOrderEntity
 {
     [SheetOrder("Expenses")] // No order specified, should use property order
@@ -65,6 +71,7 @@ public class TestOptionalOrderEntity
 }
 
 // Test entity mixing explicit and optional orders
+[ExcludeFromCodeCoverage]
 public class TestMixedOrderEntity
 {
     [SheetOrder("Expenses")] // No order specified, should come first (unordered)
@@ -81,6 +88,7 @@ public class TestMixedOrderEntity
 }
 
 // Test entity with out-of-range order numbers
+[ExcludeFromCodeCoverage]
 public class TestOutOfRangeOrderEntity
 {
     [SheetOrder("Unordered1")] // No order, property index 0
@@ -100,6 +108,7 @@ public class TestOutOfRangeOrderEntity
 }
 
 // Test entity with gaps in order numbers
+[ExcludeFromCodeCoverage]
 public class TestGapOrderEntity
 {
     [SheetOrder("Unordered")] // No order
@@ -116,6 +125,7 @@ public class TestGapOrderEntity
 }
 
 // Test entity with complex insertion scenarios
+[ExcludeFromCodeCoverage]
 public class TestComplexInsertionEntity
 {
     [SheetOrder("UnorderedA")] // Unordered, property index 0
@@ -135,6 +145,7 @@ public class TestComplexInsertionEntity
 }
 
 // Test entity demonstrating optional ordering (only some sheets have explicit order)
+[ExcludeFromCodeCoverage]
 public class TestOptionalMixedOrderEntity
 {
     [SheetOrder("FirstUnordered")] // No order specified, will be first in unordered group
@@ -456,4 +467,56 @@ public class EntitySheetOrderHelperTests
         Assert.Equal("Trips", sheetOrder[1]);    // Property index 1  
         Assert.Equal("Setup", sheetOrder[2]);    // Property index 2
     }
+
+    [Fact]
+    public void GetSheetOrderFromEntity_EntityWithNoProperties_ReturnsEmptyList()
+    {
+        // Act
+        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestNoAttributesEntity>();
+
+        // Assert
+        Assert.Empty(sheetOrder);
+    }
+
+    [Fact]
+    public void GetSheetOrderFromEntity_EntityWithDuplicateSheetOrders_ReturnsInconsistentOrder()
+    {
+        // Act
+        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestDuplicateOrderEntity>();
+
+        // Assert
+        Assert.Equal(2, sheetOrder.Count);
+        Assert.Contains("Trips", sheetOrder);
+        Assert.Contains("Shifts", sheetOrder);
+    }
+
+    [Fact]
+    public void GetSheetOrderFromEntity_EntityWithNegativeSheetOrder_ThrowsException()
+    {
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() =>
+            EntitySheetOrderHelper.GetSheetOrderFromEntity<TestNegativeSheetOrderEntity>());
+    }
+
+    [Fact]
+    public void ValidateEntitySheetMapping_NullSheetNamesInAvailableSheets_ReturnsErrors()
+    {
+        // Arrange
+        var availableSheets = new[] { "Trips", "", "Expenses", "Setup" };
+
+        // Act
+        var errors = EntitySheetOrderHelper.ValidateEntitySheetMapping<TestSheetOrderEntity>(availableSheets.Where(s => !string.IsNullOrEmpty(s)));
+
+        // Assert
+        Assert.NotEmpty(errors);
+        // Shifts is not in the available sheets (null is there instead)
+        Assert.Contains(errors, e => e.Contains("Shifts") && e.Contains("not available"));
+    }
+}
+
+[ExcludeFromCodeCoverage]
+public class TestNegativeSheetOrderEntity
+{
+    [SheetOrder(-2, "NegativeOrderSheet")]
+    public bool NegativeOrderSheet { get; set; } = true;
 }

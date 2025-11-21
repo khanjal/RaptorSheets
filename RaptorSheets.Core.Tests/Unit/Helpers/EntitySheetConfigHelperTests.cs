@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Tests.Data;
@@ -131,7 +132,7 @@ public class EntitySheetConfigHelperTests
         // Assert
         Assert.NotEmpty(errors);
         Assert.Contains(errors, e => e.Contains("TestNoAttributesEntity"));
-        Assert.Contains(errors, e => e.Contains("no properties with ColumnOrder attributes"));
+        Assert.Contains(errors, e => e.Contains("no properties with Column attributes"));
     }
 
     [Fact]
@@ -244,5 +245,24 @@ public class EntitySheetConfigHelperTests
         
         Assert.True(payIndex < addressIndex, "Base class properties should appear before derived class properties");
         Assert.Equal(1, headerNames.Count(h => h == TestHeaderNames.Pay)); // Should appear only once
+    }
+
+    private class TestNoPropertiesEntity
+    {
+    }
+
+    private class TestDuplicateColumnEntity
+    {
+        [Column("DuplicateHeader")]
+        public string Property1 { get; set; } = "";
+
+        [Column("DuplicateHeader")]
+        public string Property2 { get; set; } = "";
+    }
+
+    private class TestInvalidColumnEntity
+    {
+        [Column("InvalidColumn")]
+        public string InvalidProperty { get; set; } = "";
     }
 }

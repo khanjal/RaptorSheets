@@ -34,6 +34,9 @@ public enum SheetEnum
     [Description(SheetsConfig.SheetNames.Services)]
     SERVICES,
 
+    [Description(SheetsConfig.SheetNames.Setup)]
+    SETUP,
+
     [Description(SheetsConfig.SheetNames.Shifts)]
     SHIFTS,
 

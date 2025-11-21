@@ -1,145 +1,130 @@
-using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Gig.Entities;
 
+[ExcludeFromCodeCoverage]
 public class ShiftEntity : SheetRowEntityBase
 {
-    [JsonPropertyName("date")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Date)]
+    // Input columns (user-entered data)
+    // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
     public string Date { get; set; } = "";
 
-    [JsonPropertyName("start")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TimeStart)]
+    [Column(SheetsConfig.HeaderNames.TimeStart, isInput: true, formatType: FormatEnum.TIME)]
     public string Start { get; set; } = "";
 
-    [JsonPropertyName("finish")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TimeEnd)]
+    [Column(SheetsConfig.HeaderNames.TimeEnd, isInput: true, formatType: FormatEnum.TIME)]
     public string Finish { get; set; } = "";
 
-    [JsonPropertyName("service")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Service)]
+    [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
     public string Service { get; set; } = "";
 
-    [JsonPropertyName("number")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Number)]
+    [Column(SheetsConfig.HeaderNames.Number, isInput: true, jsonPropertyName: "number", note: ColumnNotes.ShiftNumber)]
     public int? Number { get; set; }
 
-    [JsonPropertyName("active")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TimeActive)]
+    [Column(SheetsConfig.HeaderNames.TimeActive, isInput: true, note: ColumnNotes.ActiveTime, formatType: FormatEnum.DURATION)]
     public string Active { get; set; } = "";
 
-    [JsonPropertyName("time")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TimeTotal)]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, isInput: true, note: ColumnNotes.TotalTime, formatType: FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
-    [JsonPropertyName("omit")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TimeOmit)]
+    [Column(SheetsConfig.HeaderNames.TimeOmit, isInput: true, jsonPropertyName: "omit", note: ColumnNotes.TimeOmit, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.Boolean)]
     public bool? Omit { get; set; }
 
-    [JsonPropertyName("trips")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Trips)]
+    [Column(SheetsConfig.HeaderNames.Trips, isInput: true, note: ColumnNotes.ShiftTrips)]
     public int Trips { get; set; }
 
-    // Financial properties from AmountEntity in correct position
-    [JsonPropertyName("pay")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Pay)]
+    // Financial properties
+    [Column(SheetsConfig.HeaderNames.Pay, isInput: true, formatType: FormatEnum.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [JsonPropertyName("tip")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Tips)]
+    [Column(SheetsConfig.HeaderNames.Tips, isInput: true, jsonPropertyName: "tip", formatType: FormatEnum.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
-    [JsonPropertyName("bonus")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Bonus)]
+    [Column(SheetsConfig.HeaderNames.Bonus, isInput: true, formatType: FormatEnum.ACCOUNTING)]
     public decimal? Bonus { get; set; }
 
-    [JsonPropertyName("cash")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Cash)]
+    [Column(SheetsConfig.HeaderNames.Cash, isInput: true, formatType: FormatEnum.ACCOUNTING)]
     public decimal? Cash { get; set; }
 
-    [JsonPropertyName("startOdometer")]
-    [ColumnOrder(SheetsConfig.HeaderNames.OdometerStart)]
+    [Column(SheetsConfig.HeaderNames.OdometerStart,
+        isInput: true,
+        jsonPropertyName: "startOdometer",
+        formatPattern: CellFormatPatterns.Distance)]
     public decimal? OdometerStart { get; set; }
 
-    [JsonPropertyName("endOdometer")]
-    [ColumnOrder(SheetsConfig.HeaderNames.OdometerEnd)]
+    [Column(SheetsConfig.HeaderNames.OdometerEnd,
+        isInput: true,
+        jsonPropertyName: "endOdometer",
+        formatPattern: CellFormatPatterns.Distance)]
     public decimal? OdometerEnd { get; set; }
 
-    [JsonPropertyName("distance")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Distance)]
+    [Column(SheetsConfig.HeaderNames.Distance,
+        isInput: true,
+        jsonPropertyName: "distance",
+        formatPattern: CellFormatPatterns.Distance,
+        note: ColumnNotes.ShiftDistance)]
     public decimal? Distance { get; set; }
 
-    [JsonPropertyName("region")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Region)]
+    [Column(SheetsConfig.HeaderNames.Region, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion)]
     public string Region { get; set; } = "";
 
-    [JsonPropertyName("note")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Note)]
+    [Column(SheetsConfig.HeaderNames.Note, isInput: true)]
     public string Note { get; set; } = "";
 
-    [JsonPropertyName("key")]
-    [ColumnOrder(SheetsConfig.HeaderNames.Key)]
+    // Output columns (formulas/calculated) - defaults to isInput: false
+    [Column(SheetsConfig.HeaderNames.Key, isInput: false, note: ColumnNotes.ShiftKey)]
     public string Key { get; set; } = "";
 
-    [JsonPropertyName("totalActive")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TotalTimeActive)]
+    [Column(SheetsConfig.HeaderNames.TotalTimeActive, FormatEnum.DURATION, "totalActive", ColumnNotes.TotalTimeActive)]
     public string TotalActive { get; set; } = "";
 
-    [JsonPropertyName("totalTime")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TotalTime)]
+    [Column(SheetsConfig.HeaderNames.TotalTime, FormatEnum.DURATION, "totalTime")]
     public string TotalTime { get; set; } = "";
 
-    [JsonPropertyName("totalTrips")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TotalTrips)]
+    [Column(SheetsConfig.HeaderNames.TotalTrips, jsonPropertyName: "totalTrips", note: ColumnNotes.TotalTrips)]
     public int TotalTrips { get; set; }
 
-    [JsonPropertyName("totalPay")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TotalPay)]
+    [Column(SheetsConfig.HeaderNames.TotalPay, FormatEnum.ACCOUNTING, "totalPay")]
     public decimal? TotalPay { get; set; }
 
-    [JsonPropertyName("totalTips")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TotalTips)]
+    [Column(SheetsConfig.HeaderNames.TotalTips, FormatEnum.ACCOUNTING, "totalTips")]
     public decimal? TotalTips { get; set; }
 
-    [JsonPropertyName("totalBonus")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TotalBonus)]
+    [Column(SheetsConfig.HeaderNames.TotalBonus, FormatEnum.ACCOUNTING, "totalBonus")]
     public decimal? TotalBonus { get; set; }
 
-    [JsonPropertyName("grandTotal")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TotalGrand)]
+    [Column(SheetsConfig.HeaderNames.TotalGrand, FormatEnum.ACCOUNTING, "grandTotal")]
     public decimal? GrandTotal { get; set; }
 
-    [JsonPropertyName("totalCash")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TotalCash)]
+    [Column(SheetsConfig.HeaderNames.TotalCash, FormatEnum.ACCOUNTING, "totalCash")]
     public decimal? TotalCash { get; set; }
 
-    [JsonPropertyName("amountPerTrip")]
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerTrip)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING, "amountPerTrip")]
     public decimal? AmountPerTrip { get; set; }
 
-    [JsonPropertyName("amountPerTime")]
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerTime)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING, "amountPerTime")]
     public decimal? AmountPerTime { get; set; }
 
-    [JsonPropertyName("totalDistance")]
-    [ColumnOrder(SheetsConfig.HeaderNames.TotalDistance)]
+    [Column(SheetsConfig.HeaderNames.TotalDistance, FormatEnum.DISTANCE, "totalDistance", ColumnNotes.TotalDistance)]
     public decimal? TotalDistance { get; set; }
 
-    [JsonPropertyName("amountPerDistance")]
-    [ColumnOrder(SheetsConfig.HeaderNames.AmountPerDistance)]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING, "amountPerDistance")]
     public decimal? AmountPerDistance { get; set; }
 
-    [ColumnOrder(SheetsConfig.HeaderNames.TripsPerHour)]
+    [Column(SheetsConfig.HeaderNames.TripsPerHour, FormatEnum.DISTANCE)]
     public decimal? TripsPerHour { get; set; }
 
-    [ColumnOrder(SheetsConfig.HeaderNames.Day)]
+    [Column(SheetsConfig.HeaderNames.Day)]
     public string Day { get; set; } = "";
 
-    [ColumnOrder(SheetsConfig.HeaderNames.Month)]
+    [Column(SheetsConfig.HeaderNames.Month)]
     public string Month { get; set; } = "";
 
-    [ColumnOrder(SheetsConfig.HeaderNames.Year)]
+    [Column(SheetsConfig.HeaderNames.Year)]
     public string Year { get; set; } = "";
 }

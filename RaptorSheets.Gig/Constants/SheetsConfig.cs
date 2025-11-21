@@ -111,12 +111,45 @@ public static class SheetsConfig
         public const string TripsPerHour = "Trips/Hour";
         public const string Type = "Type";
         public const string UnitEnd = "End Unit";
+        public const string Value = "Value";
         public const string VisitFirst = "First Trip";
         public const string VisitLast = "Last Trip";
         public const string Visits = "Visits";
         public const string Week = "Week";
         public const string Weekday = "Weekday";
         public const string Year = "Year";
+    }
+
+    /// <summary>
+    /// Validation pattern name constants that map to ValidationEnum values.
+    /// These are used in ColumnAttribute validationPattern parameters.
+    /// The string values match the ValidationEnum member names.
+    /// </summary>
+    public static class ValidationNames
+    {
+        /// <summary>Maps to ValidationEnum.BOOLEAN</summary>
+        public const string Boolean = "BOOLEAN";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_ADDRESS</summary>
+        public const string RangeAddress = "RANGE_ADDRESS";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_NAME</summary>
+        public const string RangeName = "RANGE_NAME";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_PLACE</summary>
+        public const string RangePlace = "RANGE_PLACE";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_REGION</summary>
+        public const string RangeRegion = "RANGE_REGION";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_SERVICE</summary>
+        public const string RangeService = "RANGE_SERVICE";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_TYPE</summary>
+        public const string RangeType = "RANGE_TYPE";
+        
+        /// <summary>Maps to ValidationEnum.RANGE_SELF</summary>
+        public const string RangeSelf = "RANGE_SELF";
     }
 
     /// <summary>
@@ -320,6 +353,18 @@ public static class SheetsConfig
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<RegionEntity>()
+    };
+
+    public static SheetModel SetupSheet => new()
+    {
+        Name = SheetNames.Setup,
+        CellColor = ColorEnum.LIGHT_PURPLE,
+        TabColor = ColorEnum.PURPLE,
+        FontColor = ColorEnum.WHITE,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = true,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<SetupEntity>()
     };
 
     public static SheetModel ServiceSheet => new()

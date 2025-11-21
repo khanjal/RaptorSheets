@@ -1,36 +1,44 @@
 ﻿using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Gig.Enums;
-using RaptorSheets.Gig.Mappers;
 using RaptorSheets.Core.Constants;
-using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Gig.Helpers;
-using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Extensions;
-using RaptorSheets.Common.Mappers;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Helpers;
+using RaptorSheets.Gig.Mappers;
 
 namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
 public class GoogleSheetHelpersTests
 {
-    public static IEnumerable<object[]> Sheets =>
-    new List<object[]>
+    public static TheoryData<SheetModel, BatchUpdateSpreadsheetRequest> Sheets
     {
-        new object[] { AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.ADDRESSES.GetDescription() }) },
-        new object[] { DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.DAILY.GetDescription() }) },
-        new object[] { ExpenseMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.EXPENSES.GetDescription() }) },
-        new object[] { MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.MONTHLY.GetDescription() }) },
-        new object[] { NameMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.NAMES.GetDescription() }) },
-        new object[] { PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.PLACES.GetDescription() }) },
-        new object[] { RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.REGIONS.GetDescription() }) },
-        new object[] { ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.SERVICES.GetDescription() }) },
-        new object[] { SetupMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { Common.Enums.SheetEnum.SETUP.GetDescription() }) },
-        new object[] { ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.SHIFTS.GetDescription() }) },
-        new object[] { TripMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.TRIPS.GetDescription() }) },
-        new object[] { TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.TYPES.GetDescription() }) },
-        new object[] { WeekdayMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.WEEKDAYS.GetDescription() }) },
-        new object[] { WeeklyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.WEEKLY.GetDescription() }) },
-        new object[] { YearlyMapper.GetSheet(), GenerateSheetsHelpers.Generate(new List<string> { SheetEnum.YEARLY.GetDescription() }) },
-    };
+        get
+        {
+            var data = new TheoryData<SheetModel, BatchUpdateSpreadsheetRequest>
+            {
+                { AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.ADDRESSES.GetDescription()]) },
+                { DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.DAILY.GetDescription()]) },
+                { GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet), GenerateSheetsHelpers.Generate([SheetEnum.EXPENSES.GetDescription()]) },
+                { MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.MONTHLY.GetDescription()]) },
+                { NameMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.NAMES.GetDescription()]) },
+                { PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.PLACES.GetDescription()]) },
+                { RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.REGIONS.GetDescription()]) },
+                { ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.SERVICES.GetDescription()]) },
+                { GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet), GenerateSheetsHelpers.Generate([SheetEnum.SETUP.GetDescription()]) },
+                { ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.SHIFTS.GetDescription()]) },
+                { TripMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.TRIPS.GetDescription()]) },
+                { TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.TYPES.GetDescription()]) },
+                { WeekdayMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.WEEKDAYS.GetDescription()]) },
+                { WeeklyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.WEEKLY.GetDescription()]) },
+                { YearlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.YEARLY.GetDescription()]) }
+            };
+            return data;
+        }
+    }
 
     [Theory]
     [MemberData(nameof(Sheets))]
@@ -51,12 +59,14 @@ public class GoogleSheetHelpersTests
     [MemberData(nameof(Sheets))]
     public void GivenSheetHeaders_ThenReturnSheetHeaders(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
     {
-        var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
+        // Get the SheetId from the batch request (which has the randomly generated ID)
+        var sheetId = batchRequest.Requests[0].AddSheet.Properties.SheetId;
 
         // Check on if it had to expand the number of rows (headers > 26)
         if (config.Headers.Count > 26)
         {
-            var appendDimension = batchRequest.Requests.First(x => x.AppendDimension != null).AppendDimension;
+            var appendDimension = batchRequest.Requests.FirstOrDefault(x => x.AppendDimension != null)?.AppendDimension;
+            Assert.NotNull(appendDimension);
             Assert.Equal("COLUMNS", appendDimension.Dimension);
             Assert.Equal(config.Headers.Count - 26, appendDimension.Length);
             Assert.Equal(sheetId, appendDimension.SheetId);
@@ -72,7 +82,7 @@ public class GoogleSheetHelpersTests
     [MemberData(nameof(Sheets))]
     public void GivenSheetColors_ThenReturnSheetBanding(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
     {
-        var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
+        var sheetId = batchRequest.Requests[0].AddSheet.Properties.SheetId;
 
         var bandedRange = batchRequest.Requests.First(x => x.AddBanding != null).AddBanding.BandedRange;
         Assert.Equal(sheetId, bandedRange.Range.SheetId);
@@ -84,7 +94,7 @@ public class GoogleSheetHelpersTests
     [MemberData(nameof(Sheets))]
     public void GivenSheetProtected_ThenReturnProtectRequest(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
     {
-        var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
+        var sheetId = batchRequest.Requests[0].AddSheet.Properties.SheetId;
         var protectRange = batchRequest.Requests.Where(x => x.AddProtectedRange != null).ToList();
 
         if (!config.ProtectSheet)
@@ -92,8 +102,23 @@ public class GoogleSheetHelpersTests
             return;
         }
 
-        Assert.Single(protectRange);
-        var sheetProtection = protectRange.First().AddProtectedRange.ProtectedRange;
+        // Protected sheets should have at least one protection request
+        // With entity-driven headers, there may be multiple protection requests if headers are individually protected
+        Assert.NotEmpty(protectRange);
+
+        // Log protectRange for debugging
+        protectRange.Select(protection => protection.AddProtectedRange.ProtectedRange)
+            .ToList()
+            .ForEach(protectedRange => Console.WriteLine($"Protected Range: SheetId={protectedRange.Range.SheetId}, Description={protectedRange.Description}"));
+
+        // At least one should be a sheet-level protection
+        var sheetProtections = protectRange.Where(p =>
+            p.AddProtectedRange.ProtectedRange.Description == ProtectionWarnings.SheetWarning &&
+            p.AddProtectedRange.ProtectedRange.Range.SheetId == sheetId).ToList();
+
+        Assert.NotEmpty(sheetProtections);
+
+        var sheetProtection = sheetProtections[0].AddProtectedRange.ProtectedRange;
         Assert.Equal(sheetId, sheetProtection.Range.SheetId);
         Assert.Equal(ProtectionWarnings.SheetWarning, sheetProtection.Description);
         Assert.True(sheetProtection.WarningOnly);
@@ -103,7 +128,7 @@ public class GoogleSheetHelpersTests
     [MemberData(nameof(Sheets))]
     public void GivenSheetNotProtected_ThenReturnProtectRequests(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
     {
-        var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
+        var sheetId = batchRequest.Requests[0].AddSheet.Properties.SheetId;
         var protectRange = batchRequest.Requests.Where(x => x.AddProtectedRange != null).ToList();
 
         if (config.ProtectSheet)
@@ -136,7 +161,6 @@ public class GoogleSheetHelpersTests
     [MemberData(nameof(Sheets))]
     public void GivenSheetHeaderFormatOrValidation_ThenReturnRepeatCellsRequest(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
     {
-        var sheetId = batchRequest.Requests.First().AddSheet.Properties.SheetId;
         var repeatCells = batchRequest.Requests.Where(x => x.RepeatCell != null).ToList();
         var repeatHeaders = config.Headers.Where(x => x.Format != null || !string.IsNullOrEmpty(x.Validation)).ToList();
 
@@ -156,7 +180,7 @@ public class GoogleSheetHelpersTests
 
         Assert.NotNull(result);
         Assert.Single(result);
-        Assert.Equal(startRowId - 1, result.First().Item1);
-        Assert.Equal(startRowId + count - 1, result.First().Item2);
+        Assert.Equal(startRowId - 1, result[0].Item1);
+        Assert.Equal(startRowId + count - 1, result[0].Item2);
     }
 }

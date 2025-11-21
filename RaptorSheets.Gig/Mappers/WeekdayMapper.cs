@@ -3,56 +3,21 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
-using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
 
 namespace RaptorSheets.Gig.Mappers;
 
+/// <summary>
+/// Weekday mapper for configuring the Weekday sheet with formulas, validations, and formatting.
+/// This mapper is designed for weekday-specific data aggregation and calculations.
+/// </summary>
 public static class WeekdayMapper
 {
-    public static List<WeekdayEntity> MapFromRangeData(IList<IList<object>> values)
-    {
-        var weekdays = new List<WeekdayEntity>();
-        var headers = new Dictionary<int, string>();
-        values = values!.Where(x => !string.IsNullOrEmpty(x[0]?.ToString())).ToList();
-        var id = 0;
-
-        foreach (var value in values)
-        {
-            id++;
-            if (id == 1)
-            {
-                headers = HeaderHelpers.ParserHeader(value);
-                continue;
-            }
-
-            // Console.Write(JsonSerializer.Serialize(value));
-            WeekdayEntity weekday = new()
-            {
-                RowId = id,
-                Day = HeaderHelpers.GetIntValue(HeaderEnum.DAY.GetDescription(), value, headers),
-                Weekday = HeaderHelpers.GetStringValue(HeaderEnum.WEEKDAY.GetDescription(), value, headers),
-                Trips = HeaderHelpers.GetIntValue(HeaderEnum.TRIPS.GetDescription(), value, headers),
-                Pay = HeaderHelpers.GetDecimalValue(HeaderEnum.PAY.GetDescription(), value, headers),
-                Tip = HeaderHelpers.GetDecimalValue(HeaderEnum.TIPS.GetDescription(), value, headers),
-                Bonus = HeaderHelpers.GetDecimalValue(HeaderEnum.BONUS.GetDescription(), value, headers),
-                Total = HeaderHelpers.GetDecimalValue(HeaderEnum.TOTAL.GetDescription(), value, headers),
-                Cash = HeaderHelpers.GetDecimalValue(HeaderEnum.CASH.GetDescription(), value, headers),
-                Distance = HeaderHelpers.GetDecimalValue(HeaderEnum.DISTANCE.GetDescription(), value, headers),
-                Time = HeaderHelpers.GetStringValue(HeaderEnum.TIME_TOTAL.GetDescription(), value, headers),
-                Days = HeaderHelpers.GetIntValue(HeaderEnum.DAYS.GetDescription(), value, headers),
-                DailyAverage = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PER_DAY.GetDescription(), value, headers),
-                PreviousDailyAverage = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PER_PREVIOUS_DAY.GetDescription(), value, headers),
-                CurrentAmount = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_CURRENT.GetDescription(), value, headers),
-                PreviousAmount = HeaderHelpers.GetDecimalValue(HeaderEnum.AMOUNT_PREVIOUS.GetDescription(), value, headers),
-            };
-
-            weekdays.Add(weekday);
-        }
-        return weekdays;
-    }
-
+    /// <summary>
+    /// Retrieves the configured Weekday sheet.
+    /// Includes formulas, validations, and formatting specific to the Weekday sheet.
+    /// </summary>
     public static SheetModel GetSheet()
     {
         var sheet = SheetsConfig.WeekdaySheet;
@@ -63,6 +28,7 @@ public static class WeekdayMapper
         var dailyDayRange = dailySheet.GetRange(HeaderEnum.DAY.GetDescription());
         var dailyDateToTotalRange = dailySheet.GetRangeBetweenColumns(HeaderEnum.DATE.GetDescription(), HeaderEnum.TOTAL.GetDescription());
 
+        // Configure specific headers unique to WeekdayMapper.
         sheet.Headers.ForEach(header =>
         {
             var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
@@ -70,29 +36,29 @@ public static class WeekdayMapper
             switch (headerEnum)
             {
                 case HeaderEnum.DAY:
-                    // Use filtered unique formula for weekday numbers from Daily sheet
+                    // Formula to generate unique weekday numbers from the Daily sheet.
                     header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.DAY.GetDescription(), dailySheet.GetRange(HeaderEnum.DAY.GetDescription(), 2));
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.WEEKDAY:
-                    // Use weekday text formula based on day range
+                    // Formula to generate weekday text based on day range.
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(keyRange, HeaderEnum.WEEKDAY.GetDescription(), keyRange, 1);
                     break;
                 case HeaderEnum.TRIPS:
-                    // Sum trips by weekday number using the existing DAY column from Daily sheet
+                    // Formula to sum trips by weekday number using the Daily sheet.
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), 
                         dailyDayRange, 
                         dailySheet.GetRange(HeaderEnum.TRIPS.GetDescription()));
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.DAYS:
-                    // Count days by weekday number using the existing DAY column from Daily sheet
+                    // Formula to count days by weekday number using the Daily sheet.
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, HeaderEnum.DAYS.GetDescription(), 
                         dailyDayRange);
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.PAY:
-                    // Sum pay by weekday number using the existing DAY column from Daily sheet
+                    // Formula to sum pay by weekday number using the Daily sheet.
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), 
                         dailyDayRange, 
                         dailySheet.GetRange(HeaderEnum.PAY.GetDescription()));
@@ -174,3 +140,4 @@ public static class WeekdayMapper
         return sheet;
     }
 }
+

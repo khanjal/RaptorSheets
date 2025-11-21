@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Integration.Base;
 
@@ -7,6 +8,7 @@ namespace RaptorSheets.Gig.Tests.Integration;
 /// Test fixture that runs ONCE before all integration tests in the collection.
 /// Provides clean environment setup for CI/CD pipelines that can't run PowerShell scripts.
 /// </summary>
+[ExcludeFromCodeCoverage] 
 public class IntegrationTestFixture : IAsyncLifetime
 {
     public async Task InitializeAsync()
@@ -85,6 +87,7 @@ public class IntegrationTestFixture : IAsyncLifetime
 /// 3. Run tests in parallel within the collection (if desired)
 /// </summary>
 [CollectionDefinition("IntegrationCollection")]
+[ExcludeFromCodeCoverage]
 public class IntegrationCollectionDefinition : ICollectionFixture<IntegrationTestFixture>
 {
     // This class is just a marker for the collection
@@ -97,7 +100,7 @@ public class IntegrationCollectionDefinition : ICollectionFixture<IntegrationTes
 internal class TestableIntegrationBase : IntegrationTestBase
 {
     // Expose protected members for the fixture
-    public new bool HasCredentials() => base.GoogleSheetManager != null;
+    public bool HasCredentials() => base.GoogleSheetManager != null;
     public new IGoogleSheetManager? GoogleSheetManager => base.GoogleSheetManager;
     public new List<string> TestSheets => base.TestSheets;
     public new async Task<bool> EnsureSheetsExist(List<string> sheets) => await base.EnsureSheetsExist(sheets);

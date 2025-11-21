@@ -1,4 +1,5 @@
 using Google.Apis.Sheets.v4.Data;
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Models.Google;
@@ -58,12 +59,12 @@ public static class HeaderHelpers
 
         var dateString = values[columnId]!.ToString() ?? "";
         
-        if (DateTime.TryParse(dateString, out DateTime result))
+        if (DateTime.TryParse(dateString, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime result))
         {
             // If the input was in yyyy-MM-dd format, preserve it, otherwise normalize to yyyy-MM-dd
-            if (dateString.Contains("-") && dateString.Length == 10)
+            if (dateString.Contains('-') && dateString.Length == 10)
             {
-                return result.ToString("yyyy-MM-dd");
+                return result.ToString(CellFormatPatterns.Date);
             }
             else
             {
@@ -90,37 +91,54 @@ public static class HeaderHelpers
 
     public static int GetIntValue(string columnName, IList<object> values, Dictionary<int, string> headers)
     {
+        return GetIntValueOrNull(columnName, values, headers) ?? 0;
+    }
+    
+    public static int? GetIntValueOrNull(string columnName, IList<object> values, Dictionary<int, string> headers)
+    {
         var columnId = GetHeaderKey(headers, columnName);
 
-        if (columnId > values.Count || columnId < 0 || values[columnId] == null)
+        if (columnId >= values.Count || columnId < 0 || values[columnId] == null)
         {
-            return 0;
+            Console.WriteLine($"Column '{columnName}' is out of range or null.");
+            return null;
         }
 
         var value = values[columnId]?.ToString()?.Trim();
-        
+
+        // Log the raw value for debugging purposes
+        Console.WriteLine($"Raw value for column '{columnName}': {value}");
+
         // If the string contains a decimal point, it's not a valid integer
         if (value?.Contains('.') == true)
         {
-            return 0;
+            Console.WriteLine($"Column '{columnName}' contains decimal point - not a valid integer.");
+            return null;
         }
-        
+
         // Handle negative numbers - preserve the minus sign but remove other non-digit characters
         var isNegative = value?.StartsWith("-") == true;
-        value = NonDigitRegex.Replace(value!, ""); // Remove all non-digit characters with timeout
-        
-        if (string.IsNullOrEmpty(value))
+        value = NonDigitRegex.Replace(value ?? string.Empty, ""); // Remove all non-digit characters with timeout
+
+        // Log the filtered value for debugging purposes
+        Console.WriteLine($"Filtered value for column '{columnName}': {value}");
+
+        if (value == "-" || string.IsNullOrEmpty(value))
         {
-            return 0; // Make empty into 0s.
+            Console.WriteLine($"Column '{columnName}' has an empty or invalid value after filtering.");
+            return null;  // Make empty values into nulls.
         }
 
         if (int.TryParse(value, out int result))
         {
+            Console.WriteLine($"Parsed value for column '{columnName}': {result}");
             return isNegative ? -result : result;
         }
 
-        return 0;
+        Console.WriteLine($"Failed to parse value for column '{columnName}': {value}");
+        return null;
     }
+    
     public static decimal GetDecimalValue(string columnName, IList<object> values, Dictionary<int, string> headers)
     {
         return GetDecimalValueOrNull(columnName, values, headers) ?? 0;
@@ -131,27 +149,36 @@ public static class HeaderHelpers
     {
         var columnId = GetHeaderKey(headers, columnName);
 
-        // TODO: Look into this closer. had to change to >= values.count. Does this need to be on other ones?
         if (columnId >= values.Count || columnId < 0 || values[columnId] == null)
         {
+            Console.WriteLine($"Column '{columnName}' is out of range or null.");
             return null;
         }
 
         var value = values[columnId]?.ToString()?.Trim();
-        value = NonDecimalRegex.Replace(value!, ""); // Remove all special currency symbols except for .'s and -'s with timeout
+
+        // Log the raw value for debugging purposes
+        Console.WriteLine($"Raw value for column '{columnName}': {value}");
+
+        value = NonDecimalRegex.Replace(value ?? string.Empty, ""); // Remove all special currency symbols except for .'s and -'s with timeout
+
+        // Log the filtered value for debugging purposes
+        Console.WriteLine($"Filtered value for column '{columnName}': {value}");
+
         if (value == "-" || value == "")
         {
+            Console.WriteLine($"Column '{columnName}' has an empty or invalid value after filtering.");
             return null;  // Make account -'s into nulls.
         }
 
         if (decimal.TryParse(value, out decimal result))
         {
+            Console.WriteLine($"Parsed value for column '{columnName}': {result}");
             return result;
         }
-        else
-        {
-            return null;
-        }
+
+        Console.WriteLine($"Failed to parse value for column '{columnName}': {value}");
+        return null;
     }
 
     private static int GetHeaderKey(Dictionary<int, string> header, string value)

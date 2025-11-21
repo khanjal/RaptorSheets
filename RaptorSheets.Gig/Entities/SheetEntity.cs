@@ -1,5 +1,6 @@
 using RaptorSheets.Core.Entities;
 using System.Text.Json.Serialization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Gig.Entities;
 
@@ -8,6 +9,7 @@ namespace RaptorSheets.Gig.Entities;
 /// This is a data transfer object that aggregates data from all sheets.
 /// Sheet order is determined by the declaration order in SheetsConfig.SheetNames.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class SheetEntity
 {
     [JsonPropertyName("properties")]

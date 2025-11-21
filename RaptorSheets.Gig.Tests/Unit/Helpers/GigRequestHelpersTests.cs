@@ -171,9 +171,7 @@ public class GigRequestHelpersTests
         var trips = new List<TripEntity> { new() { RowId = 1 } };
 
         // Act - pass null to test null handling behavior
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type
         var result = GigRequestHelpers.CreateUpdateCellTripRequests(trips, null);
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type
 
         // Assert
         Assert.NotNull(result);

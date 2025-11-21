@@ -1,12 +1,13 @@
 ﻿using Google.Apis.Sheets.v4.Data;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Mappers;
-using RaptorSheets.Core.Enums;
-using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Extensions;
-using RaptorSheets.Common.Mappers;
-using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Helpers;
 
@@ -17,34 +18,40 @@ public static class GenerateSheetsHelpers
 
     public static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
+        if (sheets.Count == 0)
+        {
+            // Skip unnecessary processing when the collection is empty
+            return new BatchUpdateSpreadsheetRequest { Requests = new List<Request>() };
+        }
+
         _batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
         _batchUpdateSpreadsheetRequest.Requests = [];
         _repeatCellRequests = [];
 
-        sheets.ForEach(sheet =>
+        foreach (var sheet in sheets)
         {
             var sheetModel = GetSheetModel(sheet);
             var random = new Random();
             sheetModel.Id = random.Next();
 
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
 
             var appendDimension = GoogleRequestHelpers.GenerateAppendDimension(sheetModel);
             if (appendDimension != null)
             {
-                _batchUpdateSpreadsheetRequest!.Requests.Add(appendDimension);
+                _batchUpdateSpreadsheetRequest.Requests.Add(appendDimension);
             }
 
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
             GenerateHeadersFormatAndProtection(sheetModel);
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
-            _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
-        });
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
+            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
+        }
 
-        _repeatCellRequests.ForEach(request =>
+        foreach (var request in _repeatCellRequests)
         {
             _batchUpdateSpreadsheetRequest.Requests.Add(new Request { RepeatCell = request });
-        });
+        }
 
         return _batchUpdateSpreadsheetRequest;
     }
@@ -60,13 +67,13 @@ public static class GenerateSheetsHelpers
         {
             var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase) => AddressMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase) => DailyMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) => ExpenseMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet),
             var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) => MonthlyMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) => NameMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) => PlaceMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) => RegionMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) => ServiceMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => SetupMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet),
             var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) => ShiftMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) => TripMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase) => TypeMapper.GetSheet(),
@@ -83,7 +90,7 @@ public static class GenerateSheetsHelpers
         sheet.Headers.UpdateColumns();
 
         // Format/Protect Column Cells
-        sheet!.Headers.ForEach(header =>
+        foreach (var header in sheet.Headers)
         {
             var range = new GridRange
             {
@@ -100,9 +107,9 @@ public static class GenerateSheetsHelpers
             }
 
             // If there's no format or validation then go to next header
-            if (header.Format == null && string.IsNullOrEmpty(header.Validation))
+            if (header.Format == null && string.IsNullOrEmpty(header.Validation) && string.IsNullOrEmpty(header.FormatPattern))
             {
-                return;
+                continue;
             }
 
             var repeatCellModel = new RepeatCellModel
@@ -110,9 +117,16 @@ public static class GenerateSheetsHelpers
                 GridRange = range,
             };
 
-            if (header.Format != null)
+            // Apply formatting if Format or FormatPattern exists
+            if (header.Format != null || !string.IsNullOrEmpty(header.FormatPattern))
             {
-                repeatCellModel.CellFormat = SheetHelpers.GetCellFormat((FormatEnum)header.Format);
+                var formatToUse = header.Format ?? FormatEnum.NUMBER; // Default to NUMBER if only pattern provided
+
+                // FormatPattern is the single source of truth - it's always populated
+                // Either from custom pattern or derived from FormatEnum
+                repeatCellModel.CellFormat = !string.IsNullOrEmpty(header.FormatPattern)
+                    ? SheetHelpers.GetCellFormat(formatToUse, header.FormatPattern)
+                    : SheetHelpers.GetCellFormat(formatToUse);
             }
 
             if (!string.IsNullOrEmpty(header.Validation))
@@ -122,6 +136,6 @@ public static class GenerateSheetsHelpers
             }
 
             _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
-        });
+        }
     }  
 }

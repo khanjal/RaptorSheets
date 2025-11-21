@@ -32,9 +32,10 @@ public class GoogleSheetManagerTests
         // An exception during credential validation proves that parameter processing works correctly
         // (This is expected behavior since we're using invalid test credentials)
         Exception? caughtException = null;
+        GoogleSheetManager? manager = null;
         try
         {
-            new GoogleSheetManager(parameters, "test-spreadsheet");
+            manager = new GoogleSheetManager(parameters, "test-spreadsheet");
         }
         catch (Exception ex)
         {
@@ -44,12 +45,13 @@ public class GoogleSheetManagerTests
         // Verify we get a meaningful exception (not a null reference or missing parameter error)
         Assert.NotNull(caughtException);
         Assert.NotEmpty(caughtException.Message);
+        Assert.Null(manager); // Ensure manager is not initialized on exception
     }
 
     [Fact]
     public void CheckSheetHeaders_WithNullSpreadsheet_ReturnsError()
     {
-        var result = GoogleSheetManager.CheckSheetHeaders(null);
+        var result = GoogleSheetManager.CheckSheetHeaders(default!);
         Assert.Single(result);
         Assert.Contains("Unable to retrieve sheet(s)", result[0].Message);
     }
@@ -57,7 +59,7 @@ public class GoogleSheetManagerTests
     [Fact]
     public void CheckSheetHeaders_WithEmptySheets_ReturnsInfo()
     {
-        var spreadsheet = new Spreadsheet { Sheets = new List<Sheet>() };
+        var spreadsheet = new Spreadsheet { Sheets = [] };
         var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
         Assert.Single(result);
         Assert.Contains("No sheet header issues found", result[0].Message);
@@ -68,23 +70,23 @@ public class GoogleSheetManagerTests
     {
         var spreadsheet = new Spreadsheet
         {
-            Sheets = new List<Sheet>
-            {
+            Sheets =
+            [
                 new()
                 {
                     Properties = new SheetProperties { Title = "Stocks" },
-                    Data = new List<GridData>
-                    {
+                    Data =
+                    [
                         new()
                         {
-                            RowData = new List<RowData>
-                            {
-                                new() { Values = new List<CellData> { new() { FormattedValue = "Header1" } } }
-                            }
+                            RowData =
+                            [
+                                new() { Values = [new() { FormattedValue = "Header1" }] }
+                            ]
                         }
-                    }
+                    ]
                 }
-            }
+            ]
         };
         var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
         Assert.NotNull(result);
@@ -111,7 +113,7 @@ public class GoogleSheetManagerTests
     public void GetSheetLayouts_MixedSheets_ReturnsOnlyValid()
     {
         var manager = new GoogleSheetManager("token", "spreadsheet");
-        var layouts = manager.GetSheetLayouts(new List<string> { "Stocks", "InvalidSheet", "Accounts" });
+        var layouts = manager.GetSheetLayouts(["Stocks", "InvalidSheet", "Accounts"]);
         Assert.Contains(layouts, l => l != null);
         Assert.DoesNotContain(layouts, l => l == null);
     }
@@ -130,7 +132,7 @@ public class GoogleSheetManagerTests
     {
         var manager = new GoogleSheetManager("token", "spreadsheet");
         var entity = new SheetEntity();
-        var result = await manager.AddSheetData(new List<SheetEnum> { SheetEnum.TICKERS }, entity);
+        var result = await manager.AddSheetData([SheetEnum.TICKERS], entity);
         Assert.Contains(result.Messages, m => m.Message.Contains("not supported") || m.Message.Contains("No data to add"));
     }
 
@@ -139,7 +141,7 @@ public class GoogleSheetManagerTests
     {
         var manager = new GoogleSheetManager("token", "spreadsheet");
         // This will likely add error messages since the service is not mocked and will return null
-        var result = await manager.CreateSheets(new List<SheetEnum> { SheetEnum.STOCKS });
+        var result = await manager.CreateSheets([SheetEnum.STOCKS]);
         Assert.Contains(result.Messages, m => m.Message.Contains("not created"));
     }
 }

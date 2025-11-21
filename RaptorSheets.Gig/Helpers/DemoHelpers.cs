@@ -61,10 +61,10 @@ public static class DemoHelpers
     {
         // SonarQube S2245: Using Random is safe here - this generates demo/sample data, not security-sensitive values
         // Optional seed parameter allows deterministic generation for testing
-        #pragma warning disable S2245
+#pragma warning disable S2245
         var random = seed.HasValue ? new Random(seed.Value) : new Random();
-        #pragma warning restore S2245
-        
+#pragma warning restore S2245
+
         var sheetEntity = new SheetEntity();
         var idContext = new DemoIdContext();
 
@@ -145,7 +145,7 @@ public static class DemoHelpers
         {
             RowId = idContext.ShiftId++,
             Action = ActionTypeEnum.INSERT.GetDescription(),
-            Date = context.Date.ToString("yyyy-MM-dd"),
+            Date = context.Date.ToString(CellFormatPatterns.Date),
             Number = shiftNumber,
             Service = service,
             Start = shiftStart.ToString("T"),
@@ -197,7 +197,7 @@ public static class DemoHelpers
         string service,
         DateTime date)
     {
-        var key = (service, date.ToString("yyyy-MM-dd"));
+        var key = (service, date.ToString(CellFormatPatterns.Date));
         if (!serviceDayShiftNumber.ContainsKey(key))
         {
             serviceDayShiftNumber[key] = 1;
@@ -332,7 +332,7 @@ public static class DemoHelpers
             {
                 RowId = idContext.ExpenseId++,
                 Action = ActionTypeEnum.INSERT.GetDescription(),
-                Date = date,
+                Date = date.ToString(CellFormatPatterns.Date),  // Convert DateTime to string format
                 Category = category,
                 Name = $"{category} - Demo",
                 Amount = amount,
@@ -367,7 +367,7 @@ public static class DemoHelpers
         {
             RowId = rowId,
             Action = ActionTypeEnum.INSERT.GetDescription(),
-            Date = context.Date.ToString("yyyy-MM-dd"),
+            Date = context.Date.ToString(CellFormatPatterns.Date),
             Number = context.ShiftNumber,
             Service = context.Service,
             Region = context.Region,

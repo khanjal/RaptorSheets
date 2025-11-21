@@ -1,0 +1,46 @@
+using RaptorSheets.Core.Enums;
+
+namespace RaptorSheets.Core.Attributes;
+
+/// <summary>
+/// Specifies the field type and formatting for automatic type conversion and Google Sheets formatting.
+/// This attribute enables type-aware data conversion similar to GoogleSheetsWrapper's approach.
+/// </summary>
+[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+public class TypedFieldAttribute : Attribute
+{
+    /// <summary>
+    /// Gets the field type for automatic conversion and formatting
+    /// </summary>
+    public FieldType FieldType { get; }
+
+    /// <summary>
+    /// Gets the custom number format pattern for Google Sheets (optional)
+    /// </summary>
+    public string? NumberFormatPattern { get; }
+
+    /// <summary>
+    /// Gets whether this field should be validated (optional)
+    /// </summary>
+    public bool EnableValidation { get; }
+
+    /// <summary>
+    /// Gets custom validation pattern for the field (optional)
+    /// </summary>
+    public string? ValidationPattern { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the TypedFieldAttribute with optional parameters.
+    /// </summary>
+    /// <param name="fieldType">The field type for automatic conversion and formatting</param>
+    /// <param name="formatPattern">Custom number format pattern for Google Sheets (optional)</param>
+    /// <param name="enableValidation">Whether to enable validation for this field (optional)</param>
+    /// <param name="validationPattern">Custom validation pattern (optional)</param>
+    public TypedFieldAttribute(FieldType fieldType, string? formatPattern = null, bool enableValidation = false, string? validationPattern = null)
+    {
+        FieldType = fieldType;
+        NumberFormatPattern = formatPattern;
+        EnableValidation = enableValidation;
+        ValidationPattern = validationPattern;
+    }
+}
