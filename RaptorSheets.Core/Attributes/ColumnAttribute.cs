@@ -8,7 +8,6 @@ namespace RaptorSheets.Core.Attributes;
 /// <summary>
 /// Comprehensive attribute that defines column configuration for Google Sheets.
 /// Automatically infers FieldType from property type - you only need to specify FormatType for special formatting.
-/// Uses header name as default JSON property name with optional override.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
 public class ColumnAttribute : Attribute
@@ -17,11 +16,6 @@ public class ColumnAttribute : Attribute
     /// Gets the header name for the sheet column
     /// </summary>
     public string HeaderName { get; }
-
-    /// <summary>
-    /// Gets the JSON property name for serialization (defaults to header name converted to camelCase)
-    /// </summary>
-    public string JsonPropertyName { get; }
 
     /// <summary>
     /// Gets the field type for data conversion between C# and Google Sheets.
@@ -86,29 +80,6 @@ public class ColumnAttribute : Attribute
     public ColumnAttribute(string headerName)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
-        IsFieldTypeExplicit = false;
-        FormatType = FormatEnum.DEFAULT;
-        NumberFormatPattern = null;
-        Order = -1;
-        IsInput = false;
-        EnableValidation = false;
-        ValidationPattern = null;
-        Note = null;
-    }
-
-    /// <summary>
-    /// Initializes a column configuration with custom JSON property name.
-    /// FieldType is automatically inferred from the property type.
-    /// Use this when the JSON property name differs from the auto-generated camelCase header name.
-    /// </summary>
-    /// <param name="headerName">Header name for sheet column</param>
-    /// <param name="jsonPropertyName">Custom JSON property name for serialization</param>
-    public ColumnAttribute(string headerName, string jsonPropertyName)
-    {
-        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = FormatEnum.DEFAULT;
@@ -130,30 +101,6 @@ public class ColumnAttribute : Attribute
     public ColumnAttribute(string headerName, FormatEnum formatType)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
-        FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
-        IsFieldTypeExplicit = false;
-        FormatType = formatType;
-        NumberFormatPattern = null;
-        Order = -1;
-        IsInput = false;
-        EnableValidation = false;
-        ValidationPattern = null;
-        Note = null;
-    }
-
-    /// <summary>
-    /// Initializes a column configuration with format type and custom JSON property name.
-    /// FieldType is automatically inferred from the property type.
-    /// Use this when you need to override both the format and JSON property name.
-    /// </summary>
-    /// <param name="headerName">Header name for sheet column</param>
-    /// <param name="formatType">Format type for Google Sheets display</param>
-    /// <param name="jsonPropertyName">Custom JSON property name for serialization</param>
-    public ColumnAttribute(string headerName, FormatEnum formatType, string jsonPropertyName)
-    {
-        HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = formatType;
@@ -172,12 +119,10 @@ public class ColumnAttribute : Attribute
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
     /// <param name="formatType">Format type for Google Sheets display</param>
-    /// <param name="jsonPropertyName">Custom JSON property name for serialization</param>
     /// <param name="note">Note/comment to display in Google Sheets</param>
-    public ColumnAttribute(string headerName, FormatEnum formatType, string jsonPropertyName, string note)
+    public ColumnAttribute(string headerName, FormatEnum formatType, string note)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = formatType;
@@ -197,10 +142,9 @@ public class ColumnAttribute : Attribute
     /// <param name="headerName">Header name for sheet column</param>
     /// <param name="jsonPropertyName">Custom JSON property name for serialization</param>
     /// <param name="note">Note/comment to display in Google Sheets</param>
-    public ColumnAttribute(string headerName, string jsonPropertyName, string note)
+    public ColumnAttribute(string headerName, string note)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = jsonPropertyName ?? throw new ArgumentNullException(nameof(jsonPropertyName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = FormatEnum.DEFAULT;
@@ -225,7 +169,6 @@ public class ColumnAttribute : Attribute
         ArgumentNullException.ThrowIfNull(options);
 
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = options.JsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = options.FormatType;
@@ -244,7 +187,6 @@ public class ColumnAttribute : Attribute
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
     /// <param name="isInput">True if this is a user-input column</param>
-    /// <param name="jsonPropertyName">Custom JSON property name (null = auto-generate from header)</param>
     /// <param name="formatPattern">Custom number format pattern (null = use default)</param>
     /// <param name="note">Note/comment to display in Google Sheets</param>
     /// <param name="enableValidation">Enable field validation</param>
@@ -254,7 +196,6 @@ public class ColumnAttribute : Attribute
     public ColumnAttribute(
         string headerName,
         bool isInput,
-        string? jsonPropertyName = null,
         string? formatPattern = null,
         string? note = null,
         bool enableValidation = false,
@@ -263,7 +204,6 @@ public class ColumnAttribute : Attribute
         FormatEnum formatType = FormatEnum.DEFAULT)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = jsonPropertyName ?? ConvertHeaderNameToJsonPropertyName(headerName);
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = formatType;
@@ -285,7 +225,6 @@ public class ColumnAttribute : Attribute
     public ColumnAttribute(string headerName, FieldType fieldType, bool isInput)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
-        JsonPropertyName = ConvertHeaderNameToJsonPropertyName(headerName);
         FieldType = fieldType;
         IsFieldTypeExplicit = true;
         FormatType = FormatEnum.DEFAULT;
@@ -368,42 +307,5 @@ public class ColumnAttribute : Attribute
             FieldType.String => FormatEnum.TEXT,
             _ => null
         };
-    }
-
-    /// <summary>
-    /// Converts a header name to a camelCase JSON property name
-    /// Examples: "Start Address" -> "startAddress", "Pay" -> "pay", "Amount Per Time" -> "amountPerTime"
-    /// </summary>
-    private static string ConvertHeaderNameToJsonPropertyName(string headerName)
-    {
-        if (string.IsNullOrWhiteSpace(headerName))
-        {
-            return headerName;
-        }
-
-        // Remove common punctuation and split on spaces/special characters
-        var words = headerName
-            .Replace("-", " ")
-            .Replace("_", " ")
-            .Replace(".", " ")
-            .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-        if (words.Length == 0)
-        {
-            return headerName.ToLowerInvariant();
-        }
-
-        // Use StringBuilder for efficient concatenation
-        var result = new StringBuilder(words[0].ToLowerInvariant());
-        for (int i = 1; i < words.Length; i++)
-        {
-            var word = words[i];
-            if (word.Length > 0)
-            {
-                result.Append(char.ToUpperInvariant(word[0])).Append(word[1..].ToLowerInvariant());
-            }
-        }
-
-        return result.ToString();
     }
 }
