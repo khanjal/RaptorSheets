@@ -2,6 +2,7 @@ using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace RaptorSheets.Gig.Entities;
 
@@ -16,10 +17,10 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
     public string Service { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Number, isInput: true, jsonPropertyName: "number", note: ColumnNotes.ShiftNumber)]
+    [Column(SheetsConfig.HeaderNames.Number, isInput: true, note: ColumnNotes.ShiftNumber)]
     public int? Number { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Exclude, isInput: true, jsonPropertyName: "exclude", note: ColumnNotes.Exclude, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.Boolean)]
+    [Column(SheetsConfig.HeaderNames.Exclude, isInput: true, note: ColumnNotes.Exclude, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.Boolean)]
     public bool Exclude { get; set; } = false;
 
     [Column(SheetsConfig.HeaderNames.Type, isInput: true, note: ColumnNotes.Types, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeType)]
@@ -28,10 +29,12 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Place, isInput: true, note: ColumnNotes.Place, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangePlace)]
     public string Place { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Pickup, isInput: true, jsonPropertyName: "pickupTime", note: ColumnNotes.Pickup, formatType: FormatEnum.TIME)]
+    [Column(SheetsConfig.HeaderNames.Pickup, isInput: true, note: ColumnNotes.Pickup, formatType: FormatEnum.TIME)]
+    [JsonPropertyName("pickupTime")]
     public string Pickup { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Dropoff, isInput: true, jsonPropertyName: "dropoffTime", formatType: FormatEnum.TIME)]
+    [Column(SheetsConfig.HeaderNames.Dropoff, isInput: true, formatType: FormatEnum.TIME)]
+    [JsonPropertyName("dropoffTime")]
     public string Dropoff { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Duration, isInput: true, note: ColumnNotes.Duration, formatType: FormatEnum.DURATION)]
@@ -55,19 +58,18 @@ public class TripEntity : SheetRowEntityBase
 
     [Column(SheetsConfig.HeaderNames.OdometerStart,
         isInput: true,
-        jsonPropertyName: "startOdometer",
         formatType: FormatEnum.DISTANCE)]
+    [JsonPropertyName("startOdometer")]
     public decimal? OdometerStart { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerEnd,
         isInput: true,
-        jsonPropertyName: "endOdometer",
         formatType: FormatEnum.DISTANCE)]
+    [JsonPropertyName("endOdometer")]
     public decimal? OdometerEnd { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Distance,
         isInput: true,
-        jsonPropertyName: "distance",
         formatType: FormatEnum.DISTANCE,
         note: ColumnNotes.TripDistance)]
     public decimal? Distance { get; set; }
@@ -84,7 +86,7 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.UnitEnd, isInput: true, note: ColumnNotes.UnitTypes)]
     public string EndUnit { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.OrderNumber, isInput: true, jsonPropertyName: "orderNumber")]
+    [Column(SheetsConfig.HeaderNames.OrderNumber, isInput: true)]
     public string OrderNumber { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Region, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion)]
@@ -106,9 +108,9 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Year)]
     public string Year { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING, "amountPerTime")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING)]
     public decimal? AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING, "amountPerDistance")]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
     public decimal? AmountPerDistance { get; set; }
 }

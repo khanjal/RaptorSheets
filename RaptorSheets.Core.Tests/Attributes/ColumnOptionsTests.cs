@@ -94,7 +94,6 @@ public class ColumnOptionsTests
 
         // Assert
         Assert.Equal("Pay", attribute.HeaderName);
-        Assert.Equal("payAmount", attribute.JsonPropertyName);
         Assert.Equal(FormatEnum.ACCOUNTING, attribute.FormatType);
         Assert.Equal("\"£\"#,##0.00", attribute.NumberFormatPattern);
         Assert.Equal(3, attribute.Order);
@@ -116,7 +115,6 @@ public class ColumnOptionsTests
 
         // Assert
         Assert.Equal("Pay", attribute.HeaderName);
-        Assert.Equal("pay", attribute.JsonPropertyName); // Auto-generated
         Assert.True(attribute.IsInput);
         Assert.Equal("Payment amount", attribute.Note);
         Assert.True(attribute.EnableValidation);
@@ -134,7 +132,6 @@ public class ColumnOptionsTests
 
         // Assert
         Assert.Equal("Test", attribute.HeaderName);
-        Assert.Equal("test", attribute.JsonPropertyName); // Auto-generated
         Assert.True(attribute.IsInput);
         Assert.Equal(-1, attribute.Order);
         Assert.False(attribute.EnableValidation);
@@ -156,7 +153,6 @@ public class ColumnOptionsTests
 
         // Assert
         Assert.Equal("Start Address", attribute.HeaderName);
-        Assert.Equal("startAddress", attribute.JsonPropertyName); // Auto-generated
     }
 
     [Fact]

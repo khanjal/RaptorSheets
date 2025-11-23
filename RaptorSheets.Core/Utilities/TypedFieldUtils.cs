@@ -186,16 +186,6 @@ public static class TypedFieldUtils
         return columnAttr.GetEffectiveHeaderName();
     }
 
-    /// <summary>
-    /// Creates a JSON property name attribute equivalent for the Column
-    /// </summary>
-    /// <param name="columnAttr">The column attribute</param>
-    /// <returns>JSON property name</returns>
-    public static string GetJsonPropertyName(ColumnAttribute columnAttr)
-    {
-        return columnAttr.JsonPropertyName;
-    }
-
     #region Private Conversion Methods
 
     private static object? ParseCurrency(string value)

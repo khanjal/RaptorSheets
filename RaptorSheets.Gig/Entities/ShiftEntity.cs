@@ -3,6 +3,7 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace RaptorSheets.Gig.Entities;
 
@@ -23,7 +24,7 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
     public string Service { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Number, isInput: true, jsonPropertyName: "number", note: ColumnNotes.ShiftNumber)]
+    [Column(SheetsConfig.HeaderNames.Number, isInput: true, note: ColumnNotes.ShiftNumber)]
     public int? Number { get; set; }
 
     [Column(SheetsConfig.HeaderNames.TimeActive, isInput: true, note: ColumnNotes.ActiveTime, formatType: FormatEnum.DURATION)]
@@ -32,7 +33,7 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.TimeTotal, isInput: true, note: ColumnNotes.TotalTime, formatType: FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeOmit, isInput: true, jsonPropertyName: "omit", note: ColumnNotes.TimeOmit, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.Boolean)]
+    [Column(SheetsConfig.HeaderNames.TimeOmit, isInput: true, note: ColumnNotes.TimeOmit, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.Boolean)]
     public bool? Omit { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Trips, isInput: true, note: ColumnNotes.ShiftTrips)]
@@ -42,7 +43,7 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Pay, isInput: true, formatType: FormatEnum.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, isInput: true, jsonPropertyName: "tip", formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Tips, isInput: true, formatType: FormatEnum.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Bonus, isInput: true, formatType: FormatEnum.ACCOUNTING)]
@@ -53,19 +54,18 @@ public class ShiftEntity : SheetRowEntityBase
 
     [Column(SheetsConfig.HeaderNames.OdometerStart,
         isInput: true,
-        jsonPropertyName: "startOdometer",
         formatPattern: CellFormatPatterns.Distance)]
+    [JsonPropertyName("startOdometer")]
     public decimal? OdometerStart { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerEnd,
         isInput: true,
-        jsonPropertyName: "endOdometer",
         formatPattern: CellFormatPatterns.Distance)]
+    [JsonPropertyName("endOdometer")]
     public decimal? OdometerEnd { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Distance,
         isInput: true,
-        jsonPropertyName: "distance",
         formatPattern: CellFormatPatterns.Distance,
         note: ColumnNotes.ShiftDistance)]
     public decimal? Distance { get; set; }
@@ -80,40 +80,40 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Key, isInput: false, note: ColumnNotes.ShiftKey)]
     public string Key { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TotalTimeActive, FormatEnum.DURATION, "totalActive", ColumnNotes.TotalTimeActive)]
+    [Column(SheetsConfig.HeaderNames.TotalTimeActive, FormatEnum.DURATION, ColumnNotes.TotalTimeActive)]
     public string TotalActive { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TotalTime, FormatEnum.DURATION, "totalTime")]
+    [Column(SheetsConfig.HeaderNames.TotalTime, FormatEnum.DURATION)]
     public string TotalTime { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TotalTrips, jsonPropertyName: "totalTrips", note: ColumnNotes.TotalTrips)]
+    [Column(SheetsConfig.HeaderNames.TotalTrips, note: ColumnNotes.TotalTrips)]
     public int TotalTrips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalPay, FormatEnum.ACCOUNTING, "totalPay")]
+    [Column(SheetsConfig.HeaderNames.TotalPay, FormatEnum.ACCOUNTING)]
     public decimal? TotalPay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalTips, FormatEnum.ACCOUNTING, "totalTips")]
+    [Column(SheetsConfig.HeaderNames.TotalTips, FormatEnum.ACCOUNTING)]
     public decimal? TotalTips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalBonus, FormatEnum.ACCOUNTING, "totalBonus")]
+    [Column(SheetsConfig.HeaderNames.TotalBonus, FormatEnum.ACCOUNTING)]
     public decimal? TotalBonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalGrand, FormatEnum.ACCOUNTING, "grandTotal")]
+    [Column(SheetsConfig.HeaderNames.TotalGrand, FormatEnum.ACCOUNTING)]
     public decimal? GrandTotal { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalCash, FormatEnum.ACCOUNTING, "totalCash")]
+    [Column(SheetsConfig.HeaderNames.TotalCash, FormatEnum.ACCOUNTING)]
     public decimal? TotalCash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING, "amountPerTrip")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING)]
     public decimal? AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING, "amountPerTime")]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING)]
     public decimal? AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalDistance, FormatEnum.DISTANCE, "totalDistance", ColumnNotes.TotalDistance)]
+    [Column(SheetsConfig.HeaderNames.TotalDistance, FormatEnum.DISTANCE, ColumnNotes.TotalDistance)]
     public decimal? TotalDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING, "amountPerDistance")]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
     public decimal? AmountPerDistance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.TripsPerHour, FormatEnum.DISTANCE)]
