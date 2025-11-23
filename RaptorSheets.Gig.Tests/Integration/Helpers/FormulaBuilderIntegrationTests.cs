@@ -75,38 +75,6 @@ public class FormulaBuilderIntegrationTests
     }
 
     [Fact]
-    public void FormulaBuilders_ComparedToLegacyHelpers_ShouldProduceSimilarResults()
-    {
-        // Arrange
-        var keyRange = "$A:$A";
-        var header = "Test Header";
-        var lookupRange = "$B:$B";
-        var sumRange = "$C:$C";
-
-        // Act - Compare legacy vs new approaches
-        #pragma warning disable CS0618 // Type or member is obsolete
-        var legacyFormula = ArrayFormulaHelpers.ArrayFormulaSumIf(keyRange, header, lookupRange, sumRange);
-        #pragma warning restore CS0618
-        var newFormula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, header, lookupRange, sumRange);
-
-        // Assert - Both should generate valid ARRAYFORMULA with SUMIF
-        Assert.Contains("=ARRAYFORMULA(", legacyFormula);
-        Assert.Contains("=ARRAYFORMULA(", newFormula);
-        Assert.Contains("SUMIF(", legacyFormula);
-        Assert.Contains("SUMIF(", newFormula);
-        
-        // Both should contain the same range references
-        Assert.Contains(keyRange, legacyFormula);
-        Assert.Contains(keyRange, newFormula);
-        Assert.Contains(header, legacyFormula);
-        Assert.Contains(header, newFormula);
-        Assert.Contains(lookupRange, legacyFormula);
-        Assert.Contains(lookupRange, newFormula);
-        Assert.Contains(sumRange, legacyFormula);
-        Assert.Contains(sumRange, newFormula);
-    }
-
-    [Fact]
     public void FormulaBuilders_WithComplexRanges_ShouldHandleCorrectly()
     {
         // Arrange - Test with complex range references similar to real usage

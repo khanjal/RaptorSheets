@@ -91,7 +91,6 @@ public static class EntitySheetOrderHelper
     public static List<string> ValidateEntitySheetMapping<T>(IEnumerable<string> availableSheets)
     {
         var entityType = typeof(T);
-        // Filter out null values from available sheets
         var availableSheetsSet = availableSheets.Where(s => s != null).ToHashSet();
         var errors = new List<string>();
         var usedOrders = new HashSet<int>();
@@ -102,44 +101,61 @@ public static class EntitySheetOrderHelper
         foreach (var property in properties)
         {
             var sheetOrderAttr = property.GetCustomAttribute<SheetOrderAttribute>();
-            if (sheetOrderAttr != null)
-            {
-                // Validate sheet name exists
-                if (string.IsNullOrEmpty(sheetOrderAttr.SheetName) || !availableSheetsSet.Contains(sheetOrderAttr.SheetName!))
-                {
-                    errors.Add($"Property '{property.Name}' in entity '{entityType.Name}' " +
-                              $"references sheet '{sheetOrderAttr.SheetName ?? "null"}' which is not available in " +
-                              $"SheetsConfig.SheetNames. Please add this sheet to the constants or " +
-                              $"update the SheetOrder attribute.");
-                }
+            if (sheetOrderAttr == null)
+                continue;
 
-                // Validate order is unique (excluding -1 for optional orders)
-                if (sheetOrderAttr.Order != -1)
-                {
-                    if (usedOrders.Contains(sheetOrderAttr.Order))
-                    {
-                        errors.Add($"Order {sheetOrderAttr.Order} is used multiple times in entity '{entityType.Name}'. " +
-                                  $"Each SheetOrder attribute must have a unique Order value.");
-                    }
-                    else
-                    {
-                        usedOrders.Add(sheetOrderAttr.Order);
-                    }
-                }
-
-                // Validate sheet name is unique
-                if (usedSheetNames.Contains(sheetOrderAttr.SheetName!))
-                {
-                    errors.Add($"Sheet name '{sheetOrderAttr.SheetName}' is used multiple times in entity '{entityType.Name}'. " +
-                              $"Each SheetOrder attribute must reference a unique sheet name.");
-                }
-                else
-                {
-                    usedSheetNames.Add(sheetOrderAttr.SheetName!);
-                }
-            }
+            ValidateSheetName(sheetOrderAttr, property, entityType, availableSheetsSet, errors);
+            ValidateOrder(sheetOrderAttr, property, entityType, usedOrders, errors);
+            ValidateSheetNameUniqueness(sheetOrderAttr, property, entityType, usedSheetNames, errors);
         }
 
         return errors;
+    }
+
+    private static void ValidateSheetName(
+        SheetOrderAttribute sheetOrderAttr,
+        PropertyInfo property,
+        Type entityType,
+        HashSet<string> availableSheetsSet,
+        List<string> errors)
+    {
+        if (string.IsNullOrEmpty(sheetOrderAttr.SheetName) || !availableSheetsSet.Contains(sheetOrderAttr.SheetName!))
+        {
+            errors.Add($"Property '{property.Name}' in entity '{entityType.Name}' " +
+                      $"references sheet '{sheetOrderAttr.SheetName ?? "null"}' which is not available in " +
+                      $"SheetsConfig.SheetNames. Please add this sheet to the constants or " +
+                      $"update the SheetOrder attribute.");
+        }
+    }
+
+    private static void ValidateOrder(
+        SheetOrderAttribute sheetOrderAttr,
+        PropertyInfo property,
+        Type entityType,
+        HashSet<int> usedOrders,
+        List<string> errors)
+    {
+        if (sheetOrderAttr.Order == -1)
+            return;
+
+        if (!usedOrders.Add(sheetOrderAttr.Order))
+        {
+            errors.Add($"Order {sheetOrderAttr.Order} is used multiple times in entity '{entityType.Name}'. " +
+                      $"Each SheetOrder attribute must have a unique Order value.");
+        }
+    }
+
+    private static void ValidateSheetNameUniqueness(
+        SheetOrderAttribute sheetOrderAttr,
+        PropertyInfo property,
+        Type entityType,
+        HashSet<string> usedSheetNames,
+        List<string> errors)
+    {
+        if (!usedSheetNames.Add(sheetOrderAttr.SheetName!))
+        {
+            errors.Add($"Sheet name '{sheetOrderAttr.SheetName}' is used multiple times in entity '{entityType.Name}'. " +
+                      $"Each SheetOrder attribute must reference a unique sheet name.");
+        }
     }
 }
