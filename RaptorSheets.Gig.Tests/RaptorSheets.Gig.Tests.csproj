@@ -89,8 +89,4 @@
     <ProjectReference Include="..\RaptorSheets.Test\RaptorSheets.Test.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Unit\Serialization\" />
-  </ItemGroup>
-
 </Project>
