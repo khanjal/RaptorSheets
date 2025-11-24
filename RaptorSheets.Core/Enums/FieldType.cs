@@ -5,16 +5,34 @@ namespace RaptorSheets.Core.Enums;
 /// </summary>
 public enum FieldType
 {
+    // Basic data types
     /// <summary>
     /// Plain text field
     /// </summary>
     String,
     
     /// <summary>
+    /// Boolean field (true/false)
+    /// </summary>
+    Boolean,
+    
+    // Numeric types
+    /// <summary>
+    /// Integer field (whole numbers)
+    /// </summary>
+    Integer,
+    
+    /// <summary>
     /// Numeric field with decimal places
     /// </summary>
     Number,
     
+    /// <summary>
+    /// Percentage field with % symbol
+    /// </summary>
+    Percentage,
+    
+    // Financial types
     /// <summary>
     /// Currency field with currency symbol and formatting ($#,##0.00)
     /// </summary>
@@ -26,6 +44,7 @@ public enum FieldType
     /// </summary>
     Accounting,
     
+    // Date and time types
     /// <summary>
     /// Date and time field with proper serialization for Google Sheets
     /// Uses ToSerialDate() conversion for date values
@@ -44,20 +63,17 @@ public enum FieldType
     /// </summary>
     Duration,
     
+    // Measurement types
+    /// <summary>
+    /// Distance/measurement field with decimal formatting
+    /// </summary>
+    Distance,
+    
+    // Communication types
     /// <summary>
     /// Phone number field with standardized formatting
     /// </summary>
     PhoneNumber,
-    
-    /// <summary>
-    /// Boolean field (true/false)
-    /// </summary>
-    Boolean,
-    
-    /// <summary>
-    /// Integer field (whole numbers)
-    /// </summary>
-    Integer,
     
     /// <summary>
     /// Email address field
@@ -67,10 +83,5 @@ public enum FieldType
     /// <summary>
     /// URL field for web addresses
     /// </summary>
-    Url,
-    
-    /// <summary>
-    /// Percentage field with % symbol
-    /// </summary>
-    Percentage
+    Url
 }

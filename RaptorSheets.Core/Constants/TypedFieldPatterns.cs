@@ -25,7 +25,8 @@ public static class TypedFieldPatterns
         { FieldType.Integer, CellFormatPatterns.Integer },
         { FieldType.Email, CellFormatPatterns.Text },
         { FieldType.Url, CellFormatPatterns.Text },
-        { FieldType.Percentage, CellFormatPatterns.Percentage }
+        { FieldType.Percentage, CellFormatPatterns.Percentage },
+        { FieldType.Distance, CellFormatPatterns.Distance }
     }.ToImmutableDictionary();
 
     /// <summary>
@@ -45,7 +46,8 @@ public static class TypedFieldPatterns
         { FieldType.Integer, CellFormatPatterns.CellFormatNumber },
         { FieldType.Email, CellFormatPatterns.CellFormatText },
         { FieldType.Url, CellFormatPatterns.CellFormatText },
-        { FieldType.Percentage, CellFormatPatterns.CellFormatPercent }
+        { FieldType.Percentage, CellFormatPatterns.CellFormatPercent },
+        { FieldType.Distance, CellFormatPatterns.CellFormatNumber }
     }.ToImmutableDictionary();
 
     /// <summary>
