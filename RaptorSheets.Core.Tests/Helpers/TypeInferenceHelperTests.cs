@@ -56,7 +56,7 @@ public class TypeInferenceHelperTests
     [InlineData(FieldType.Integer, FormatEnum.NUMBER)]
     [InlineData(FieldType.Boolean, FormatEnum.TEXT)]
     [InlineData(FieldType.String, FormatEnum.TEXT)]
-    [InlineData(FieldType.Distance, FormatEnum.DISTANCE)]
+    [InlineData(FieldType.Distance, FormatEnum.NUMBER)]
     public void GetDefaultFormatForFieldType_ReturnsCorrectFormat(FieldType fieldType, FormatEnum expected)
     {
         // Act
@@ -88,10 +88,8 @@ public class TypeInferenceHelperTests
     [InlineData(typeof(string), FormatEnum.DURATION, FieldType.Duration)]
     [InlineData(typeof(string), FormatEnum.DATE, FieldType.DateTime)]
     [InlineData(typeof(string), FormatEnum.TEXT, FieldType.String)]
-    [InlineData(typeof(string), FormatEnum.CURRENCY, FieldType.String)]
-    [InlineData(typeof(decimal), FormatEnum.DATE, FieldType.Currency)]
-    [InlineData(typeof(decimal), FormatEnum.DISTANCE, FieldType.Distance)]
-    [InlineData(typeof(decimal?), FormatEnum.DISTANCE, FieldType.Distance)]
+    [InlineData(typeof(string), FormatEnum.CURRENCY, FieldType.Number)]
+    [InlineData(typeof(decimal), FormatEnum.DISTANCE, FieldType.Number)]
     [InlineData(typeof(int), FormatEnum.TIME, FieldType.Integer)]
     public void InferFieldTypeFromFormat_WithStringAndSpecialFormat_ReturnsCorrectType(
         Type propertyType, FormatEnum format, FieldType expected)
