@@ -57,7 +57,7 @@ public class ContactEntity
 {
     public int RowId { get; set; }
 
-    // Header name automatically generates JSON property name "name"
+    // Basic string field with header mapping
     [Column(SheetsConfig.HeaderNames.Name, FieldType.String)]
     public string Name { get; set; } = "";
 
@@ -70,7 +70,8 @@ public class ContactEntity
     public decimal? Score { get; set; }
 
     // Override JSON name when needed
-    [Column(SheetsConfig.HeaderNames.EmailAddress, FieldType.Email, jsonPropertyName: "email")]
+    [Column(SheetsConfig.HeaderNames.EmailAddress, FieldType.Email)]
+    [JsonPropertyName("email")]
     public string EmailAddress { get; set; } = "";
 }
 
@@ -128,7 +129,7 @@ await service.ExecuteBatchUpdate(requests);
 ## ✨ Key Features
 
 ### TypedField System
-- **ColumnAttribute**: Single attribute for JSON names, headers, types, and formatting
+- **ColumnAttribute**: Single attribute for headers, types, and formatting
 - **Automatic Type Conversion**: Currency, dates, percentages, phone numbers, emails
 - **Default Format Patterns**: Specify only when different from sensible defaults
 - **Header-Driven Configuration**: Use header names as primary source of truth
