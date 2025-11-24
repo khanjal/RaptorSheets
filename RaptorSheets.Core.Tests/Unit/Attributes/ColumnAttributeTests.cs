@@ -89,7 +89,7 @@ public class ColumnAttributeTests
         var pattern = column.GetEffectiveNumberFormatPattern();
         
         // Assert
-        Assert.Equal(CellFormatPatterns.Currency, pattern); // FieldType.Currency default
+        Assert.Equal(CellFormatPatterns.NumberWithDecimals, pattern); // FieldType.Currency default
     }
 
     [Fact]

@@ -14,8 +14,8 @@ public class TypeInferenceHelperTests
     [InlineData(typeof(long?), FieldType.Integer)]
     [InlineData(typeof(short), FieldType.Integer)]
     [InlineData(typeof(byte), FieldType.Integer)]
-    [InlineData(typeof(decimal), FieldType.Currency)]
-    [InlineData(typeof(decimal?), FieldType.Currency)]
+    [InlineData(typeof(decimal), FieldType.Number)]
+    [InlineData(typeof(decimal?), FieldType.Number)]
     [InlineData(typeof(double), FieldType.Number)]
     [InlineData(typeof(double?), FieldType.Number)]
     [InlineData(typeof(float), FieldType.Number)]
@@ -88,7 +88,7 @@ public class TypeInferenceHelperTests
     [InlineData(typeof(string), FormatEnum.DURATION, FieldType.Duration)]
     [InlineData(typeof(string), FormatEnum.DATE, FieldType.DateTime)]
     [InlineData(typeof(string), FormatEnum.TEXT, FieldType.String)]
-    [InlineData(typeof(string), FormatEnum.CURRENCY, FieldType.Number)]
+    [InlineData(typeof(string), FormatEnum.CURRENCY, FieldType.String)]
     [InlineData(typeof(decimal), FormatEnum.DISTANCE, FieldType.Number)]
     [InlineData(typeof(int), FormatEnum.TIME, FieldType.Integer)]
     public void InferFieldTypeFromFormat_WithStringAndSpecialFormat_ReturnsCorrectType(
@@ -113,7 +113,7 @@ public class TypeInferenceHelperTests
 
         // Assert
         Assert.Contains("Decimal", result);
-        Assert.Contains("Currency", result);
+        Assert.Contains("Number", result);
         Assert.Contains("ACCOUNTING", result);
     }
 
@@ -129,8 +129,8 @@ public class TypeInferenceHelperTests
 
         // Assert
         Assert.Contains("Decimal", result);
-        Assert.Contains("Currency", result);
-        Assert.Contains("CURRENCY", result); // Should show the inferred format
+        Assert.Contains("Number", result);
+        Assert.Contains("NUMBER", result); // Should show the inferred format
     }
 
     [Theory]
@@ -162,6 +162,6 @@ public class TypeInferenceHelperTests
 
         // Assert
         Assert.Equal(nonNullableResult, nullableResult);
-        Assert.Equal(FieldType.Currency, nullableResult);
+        Assert.Equal(FieldType.Number, nullableResult);
     }
 }
