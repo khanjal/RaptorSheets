@@ -267,11 +267,46 @@ public class ColumnAttribute : Attribute
     public bool IsOutput => !IsInput;
 
     /// <summary>
-    /// Gets the effective number format pattern (custom pattern or default for field type)
+    /// Gets the effective number format pattern (custom pattern, FormatType pattern, or FieldType pattern)
+    /// Priority: Custom NumberFormatPattern > FormatType pattern > FieldType pattern
     /// </summary>
     public string GetEffectiveNumberFormatPattern()
     {
-        return NumberFormatPattern ?? TypedFieldPatterns.GetDefaultPattern(FieldType);
+        // 1. Use custom pattern if specified
+        if (!string.IsNullOrEmpty(NumberFormatPattern))
+        {
+            return NumberFormatPattern;
+        }
+        
+        // 2. Use FormatType pattern if explicitly specified (not DEFAULT)
+        if (FormatType != FormatEnum.DEFAULT)
+        {
+            return GetPatternFromFormatType(FormatType);
+        }
+        
+        // 3. Fall back to FieldType pattern
+        return TypedFieldPatterns.GetDefaultPattern(FieldType);
+    }
+    
+    /// <summary>
+    /// Gets the pattern for a specific FormatEnum
+    /// </summary>
+    private static string GetPatternFromFormatType(FormatEnum formatType)
+    {
+        return formatType switch
+        {
+            FormatEnum.ACCOUNTING => CellFormatPatterns.Accounting,
+            FormatEnum.CURRENCY => CellFormatPatterns.Currency,
+            FormatEnum.DATE => CellFormatPatterns.Date,
+            FormatEnum.DISTANCE => CellFormatPatterns.Distance,
+            FormatEnum.DURATION => CellFormatPatterns.Duration,
+            FormatEnum.NUMBER => CellFormatPatterns.Number,
+            FormatEnum.PERCENT => CellFormatPatterns.Percentage,
+            FormatEnum.TEXT => CellFormatPatterns.Text,
+            FormatEnum.TIME => CellFormatPatterns.Time,
+            FormatEnum.WEEKDAY => CellFormatPatterns.Weekday,
+            _ => CellFormatPatterns.Text
+        };
     }
 
     /// <summary>
