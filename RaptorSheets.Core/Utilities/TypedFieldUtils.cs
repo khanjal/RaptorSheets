@@ -3,6 +3,7 @@ using System.Reflection;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Helpers;
 
 namespace RaptorSheets.Core.Utilities;
 
@@ -193,9 +194,16 @@ public static class TypedFieldUtils
         if (string.IsNullOrWhiteSpace(value))
             return null;
 
-        // Remove currency symbols and parse
-        var cleanValue = value.Replace("$", "").Replace(",", "").Trim();
-        return decimal.TryParse(cleanValue, NumberStyles.Currency, CultureInfo.InvariantCulture, out var result) ? result : null;
+        // Clean the value using NumberHelper
+        var cleanValue = NumberHelper.CleanNumber(value);
+
+        // Attempt to parse the cleaned value as a decimal
+        if (decimal.TryParse(cleanValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var result))
+        {
+            return result;
+        }
+
+        return null;
     }
 
     private static object? ParsePhoneNumber(string value)
@@ -238,9 +246,12 @@ public static class TypedFieldUtils
         if (string.IsNullOrWhiteSpace(value))
             return GetDefaultValue(targetType);
 
+        // Clean the value using NumberHelper
+        var cleanValue = NumberHelper.CleanNumber(value);
+
         var underlyingType = GetNullableUnderlyingType(targetType);
-        
-        if (double.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var doubleResult))
+
+        if (double.TryParse(cleanValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var doubleResult))
         {
             return Convert.ChangeType(doubleResult, underlyingType, CultureInfo.InvariantCulture);
         }

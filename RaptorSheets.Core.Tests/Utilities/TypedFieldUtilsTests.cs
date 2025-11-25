@@ -116,12 +116,12 @@ public class TypedFieldUtilsTests
     {
         // Arrange
         var attribute = new ColumnAttribute("test");
-        attribute.SetFieldTypeFromProperty(typeof(string));
+        attribute.SetFieldTypeFromProperty(typeof(decimal));
 
         // Act
-        var result = TypedFieldUtils.ConvertFromSheetValue("$12.34", typeof(string), attribute);
+        var result = TypedFieldUtils.ConvertFromSheetValue("$12.34", typeof(decimal), attribute);
 
-        // Assert - Currency parsing should successfully remove the $ sign
+        // Assert - Currency parsing should successfully remove the $ sign and convert to decimal
         Assert.Equal(12.34m, result);
     }
 
