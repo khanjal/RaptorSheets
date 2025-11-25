@@ -17,6 +17,6 @@ public static class NumberHelper
         if (string.IsNullOrWhiteSpace(value))
             return string.Empty;
 
-        return Regex.Replace(value, "[^\\d.\\-]", "").Trim();
+        return Regex.Replace(value, "[^\\d.\\-]", "", RegexOptions.None, TimeSpan.FromMilliseconds(100)).Trim();
     }
 }
