@@ -38,7 +38,7 @@ public class EntitySheetConfigHelperColumnTests
         // Assert
         var customCurrencyHeader = headers.FirstOrDefault(h => h.Name == "CustomCurrency");
         Assert.NotNull(customCurrencyHeader);
-        Assert.Contains("NumberFormat:", customCurrencyHeader.Note ?? "");
+        Assert.Contains("Cell Format:", customCurrencyHeader.Note ?? "");
         Assert.Contains("\"£\"#,##0.00", customCurrencyHeader.Note ?? "");
     }
 

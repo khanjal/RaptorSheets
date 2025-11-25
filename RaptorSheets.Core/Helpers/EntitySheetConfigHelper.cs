@@ -84,11 +84,11 @@ public static class EntitySheetConfigHelper
         {
             if (string.IsNullOrEmpty(header.Note))
             {
-                header.Note = $"NumberFormat:{numberPattern}";
+                header.Note = $"Cell Format: {numberPattern}";
             }
             else
             {
-                header.Note += $"\nNumberFormat:{numberPattern}";
+                header.Note += $"\n\nCell Format: {numberPattern}";
             }
         }
 

@@ -49,9 +49,9 @@ public class TypedFieldUtilsTests
     [InlineData("InvalidDate", typeof(DateTime?), FieldType.DateTime)] // Invalid date string - nullable
     [InlineData("", typeof(DateTime?), FieldType.DateTime)] // Empty string for DateTime - nullable
     [InlineData(null, typeof(DateTime?), FieldType.DateTime)] // Null value for DateTime - nullable
-    [InlineData("NotACurrency", typeof(decimal?), FieldType.Currency)] // Invalid decimal - nullable
-    [InlineData("", typeof(decimal?), FieldType.Currency)] // Empty string for decimal - nullable
-    [InlineData(null, typeof(decimal?), FieldType.Currency)] // Null value for decimal - nullable
+    [InlineData("NotACurrency", typeof(decimal?), FieldType.Number)] // Invalid decimal - nullable
+    [InlineData("", typeof(decimal?), FieldType.Number)] // Empty string for decimal - nullable
+    [InlineData(null, typeof(decimal?), FieldType.Number)] // Null value for decimal - nullable
     public void ConvertFromSheetValue_ShouldReturnDefaultValue_WhenDataIsInvalid(string? input, Type targetType, FieldType fieldType)
     {
         // Arrange
@@ -116,12 +116,12 @@ public class TypedFieldUtilsTests
     {
         // Arrange
         var attribute = new ColumnAttribute("test");
-        attribute.SetFieldTypeFromProperty(typeof(decimal?));
+        attribute.SetFieldTypeFromProperty(typeof(decimal));
 
         // Act
-        var result = TypedFieldUtils.ConvertFromSheetValue("$12.34", typeof(decimal?), attribute);
+        var result = TypedFieldUtils.ConvertFromSheetValue("$12.34", typeof(decimal), attribute);
 
-        // Assert - Currency parsing should successfully remove the $ sign
+        // Assert - Currency parsing should successfully remove the $ sign and convert to decimal
         Assert.Equal(12.34m, result);
     }
 

@@ -13,16 +13,20 @@ public static class TypedFieldPatterns
     /// </summary>
     private static readonly ImmutableDictionary<FieldType, string> _defaultPatterns = new Dictionary<FieldType, string>
     {
-        { FieldType.String, "@" },
-        { FieldType.Number, "#,##0.00" },
-        { FieldType.Currency, "\"$\"#,##0.00" },
-        { FieldType.DateTime, "M/d/yyyy H:mm:ss" },
-        { FieldType.PhoneNumber, "(###) ###-####" },
-        { FieldType.Boolean, "@" },
-        { FieldType.Integer, "0" },
-        { FieldType.Email, "@" },
-        { FieldType.Url, "@" },
-        { FieldType.Percentage, "0.00%" }
+        { FieldType.String, CellFormatPatterns.Text },
+        { FieldType.Number, CellFormatPatterns.NumberWithDecimals },
+        { FieldType.Currency, CellFormatPatterns.Currency },
+        { FieldType.Accounting, CellFormatPatterns.Accounting },
+        { FieldType.DateTime, CellFormatPatterns.Date },
+        { FieldType.Time, CellFormatPatterns.Time },
+        { FieldType.Duration, CellFormatPatterns.Duration },
+        { FieldType.PhoneNumber, CellFormatPatterns.Phone },
+        { FieldType.Boolean, CellFormatPatterns.Text },
+        { FieldType.Integer, CellFormatPatterns.Integer },
+        { FieldType.Email, CellFormatPatterns.Text },
+        { FieldType.Url, CellFormatPatterns.Text },
+        { FieldType.Percentage, CellFormatPatterns.Percentage },
+        { FieldType.Distance, CellFormatPatterns.Distance }
     }.ToImmutableDictionary();
 
     /// <summary>
@@ -30,16 +34,20 @@ public static class TypedFieldPatterns
     /// </summary>
     private static readonly ImmutableDictionary<FieldType, string> _numberFormatTypes = new Dictionary<FieldType, string>
     {
-        { FieldType.String, "TEXT" },
-        { FieldType.Number, "NUMBER" },
-        { FieldType.Currency, "CURRENCY" },
-        { FieldType.DateTime, "DATE_TIME" },
-        { FieldType.PhoneNumber, "NUMBER" },
-        { FieldType.Boolean, "TEXT" },
-        { FieldType.Integer, "NUMBER" },
-        { FieldType.Email, "TEXT" },
-        { FieldType.Url, "TEXT" },
-        { FieldType.Percentage, "PERCENT" }
+        { FieldType.String, CellFormatPatterns.CellFormatText },
+        { FieldType.Number, CellFormatPatterns.CellFormatNumber },
+        { FieldType.Currency, CellFormatPatterns.CellFormatCurrency },
+        { FieldType.Accounting, CellFormatPatterns.CellFormatNumber },
+        { FieldType.DateTime, CellFormatPatterns.CellFormatDateTime },
+        { FieldType.Time, CellFormatPatterns.CellFormatDateTime },
+        { FieldType.Duration, CellFormatPatterns.CellFormatDateTime },
+        { FieldType.PhoneNumber, CellFormatPatterns.CellFormatNumber },
+        { FieldType.Boolean, CellFormatPatterns.CellFormatText },
+        { FieldType.Integer, CellFormatPatterns.CellFormatNumber },
+        { FieldType.Email, CellFormatPatterns.CellFormatText },
+        { FieldType.Url, CellFormatPatterns.CellFormatText },
+        { FieldType.Percentage, CellFormatPatterns.CellFormatPercent },
+        { FieldType.Distance, CellFormatPatterns.CellFormatNumber }
     }.ToImmutableDictionary();
 
     /// <summary>
@@ -47,9 +55,9 @@ public static class TypedFieldPatterns
     /// </summary>
     private static readonly ImmutableDictionary<FieldType, string> _validationPatterns = new Dictionary<FieldType, string>
     {
-        { FieldType.Email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" },
-        { FieldType.PhoneNumber, @"^\+?1?\d{9,15}$" },
-        { FieldType.Url, @"^https?://.+$" }
+        { FieldType.Email, CellFormatPatterns.ValidationEmail },
+        { FieldType.PhoneNumber, CellFormatPatterns.ValidationPhoneNumber },
+        { FieldType.Url, CellFormatPatterns.ValidationUrl }
     }.ToImmutableDictionary();
 
     /// <summary>

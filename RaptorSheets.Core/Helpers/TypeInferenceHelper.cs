@@ -26,7 +26,7 @@ public static class TypeInferenceHelper
             nameof(Int64) => FieldType.Integer,
             nameof(Int16) => FieldType.Integer,
             nameof(Byte) => FieldType.Integer,
-            nameof(Decimal) => FieldType.Currency,  // Default for decimal is currency
+            nameof(Decimal) => FieldType.Number,
             nameof(Double) => FieldType.Number,
             nameof(Single) => FieldType.Number,
             nameof(Boolean) => FieldType.Boolean,
@@ -55,6 +55,7 @@ public static class TypeInferenceHelper
             FieldType.Integer => FormatEnum.NUMBER,
             FieldType.Boolean => FormatEnum.TEXT,
             FieldType.String => FormatEnum.TEXT,
+            FieldType.Distance => FormatEnum.NUMBER,
             _ => FormatEnum.TEXT
         };
     }

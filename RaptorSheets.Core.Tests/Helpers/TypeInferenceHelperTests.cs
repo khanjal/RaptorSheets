@@ -14,8 +14,8 @@ public class TypeInferenceHelperTests
     [InlineData(typeof(long?), FieldType.Integer)]
     [InlineData(typeof(short), FieldType.Integer)]
     [InlineData(typeof(byte), FieldType.Integer)]
-    [InlineData(typeof(decimal), FieldType.Currency)]
-    [InlineData(typeof(decimal?), FieldType.Currency)]
+    [InlineData(typeof(decimal), FieldType.Number)]
+    [InlineData(typeof(decimal?), FieldType.Number)]
     [InlineData(typeof(double), FieldType.Number)]
     [InlineData(typeof(double?), FieldType.Number)]
     [InlineData(typeof(float), FieldType.Number)]
@@ -56,6 +56,7 @@ public class TypeInferenceHelperTests
     [InlineData(FieldType.Integer, FormatEnum.NUMBER)]
     [InlineData(FieldType.Boolean, FormatEnum.TEXT)]
     [InlineData(FieldType.String, FormatEnum.TEXT)]
+    [InlineData(FieldType.Distance, FormatEnum.NUMBER)]
     public void GetDefaultFormatForFieldType_ReturnsCorrectFormat(FieldType fieldType, FormatEnum expected)
     {
         // Act
@@ -88,7 +89,7 @@ public class TypeInferenceHelperTests
     [InlineData(typeof(string), FormatEnum.DATE, FieldType.DateTime)]
     [InlineData(typeof(string), FormatEnum.TEXT, FieldType.String)]
     [InlineData(typeof(string), FormatEnum.CURRENCY, FieldType.String)]
-    [InlineData(typeof(decimal), FormatEnum.DATE, FieldType.Currency)]
+    [InlineData(typeof(decimal), FormatEnum.DISTANCE, FieldType.Number)]
     [InlineData(typeof(int), FormatEnum.TIME, FieldType.Integer)]
     public void InferFieldTypeFromFormat_WithStringAndSpecialFormat_ReturnsCorrectType(
         Type propertyType, FormatEnum format, FieldType expected)
@@ -112,7 +113,7 @@ public class TypeInferenceHelperTests
 
         // Assert
         Assert.Contains("Decimal", result);
-        Assert.Contains("Currency", result);
+        Assert.Contains("Number", result);
         Assert.Contains("ACCOUNTING", result);
     }
 
@@ -128,8 +129,8 @@ public class TypeInferenceHelperTests
 
         // Assert
         Assert.Contains("Decimal", result);
-        Assert.Contains("Currency", result);
-        Assert.Contains("CURRENCY", result); // Should show the inferred format
+        Assert.Contains("Number", result);
+        Assert.Contains("NUMBER", result); // Should show the inferred format
     }
 
     [Theory]
@@ -161,6 +162,6 @@ public class TypeInferenceHelperTests
 
         // Assert
         Assert.Equal(nonNullableResult, nullableResult);
-        Assert.Equal(FieldType.Currency, nullableResult);
+        Assert.Equal(FieldType.Number, nullableResult);
     }
 }
