@@ -2,6 +2,7 @@ using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace RaptorSheets.Gig.Entities;
 
@@ -24,7 +25,7 @@ public class WeekdayEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Pay, FormatEnum.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, FormatEnum.ACCOUNTING, "tip")]
+    [Column(SheetsConfig.HeaderNames.Tips, FormatEnum.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Bonus, FormatEnum.ACCOUNTING)]
@@ -39,7 +40,7 @@ public class WeekdayEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING)]
     public decimal AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, FormatEnum.DISTANCE, "distance")]
+    [Column(SheetsConfig.HeaderNames.Distance, FormatEnum.DISTANCE)]
     public decimal Distance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
@@ -51,15 +52,19 @@ public class WeekdayEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING)]
     public decimal AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDay, FormatEnum.ACCOUNTING, "dailyAverage")]
+    [Column(SheetsConfig.HeaderNames.AmountPerDay, FormatEnum.ACCOUNTING)]
+    [JsonPropertyName("dailyAverage")]
     public decimal AmountPerDay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountCurrent, FormatEnum.ACCOUNTING, "currentAmount")]
+    [Column(SheetsConfig.HeaderNames.AmountCurrent, FormatEnum.ACCOUNTING)]
+    [JsonPropertyName("currentAmount")]
     public decimal CurrentAmount { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPrevious, FormatEnum.ACCOUNTING, "previousAmount")]
+    [Column(SheetsConfig.HeaderNames.AmountPrevious, FormatEnum.ACCOUNTING)]
+    [JsonPropertyName("previousAmount")]
     public decimal PreviousAmount { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerPreviousDay, FormatEnum.ACCOUNTING, "dailyPrevAverage")]
+    [Column(SheetsConfig.HeaderNames.AmountPerPreviousDay, FormatEnum.ACCOUNTING)]
+    [JsonPropertyName("dailyPrevAverage")]
     public decimal AmountPerPrevDay { get; set; }
 }
