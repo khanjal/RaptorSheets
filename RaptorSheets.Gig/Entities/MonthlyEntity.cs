@@ -25,7 +25,7 @@ public class MonthlyEntity
     [Column(SheetsConfig.HeaderNames.Pay, FormatEnum.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, FormatEnum.ACCOUNTING, "tip")]
+    [Column(SheetsConfig.HeaderNames.Tips, FormatEnum.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Bonus, FormatEnum.ACCOUNTING)]
@@ -40,7 +40,7 @@ public class MonthlyEntity
     [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING)]
     public decimal AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, FormatEnum.DISTANCE, "distance")]
+    [Column(SheetsConfig.HeaderNames.Distance, FormatEnum.DISTANCE)]
     public decimal Distance { get; set; }
 
     [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
