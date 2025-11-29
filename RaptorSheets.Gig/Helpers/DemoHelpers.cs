@@ -161,7 +161,6 @@ public static class DemoHelpers
             Distance = shiftData.Distance,
             Pay = shiftData.Pay,
             Tip = shiftData.Tip,
-            Trips = tripsValue,
             Omit = context.Random.NextDouble() < 0.08 // 8% chance to omit
         });
 

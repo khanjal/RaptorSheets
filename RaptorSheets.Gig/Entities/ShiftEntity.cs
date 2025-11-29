@@ -37,7 +37,7 @@ public class ShiftEntity : SheetRowEntityBase
     public bool? Omit { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Trips, isInput: true, note: ColumnNotes.ShiftTrips)]
-    public int Trips { get; set; }
+    public int? Trips { get; set; }
 
     // Financial properties
     [Column(SheetsConfig.HeaderNames.Pay, isInput: true, formatType: FormatEnum.ACCOUNTING)]
