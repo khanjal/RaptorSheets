@@ -11,6 +11,9 @@ namespace RaptorSheets.Gig.Helpers;
 /// </summary>
 public static class DemoHelpers
 {
+        // Global demo dictionaries
+        private static readonly Dictionary<string, List<string>> PlaceAddresses = new();
+        private static readonly Dictionary<string, List<string>> NameAddresses = new();
     /// <summary>
     /// Context object for managing ID generation during demo data creation.
     /// </summary>
@@ -66,6 +69,10 @@ public static class DemoHelpers
 #pragma warning restore S2245
 
         var sheetEntity = new SheetEntity();
+
+        // Initialize global demo pools once
+        GeneratePlacesWithAddresses(random);
+        GeneratePeopleWithAddresses(random, 500);
         var idContext = new DemoIdContext();
 
         for (var date = startDate; date <= endDate; date = date.AddDays(1))
@@ -523,43 +530,126 @@ public static class DemoHelpers
     /// </summary>
     private static TripLocationData GenerateTripLocationData(Random random)
     {
-        // Real restaurant and fast food places
-        var restaurantPlaces = new[] 
-        { 
-            "McDonald's", "Chipotle", "Starbucks", "Panera Bread", "Taco Bell", 
-            "Subway", "Panda Express", "In-N-Out Burger", "Chick-fil-A", "Olive Garden",
-            "Red Lobster", "The Cheesecake Factory", "P.F. Chang's", "Five Guys", "Shake Shack",
-            "Wendy's", "KFC", "Popeyes", "Buffalo Wild Wings", "Applebee's"
-        };
+        // Ensure global pools are initialized
+        if (PlaceAddresses.Count == 0)
+        {
+            GeneratePlacesWithAddresses(random);
+        }
+        if (NameAddresses.Count == 0)
+        {
+            GeneratePeopleWithAddresses(random, 500);
+        }
 
-        // Realistic street addresses
-        var sampleAddresses = new[] 
-        { 
-            "123 Market St", "456 Mission St", "789 Main St", "321 Broadway", "654 University Ave", 
-            "987 El Camino Real", "147 Castro St", "258 Valencia St", "369 Geary St", "741 Post St",
-            "852 Van Ness Ave", "963 Divisadero St", "159 Hayes St", "753 Polk St", "951 Columbus Ave"
-        };
+        // Pick a random place and customer from global dictionaries
+        var placeKeys = PlaceAddresses.Keys.ToList();
+        var place = placeKeys[random.Next(placeKeys.Count)];
+        var startAddress = PlaceAddresses[place][random.Next(PlaceAddresses[place].Count)];
 
-        // First name + Last initial format
-        var firstNames = new[] 
-        { 
-            "John", "Sarah", "Michael", "Emily", "David", "Jessica", "Chris", "Ashley", 
-            "Ryan", "Amanda", "Kevin", "Jennifer", "Brian", "Lauren", "Daniel", "Rachel",
-            "Matthew", "Michelle", "James", "Nicole", "Andrew", "Stephanie", "Jason", "Megan"
-        };
-        
-        // Use GoogleConfig.ColumnLetters for last initial
-        var columnLetters = GoogleConfig.ColumnLetters;
-        var lastInitial = columnLetters[random.Next(columnLetters.Length)].ToString();
-        var customerName = $"{firstNames[random.Next(firstNames.Length)]} {lastInitial}.";
+        var nameKeys = NameAddresses.Keys.ToList();
+        var customerName = nameKeys[random.Next(nameKeys.Count)];
+        var endAddress = NameAddresses[customerName][random.Next(NameAddresses[customerName].Count)];
 
         return new TripLocationData
         {
-            Place = restaurantPlaces[random.Next(restaurantPlaces.Length)],
-            StartAddress = sampleAddresses[random.Next(sampleAddresses.Length)],
-            EndAddress = sampleAddresses[random.Next(sampleAddresses.Length)],
+            Place = place,
+            StartAddress = startAddress,
+            EndAddress = endAddress,
             CustomerName = customerName
         };
+    }
+
+    /// <summary>
+    /// Populates global place address dictionary with 1–5 addresses per place.
+    /// </summary>
+    public static void GeneratePlacesWithAddresses(Random random)
+    {
+        foreach (var place in RestaurantPlaces)
+        {
+            if (!PlaceAddresses.ContainsKey(place))
+            {
+                PlaceAddresses[place] = new List<string>();
+            }
+
+            int targetCount = random.Next(1, 6);
+            int existingCount = PlaceAddresses[place].Count;
+            int toGenerate = Math.Max(0, targetCount - existingCount);
+
+            for (int i = 0; i < toGenerate; i++)
+            {
+                var newAddress = GenerateRandomAddress(random);
+                PlaceAddresses[place].Add(newAddress);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Generates people with random addresses and household members using the provided dictionary.
+    /// </summary>
+    public static void GeneratePeopleWithAddresses(Random random, int numberOfPeople = 500)
+    {
+        for (int i = 0; i < numberOfPeople; i++)
+        {
+            var name = GenerateRandomCustomerName(random);
+
+            if (!NameAddresses.ContainsKey(name))
+            {
+                NameAddresses[name] = new List<string>();
+            }
+
+            // Target 1–2 addresses per person
+            int targetCount = random.Next(1, 3);
+            int existingCount = NameAddresses[name].Count;
+            int toGenerate = Math.Max(0, targetCount - existingCount);
+
+            for (int j = 0; j < toGenerate; j++)
+            {
+                var newAddress = GenerateRandomAddress(random);
+                NameAddresses[name].Add(newAddress);
+            }
+
+            // Rarely generate a household member with the same last initial and shared address
+            if (random.NextDouble() < 0.05 && NameAddresses[name].Count > 0) // ~5% chance
+            {
+                // Extract last initial from the name (e.g., "John A.")
+                var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var lastInitial = parts.Length > 1 && parts[1].Length > 0 ? parts[1][0].ToString() : GoogleConfig.ColumnLetters[random.Next(GoogleConfig.ColumnLetters.Length)].ToString();
+                var householdMemberName = $"{FirstNames[random.Next(FirstNames.Length)]} {lastInitial}.";
+
+                var sharedAddress = NameAddresses[name][random.Next(NameAddresses[name].Count)];
+
+                if (!NameAddresses.ContainsKey(householdMemberName))
+                {
+                    NameAddresses[householdMemberName] = new List<string> { sharedAddress };
+                }
+                else if (!NameAddresses[householdMemberName].Contains(sharedAddress))
+                {
+                    NameAddresses[householdMemberName].Add(sharedAddress);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Generates a random address.
+    /// </summary>
+    private static string GenerateRandomAddress(Random random)
+    {
+        var streetNumber = random.Next(100, 1000);
+        var streetName = StreetNames[random.Next(StreetNames.Length)];
+        var streetType = StreetTypes[random.Next(StreetTypes.Length)];
+        return $"{streetNumber} {streetName} {streetType}";
+    }
+
+    /// <summary>
+    /// Generates a random customer name.
+    /// </summary>
+    private static string GenerateRandomCustomerName(Random random)
+    {
+        // Use GoogleConfig.ColumnLetters for last initial
+        var columnLetters = GoogleConfig.ColumnLetters;
+        var lastInitial = columnLetters[random.Next(columnLetters.Length)].ToString();
+
+        return $"{FirstNames[random.Next(FirstNames.Length)]} {lastInitial}.";
     }
 
     /// <summary>
@@ -593,4 +683,50 @@ public static class DemoHelpers
         public string EndAddress { get; init; } = "";
         public string CustomerName { get; init; } = "";
     }
+
+    // Expanded list of restaurant and fast food places
+    private static readonly string[] RestaurantPlaces =
+    {
+        "McDonald's", "Chipotle", "Starbucks", "Panera Bread", "Taco Bell",
+        "Subway", "Panda Express", "In-N-Out Burger", "Chick-fil-A", "Olive Garden",
+        "Red Lobster", "The Cheesecake Factory", "P.F. Chang's", "Five Guys", "Shake Shack",
+        "Wendy's", "KFC", "Popeyes", "Buffalo Wild Wings", "Applebee's",
+        "Domino's Pizza", "Pizza Hut", "Dunkin' Donuts", "Burger King", "Arby's",
+        "Sonic Drive-In", "Jersey Mike's", "Jimmy John's", "Qdoba", "Del Taco",
+        "Raising Cane's", "Zaxby's", "Wingstop", "Blaze Pizza", "Culver's",
+        "Whataburger", "Hardee's", "Carl's Jr.", "Bojangles", "El Pollo Loco",
+        "Boston Market", "Captain D's", "Checkers", "Church's Chicken", "Freddy's",
+        "Hooters", "Jack in the Box", "Little Caesars", "Papa John's", "Tim Hortons"
+    };
+
+    // Expanded list of street names
+    private static readonly string[] StreetNames =
+    {
+        "Market", "Mission", "Main", "Broadway", "University",
+        "El Camino Real", "Castro", "Valencia", "Geary", "Post",
+        "Maple", "Oak", "Pine", "Cedar", "Elm",
+        "Sunset", "Oceanview", "Highland", "Meadowbrook", "Ridgeway",
+        "Spring", "Summer", "Autumn", "Winter", "Hillcrest",
+        "Park", "Lake", "River", "Forest", "Mountain",
+        "Garden", "Orchard", "Vineyard", "Willow", "Birch",
+        "Chestnut", "Magnolia", "Sycamore", "Hawthorne", "Dogwood",
+        "Aspen", "Juniper", "Spruce", "Fir", "Alder"
+    };
+
+    private static readonly string[] StreetTypes =
+    {
+        "St", "Ave", "Blvd", "Rd", "Dr", "Ln", "Way", "Ct", "Pl", "Terrace"
+    };
+
+    // Expanded list of first names
+    private static readonly string[] FirstNames =
+    {
+        "John", "Sarah", "Michael", "Emily", "David", "Jessica", "Chris", "Ashley",
+        "Ryan", "Amanda", "Kevin", "Jennifer", "Brian", "Lauren", "Daniel", "Rachel",
+        "Matthew", "Michelle", "James", "Nicole", "Andrew", "Stephanie", "Jason", "Megan",
+        "Aisha", "Hiroshi", "Carlos", "Fatima", "Liam", "Sophia", "Zhang", "Priya",
+        "Ethan", "Olivia", "Noah", "Emma", "Lucas", "Isabella", "Mason", "Ava",
+        "Logan", "Mia", "Elijah", "Charlotte", "Alexander", "Amelia", "Jacob", "Harper",
+        "Sebastian", "Ella", "Benjamin", "Scarlett", "Henry", "Grace", "Jackson", "Chloe"
+    };
 }
