@@ -276,4 +276,245 @@ public partial class GoogleSheetManager
     }
 
     #endregion
+
+    #region Formatting Operations
+
+    /// <summary>
+    /// Reapplies formatting to a sheet based on its configuration in SheetsConfig.
+    /// This allows updating column formats, colors, borders, and protection without changing data.
+    /// </summary>
+    /// <param name="sheet">The sheet name to reapply formatting to.</param>
+    /// <param name="options">Formatting options to apply. If null, uses Common defaults.</param>
+    /// <returns>SheetEntity with messages indicating success or errors.</returns>
+    public async Task<SheetEntity> ReapplyFormatting(string sheet, FormattingOptionsEntity? options = null)
+    {
+        return await ReapplyFormatting(new List<string> { sheet }, options ?? FormattingOptionsEntity.Common);
+    }
+
+    /// <summary>
+    /// Reapplies formatting to multiple sheets based on their configurations in SheetsConfig.
+    /// </summary>
+    /// <param name="sheets">The sheet names to reapply formatting to.</param>
+    /// <param name="options">Formatting options to apply. If null, uses Common defaults.</param>
+    /// <returns>SheetEntity with messages indicating success or errors.</returns>
+    public async Task<SheetEntity> ReapplyFormatting(List<string> sheets, FormattingOptionsEntity? options = null)
+    {
+        var sheetEntity = new SheetEntity();
+        var formattingOptions = options ?? FormattingOptionsEntity.Common;
+
+        if (!formattingOptions.HasAnyOptions)
+        {
+            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
+                "No formatting options selected for reapplication",
+                MessageTypeEnum.APPLY_FORMAT));
+            return sheetEntity;
+        }
+
+        try
+        {
+            // Get spreadsheet info to find sheet IDs
+            var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+            if (spreadsheetInfo?.Sheets == null || spreadsheetInfo.Sheets.Count == 0)
+            {
+                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage(
+                    "Unable to retrieve sheet information",
+                    MessageTypeEnum.APPLY_FORMAT));
+                return sheetEntity;
+            }
+
+            var batchUpdateRequest = new BatchUpdateSpreadsheetRequest { Requests = new List<Request>() };
+
+            foreach (var sheet in sheets)
+            {
+                var sheetInfo = spreadsheetInfo.Sheets.FirstOrDefault(s =>
+                    string.Equals(s.Properties.Title, sheet, StringComparison.OrdinalIgnoreCase));
+
+                if (sheetInfo == null)
+                {
+                    sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
+                        $"Sheet '{sheet}' not found in spreadsheet",
+                        MessageTypeEnum.APPLY_FORMAT));
+                    continue;
+                }
+
+                var sheetId = sheetInfo.Properties.SheetId.GetValueOrDefault();
+                var sheetModel = GetSheetConfigurationInternal(sheet);
+
+                if (sheetModel == null)
+                {
+                    sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
+                        $"No configuration found for sheet '{sheet}'",
+                        MessageTypeEnum.APPLY_FORMAT));
+                    continue;
+                }
+
+                // Add formatting requests based on options
+                GenerateFormattingRequests(
+                    batchUpdateRequest,
+                    sheetModel,
+                    sheetId,
+                    sheetInfo,
+                    formattingOptions);
+
+                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
+                    $"Formatting queued for {sheet}",
+                    MessageTypeEnum.APPLY_FORMAT));
+            }
+
+            // Execute batch update if there are requests
+            if (batchUpdateRequest.Requests.Count > 0)
+            {
+                var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateRequest);
+                if (response != null)
+                {
+                    sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
+                        $"Formatting applied successfully to {sheets.Count} sheet(s)",
+                        MessageTypeEnum.APPLY_FORMAT));
+                }
+                else
+                {
+                    sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage(
+                        "Failed to apply formatting - no response from API",
+                        MessageTypeEnum.APPLY_FORMAT));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage(
+                $"Error reapplying formatting: {ex.Message}",
+                MessageTypeEnum.APPLY_FORMAT));
+        }
+
+        return sheetEntity;
+    }
+
+    /// <summary>
+    /// Gets the sheet configuration from SheetsConfig for a given sheet name.
+    /// </summary>
+    public static SheetModel GetSheetConfiguration(string sheetName)
+    {
+        var config = GetSheetConfigurationInternal(sheetName);
+        if (config == null)
+        {
+            throw new ArgumentException($"Unknown sheet name: {sheetName}", nameof(sheetName));
+        }
+        return config;
+    }
+
+    private static SheetModel? GetSheetConfigurationInternal(string sheetName)
+    {
+        return sheetName switch
+        {
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.TripSheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.ShiftSheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.ExpenseSheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.AddressSheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.NameSheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.PlaceSheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.RegionSheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.ServiceSheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.TypeSheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.DailySheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.WeeklySheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.MonthlySheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.YearlySheet,
+            _ when string.Equals(sheetName, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) 
+                => SheetsConfig.SetupSheet,
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// Generates formatting API requests based on the sheet configuration and options.
+    /// </summary>
+    private static void GenerateFormattingRequests(
+        BatchUpdateSpreadsheetRequest batchRequest,
+        SheetModel sheetModel,
+        int sheetId,
+        Google.Apis.Sheets.v4.Data.Sheet sheetInfo,
+        FormattingOptionsEntity options)
+    {
+        // Reapply column formats
+        if (options.ReapplyColumnFormats && sheetModel.Headers.Count > 0)
+        {
+            foreach (var header in sheetModel.Headers.Where(h => h.Format.HasValue))
+            {
+                if (!string.IsNullOrEmpty(header.FormatPattern))
+                {
+                    batchRequest.Requests.Add(
+                        GoogleRequestHelpers.GenerateUpdateNumberFormat(
+                            sheetId,
+                            0, // Start from first row
+                            sheetInfo.Data?.FirstOrDefault()?.RowData?.Count ?? 1000, // To end
+                            header.Index,
+                            header.Index + 1,
+                            header.Format!.Value.GetDescription(),
+                            header.FormatPattern));
+                }
+            }
+        }
+
+        // Reapply tab color
+        if (options.ReapplyColors && sheetModel.TabColor != ColorEnum.BLACK)
+        {
+            var color = SheetHelpers.GetColor(sheetModel.TabColor);
+            batchRequest.Requests.Add(
+                GoogleRequestHelpers.GenerateUpdateTabColor(
+                    sheetId,
+                    color.Red ?? 0,
+                    color.Green ?? 0,
+                    color.Blue ?? 0));
+        }
+
+        // Reapply alternating row colors (cell color)
+        if (options.ReapplyColors && sheetModel.CellColor != ColorEnum.BLACK)
+        {
+            var color = SheetHelpers.GetColor(sheetModel.CellColor);
+            batchRequest.Requests.Add(
+                GoogleRequestHelpers.GenerateUpdateCellColor(
+                    sheetId,
+                    1, // Start from row 2 (after header)
+                    sheetInfo.Data?.FirstOrDefault()?.RowData?.Count ?? 1000,
+                    0,
+                    sheetModel.Headers.Count,
+                    color.Red ?? 0,
+                    color.Green ?? 0,
+                    color.Blue ?? 0));
+        }
+
+        // Reapply frozen rows/columns
+        if (options.ReapplyFrozenRows)
+        {
+            batchRequest.Requests.Add(
+                GoogleRequestHelpers.GenerateUpdateFrozenRowsColumns(
+                    sheetId,
+                    sheetModel.FreezeRowCount,
+                    sheetModel.FreezeColumnCount));
+        }
+
+        // Reapply protection
+        if (options.ReapplyProtection && sheetModel.ProtectSheet)
+        {
+            batchRequest.Requests.Add(
+                GoogleRequestHelpers.GenerateProtectSheet(
+                    sheetId,
+                    $"Protected: {sheetModel.Name}"));
+        }
+    }
+
+    #endregion
 }

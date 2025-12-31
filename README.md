@@ -13,6 +13,15 @@ A comprehensive .NET 8 library that simplifies Google Sheets API interactions fo
 | Code Quality | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=khanjal_RaptorSheets&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=khanjal_RaptorSheets) | [SonarCloud](https://sonarcloud.io/project/overview?id=khanjal_RaptorSheets) |
 | License | [![License](https://img.shields.io/github/license/khanjal/RaptorSheets)](LICENSE) | - |
 
+## 🧭 Project Conventions
+- Shared-first: place reusable entities, helpers, enums, request/response models, and formatting options in Core; keep domain-specific managers/mappers/config in domain projects.
+- Constants as single source: use sheet/header/format names from SheetsConfig (or domain constants when truly domain-only); avoid hard-coded strings.
+- Entity-driven config: generate headers with `EntitySheetConfigHelper.GenerateHeadersFromEntity<T>()` and call `sheet.Headers.UpdateColumns()` before applying formulas/formatting.
+- Request builders: extend `RaptorSheets.Core/Helpers/GoogleRequestHelpers.cs` for new Sheets API operations so all domains share the same builders.
+- Formatting: use the shared `FormattingOptionsEntity` (Core) for formatting/metadata operations; orchestration stays in domain managers.
+- Ordering: default to declaration order; use `ColumnOrder`/`SheetOrder` only when necessary; keep tab order in explicit arrays and validate in tests.
+- Testing: default to deterministic unit tests under `*.Tests/Unit`; seed randomness, avoid time/network flakiness, and prefer validation helpers.
+
 ## 📦 Installation
 
 ```bash
