@@ -24,10 +24,34 @@ public partial class GoogleSheetManager
 
     public async Task<SheetEntity> CreateSheets(List<string> sheets)
     {
-        var batchUpdateSpreadsheetRequest = GenerateSheetsHelpers.Generate(sheets);
-        var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
-
         var sheetEntity = new SheetEntity();
+        var batchUpdateSpreadsheetRequest = GenerateSheetsHelpers.Generate(sheets);
+
+        try
+        {
+            // Move default sheet (e.g., "Sheet1") to end in the same batch to minimize API calls
+            var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+            var defaultSheet = spreadsheetInfo?.Sheets?.FirstOrDefault(s =>
+                string.Equals(s.Properties.Title, "Sheet1", StringComparison.OrdinalIgnoreCase));
+
+            if (defaultSheet != null && defaultSheet.Properties.SheetId.HasValue)
+            {
+                var existingCount = spreadsheetInfo!.Sheets!.Count;
+                var targetIndex = GoogleRequestHelpers.ComputeEndIndex(existingCount, sheets.Count);
+                batchUpdateSpreadsheetRequest.Requests.Add(
+                    GoogleRequestHelpers.GenerateUpdateSheetIndex(defaultSheet.Properties.SheetId.Value, targetIndex)
+                );
+            }
+        }
+        catch
+        {
+            // Warn but proceed with creation
+            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
+                "Could not move default sheet to end; proceeding with creation",
+                MessageTypeEnum.CREATE_SHEET));
+        }
+
+        var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
 
         // No sheets created if null.
         if (response == null)

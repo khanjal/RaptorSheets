@@ -484,4 +484,36 @@ public class GoogleRequestHelpersTests
         Assert.NotNull(result);
         Assert.Empty(result);
     }
+
+    [Fact]
+    public void ComputeEndIndex_ReturnsCorrectEndPosition()
+    {
+        // Arrange
+        var existingSheetCount = 4;
+        var newSheetCount = 10;
+
+        // Act
+        var endIndex = GoogleRequestHelpers.ComputeEndIndex(existingSheetCount, newSheetCount);
+
+        // Assert
+        Assert.Equal(existingSheetCount + newSheetCount, endIndex);
+    }
+
+    [Fact]
+    public void GenerateUpdateSheetIndex_BuildsRequestWithIndexField()
+    {
+        // Arrange
+        var sheetId = 42;
+        var index = 10;
+
+        // Act
+        var request = GoogleRequestHelpers.GenerateUpdateSheetIndex(sheetId, index);
+
+        // Assert
+        Assert.NotNull(request.UpdateSheetProperties);
+        Assert.Equal("index", request.UpdateSheetProperties.Fields);
+        Assert.NotNull(request.UpdateSheetProperties.Properties);
+        Assert.Equal(sheetId, request.UpdateSheetProperties.Properties.SheetId);
+        Assert.Equal(index, request.UpdateSheetProperties.Properties.Index);
+    }
 }
