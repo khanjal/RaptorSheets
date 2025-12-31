@@ -6,6 +6,14 @@
 
 RaptorSheets.Gig is a specialized implementation of RaptorSheets.Core designed for gig work and freelance tracking. It provides pre-configured sheet types, entities, and workflows optimized for managing trips, shifts, expenses, and earnings across multiple gig platforms.
 
+### Conventions for Gig
+- Reuse Core first: consume shared entities/helpers/constants (including `FormattingOptionsEntity` and `GoogleRequestHelpers`) from Core; only domain-specific managers/mappers/config live here.
+- No hard-coded strings: use sheet/header/format constants from SheetsConfig (or Gig constants when truly domain-only).
+- Entity-driven headers: generate via `EntitySheetConfigHelper.GenerateHeadersFromEntity<T>()` and call `sheet.Headers.UpdateColumns()` before adding formulas/formatting.
+- Formatting orchestration: keep formatting logic in managers; models/helpers stay in Core.
+- Ordering: default to declaration order; use `ColumnOrder`/`SheetOrder` only when needed; tab order comes from explicit arrays.
+- Testing: place deterministic unit tests in `RaptorSheets.Gig.Tests/Unit`; seed randomness and avoid time/network flakiness.
+
 ## Table of Contents
 1. [Quick Start](#quick-start)
 2. [Demo Setup](#demo-setup)

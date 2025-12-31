@@ -4,6 +4,23 @@
 
 The RaptorSheets system manages Google Sheets through a layered architecture that separates concerns between configuration, data modeling, and business logic. The system handles complex spreadsheets with automated formulas, cross-sheet references, and **optional** column and sheet ordering.
 
+## AI Contribution Guidelines
+
+- **Put shared logic in Core**: Entities, helpers, models, enums, request/response builders, validation helpers, and constants that can apply across domains belong in `RaptorSheets.Core`. Domain projects (`RaptorSheets.Gig`, `RaptorSheets.Stock`, etc.) should consume these shared pieces instead of duplicating them.
+- **Default shared types to Core**: If a type is or could be used across domains (e.g., formatting options, request models, common entities), add it to `RaptorSheets.Core` and reference it—avoid parallel domain copies.
+- **Keep domain-specific code in its project**: Only domain-specific managers, mappers, and configuration live in the domain project. Prefer referencing Core types instead of redefining them.
+- **Reuse centralized constants**: Always use the shared constants (sheet names, headers, formats) from Core/SheetsConfig to avoid drift.
+- **Prefer entity-driven generation**: Use `EntitySheetConfigHelper.GenerateHeadersFromEntity<T>()` and constants-based sheet ordering; avoid manual header or tab lists unless there is a justified exception.
+- **Leverage existing helpers**: Before adding new helpers, check `Core.Helpers` (e.g., `GoogleRequestHelpers`, `SheetHelpers`, `MapperHelper`) and extend them rather than creating parallel utilities.
+- **Extend GoogleRequestHelpers in Core**: When adding new Google Sheets API requests, put them in `RaptorSheets.Core/Helpers/GoogleRequestHelpers.cs` so all domains share the same request builders.
+- **Use shared formatting models**: Reuse `FormattingOptionsEntity` (in Core) for any formatting/metadata operations; orchestration belongs in domain managers (e.g., `GoogleSheetManager`) but models/helpers stay in Core.
+- **Keep constants single-source**: Reference sheet/header/format constants from `SheetsConfig` (or domain constants when truly domain-specific); avoid hard-coded strings.
+- **Mapper + UpdateColumns pattern**: Prefer `EntitySheetConfigHelper.GenerateHeadersFromEntity<T>()` + `sheet.Headers.UpdateColumns()` before adding formulas/formatting to guarantee correct column indexes.
+- **Deterministic, unit-scoped tests**: Default tests to unit scope under `*.Tests/Unit`; use seeds and validation helpers to avoid flaky time/random/network dependencies.
+- **Testing best practices**: Unit tests belong in the corresponding `*.Tests/Unit` project folders; keep tests deterministic, narrow in scope, and prefer validation helpers over brittle assertions.
+- **Minimal optional attributes**: Use `ColumnOrder`/`SheetOrder` only when necessary; default ordering comes from declaration order.
+- **Maintain reusability and clarity**: Favor small, composable methods, clear naming, and consistent JSON property usage across entities.
+
 ### Key Design Principles
 
 1. **Optional Complexity**: Use explicit ordering only when needed

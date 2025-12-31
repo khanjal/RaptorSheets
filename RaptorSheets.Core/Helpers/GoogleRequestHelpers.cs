@@ -416,4 +416,218 @@ public static class GoogleRequestHelpers
     {
         return existingSheetCount + newSheetCount;
     }
+
+    #region Formatting Requests
+
+    /// <summary>
+    /// Generates a request to update the number format for a cell range.
+    /// </summary>
+    /// <param name="sheetId">The ID of the sheet containing the range.</param>
+    /// <param name="startRowIndex">The zero-based start row index (inclusive).</param>
+    /// <param name="endRowIndex">The zero-based end row index (exclusive).</param>
+    /// <param name="startColumnIndex">The zero-based start column index (inclusive).</param>
+    /// <param name="endColumnIndex">The zero-based end column index (exclusive).</param>
+    /// <param name="numberFormatType">The number format type (e.g., "TEXT", "CURRENCY", "DATE").</param>
+    /// <param name="numberFormatPattern">The number format pattern (e.g., "$#,##0.00", "yyyy-mm-dd").</param>
+    /// <returns>A Request containing the format update.</returns>
+    public static Request GenerateUpdateNumberFormat(
+        int sheetId,
+        int startRowIndex,
+        int endRowIndex,
+        int startColumnIndex,
+        int endColumnIndex,
+        string numberFormatType,
+        string? numberFormatPattern = null)
+    {
+        var updateCellsRequest = new UpdateCellsRequest
+        {
+            Range = new GridRange
+            {
+                SheetId = sheetId,
+                StartRowIndex = startRowIndex,
+                EndRowIndex = endRowIndex,
+                StartColumnIndex = startColumnIndex,
+                EndColumnIndex = endColumnIndex
+            },
+            Fields = "userEnteredFormat.numberFormat"
+        };
+
+        // Create a single row of cell data for the format
+        var rows = new List<RowData>();
+        for (int i = startRowIndex; i < endRowIndex; i++)
+        {
+            var cellData = new List<CellData>();
+            for (int j = startColumnIndex; j < endColumnIndex; j++)
+            {
+                cellData.Add(new CellData
+                {
+                    UserEnteredFormat = new CellFormat
+                    {
+                        NumberFormat = new NumberFormat
+                        {
+                            Type = numberFormatType,
+                            Pattern = numberFormatPattern
+                        }
+                    }
+                });
+            }
+            rows.Add(new RowData { Values = cellData });
+        }
+
+        updateCellsRequest.Rows = rows;
+
+        return new Request { UpdateCells = updateCellsRequest };
+    }
+
+    /// <summary>
+    /// Generates a request to update cell background colors.
+    /// </summary>
+    /// <param name="sheetId">The ID of the sheet containing the range.</param>
+    /// <param name="startRowIndex">The zero-based start row index (inclusive).</param>
+    /// <param name="endRowIndex">The zero-based end row index (exclusive).</param>
+    /// <param name="startColumnIndex">The zero-based start column index (inclusive).</param>
+    /// <param name="endColumnIndex">The zero-based end column index (exclusive).</param>
+    /// <param name="red">The red component (0-1).</param>
+    /// <param name="green">The green component (0-1).</param>
+    /// <param name="blue">The blue component (0-1).</param>
+    /// <param name="alpha">The alpha component (0-1, defaults to 1).</param>
+    /// <returns>A Request containing the color update.</returns>
+    public static Request GenerateUpdateCellColor(
+        int sheetId,
+        int startRowIndex,
+        int endRowIndex,
+        int startColumnIndex,
+        int endColumnIndex,
+        float red,
+        float green,
+        float blue,
+        float alpha = 1f)
+    {
+        var updateCellsRequest = new UpdateCellsRequest
+        {
+            Range = new GridRange
+            {
+                SheetId = sheetId,
+                StartRowIndex = startRowIndex,
+                EndRowIndex = endRowIndex,
+                StartColumnIndex = startColumnIndex,
+                EndColumnIndex = endColumnIndex
+            },
+            Fields = "userEnteredFormat.backgroundColor"
+        };
+
+        var rows = new List<RowData>();
+        for (int i = startRowIndex; i < endRowIndex; i++)
+        {
+            var cellData = new List<CellData>();
+            for (int j = startColumnIndex; j < endColumnIndex; j++)
+            {
+                cellData.Add(new CellData
+                {
+                    UserEnteredFormat = new CellFormat
+                    {
+                        BackgroundColor = new Color
+                        {
+                            Red = red,
+                            Green = green,
+                            Blue = blue,
+                            Alpha = alpha
+                        }
+                    }
+                });
+            }
+            rows.Add(new RowData { Values = cellData });
+        }
+
+        updateCellsRequest.Rows = rows;
+
+        return new Request { UpdateCells = updateCellsRequest };
+    }
+
+    /// <summary>
+    /// Generates a request to update sheet tab color.
+    /// </summary>
+    /// <param name="sheetId">The ID of the sheet.</param>
+    /// <param name="red">The red component (0-1).</param>
+    /// <param name="green">The green component (0-1).</param>
+    /// <param name="blue">The blue component (0-1).</param>
+    /// <param name="alpha">The alpha component (0-1, defaults to 1).</param>
+    /// <returns>A Request containing the tab color update.</returns>
+    public static Request GenerateUpdateTabColor(
+        int sheetId,
+        float red,
+        float green,
+        float blue,
+        float alpha = 1f)
+    {
+        var updateSheetPropertiesRequest = new UpdateSheetPropertiesRequest
+        {
+            Properties = new SheetProperties
+            {
+                SheetId = sheetId,
+                TabColor = new Color
+                {
+                    Red = red,
+                    Green = green,
+                    Blue = blue,
+                    Alpha = alpha
+                }
+            },
+            Fields = "tabColor"
+        };
+
+        return new Request { UpdateSheetProperties = updateSheetPropertiesRequest };
+    }
+
+    /// <summary>
+    /// Generates a request to update frozen rows in a sheet.
+    /// </summary>
+    /// <param name="sheetId">The ID of the sheet.</param>
+    /// <param name="frozenRowCount">The number of rows to freeze (0 to unfreeze).</param>
+    /// <param name="frozenColumnCount">The number of columns to freeze (0 to unfreeze).</param>
+    /// <returns>A Request containing the frozen row/column update.</returns>
+    public static Request GenerateUpdateFrozenRowsColumns(
+        int sheetId,
+        int frozenRowCount,
+        int frozenColumnCount)
+    {
+        var updateSheetPropertiesRequest = new UpdateSheetPropertiesRequest
+        {
+            Properties = new SheetProperties
+            {
+                SheetId = sheetId,
+                GridProperties = new GridProperties
+                {
+                    FrozenRowCount = frozenRowCount,
+                    FrozenColumnCount = frozenColumnCount
+                }
+            },
+            Fields = "gridProperties.frozenRowCount,gridProperties.frozenColumnCount"
+        };
+
+        return new Request { UpdateSheetProperties = updateSheetPropertiesRequest };
+    }
+
+    /// <summary>
+    /// Generates a request to protect a sheet.
+    /// </summary>
+    /// <param name="sheetId">The ID of the sheet to protect.</param>
+    /// <param name="title">The title/description of the protected sheet.</param>
+    /// <returns>A Request containing the sheet protection.</returns>
+    public static Request GenerateProtectSheet(int sheetId, string? title = null)
+    {
+        var addProtectedRangeRequest = new AddProtectedRangeRequest
+        {
+            ProtectedRange = new ProtectedRange
+            {
+                Range = new GridRange { SheetId = sheetId },
+                Description = title ?? $"Protected sheet {sheetId}",
+                WarningOnly = true
+            }
+        };
+
+        return new Request { AddProtectedRange = addProtectedRangeRequest };
+    }
+
+    #endregion
 }
