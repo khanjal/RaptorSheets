@@ -24,6 +24,7 @@ public partial class GoogleSheetManager
 
     public async Task<SheetEntity> CreateSheets(List<string> sheets)
     {
+        var sheetEntity = new SheetEntity();
         var batchUpdateSpreadsheetRequest = GenerateSheetsHelpers.Generate(sheets);
 
         try
@@ -44,12 +45,13 @@ public partial class GoogleSheetManager
         }
         catch
         {
-            // Ignore errors in moving default sheet; proceed with creation
+            // Warn but proceed with creation
+            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
+                "Could not move default sheet to end; proceeding with creation",
+                MessageTypeEnum.CREATE_SHEET));
         }
 
         var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
-
-        var sheetEntity = new SheetEntity();
 
         // No sheets created if null.
         if (response == null)

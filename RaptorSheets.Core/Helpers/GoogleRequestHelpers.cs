@@ -376,7 +376,12 @@ public static class GoogleRequestHelpers
         return batchUpdateValuesRequest;
     }
 
-    // New: Update sheet tab index (position)
+    /// <summary>
+    /// Generates a request to update a sheet's tab index (position).
+    /// </summary>
+    /// <param name="sheetId">The ID of the sheet to move.</param>
+    /// <param name="index">The target zero-based index position for the sheet tab.</param>
+    /// <returns>A <see cref="Request"/> containing the UpdateSheetProperties request.</returns>
     public static Request GenerateUpdateSheetIndex(int sheetId, int index)
     {
         var updateRequest = new UpdateSheetPropertiesRequest
@@ -392,7 +397,21 @@ public static class GoogleRequestHelpers
         return new Request { UpdateSheetProperties = updateRequest };
     }
 
-    // New: Helper to compute end index for moving default tab to the end within same batch
+    /// <summary>
+    /// Computes the target zero-based sheet index for moving a sheet to the end position
+    /// after adding new sheets in the same batch operation.
+    /// </summary>
+    /// <param name="existingSheetCount">
+    /// The number of sheets that exist in the spreadsheet before the batch operation.
+    /// </param>
+    /// <param name="newSheetCount">
+    /// The number of new sheets being added in the same batch operation.
+    /// </param>
+    /// <returns>
+    /// The target index at which a sheet can be placed to position it after all
+    /// existing and newly added sheets. This is calculated as 
+    /// <c>existingSheetCount + newSheetCount</c>.
+    /// </returns>
     public static int ComputeEndIndex(int existingSheetCount, int newSheetCount)
     {
         return existingSheetCount + newSheetCount;
