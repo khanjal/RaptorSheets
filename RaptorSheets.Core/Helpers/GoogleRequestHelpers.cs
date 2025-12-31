@@ -375,4 +375,26 @@ public static class GoogleRequestHelpers
 
         return batchUpdateValuesRequest;
     }
+
+    // New: Update sheet tab index (position)
+    public static Request GenerateUpdateSheetIndex(int sheetId, int index)
+    {
+        var updateRequest = new UpdateSheetPropertiesRequest
+        {
+            Properties = new SheetProperties
+            {
+                SheetId = sheetId,
+                Index = index
+            },
+            Fields = "index"
+        };
+
+        return new Request { UpdateSheetProperties = updateRequest };
+    }
+
+    // New: Helper to compute end index for moving default tab to the end within same batch
+    public static int ComputeEndIndex(int existingSheetCount, int newSheetCount)
+    {
+        return existingSheetCount + newSheetCount;
+    }
 }
