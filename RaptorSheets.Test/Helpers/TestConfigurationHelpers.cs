@@ -43,4 +43,11 @@ public static class TestConfigurationHelpers
 
         return _configuration["spreadsheets:stock"] ?? string.Empty;
     }
+
+    public static string GetJobSheet()
+    {
+        GetConfiguration();
+
+        return _configuration["spreadsheets:job"] ?? string.Empty;
+    }
 }

@@ -37,6 +37,23 @@ public static class GoogleFormulaBuilder
     #region Generic ARRAYFORMULA Builders
 
     /// <summary>
+    /// Builds a generic ARRAYFORMULA with custom formula.
+    /// This is the base builder that all other BuildArrayFormula* methods use internally.
+    /// Pattern: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true, {formula}))
+    /// </summary>
+    /// <param name="keyRange">The range to check for row position and blanks (e.g., "A2:A")</param>
+    /// <param name="header">The column header name to display in row 1</param>
+    /// <param name="formula">The formula to apply starting from row 2</param>
+    /// <returns>Complete ARRAYFORMULA string</returns>
+    public static string BuildArrayFormula(string keyRange, string header, string formula)
+    {
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, formula);
+    }
+
+    /// <summary>
     /// Builds a complete ARRAYFORMULA with SUMIF aggregation
     /// </summary>
     public static string BuildArrayFormulaSumIf(string keyRange, string header, string lookupRange, string sumRange)

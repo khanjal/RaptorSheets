@@ -70,9 +70,10 @@ public static class SheetsConfig
         SheetNames.Schedules,
 
         // Analysis/summary sheets
-        SheetNames.Weekly,
-        SheetNames.Monthly,
-        SheetNames.Summary,
+        // TODO: Implement Weekly, Monthly, Summary sheets
+        // SheetNames.Weekly,
+        // SheetNames.Monthly,
+        // SheetNames.Summary,
 
         // Administrative sheets (rightmost tabs)
         SheetNames.Setup
@@ -231,9 +232,10 @@ public static class SheetsConfig
         Name = SheetNames.Applications,
         CellColor = ColorEnum.LIGHT_CYAN,
         TabColor = ColorEnum.BLUE,
+        FontColor = ColorEnum.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
-        ProtectSheet = true,
+        ProtectSheet = false,  // Input sheet - don't protect entire sheet
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ApplicationEntity>()
     };
 
@@ -242,9 +244,10 @@ public static class SheetsConfig
         Name = SheetNames.Interviews,
         CellColor = ColorEnum.LIGHT_GREEN,
         TabColor = ColorEnum.GREEN,
+        FontColor = ColorEnum.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
-        ProtectSheet = true,
+        ProtectSheet = false,  // Input sheet - don't protect entire sheet
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<InterviewEntity>()
     };
 
@@ -275,9 +278,10 @@ public static class SheetsConfig
         Name = SheetNames.CompanyDetails,
         CellColor = ColorEnum.LIGHT_PURPLE,
         TabColor = ColorEnum.PURPLE,
+        FontColor = ColorEnum.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
-        ProtectSheet = false,
+        ProtectSheet = false,  // Input sheet
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<CompanyDetailEntity>()
     };
 
@@ -286,9 +290,10 @@ public static class SheetsConfig
         Name = SheetNames.PositionDetails,
         CellColor = ColorEnum.LIGHT_PURPLE,
         TabColor = ColorEnum.PURPLE,
+        FontColor = ColorEnum.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
-        ProtectSheet = false,
+        ProtectSheet = false,  // Input sheet
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PositionDetailEntity>()
     };
 
@@ -352,9 +357,10 @@ public static class SheetsConfig
         Name = SheetNames.Setup,
         TabColor = ColorEnum.ORANGE,
         CellColor = ColorEnum.LIGHT_YELLOW,
+        FontColor = ColorEnum.WHITE,
         FreezeColumnCount = 0,
         FreezeRowCount = 1,
-        ProtectSheet = false,
+        ProtectSheet = false,  // Admin sheet - allow edits
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<SetupEntity>()
     };
 }

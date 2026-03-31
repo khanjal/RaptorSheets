@@ -3,6 +3,7 @@ using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Entities;
+using RaptorSheets.Job.Helpers;
 
 namespace RaptorSheets.Job.Mappers;
 
@@ -42,18 +43,19 @@ public static class InterviewMapper
             switch (headerName)
             {
                 case var _ when headerName == SheetsConfig.HeaderNames.Key:
-                    // Formula to generate key matching application: Company-JobTitle-0 (default)
-                    // Users should update the number to match their application if needed
-                    header.Formula = $@"=ARRAYFORMULA(IF(LEN({companyRange})=0,"""",
-                        {companyRange}&""-""&{jobTitleRange}&""-0""))";
+                    header.Formula = JobFormulaBuilder.BuildKeyFormula(
+                        dateRange,
+                        SheetsConfig.HeaderNames.Key,
+                        companyRange,
+                        jobTitleRange);
                     break;
 
                 case var _ when headerName == SheetsConfig.HeaderNames.InterviewRound:
-                    // Calculate interview round by counting previous interviews for same key
                     var keyRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Key);
-                    header.Formula = $@"=ARRAYFORMULA(IF(LEN({keyRange})=0,"""",
-                        COUNTIFS({keyRange},{keyRange},
-                                 ROW({keyRange}),""<=""&ROW({keyRange}))))";
+                    header.Formula = JobFormulaBuilder.BuildInterviewRoundFormula(
+                        dateRange,
+                        SheetsConfig.HeaderNames.InterviewRound,
+                        keyRange);
                     break;
 
                 default:

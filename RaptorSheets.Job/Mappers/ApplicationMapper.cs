@@ -3,6 +3,7 @@ using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Entities;
+using RaptorSheets.Job.Helpers;
 
 namespace RaptorSheets.Job.Mappers;
 
@@ -31,13 +32,12 @@ public static class ApplicationMapper
     /// <param name="sheet">The Applications sheet model to configure.</param>
     private static void ConfigureApplicationFormulas(SheetModel sheet)
     {
+        // Note: UpdateColumns() has already been called by GenericSheetMapper
+        // We can now safely use GetLocalRange methods
+
         var dateRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Date);
         var companyRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Company);
         var jobTitleRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.JobTitle);
-
-        // Get Interview sheet for counting
-        var interviewSheet = InterviewMapper.GetSheet();
-        var interviewKeyRange = interviewSheet.GetRange(SheetsConfig.HeaderNames.Key);
 
         sheet.Headers.ForEach(header =>
         {
@@ -46,37 +46,38 @@ public static class ApplicationMapper
             switch (headerName)
             {
                 case var _ when headerName == SheetsConfig.HeaderNames.Key:
-                    // Formula to generate unique key: Company-JobTitle-0 (default)
-                    // Users can modify the number if they have multiple applications for same company/position
-                    header.Formula = $@"=ARRAYFORMULA(IF(LEN({companyRange})=0,"""",
-                        {companyRange}&""-""&{jobTitleRange}&""-0""))";
+                    header.Formula = JobFormulaBuilder.BuildKeyFormula(
+                        dateRange,
+                        SheetsConfig.HeaderNames.Key,
+                        companyRange,
+                        jobTitleRange);
                     break;
 
                 case var _ when headerName == SheetsConfig.HeaderNames.InterviewCount:
-                    // Count interviews for this application based on key match
                     var keyRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Key);
-                    header.Formula = $@"=ARRAYFORMULA(IF(LEN({keyRange})=0,"""",
-                        COUNTIF({interviewKeyRange},{keyRange})))";
+                    header.Formula = JobFormulaBuilder.BuildInterviewCountFormula(
+                        dateRange,
+                        SheetsConfig.HeaderNames.InterviewCount,
+                        keyRange);
                     break;
 
                 case var _ when headerName == SheetsConfig.HeaderNames.DaysActive:
-                    // Calculate days between application and decision date
-                    // If no decision date, calculate to today
                     var decisionDateRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.DecisionDate);
-                    header.Formula = $@"=ARRAYFORMULA(IF(LEN({dateRange})=0,"""",
-                        IF(LEN({decisionDateRange})>0,
-                            {decisionDateRange}-{dateRange},
-                            TODAY()-{dateRange})))";
+                    header.Formula = JobFormulaBuilder.BuildDaysActiveFormula(
+                        dateRange,
+                        SheetsConfig.HeaderNames.DaysActive,
+                        dateRange,
+                        decisionDateRange);
                     break;
 
                 case var _ when headerName == SheetsConfig.HeaderNames.PayAvg:
-                    // Calculate average of low and high pay
                     var payLowRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.PayLow);
                     var payHighRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.PayHigh);
-                    header.Formula = $@"=ARRAYFORMULA(IF(LEN({dateRange})=0,"""",
-                        IF(AND(ISNUMBER({payLowRange}),ISNUMBER({payHighRange})),
-                            ({payLowRange}+{payHighRange})/2,
-                            """")))";
+                    header.Formula = JobFormulaBuilder.BuildPayAverageFormula(
+                        dateRange,
+                        SheetsConfig.HeaderNames.PayAvg,
+                        payLowRange,
+                        payHighRange);
                     break;
 
                 default:

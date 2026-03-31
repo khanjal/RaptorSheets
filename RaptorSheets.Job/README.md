@@ -702,6 +702,117 @@ foreach (var site in topSites)
 - Check that sheet names match exactly
 - Verify validation is configured in mapper
 
+## Testing
+
+### Running Integration Tests
+
+The Job project includes comprehensive integration tests that validate sheet creation, data operations, and formulas against actual Google Sheets.
+
+#### Prerequisites
+
+1. **Google Service Account Credentials**: Required for Google Sheets API access
+2. **Test Spreadsheet**: A dedicated Google Sheets spreadsheet for testing
+
+#### Configure User Secrets
+
+Set up your test credentials and spreadsheet ID:
+
+```bash
+# Navigate to the Test.Common project
+cd RaptorSheets.Test
+
+# Set your Google credentials (JSON format)
+dotnet user-secrets set "google_credentials:type" "service_account"
+dotnet user-secrets set "google_credentials:private_key_id" "YOUR_PRIVATE_KEY_ID"
+dotnet user-secrets set "google_credentials:private_key" "YOUR_PRIVATE_KEY"
+dotnet user-secrets set "google_credentials:client_email" "YOUR_CLIENT_EMAIL"
+dotnet user-secrets set "google_credentials:client_id" "YOUR_CLIENT_ID"
+
+# Set your test spreadsheet ID (found in the Google Sheets URL)
+dotnet user-secrets set "spreadsheets:job" "YOUR_SPREADSHEET_ID"
+```
+
+#### Run Integration Tests
+
+```bash
+# Run all integration tests
+dotnet test RaptorSheets.Job.Tests --filter "Category=Integration"
+
+# Run specific test class
+dotnet test RaptorSheets.Job.Tests --filter "FullyQualifiedName~GoogleSheetsIntegrationTests"
+
+# Run with detailed output
+dotnet test RaptorSheets.Job.Tests --filter "Category=Integration" --logger "console;verbosity=detailed"
+```
+
+#### What the Integration Tests Do
+
+1. **Environment Setup** (`IntegrationTestFixture`):
+   - Runs once before all tests
+   - Deletes existing sheets in test spreadsheet
+   - Creates fresh sheets with proper structure
+   - Validates sheet creation succeeded
+
+2. **Sheet Structure Validation**:
+   - Verifies all required sheets exist
+   - Validates headers match expected configuration
+   - Checks sheet tab order
+   - Ensures proper formatting and protection
+
+3. **Demo Data Generation**:
+   - Tests realistic application and interview data generation
+   - Validates date ranges
+   - Checks reference data population
+
+#### View Test Results in Google Sheets
+
+After running the tests, you can open your test spreadsheet in Google Sheets to see:
+- ? All sheets created with proper formatting
+- ? Headers with correct names and order  
+- ? Formulas configured in calculated columns
+- ? Data validation dropdowns working
+- ? Proper tab colors and protection
+
+**Example Test Spreadsheet**:
+```
+https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit
+```
+
+#### Troubleshooting
+
+**"User secrets not configured" - Tests Skipped**:
+```bash
+# Verify secrets are set
+dotnet user-secrets list --project RaptorSheets.Test.Common.csproj
+```
+
+**"Sheet creation failed" - Permission Error**:
+- Ensure your service account has Editor access to the spreadsheet
+- Share the spreadsheet with your service account email: `your-service@project.iam.gserviceaccount.com`
+
+**"Tests are slow"**:
+- Integration tests make real API calls to Google Sheets
+- Expected runtime: 10-30 seconds for full suite
+- Tests run sequentially to avoid API rate limits
+
+### Unit Tests
+
+Unit tests validate individual components without requiring Google Sheets access:
+
+```bash
+# Run all unit tests
+dotnet test RaptorSheets.Job.Tests --filter "Category!=Integration"
+
+# Run specific test class
+dotnet test RaptorSheets.Job.Tests --filter "FullyQualifiedName~SheetsConfigTests"
+```
+
+Unit tests cover:
+- Sheet configuration validation
+- Header name constants
+- Sheet ordering and utilities
+- Entity structure validation
+
 ## License
 
 MIT License - see LICENSE file for details

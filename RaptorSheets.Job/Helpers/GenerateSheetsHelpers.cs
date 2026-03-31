@@ -133,7 +133,24 @@ public static class GenerateSheetsHelpers
 
             if (!string.IsNullOrEmpty(header.Validation))
             {
-                // Simple validation support - can be enhanced later
+                // Validation range needs = prefix for Google Sheets
+                // Sheet names with spaces need to be wrapped in single quotes
+                var validationValue = header.Validation;
+                if (!validationValue.StartsWith("="))
+                {
+                    validationValue = $"={validationValue}";
+                }
+
+                // Check if the range contains a sheet name with spaces and wrap it in quotes if needed
+                if (validationValue.Contains("!") && !validationValue.Contains("'"))
+                {
+                    var parts = validationValue.Split('!');
+                    if (parts[0].Contains(" "))
+                    {
+                        validationValue = $"='{parts[0].TrimStart('=')}'!{parts[1]}";
+                    }
+                }
+
                 repeatCellModel.DataValidation = new Google.Apis.Sheets.v4.Data.DataValidationRule
                 {
                     Condition = new Google.Apis.Sheets.v4.Data.BooleanCondition
@@ -141,11 +158,11 @@ public static class GenerateSheetsHelpers
                         Type = "ONE_OF_RANGE",
                         Values = new List<Google.Apis.Sheets.v4.Data.ConditionValue>
                         {
-                            new() { UserEnteredValue = header.Validation }
+                            new() { UserEnteredValue = validationValue }
                         }
                     },
                     ShowCustomUi = true,
-                    Strict = true
+                    Strict = false
                 };
             }
 
