@@ -31,9 +31,6 @@ public class ApplicationEntity : SheetRowEntityBase
 
     // Calculated columns
 
-    [Column(SheetsConfig.HeaderNames.Key, isInput: false)]
-    public string Key { get; set; } = "";
-
     [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: FormatEnum.NUMBER)]
     public int InterviewCount { get; set; }
 
@@ -73,4 +70,12 @@ public class ApplicationEntity : SheetRowEntityBase
 
     [Column(SheetsConfig.HeaderNames.Schedule, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeSchedule)]
     public string Schedule { get; set; } = "";
+
+    // Duplicate counter for company+jobtitle combos (user-visible '#')
+    [Column(SheetsConfig.HeaderNames.Duplicate, isInput: false, formatType: FormatEnum.NUMBER)]
+    public int? Duplicate { get; set; }
+
+    // Calculated/linked columns - moved to the end so the Key column is not visible in primary input area
+    [Column(SheetsConfig.HeaderNames.Key, isInput: false)]
+    public string Key { get; set; } = "";
 }

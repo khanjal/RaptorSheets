@@ -89,6 +89,7 @@ public static class SheetsConfig
         public const string Date = "Date";
         public const string Company = "Company";
         public const string JobTitle = "Job Title";
+        public const string Duplicate = "#"; // Duplicate occurrence counter for company+jobtitle combos
         public const string Notes = "Notes";
 
         // Application headers
@@ -98,9 +99,10 @@ public static class SheetsConfig
         public const string Decision = "Decision";
         public const string DecisionDate = "Decision Date";
         public const string DaysActive = "Days Active";
-        public const string PayLow = "Pay - Low";
-        public const string PayHigh = "Pay - High";
-        public const string PayAvg = "Pay - Avg";
+        // Payment fields: removed dashes for simpler mapping and display (e.g., "Pay Low")
+        public const string PayLow = "Pay Low";
+        public const string PayHigh = "Pay High";
+        public const string PayAvg = "Pay Avg";
         public const string Location = "Location";
         public const string Schedule = "Schedule";
 

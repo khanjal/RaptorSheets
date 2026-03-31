@@ -33,10 +33,6 @@ public class InterviewEntity : SheetRowEntityBase
     public string JobTitle { get; set; } = "";
 
     // Calculated/linked columns
-
-    [Column(SheetsConfig.HeaderNames.Key, isInput: false)]
-    public string Key { get; set; } = "";
-
     // Input columns continued
 
     [Column(SheetsConfig.HeaderNames.InterviewType, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeInterviewType)]
@@ -63,4 +59,12 @@ public class InterviewEntity : SheetRowEntityBase
 
     [Column(SheetsConfig.HeaderNames.Notes, isInput: true)]
     public string Notes { get; set; } = "";
+
+    // Duplicate counter for company+jobtitle combos (user-visible '#')
+    [Column(SheetsConfig.HeaderNames.Duplicate, isInput: false, formatType: FormatEnum.NUMBER)]
+    public int? Duplicate { get; set; }
+
+    // Calculated/linked columns - moved to the end so the Key is not directly edited in the main input area
+    [Column(SheetsConfig.HeaderNames.Key, isInput: false)]
+    public string Key { get; set; } = "";
 }

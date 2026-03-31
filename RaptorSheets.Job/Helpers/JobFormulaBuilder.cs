@@ -10,11 +10,17 @@ namespace RaptorSheets.Job.Helpers;
 public static class JobFormulaBuilder
 {
     /// <summary>
-    /// Builds Key formula: Company-JobTitle-0
+    /// Builds Key formula: Company-JobTitle-<duplicate>
+    /// If duplicateRange is empty the key will end in -0
     /// </summary>
-    public static string BuildKeyFormula(string keyRange, string header, string companyRange, string jobTitleRange)
+    public static string BuildKeyFormula(string keyRange, string header, string companyRange, string jobTitleRange, string? duplicateRange = null)
     {
-        var formula = $"{companyRange}&\"-\"&{jobTitleRange}&\"-0\"";
+        // If duplicateRange provided, append '-' & duplicateRange; otherwise append '-0'
+        var duplicatePart = string.IsNullOrEmpty(duplicateRange)
+            ? "\"-0\""
+            : "\"-\"&" + duplicateRange;
+
+        var formula = $"{companyRange}&\"-\"&{jobTitleRange}&" + duplicatePart;
         return GoogleFormulaBuilder.BuildArrayFormula(keyRange, header, formula);
     }
 
@@ -53,6 +59,16 @@ public static class JobFormulaBuilder
     public static string BuildInterviewRoundFormula(string keyRange, string header, string interviewKeyRange)
     {
         var formula = $"COUNTIFS({interviewKeyRange},{interviewKeyRange},ROW({interviewKeyRange}),\"<=\"&ROW({interviewKeyRange}))";
+        return GoogleFormulaBuilder.BuildArrayFormula(keyRange, header, formula);
+    }
+
+    /// <summary>
+    /// Builds Duplicate count formula: counts occurrences of company+jobtitle up to current row
+    /// </summary>
+    public static string BuildDuplicateCountFormula(string keyRange, string header, string companyRange, string jobTitleRange)
+    {
+        // COUNTIFS(companyRange, companyRange, jobTitleRange, jobTitleRange, ROW(companyRange), "<="&ROW(companyRange))
+        var formula = $"COUNTIFS({companyRange},{companyRange},{jobTitleRange},{jobTitleRange},ROW({companyRange}),\"<=\"&ROW({companyRange}))";
         return GoogleFormulaBuilder.BuildArrayFormula(keyRange, header, formula);
     }
 }

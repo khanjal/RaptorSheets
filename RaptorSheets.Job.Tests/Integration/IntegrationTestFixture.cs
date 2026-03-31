@@ -49,29 +49,29 @@ public class IntegrationTestFixture : IAsyncLifetime
                 Console.WriteLine("Waiting 3s for deletion to propagate...");
                 await Task.Delay(3000);
 
-                // Step 2: Create all fresh sheets
-                Console.WriteLine("Creating all sheets...");
-                var createResult = await testBase.GoogleSheetManager!.CreateAllSheets();
-                Console.WriteLine($"Create result: {createResult.Messages.Count} messages");
-                foreach (var msg in createResult.Messages)
+                // Step 2: Create all fresh sheets and populate demo data (SetupDemo handles both)
+                try
                 {
-                    Console.WriteLine($"  [{msg.Level}] {msg.Message}");
+                    Console.WriteLine("Creating sheets and populating demo data (SetupDemo)...");
+                    var demoResult = await testBase.GoogleSheetManager!.SetupDemo();
+                    Console.WriteLine($"SetupDemo complete: Applications={demoResult.Applications.Count}, Interviews={demoResult.Interviews.Count}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"WARNING: SetupDemo failed: {ex.Message}");
                 }
 
-                var createErrors = createResult.Messages.Where(m => m.Level == "ERROR").ToList();
-
-                if (createErrors.Count > 0)
+                // Populate demo data so calculated columns and sample rows are visible for integration tests
+                try
                 {
-                    Console.WriteLine($"WARNING: Sheet creation had errors: {string.Join(", ", createErrors.Select(e => e.Message))}");
+                    Console.WriteLine("Populating demo data into sheets...");
+                    var demo = await testBase.GoogleSheetManager!.PopulateDemoData();
+                    Console.WriteLine($"Demo population complete: Applications={demo.Applications.Count}, Interviews={demo.Interviews.Count}");
                 }
-                else
+                catch (Exception ex)
                 {
-                    Console.WriteLine("SUCCESS: Fresh sheets created successfully");
+                    Console.WriteLine($"WARNING: Demo data population failed: {ex.Message}");
                 }
-
-                // Wait for creation to complete
-                Console.WriteLine("Waiting 2s for creation to complete...");
-                await Task.Delay(2000);
             }
 
             Console.WriteLine("SUCCESS: Integration test environment ready");

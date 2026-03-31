@@ -35,6 +35,7 @@ public static class InterviewMapper
         var dateRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Date);
         var companyRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Company);
         var jobTitleRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.JobTitle);
+        var duplicateRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Duplicate);
 
         sheet.Headers.ForEach(header =>
         {
@@ -47,7 +48,8 @@ public static class InterviewMapper
                         dateRange,
                         SheetsConfig.HeaderNames.Key,
                         companyRange,
-                        jobTitleRange);
+                        jobTitleRange,
+                        duplicateRange);
                     break;
 
                 case var _ when headerName == SheetsConfig.HeaderNames.InterviewRound:
@@ -56,6 +58,15 @@ public static class InterviewMapper
                         dateRange,
                         SheetsConfig.HeaderNames.InterviewRound,
                         keyRange);
+                    break;
+
+                case var _ when headerName == SheetsConfig.HeaderNames.Duplicate:
+                    // Duplicate count per company+jobtitle on Interviews sheet
+                    header.Formula = JobFormulaBuilder.BuildDuplicateCountFormula(
+                        dateRange,
+                        SheetsConfig.HeaderNames.Duplicate,
+                        companyRange,
+                        jobTitleRange);
                     break;
 
                 default:
