@@ -40,6 +40,10 @@ public static class ApplicationMapper
         var jobTitleRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.JobTitle);
         var duplicateRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Duplicate);
 
+        // Interviews sheet key lookup (start at row 2 to exclude header)
+        var interviewSheet = InterviewMapper.GetSheet();
+        var interviewKeyLookup = interviewSheet.GetRange(SheetsConfig.HeaderNames.Key, 2);
+
         sheet.Headers.ForEach(header =>
         {
             var headerName = header!.Name.ToString()!.Trim();
@@ -60,7 +64,8 @@ public static class ApplicationMapper
                     header.Formula = JobFormulaBuilder.BuildInterviewCountFormula(
                         dateRange,
                         SheetsConfig.HeaderNames.InterviewCount,
-                        keyRange);
+                        keyRange,
+                        interviewKeyLookup);
                     break;
 
                 case var _ when headerName == SheetsConfig.HeaderNames.DaysActive:

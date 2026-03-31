@@ -25,11 +25,14 @@ public static class JobFormulaBuilder
     }
 
     /// <summary>
-    /// Builds Interview Count formula using INDIRECT to reference Interviews sheet
+    /// Builds Interview Count formula: counts interviews matching the application key using a provided interview lookup range.
+    /// keyRange = blank-check range (e.g., Date column on Applications)
+    /// applicationKeyRange = the application key cell/range in Applications
+    /// interviewLookupRange = the key range in Interviews (e.g., "Interviews!F2:F")
     /// </summary>
-    public static string BuildInterviewCountFormula(string keyRange, string header, string applicationKeyRange)
+    public static string BuildInterviewCountFormula(string keyRange, string header, string applicationKeyRange, string interviewLookupRange)
     {
-        var formula = $"IFERROR(COUNTIF(INDIRECT(\"Interviews!F:F\"),{applicationKeyRange}),0)";
+        var formula = $"IFERROR(COUNTIF({interviewLookupRange},{applicationKeyRange}),0)";
         return GoogleFormulaBuilder.BuildArrayFormula(keyRange, header, formula);
     }
 

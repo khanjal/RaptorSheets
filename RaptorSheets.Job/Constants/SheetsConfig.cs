@@ -244,7 +244,7 @@ public static class SheetsConfig
     public static SheetModel InterviewSheet => new()
     {
         Name = SheetNames.Interviews,
-        CellColor = ColorEnum.LIGHT_GREEN,
+        CellColor = ColorEnum.LIGHT_GRAY,
         TabColor = ColorEnum.GREEN,
         FontColor = ColorEnum.WHITE,
         FreezeColumnCount = 1,

@@ -49,29 +49,35 @@ public class IntegrationTestFixture : IAsyncLifetime
                 Console.WriteLine("Waiting 3s for deletion to propagate...");
                 await Task.Delay(3000);
 
-                // Step 2: Create all fresh sheets and populate demo data (SetupDemo handles both)
-                try
+                // Step 2: Create all fresh sheets (Gig-style fixture behavior)
+                Console.WriteLine("Creating all sheets...");
+                var createResult = await testBase.GoogleSheetManager!.CreateAllSheets();
+                Console.WriteLine($"Create result: {createResult.Messages.Count} messages");
+                foreach (var msg in createResult.Messages)
                 {
-                    Console.WriteLine("Creating sheets and populating demo data (SetupDemo)...");
-                    var demoResult = await testBase.GoogleSheetManager!.SetupDemo();
-                    Console.WriteLine($"SetupDemo complete: Applications={demoResult.Applications.Count}, Interviews={demoResult.Interviews.Count}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"WARNING: SetupDemo failed: {ex.Message}");
+                    Console.WriteLine($"  [{msg.Level}] {msg.Message}");
                 }
 
-                // Populate demo data so calculated columns and sample rows are visible for integration tests
-                try
+                var createErrors = createResult.Messages.Where(m => m.Level == "ERROR").ToList();
+                if (createErrors.Count > 0)
                 {
-                    Console.WriteLine("Populating demo data into sheets...");
-                    var demo = await testBase.GoogleSheetManager!.PopulateDemoData();
-                    Console.WriteLine($"Demo population complete: Applications={demo.Applications.Count}, Interviews={demo.Interviews.Count}");
+                    Console.WriteLine($"WARNING: Sheet creation had errors: {string.Join(", ", createErrors.Select(e => e.Message))}");
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.WriteLine($"WARNING: Demo data population failed: {ex.Message}");
+                    Console.WriteLine("SUCCESS: Fresh sheets created successfully");
                 }
+
+                // Wait for creation to complete
+                await Task.Delay(2000);
+
+                // Step 3: Seed demo data so primary sheets are populated for integration tests
+                Console.WriteLine("Populating demo data...");
+                var demoData = await testBase.GoogleSheetManager.PopulateDemoData();
+                Console.WriteLine($"  Applications seeded: {demoData.Applications.Count}");
+                Console.WriteLine($"  Interviews seeded: {demoData.Interviews.Count}");
+
+                await Task.Delay(1000);
             }
 
             Console.WriteLine("SUCCESS: Integration test environment ready");

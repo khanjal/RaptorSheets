@@ -50,5 +50,68 @@ public class SetupIntegrationTest : IntegrationTestBase
         }
 
         Assert.Equal(TestSheets.Count, existingSheets.Count);
+
+        // Seed demo data so primary sheets are not header-only
+        Console.WriteLine("\nPopulating demo data...");
+        var demoData = await GoogleSheetManager.PopulateDemoData();
+        Console.WriteLine($"  Applications generated: {demoData.Applications.Count}");
+        Console.WriteLine($"  Interviews generated: {demoData.Interviews.Count}");
+
+        await Task.Delay(2000);
+
+        // Verify key sheets contain data rows
+        var spreadsheetInfo = await GoogleSheetManager.GetSpreadsheetInfo(new List<string>
+        {
+            $"{SheetsConfig.SheetNames.Applications}!A2:A",
+            $"{SheetsConfig.SheetNames.Interviews}!A2:A",
+            $"{SheetsConfig.SheetNames.Companies}!A2:C",
+            $"{SheetsConfig.SheetNames.Positions}!A2:B"
+        });
+
+        Assert.NotNull(spreadsheetInfo);
+
+        var appSheet = spreadsheetInfo.Sheets.FirstOrDefault(s =>
+            string.Equals(s.Properties.Title, SheetsConfig.SheetNames.Applications, StringComparison.OrdinalIgnoreCase));
+        var intSheet = spreadsheetInfo.Sheets.FirstOrDefault(s =>
+            string.Equals(s.Properties.Title, SheetsConfig.SheetNames.Interviews, StringComparison.OrdinalIgnoreCase));
+        var companySheet = spreadsheetInfo.Sheets.FirstOrDefault(s =>
+            string.Equals(s.Properties.Title, SheetsConfig.SheetNames.Companies, StringComparison.OrdinalIgnoreCase));
+        var positionSheet = spreadsheetInfo.Sheets.FirstOrDefault(s =>
+            string.Equals(s.Properties.Title, SheetsConfig.SheetNames.Positions, StringComparison.OrdinalIgnoreCase));
+
+        var appHasData = appSheet?.Data?
+            .SelectMany(d => d.RowData ?? [])
+            .SelectMany(r => r.Values ?? [])
+            .Any(v => !string.IsNullOrWhiteSpace(v.FormattedValue)) == true;
+
+        var intHasData = intSheet?.Data?
+            .SelectMany(d => d.RowData ?? [])
+            .SelectMany(r => r.Values ?? [])
+            .Any(v => !string.IsNullOrWhiteSpace(v.FormattedValue)) == true;
+
+        var companyHasData = companySheet?.Data?
+            .SelectMany(d => d.RowData ?? [])
+            .Any(r =>
+            {
+                var values = r.Values ?? [];
+                var company = values.ElementAtOrDefault(0)?.FormattedValue;
+                var appCount = values.ElementAtOrDefault(1)?.FormattedValue;
+                return !string.IsNullOrWhiteSpace(company) && !string.IsNullOrWhiteSpace(appCount);
+            }) == true;
+
+        var positionHasData = positionSheet?.Data?
+            .SelectMany(d => d.RowData ?? [])
+            .Any(r =>
+            {
+                var values = r.Values ?? [];
+                var position = values.ElementAtOrDefault(0)?.FormattedValue;
+                var appCount = values.ElementAtOrDefault(1)?.FormattedValue;
+                return !string.IsNullOrWhiteSpace(position) && !string.IsNullOrWhiteSpace(appCount);
+            }) == true;
+
+        Assert.True(appHasData, "Applications sheet should contain seeded test data.");
+        Assert.True(intHasData, "Interviews sheet should contain seeded test data.");
+        Assert.True(companyHasData, "Companies sheet should auto-populate company names and application counts.");
+        Assert.True(positionHasData, "Positions sheet should auto-populate position names and application counts.");
     }
 }

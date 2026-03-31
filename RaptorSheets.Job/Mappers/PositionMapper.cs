@@ -1,6 +1,7 @@
-using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Entities;
 
@@ -23,9 +24,12 @@ public static class PositionMapper
     private static void ConfigurePositionFormulas(SheetModel sheet)
     {
         var applicationSheet = ApplicationMapper.GetSheet();
+        var interviewSheet = InterviewMapper.GetSheet();
 
         var positionRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Position);
-        var appJobTitleRange = applicationSheet.GetRange(SheetsConfig.HeaderNames.JobTitle);
+        // Start source range at row 2 to exclude header row (consistent with Gig patterns)
+        var appJobTitleRange = applicationSheet.GetRange(SheetsConfig.HeaderNames.JobTitle, 2);
+        var intJobTitleRange = interviewSheet.GetRange(SheetsConfig.HeaderNames.JobTitle, 2);
 
         sheet.Headers.ForEach(header =>
         {
@@ -34,15 +38,26 @@ public static class PositionMapper
             switch (headerName)
             {
                 case var _ when headerName == SheetsConfig.HeaderNames.Position:
-                    // Get unique positions from Applications
-                    header.Formula = $@"=ARRAYFORMULA(IF(LEN({appJobTitleRange})=0,"""",
-                        UNIQUE(FILTER({appJobTitleRange},LEN({appJobTitleRange})>0))))";
+                    // Unique positions list with embedded header (Gig-style array literal)
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(
+                        SheetsConfig.HeaderNames.Position,
+                        appJobTitleRange);
                     break;
 
                 case var _ when headerName == SheetsConfig.HeaderNames.ApplicationCount:
-                    // Count applications for this position
-                    header.Formula = $@"=ARRAYFORMULA(IF(LEN({positionRange})=0,"""",
-                        COUNTIF({appJobTitleRange},{positionRange})))";
+                    // Count applications per position with embedded header
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(
+                        positionRange,
+                        SheetsConfig.HeaderNames.ApplicationCount,
+                        appJobTitleRange);
+                    break;
+
+                case var _ when headerName == SheetsConfig.HeaderNames.InterviewCount:
+                    // Count interviews per position with embedded header
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(
+                        positionRange,
+                        SheetsConfig.HeaderNames.InterviewCount,
+                        intJobTitleRange);
                     break;
 
                 default:

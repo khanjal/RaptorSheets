@@ -173,24 +173,6 @@ public partial class GoogleSheetManager
             await _googleSheetService.BatchUpdateData(intUpdate);
         }
 
-        // Write reference sheets (Sites, Decisions, InterviewTypes, InterviewOutcomes, Schedules)
-        async Task WriteReference<T>(Func<SheetModel> mapper, List<T> items) where T : class, new()
-        {
-            var sheet = mapper();
-            var headers = sheet.Headers.Select(h => (object)h.Name).ToList();
-            var rows = GenericSheetMapper<T>.MapToRangeData(items.Cast<T>().ToList(), headers);
-            if (rows.Count == 0) return;
-            var values = new Dictionary<int, IList<IList<object?>>> { [2] = rows };
-            var update = GoogleRequestHelpers.GenerateUpdateValueRequest(sheet.Name, values);
-            await _googleSheetService.BatchUpdateData(update);
-        }
-
-        await WriteReference(() => ValidationMapper.GetSiteSheet(), demoData.Sites);
-        await WriteReference(() => ValidationMapper.GetDecisionSheet(), demoData.Decisions);
-        await WriteReference(() => ValidationMapper.GetInterviewTypeSheet(), demoData.InterviewTypes);
-        await WriteReference(() => ValidationMapper.GetInterviewOutcomeSheet(), demoData.InterviewOutcomes);
-        await WriteReference(() => ValidationMapper.GetScheduleSheet(), demoData.Schedules);
-
         return demoData;
     }
 }
