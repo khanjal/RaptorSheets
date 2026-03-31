@@ -76,7 +76,7 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Error: {ex}");
             return null;
         }
     }
@@ -141,7 +141,7 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Error: {ex}");
             return null;
         }
     }

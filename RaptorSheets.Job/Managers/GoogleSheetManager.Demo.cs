@@ -34,66 +34,55 @@ public partial class GoogleSheetManager
         var sheetEntity = new SheetEntity();
 
         // Generate demo applications
-        var companies = new[] { "TechCorp", "DataSystems Inc", "Cloud Solutions", "AI Innovations", "WebWorks" };
-        var positions = new[] { "Software Engineer", "Senior Developer", "Data Scientist", "Product Manager", "UX Designer" };
-        var sites = new[] { "LinkedIn", "Indeed", "Glassdoor", "Company Website" };
-        var decisions = new[] { "Pending", "Accepted", "Rejected", "Interview Scheduled" };
+        var companies = new[]
+        {
+            "TechCorp", "DataSystems Inc", "Cloud Solutions", "AI Innovations", "WebWorks",
+            "NextGen Labs", "Pioneer Software", "BrightPath Tech", "Nimbus Analytics", "Quantum Apps",
+            "Vertex Systems", "BluePeak Digital", "CoreStack", "Apex Dynamics", "Forge Data"
+        };
+
+        var positions = new[]
+        {
+            "Software Engineer", "Senior Developer", "Data Scientist", "Product Manager", "UX Designer",
+            "QA Engineer", "DevOps Engineer", "Backend Engineer", "Frontend Engineer", "Engineering Manager",
+            "Solutions Architect", "Security Engineer", "Data Engineer", "Business Analyst", "Mobile Developer"
+        };
+
+        var sites = new[] { "LinkedIn", "Indeed", "Glassdoor", "Company Website", "Wellfound", "ZipRecruiter" };
+        var decisions = new[] { "Pending", "Accepted", "Rejected", "Interview Scheduled", "On Hold" };
+        var schedules = new[] { "Full-time", "Part-time", "Contract", "Temporary", "Hybrid" };
+
+        var totalDays = Math.Max(1, (end.Date - start.Date).Days + 1);
+        var targetApplications = Math.Max(220, totalDays * 5); // Hundreds of applications by default
 
         var applicationId = 2; // start at row 2 (row 1 reserved for headers)
-        for (var date = start; date <= end; date = date.AddDays(random.Next(2, 7)))
+        for (var i = 0; i < targetApplications; i++)
         {
             var company = companies[random.Next(companies.Length)];
             var position = positions[random.Next(positions.Length)];
+            var appDate = start.AddDays(random.Next(totalDays));
+
+            var payLow = random.Next(70000, 180000);
+            var payHigh = payLow + random.Next(10000, 70000);
 
             sheetEntity.Applications.Add(new ApplicationEntity
             {
                 RowId = applicationId++,
-                Date = date.ToString("yyyy-MM-dd"),
+                Date = appDate.ToString("yyyy-MM-dd"),
                 Company = company,
                 JobTitle = position,
-                Posting = $"https://example.com/job/{random.Next(1000, 9999)}",
+                Posting = $"https://example.com/job/{random.Next(100000, 999999)}",
                 Site = sites[random.Next(sites.Length)],
                 Decision = decisions[random.Next(decisions.Length)],
-                PayLow = random.Next(70000, 120000),
-                PayHigh = random.Next(120000, 180000),
-                Location = random.Next(2) == 0 ? "Remote" : "New York, NY",
-                Schedule = random.Next(3) == 0 ? "Contract" : "Full-time"
-            });
-        }
-
-        // Add a few explicit duplicate company/job combos to exercise duplicate counting
-        if (sheetEntity.Applications.Count >= 2)
-        {
-            // Duplicate first application twice
-            var first = sheetEntity.Applications[0];
-            sheetEntity.Applications.Add(new ApplicationEntity
-            {
-                RowId = applicationId++,
-                Date = start.AddDays(1).ToString("yyyy-MM-dd"),
-                Company = first.Company,
-                JobTitle = first.JobTitle,
-                Posting = first.Posting,
-                Site = first.Site,
-                Decision = first.Decision,
-                PayLow = first.PayLow,
-                PayHigh = first.PayHigh,
-                Location = first.Location,
-                Schedule = first.Schedule
-            });
-
-            sheetEntity.Applications.Add(new ApplicationEntity
-            {
-                RowId = applicationId++,
-                Date = start.AddDays(2).ToString("yyyy-MM-dd"),
-                Company = first.Company,
-                JobTitle = first.JobTitle,
-                Posting = first.Posting,
-                Site = first.Site,
-                Decision = first.Decision,
-                PayLow = first.PayLow,
-                PayHigh = first.PayHigh,
-                Location = first.Location,
-                Schedule = first.Schedule
+                PayLow = payLow,
+                PayHigh = payHigh,
+                Location = random.Next(3) switch
+                {
+                    0 => "Remote",
+                    1 => "Hybrid",
+                    _ => "New York, NY"
+                },
+                Schedule = schedules[random.Next(schedules.Length)]
             });
         }
 
@@ -107,31 +96,54 @@ public partial class GoogleSheetManager
         var outcomes = new[] { "Passed", "Failed", "Pending", "Moved to Next Round" };
         sheetEntity.InterviewOutcomes.AddRange(outcomes.Select((o, i) => new InterviewOutcomeEntity { RowId = i + 1, Outcome = o }));
 
-        var schedules = new[] { "Full-time", "Part-time", "Contract", "Temporary" };
         sheetEntity.Schedules.AddRange(schedules.Select((s, i) => new ScheduleEntity { RowId = i + 1, Schedule = s }));
 
-        // Generate a few interview records linked to some applications (if available)
+        // Generate interviews:
+        // - about half of applications get interviews
+        // - about half of interviewed applications get multiple interviews
         var interviewId = 2; // start at row 2
-        if (sheetEntity.Applications.Count > 0)
+        var interviewCandidates = sheetEntity.Applications
+            .OrderBy(_ => random.Next())
+            .Take(sheetEntity.Applications.Count / 2)
+            .ToList();
+
+        var multiInterviewApps = interviewCandidates
+            .OrderBy(_ => random.Next())
+            .Take(interviewCandidates.Count / 2)
+            .ToHashSet();
+
+        foreach (var app in interviewCandidates)
         {
-            // Use first two applications as sources for interviews
-            var sourceApps = sheetEntity.Applications.Take(2).ToList();
-            foreach (var app in sourceApps)
+            var interviewCount = multiInterviewApps.Contains(app)
+                ? random.Next(2, 5) // 2-4 interviews
+                : 1;
+
+            var baseDate = DateTime.Parse(app.Date);
+
+            for (var round = 0; round < interviewCount; round++)
             {
+                var interviewDate = baseDate.AddDays(random.Next(0, 21) + round);
+                var startHour = random.Next(8, 17);
+                var startMinute = random.Next(0, 2) == 0 ? 0 : 30;
+                var durationMinutes = new[] { 30, 45, 60, 90 }[random.Next(4)];
+
+                var startTime = new DateTime(interviewDate.Year, interviewDate.Month, interviewDate.Day, startHour, startMinute, 0);
+                var endTime = startTime.AddMinutes(durationMinutes);
+
                 sheetEntity.Interviews.Add(new InterviewEntity
                 {
                     RowId = interviewId++,
-                    Date = DateTime.Parse(app.Date).ToString("yyyy-MM-dd"),
-                    StartTime = "09:00",
-                    EndTime = "10:00",
-                    Duration = "01:00",
+                    Date = interviewDate.ToString("yyyy-MM-dd"),
+                    StartTime = startTime.ToString("hh:mm tt").ToLowerInvariant(),
+                    EndTime = endTime.ToString("hh:mm tt").ToLowerInvariant(),
+                    Duration = TimeSpan.FromMinutes(durationMinutes).ToString(@"hh\:mm"),
                     Company = app.Company,
                     JobTitle = app.JobTitle,
-                    InterviewType = "Phone Screen",
-                    RecruiterName = "Recruiter",
-                    RecruiterContact = "recruiter@example.com",
-                    Attendees = "Interviewer 1, Interviewer 2",
-                    Outcome = "Pending",
+                    InterviewType = interviewTypes[random.Next(interviewTypes.Length)],
+                    RecruiterName = $"Recruiter {random.Next(1, 40)}",
+                    RecruiterContact = $"recruiter{random.Next(1, 120)}@example.com",
+                    Attendees = $"Interviewer {random.Next(1, 25)}, Interviewer {random.Next(26, 50)}",
+                    Outcome = outcomes[random.Next(outcomes.Length)],
                     Notes = "Auto-generated interview"
                 });
             }

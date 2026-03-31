@@ -49,13 +49,64 @@ public partial class GoogleSheetManager
                 MessageTypeEnum.CREATE_SHEET));
         }
 
-        var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
+        // Attempt the batch update with a small retry loop to handle transient API errors
+        BatchUpdateSpreadsheetResponse? response = null;
+        const int maxAttempts = 3;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
+                if (response != null)
+                    break;
+            }
+            catch (Exception ex)
+            {
+                // Bubble up a warning message but keep retrying
+                sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"Batch update attempt {attempt} failed: {ex.Message}", MessageTypeEnum.CREATE_SHEET));
+                // Also write full exception to console for diagnostics
+                Console.WriteLine($"Batch update attempt {attempt} exception: {ex}");
+            }
+
+            // Backoff between attempts
+            await Task.Delay(1000 * attempt);
+        }
 
         if (response == null)
         {
+            // Record explicit errors per-sheet for visibility
             foreach (var sheet in sheets)
             {
                 sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{sheet} not created", MessageTypeEnum.CREATE_SHEET));
+            }
+
+            // Try to give additional diagnostic information: what sheets actually exist now
+            try
+            {
+                var properties = await _googleSheetService.GetSheetInfo(null);
+                var created = properties?.Sheets?.Select(s => s.Properties.Title).ToList() ?? new List<string>();
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Existing sheets after failure: {string.Join(", ", created)}", MessageTypeEnum.CREATE_SHEET));
+            }
+            catch
+            {
+                // Ignore diagnostics failure
+            }
+
+            // Log intended requests for debugging
+            try
+            {
+                var intended = batchUpdateSpreadsheetRequest.Requests?
+                    .Where(r => r.AddSheet != null)
+                    .Select(r => r.AddSheet.Properties?.Title)
+                    .Where(t => !string.IsNullOrEmpty(t))
+                    .ToList() ?? new List<string>();
+
+                Console.WriteLine($"Intended AddSheet titles ({intended.Count}): {string.Join(", ", intended)}");
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Intended AddSheet titles: {string.Join(", ", intended)}", MessageTypeEnum.CREATE_SHEET));
+            }
+            catch
+            {
+                // Best effort only
             }
 
             return sheetEntity;
