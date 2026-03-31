@@ -38,7 +38,10 @@ public partial class GoogleSheetManager
         {
             "TechCorp", "DataSystems Inc", "Cloud Solutions", "AI Innovations", "WebWorks",
             "NextGen Labs", "Pioneer Software", "BrightPath Tech", "Nimbus Analytics", "Quantum Apps",
-            "Vertex Systems", "BluePeak Digital", "CoreStack", "Apex Dynamics", "Forge Data"
+            "Vertex Systems", "BluePeak Digital", "CoreStack", "Apex Dynamics", "Forge Data",
+            "Summit Software", "Sterling Systems", "Catalyst Labs", "Horizon Tech", "Meridian Solutions",
+            "Orbit Analytics", "Silverline Digital", "Maple Street Co", "Paramount Logic", "Bluewater Tech",
+            "Greenfield Apps", "UrbanGrid", "Solstice Software", "Ivory Tower Labs", "Praxis Systems", "NorthStar AI"
         };
 
         var positions = new[]
@@ -53,12 +56,31 @@ public partial class GoogleSheetManager
         var schedules = new[] { "Full-time", "Part-time", "Contract", "Temporary", "Hybrid" };
 
         var totalDays = Math.Max(1, (end.Date - start.Date).Days + 1);
-        var targetApplications = Math.Max(220, totalDays * 5); // Hundreds of applications by default
+        var originalTargetApplications = Math.Max(220, totalDays * 5); // Desired scale
+
+        // Enforce realistic per-company application cap (max 3 per company)
+        var maxPerCompany = 3;
+        var maxPossibleApplications = companies.Length * maxPerCompany;
+        var targetApplications = Math.Min(originalTargetApplications, maxPossibleApplications);
 
         var applicationId = 2; // start at row 2 (row 1 reserved for headers)
+
+        // Track how many applications per company to enforce cap
+        var companyCounts = companies.ToDictionary(c => c, _ => 0);
+
         for (var i = 0; i < targetApplications; i++)
         {
-            var company = companies[random.Next(companies.Length)];
+            // Pick a company that hasn't reached the cap yet
+            var availableCompanies = companies.Where(c => companyCounts[c] < maxPerCompany).ToList();
+            if (!availableCompanies.Any())
+            {
+                // Shouldn't happen due to targetApplications cap, but break defensively
+                break;
+            }
+
+            var company = availableCompanies[random.Next(availableCompanies.Count)];
+            companyCounts[company]++;
+
             var position = positions[random.Next(positions.Length)];
             var appDate = start.AddDays(random.Next(totalDays));
 
@@ -102,21 +124,57 @@ public partial class GoogleSheetManager
         // - about half of applications get interviews
         // - about half of interviewed applications get multiple interviews
         var interviewId = 2; // start at row 2
+        // Create realistic recruiter and interviewer name pools
+        var recruiters = new[]
+        {
+            "Alice Johnson", "Michael Brown", "Olivia Davis", "Daniel Wilson", "Emma Thompson",
+            "James Anderson", "Sophia Martinez", "Liam Garcia", "Isabella Robinson", "Noah Clark",
+            "Ava Rodriguez", "Ethan Lewis", "Mia Walker", "Lucas Hall", "Amelia Young",
+            "Benjamin Allen", "Charlotte King", "Henry Wright", "Evelyn Scott", "Owen Green"
+        };
+
+        var interviewers = new[]
+        {
+            "Karen Miller", "Robert Moore", "Patricia Taylor", "John Jackson", "Linda White",
+            "Barbara Harris", "Elizabeth Martin", "Thomas Thompson", "Christopher Garcia", "Matthew Martinez",
+            "Anthony Robinson", "Mark Clark", "Steven Rodriguez", "Paul Lewis", "Andrew Lee",
+            "Rachel Walker", "Rebecca Hall", "Julia Allen", "Victoria Young", "Kevin Hernandez",
+            "Brian King", "Sarah Wright", "Eric Lopez", "Tiffany Hill", "Brandon Scott",
+            "Natalie Green", "Gregory Adams", "Lauren Baker", "Derek Nelson", "Megan Carter",
+            "Adam Mitchell", "Samantha Perez", "Aaron Roberts", "Katherine Turner", "Justin Phillips",
+            "Diana Campbell", "Eleanor Parker", "Zachary Evans", "Olga Edwards", "Simone Collins"
+        };
+
+        // Pick some company+position combos that will receive multiple interviews
+        var combos = sheetEntity.Applications.Select(a => (a.Company, a.JobTitle)).Distinct().ToList();
+        var multiInterviewCombos = new HashSet<(string Company, string JobTitle)>();
+        var comboCount = Math.Max(8, combos.Count / 10);
+        var shuffledCombos = combos.OrderBy(_ => random.Next()).ToList();
+        for (var c = 0; c < Math.Min(comboCount, shuffledCombos.Count); c++)
+        {
+            multiInterviewCombos.Add(shuffledCombos[c]);
+        }
+
         var interviewCandidates = sheetEntity.Applications
             .OrderBy(_ => random.Next())
             .Take(sheetEntity.Applications.Count / 2)
             .ToList();
 
-        var multiInterviewApps = interviewCandidates
-            .OrderBy(_ => random.Next())
-            .Take(interviewCandidates.Count / 2)
-            .ToHashSet();
-
         foreach (var app in interviewCandidates)
         {
-            var interviewCount = multiInterviewApps.Contains(app)
-                ? random.Next(2, 5) // 2-4 interviews
-                : 1;
+            var isMultiCombo = multiInterviewCombos.Contains((app.Company, app.JobTitle));
+
+            int interviewCount;
+            if (isMultiCombo)
+            {
+                // Popular combos: higher chance of multiple interviews
+                interviewCount = random.Next(2, 6); // 2-5 interviews
+            }
+            else
+            {
+                // Otherwise ~50% chance of at least one interview, small chance of 2
+                interviewCount = random.NextDouble() < 0.5 ? 1 : (random.NextDouble() < 0.2 ? 2 : 1);
+            }
 
             var baseDate = DateTime.Parse(app.Date);
 
@@ -130,6 +188,18 @@ public partial class GoogleSheetManager
                 var startTime = new DateTime(interviewDate.Year, interviewDate.Month, interviewDate.Day, startHour, startMinute, 0);
                 var endTime = startTime.AddMinutes(durationMinutes);
 
+                // pick recruiter and attendees
+                var recruiter = recruiters[random.Next(recruiters.Length)];
+                var recruiterContact = recruiter.ToLower().Replace(' ', '.') + "@example.com";
+
+                // pick 1-3 interviewers for attendees
+                var numInterviewers = random.Next(1, 4);
+                var attendees = new List<string>();
+                for (var ai = 0; ai < numInterviewers; ai++)
+                {
+                    attendees.Add(interviewers[random.Next(interviewers.Length)]);
+                }
+
                 sheetEntity.Interviews.Add(new InterviewEntity
                 {
                     RowId = interviewId++,
@@ -140,9 +210,9 @@ public partial class GoogleSheetManager
                     Company = app.Company,
                     JobTitle = app.JobTitle,
                     InterviewType = interviewTypes[random.Next(interviewTypes.Length)],
-                    RecruiterName = $"Recruiter {random.Next(1, 40)}",
-                    RecruiterContact = $"recruiter{random.Next(1, 120)}@example.com",
-                    Attendees = $"Interviewer {random.Next(1, 25)}, Interviewer {random.Next(26, 50)}",
+                    RecruiterName = recruiter,
+                    RecruiterContact = recruiterContact,
+                    Attendees = string.Join(", ", attendees),
                     Outcome = outcomes[random.Next(outcomes.Length)],
                     Notes = "Auto-generated interview"
                 });
