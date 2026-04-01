@@ -200,6 +200,19 @@ public partial class GoogleSheetManager
                     attendees.Add(interviewers[random.Next(interviewers.Length)]);
                 }
 
+                // Determine interview type sequence for multi-interview combos
+                string interviewType;
+                if (isMultiCombo)
+                {
+                    // Progression: phone -> technical/virtual -> behavioral -> on-site -> final
+                    var progression = new[] { "Phone Screen", "Technical Interview", "Behavioral Interview", "On-Site", "Final Round" };
+                    interviewType = progression[Math.Min(round, progression.Length - 1)];
+                }
+                else
+                {
+                    interviewType = interviewTypes[random.Next(interviewTypes.Length)];
+                }
+
                 sheetEntity.Interviews.Add(new InterviewEntity
                 {
                     RowId = interviewId++,
@@ -209,7 +222,7 @@ public partial class GoogleSheetManager
                     Duration = TimeSpan.FromMinutes(durationMinutes).ToString(@"hh\:mm"),
                     Company = app.Company,
                     JobTitle = app.JobTitle,
-                    InterviewType = interviewTypes[random.Next(interviewTypes.Length)],
+                    InterviewType = interviewType,
                     RecruiterName = recruiter,
                     RecruiterContact = recruiterContact,
                     Attendees = string.Join(", ", attendees),
