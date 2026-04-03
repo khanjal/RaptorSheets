@@ -253,16 +253,16 @@ public class EntitySheetConfigHelperTests
 
     private class TestDuplicateColumnEntity
     {
-        [Column("DuplicateHeader")]
+        [Header("DuplicateHeader")]
         public string Property1 { get; set; } = "";
 
-        [Column("DuplicateHeader")]
+        [Header("DuplicateHeader")]
         public string Property2 { get; set; } = "";
     }
 
     private class TestInvalidColumnEntity
     {
-        [Column("InvalidColumn")]
+        [Header("InvalidColumn")]
         public string InvalidProperty { get; set; } = "";
     }
 }

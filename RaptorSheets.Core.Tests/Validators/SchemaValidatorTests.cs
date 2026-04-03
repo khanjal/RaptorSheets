@@ -162,13 +162,13 @@ namespace RaptorSheets.Core.Tests.Validators
 
         private class TestEntity
         {
-            [Column("Header1")]
+            [Header("Header1")]
             public string Header1 { get; set; } = "";
 
-            [Column("Header2")]
+            [Header("Header2")]
             public string Header2 { get; set; } = "";
 
-            [Column("Header3")]
+            [Header("Header3")]
             public string Header3 { get; set; } = "";
         }
     }

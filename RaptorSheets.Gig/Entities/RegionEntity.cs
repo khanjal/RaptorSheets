@@ -10,44 +10,52 @@ namespace RaptorSheets.Gig.Entities;
 public class RegionEntity : SheetRowEntityBase
 {
     // Entity-specific property first
-    [Column(SheetsConfig.HeaderNames.Region)]
+    [Header(SheetsConfig.HeaderNames.Region)]
     public string Region { get; set; } = "";
 
     // CommonTripSheetHeaders pattern
-    [Column(SheetsConfig.HeaderNames.Trips)]
+    [Header(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
     // CommonIncomeHeaders
-    [Column(SheetsConfig.HeaderNames.Pay, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Pay)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Tips)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Bonus)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Total, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Total)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Cash)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerTrip)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, FormatEnum.DISTANCE)]
+    [Header(SheetsConfig.HeaderNames.Distance)]
+    [Format(FormatEnum.DISTANCE)]
     public decimal Distance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerDistance)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerDistance { get; set; }
 
     // Visit properties
-    [Column(SheetsConfig.HeaderNames.VisitFirst)]
+    [Header(SheetsConfig.HeaderNames.VisitFirst)]
     [JsonPropertyName("firstTrip")]
     public string FirstTrip { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.VisitLast)]
+    [Header(SheetsConfig.HeaderNames.VisitLast)]
     [JsonPropertyName("lastTrip")]
     public string LastTrip { get; set; } = "";
 }

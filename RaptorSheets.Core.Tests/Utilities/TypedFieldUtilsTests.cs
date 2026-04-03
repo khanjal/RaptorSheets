@@ -151,19 +151,22 @@ public class TypedFieldUtilsTests
     // Test entity for validation
     private class TestEntity
     {
-        [Column("TestString")]
+        [Header("TestString")]
         public string TestString { get; set; } = "";
 
-        [Column("TestCurrency", formatType: FormatEnum.CURRENCY)]
+        [Header("TestCurrency")]
+        [Format(FormatEnum.CURRENCY)]
         public decimal? TestCurrency { get; set; }
 
-        [Column("TestDateTime", formatType: FormatEnum.DATE)]
+        [Header("TestDateTime")]
+        [Format(FormatEnum.DATE)]
         public DateTime? TestDateTime { get; set; }
 
-        [Column("TestInteger", formatType: FormatEnum.NUMBER)]
+        [Header("TestInteger")]
+        [Format(FormatEnum.NUMBER)]
         public int? TestInteger { get; set; }
 
-        [Column("TestBoolean")]
+        [Header("TestBoolean")]
         public bool TestBoolean { get; set; }
 
         // Property without Column attribute should be ignored

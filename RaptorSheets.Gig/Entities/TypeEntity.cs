@@ -9,41 +9,49 @@ namespace RaptorSheets.Gig.Entities;
 [ExcludeFromCodeCoverage]
 public class TypeEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Type)]
+    [Header(SheetsConfig.HeaderNames.Type)]
     public string Type { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Trips)]
+    [Header(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Pay, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Pay)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Tips)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Tips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Bonus)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Total, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Total)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Cash)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerTrip)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, FormatEnum.DISTANCE)]
+    [Header(SheetsConfig.HeaderNames.Distance)]
+    [Format(FormatEnum.DISTANCE)]
     public decimal Distance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerDistance)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.VisitFirst)]
+    [Header(SheetsConfig.HeaderNames.VisitFirst)]
     [JsonPropertyName("firstTrip")]
     public string FirstTrip { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.VisitLast)]
+    [Header(SheetsConfig.HeaderNames.VisitLast)]
     [JsonPropertyName("lastTrip")]
     public string LastTrip { get; set; } = "";
 }

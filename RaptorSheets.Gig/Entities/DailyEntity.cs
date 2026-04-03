@@ -9,51 +9,62 @@ namespace RaptorSheets.Gig.Entities;
 public class DailyEntity : SheetRowEntityBase
 {
     // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
-    [Column(SheetsConfig.HeaderNames.Date, FormatEnum.DATE)]
+        [Header(SheetsConfig.HeaderNames.Date)]
+        [Format(FormatEnum.DATE)]
     public string Date { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Trips)]
+    [Header(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Pay, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Pay)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Tips)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Bonus)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Total, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Total)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Cash)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerTrip)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, FormatEnum.DISTANCE)]
+    [Header(SheetsConfig.HeaderNames.Distance)]
+    [Format(FormatEnum.DISTANCE)]
     public decimal Distance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerDistance)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TimeTotal, FormatEnum.DURATION)]
+    [Header(SheetsConfig.HeaderNames.TimeTotal)]
+    [Format(FormatEnum.DURATION)]
     public string Time { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerTime)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Day)]
+    [Header(SheetsConfig.HeaderNames.Day)]
     public string Day { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Weekday)]
+    [Header(SheetsConfig.HeaderNames.Weekday)]
     public string Weekday { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Week)]
+    [Header(SheetsConfig.HeaderNames.Week)]
     public string Week { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Month)]
+    [Header(SheetsConfig.HeaderNames.Month)]
     public string Month { get; set; } = "";
 }

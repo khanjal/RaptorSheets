@@ -39,7 +39,7 @@ public class EntitySheetConfigHelperColumnTests
         var customCurrencyHeader = headers.FirstOrDefault(h => h.Name == "CustomCurrency");
         Assert.NotNull(customCurrencyHeader);
         Assert.Contains("Cell Format:", customCurrencyHeader.Note ?? "");
-        Assert.Contains("\"£\"#,##0.00", customCurrencyHeader.Note ?? "");
+        Assert.Contains("\"ï¿½\"#,##0.00", customCurrencyHeader.Note ?? "");
     }
 
     [Fact]
@@ -55,19 +55,24 @@ public class EntitySheetConfigHelperColumnTests
     // Test entities for validation
     private class TestEntityWithColumns
     {
-        [Column("Currency", FormatEnum.CURRENCY)]
+        [Header("Currency")]
+        [Format(FormatEnum.CURRENCY)]
         public decimal? Currency { get; set; }
 
-        [Column("Date", FormatEnum.DATE)]
+        [Header("Date")]
+        [Format(FormatEnum.DATE)]
         public DateTime? Date { get; set; }
 
-        [Column("Number", FormatEnum.NUMBER)]
+        [Header("Number")]
+        [Format(FormatEnum.NUMBER)]
         public double? Number { get; set; }
 
-        [Column("CustomCurrency", isInput: false, formatPattern: "\"£\"#,##0.00", formatType: FormatEnum.CURRENCY)]
+        [Header("CustomCurrency")]
+        [Format(FormatEnum.CURRENCY, pattern: "\"ï¿½\"#,##0.00")]
         public decimal? CustomCurrency { get; set; }
 
-        [Column("String", FormatEnum.TEXT)]
+        [Header("String")]
+        [Format(FormatEnum.TEXT)]
         public string StringField { get; set; } = "";
     }
 }

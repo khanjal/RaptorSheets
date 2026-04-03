@@ -14,22 +14,31 @@ public class GenericSheetMapperTests
     {
         public int RowId { get; set; }
 
-        [Column("Name", isInput: true)]
+        [Header("Name")]
+        [Input(true)]
         public string Name { get; set; } = "";
 
-        [Column("Date", isInput: true, formatType: FormatEnum.DATE)]
+        [Header("Date")]
+        [Input(true)]
+        [Format(FormatEnum.DATE)]
         public string Date { get; set; } = "";
 
-        [Column("Amount", isInput: true, formatType: FormatEnum.ACCOUNTING)]
+        [Header("Amount")]
+        [Input(true)]
+        [Format(FormatEnum.ACCOUNTING)]
         public decimal? Amount { get; set; }
 
-        [Column("Count", isInput: true)]
+        [Header("Count")]
+        [Input(true)]
         public int? Count { get; set; }
 
-        [Column("Active", isInput: true)]
+        [Header("Active")]
+        [Input(true)]
         public bool Active { get; set; }
 
-        [Column("Distance", formatPattern: CellFormatPatterns.Distance, isInput: true)]
+        [Header("Distance")]
+        [Input(true)]
+        [Format(FormatEnum.DISTANCE, pattern: CellFormatPatterns.Distance)]
         public decimal? Distance { get; set; }
 
         public bool Saved { get; set; }

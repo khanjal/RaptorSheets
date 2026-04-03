@@ -8,18 +8,27 @@ namespace RaptorSheets.Gig.Entities;
 [ExcludeFromCodeCoverage]
 public class ExpenseEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
+    [Header(SheetsConfig.HeaderNames.Date)]
+    [Input]
+    [Note(ColumnNotes.DateFormat)]
+    [Format(FormatEnum.DATE)]
     public string Date { get; set; } = string.Empty;
     
-    [Column(SheetsConfig.HeaderNames.Name, isInput: true)]
+    [Header(SheetsConfig.HeaderNames.Name)]
+    [Input]
     public string Name { get; set; } = string.Empty;
     
-    [Column(SheetsConfig.HeaderNames.Amount, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Amount)]
+    [Input]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal Amount { get; set; }
     
-    [Column(SheetsConfig.HeaderNames.Category, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeSelf)]
+    [Header(SheetsConfig.HeaderNames.Category)]
+    [Input]
+    [Validation(SheetsConfig.ValidationNames.RangeSelf)]
     public string Category { get; set; } = string.Empty;
     
-    [Column(SheetsConfig.HeaderNames.Description, isInput: true)]
+    [Header(SheetsConfig.HeaderNames.Description)]
+    [Input]
     public string Description { get; set; } = string.Empty;
 }

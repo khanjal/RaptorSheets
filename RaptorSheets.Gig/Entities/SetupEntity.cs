@@ -10,11 +10,11 @@ public class SetupEntity
     public int RowId { get; set; }
     public string Action { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Name)]
-    public string Name { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Name)]
+        public string Name { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Value)]
-    public string Value { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Value)]
+        public string Value { get; set; } = string.Empty;
 
     public bool Saved { get; set; }
 }

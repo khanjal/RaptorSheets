@@ -35,17 +35,80 @@ public static class TypedFieldUtils
         // Get properties in inheritance order (base class first)
         var allProperties = GetPropertiesInInheritanceOrder(type);
         
-        for (int i = 0; i < allProperties.Count; i++)
-        {
-            var property = allProperties[i];
-            var columnAttr = property.GetCustomAttribute<ColumnAttribute>();
-            if (columnAttr != null)
+            for (int i = 0; i < allProperties.Count; i++)
             {
-                // Set the field type from property if not explicitly set
-                columnAttr.SetFieldTypeFromProperty(property.PropertyType);
-                properties.Add((property, columnAttr, i));
+                var property = allProperties[i];
+                // Prefer new HeaderAttribute for header identity (replaces legacy Column attribute usage)
+                var headerAttr = property.GetCustomAttribute<HeaderAttribute>();
+
+                // Support new split attributes by merging them into a runtime ColumnAttribute
+                var formatAttr = property.GetCustomAttribute<FormatAttribute>();
+                var validationAttr = property.GetCustomAttribute<ValidationAttribute>();
+                var inputAttr = property.GetCustomAttribute<InputAttribute>();
+                var noteAttr = property.GetCustomAttribute<NoteAttribute>();
+                var orderAttr = property.GetCustomAttribute<ColumnOrderAttribute>();
+
+                ColumnAttribute? columnAttr = null;
+
+                if (headerAttr != null)
+                {
+                    // Build options from supplemental attributes
+                    var options = new ColumnOptions
+                    {
+                        FormatPattern = null,
+                        JsonPropertyName = null,
+                        Order = -1,
+                        IsInput = false,
+                        EnableValidation = false,
+                        ValidationPattern = null,
+                        Note = null,
+                        FormatType = FormatEnum.DEFAULT
+                    };
+
+                    if (formatAttr != null)
+                    {
+                        if (formatAttr.Pattern != null)
+                            options.FormatPattern = formatAttr.Pattern;
+                        if (formatAttr.FormatType != FormatEnum.DEFAULT)
+                            options.FormatType = formatAttr.FormatType;
+                    }
+
+                    if (validationAttr != null)
+                    {
+                        options.EnableValidation = validationAttr.EnableValidation;
+                        if (!string.IsNullOrEmpty(validationAttr.Pattern))
+                            options.ValidationPattern = validationAttr.Pattern;
+                    }
+
+                    if (inputAttr != null)
+                    {
+                        options.IsInput = inputAttr.IsInput;
+                    }
+
+                    if (noteAttr != null)
+                    {
+                        options.Note = noteAttr.Note;
+                    }
+
+                    if (orderAttr != null)
+                    {
+                        if (orderAttr.Order >= 0)
+                            options.Order = orderAttr.Order;
+                    }
+
+                    // Create runtime ColumnAttribute (no longer an actual Attribute type)
+                    columnAttr = new ColumnAttribute(headerAttr.HeaderName, options);
+                }
+
+                // (No legacy attribute fallback: code now uses `HeaderAttribute` + split attributes.)
+
+                if (columnAttr != null)
+                {
+                    // Set the field type from property if not explicitly set
+                    columnAttr.SetFieldTypeFromProperty(property.PropertyType);
+                    properties.Add((property, columnAttr, i));
+                }
             }
-        }
         
         // Sort by explicit order if provided, otherwise by declaration order
         return properties

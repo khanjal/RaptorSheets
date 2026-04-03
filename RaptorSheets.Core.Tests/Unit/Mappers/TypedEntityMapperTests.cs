@@ -8,13 +8,13 @@ public class TypedEntityMapperTests
 {
     private class TestEntity
     {
-        [Column("Header1")]
+        [Header("Header1")]
         public string Header1 { get; set; } = "";
 
-        [Column("Header2")]
+        [Header("Header2")]
         public int Header2 { get; set; }
 
-        [Column("Header3")]
+        [Header("Header3")]
         public decimal Header3 { get; set; }
     }
 
@@ -98,7 +98,7 @@ public class TypedEntityMapperTests
 
     private class InvalidTestEntity
     {
-        [Column("InvalidHeader")]
+        [Header("InvalidHeader")]
         public string InvalidHeader { get; set; } = "";
     }
 }

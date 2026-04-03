@@ -11,109 +11,157 @@ public class TripEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
     // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, formatType: FormatEnum.DATE)]
-    public string Date { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Date)]
+    [Input]
+    [Format(FormatEnum.DATE)]
+    public string Date { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
-    public string Service { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Service)]
+    [Input]
+    [Validation(SheetsConfig.ValidationNames.RangeService)]
+    public string Service { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Number, isInput: true, note: ColumnNotes.ShiftNumber)]
+    [Header(SheetsConfig.HeaderNames.Number)]
+    [Input]
+    [Note(ColumnNotes.ShiftNumber)]
     public int? Number { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Exclude, isInput: true, note: ColumnNotes.Exclude, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.Boolean)]
+    [Header(SheetsConfig.HeaderNames.Exclude)]
+    [Input]
+    [Note(ColumnNotes.Exclude)]
+    [Validation(SheetsConfig.ValidationNames.Boolean)]
     public bool Exclude { get; set; } = false;
 
-    [Column(SheetsConfig.HeaderNames.Type, isInput: true, note: ColumnNotes.Types, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeType)]
-    public string Type { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Type)]
+    [Input]
+    [Note(ColumnNotes.Types)]
+    [Validation(SheetsConfig.ValidationNames.RangeType)]
+    public string Type { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Place, isInput: true, note: ColumnNotes.Place, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangePlace)]
-    public string Place { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Place)]
+    [Input]
+    [Note(ColumnNotes.Place)]
+    [Validation(SheetsConfig.ValidationNames.RangePlace)]
+    public string Place { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Pickup, isInput: true, note: ColumnNotes.Pickup, formatType: FormatEnum.TIME)]
+    [Header(SheetsConfig.HeaderNames.Pickup)]
+    [Input]
+    [Note(ColumnNotes.Pickup)]
+    [Format(FormatEnum.TIME)]
     [JsonPropertyName("pickupTime")]
-    public string Pickup { get; set; } = "";
+    public string Pickup { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Dropoff, isInput: true, formatType: FormatEnum.TIME)]
+    [Header(SheetsConfig.HeaderNames.Dropoff)]
+    [Input]
+    [Format(FormatEnum.TIME)]
     [JsonPropertyName("dropoffTime")]
-    public string Dropoff { get; set; } = "";
+    public string Dropoff { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Duration, isInput: true, note: ColumnNotes.Duration, formatType: FormatEnum.DURATION)]
-    public string Duration { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Duration)]
+    [Input]
+    [Note(ColumnNotes.Duration)]
+    [Format(FormatEnum.DURATION)]
+    public string Duration { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Pay, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Pay)]
+    [Input]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Tips)]
+    [Input]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Bonus)]
+    [Input]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Bonus { get; set; }
 
     // Output column (formula: Pay + Tips + Bonus) - defaults to isInput: false
-    [Column(SheetsConfig.HeaderNames.Total, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Total)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Cash)]
+    [Input]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerStart,
-        isInput: true,
-        formatType: FormatEnum.DISTANCE)]
+    [Header(SheetsConfig.HeaderNames.OdometerStart)]
+    [Input]
+    [Format(FormatEnum.DISTANCE)]
     [JsonPropertyName("startOdometer")]
     public decimal? OdometerStart { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.OdometerEnd,
-        isInput: true,
-        formatType: FormatEnum.DISTANCE)]
+    [Header(SheetsConfig.HeaderNames.OdometerEnd)]
+    [Input]
+    [Format(FormatEnum.DISTANCE)]
     [JsonPropertyName("endOdometer")]
     public decimal? OdometerEnd { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance,
-        isInput: true,
-        formatType: FormatEnum.DISTANCE,
-        note: ColumnNotes.TripDistance)]
+    [Header(SheetsConfig.HeaderNames.Distance)]
+    [Input]
+    [Format(FormatEnum.DISTANCE)]
+    [Note(ColumnNotes.TripDistance)]
     public decimal? Distance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Name, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeName)]
-    public string Name { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Name)]
+    [Input]
+    [Validation(SheetsConfig.ValidationNames.RangeName)]
+    public string Name { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.AddressStart, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeAddress)]
-    public string StartAddress { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.AddressStart)]
+    [Input]
+    [Validation(SheetsConfig.ValidationNames.RangeAddress)]
+    public string StartAddress { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.AddressEnd, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeAddress)]
-    public string EndAddress { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.AddressEnd)]
+    [Input]
+    [Validation(SheetsConfig.ValidationNames.RangeAddress)]
+    public string EndAddress { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.UnitEnd, isInput: true, note: ColumnNotes.UnitTypes)]
-    public string EndUnit { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.UnitEnd)]
+    [Input]
+    [Note(ColumnNotes.UnitTypes)]
+    public string EndUnit { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.OrderNumber, isInput: true)]
-    public string OrderNumber { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.OrderNumber)]
+    [Input]
+    public string OrderNumber { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Region, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion)]
-    public string Region { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Region)]
+    [Input]
+    [Validation(SheetsConfig.ValidationNames.RangeRegion)]
+    public string Region { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Note, isInput: true)]
-    public string Note { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Note)]
+    [Input]
+    public string Note { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Tags, isInput: true)]
-    public string Tags { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Tags)]
+    [Input]
+    public string Tags { get; set; } = string.Empty;
 
     // Output columns (formulas/calculated) - default to isInput: false
-    [Column(SheetsConfig.HeaderNames.Key, isInput: false, note: ColumnNotes.TripKey)]
-    public string Key { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.Key)]
+    [Note(ColumnNotes.TripKey)]
+    public string Key { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.Day)]
+    [Header(SheetsConfig.HeaderNames.Day)]
     public string Day { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Month)]
+    [Header(SheetsConfig.HeaderNames.Month)]
     public string Month { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Year)]
+    [Header(SheetsConfig.HeaderNames.Year)]
     public string Year { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerTime)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerDistance)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? AmountPerDistance { get; set; }
 }

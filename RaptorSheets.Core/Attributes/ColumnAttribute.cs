@@ -8,8 +8,7 @@ namespace RaptorSheets.Core.Attributes;
 /// Comprehensive attribute that defines column configuration for Google Sheets.
 /// Automatically infers FieldType from property type - you only need to specify FormatType for special formatting.
 /// </summary>
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-public class ColumnAttribute : Attribute
+public class ColumnAttribute
 {
     /// <summary>
     /// Gets the header name for the sheet column

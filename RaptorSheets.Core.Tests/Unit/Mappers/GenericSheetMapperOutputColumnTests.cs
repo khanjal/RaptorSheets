@@ -13,21 +13,24 @@ public class GenericSheetMapperOutputColumnTests
     // Test entity with mixed input/output columns
     private class TestEntity
     {
-        [Column("Input1", isInput: true)]
+        [Header("Input1")]
+        [Input(true)]
         public string Input1 { get; set; } = "";
 
-        [Column("Input2", isInput: true)]
+        [Header("Input2")]
+        [Input(true)]
         public decimal? Input2 { get; set; }
 
         // Output column (formula) - should write null to preserve position
-        [Column("Total")]
+        [Header("Total")]
         public decimal? Total { get; set; }
 
-        [Column("Input3", isInput: true)]
+        [Header("Input3")]
+        [Input(true)]
         public string Input3 { get; set; } = "";
 
         // Another output column after input
-        [Column("Calculated")]
+        [Header("Calculated")]
         public decimal? Calculated { get; set; }
     }
 

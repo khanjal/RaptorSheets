@@ -8,61 +8,75 @@ namespace RaptorSheets.Gig.Entities;
 [ExcludeFromCodeCoverage]
 public class WeeklyEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Week)]
+    [Header(SheetsConfig.HeaderNames.Week)]
     public string Week { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Trips)]
+    [Header(SheetsConfig.HeaderNames.Trips)]
     public int Trips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Days)]
+    [Header(SheetsConfig.HeaderNames.Days)]
     public int Days { get; set; }
 
     // Financial properties
-    [Column(SheetsConfig.HeaderNames.Pay, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Pay)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Tips)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Bonus)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Total, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Total)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Cash)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal? Cash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerTrip)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Distance, FormatEnum.DISTANCE)]
+    [Header(SheetsConfig.HeaderNames.Distance)]
+    [Format(FormatEnum.DISTANCE)]
     public decimal Distance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerDistance)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TimeTotal, FormatEnum.DURATION)]
-    public string Time { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.TimeTotal)]
+    [Format(FormatEnum.DURATION)]
+    public string Time { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerTime)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDay, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.AmountPerDay)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal AmountPerDay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Average, FormatEnum.ACCOUNTING)]
+    [Header(SheetsConfig.HeaderNames.Average)]
+    [Format(FormatEnum.ACCOUNTING)]
     public decimal Average { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Number)]
+    [Header(SheetsConfig.HeaderNames.Number)]
     public int Number { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Year)]
+    [Header(SheetsConfig.HeaderNames.Year)]
     public int Year { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.DateBegin, FormatEnum.DATE)]
-    public string Begin { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.DateBegin)]
+    [Format(FormatEnum.DATE)]
+    public string Begin { get; set; } = string.Empty;
 
-    [Column(SheetsConfig.HeaderNames.DateEnd, FormatEnum.DATE)]
-    public string End { get; set; } = "";
+    [Header(SheetsConfig.HeaderNames.DateEnd)]
+    [Format(FormatEnum.DATE)]
+    public string End { get; set; } = string.Empty;
 }
