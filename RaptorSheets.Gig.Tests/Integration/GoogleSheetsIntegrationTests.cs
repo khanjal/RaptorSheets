@@ -260,7 +260,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine("📝 Step 1: Inserting test data...");
         var testData = CreateTestData(testRunId, shifts: 5, tripsPerShift: 3, expenses: 4);
         await InsertTestData(testData);
-        await Task.Delay(2000); // Allow propagation
+        await Task.Delay(5000); // Allow propagation
         
         ValidateInsertResult(testRunId, testData);
         
@@ -303,7 +303,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             return expense;
         });
         
-        await Task.Delay(2000); // Allow propagation
+        await Task.Delay(5000); // Allow propagation
         
         // Step 4: READ AGAIN - Validate updates
         System.Diagnostics.Debug.WriteLine("🔍 Step 4: Validating updates...");

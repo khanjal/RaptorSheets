@@ -95,6 +95,9 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Note, isInput: true)]
     public string Note { get; set; } = "";
 
+    [Column(SheetsConfig.HeaderNames.Tags, isInput: true)]
+    public string Tags { get; set; } = "";
+
     // Output columns (formulas/calculated) - default to isInput: false
     [Column(SheetsConfig.HeaderNames.Key, isInput: false, note: ColumnNotes.TripKey)]
     public string Key { get; set; } = "";

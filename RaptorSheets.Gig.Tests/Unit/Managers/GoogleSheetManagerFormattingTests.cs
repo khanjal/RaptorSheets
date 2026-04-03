@@ -3,7 +3,6 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Core.Entities;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Managers;
 using System.ComponentModel;
@@ -13,96 +12,6 @@ namespace RaptorSheets.Gig.Tests.Unit.Managers;
 [Category("Unit Tests")]
 public class GoogleSheetManagerFormattingTests
 {
-    private readonly GoogleSheetManager _manager;
-
-    public GoogleSheetManagerFormattingTests()
-    {
-        _manager = new GoogleSheetManager("test-token", "test-spreadsheet-id");
-    }
-
-    #region FormattingOptionsEntity Tests
-
-    [Fact]
-    public void FormattingOptionsEntity_None_ShouldHaveAllOptionsFalse()
-    {
-        // Act
-        var options = FormattingOptionsEntity.None;
-
-        // Assert
-        Assert.False(options.ReapplyColumnFormats);
-        Assert.False(options.ReapplyBorders);
-        Assert.False(options.ReapplyColors);
-        Assert.False(options.ReapplyProtection);
-        Assert.False(options.ReapplyFrozenRows);
-        Assert.False(options.HasAnyOptions);
-    }
-
-    [Fact]
-    public void FormattingOptionsEntity_All_ShouldHaveAllOptionsTrue()
-    {
-        // Act
-        var options = FormattingOptionsEntity.All;
-
-        // Assert
-        Assert.True(options.ReapplyColumnFormats);
-        Assert.True(options.ReapplyBorders);
-        Assert.True(options.ReapplyColors);
-        Assert.True(options.ReapplyProtection);
-        Assert.True(options.ReapplyFrozenRows);
-        Assert.True(options.HasAnyOptions);
-    }
-
-    [Fact]
-    public void FormattingOptionsEntity_Common_ShouldHaveCommonOptionsTrue()
-    {
-        // Act
-        var options = FormattingOptionsEntity.Common;
-
-        // Assert
-        Assert.True(options.ReapplyColumnFormats);
-        Assert.True(options.ReapplyColors);
-        Assert.False(options.ReapplyBorders); // Not in Common
-        Assert.False(options.ReapplyProtection); // Not in Common
-        Assert.True(options.ReapplyFrozenRows);
-        Assert.True(options.HasAnyOptions);
-    }
-
-    [Fact]
-    public void FormattingOptionsEntity_HasAnyOptions_WithNoOptionsTrue_ShouldBeFalse()
-    {
-        // Act
-        var options = new FormattingOptionsEntity
-        {
-            ReapplyColumnFormats = false,
-            ReapplyBorders = false,
-            ReapplyColors = false,
-            ReapplyProtection = false,
-            ReapplyFrozenRows = false
-        };
-
-        // Assert
-        Assert.False(options.HasAnyOptions);
-    }
-
-    [Fact]
-    public void FormattingOptionsEntity_HasAnyOptions_WithAtLeastOneTrue_ShouldBeTrue()
-    {
-        // Act
-        var options = new FormattingOptionsEntity
-        {
-            ReapplyColumnFormats = true,
-            ReapplyBorders = false,
-            ReapplyColors = false,
-            ReapplyProtection = false,
-            ReapplyFrozenRows = false
-        };
-
-        // Assert
-        Assert.True(options.HasAnyOptions);
-    }
-
-    #endregion
-
     #region GetSheetConfiguration Tests
 
     [Fact]
@@ -182,33 +91,9 @@ public class GoogleSheetManagerFormattingTests
     {
         // Arrange
         var sheetName = SheetsConfig.SheetNames.Trips;
-        var options = FormattingOptionsEntity.Common;
 
         // Act & Assert - Should not throw
-        // Note: In a real test with mocked API, this would verify batch requests
         GoogleSheetManager.GetSheetConfiguration(sheetName); // Verify sheet exists
-    }
-
-    [Fact]
-    public void ReapplyFormatting_WithNoOptions_ShouldNotCreateRequests()
-    {
-        // Arrange
-        var options = FormattingOptionsEntity.None;
-
-        // Assert
-        Assert.False(options.HasAnyOptions);
-    }
-
-    [Fact]
-    public void ReapplyFormatting_WithCommonOptions_ShouldIncludeColorAndFormats()
-    {
-        // Arrange
-        var options = FormattingOptionsEntity.Common;
-
-        // Assert
-        Assert.True(options.ReapplyColumnFormats);
-        Assert.True(options.ReapplyColors);
-        Assert.True(options.ReapplyFrozenRows);
     }
 
     #endregion
@@ -225,7 +110,6 @@ public class GoogleSheetManagerFormattingTests
             SheetsConfig.SheetNames.Shifts,
             SheetsConfig.SheetNames.Expenses
         };
-        var options = FormattingOptionsEntity.Common;
 
         // Act & Assert
         Assert.NotNull(sheets);
@@ -242,7 +126,6 @@ public class GoogleSheetManagerFormattingTests
     {
         // Arrange
         var sheets = new List<string>();
-        var options = FormattingOptionsEntity.Common;
 
         // Act & Assert
         Assert.Empty(sheets);

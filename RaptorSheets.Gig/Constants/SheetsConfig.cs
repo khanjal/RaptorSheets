@@ -94,6 +94,7 @@ public static class SheetsConfig
         public const string TimeOmit = "O";
         public const string TimeStart = "Start";
         public const string TimeTotal = "Time";
+        public const string Tags = "Tags";
         public const string Tip = "Tip";
         public const string Tips = "Tips";
         public const string Total = "Total";

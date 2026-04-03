@@ -4,6 +4,7 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
@@ -115,7 +116,21 @@ public partial class GoogleSheetManager
 
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
+        return CheckSheetHeaders(sheetInfoResponse, out _);
+    }
+
+    /// <summary>
+    /// Checks sheet headers and optionally returns information about missing columns.
+    /// </summary>
+    /// <param name="sheetInfoResponse">The spreadsheet info from Google Sheets</param>
+    /// <param name="missingColumns">Output dictionary of missing columns per sheet (empty if none found)</param>
+    /// <returns>Validation messages</returns>
+    public static List<MessageEntity> CheckSheetHeaders(
+        Spreadsheet sheetInfoResponse,
+        out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
         var messages = new List<MessageEntity>();
+        missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>();
 
         if (sheetInfoResponse == null)
         {
@@ -130,57 +145,28 @@ public partial class GoogleSheetManager
         {
             var sheetName = sheet.Properties.Title;
             var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
+            var sheetModel = GetSheetModelFromMapper(sheetName);
 
-            switch (sheetName)
+            if (sheetModel == null)
             {
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet)));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet)));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
-                    break;
-                default:
-                    messages.Add(MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageTypeEnum.CHECK_SHEET));
-                    break;
+                messages.Add(MessageHelpers.CreateWarningMessage(
+                    $"Sheet {sheetName} does not match any known sheet name", 
+                    MessageTypeEnum.CHECK_SHEET));
+                continue;
+            }
+
+            // Check headers and get missing column info
+            var sheetMessages = HeaderHelpers.CheckSheetHeaders(sheetHeader, sheetModel, out var insertionInfo);
+            headerMessages.AddRange(sheetMessages);
+
+            // If there are missing columns, add sheet ID and store them
+            if (insertionInfo.Count > 0)
+            {
+                foreach (var info in insertionInfo)
+                {
+                    info.SheetId = sheet.Properties.SheetId ?? 0;
+                }
+                missingColumns[sheetName] = insertionInfo;
             }
         }
 
@@ -197,6 +183,83 @@ public partial class GoogleSheetManager
         return messages;
     }
 
+    /// <summary>
+    /// Inserts missing columns into sheets based on validation results.
+    /// </summary>
+    /// <param name="missingColumns">Dictionary of sheet names to missing column information</param>
+    /// <returns>Result entity with messages about the insertion operation</returns>
+    public async Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        var sheetEntity = new SheetEntity();
+
+        if (missingColumns == null || missingColumns.Count == 0)
+        {
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                "No missing columns to insert",
+                MessageTypeEnum.CHECK_SHEET));
+            return sheetEntity;
+        }
+
+        var requests = new List<Request>();
+
+        foreach (var (sheetName, columns) in missingColumns)
+        {
+            // Sort columns by index in descending order to insert from right to left
+            // This prevents column shifting issues
+            var sortedColumns = columns.OrderByDescending(c => c.ColumnIndex).ToList();
+
+            foreach (var column in sortedColumns)
+            {
+                // Insert the column
+                requests.Add(GoogleRequestHelpers.GenerateInsertColumnDimension(
+                    column.SheetId,
+                    column.ColumnIndex,
+                    column.ColumnIndex + 1,
+                    inheritFromBefore: true));
+
+                // Update the header cell with the column name
+                var headerRow = new RowData
+                {
+                    Values = new List<CellData>
+                    {
+                        new CellData
+                        {
+                            UserEnteredValue = new ExtendedValue { StringValue = column.ColumnName }
+                        }
+                    }
+                };
+
+                requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(
+                    column.SheetId,
+                    0, // Header row index
+                    new List<RowData> { headerRow }));
+
+                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                    $"Inserting column '{column.ColumnName}' at index {column.ColumnIndex} in sheet '{sheetName}'",
+                    MessageTypeEnum.CHECK_SHEET));
+            }
+        }
+
+        // Execute the batch request
+        var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
+        var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest);
+
+        if (result != null)
+        {
+            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                $"Successfully inserted {missingColumns.Sum(kv => kv.Value.Count)} missing column(s)",
+                MessageTypeEnum.CHECK_SHEET));
+        }
+        else
+        {
+            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage(
+                "Failed to insert missing columns",
+                MessageTypeEnum.CHECK_SHEET));
+        }
+
+        return sheetEntity;
+    }
+
     #endregion
 
     #region Sheet Layouts
@@ -210,46 +273,7 @@ public partial class GoogleSheetManager
     /// <returns>SheetModel containing the complete sheet configuration, or null if sheet not found</returns>
     public SheetModel? GetSheetLayout(string sheet)
     {
-        try
-        {
-            // Use the existing helper to get the appropriate mapper's sheet model
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase))
-                return AddressMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase))
-                return DailyMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase))
-                return GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet);
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase))
-                return MonthlyMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase))
-                return NameMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase))
-                return PlaceMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase))
-                return RegionMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase))
-                return ServiceMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase))
-                return GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet);
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase))
-                return ShiftMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase))
-                return TripMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase))
-                return TypeMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase))
-                return WeekdayMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase))
-                return WeeklyMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase))
-                return YearlyMapper.GetSheet();
-
-            return null;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+        return GetSheetModelFromMapper(sheet);
     }
 
     /// <summary>
@@ -275,6 +299,55 @@ public partial class GoogleSheetManager
         return sheetModels;
     }
 
+    /// <summary>
+    /// Gets the sheet model from the appropriate mapper based on sheet name.
+    /// This returns the model with headers generated from entities and all configuration.
+    /// </summary>
+    private static SheetModel? GetSheetModelFromMapper(string sheetName)
+    {
+        try
+        {
+            return sheetName switch
+            {
+                var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase) 
+                    => AddressMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase) 
+                    => DailyMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) 
+                    => GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) 
+                    => MonthlyMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) 
+                    => NameMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) 
+                    => PlaceMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) 
+                    => RegionMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) 
+                    => ServiceMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) 
+                    => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) 
+                    => ShiftMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) 
+                    => TripMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase) 
+                    => TypeMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase) 
+                    => WeekdayMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase) 
+                    => WeeklyMapper.GetSheet(),
+                var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase) 
+                    => YearlyMapper.GetSheet(),
+                _ => null
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     #endregion
 
     #region Formatting Operations
@@ -286,26 +359,24 @@ public partial class GoogleSheetManager
     /// <param name="sheet">The sheet name to reapply formatting to.</param>
     /// <param name="options">Formatting options to apply. If null, uses Common defaults.</param>
     /// <returns>SheetEntity with messages indicating success or errors.</returns>
-    public async Task<SheetEntity> ReapplyFormatting(string sheet, FormattingOptionsEntity? options = null)
+    public async Task<SheetEntity> ReapplyFormatting(string sheet)
     {
-        return await ReapplyFormatting(new List<string> { sheet }, options ?? FormattingOptionsEntity.Common);
+        return await ReapplyFormatting(new List<string> { sheet });
     }
 
     /// <summary>
-    /// Reapplies formatting to multiple sheets based on their configurations in SheetsConfig.
+    /// Reapplies all formatting to multiple sheets based on their configurations in SheetsConfig.
     /// </summary>
     /// <param name="sheets">The sheet names to reapply formatting to.</param>
-    /// <param name="options">Formatting options to apply. If null, uses Common defaults.</param>
     /// <returns>SheetEntity with messages indicating success or errors.</returns>
-    public async Task<SheetEntity> ReapplyFormatting(List<string> sheets, FormattingOptionsEntity? options = null)
+    public async Task<SheetEntity> ReapplyFormatting(List<string> sheets)
     {
         var sheetEntity = new SheetEntity();
-        var formattingOptions = options ?? FormattingOptionsEntity.Common;
 
-        if (!formattingOptions.HasAnyOptions)
+        if (sheets == null || sheets.Count == 0)
         {
             sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
-                "No formatting options selected for reapplication",
+                "No sheets specified for formatting reapplication",
                 MessageTypeEnum.APPLY_FORMAT));
             return sheetEntity;
         }
@@ -348,13 +419,12 @@ public partial class GoogleSheetManager
                     continue;
                 }
 
-                // Add formatting requests based on options
+                // Add all formatting requests for this sheet
                 GenerateFormattingRequests(
                     batchUpdateRequest,
                     sheetModel,
                     sheetId,
-                    sheetInfo,
-                    formattingOptions);
+                    sheetInfo);
 
                 sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
                     $"Formatting queued for {sheet}",
@@ -439,17 +509,16 @@ public partial class GoogleSheetManager
     }
 
     /// <summary>
-    /// Generates formatting API requests based on the sheet configuration and options.
+    /// Generates all formatting API requests for a sheet based on its configuration.
     /// </summary>
     private static void GenerateFormattingRequests(
         BatchUpdateSpreadsheetRequest batchRequest,
         SheetModel sheetModel,
         int sheetId,
-        Google.Apis.Sheets.v4.Data.Sheet sheetInfo,
-        FormattingOptionsEntity options)
+        Google.Apis.Sheets.v4.Data.Sheet sheetInfo)
     {
-        // Reapply column formats
-        if (options.ReapplyColumnFormats && sheetModel.Headers.Count > 0)
+        // Apply column formats
+        if (sheetModel.Headers.Count > 0)
         {
             foreach (var header in sheetModel.Headers.Where(h => h.Format.HasValue))
             {
@@ -468,8 +537,8 @@ public partial class GoogleSheetManager
             }
         }
 
-        // Reapply tab color
-        if (options.ReapplyColors && sheetModel.TabColor != ColorEnum.BLACK)
+        // Apply tab color
+        if (sheetModel.TabColor != ColorEnum.BLACK)
         {
             var color = SheetHelpers.GetColor(sheetModel.TabColor);
             batchRequest.Requests.Add(
@@ -480,8 +549,8 @@ public partial class GoogleSheetManager
                     color.Blue ?? 0));
         }
 
-        // Reapply alternating row colors (cell color)
-        if (options.ReapplyColors && sheetModel.CellColor != ColorEnum.BLACK)
+        // Apply alternating row colors (cell color)
+        if (sheetModel.CellColor != ColorEnum.BLACK)
         {
             var color = SheetHelpers.GetColor(sheetModel.CellColor);
             batchRequest.Requests.Add(
@@ -496,18 +565,15 @@ public partial class GoogleSheetManager
                     color.Blue ?? 0));
         }
 
-        // Reapply frozen rows/columns
-        if (options.ReapplyFrozenRows)
-        {
-            batchRequest.Requests.Add(
-                GoogleRequestHelpers.GenerateUpdateFrozenRowsColumns(
-                    sheetId,
-                    sheetModel.FreezeRowCount,
-                    sheetModel.FreezeColumnCount));
-        }
+        // Apply frozen rows/columns
+        batchRequest.Requests.Add(
+            GoogleRequestHelpers.GenerateUpdateFrozenRowsColumns(
+                sheetId,
+                sheetModel.FreezeRowCount,
+                sheetModel.FreezeColumnCount));
 
-        // Reapply protection
-        if (options.ReapplyProtection && sheetModel.ProtectSheet)
+        // Apply protection if configured
+        if (sheetModel.ProtectSheet)
         {
             batchRequest.Requests.Add(
                 GoogleRequestHelpers.GenerateProtectSheet(

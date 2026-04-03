@@ -1,5 +1,6 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Gig.Entities;
@@ -31,6 +32,9 @@ public interface IGoogleSheetManager
     Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
     SheetModel? GetSheetLayout(string sheet);
     List<SheetModel> GetSheetLayouts(List<string> sheets);
+    
+    // Header Management
+    Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
     
     // Demo Data Generation
     SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null);

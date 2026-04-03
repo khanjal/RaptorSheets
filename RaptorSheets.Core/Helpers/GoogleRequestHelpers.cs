@@ -228,6 +228,34 @@ public static class GoogleRequestHelpers
         return insertRequest;
     }
 
+    /// <summary>
+    /// Generates a request to insert one or more columns at a specific position.
+    /// </summary>
+    /// <param name="sheetId">The sheet ID to insert columns into.</param>
+    /// <param name="startIndex">The column index to start inserting at (0-based).</param>
+    /// <param name="endIndex">The column index to end inserting at (exclusive, 0-based).</param>
+    /// <param name="inheritFromBefore">If true, inherits formatting from the column before the insertion point.</param>
+    /// <returns>A Google Sheets API request to insert columns.</returns>
+    public static Request GenerateInsertColumnDimension(int sheetId, int startIndex, int endIndex, bool inheritFromBefore = true)
+    {
+        var insertRequest = new Request
+        {
+            InsertDimension = new InsertDimensionRequest
+            {
+                Range = new DimensionRange
+                {
+                    SheetId = sheetId,
+                    Dimension = "COLUMNS",
+                    StartIndex = startIndex,
+                    EndIndex = endIndex
+                },
+                InheritFromBefore = inheritFromBefore
+            }
+        };
+
+        return insertRequest;
+    }
+
     public static BatchGetValuesByDataFilterRequest GenerateBatchGetValuesByDataFilterRequest(List<string> sheets, string? range = "")
     {
         if (sheets == null || sheets.Count < 1)

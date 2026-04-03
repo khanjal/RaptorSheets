@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using Xunit;
 
@@ -363,5 +364,89 @@ public class HeaderHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public void CheckSheetHeaders_WithMissingColumn_ShouldReturnInsertionInfo()
+    {
+        // Arrange
+        var values = new List<object> { "Header1", "Header3" }; // Missing "Header2"
+        var sheetModel = new SheetModel
+        {
+            Name = "TestSheet",
+            Headers =
+            [
+                new SheetCellModel { Name = "Header1", Column = "A", Index = 0 },
+                new SheetCellModel { Name = "Header2", Column = "B", Index = 1 },
+                new SheetCellModel { Name = "Header3", Column = "C", Index = 2 }
+            ]
+        };
+
+        // Act
+        var result = HeaderHelpers.CheckSheetHeaders(values, sheetModel, out var insertionInfo);
+
+        // Assert
+        Assert.NotEmpty(result);
+        Assert.Contains(result, m => m.Message.Contains("Missing column [Header2] - can be inserted"));
+        
+        Assert.Single(insertionInfo);
+        Assert.Equal("TestSheet", insertionInfo[0].SheetName);
+        Assert.Equal(1, insertionInfo[0].ColumnIndex);
+        Assert.Equal("Header2", insertionInfo[0].ColumnName);
+        Assert.Equal("B", insertionInfo[0].ColumnLetter);
+    }
+
+    [Fact]
+    public void CheckSheetHeaders_WithAllColumnsPresent_ShouldReturnNoInsertionInfo()
+    {
+        // Arrange
+        var values = new List<object> { "Header1", "Header2", "Header3" };
+        var sheetModel = new SheetModel
+        {
+            Name = "TestSheet",
+            Headers =
+            [
+                new SheetCellModel { Name = "Header1", Column = "A", Index = 0 },
+                new SheetCellModel { Name = "Header2", Column = "B", Index = 1 },
+                new SheetCellModel { Name = "Header3", Column = "C", Index = 2 }
+            ]
+        };
+
+        // Act
+        var result = HeaderHelpers.CheckSheetHeaders(values, sheetModel, out var insertionInfo);
+
+        // Assert
+        Assert.Empty(result);
+        Assert.Empty(insertionInfo);
+    }
+
+    [Fact]
+    public void CheckSheetHeaders_WithMultipleMissingColumns_ShouldReturnAllInsertionInfo()
+    {
+        // Arrange
+        var values = new List<object> { "Header1" }; // Missing "Header2" and "Header3"
+        var sheetModel = new SheetModel
+        {
+            Name = "TestSheet",
+            Headers =
+            [
+                new SheetCellModel { Name = "Header1", Column = "A", Index = 0 },
+                new SheetCellModel { Name = "Header2", Column = "B", Index = 1 },
+                new SheetCellModel { Name = "Header3", Column = "C", Index = 2 }
+            ]
+        };
+
+        // Act
+        var result = HeaderHelpers.CheckSheetHeaders(values, sheetModel, out var insertionInfo);
+
+        // Assert
+        Assert.Equal(2, result.Count);
+        Assert.Equal(2, insertionInfo.Count);
+        
+        Assert.Equal("Header2", insertionInfo[0].ColumnName);
+        Assert.Equal(1, insertionInfo[0].ColumnIndex);
+        
+        Assert.Equal("Header3", insertionInfo[1].ColumnName);
+        Assert.Equal(2, insertionInfo[1].ColumnIndex);
     }
 }
