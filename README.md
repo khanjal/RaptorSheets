@@ -55,64 +55,51 @@ var sheetData = await service.GetSheetData("MySheet");
 Console.WriteLine($"Found {sheetData.Values.Count} rows");
 ```
 
-### TypedField System with ColumnAttribute
+### TypedField System (Header + Metadata Attributes)
 ```csharp
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Repositories;
 
-// Define entities with automatic type conversion
+// Define entities using Header and metadata attributes
 public class ContactEntity
 {
     public int RowId { get; set; }
 
     // Basic string field with header mapping
-    [Column(SheetsConfig.HeaderNames.Name, FieldType.String)]
+    [Header(SheetsConfig.HeaderNames.Name)]
+    [Input]
     public string Name { get; set; } = "";
 
-    // Automatic currency formatting with default "$#,##0.00" pattern
-    [Column(SheetsConfig.HeaderNames.Salary, FieldType.Currency)]
+    // Automatic currency formatting
+    [Header(SheetsConfig.HeaderNames.Salary)]
+    [Input]
+    [Format(FormatEnum.CURRENCY)]
     public decimal? Salary { get; set; }
 
     // Custom format when different from default
-    [Column(SheetsConfig.HeaderNames.Score, FieldType.Percentage, "0.0%")]
+    [Header(SheetsConfig.HeaderNames.Score)]
+    [Input]
+    [Format(FormatEnum.PERCENT, pattern: "0.0%")]
     public decimal? Score { get; set; }
 
     // Override JSON name when needed
-    [Column(SheetsConfig.HeaderNames.EmailAddress, FieldType.Email)]
+    [Header(SheetsConfig.HeaderNames.EmailAddress)]
+    [Input]
     [JsonPropertyName("email")]
     public string EmailAddress { get; set; } = "";
 }
 
-// Repository with automatic CRUD operations
+// Repository with automatic CRUD operations (unchanged)
 public class ContactRepository : BaseEntityRepository<ContactEntity>
 {
     public ContactRepository(IGoogleSheetService sheetService) 
         : base(sheetService, "Contacts", hasHeaderRow: true) { }
-
-    // Custom business logic methods
-    public async Task<List<ContactEntity>> GetHighScorersAsync()
-    {
-        var allContacts = await GetAllAsync(); // Automatic type conversion
-        return allContacts.Where(c => c.Score > 0.8m).ToList();
-    }
 }
 
 // Usage
 var repository = new ContactRepository(service);
-
-// Automatic type conversion: "$75,000.00" → decimal 75000
 var contacts = await repository.GetAllAsync();
-
-// Add new contact with automatic conversion
-var newContact = new ContactEntity
-{
-    Name = "John Doe",
-    Salary = 75000m,      // Automatically formatted as "$75,000.00"
-    Score = 0.95m,        // Automatically formatted as "95.0%"
-    EmailAddress = "john@example.com"
-};
-await repository.AddAsync(newContact);
 ```
 
 ### Create Advanced Sheets with Formatting
@@ -138,9 +125,9 @@ await service.ExecuteBatchUpdate(requests);
 ## ✨ Key Features
 
 ### TypedField System
-- **ColumnAttribute**: Single attribute for headers, types, and formatting
+- **Header + Metadata Attributes**: Use `HeaderAttribute` plus `Input`, `Format`, `Validation`, and `Note` to express column intent. Internally these are merged into runtime `ColumnAttribute` objects for processing.
 - **Automatic Type Conversion**: Currency, dates, percentages, phone numbers, emails
-- **Default Format Patterns**: Specify only when different from sensible defaults
+- **Default Format Patterns**: Specify only when different from sensible defaults using `Format` attribute
 - **Header-Driven Configuration**: Use header names as primary source of truth
 - **Repository Pattern**: Automatic CRUD operations with type conversion
 
@@ -160,7 +147,7 @@ await service.ExecuteBatchUpdate(requests);
 Your Custom Application
        ↓
 TypedField System
-  ├── ColumnAttribute (Configuration)
+    ├── HeaderAttribute + Input/Format/Validation/Note (Configuration)
   ├── BaseEntityRepository<T> (CRUD Operations)
   ├── TypedEntityMapper<T> (Conversion)
   └── Schema Validation (Type Safety)
@@ -178,8 +165,10 @@ Google Sheets API v4
 
 ### Simplified Configuration
 ```csharp
-// Single attribute, automated mapping
-[Column(SheetsConfig.HeaderNames.Pay, FieldType.Currency, "\"$\"#,##0.00")]
+// Use Header + metadata attributes for clearer intent
+[Header(SheetsConfig.HeaderNames.Pay)]
+[Input]
+[Format(FormatEnum.ACCOUNTING)]
 public decimal? Pay { get; set; }
 
 // Automated conversion in mappers
@@ -243,18 +232,22 @@ var manager = new GoogleSheetManager(accessToken, spreadsheetId);
 RaptorSheets.Core with TypedField system is designed to be the foundation for domain-specific packages:
 
 ```csharp
-// 1. Define your domain entities with ColumnAttribute
+// 1. Define your domain entities using Header + metadata attributes
 public class ProductEntity
 {
     public int RowId { get; set; }
     
-    [Column(SheetsConfig.HeaderNames.ProductName, FieldType.String)]
+    [Header(SheetsConfig.HeaderNames.ProductName)]
+    [Input]
     public string Name { get; set; } = "";
     
-    [Column(SheetsConfig.HeaderNames.Price, FieldType.Currency)]
+    [Header(SheetsConfig.HeaderNames.Price)]
+    [Input]
+    [Format(FormatEnum.CURRENCY)]
     public decimal Price { get; set; }
     
-    [Column(SheetsConfig.HeaderNames.LaunchDate, FieldType.DateTime, "M/d/yyyy")]
+    [Header(SheetsConfig.HeaderNames.LaunchDate)]
+    [Format(FormatEnum.DATE)]
     public DateTime? LaunchDate { get; set; }
 }
 
