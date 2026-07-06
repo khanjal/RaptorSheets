@@ -70,6 +70,8 @@ public static class GenerateSheetsHelpers
             var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) => MonthlyMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) => NameMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) => PlaceMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.TripSummary, StringComparison.OrdinalIgnoreCase) => TripSummaryMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.PlaceSummary, StringComparison.OrdinalIgnoreCase) => PlaceSummaryMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) => RegionMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) => ServiceMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet),

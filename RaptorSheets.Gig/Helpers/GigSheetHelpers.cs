@@ -72,6 +72,12 @@ public static class GigSheetHelpers
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(PlaceMapper.GetSheet());
                     break;
+                case var s when string.Equals(s, SheetsConfig.SheetNames.TripSummary, StringComparison.OrdinalIgnoreCase):
+                    sheetData.Add(TripSummaryMapper.GetSheet());
+                    break;
+                case var s when string.Equals(s, SheetsConfig.SheetNames.PlaceSummary, StringComparison.OrdinalIgnoreCase):
+                    sheetData.Add(PlaceSummaryMapper.GetSheet());
+                    break;
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase):
                     sheetData.Add(RegionMapper.GetSheet());
                     break;
@@ -224,6 +230,22 @@ public static class GigSheetHelpers
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, PlaceMapper.GetSheet()));
                 sheetEntity.Places = GenericSheetMapper<PlaceEntity>.MapFromRangeData(values);
                 break;
+            case var s when string.Equals(s, SheetsConfig.SheetNames.TripSummary, StringComparison.OrdinalIgnoreCase):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TripSummaryMapper.GetSheet()));
+                sheetEntity.TripSummary = GenericSheetMapper<TripSummaryEntity>.MapFromRangeData(values);
+                break;
+            case var s when string.Equals(s, SheetsConfig.SheetNames.PlaceSummary, StringComparison.OrdinalIgnoreCase):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, PlaceSummaryMapper.GetSheet()));
+                sheetEntity.PlaceSummary = GenericSheetMapper<PlaceSummaryEntity>.MapFromRangeData(values);
+                break;
+            case var s when string.Equals(s, SheetsConfig.SheetNames.TripSummary, StringComparison.OrdinalIgnoreCase):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TripSummaryMapper.GetSheet()));
+                sheetEntity.TripSummary = GenericSheetMapper<TripSummaryEntity>.MapFromRangeData(values);
+                break;
+            case var s when string.Equals(s, SheetsConfig.SheetNames.PlaceSummary, StringComparison.OrdinalIgnoreCase):
+                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, PlaceSummaryMapper.GetSheet()));
+                sheetEntity.PlaceSummary = GenericSheetMapper<PlaceSummaryEntity>.MapFromRangeData(values);
+                break;
             case var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, RegionMapper.GetSheet()));
                 sheetEntity.Regions = GenericSheetMapper<RegionEntity>.MapFromRangeData(values);
@@ -236,6 +258,7 @@ public static class GigSheetHelpers
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet)));
                 sheetEntity.Setup = GenericSheetMapper<SetupEntity>.MapFromRangeData(values);
                 break;
+            // TripSummary and PlaceSummary are summary helper sheets derived from Trips
             case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, ShiftMapper.GetSheet()));
                 sheetEntity.Shifts = GenericSheetMapper<ShiftEntity>.MapFromRangeData(values);
