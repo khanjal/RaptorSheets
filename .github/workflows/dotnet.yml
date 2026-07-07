@@ -53,6 +53,20 @@ jobs:
         google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
         google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
       run: |
+        # If an encoded JSON secret is provided, decode it and populate fields (robust against newline escaping)
+        if [[ -n "${GOOGLE_CREDENTIALS_JSON_B64:-}" ]]; then
+          echo "Decoding GOOGLE_CREDENTIALS_JSON_B64 and extracting fields"
+          echo "${GOOGLE_CREDENTIALS_JSON_B64}" | base64 --decode > /tmp/gcp_creds.json
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "Installing jq for JSON parsing"
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+          export google_credentials__type="$(jq -r '.type // empty' /tmp/gcp_creds.json)"
+          export google_credentials__private_key_id="$(jq -r '.private_key_id // empty' /tmp/gcp_creds.json)"
+          export google_credentials__private_key="$(jq -r '.private_key // empty' /tmp/gcp_creds.json)"
+          export google_credentials__client_email="$(jq -r '.client_email // empty' /tmp/gcp_creds.json)"
+          export google_credentials__client_id="$(jq -r '.client_id // empty' /tmp/gcp_creds.json)"
+        fi
         # Normalize private key newlines if the secret contains literal "\\n" sequences
         if [[ -n "${google_credentials__private_key}" && "${google_credentials__private_key}" == *'\\n'* ]]; then
           echo "Normalizing google private key newlines"
@@ -117,6 +131,20 @@ jobs:
       if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
       shell: bash
       run: |
+        # If an encoded JSON secret is provided, decode it and populate fields (robust against newline escaping)
+        if [[ -n "${GOOGLE_CREDENTIALS_JSON_B64:-}" ]]; then
+          echo "Decoding GOOGLE_CREDENTIALS_JSON_B64 and extracting fields"
+          echo "${GOOGLE_CREDENTIALS_JSON_B64}" | base64 --decode > /tmp/gcp_creds.json
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "Installing jq for JSON parsing"
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+          export google_credentials__type="$(jq -r '.type // empty' /tmp/gcp_creds.json)"
+          export google_credentials__private_key_id="$(jq -r '.private_key_id // empty' /tmp/gcp_creds.json)"
+          export google_credentials__private_key="$(jq -r '.private_key // empty' /tmp/gcp_creds.json)"
+          export google_credentials__client_email="$(jq -r '.client_email // empty' /tmp/gcp_creds.json)"
+          export google_credentials__client_id="$(jq -r '.client_id // empty' /tmp/gcp_creds.json)"
+        fi
         mkdir -p ./.sonar/scanner
         dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
 
