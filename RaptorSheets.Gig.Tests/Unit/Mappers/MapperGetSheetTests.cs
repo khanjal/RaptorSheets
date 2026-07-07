@@ -51,9 +51,8 @@ public class MapperGetSheetTests
         // Note: We check result headers since sheetConfig may not have UpdateColumns() called
         foreach (var resultHeader in result.Headers)
         {
-            // TODO: Revisit this test since we have placeholder headers now.
-            // Assert.False(string.IsNullOrWhiteSpace(resultHeader.Column), 
-            //     $"Header '{resultHeader.Name}' should have a Column value");
+            Assert.False(string.IsNullOrWhiteSpace(resultHeader.Column), 
+                $"Header '{resultHeader.Name}' should have a Column value");
 
             // Protected sheets should have EITHER formulas OR be marked as input columns
             // Not all headers in protected sheets have formulas - some are user input fields
