@@ -45,4 +45,38 @@ public static class ListExtensions
         int index = rng.Next(list.Count);
         return list[index];
     }
+
+    /// <summary>
+    /// <summary>
+    /// Keep the first <paramref name="leadingCount"/> existing headers and pad with
+    /// empty placeholders so the final header count equals the original count
+    /// observed before modification. Useful when you want to preserve the
+    /// total header width but only keep a small number of actual header cells.
+    /// </summary>
+    /// <param name="leadingCount">Number of leading headers to keep (e.g. 1)</param>
+    public static void EnsureHeaderPlaceholders(this List<SheetCellModel> headers, int leadingCount)
+    {
+        if (headers == null) return;
+
+        // Ensure indexes are assigned and capture the original total
+        headers.UpdateColumns();
+        int originalTotal = headers.Count;
+
+        var kept = new List<SheetCellModel>();
+        for (int i = 0; i < Math.Min(Math.Max(0, leadingCount), headers.Count); i++)
+        {
+            kept.Add(headers[i]);
+        }
+
+        headers.Clear();
+        headers.AddRange(kept);
+
+        // Pad to the original total with empty placeholders
+        while (headers.Count < originalTotal)
+        {
+            headers.Add(new SheetCellModel { Name = "" });
+        }
+
+        headers.UpdateColumns();
+    }
 }

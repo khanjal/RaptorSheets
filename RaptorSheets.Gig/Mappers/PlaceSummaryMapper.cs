@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Helpers;
+using System.Collections.Generic;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
@@ -23,14 +24,8 @@ public static class PlaceSummaryMapper
 
         sheet.Headers.UpdateColumns();
 
-        // Only keep the first header cell — the QUERY will provide the other headers
-        if (sheet.Headers.Count > 1)
-        {
-            var firstHeader = sheet.Headers[0];
-            sheet.Headers.Clear();
-            sheet.Headers.Add(firstHeader);
-            sheet.Headers.UpdateColumns();
-        }
+        // Keep one real header, pad the rest up to the original header count
+        sheet.Headers.EnsureHeaderPlaceholders(1);
 
         var tripSheet = SheetsConfig.TripSheet;
         tripSheet.Headers.UpdateColumns();
