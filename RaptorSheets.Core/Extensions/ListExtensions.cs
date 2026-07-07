@@ -56,27 +56,19 @@ public static class ListExtensions
     /// <param name="leadingCount">Number of leading headers to keep (e.g. 1)</param>
     public static void EnsureHeaderPlaceholders(this List<SheetCellModel> headers, int leadingCount)
     {
-        if (headers == null) return;
+        if (headers == null || headers.Count == 0) return;
 
-        // Ensure indexes are assigned and capture the original total
+        // Ensure indexes/columns are assigned before we mutate hide flags
         headers.UpdateColumns();
-        int originalTotal = headers.Count;
 
-        var kept = new List<SheetCellModel>();
-        for (int i = 0; i < Math.Min(Math.Max(0, leadingCount), headers.Count); i++)
+        var keep = Math.Max(0, leadingCount);
+
+        for (int i = 0; i < headers.Count; i++)
         {
-            kept.Add(headers[i]);
+            headers[i].HideHeaderName = i >= keep;
         }
 
-        headers.Clear();
-        headers.AddRange(kept);
-
-        // Pad to the original total with empty placeholders
-        while (headers.Count < originalTotal)
-        {
-            headers.Add(new SheetCellModel { Name = "" });
-        }
-
+        // Recompute columns/indexes in case callers expect them updated
         headers.UpdateColumns();
     }
 }

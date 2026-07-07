@@ -132,7 +132,11 @@ public static class SheetHelpers
 
         foreach (var header in headers)
         {
-            if (!string.IsNullOrEmpty(header.Formula))
+            if (header.HideHeaderName)
+            {
+                objectList.Add(string.Empty);
+            }
+            else if (!string.IsNullOrEmpty(header.Formula))
             {
                 objectList.Add(header.Formula);
             }
@@ -169,8 +173,13 @@ public static class SheetHelpers
 
             var value = new ExtendedValue();
 
-            if (!string.IsNullOrEmpty(header.Formula) || header.Protect)
+            // Use a formula if the header explicitly has one (non-empty) or if the header is protected.
+            // This ensures an empty-string formula only counts when protection is intended.
+            if (header.Protect || !string.IsNullOrEmpty(header.Formula))
             {
+                // Distinguish between null and empty string formulas:
+                // - null => use the header Name as the formula value
+                // - empty string ("") => treat as an explicit empty formula
                 if (header.Formula != null)
                 {
                     value.FormulaValue = header.Formula;
@@ -179,7 +188,6 @@ public static class SheetHelpers
                 {
                     value.FormulaValue = header.Name;
                 }
-                
 
                 if (!sheet.ProtectSheet)
                 {
@@ -193,6 +201,12 @@ public static class SheetHelpers
             else
             {
                 value.StringValue = header.Name;
+            }
+
+            // If requested, hide the header name in the emitted cell (keep Name on the model intact)
+            if (header.HideHeaderName)
+            {
+                value.StringValue = string.Empty;
             }
 
             if (!string.IsNullOrEmpty(header.Note))

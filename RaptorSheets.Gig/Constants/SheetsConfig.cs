@@ -415,14 +415,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        // TripSummary is a spilling QUERY produced by the mapper; only the first
-        // header cell is required in the sheet configuration. The mapper will
-        // place a spilling formula into this cell which supplies the remaining
-        // columns at runtime.
-        Headers = new List<SheetCellModel>
-        {
-            new SheetCellModel { Name = HeaderNames.Name }
-        }
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TripSummaryEntity>()
     };
 
     public static SheetModel PlaceSummary => new()
@@ -433,14 +426,7 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        // PlaceSummary is a spilling QUERY produced by the mapper; only the first
-        // header cell is required in the sheet configuration. The mapper will
-        // place a spilling formula into this cell which supplies the remaining
-        // columns at runtime.
-        Headers = new List<SheetCellModel>
-        {
-            new SheetCellModel { Name = HeaderNames.Place }
-        }
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PlaceSummaryEntity>()
     };
 
     public static SheetModel TypeSheet => new()

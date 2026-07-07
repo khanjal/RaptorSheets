@@ -21,8 +21,11 @@ public class EnsureHeaderPlaceholdersTests
 
         Assert.Equal(3, headers.Count);
         Assert.Equal("H1", headers[0].Name);
-        Assert.Equal("", headers[1].Name);
-        Assert.Equal("", headers[2].Name);
+        // After simplification we simply mark the trailing headers as hidden
+        Assert.Equal("H2", headers[1].Name);
+        Assert.True(headers[1].HideHeaderName);
+        Assert.Equal("H3", headers[2].Name);
+        Assert.True(headers[2].HideHeaderName);
         Assert.Equal("A", headers[0].Column);
         Assert.Equal("B", headers[1].Column);
         Assert.Equal("C", headers[2].Column);
@@ -47,8 +50,10 @@ public class EnsureHeaderPlaceholdersTests
         Assert.Equal(4, headers.Count);
         Assert.Equal("H1", headers[0].Name);
         Assert.Equal("H2", headers[1].Name);
-        Assert.Equal("", headers[2].Name);
-        Assert.Equal("", headers[3].Name);
+        Assert.Equal("H3", headers[2].Name);
+        Assert.True(headers[2].HideHeaderName);
+        Assert.Equal("H4", headers[3].Name);
+        Assert.True(headers[3].HideHeaderName);
     }
 
     [Fact]
