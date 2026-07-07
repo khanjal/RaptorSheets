@@ -36,7 +36,7 @@ public static class PlaceSummaryMapper
         tripSheet.Headers.UpdateColumns();
 
         var placeRange = tripSheet.GetRange(SheetsConfig.HeaderNames.Place, 2);
-        var addressRange = tripSheet.GetRange(SheetsConfig.HeaderNames.Address, 2);
+        var addressRange = tripSheet.GetRange(SheetsConfig.HeaderNames.AddressStart, 2);
 
         var query = GoogleFormulaBuilder.BuildVstackQueryGroupTwoColumns(
             SheetsConfig.HeaderNames.Place,
