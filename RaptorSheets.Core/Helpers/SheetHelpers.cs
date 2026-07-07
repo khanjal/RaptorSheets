@@ -132,11 +132,7 @@ public static class SheetHelpers
 
         foreach (var header in headers)
         {
-            if (header.HideHeaderName)
-            {
-                objectList.Add(string.Empty);
-            }
-            else if (!string.IsNullOrEmpty(header.Formula))
+            if (!string.IsNullOrEmpty(header.Formula))
             {
                 objectList.Add(header.Formula);
             }
@@ -203,18 +199,21 @@ public static class SheetHelpers
                 value.StringValue = header.Name;
             }
 
-            // If requested, hide the header name in the emitted cell (keep Name on the model intact)
-            if (header.HideHeaderName)
-            {
-                value.StringValue = string.Empty;
-            }
-
             if (!string.IsNullOrEmpty(header.Note))
             {
                 cell.Note = header.Note;
             }
 
-            cell.UserEnteredValue = value;
+            // If requested, do not set a UserEnteredValue so the cell remains empty (allows formula spills)
+            if (header.HideHeaderName)
+            {
+                cell.UserEnteredValue = null;
+            }
+            else
+            {
+                cell.UserEnteredValue = value;
+            }
+
             cells.Add(cell);
         }
 
