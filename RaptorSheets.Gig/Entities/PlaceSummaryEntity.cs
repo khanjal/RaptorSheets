@@ -12,8 +12,8 @@ public class PlaceSummaryEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Place)]
     public string Place { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AddressStart)]
-    public string StartAddress { get; set; } = "";
+    [Column(SheetsConfig.HeaderNames.Address)]
+    public string Address { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Count)]
     public int Count { get; set; }

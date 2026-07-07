@@ -24,6 +24,16 @@ public static class TripSummaryMapper
         // Ensure header indexes are assigned
         sheet.Headers.UpdateColumns();
 
+        // For this summary the QUERY will provide the full header row (labels),
+        // so only keep the first header cell for placing the spilling formula
+        if (sheet.Headers.Count > 1)
+        {
+            var firstHeader = sheet.Headers[0];
+            sheet.Headers.Clear();
+            sheet.Headers.Add(firstHeader);
+            sheet.Headers.UpdateColumns();
+        }
+
         // Build the single QUERY formula that produces Name|Address|Count from Trips
         var tripSheet = SheetsConfig.TripSheet;
         tripSheet.Headers.UpdateColumns();
@@ -36,7 +46,8 @@ public static class TripSummaryMapper
             SheetsConfig.HeaderNames.Address,
             nameRange,
             endAddressRange,
-            SheetsConfig.HeaderNames.Count);
+            SheetsConfig.HeaderNames.Count
+        );
 
         // Place formula in first header so it will spill across columns
         if (sheet.Headers.Count > 0)

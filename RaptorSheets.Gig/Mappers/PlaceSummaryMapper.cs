@@ -23,17 +23,26 @@ public static class PlaceSummaryMapper
 
         sheet.Headers.UpdateColumns();
 
+        // Only keep the first header cell — the QUERY will provide the other headers
+        if (sheet.Headers.Count > 1)
+        {
+            var firstHeader = sheet.Headers[0];
+            sheet.Headers.Clear();
+            sheet.Headers.Add(firstHeader);
+            sheet.Headers.UpdateColumns();
+        }
+
         var tripSheet = SheetsConfig.TripSheet;
         tripSheet.Headers.UpdateColumns();
 
         var placeRange = tripSheet.GetRange(SheetsConfig.HeaderNames.Place, 2);
-        var startAddressRange = tripSheet.GetRange(SheetsConfig.HeaderNames.AddressStart, 2);
+        var addressRange = tripSheet.GetRange(SheetsConfig.HeaderNames.Address, 2);
 
         var query = GoogleFormulaBuilder.BuildVstackQueryGroupTwoColumns(
             SheetsConfig.HeaderNames.Place,
-            SheetsConfig.HeaderNames.AddressStart,
+            SheetsConfig.HeaderNames.Address,
             placeRange,
-            startAddressRange,
+            addressRange,
             SheetsConfig.HeaderNames.Count,
             countColumnIsSecond: true);
 

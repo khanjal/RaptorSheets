@@ -128,12 +128,11 @@ public static class GoogleFormulaBuilder
     {
         var countExpr = countColumnIsSecond ? "count(Col2)" : "count(Col1)";
 
-        var headerLiteral = "{\"" + header1 + "\",\"" + header2 + "\",\"" + countHeader + "\"}";
         var ranges = "{" + range1 + "," + range2 + "}";
 
         var innerQuery = "\"select Col1, Col2, " + countExpr + " where Col1 is not null and Col2 is not null group by Col1, Col2 order by Col1 asc, " + countExpr + " desc label Col1 '" + header1 + "', Col2 '" + header2 + "', " + countExpr + " '" + countHeader + "'\",0";
 
-        return "=VSTACK(" + headerLiteral + ",QUERY(" + ranges + "," + innerQuery + "))";
+        return "=QUERY(" + ranges + "," + innerQuery + ")";
     }
 
     /// <summary>
