@@ -13,6 +13,8 @@ public class SheetOrder_GetAllSheetNames_Tests
             SheetsConfig.SheetNames.Trips,
             SheetsConfig.SheetNames.Shifts,
             SheetsConfig.SheetNames.Expenses,
+            SheetsConfig.SheetNames.TripSummary,
+            SheetsConfig.SheetNames.PlaceSummary,
             SheetsConfig.SheetNames.Addresses,
             SheetsConfig.SheetNames.Names,
             SheetsConfig.SheetNames.Places,

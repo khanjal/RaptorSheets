@@ -11,12 +11,12 @@ public class SheetEntityOrderingTests
         var sheetOrder = SheetsConfig.SheetUtilities.GetAllSheetNames();
 
         // Assert
-        Assert.Equal(15, sheetOrder.Count);
+        Assert.Equal(17, sheetOrder.Count);
         
         // Verify key positions
         Assert.Equal(SheetsConfig.SheetNames.Trips, sheetOrder[0]);      // First
         Assert.Equal(SheetsConfig.SheetNames.Shifts, sheetOrder[1]);     // Second
-        Assert.Equal(SheetsConfig.SheetNames.Setup, sheetOrder[14]);     // Last
+        Assert.Equal(SheetsConfig.SheetNames.Setup, sheetOrder[16]);     // Last
     }
 
     [Fact]

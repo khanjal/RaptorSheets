@@ -121,6 +121,22 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
+    /// Builds a VSTACK + QUERY formula that groups two parallel ranges by the first two columns
+    /// and returns a header row plus a count column. This centralizes the common summary pattern.
+    /// </summary>
+    public static string BuildVstackQueryGroupTwoColumns(string header1, string header2, string range1, string range2, string countHeader, bool countColumnIsSecond = false)
+    {
+        var countExpr = countColumnIsSecond ? "count(Col2)" : "count(Col1)";
+
+        var headerLiteral = "{\"" + header1 + "\",\"" + header2 + "\",\"" + countHeader + "\"}";
+        var ranges = "{" + range1 + "," + range2 + "}";
+
+        var innerQuery = "\"select Col1, Col2, " + countExpr + " where Col1 is not null and Col2 is not null group by Col1, Col2 order by Col1 asc, " + countExpr + " desc label Col1 '" + header1 + "', Col2 '" + header2 + "', " + countExpr + " '" + countHeader + "'\",0";
+
+        return "=VSTACK(" + headerLiteral + ",QUERY(" + ranges + "," + innerQuery + "))";
+    }
+
+    /// <summary>
     /// Builds a complete ARRAYFORMULA for unique values
     /// </summary>
     public static string BuildArrayFormulaUnique(string keyRange, string header, string sourceRange)

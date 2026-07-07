@@ -14,7 +14,7 @@ public class SheetsConfigUtilitiesTests
         var sheetOrder = SheetsConfig.SheetUtilities.GetAllSheetNames();
 
         // Assert
-        Assert.Equal(15, sheetOrder.Count);
+        Assert.Equal(17, sheetOrder.Count);
         Assert.Equal(SheetsConfig.SheetNames.Trips, sheetOrder[0]);      // First
         Assert.Equal(SheetsConfig.SheetNames.Shifts, sheetOrder[1]);     // Second
         Assert.Equal(SheetsConfig.SheetNames.Setup, sheetOrder.Last());  // Last
@@ -52,7 +52,7 @@ public class SheetsConfigUtilitiesTests
         // Act & Assert
         Assert.Equal(0, SheetsConfig.SheetUtilities.GetSheetIndex("Trips"));
         Assert.Equal(0, SheetsConfig.SheetUtilities.GetSheetIndex("trips")); // Case insensitive
-        Assert.Equal(14, SheetsConfig.SheetUtilities.GetSheetIndex("Setup"));
+        Assert.Equal(16, SheetsConfig.SheetUtilities.GetSheetIndex("Setup"));
         Assert.Equal(-1, SheetsConfig.SheetUtilities.GetSheetIndex("NotFound"));
     }
 

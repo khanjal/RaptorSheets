@@ -407,6 +407,28 @@ public static class SheetsConfig
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TripEntity>()
     };
 
+    public static SheetModel TripSummary => new()
+    {
+        Name = SheetNames.TripSummary,
+        TabColor = ColorEnum.CYAN,
+        CellColor = ColorEnum.LIGHT_CYAN,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = true,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TripSummaryEntity>()
+    };
+
+    public static SheetModel PlaceSummary => new()
+    {
+        Name = SheetNames.PlaceSummary,
+        TabColor = ColorEnum.CYAN,
+        CellColor = ColorEnum.LIGHT_CYAN,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = true,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PlaceSummaryEntity>()
+    };
+
     public static SheetModel TypeSheet => new()
     {
         Name = SheetNames.Types,

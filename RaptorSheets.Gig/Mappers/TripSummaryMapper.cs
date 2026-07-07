@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
@@ -30,7 +31,12 @@ public static class TripSummaryMapper
         var nameRange = tripSheet.GetRange(SheetsConfig.HeaderNames.Name, 2);
         var endAddressRange = tripSheet.GetRange(SheetsConfig.HeaderNames.AddressEnd, 2);
 
-        var query = $"=VSTACK({{"\"Name\"","\"Address\"","\"Count\""}},QUERY({{{nameRange},{endAddressRange}}},\"select Col1, Col2, count(Col1) where Col1 is not null and Col2 is not null group by Col1, Col2 order by Col1 asc, count(Col1) desc label Col1 'Name', Col2 'Address', count(Col1) 'Count'\",0))";
+        var query = GoogleFormulaBuilder.BuildVstackQueryGroupTwoColumns(
+            SheetsConfig.HeaderNames.Name,
+            SheetsConfig.HeaderNames.Address,
+            nameRange,
+            endAddressRange,
+            SheetsConfig.HeaderNames.Count);
 
         // Place formula in first header so it will spill across columns
         if (sheet.Headers.Count > 0)
