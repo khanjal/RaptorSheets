@@ -41,7 +41,7 @@ public static class TripSummaryMapper
         var nameRange = tripSheet.GetRange(SheetsConfig.HeaderNames.Name, 2);
         var endAddressRange = tripSheet.GetRange(SheetsConfig.HeaderNames.AddressEnd, 2);
 
-        var query = GoogleFormulaBuilder.BuildVstackQueryGroupTwoColumns(
+        var query = GoogleFormulaBuilder.BuildQueryGroupTwoColumns(
             SheetsConfig.HeaderNames.Name,
             SheetsConfig.HeaderNames.Address,
             nameRange,

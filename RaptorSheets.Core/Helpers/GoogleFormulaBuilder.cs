@@ -121,10 +121,10 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
-    /// Builds a VSTACK + QUERY formula that groups two parallel ranges by the first two columns
+    /// Builds a QUERY formula that groups two parallel ranges by the first two columns
     /// and returns a header row plus a count column. This centralizes the common summary pattern.
     /// </summary>
-    public static string BuildVstackQueryGroupTwoColumns(string header1, string header2, string range1, string range2, string countHeader, bool countColumnIsSecond = false)
+    public static string BuildQueryGroupTwoColumns(string header1, string header2, string range1, string range2, string countHeader, bool countColumnIsSecond = false)
     {
         var countExpr = countColumnIsSecond ? "count(Col2)" : "count(Col1)";
 
