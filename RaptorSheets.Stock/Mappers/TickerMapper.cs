@@ -103,7 +103,7 @@ public static class TickerMapper
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
                                                                     HeaderEnum.TICKER.GetDescription(),
-                                                                    GoogleFinanceAttributesEnum.PRICE.GetDescription());
+                                                                    GoogleFinanceAttributes.PRICE.GetDescription());
                     break;
 
                 case HeaderEnum.MAX_HIGH:
@@ -111,7 +111,7 @@ public static class TickerMapper
                     header.Formula = ColumnFormulas.GoogleFinanceMax(headerEnum.GetDescription(),
                                                                     keyRange,
                                                                     HeaderEnum.TICKER.GetDescription(),
-                                                                    GoogleFinanceAttributesEnum.HIGH.GetDescription());
+                                                                    GoogleFinanceAttributes.HIGH.GetDescription());
                     break;
 
                 case HeaderEnum.MIN_LOW:
@@ -119,14 +119,14 @@ public static class TickerMapper
                     header.Formula = ColumnFormulas.GoogleFinanceMin(headerEnum.GetDescription(),
                                                                     keyRange,
                                                                     HeaderEnum.TICKER.GetDescription(),
-                                                                    GoogleFinanceAttributesEnum.LOW.GetDescription());
+                                                                    GoogleFinanceAttributes.LOW.GetDescription());
                     break;
 
                 case HeaderEnum.NAME:
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
                                                                     HeaderEnum.TICKER.GetDescription(),
-                                                                    GoogleFinanceAttributesEnum.NAME.GetDescription());
+                                                                    GoogleFinanceAttributes.NAME.GetDescription());
                     break;
 
                 case HeaderEnum.PE_RATIO:
@@ -134,7 +134,7 @@ public static class TickerMapper
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
                                                                     HeaderEnum.TICKER.GetDescription(),
-                                                                    GoogleFinanceAttributesEnum.PE_RATIO.GetDescription());
+                                                                    GoogleFinanceAttributes.PE_RATIO.GetDescription());
                     break;
 
                 case HeaderEnum.RETURN:
@@ -155,7 +155,7 @@ public static class TickerMapper
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
                                                                     HeaderEnum.TICKER.GetDescription(),
-                                                                    GoogleFinanceAttributesEnum.WEEK_HIGH_52.GetDescription());
+                                                                    GoogleFinanceAttributes.WEEK_HIGH_52.GetDescription());
                     break;
 
                 case HeaderEnum.WEEK_LOW_52:
@@ -163,7 +163,7 @@ public static class TickerMapper
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
                                                                     HeaderEnum.TICKER.GetDescription(),
-                                                                    GoogleFinanceAttributesEnum.WEEK_LOW_52.GetDescription());
+                                                                    GoogleFinanceAttributes.WEEK_LOW_52.GetDescription());
                     break;
 
                 default:

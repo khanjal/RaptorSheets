@@ -236,15 +236,8 @@ public static class GoogleFormulaBuilder
     /// </summary>
     public static string BuildArrayFormulaSplit(string keyRange, string header, string sourceRange, string delimiter, int index)
     {
-        var splitFormula = GoogleFormulas.SplitStringByIndex
-            .Replace(PlaceholderSourceRange, sourceRange)
-            .Replace(PlaceholderDelimiter, delimiter)
-            .Replace(PlaceholderIndex, index.ToString());
-
-        return GoogleFormulas.ArrayFormulaBase
-            .Replace(PlaceholderKeyRange, keyRange)
-            .Replace(PlaceholderHeader, header)
-            .Replace(PlaceholderFormula, splitFormula);
+        // Delegate to the indexed split implementation to avoid duplicate logic
+        return BuildArrayFormulaSplitByIndex(keyRange, header, sourceRange, delimiter, index);
     }
 
     /// <summary>
