@@ -93,43 +93,7 @@ public class GoogleSheetService : IGoogleSheetService
             return null;
         }
         // Ensure missing sheets are created first to avoid invalid A1 range parsing errors
-        try
-        {
-            var spreadsheetInfo = await GetSheetInfo();
-            if (spreadsheetInfo != null && spreadsheetInfo.Sheets != null)
-            {
-                var existingTitles = spreadsheetInfo.Sheets
-                    .Where(s => s?.Properties?.Title != null)
-                    .Select(s => s.Properties.Title)
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-                var missingSheets = sheets.Where(s => !existingTitles.Contains(s)).ToList();
-
-                if (missingSheets.Count > 0)
-                {
-                    var requests = SheetOrderingHelper.BuildAddSheetRequests(spreadsheetInfo, sheets);
-                    if (requests != null && requests.Count > 0)
-                    {
-                        var batchUpdate = new Google.Apis.Sheets.v4.Data.BatchUpdateSpreadsheetRequest
-                        {
-                            Requests = requests.ToList()
-                        };
-
-                        // Attempt to create missing sheets; log but continue regardless of failure
-                        var createResponse = await BatchUpdateSpreadsheet(batchUpdate);
-                        if (createResponse == null)
-                        {
-                            Console.WriteLine($"Warning: failed to create missing sheets: {string.Join(',', missingSheets)}");
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Do not fail here; we'll still attempt the batch get which will be handled below
-            Console.WriteLine($"Warning while ensuring sheets exist: {ex.Message}");
-        }
+        await SheetInitializationHelper.EnsureMissingSheetsCreatedAsync(this, sheets);
 
         var request = GoogleRequestHelpers.GenerateBatchGetValuesByDataFilterRequest(sheets, range);
 
@@ -146,7 +110,7 @@ public class GoogleSheetService : IGoogleSheetService
             return null;
         }
     }
-
+   
     public async Task<ValueRange?> GetSheetData(string sheet)
     {
         try
