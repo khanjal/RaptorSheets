@@ -51,6 +51,8 @@ var credentials = new Dictionary<string, string>
 
 var manager = new GoogleSheetManager(credentials, spreadsheetId);
 ```
+ 
+> Compatibility note: the library accepts either the standard service-account JSON keys (snake_case, e.g. `private_key`, `private_key_id`, `client_email`, `client_id`) or camelCase dictionary keys (e.g. `privateKey`, `privateKeyId`, `clientEmail`, `clientId`). You can pass a deserialized JSON dictionary directly; the client will resolve either naming style.
 
 #### Method 2: JSON File
 ```csharp
