@@ -8,14 +8,16 @@ public static class ObjectExtensions
     {
         ArgumentNullException.ThrowIfNull(sheet);
 
-        return $"{sheet.Headers.FirstOrDefault(x => x.Name == header)?.Column}";
+        var match = sheet.Headers.FirstOrDefault(x => x.Name == header);
+        return $"{match?.Column}";
     }
 
     public static string GetIndex(this SheetModel sheet, string header)
     {
         ArgumentNullException.ThrowIfNull(sheet);
 
-        return $"{sheet.Headers.FirstOrDefault(x => x.Name == header)?.Index}";
+        var match = sheet.Headers.FirstOrDefault(x => x.Name == header);
+        return $"{match?.Index}";
     }
 
     public static string GetRange(this SheetModel sheet, string header, int row = 1)

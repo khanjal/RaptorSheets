@@ -62,7 +62,7 @@ public static class DemoHelpers
         // SonarQube S2245: Using Random is safe here - this generates demo/sample data, not security-sensitive values
         // Optional seed parameter allows deterministic generation for testing
 #pragma warning disable S2245
-        var random = seed.HasValue ? new Random(seed.Value) : new Random();
+        var random = seed.HasValue ? new Random(seed.Value) : Random.Shared;
 #pragma warning restore S2245
 
         var sheetEntity = new SheetEntity();

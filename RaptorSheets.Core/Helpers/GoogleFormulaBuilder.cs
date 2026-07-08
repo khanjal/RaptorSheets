@@ -121,6 +121,21 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
+    /// Builds a QUERY formula that groups two parallel ranges by the first two columns
+    /// and returns a header row plus a count column. This centralizes the common summary pattern.
+    /// </summary>
+    public static string BuildQueryGroupTwoColumns(string header1, string header2, string range1, string range2, string countHeader, bool countColumnIsSecond = false)
+    {
+        var countExpr = countColumnIsSecond ? "count(Col2)" : "count(Col1)";
+
+        var ranges = "{" + range1 + "," + range2 + "}";
+
+        var innerQuery = "\"select Col1, Col2, " + countExpr + " where Col1 is not null and Col2 is not null group by Col1, Col2 order by Col1 asc, " + countExpr + " desc label Col1 '" + header1 + "', Col2 '" + header2 + "', " + countExpr + " '" + countHeader + "'\",0";
+
+        return "=QUERY(" + ranges + "," + innerQuery + ")";
+    }
+
+    /// <summary>
     /// Builds a complete ARRAYFORMULA for unique values
     /// </summary>
     public static string BuildArrayFormulaUnique(string keyRange, string header, string sourceRange)
@@ -221,15 +236,8 @@ public static class GoogleFormulaBuilder
     /// </summary>
     public static string BuildArrayFormulaSplit(string keyRange, string header, string sourceRange, string delimiter, int index)
     {
-        var splitFormula = GoogleFormulas.SplitStringByIndex
-            .Replace(PlaceholderSourceRange, sourceRange)
-            .Replace(PlaceholderDelimiter, delimiter)
-            .Replace(PlaceholderIndex, index.ToString());
-
-        return GoogleFormulas.ArrayFormulaBase
-            .Replace(PlaceholderKeyRange, keyRange)
-            .Replace(PlaceholderHeader, header)
-            .Replace(PlaceholderFormula, splitFormula);
+        // Delegate to the indexed split implementation to avoid duplicate logic
+        return BuildArrayFormulaSplitByIndex(keyRange, header, sourceRange, delimiter, index);
     }
 
     /// <summary>

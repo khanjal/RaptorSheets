@@ -2,7 +2,7 @@
 
 namespace RaptorSheets.Core.Constants;
 
-public enum GoogleFinanceAttributesEnum
+public enum GoogleFinanceAttributes
 {
     [Description("high")]
     HIGH,

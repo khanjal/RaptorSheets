@@ -8,9 +8,8 @@ namespace RaptorSheets.Core.Interfaces;
 /// </summary>
 /// <typeparam name="TSheetEntity">The domain-specific sheet entity type</typeparam>
 /// <typeparam name="TSheetEnum">The domain-specific sheet enum type</typeparam>
-public interface IBaseDomainSheetManager<TSheetEntity, TSheetEnum> 
+public interface IBaseDomainSheetManager<TSheetEntity>
     where TSheetEntity : class, new()
-    where TSheetEnum : Enum
 {
     /// <summary>
     /// Change data in specified sheets

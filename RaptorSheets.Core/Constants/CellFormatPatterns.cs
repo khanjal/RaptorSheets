@@ -53,6 +53,7 @@ public static class CellFormatPatterns
     public const string CellFormatNumber = "NUMBER";
     public const string CellFormatCurrency = "CURRENCY";
     public const string CellFormatDateTime = "DATE_TIME";
+    public const string CellFormatDate = "DATE";
     public const string CellFormatPercent = "PERCENT";
     
     // Validation patterns

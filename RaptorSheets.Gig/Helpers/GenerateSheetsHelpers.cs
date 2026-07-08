@@ -13,9 +13,6 @@ namespace RaptorSheets.Gig.Helpers;
 
 public static class GenerateSheetsHelpers
 {
-    private static BatchUpdateSpreadsheetRequest? _batchUpdateSpreadsheetRequest;
-    private static List<RepeatCellRequest>? _repeatCellRequests;
-
     public static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
         if (sheets.Count == 0)
@@ -24,9 +21,11 @@ public static class GenerateSheetsHelpers
             return new BatchUpdateSpreadsheetRequest { Requests = new List<Request>() };
         }
 
-        _batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
-        _batchUpdateSpreadsheetRequest.Requests = [];
-        _repeatCellRequests = [];
+        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
+        {
+            Requests = []
+        };
+        var repeatCellRequests = new List<RepeatCellRequest>();
 
         foreach (var sheet in sheets)
         {
@@ -34,26 +33,26 @@ public static class GenerateSheetsHelpers
             var random = new Random();
             sheetModel.Id = random.Next();
 
-            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
+            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
 
             var appendDimension = GoogleRequestHelpers.GenerateAppendDimension(sheetModel);
             if (appendDimension != null)
             {
-                _batchUpdateSpreadsheetRequest.Requests.Add(appendDimension);
+                batchUpdateSpreadsheetRequest.Requests.Add(appendDimension);
             }
 
-            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
-            GenerateHeadersFormatAndProtection(sheetModel);
-            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
-            _batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
+            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
+            GenerateHeadersFormatAndProtection(sheetModel, batchUpdateSpreadsheetRequest, repeatCellRequests);
+            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
+            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
         }
 
-        foreach (var request in _repeatCellRequests)
+        foreach (var request in repeatCellRequests)
         {
-            _batchUpdateSpreadsheetRequest.Requests.Add(new Request { RepeatCell = request });
+            batchUpdateSpreadsheetRequest.Requests.Add(new Request { RepeatCell = request });
         }
 
-        return _batchUpdateSpreadsheetRequest;
+        return batchUpdateSpreadsheetRequest;
     }
 
     public static List<string> GetSheetNames()
@@ -71,6 +70,8 @@ public static class GenerateSheetsHelpers
             var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) => MonthlyMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) => NameMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) => PlaceMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.TripSummary, StringComparison.OrdinalIgnoreCase) => TripSummaryMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.PlaceSummary, StringComparison.OrdinalIgnoreCase) => PlaceSummaryMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) => RegionMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) => ServiceMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet),
@@ -84,7 +85,10 @@ public static class GenerateSheetsHelpers
         };
     }
 
-    private static void GenerateHeadersFormatAndProtection(SheetModel sheet)
+    private static void GenerateHeadersFormatAndProtection(
+        SheetModel sheet,
+        BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest,
+        List<RepeatCellRequest> repeatCellRequests)
     {
         // Ensure headers have proper Column/Index assignments prior to formatting, like Stock implementation
         sheet.Headers.UpdateColumns();
@@ -103,7 +107,7 @@ public static class GenerateSheetsHelpers
             // If whole sheet isn't protected then protect certain columns
             if (!string.IsNullOrEmpty(header.Formula) && !sheet.ProtectSheet)
             {
-                _batchUpdateSpreadsheetRequest!.Requests.Add(GoogleRequestHelpers.GenerateColumnProtection(range));
+                batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateColumnProtection(range));
             }
 
             // If there's no format or validation then go to next header
@@ -135,7 +139,7 @@ public static class GenerateSheetsHelpers
                 repeatCellModel.DataValidation = GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>(), columnRange);
             }
 
-            _repeatCellRequests!.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
+            repeatCellRequests.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
         }
     }  
 }

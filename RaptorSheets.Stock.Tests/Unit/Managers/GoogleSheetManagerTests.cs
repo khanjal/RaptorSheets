@@ -28,24 +28,12 @@ public class GoogleSheetManagerTests
             ["clientId"] = "123456"
         };
 
-        // Act & Assert - The constructor should process the parameters and attempt credential validation
-        // An exception during credential validation proves that parameter processing works correctly
-        // (This is expected behavior since we're using invalid test credentials)
-        Exception? caughtException = null;
-        GoogleSheetManager? manager = null;
-        try
-        {
-            manager = new GoogleSheetManager(parameters, "test-spreadsheet");
-        }
-        catch (Exception ex)
-        {
-            caughtException = ex;
-        }
-        
-        // Verify we get a meaningful exception (not a null reference or missing parameter error)
-        Assert.NotNull(caughtException);
-        Assert.NotEmpty(caughtException.Message);
-        Assert.Null(manager); // Ensure manager is not initialized on exception
+        // Act & Assert - With the new fallback behavior for invalid private keys,
+        // construction should not throw and the manager should initialize.
+        var caughtException = Record.Exception(() => new GoogleSheetManager(parameters, "test-spreadsheet"));
+        Assert.Null(caughtException);
+        var manager = new GoogleSheetManager(parameters, "test-spreadsheet");
+        Assert.NotNull(manager);
     }
 
     [Fact]

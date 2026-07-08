@@ -214,41 +214,6 @@ public static class EntitySheetConfigHelper
         };
     }
 
-    /// <summary>
-    /// Gets properties from an entity type, ordered by inheritance hierarchy (base class properties first).
-    /// </summary>
-    private static List<PropertyInfo> GetPropertiesInInheritanceOrder(Type entityType)
-    {
-        var typeHierarchy = new List<Type>();
-        var currentType = entityType;
-
-        // Build inheritance chain from derived to base
-        while (currentType != null && currentType != typeof(object))
-        {
-            typeHierarchy.Add(currentType);
-            currentType = currentType.BaseType;
-        }
-
-        // Reverse to get base class first
-        typeHierarchy.Reverse();
-
-        var orderedProperties = new List<PropertyInfo>();
-        var processedProperties = new HashSet<string>();
-
-        // Process properties from base classes first
-        foreach (var type in typeHierarchy)
-        {
-            var properties = type.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
-                .Where(property => !processedProperties.Contains(property.Name));
-            foreach (var property in properties)
-            {
-                orderedProperties.Add(property);
-                processedProperties.Add(property.Name);
-            }
-        }
-
-        return orderedProperties;
-    }
 
     /// <summary>
     /// Gets the default number format pattern for a given FormatEnum.

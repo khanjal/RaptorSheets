@@ -169,8 +169,13 @@ public static class SheetHelpers
 
             var value = new ExtendedValue();
 
-            if (!string.IsNullOrEmpty(header.Formula) || header.Protect)
+            // Use a formula if the header explicitly has one (non-empty) or if the header is protected.
+            // This ensures an empty-string formula only counts when protection is intended.
+            if (header.Protect || !string.IsNullOrEmpty(header.Formula))
             {
+                // Distinguish between null and empty string formulas:
+                // - null => use the header Name as the formula value
+                // - empty string ("") => treat as an explicit empty formula
                 if (header.Formula != null)
                 {
                     value.FormulaValue = header.Formula;
@@ -179,7 +184,6 @@ public static class SheetHelpers
                 {
                     value.FormulaValue = header.Name;
                 }
-                
 
                 if (!sheet.ProtectSheet)
                 {
@@ -200,7 +204,16 @@ public static class SheetHelpers
                 cell.Note = header.Note;
             }
 
-            cell.UserEnteredValue = value;
+            // If requested, do not set a UserEnteredValue so the cell remains empty (allows formula spills)
+            if (header.HideHeaderName)
+            {
+                cell.UserEnteredValue = null;
+            }
+            else
+            {
+                cell.UserEnteredValue = value;
+            }
+
             cells.Add(cell);
         }
 
@@ -217,16 +230,16 @@ public static class SheetHelpers
         {
             NumberFormat = format switch
             {
-                FormatEnum.ACCOUNTING => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Accounting },
-                FormatEnum.CURRENCY => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Currency },
-                FormatEnum.DATE => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Date },
-                FormatEnum.DISTANCE => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Distance },
-                FormatEnum.DURATION => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Duration },
-                FormatEnum.NUMBER => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Number },
-                FormatEnum.TEXT => new NumberFormat { Type = "TEXT" },
-                FormatEnum.TIME => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Time },
-                FormatEnum.WEEKDAY => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Weekday },
-                _ => new NumberFormat { Type = "TEXT" }
+                FormatEnum.ACCOUNTING => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Accounting },
+                FormatEnum.CURRENCY => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Currency },
+                FormatEnum.DATE => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Date },
+                FormatEnum.DISTANCE => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Distance },
+                FormatEnum.DURATION => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Duration },
+                FormatEnum.NUMBER => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Number },
+                FormatEnum.TEXT => new NumberFormat { Type = CellFormatPatterns.CellFormatText },
+                FormatEnum.TIME => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Time },
+                FormatEnum.WEEKDAY => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Weekday },
+                _ => new NumberFormat { Type = CellFormatPatterns.CellFormatText }
             }
         };
 

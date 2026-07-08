@@ -22,6 +22,8 @@ public static class SheetsConfig
         public const string Trips = "Trips";
         public const string Shifts = "Shifts";
         public const string Expenses = "Expenses";
+        public const string TripSummary = "TripSummary";
+        public const string PlaceSummary = "PlaceSummary";
         
         // Reference data sheets (depend on primary data)
         public const string Addresses = "Addresses";
@@ -115,6 +117,7 @@ public static class SheetsConfig
         public const string VisitFirst = "First Trip";
         public const string VisitLast = "Last Trip";
         public const string Visits = "Visits";
+        public const string Count = "Count";
         public const string Week = "Week";
         public const string Weekday = "Weekday";
         public const string Year = "Year";
@@ -167,6 +170,9 @@ public static class SheetsConfig
             SheetNames.Trips,
             SheetNames.Shifts,
             SheetNames.Expenses,
+            // Summary helper sheets (inserted after Expenses)
+            SheetNames.TripSummary,
+            SheetNames.PlaceSummary,
             
             // Reference data sheets (middle tabs)
             SheetNames.Addresses,
@@ -227,6 +233,8 @@ public static class SheetsConfig
         public static class UpperCase
         {
             public static string Addresses => SheetNames.Addresses.ToUpperInvariant();
+            public static string TripSummary => SheetNames.TripSummary.ToUpperInvariant();
+            public static string PlaceSummary => SheetNames.PlaceSummary.ToUpperInvariant();
             public static string Daily => SheetNames.Daily.ToUpperInvariant();
             public static string Expenses => SheetNames.Expenses.ToUpperInvariant();
             public static string Monthly => SheetNames.Monthly.ToUpperInvariant();
@@ -397,6 +405,28 @@ public static class SheetsConfig
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TripEntity>()
+    };
+
+    public static SheetModel TripSummary => new()
+    {
+        Name = SheetNames.TripSummary,
+        TabColor = ColorEnum.CYAN,
+        CellColor = ColorEnum.LIGHT_CYAN,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = true,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TripSummaryEntity>()
+    };
+
+    public static SheetModel PlaceSummary => new()
+    {
+        Name = SheetNames.PlaceSummary,
+        TabColor = ColorEnum.CYAN,
+        CellColor = ColorEnum.LIGHT_CYAN,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = true,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PlaceSummaryEntity>()
     };
 
     public static SheetModel TypeSheet => new()

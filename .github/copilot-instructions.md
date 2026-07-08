@@ -1,6 +1,32 @@
 # Google Sheets Management System Documentation
 
+## AI Prompt Efficiency & Token Budgeting
+
+Keep Copilot prompts efficient and token-aware with these rules:
+
+- Provide minimal context needed to act (1–3 short paragraphs).
+- Link to files and line ranges instead of pasting entire files.
+- Begin with a 1–2 line intent summary and list the expected outputs (2–4 items).
+- Ask a clarifying question before performing large or risky edits.
+- Prefer structured outputs (JSON, diffs, or patches) when possible to reduce verbosity.
+- Specify a response length cap (for example: “short summary <= 150 tokens + patch”).
+- Break large work into chunks and iterate (summarize → edit → verify).
+- Reuse short cached summaries of large files rather than resending full content.
+- Favor concrete diffs/patches over long explanations.
+
+Note: When calling LLM APIs, configure a sensible `max_tokens` budget and prefer incremental interactions.
+
 ## Overview
+
+## Limiting Copilot Runs
+
+To reduce unexpected GitHub AI Credits and Actions minutes consumption, we limit Copilot Code Review runs:
+
+- Copilot runs should be gated behind a label (`copilot-review`) or manually triggered.
+- A sample workflow `/.github/workflows/copilot-control.yml` is included to demonstrate labeling and `workflow_dispatch` gating.
+- If you need a run, add the `copilot-review` label to the PR or use the "Run workflow" button in Actions.
+- Keep PR diffs small and use path filters to avoid unnecessary runs.
+
 
 The RaptorSheets system manages Google Sheets through a layered architecture that separates concerns between configuration, data modeling, and business logic. The system handles complex spreadsheets with automated formulas, cross-sheet references, and **optional** column and sheet ordering.
 
