@@ -20,64 +20,81 @@ namespace RaptorSheets.Core.Helpers
                 return requests;
             }
 
-            // Build a list of existing sheet titles -> index
-            var existingList = new List<(string Title, int Index)>();
-            if (spreadsheetInfo?.Sheets != null)
-            {
-                existingList = spreadsheetInfo.Sheets
-                    .Select((s, idx) => (Title: s?.Properties?.Title ?? string.Empty, Index: s?.Properties?.Index ?? idx))
-                    .Where(x => !string.IsNullOrEmpty(x.Title))
-                    .ToList();
-            }
-
+            var existingList = GetExistingList(spreadsheetInfo);
             var existingIndexMap = existingList
                 .ToDictionary(e => e.Title, e => e.Index, StringComparer.OrdinalIgnoreCase);
 
-            // Determine insertion index for each missing sheet based on the next requested sheet
-            // that already exists; if none found, append at the end preserving requested order.
+            var insertionEntries = ComputeInsertionEntries(requestedSheets, existingIndexMap, existingList.Count);
+
+            var orderedInsertions = insertionEntries
+                .OrderByDescending(x => x.TargetIndex)
+                .ThenByDescending(x => x.OriginalOrder)
+                .ToList();
+
+            return BuildRequestsFromEntries(orderedInsertions);
+        }
+
+        private static List<(string Title, int Index)> GetExistingList(Spreadsheet spreadsheetInfo)
+        {
+            var existingList = new List<(string Title, int Index)>();
+
+            if (spreadsheetInfo?.Sheets == null)
+            {
+                return existingList;
+            }
+
+            existingList = spreadsheetInfo.Sheets
+                .Select((s, idx) => (Title: s?.Properties?.Title ?? string.Empty, Index: s?.Properties?.Index ?? idx))
+                .Where(x => !string.IsNullOrEmpty(x.Title))
+                .ToList();
+
+            return existingList;
+        }
+
+        private static List<(string Name, int TargetIndex, int OriginalOrder)> ComputeInsertionEntries(
+            List<string> requestedSheets,
+            Dictionary<string, int> existingIndexMap,
+            int existingCount)
+        {
             var insertionEntries = new List<(string Name, int TargetIndex, int OriginalOrder)>();
             int appendCounter = 0;
 
             for (int i = 0; i < requestedSheets.Count; i++)
             {
                 var requestedName = requestedSheets[i];
-                if (!existingIndexMap.ContainsKey(requestedName))
+                if (existingIndexMap.ContainsKey(requestedName))
                 {
-                    int? nextExistingIndex = null;
-                    for (int j = i + 1; j < requestedSheets.Count; j++)
-                    {
-                        var nextRequested = requestedSheets[j];
-                        if (existingIndexMap.TryGetValue(nextRequested, out var idx))
-                        {
-                            nextExistingIndex = idx;
-                            break;
-                        }
-                    }
-
-                    int targetIndex;
-                    if (nextExistingIndex.HasValue)
-                    {
-                        targetIndex = nextExistingIndex.Value;
-                    }
-                    else
-                    {
-                        // Append at the end (preserve relative order for multiple new sheets)
-                        targetIndex = existingList.Count + appendCounter;
-                        appendCounter++;
-                    }
-
-                    insertionEntries.Add((requestedName, targetIndex, insertionEntries.Count));
+                    continue;
                 }
+
+                int? nextExistingIndex = null;
+                for (int j = i + 1; j < requestedSheets.Count; j++)
+                {
+                    var nextRequested = requestedSheets[j];
+                    if (existingIndexMap.TryGetValue(nextRequested, out var idx))
+                    {
+                        nextExistingIndex = idx;
+                        break;
+                    }
+                }
+
+                int targetIndex = nextExistingIndex ?? (existingCount + appendCounter);
+                if (!nextExistingIndex.HasValue)
+                {
+                    appendCounter++;
+                }
+
+                insertionEntries.Add((requestedName, targetIndex, insertionEntries.Count));
             }
 
-            // Insert in descending target index order (and descending original order when equal)
-            // so repeated inserts before the same index preserve the requested sequence.
-            var orderedInsertions = insertionEntries
-                .OrderByDescending(x => x.TargetIndex)
-                .ThenByDescending(x => x.OriginalOrder)
-                .ToList();
+            return insertionEntries;
+        }
 
-            foreach (var entry in orderedInsertions)
+        private static IList<Request> BuildRequestsFromEntries(IEnumerable<(string Name, int TargetIndex, int OriginalOrder)> entries)
+        {
+            var requests = new List<Request>();
+
+            foreach (var entry in entries)
             {
                 var add = new Request
                 {
