@@ -107,32 +107,20 @@ public class GoogleSheetService : IGoogleSheetService
 
                 if (missingSheets.Count > 0)
                 {
-                    // Create simple AddSheet requests for each missing sheet
-                    var batchUpdate = new Google.Apis.Sheets.v4.Data.BatchUpdateSpreadsheetRequest
+                    var requests = SheetOrderingHelper.BuildAddSheetRequests(spreadsheetInfo, sheets);
+                    if (requests != null && requests.Count > 0)
                     {
-                        Requests = new List<Google.Apis.Sheets.v4.Data.Request>()
-                    };
-
-                    foreach (var missing in missingSheets)
-                    {
-                        var add = new Google.Apis.Sheets.v4.Data.Request
+                        var batchUpdate = new Google.Apis.Sheets.v4.Data.BatchUpdateSpreadsheetRequest
                         {
-                            AddSheet = new Google.Apis.Sheets.v4.Data.AddSheetRequest
-                            {
-                                Properties = new Google.Apis.Sheets.v4.Data.SheetProperties
-                                {
-                                    Title = missing
-                                }
-                            }
+                            Requests = requests.ToList()
                         };
-                        batchUpdate.Requests.Add(add);
-                    }
 
-                    // Attempt to create missing sheets; log but continue regardless of failure
-                    var createResponse = await BatchUpdateSpreadsheet(batchUpdate);
-                    if (createResponse == null)
-                    {
-                        Console.WriteLine($"Warning: failed to create missing sheets: {string.Join(',', missingSheets)}");
+                        // Attempt to create missing sheets; log but continue regardless of failure
+                        var createResponse = await BatchUpdateSpreadsheet(batchUpdate);
+                        if (createResponse == null)
+                        {
+                            Console.WriteLine($"Warning: failed to create missing sheets: {string.Join(',', missingSheets)}");
+                        }
                     }
                 }
             }
