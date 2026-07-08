@@ -5,6 +5,25 @@ namespace RaptorSheets.Core.Mappers;
 
 public static class PropertyEntityMapper
 {
+    /// <summary>
+    /// Map a Google Drive <see cref="File"/> to a <see cref="PropertyEntity"/>.
+    /// </summary>
+    /// <remarks>
+    /// Additional file metadata can be placed into the returned entity's <see cref="PropertyEntity.Attributes"/> dictionary.
+    /// Example usage:
+    /// <code>
+    /// var entity = new PropertyEntity
+    /// {
+    ///     Id = file.Id,
+    ///     Name = file.Name,
+    ///     Attributes = new Dictionary<string,string>
+    ///     {
+    ///         { "MimeType", file.MimeType },
+    ///         { "CreatedTime", file.CreatedTimeRaw }
+    ///     }
+    /// };
+    /// </code>
+    /// </remarks>
     public static PropertyEntity MapFromDriveFile(File? file)
     {
         if (file == null) return new PropertyEntity();
@@ -13,12 +32,6 @@ public static class PropertyEntityMapper
         {
             Id = file.Id,
             Name = file.Name
-            // You can map additional fields to Attributes if needed, e.g.:
-            // Attributes = new Dictionary<string, string>
-            // {
-            //     { "MimeType", file.MimeType },
-            //     { "CreatedTime", file.CreatedTimeRaw }
-            // }
         };
     }
 

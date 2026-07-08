@@ -230,16 +230,16 @@ public static class SheetHelpers
         {
             NumberFormat = format switch
             {
-                FormatEnum.ACCOUNTING => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Accounting },
-                FormatEnum.CURRENCY => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Currency },
-                FormatEnum.DATE => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Date },
-                FormatEnum.DISTANCE => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Distance },
-                FormatEnum.DURATION => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Duration },
-                FormatEnum.NUMBER => new NumberFormat { Type = "NUMBER", Pattern = CellFormatPatterns.Number },
-                FormatEnum.TEXT => new NumberFormat { Type = "TEXT" },
-                FormatEnum.TIME => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Time },
-                FormatEnum.WEEKDAY => new NumberFormat { Type = "DATE", Pattern = CellFormatPatterns.Weekday },
-                _ => new NumberFormat { Type = "TEXT" }
+                FormatEnum.ACCOUNTING => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Accounting },
+                FormatEnum.CURRENCY => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Currency },
+                FormatEnum.DATE => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Date },
+                FormatEnum.DISTANCE => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Distance },
+                FormatEnum.DURATION => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Duration },
+                FormatEnum.NUMBER => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Number },
+                FormatEnum.TEXT => new NumberFormat { Type = CellFormatPatterns.CellFormatText },
+                FormatEnum.TIME => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Time },
+                FormatEnum.WEEKDAY => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Weekday },
+                _ => new NumberFormat { Type = CellFormatPatterns.CellFormatText }
             }
         };
 
