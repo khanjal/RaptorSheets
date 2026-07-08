@@ -182,8 +182,8 @@ Business expense tracking:
 ### Summary Helpers
 These sheets provide aggregated summaries derived from the `Trips` data. They are generated using query formulas in the mappers and are typically protected/read-only.
 
-- **TRIPSUMMARY**: Aggregates trips by `Name` and `Address` into `Name | Address | Count`. Implemented by `TripSummaryMapper` and exposed via `SheetsConfig.TripSummary`.
-- **PLACESUMMARY**: Aggregates trips by `Place` and `Address` into `Place | Address | Count`. Implemented by `PlaceSummaryMapper` and exposed via `SheetsConfig.PlaceSummary`.
+- **TripSummary**: Aggregates trips by `Name` and `Address` into `Name | Address | Count`. Implemented by `TripSummaryMapper` and exposed via `SheetsConfig.TripSummary`.
+- **PlaceSummary**: Aggregates trips by `Place` and `Address` into `Place | Address | Count`. Implemented by `PlaceSummaryMapper` and exposed via `SheetsConfig.PlaceSummary`.
 
 These summary sheets are created as part of the normal sheet creation flow (`CreateAllSheets`) when present in the `SheetsConfig.SheetUtilities.GetAllSheetNames()` ordering.
 

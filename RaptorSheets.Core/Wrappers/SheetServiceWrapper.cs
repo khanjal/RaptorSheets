@@ -116,7 +116,7 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
             }
         }
 
-        throw new KeyNotFoundException($"Missing required parameter. Expected one of: {string.Join(", ", candidates)}");
+        throw new ArgumentException($"Missing required parameter. Expected one of: {string.Join(", ", candidates)}", nameof(parameters));
     }
 
     private SheetsService InitializeService(Google.Apis.Http.IConfigurableHttpClientInitializer httpInitializer)

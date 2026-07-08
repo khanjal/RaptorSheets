@@ -24,6 +24,9 @@ public class GoogleSheetService : IGoogleSheetService
 {
     private readonly SheetServiceWrapper _sheetService;
     private readonly string _range = GoogleConfig.Range;
+    // Lightweight in-memory cache to avoid repeated GetSpreadsheet calls
+    private Spreadsheet? _cachedSpreadsheet;
+    private readonly object _cacheLock = new object();
 
 
     public GoogleSheetService(string accessToken, string spreadsheetId)
@@ -71,6 +74,15 @@ public class GoogleSheetService : IGoogleSheetService
         try
         {
             var response = await _sheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
+
+            // Invalidate cached spreadsheet information when modifications are made
+            if (response != null)
+            {
+                lock (_cacheLock)
+                {
+                    _cachedSpreadsheet = null;
+                }
+            }
 
             return response;
         }
@@ -137,9 +149,32 @@ public class GoogleSheetService : IGoogleSheetService
     {
         try
         {
-            var response = await _sheetService.GetSpreadsheet(ranges);
+            // If no ranges are requested, return cached spreadsheet info when available
+            if (ranges == null)
+            {
+                lock (_cacheLock)
+                {
+                    if (_cachedSpreadsheet != null)
+                    {
+                        return _cachedSpreadsheet;
+                    }
+                }
 
-            return response;
+                var response = await _sheetService.GetSpreadsheet(ranges);
+                if (response != null)
+                {
+                    lock (_cacheLock)
+                    {
+                        _cachedSpreadsheet = response;
+                    }
+                }
+
+                return response;
+            }
+
+            // When specific ranges are requested, do not use the cached full-spreadsheet object
+            var rangedResponse = await _sheetService.GetSpreadsheet(ranges);
+            return rangedResponse;
         }
         catch (Exception ex)
         {
