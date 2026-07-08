@@ -11,16 +11,8 @@ public static class PlaceSummaryMapper
 {
     public static SheetModel GetSheet()
     {
-        var sheet = new SheetModel
-        {
-            Name = SheetsConfig.SheetNames.PlaceSummary,
-            TabColor = RaptorSheets.Core.Enums.ColorEnum.CYAN,
-            CellColor = RaptorSheets.Core.Enums.ColorEnum.LIGHT_CYAN,
-            FreezeColumnCount = 1,
-            FreezeRowCount = 1,
-            ProtectSheet = true,
-            Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PlaceSummaryEntity>()
-        };
+        // Use the centralized SheetsConfig model to avoid configuration drift
+        var sheet = SheetsConfig.PlaceSummary;
 
         sheet.Headers.UpdateColumns();
 

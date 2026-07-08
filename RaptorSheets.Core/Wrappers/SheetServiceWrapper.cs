@@ -69,10 +69,16 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
             // so unit tests can construct the wrapper without requiring a valid RSA private key.
             credential = GoogleCredential.FromAccessToken("test-token");
         }
+        catch (ArgumentException)
+        {
+            // Specific argument exceptions during FromPrivateKey indicate malformed key material.
+            credential = GoogleCredential.FromAccessToken("test-token");
+        }
         catch (Exception)
         {
-            // Any other parsing/initialization issues should not crash unit tests; fallback likewise.
-            credential = GoogleCredential.FromAccessToken("test-token");
+            // For any unexpected exception, rethrow to avoid masking real configuration issues in production.
+            // Unit tests that expect fallback should provide malformed-key scenarios leading to known exceptions above.
+            throw;
         }
 
         InitializeService(credential);

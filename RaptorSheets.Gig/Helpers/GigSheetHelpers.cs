@@ -238,14 +238,6 @@ public static class GigSheetHelpers
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, PlaceSummaryMapper.GetSheet()));
                 sheetEntity.PlaceSummary = GenericSheetMapper<PlaceSummaryEntity>.MapFromRangeData(values);
                 break;
-            case var s when string.Equals(s, SheetsConfig.SheetNames.TripSummary, StringComparison.OrdinalIgnoreCase):
-                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, TripSummaryMapper.GetSheet()));
-                sheetEntity.TripSummary = GenericSheetMapper<TripSummaryEntity>.MapFromRangeData(values);
-                break;
-            case var s when string.Equals(s, SheetsConfig.SheetNames.PlaceSummary, StringComparison.OrdinalIgnoreCase):
-                sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, PlaceSummaryMapper.GetSheet()));
-                sheetEntity.PlaceSummary = GenericSheetMapper<PlaceSummaryEntity>.MapFromRangeData(values);
-                break;
             case var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase):
                 sheetEntity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headerValues, RegionMapper.GetSheet()));
                 sheetEntity.Regions = GenericSheetMapper<RegionEntity>.MapFromRangeData(values);

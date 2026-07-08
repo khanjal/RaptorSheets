@@ -30,7 +30,7 @@ public class GoogleSheetManagerTests
 
         // Act & Assert - With the new fallback behavior for invalid private keys,
         // construction should not throw and the manager should initialize.
-        Exception? caughtException = Record.Exception(() => new GoogleSheetManager(parameters, "test-spreadsheet"));
+        var caughtException = Record.Exception(() => new GoogleSheetManager(parameters, "test-spreadsheet"));
         Assert.Null(caughtException);
         var manager = new GoogleSheetManager(parameters, "test-spreadsheet");
         Assert.NotNull(manager);

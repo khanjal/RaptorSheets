@@ -10,16 +10,8 @@ public static class TripSummaryMapper
 {
     public static SheetModel GetSheet()
     {
-        var sheet = new SheetModel
-        {
-            Name = SheetsConfig.SheetNames.TripSummary,
-            TabColor = RaptorSheets.Core.Enums.ColorEnum.CYAN,
-            CellColor = RaptorSheets.Core.Enums.ColorEnum.LIGHT_CYAN,
-            FreezeColumnCount = 1,
-            FreezeRowCount = 1,
-            ProtectSheet = true,
-            Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TripSummaryEntity>()
-        };
+        // Use the centralized SheetsConfig model to avoid configuration drift
+        var sheet = SheetsConfig.TripSummary;
 
         // Ensure header indexes are assigned
         sheet.Headers.UpdateColumns();
