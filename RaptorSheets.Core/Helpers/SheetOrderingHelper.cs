@@ -92,7 +92,6 @@ public static class SheetOrderingHelper
 
         return BuildRequestsFromEntries(orderedInsertions);
     }
-
     private static List<(string Title, int Index)> GetExistingList(Spreadsheet spreadsheetInfo)
     {
         var existingList = new List<(string Title, int Index)>();

@@ -1,3 +1,4 @@
+using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Services;
 
 namespace RaptorSheets.Core.Helpers
@@ -44,7 +45,7 @@ namespace RaptorSheets.Core.Helpers
                     var requests = SheetOrderingHelper.BuildAddSheetRequests(spreadsheetInfo, sheets);
                     if (requests != null && requests.Count > 0)
                     {
-                        var batchUpdate = new Google.Apis.Sheets.v4.Data.BatchUpdateSpreadsheetRequest
+                        var batchUpdate = new BatchUpdateSpreadsheetRequest
                         {
                             Requests = requests.ToList()
                         };
@@ -164,7 +165,7 @@ namespace RaptorSheets.Core.Helpers
             catch (Exception ex)
             {
                 Console.WriteLine($"Warning while checking missing sheets: {ex.Message}");
-                return new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
+                return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             }
         }
     }

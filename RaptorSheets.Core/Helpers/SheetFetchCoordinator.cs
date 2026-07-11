@@ -32,10 +32,7 @@ namespace RaptorSheets.Core.Helpers
 
             try
             {
-                // Determine which sheets are missing. By default the core helper will NOT create
-                // domain-specific sheets — callers in domain packages should create sheets
-                // using their own configuration. If a domain-provided creator is supplied,
-                // invoke it and retry once.
+                // Determine missing sheets (and desired indexes) using helper
                 var missingMap = await SheetInitializationHelper.GetMissingSheetsAsync(sheetService, sheets);
 
                 if (missingMap == null || missingMap.Count == 0)
@@ -55,9 +52,6 @@ namespace RaptorSheets.Core.Helpers
                         {
                             return null;
                         }
-
-                        var retry = await sheetService.GetBatchData(sheets, range);
-                        return retry;
                     }
                     catch (Exception exInner)
                     {
@@ -65,9 +59,19 @@ namespace RaptorSheets.Core.Helpers
                         return null;
                     }
                 }
+                else
+                {
+                    // No domain creator supplied; use the core helper to create missing sheets
+                    var (found, created) = await SheetInitializationHelper.EnsureMissingSheetsCreatedAsync(sheetService, sheets);
+                    if (!created)
+                    {
+                        return null;
+                    }
+                }
 
-                // No domain creator supplied; do not create sheets from core.
-                return null;
+                // Retry once
+                var retry = await sheetService.GetBatchData(sheets, range);
+                return retry;
             }
             catch (Exception ex)
             {

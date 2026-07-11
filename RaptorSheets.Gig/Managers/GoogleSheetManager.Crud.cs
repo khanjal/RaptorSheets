@@ -1,4 +1,5 @@
 using Google.Apis.Sheets.v4.Data;
+using RaptorSheets.Core.Services;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
@@ -180,29 +181,27 @@ public partial class GoogleSheetManager
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
 
-        // First attempt: try to fetch directly
-        var response = await _googleSheetService.GetBatchData(sheets, null);
-
-        // If the batch fetch failed, compute missing sheets and let the domain manager create them.
-        if (response == null)
+        // Use coordinator: try get, create missing on failure (via domain CreateSheets), then retry once
+        Func<IGoogleSheetService, List<string>, Dictionary<string,int>, Task<(List<string> Found, bool Created)>> createMissingSheetsFunc = async (svc, missingList, missingIndexMap) =>
         {
             try
             {
-                var missingIndexMap = await SheetInitializationHelper.GetMissingSheetsAsync(_googleSheetService, sheets);
-                var missingSheets = missingIndexMap?.Keys.ToList() ?? new List<string>();
-                if (missingSheets.Count > 0)
-                {
-                    // Let domain CreateSheets handle full sheet configuration (headers, formats, protections)
-                    var creationResult = await CreateSheets(missingSheets, missingIndexMap);
-                    // After creation attempt, retry fetching
-                    response = await _googleSheetService.GetBatchData(sheets, null);
-                }
+                var creationResult = await CreateSheets(missingList, missingIndexMap);
+                // Treat non-null result as success (creationResult contains messages for details)
+                return (missingList, creationResult != null);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error while creating missing sheets: {ex.Message}");
+                return (new List<string>(), false);
             }
-        }
+        };
+
+        var response = await RaptorSheets.Core.Helpers.SheetFetchCoordinator.TryGetBatchDataWithCreateOnFailure(
+            _googleSheetService,
+            sheets,
+            null,
+            createMissingSheetsFunc);
         Spreadsheet? spreadsheetInfo;
 
         if (response == null)
