@@ -157,7 +157,32 @@ public abstract class IntegrationTestBase
     
     protected async Task<SheetEntity> GetSheetData()
     {
+        return await GetTestSheetData();
+    }
+
+    /// <summary>
+    /// Returns the subset of sheets used by most tests (quiet, avoids missing-sheet noise).
+    /// </summary>
+    protected async Task<SheetEntity> GetTestSheetData()
+    {
         var result = await GoogleSheetManager!.GetSheets(TestSheets);
+        return result;
+    }
+
+    /// <summary>
+    /// Returns all configured sheets (from `SheetsConfig.SheetNames`) and is useful
+    /// for tests that must validate missing-sheet / header diagnostics.
+    /// </summary>
+    protected async Task<SheetEntity> GetAllSheetData()
+    {
+        var allSheetNames = typeof(SheetsConfig.SheetNames)
+            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.FlattenHierarchy)
+            .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(string))
+            .Select(fi => fi.GetValue(null)?.ToString() ?? "")
+            .Where(n => !string.IsNullOrEmpty(n))
+            .ToList();
+
+        var result = await GoogleSheetManager!.GetSheets(allSheetNames);
         return result;
     }
     
