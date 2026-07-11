@@ -24,7 +24,23 @@ public partial class GoogleSheetManager
             if (missingSheets.Count != 0)
             {
                 messages.AddRange(SheetHelpers.CheckSheets(missingSheets));
-                messages.AddRange((await CreateSheets(missingSheets)).Messages);
+
+                // Build a title->index map from the spreadsheet to allow CreateSheets to compute insertion indices
+                var existingIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                if (spreadsheet?.Sheets != null)
+                {
+                    for (int i = 0; i < spreadsheet.Sheets.Count; i++)
+                    {
+                        var s = spreadsheet.Sheets[i];
+                        var title = s?.Properties?.Title;
+                        if (!string.IsNullOrEmpty(title))
+                        {
+                            existingIndexMap[title] = s?.Properties?.Index ?? i;
+                        }
+                    }
+                }
+
+                messages.AddRange((await CreateSheets(missingSheets, existingIndexMap)).Messages);
             }
         }
         else

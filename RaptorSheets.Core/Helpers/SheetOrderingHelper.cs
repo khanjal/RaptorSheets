@@ -52,6 +52,47 @@ public static class SheetOrderingHelper
         return BuildRequestsFromEntries(orderedInsertions);
     }
 
+    /// <summary>
+    /// Builds AddSheet requests given an existing title->index map and the raw existing sheet count.
+    /// This avoids requiring a full <see cref="Spreadsheet"/> when the caller already has an index map.
+    /// </summary>
+    public static IList<Request> BuildAddSheetRequests(Dictionary<string, int> existingIndexMap, int existingRawCount, List<string> requestedSheets)
+    {
+        var requests = new List<Request>();
+
+        if (requestedSheets == null || requestedSheets.Count == 0)
+        {
+            return requests;
+        }
+
+        // Input validation: ensure no null/whitespace names and no duplicates (case-insensitive)
+        if (requestedSheets.Any(s => string.IsNullOrWhiteSpace(s)))
+        {
+            throw new ArgumentException("requestedSheets contains null or empty sheet names", nameof(requestedSheets));
+        }
+
+        var normalizedRequested = requestedSheets.Select(s => s.Trim()).ToList();
+        var duplicates = normalizedRequested
+            .GroupBy(s => s, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+
+        if (duplicates.Count > 0)
+        {
+            throw new ArgumentException($"Duplicate sheet names found: {string.Join(", ", duplicates)}", nameof(requestedSheets));
+        }
+
+        var insertionEntries = ComputeInsertionEntries(normalizedRequested, existingIndexMap ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase), existingRawCount);
+
+        var orderedInsertions = insertionEntries
+            .OrderByDescending(x => x.TargetIndex)
+            .ThenByDescending(x => x.OriginalOrder)
+            .ToList();
+
+        return BuildRequestsFromEntries(orderedInsertions);
+    }
+
     private static List<(string Title, int Index)> GetExistingList(Spreadsheet spreadsheetInfo)
     {
         var existingList = new List<(string Title, int Index)>();

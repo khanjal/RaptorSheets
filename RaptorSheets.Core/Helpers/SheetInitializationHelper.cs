@@ -90,5 +90,82 @@ namespace RaptorSheets.Core.Helpers
                 return (sheets.Distinct(StringComparer.OrdinalIgnoreCase).ToList(), false);
             }
         }
+
+        /// <summary>
+        /// Returns a mapping of missing sheet titles to their desired insertion index.
+        /// The returned dictionary contains only sheet names that are missing from the
+        /// spreadsheet and the index that callers should use when creating them.
+        /// This does not create any sheets; it only inspects the spreadsheet and computes
+        /// target indexes for missing names.
+        /// </summary>
+        public static async Task<Dictionary<string,int>> GetMissingSheetsAsync(IGoogleSheetService sheetService, List<string> sheets)
+        {
+            if (sheetService == null) throw new ArgumentNullException(nameof(sheetService));
+            if (sheets == null || sheets.Count == 0) return new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                var spreadsheetInfo = await sheetService.GetSheetInfo();
+
+                var existingTitles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var titleIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+                if (spreadsheetInfo?.Sheets != null)
+                {
+                    for (int i = 0; i < spreadsheetInfo.Sheets.Count; i++)
+                    {
+                        var s = spreadsheetInfo.Sheets[i];
+                        var title = s?.Properties?.Title;
+                        if (!string.IsNullOrEmpty(title))
+                        {
+                            existingTitles.Add(title);
+                            // Prefer the explicit Index property when present, otherwise fall back to list position
+                            var idx = s?.Properties?.Index ?? i;
+                            titleIndex[title] = idx;
+                        }
+                    }
+                }
+
+                var missingSheets = sheets.Where(s => !existingTitles.Contains(s)).ToList();
+
+                var missingIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+                // Compute target indexes for missing sheets so callers can create them at the right positions.
+                // Leverage SheetOrderingHelper which returns AddSheet requests with desired Index values.
+                try
+                {
+                    var addRequests = SheetOrderingHelper.BuildAddSheetRequests(spreadsheetInfo, sheets);
+                    if (addRequests != null)
+                    {
+                        foreach (var req in addRequests)
+                        {
+                            var add = req?.AddSheet;
+                            var title = add?.Properties?.Title;
+                            var idx = add?.Properties?.Index;
+                            if (!string.IsNullOrEmpty(title) && idx.HasValue)
+                            {
+                                // Only include entries for sheets that are actually missing
+                                if (missingSheets.Contains(title, StringComparer.OrdinalIgnoreCase))
+                                {
+                                    missingIndexMap[title] = idx.Value;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // If ordering helper fails for some reason, log and continue — callers will still get missing names but no indexes.
+                    Console.WriteLine($"Warning computing target indexes for missing sheets: {ex.Message}");
+                }
+
+                return missingIndexMap;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning while checking missing sheets: {ex.Message}");
+                return new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
+            }
+        }
     }
 }
