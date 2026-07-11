@@ -25,22 +25,13 @@ public partial class GoogleSheetManager
             {
                 messages.AddRange(SheetHelpers.CheckSheets(missingSheets));
 
-                // Build a title->index map from the spreadsheet to allow CreateSheets to compute insertion indices
-                var existingIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-                if (spreadsheet?.Sheets != null)
-                {
-                    for (int i = 0; i < spreadsheet.Sheets.Count; i++)
-                    {
-                        var s = spreadsheet.Sheets[i];
-                        var title = s?.Properties?.Title;
-                        if (!string.IsNullOrEmpty(title))
-                        {
-                            existingIndexMap[title] = s?.Properties?.Index ?? i;
-                        }
-                    }
-                }
+                // Compute a title->desiredIndex map for missing sheets using the canonical ordered sheet list.
+                // This ensures insertion indices are computed relative to the full expected ordering,
+                // not just the missing subset (avoids incorrectly appending sheets).
+                var allSheets = GenerateSheetsHelpers.GetSheetNames();
+                var missingIndexMap = SheetInitializationHelper.GetMissingSheets(spreadsheet, allSheets);
 
-                messages.AddRange((await CreateSheets(missingSheets, existingIndexMap)).Messages);
+                messages.AddRange((await CreateSheets(missingIndexMap)).Messages);
             }
         }
         else
