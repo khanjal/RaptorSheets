@@ -68,7 +68,7 @@ public partial class GoogleSheetManager
         {
             // Prefer using provided existingIndexMap to compute insertion targets. If not provided,
             // fall back to fetching current info.
-            IList<Request> insertionRequests = null;
+            IList<Request>? insertionRequests = null;
             int existingRawCount = 0;
 
             var currentInfo = await _googleSheetService.GetSheetInfo();
@@ -181,28 +181,32 @@ public partial class GoogleSheetManager
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
 
-        // Use coordinator: try get, create missing on failure (via domain CreateSheets), then retry once
-        Func<IGoogleSheetService, List<string>, Dictionary<string,int>, Task<(List<string> Found, bool Created)>> createMissingSheetsFunc = async (svc, missingList, missingIndexMap) =>
+        // First attempt: try to fetch directly
+        var response = await _googleSheetService.GetBatchData(sheets, null);
+        Spreadsheet? spreadsheetInfo = null;
+
+        // If the batch fetch failed, check for missing sheets and restore them.
+        if (response == null)
         {
             try
             {
-                var creationResult = await CreateSheets(missingList, missingIndexMap);
-                // Treat non-null result as success (creationResult contains messages for details)
-                return (missingList, creationResult != null);
+                spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+                // Pass the full ordered sheet list so indices are computed correctly
+                var allSheets = GenerateSheetsHelpers.GetSheetNames();
+                var missingIndexMap = SheetInitializationHelper.GetMissingSheets(spreadsheetInfo, allSheets);
+                if (missingIndexMap.Count > 0)
+                {
+                    // CreateSheets applies full config (headers, formats, protections) and uses the index map for ordering
+                    await CreateSheets(missingIndexMap);
+                    // Final attempt after restoring missing sheets
+                    response = await _googleSheetService.GetBatchData(sheets, null);
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error while creating missing sheets: {ex.Message}");
-                return (new List<string>(), false);
+                Console.WriteLine($"Error while restoring missing sheets: {ex.Message}");
             }
-        };
-
-        var response = await RaptorSheets.Core.Helpers.SheetFetchCoordinator.TryGetBatchDataWithCreateOnFailure(
-            _googleSheetService,
-            sheets,
-            null,
-            createMissingSheetsFunc);
-        Spreadsheet? spreadsheetInfo;
+        }
 
         if (response == null)
         {
@@ -215,7 +219,10 @@ public partial class GoogleSheetManager
             messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
             
             var ranges = sheets.Select(sheet => $"{sheet}!{GoogleConfig.HeaderRange}").ToList();
-            spreadsheetInfo = await _googleSheetService.GetSheetInfo(ranges);
+
+            if(spreadsheetInfo == null) {
+                spreadsheetInfo = await _googleSheetService.GetSheetInfo(ranges);
+            }
 
             if (spreadsheetInfo != null)
             {
