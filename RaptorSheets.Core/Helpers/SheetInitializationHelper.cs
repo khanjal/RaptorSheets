@@ -18,28 +18,44 @@ namespace RaptorSheets.Core.Helpers
             if (allSheets == null || allSheets.Count == 0)
                 return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-            var existingTitles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            if (spreadsheetInfo?.Sheets != null)
-            {
-                foreach (var s in spreadsheetInfo.Sheets)
-                {
-                    var title = s?.Properties?.Title;
-                    if (!string.IsNullOrEmpty(title))
-                        existingTitles.Add(title);
-                }
-            }
-
+            var existingTitles = GetExistingTitles(spreadsheetInfo);
             var missingSheets = allSheets.Where(s => !existingTitles.Contains(s)).ToList();
 
             if (missingSheets.Count == 0)
                 return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
+            return BuildMissingIndexMap(spreadsheetInfo, allSheets, missingSheets);
+        }
+
+        private static HashSet<string> GetExistingTitles(Spreadsheet? spreadsheetInfo)
+        {
+            var existingTitles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (spreadsheetInfo?.Sheets == null)
+                return existingTitles;
+
+            foreach (var s in spreadsheetInfo.Sheets)
+            {
+                var title = s?.Properties?.Title;
+                if (!string.IsNullOrEmpty(title))
+                    existingTitles.Add(title);
+            }
+
+            return existingTitles;
+        }
+
+        private static Dictionary<string, int> BuildMissingIndexMap(Spreadsheet? spreadsheetInfo, List<string> allSheets, List<string> missingSheets)
+        {
             var missingIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-            // Pass the full allSheets list so ordering helper can compute correct target indices
-            // relative to all expected sheets, not just the missing subset.
-            var addRequests = SheetOrderingHelper.BuildAddSheetRequests(spreadsheetInfo!, allSheets);
+            if (spreadsheetInfo == null)
+            {
+                foreach (var missing in missingSheets)
+                    missingIndexMap[missing] = -1;
+
+                return missingIndexMap;
+            }
+
+            var addRequests = SheetOrderingHelper.BuildAddSheetRequests(spreadsheetInfo, allSheets);
             if (addRequests != null)
             {
                 foreach (var req in addRequests)
@@ -51,7 +67,6 @@ namespace RaptorSheets.Core.Helpers
                 }
             }
 
-            // Fallback: include any missing sheets that didn't get an index from the ordering helper
             foreach (var missing in missingSheets.Where(m => !missingIndexMap.ContainsKey(m)))
                 missingIndexMap[missing] = -1;
 
