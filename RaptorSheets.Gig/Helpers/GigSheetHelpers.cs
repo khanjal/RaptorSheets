@@ -63,103 +63,103 @@ public static class GigSheetHelpers
     private static readonly Dictionary<string, Action<SheetEntity, IList<IList<object>>>> s_sheetProcessors = new(StringComparer.OrdinalIgnoreCase)
     {
         { SheetsConfig.SheetNames.Addresses, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, AddressMapper.GetSheet()));
                 se.Addresses = GenericSheetMapper<AddressEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Daily, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, DailyMapper.GetSheet()));
                 se.Daily = GenericSheetMapper<DailyEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Expenses, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet)));
                 se.Expenses = GenericSheetMapper<ExpenseEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Monthly, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, MonthlyMapper.GetSheet()));
                 se.Monthly = GenericSheetMapper<MonthlyEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Names, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, NameMapper.GetSheet()));
                 se.Names = GenericSheetMapper<NameEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Places, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, PlaceMapper.GetSheet()));
                 se.Places = GenericSheetMapper<PlaceEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.TripSummary, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TripSummaryMapper.GetSheet()));
                 se.TripSummary = GenericSheetMapper<TripSummaryEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.PlaceSummary, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, PlaceSummaryMapper.GetSheet()));
                 se.PlaceSummary = GenericSheetMapper<PlaceSummaryEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Regions, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, RegionMapper.GetSheet()));
                 se.Regions = GenericSheetMapper<RegionEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Services, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, ServiceMapper.GetSheet()));
                 se.Services = GenericSheetMapper<ServiceEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Setup, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet)));
                 se.Setup = GenericSheetMapper<SetupEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Shifts, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, ShiftMapper.GetSheet()));
                 se.Shifts = GenericSheetMapper<ShiftEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Trips, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TripMapper.GetSheet()));
                 se.Trips = GenericSheetMapper<TripEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Types, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TypeMapper.GetSheet()));
                 se.Types = GenericSheetMapper<TypeEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Weekdays, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, WeekdayMapper.GetSheet()));
                 se.Weekdays = GenericSheetMapper<WeekdayEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Weekly, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, WeeklyMapper.GetSheet()));
                 se.Weekly = GenericSheetMapper<WeeklyEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Yearly, (se, values) => {
-                var headers = values.First();
+                var headers = values[0];
                 se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, YearlyMapper.GetSheet()));
                 se.Yearly = GenericSheetMapper<YearlyEntity>.MapFromRangeData(values);
             }
@@ -280,8 +280,6 @@ public static class GigSheetHelpers
         {
             return;
         }
-
-        var headerValues = values.First();
 
         if (s_sheetProcessors.TryGetValue(sheetName, out var processor))
         {
