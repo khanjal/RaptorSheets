@@ -2,6 +2,7 @@
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Wrappers;
+using System.Linq;
 using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Core.Services;
@@ -24,10 +25,6 @@ public class GoogleSheetService : IGoogleSheetService
 {
     private readonly SheetServiceWrapper _sheetService;
     private readonly string _range = GoogleConfig.Range;
-    // Lightweight in-memory cache to avoid repeated GetSpreadsheet calls
-    private Spreadsheet? _cachedSpreadsheet;
-    private readonly object _cacheLock = new object();
-
 
     public GoogleSheetService(string accessToken, string spreadsheetId)
     {
@@ -74,16 +71,6 @@ public class GoogleSheetService : IGoogleSheetService
         try
         {
             var response = await _sheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
-
-            // Invalidate cached spreadsheet information when modifications are made
-            if (response != null)
-            {
-                lock (_cacheLock)
-                {
-                    _cachedSpreadsheet = null;
-                }
-            }
-
             return response;
         }
         catch (Exception ex)
@@ -97,27 +84,23 @@ public class GoogleSheetService : IGoogleSheetService
     {
         return await GetBatchData(sheets, null);
     }
-
+    
     public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range)
     {
         if (sheets == null || sheets.Count < 1)
         {
             return null;
         }
-        // Ensure missing sheets are created first to avoid invalid A1 range parsing errors
-        await SheetInitializationHelper.EnsureMissingSheetsCreatedAsync(this, sheets);
 
         var request = GoogleRequestHelpers.GenerateBatchGetValuesByDataFilterRequest(sheets, range);
 
         try
         {
             var response = await _sheetService.BatchGetByDataFilter(request);
-
             return response;
         }
         catch (Exception ex)
         {
-            // TooManyRequests(429) "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service ..."
             Console.WriteLine($"Error: {ex.Message}");
             return null;
         }
@@ -125,6 +108,8 @@ public class GoogleSheetService : IGoogleSheetService
    
     public async Task<ValueRange?> GetSheetData(string sheet)
     {
+        if (string.IsNullOrWhiteSpace(sheet)) return null;
+
         try
         {
             var response = await _sheetService.GetValues($"{sheet}!{_range}");
@@ -133,9 +118,8 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
-            // NotFound (invalid spreadsheetId/range)
-            // BadRequest (invalid sheet name)
-            Console.WriteLine($"Error: {ex.Message}");
+            // NotFound (invalid spreadsheetId/range) or BadRequest (invalid sheet name)
+            Console.WriteLine($"Error getting values for sheet '{sheet}': {ex.Message}");
             return null;
         }
     }
@@ -149,32 +133,8 @@ public class GoogleSheetService : IGoogleSheetService
     {
         try
         {
-            // If no ranges are requested, return cached spreadsheet info when available
-            if (ranges == null)
-            {
-                lock (_cacheLock)
-                {
-                    if (_cachedSpreadsheet != null)
-                    {
-                        return _cachedSpreadsheet;
-                    }
-                }
-
-                var response = await _sheetService.GetSpreadsheet(ranges);
-                if (response != null)
-                {
-                    lock (_cacheLock)
-                    {
-                        _cachedSpreadsheet = response;
-                    }
-                }
-
-                return response;
-            }
-
-            // When specific ranges are requested, do not use the cached full-spreadsheet object
-            var rangedResponse = await _sheetService.GetSpreadsheet(ranges);
-            return rangedResponse;
+            var response = await _sheetService.GetSpreadsheet(ranges);
+            return response;
         }
         catch (Exception ex)
         {

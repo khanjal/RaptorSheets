@@ -111,6 +111,16 @@ public partial class GoogleSheetManager
         {
             spreadsheetInfo = await _googleSheetService.GetSheetInfo();
             messages.AddRange(await HandleMissingSheets(spreadsheetInfo));
+
+            // Call the GetBatchData again after ensuring sheets exist
+            response = await _googleSheetService.GetBatchData(sheets);
+        }
+
+        if (response == null)
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
+            data.Messages.AddRange(messages);
+            return data;
         }
         else
         {
