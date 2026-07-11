@@ -25,7 +25,6 @@ public class GoogleSheetService : IGoogleSheetService
     private readonly SheetServiceWrapper _sheetService;
     private readonly string _range = GoogleConfig.Range;
 
-
     public GoogleSheetService(string accessToken, string spreadsheetId)
     {
         _sheetService = new SheetServiceWrapper(accessToken, spreadsheetId);
@@ -71,7 +70,6 @@ public class GoogleSheetService : IGoogleSheetService
         try
         {
             var response = await _sheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
-
             return response;
         }
         catch (Exception ex)
@@ -85,7 +83,7 @@ public class GoogleSheetService : IGoogleSheetService
     {
         return await GetBatchData(sheets, null);
     }
-
+    
     public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range)
     {
         if (sheets == null || sheets.Count < 1)
@@ -98,19 +96,19 @@ public class GoogleSheetService : IGoogleSheetService
         try
         {
             var response = await _sheetService.BatchGetByDataFilter(request);
-
             return response;
         }
         catch (Exception ex)
         {
-            // TooManyRequests(429) "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service ..."
             Console.WriteLine($"Error: {ex.Message}");
             return null;
         }
     }
-
+   
     public async Task<ValueRange?> GetSheetData(string sheet)
     {
+        if (string.IsNullOrWhiteSpace(sheet)) return null;
+
         try
         {
             var response = await _sheetService.GetValues($"{sheet}!{_range}");
@@ -119,9 +117,8 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
-            // NotFound (invalid spreadsheetId/range)
-            // BadRequest (invalid sheet name)
-            Console.WriteLine($"Error: {ex.Message}");
+            // NotFound (invalid spreadsheetId/range) or BadRequest (invalid sheet name)
+            Console.WriteLine($"Error getting values for sheet '{sheet}': {ex.Message}");
             return null;
         }
     }
@@ -136,7 +133,6 @@ public class GoogleSheetService : IGoogleSheetService
         try
         {
             var response = await _sheetService.GetSpreadsheet(ranges);
-
             return response;
         }
         catch (Exception ex)

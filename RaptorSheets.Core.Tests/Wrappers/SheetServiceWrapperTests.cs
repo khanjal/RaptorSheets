@@ -1,4 +1,3 @@
-using Google.Apis.Auth.OAuth2;
 using RaptorSheets.Core.Wrappers;
 using Xunit;
 

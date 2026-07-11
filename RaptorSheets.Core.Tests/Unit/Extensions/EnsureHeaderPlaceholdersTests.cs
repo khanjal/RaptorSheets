@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using Xunit;

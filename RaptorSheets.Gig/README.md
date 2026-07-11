@@ -179,6 +179,14 @@ Business expense tracking:
 - Mileage and gas costs
 - Equipment and maintenance
 
+### Summary Helpers
+These sheets provide aggregated summaries derived from the `Trips` data. They are generated using query formulas in the mappers and are typically protected/read-only.
+
+- **TripSummary**: Aggregates trips by `Name` and `Address` into `Name | Address | Count`. Implemented by `TripSummaryMapper` and exposed via `SheetsConfig.TripSummary`.
+- **PlaceSummary**: Aggregates trips by `Place` and `Address` into `Place | Address | Count`. Implemented by `PlaceSummaryMapper` and exposed via `SheetsConfig.PlaceSummary`.
+
+These summary sheets are created as part of the normal sheet creation flow (`CreateAllSheets`) when present in the `SheetsConfig.SheetUtilities.GetAllSheetNames()` ordering.
+
 ### Auxiliary Sheets
 Supporting data for efficiency:
 
@@ -309,6 +317,27 @@ public class ExpenseEntity
     // ... additional properties
 }
 ```
+
+### TripSummary Entity
+```csharp
+public class TripSummaryEntity
+{
+    public string Name { get; set; } = "";
+    public string Address { get; set; } = "";
+    public int Count { get; set; }
+}
+```
+
+### PlaceSummary Entity
+```csharp
+public class PlaceSummaryEntity
+{
+    public string Place { get; set; } = "";
+    public string Address { get; set; } = "";
+    public int Count { get; set; }
+}
+```
+
 
 ## Manager Usage
 

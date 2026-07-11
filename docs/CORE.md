@@ -122,6 +122,12 @@ var request = GoogleRequestHelpers.GenerateBatchGetValuesByDataFilterRequest(
     sheets: ["Sheet1", "Sheet2"],
     range: "A1:Z1000"
 );
+
+// Sheet ordering helpers
+// The library provides helpers to compute and apply sheet tab index updates when creating
+// multiple sheets in the same batch. Use `GenerateUpdateSheetIndex(sheetId, index)` to
+// produce an UpdateSheetProperties request, and `ComputeEndIndex(existingCount, newCount)`
+// to calculate a target index that places a sheet after all existing and newly added sheets.
 ```
 
 ### SheetHelpers

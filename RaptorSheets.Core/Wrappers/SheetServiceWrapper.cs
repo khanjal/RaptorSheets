@@ -37,13 +37,16 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
     public SheetServiceWrapper(Dictionary<string, string> parameters, string spreadsheetId)
     {
         _spreadsheetId = spreadsheetId;
+        // Resolve credential parameters with tolerant key lookup to accept either
+        // camelCase (privateKey, privateKeyId, clientEmail, clientId) or
+        // snake_case (private_key, private_key_id, client_email, client_id) names.
         var jsonCredential = new JsonCredentialParameters
         {
-            Type = parameters["type"].Trim(),
-            PrivateKeyId = parameters["privateKeyId"].Trim(),
-            PrivateKey = parameters["privateKey"].Trim(),
-            ClientEmail = parameters["clientEmail"].Trim(),
-            ClientId = parameters["clientId"].Trim(),
+            Type = ResolveParameter(parameters, "type"),
+            PrivateKeyId = ResolveParameter(parameters, "privateKeyId", "private_key_id"),
+            PrivateKey = ResolveParameter(parameters, "privateKey", "private_key"),
+            ClientEmail = ResolveParameter(parameters, "clientEmail", "client_email"),
+            ClientId = ResolveParameter(parameters, "clientId", "client_id"),
         };
 
         // Prefer constructing a service account credential explicitly instead of the obsolete FromJsonParameters API.
@@ -82,6 +85,36 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
         }
 
         InitializeService(credential);
+    }
+
+    private static string ResolveParameter(Dictionary<string, string> parameters, params string[] candidates)
+    {
+        if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+
+        // Direct lookup (exact key)
+        foreach (var c in candidates)
+        {
+            if (parameters.TryGetValue(c, out var val) && !string.IsNullOrWhiteSpace(val))
+            {
+                return val.Trim();
+            }
+        }
+
+        // Fallback: try normalized keys (remove underscores, case-insensitive)
+        foreach (var kv in parameters)
+        {
+            var normalizedKey = kv.Key?.Replace("_", "").ToLowerInvariant() ?? string.Empty;
+            foreach (var c in candidates)
+            {
+                var candidateNorm = c.Replace("_", "").ToLowerInvariant();
+                if (normalizedKey == candidateNorm && !string.IsNullOrWhiteSpace(kv.Value))
+                {
+                    return kv.Value.Trim();
+                }
+            }
+        }
+
+        throw new ArgumentException($"Missing required parameter. Expected one of: {string.Join(", ", candidates)}", nameof(parameters));
     }
 
     private SheetsService InitializeService(Google.Apis.Http.IConfigurableHttpClientInitializer httpInitializer)
