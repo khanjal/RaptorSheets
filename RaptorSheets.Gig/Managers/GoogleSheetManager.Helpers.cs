@@ -3,6 +3,7 @@ using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Helpers;
 
 namespace RaptorSheets.Gig.Managers;
 

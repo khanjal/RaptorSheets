@@ -1,5 +1,4 @@
 using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Core.Services;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
@@ -38,10 +37,13 @@ public partial class GoogleSheetManager
         var sheetEntity = new SheetEntity();
         var batchUpdateSpreadsheetRequest = GenerateSheetsHelpers.Generate(sheets);
 
+        // Fetch spreadsheet info once and reuse below to avoid duplicate API calls
+        Spreadsheet? spreadsheetInfo = null;
+
         try
         {
             // Move default sheet (e.g., "Sheet1") to end in the same batch to minimize API calls
-            var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+            spreadsheetInfo = await _googleSheetService.GetSheetInfo();
             var defaultSheet = spreadsheetInfo?.Sheets?.FirstOrDefault(s =>
                 string.Equals(s.Properties.Title, "Sheet1", StringComparison.OrdinalIgnoreCase));
 
@@ -66,29 +68,71 @@ public partial class GoogleSheetManager
         // requests so created sheets are placed in the expected order.
         try
         {
-            // Prefer using provided existingIndexMap to compute insertion targets. If not provided,
-            // fall back to fetching current info.
+            // Attempt to compute desired positions for requested sheets and add index update
+            // requests so created sheets are placed in the expected order.
             IList<Request>? insertionRequests = null;
             int existingRawCount = 0;
 
-            var currentInfo = await _googleSheetService.GetSheetInfo();
-            if (existingIndexMap != null && existingIndexMap.Count > 0)
+            // Get the canonical ordered sheet list for index computation
+            var allSheets = GenerateSheetsHelpers.GetSheetNames();
+
+            // Reuse `spreadsheetInfo` fetched earlier when possible to avoid an extra API call.
+            Spreadsheet? currentInfo = spreadsheetInfo;
+            if (currentInfo == null)
             {
-                existingRawCount = currentInfo?.Sheets?.Count ?? existingIndexMap.Count;
-                insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(existingIndexMap, existingRawCount, sheets);
-            }
-            else if (currentInfo != null)
-            {
-                insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(currentInfo, sheets);
+                try
+                {
+                    currentInfo = await _googleSheetService.GetSheetInfo();
+                }
+                catch
+                {
+                    // ignore - ordering may still be possible using provided maps
+                }
             }
 
-            if (insertionRequests != null)
-            {
-                // Map title -> target index from insertionRequests
-                var targetIndexMap = insertionRequests
-                    .Where(r => r.AddSheet != null && r.AddSheet.Properties != null && !string.IsNullOrEmpty(r.AddSheet.Properties.Title))
-                    .ToDictionary(r => r.AddSheet.Properties.Title!, r => r.AddSheet.Properties.Index ?? -1, StringComparer.OrdinalIgnoreCase);
+            // If the caller passed a map whose keys overlap the requested sheets, treat it
+            // as a desired-index map (title -> desired index for newly-created sheets).
+            var providedMapIsDesiredIndices = existingIndexMap != null && existingIndexMap.Keys.Any(k => sheets.Contains(k, StringComparer.OrdinalIgnoreCase));
 
+            if (providedMapIsDesiredIndices)
+            {
+                // We'll apply the provided indices directly below without calling the ordering helper
+            }
+            else
+            {
+                if (existingIndexMap != null && existingIndexMap.Count > 0)
+                {
+                    existingRawCount = currentInfo?.Sheets?.Count ?? existingIndexMap.Count;
+                    insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(existingIndexMap, existingRawCount, allSheets);
+                }
+                else if (currentInfo != null)
+                {
+                    insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(currentInfo, allSheets);
+                }
+            }
+
+            // Determine the mapping from title -> desired index either from the ordering helper
+            // or directly from the provided desired-index map.
+            var targetIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            if (providedMapIsDesiredIndices && existingIndexMap != null)
+            {
+                foreach (var kv in existingIndexMap.Where(kv => sheets.Contains(kv.Key, StringComparer.OrdinalIgnoreCase)))
+                    targetIndexMap[kv.Key] = kv.Value;
+            }
+            else if (insertionRequests != null)
+            {
+                foreach (var r in insertionRequests)
+                {
+                    var title = r?.AddSheet?.Properties?.Title;
+                    var idx = r?.AddSheet?.Properties?.Index;
+                    if (!string.IsNullOrEmpty(title) && idx.HasValue)
+                        targetIndexMap[title] = idx.Value;
+                }
+            }
+
+            if (targetIndexMap.Count > 0)
+            {
                 // Find AddSheet requests we will actually send (generated by GenerateSheetsHelpers)
                 var createdAdds = batchUpdateSpreadsheetRequest.Requests
                     .Where(r => r.AddSheet != null && r.AddSheet.Properties != null && !string.IsNullOrEmpty(r.AddSheet.Properties.Title))
@@ -147,7 +191,9 @@ public partial class GoogleSheetManager
             return await CreateSheets(new List<string>());
         }
 
-        var sheets = sheetsWithIndices.Keys.ToList();
+        // Order titles deterministically using a helper (stable, testable).
+        var sheets = CreateSheetsHelpers.OrderSheetTitlesByIndex(sheetsWithIndices);
+
         return await CreateSheets(sheets, sheetsWithIndices);
     }
 
@@ -191,15 +237,23 @@ public partial class GoogleSheetManager
             try
             {
                 spreadsheetInfo = await _googleSheetService.GetSheetInfo();
-                // Pass the full ordered sheet list so indices are computed correctly
-                var allSheets = GenerateSheetsHelpers.GetSheetNames();
-                var missingIndexMap = SheetInitializationHelper.GetMissingSheets(spreadsheetInfo, allSheets);
-                if (missingIndexMap.Count > 0)
+                // If we couldn't fetch spreadsheet metadata, skip restoration to avoid creating all sheets
+                if (spreadsheetInfo == null)
                 {
-                    // CreateSheets applies full config (headers, formats, protections) and uses the index map for ordering
-                    await CreateSheets(missingIndexMap);
-                    // Final attempt after restoring missing sheets
-                    response = await _googleSheetService.GetBatchData(sheets, null);
+                    Console.WriteLine("Warning: unable to fetch spreadsheet metadata; skipping missing-sheet restoration");
+                }
+                else
+                {
+                    // Pass the full ordered sheet list so indices are computed correctly
+                    var allSheets = GenerateSheetsHelpers.GetSheetNames();
+                    var missingIndexMap = SheetInitializationHelper.GetMissingSheets(spreadsheetInfo, allSheets);
+                    if (missingIndexMap.Count > 0)
+                    {
+                        // CreateSheets applies full config (headers, formats, protections) and uses the index map for ordering
+                        await CreateSheets(missingIndexMap);
+                        // Final attempt after restoring missing sheets
+                        response = await _googleSheetService.GetBatchData(sheets, null);
+                    }
                 }
             }
             catch (Exception ex)
@@ -348,7 +402,7 @@ public partial class GoogleSheetManager
         foreach (var change in changes)
         {
             var sheetName = change.Key;
-            var properties = sheetInfo.FirstOrDefault(x => x.Name == sheetName);
+                var properties = sheetInfo.FirstOrDefault(x => string.Equals(x.Name, sheetName, StringComparison.OrdinalIgnoreCase));
 
             switch (sheetName)
             {
