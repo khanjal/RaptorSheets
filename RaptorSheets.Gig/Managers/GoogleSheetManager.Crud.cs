@@ -3,6 +3,7 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Helpers;
@@ -250,9 +251,28 @@ public partial class GoogleSheetManager
                     if (missingIndexMap.Count > 0)
                     {
                         // CreateSheets applies full config (headers, formats, protections) and uses the index map for ordering
-                        await CreateSheets(missingIndexMap);
-                        // Final attempt after restoring missing sheets
-                        response = await _googleSheetService.GetBatchData(sheets, null);
+                        var createResult = await CreateSheets(missingIndexMap);
+
+                        // If creation returned errors, surface them and return immediately.
+                        if (createResult.Messages.Any(m => m.Level == MessageLevelEnum.ERROR.GetDescription()))
+                        {
+                            messages.AddRange(createResult.Messages);
+                            var errorReturn = new SheetEntity();
+                            errorReturn.Messages.AddRange(messages);
+                            return errorReturn;
+                        }
+
+                        // Creation succeeded. Do not attempt an immediate re-fetch — return an informational
+                        // SheetEntity instructing the caller to retry the GetSheets call later so Google
+                        // has time to materialize data in newly-created auxiliary sheets.
+                        var createdNames = string.Join(", ", missingIndexMap.Keys);
+                        var info = MessageHelpers.CreateInfoMessage(
+                            $"Created missing sheets: {createdNames}. Sheets may take a few seconds to become readable — please retry the request shortly.",
+                            MessageTypeEnum.GET_SHEETS);
+
+                        var createdReturn = new SheetEntity();
+                        createdReturn.Messages.Add(info);
+                        return createdReturn;
                     }
                 }
             }
