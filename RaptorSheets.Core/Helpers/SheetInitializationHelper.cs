@@ -20,7 +20,7 @@ namespace RaptorSheets.Core.Helpers
 
             try
             {
-                // Get current spreadsheet info (may come from cache)
+                // Get current spreadsheet info
                 var spreadsheetInfo = await sheetService.GetSheetInfo();
 
                 // Build a set of existing sheet titles (case-insensitive)
