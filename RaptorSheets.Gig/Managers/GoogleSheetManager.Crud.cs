@@ -104,17 +104,9 @@ public partial class GoogleSheetManager
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
 
-        var response = await _googleSheetService.GetBatchData(sheets);
+        // Use coordinator: try get, create missing on failure, then retry once
+        var response = await RaptorSheets.Core.Helpers.SheetFetchCoordinator.TryGetBatchDataWithCreateOnFailure(_googleSheetService, sheets);
         Spreadsheet? spreadsheetInfo;
-
-        if (response == null)
-        {
-            spreadsheetInfo = await _googleSheetService.GetSheetInfo();
-            messages.AddRange(await HandleMissingSheets(spreadsheetInfo));
-
-            // Call the GetBatchData again after ensuring sheets exist
-            response = await _googleSheetService.GetBatchData(sheets);
-        }
 
         if (response == null)
         {

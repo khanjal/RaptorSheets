@@ -18,10 +18,10 @@ namespace RaptorSheets.Core.Helpers
         /// after the operation (this includes existing sheets and any that were created).
         /// The returned list may include extra sheets that were not explicitly requested.
         /// </summary>
-        public static async Task<List<string>> EnsureMissingSheetsCreatedAsync(IGoogleSheetService sheetService, List<string> sheets)
+        public static async Task<(List<string> Found, bool Created)> EnsureMissingSheetsCreatedAsync(IGoogleSheetService sheetService, List<string> sheets)
         {
             if (sheetService == null) throw new ArgumentNullException(nameof(sheetService));
-            if (sheets == null || sheets.Count == 0) return new List<string>();
+            if (sheets == null || sheets.Count == 0) return (new List<string>(), false);
 
             try
             {
@@ -42,6 +42,7 @@ namespace RaptorSheets.Core.Helpers
                 // Determine which requested sheets are missing
                 var missingSheets = sheets.Where(s => !existingTitles.Contains(s)).ToList();
 
+                var createdAny = false;
                 if (missingSheets.Count > 0)
                 {
                     // Build add-sheet requests (helper gracefully handles null/empty spreadsheetInfo)
@@ -60,6 +61,8 @@ namespace RaptorSheets.Core.Helpers
                         }
                         else
                         {
+                            // Mark that we at least attempted and got a non-null response
+                            createdAny = true;
                             // If creation succeeded, refresh spreadsheet info (service invalidates cache on successful update)
                             spreadsheetInfo = await sheetService.GetSheetInfo();
                         }
@@ -83,13 +86,13 @@ namespace RaptorSheets.Core.Helpers
                     if (!string.IsNullOrWhiteSpace(req)) found.Add(req);
                 }
 
-                return found.ToList();
+                return (found.ToList(), createdAny);
             }
             catch (Exception ex)
             {
                 // Do not fail here; callers will continue to attempt their operation. Return requested list as fallback.
                 Console.WriteLine($"Warning while ensuring sheets exist: {ex.Message}");
-                return sheets.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                return (sheets.Distinct(StringComparer.OrdinalIgnoreCase).ToList(), false);
             }
         }
     }
