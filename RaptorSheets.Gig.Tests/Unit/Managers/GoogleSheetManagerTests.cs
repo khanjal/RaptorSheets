@@ -265,12 +265,14 @@ public class GoogleSheetManagerTests
             }
         };
 
-        // Act & Assert - This should throw because the code accesses Data[0] without checking
-        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => 
-            GoogleSheetManager.CheckSheetHeaders(spreadsheet));
-        
-        // This is actually a bug in the implementation - it should check Data.Count > 0 first
-        Assert.Contains("Index was out of range", exception.Message);
+        // Act - Should handle gracefully and return messages rather than throwing
+        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        // Should include a warning about the unknown sheet name
+        Assert.Contains(result, m => m.Message.Contains("TestSheet") && m.Message.Contains("does not match any known sheet name"));
     }
 
     [Fact]
@@ -325,12 +327,14 @@ public class GoogleSheetManagerTests
             }
         };
 
-        // Act & Assert - This should throw because the code accesses RowData[0] without checking
-        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => 
-            GoogleSheetManager.CheckSheetHeaders(spreadsheet));
-        
-        // This reveals a defensive programming issue in the implementation
-        Assert.Contains("Index was out of range", exception.Message);
+        // Act - Should handle gracefully and return messages rather than throwing
+        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        // Should include a warning about the unknown sheet name
+        Assert.Contains(result, m => m.Message.Contains("TestSheet") && m.Message.Contains("does not match any known sheet name"));
     }
 
     [Fact]

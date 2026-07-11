@@ -25,6 +25,31 @@ public partial class GoogleSheetManager
         return await GetSheetProperties(SheetsConfig.SheetUtilities.GetAllSheetNames());
     }
 
+    private static IEnumerable<MessageEntity> GetHeaderMessagesForKnownSheets(IEnumerable<Sheet> knownSheets)
+    {
+        foreach (var sheet in knownSheets)
+        {
+            var sheetName = sheet.Properties.Title;
+            var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
+
+            if (s_headerFactories.TryGetValue(sheetName, out var factory))
+            {
+                foreach (var msg in HeaderHelpers.CheckSheetHeaders(sheetHeader, factory()))
+                {
+                    yield return msg;
+                }
+            }
+        }
+    }
+
+    private static IEnumerable<MessageEntity> GetUnknownSheetWarnings(IEnumerable<Sheet> unknownSheets)
+    {
+        foreach (var sheet in unknownSheets)
+        {
+            yield return MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageTypeEnum.CHECK_SHEET);
+        }
+    }
+
     public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets)
     {
         var properties = new List<PropertyEntity>();
@@ -113,6 +138,28 @@ public partial class GoogleSheetManager
 
     #region Header Validation
 
+    // Sheet name -> SheetModel factory (case-insensitive) used for header checks
+    private static readonly Dictionary<string, Func<SheetModel>> s_headerFactories = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { SheetsConfig.SheetNames.Addresses, AddressMapper.GetSheet },
+        { SheetsConfig.SheetNames.Daily, DailyMapper.GetSheet },
+        { SheetsConfig.SheetNames.Expenses, () => GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet) },
+        { SheetsConfig.SheetNames.Monthly, MonthlyMapper.GetSheet },
+        { SheetsConfig.SheetNames.Names, NameMapper.GetSheet },
+        { SheetsConfig.SheetNames.Places, PlaceMapper.GetSheet },
+        { SheetsConfig.SheetNames.TripSummary, TripSummaryMapper.GetSheet },
+        { SheetsConfig.SheetNames.PlaceSummary, PlaceSummaryMapper.GetSheet },
+        { SheetsConfig.SheetNames.Regions, RegionMapper.GetSheet },
+        { SheetsConfig.SheetNames.Services, ServiceMapper.GetSheet },
+        { SheetsConfig.SheetNames.Setup, () => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet) },
+        { SheetsConfig.SheetNames.Shifts, ShiftMapper.GetSheet },
+        { SheetsConfig.SheetNames.Trips, TripMapper.GetSheet },
+        { SheetsConfig.SheetNames.Types, TypeMapper.GetSheet },
+        { SheetsConfig.SheetNames.Weekdays, WeekdayMapper.GetSheet },
+        { SheetsConfig.SheetNames.Weekly, WeeklyMapper.GetSheet },
+        { SheetsConfig.SheetNames.Yearly, YearlyMapper.GetSheet }
+    };
+
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
         var messages = new List<MessageEntity>();
@@ -122,67 +169,13 @@ public partial class GoogleSheetManager
             messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
             return messages;
         }
+        // Separate known and unknown sheets to simplify logic
+        var sheets = sheetInfoResponse.Sheets ?? new List<Sheet>();
+        var knownSheets = sheets.Where(s => s_headerFactories.ContainsKey(s.Properties.Title));
+        var unknownSheets = sheets.Except(knownSheets);
 
-        var headerMessages = new List<MessageEntity>();
-        
-        // Loop through sheets to check headers
-        foreach (var sheet in sheetInfoResponse.Sheets)
-        {
-            var sheetName = sheet.Properties.Title;
-            var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
-
-            switch (sheetName)
-            {
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, AddressMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, DailyMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet)));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, MonthlyMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, NameMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ServiceMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet)));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, ShiftMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TypeMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeekdayMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, WeeklyMapper.GetSheet()));
-                    break;
-                case var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase):
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, YearlyMapper.GetSheet()));
-                    break;
-                default:
-                    messages.Add(MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageTypeEnum.CHECK_SHEET));
-                    break;
-            }
-        }
+        var headerMessages = GetHeaderMessagesForKnownSheets(knownSheets).ToList();
+        messages.AddRange(GetUnknownSheetWarnings(unknownSheets));
 
         if (headerMessages.Count > 0)
         {
@@ -212,37 +205,12 @@ public partial class GoogleSheetManager
     {
         try
         {
-            // Use the existing helper to get the appropriate mapper's sheet model
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase))
-                return AddressMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase))
-                return DailyMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase))
-                return GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet);
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase))
-                return MonthlyMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase))
-                return NameMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase))
-                return PlaceMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase))
-                return RegionMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase))
-                return ServiceMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase))
-                return GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet);
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase))
-                return ShiftMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase))
-                return TripMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase))
-                return TypeMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase))
-                return WeekdayMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase))
-                return WeeklyMapper.GetSheet();
-            if (string.Equals(sheet, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase))
-                return YearlyMapper.GetSheet();
+            // Use the centralized factory map for sheet layouts (case-insensitive)
+            if (string.IsNullOrEmpty(sheet))
+                return null;
+
+            if (s_headerFactories.TryGetValue(sheet, out var factory))
+                return factory();
 
             return null;
         }

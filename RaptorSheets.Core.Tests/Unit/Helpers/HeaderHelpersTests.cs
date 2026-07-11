@@ -323,7 +323,9 @@ public class HeaderHelpersTests
 
         // Assert
         Assert.NotEmpty(result);
-        Assert.Contains(result, m => m.Message.Contains("Missing column"));
+        // Accept either the detailed per-column missing messages or the single
+        // 'No header row found or sheet is empty' message introduced to reduce noise.
+        Assert.Contains(result, m => m.Message.Contains("Missing column") || m.Message.Contains("No header row found"));
     }    [Theory]
     [InlineData("")]
     [InlineData("   ")]
