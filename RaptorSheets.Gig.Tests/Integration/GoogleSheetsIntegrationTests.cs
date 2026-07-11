@@ -727,12 +727,31 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // Re-read metadata and sheet data (include all sheets to detect missing summaries)
         var readAfterDelete = await GetAllSheetData();
 
-        // We expect a message indicating missing header/empty sheet for TripSummary
-        var headerMessages = (readAfterDelete.Messages ?? new List<MessageEntity>())
+        // We expect either a message indicating missing header/empty sheet for TripSummary
+        // or an informational creation notice that asks the caller to retry shortly.
+        var allMessages = readAfterDelete.Messages ?? new List<MessageEntity>();
+
+        var headerMessages = allMessages
             .Where(m => m.Message != null && m.Message.Contains("TripSummary", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
-        Assert.True(headerMessages.Count > 0, "Expected header/missing-sheet messages for TripSummary after deletion");
+        // Detect the informational creation notice produced when the manager created missing sheets
+        var creationNotice = allMessages
+            .Where(m => m.Message != null && m.Message.Contains("Sheets may take a few seconds", StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefault();
+
+        var hasCreationNotice = creationNotice != null;
+
+        // If a creation notice exists, ensure it references the TripSummary sheet
+        if (hasCreationNotice)
+        {
+            Assert.True(creationNotice.Message.IndexOf("TripSummary", StringComparison.OrdinalIgnoreCase) >= 0,
+                $"Creation notice should include TripSummary. Notice: {creationNotice.Message}");
+        }
+
+        // Require either explicit header/missing-sheet messages or the creation notice
+        Assert.True(headerMessages.Count > 0 || hasCreationNotice,
+            "Expected header/missing-sheet messages or creation notice for TripSummary after deletion");
 
         System.Diagnostics.Debug.WriteLine("   ✓ Missing-sheet detection validated (TripSummary)");
         }
