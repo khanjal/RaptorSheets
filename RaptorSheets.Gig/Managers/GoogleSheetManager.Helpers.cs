@@ -3,6 +3,7 @@ using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Helpers;
 
 namespace RaptorSheets.Gig.Managers;
 
@@ -24,7 +25,14 @@ public partial class GoogleSheetManager
             if (missingSheets.Count != 0)
             {
                 messages.AddRange(SheetHelpers.CheckSheets(missingSheets));
-                messages.AddRange((await CreateSheets(missingSheets)).Messages);
+
+                // Compute a title->desiredIndex map for missing sheets using the canonical ordered sheet list.
+                // This ensures insertion indices are computed relative to the full expected ordering,
+                // not just the missing subset (avoids incorrectly appending sheets).
+                var allSheets = GenerateSheetsHelpers.GetSheetNames();
+                var missingIndexMap = SheetInitializationHelper.GetMissingSheets(spreadsheet, allSheets);
+
+                messages.AddRange((await CreateSheets(missingIndexMap)).Messages);
             }
         }
         else

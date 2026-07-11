@@ -120,5 +120,25 @@ namespace RaptorSheets.Core.Tests.Unit.Helpers
             Assert.Equal("newone", requests[0].AddSheet.Properties.Title);
             Assert.Equal(0, requests[0].AddSheet.Properties.Index);
         }
+
+            [Fact]
+            public void BuildAddSheetRequests_WithExistingIndexMap_UsesProvidedIndices()
+            {
+                // Arrange - existing index map indicates 'Existing' at index 0
+                var existingIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["Existing"] = 0
+                };
+
+                var requested = new List<string> { "NewOne", "Existing" };
+
+                // Act - use overload that accepts existingIndexMap and existingRawCount
+                var requests = SheetOrderingHelper.BuildAddSheetRequests(existingIndexMap, 1, requested).ToList();
+
+                // Assert - only one request for NewOne inserted at index 0
+                Assert.Single(requests);
+                Assert.Equal("NewOne", requests[0].AddSheet.Properties.Title);
+                Assert.Equal(0, requests[0].AddSheet.Properties.Index);
+            }
     }
 }

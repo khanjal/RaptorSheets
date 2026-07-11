@@ -19,6 +19,21 @@ public class GoogleSheetManagerTests
         _manager = new GoogleSheetManager("test-token", "test-spreadsheet-id");
     }
 
+    [Fact]
+    public void OrderSheetTitlesByIndex_PlacesSpecifiedIndicesFirst()
+    {
+        var input = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["B"] = 2,
+            ["A"] = 0,
+            ["C"] = -1
+        };
+
+        var ordered = RaptorSheets.Gig.Helpers.CreateSheetsHelpers.OrderSheetTitlesByIndex(input);
+
+        Assert.Equal(new[] { "A", "B", "C" }, ordered);
+    }
+
     #region Constructor Tests
 
     [Fact]

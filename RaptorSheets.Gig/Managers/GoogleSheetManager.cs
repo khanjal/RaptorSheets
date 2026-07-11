@@ -48,15 +48,20 @@ public interface IGoogleSheetManager
 /// </summary>
 public partial class GoogleSheetManager : IGoogleSheetManager
 {
-    private readonly GoogleSheetService _googleSheetService;
+    private readonly RaptorSheets.Core.Services.IGoogleSheetService _googleSheetService;
+
+    public GoogleSheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService)
+    {
+        _googleSheetService = googleSheetService ?? throw new ArgumentNullException(nameof(googleSheetService));
+    }
 
     public GoogleSheetManager(string accessToken, string spreadsheetId)
+        : this(new RaptorSheets.Core.Services.GoogleSheetService(accessToken, spreadsheetId))
     {
-        _googleSheetService = new GoogleSheetService(accessToken, spreadsheetId);
     }
 
     public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId)
+        : this(new RaptorSheets.Core.Services.GoogleSheetService(parameters, spreadsheetId))
     {
-        _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
     }
 }
