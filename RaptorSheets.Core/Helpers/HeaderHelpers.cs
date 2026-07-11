@@ -197,6 +197,14 @@ public static class HeaderHelpers
     public static List<MessageEntity> CheckSheetHeaders(IList<object> values, SheetModel sheetModel)
     {
         var messages = new List<MessageEntity>();
+
+        // If there are no header values (sheet empty or header row missing), return a single, clear message
+        if (values == null || values.Count == 0 || values.All(v => string.IsNullOrWhiteSpace(v?.ToString())))
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetModel.Name}]: No header row found or sheet is empty", MessageTypeEnum.CHECK_SHEET));
+            return messages;
+        }
+
         var headerArray = new string[values.Count];
         values.CopyTo(headerArray, 0);
         var index = 0;
@@ -205,22 +213,23 @@ public static class HeaderHelpers
         {
             var sheetColumn = $"{sheetModel.Name}!{SheetHelpers.GetColumnName(index)}";
 
-            if (!values.Any(x => x?.ToString()?.Trim() == sheetHeader.Name))
+            if (!values.Any(x => string.Equals(x?.ToString()?.Trim(), sheetHeader.Name, StringComparison.OrdinalIgnoreCase)))
             {
                 messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
             }
             else
             {
-                if (index < headerArray.Length && sheetHeader.Name != headerArray[index].Trim())
+                if (index < headerArray.Length && !string.Equals(sheetHeader.Name, headerArray[index]?.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
-                    messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Column [{headerArray[index].Trim()}] should be [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
+                    var actual = headerArray[index]?.Trim() ?? "";
+                    messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Column [{actual}] should be [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
                 }
             }
             index++;
         }
 
-        // Check for extra columns that aren't in the expected sheet model
-        var expectedHeaders = sheetModel.Headers.Select(h => h.Name).ToHashSet();
+        // Check for extra columns that aren't in the expected sheet model (case-insensitive)
+        var expectedHeaders = sheetModel.Headers.Select(h => h.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
         for (int i = 0; i < values.Count; i++)
         {
             var actualHeader = values[i]?.ToString()?.Trim();

@@ -151,6 +151,12 @@ public partial class GoogleSheetManager
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceMapper.GetSheet()));
                     break;
+                case var s when string.Equals(s, SheetsConfig.SheetNames.TripSummary, StringComparison.OrdinalIgnoreCase):
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, TripSummaryMapper.GetSheet()));
+                    break;
+                case var s when string.Equals(s, SheetsConfig.SheetNames.PlaceSummary, StringComparison.OrdinalIgnoreCase):
+                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, PlaceSummaryMapper.GetSheet()));
+                    break;
                 case var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase):
                     headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, RegionMapper.GetSheet()));
                     break;
@@ -225,6 +231,10 @@ public partial class GoogleSheetManager
                 return NameMapper.GetSheet();
             if (string.Equals(sheet, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase))
                 return PlaceMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.TripSummary, StringComparison.OrdinalIgnoreCase))
+                return TripSummaryMapper.GetSheet();
+            if (string.Equals(sheet, SheetsConfig.SheetNames.PlaceSummary, StringComparison.OrdinalIgnoreCase))
+                return PlaceSummaryMapper.GetSheet();
             if (string.Equals(sheet, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase))
                 return RegionMapper.GetSheet();
             if (string.Equals(sheet, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase))
