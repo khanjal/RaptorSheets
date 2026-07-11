@@ -1,10 +1,8 @@
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Services;
 using Moq;
-using System.Collections.Generic;
 using Xunit;
 using Google.Apis.Sheets.v4.Data;
-using System.Threading.Tasks;
 
 namespace RaptorSheets.Core.Tests.Unit.Helpers
 {

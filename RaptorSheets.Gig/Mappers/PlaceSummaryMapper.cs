@@ -1,9 +1,7 @@
 using RaptorSheets.Core.Helpers;
-using System.Collections.Generic;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
-using RaptorSheets.Gig.Entities;
 
 namespace RaptorSheets.Gig.Mappers;
 

@@ -2,7 +2,6 @@
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Wrappers;
-using System.Linq;
 using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Core.Services;
