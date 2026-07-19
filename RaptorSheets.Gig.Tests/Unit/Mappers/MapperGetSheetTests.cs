@@ -327,19 +327,30 @@ public class MapperGetSheetTests
         // Act
         var sheet = DeliveryMapper.GetSheet();
         var tripsHeader = sheet.Headers.First(h => h.Name.ToString() == "Trips");
+        var firstTripHeader = sheet.Headers.First(h => h.Name.ToString() == "First Trip");
+        var lastTripHeader = sheet.Headers.First(h => h.Name.ToString() == "Last Trip");
         var amountPerTripHeader = sheet.Headers.First(h => h.Name.ToString() == "Amt/Trip");
         var amountPerDistanceHeader = sheet.Headers.First(h => h.Name.ToString() == "Amt/Dist");
 
-        // Assert - QUERY formula groups by Name/Address and sums Pay/Tips/Bonus/Total/Dist
+        // Assert - QUERY formula groups by Name/Address and sums Pay/Tips/Bonus/Total/Dist, plus
+        // min/max First Trip/Last Trip from Date - all part of the same query, since a QUERY's
+        // spilled array is contiguous and must include everything up to Amt/Trip/Amt/Dist, which
+        // are separate ARRAYFORMULAs placed after it.
         var queryFormula = sheet.Headers[0].Formula;
         Assert.NotNull(queryFormula);
         Assert.StartsWith("=QUERY({", queryFormula);
-        Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Trips', sum(Col3) 'Pay', sum(Col4) 'Tips', sum(Col5) 'Bonus', sum(Col6) 'Total', sum(Col7) 'Dist'", queryFormula);
+        Assert.Contains("select Col1, Col2, count(Col1), sum(Col3), sum(Col4), sum(Col5), sum(Col6), sum(Col7), min(Col8), max(Col9)", queryFormula);
+        Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Trips', sum(Col3) 'Pay', sum(Col4) 'Tips', sum(Col5) 'Bonus', sum(Col6) 'Total', sum(Col7) 'Dist', min(Col8) 'First Trip', max(Col9) 'Last Trip'", queryFormula);
 
-        // Assert - Trips is the renamed Count column produced by the query, not a formula of its own
+        // Assert - Trips, First Trip and Last Trip are all produced by the query, not formulas of their own
         Assert.True(tripsHeader.HideHeaderName);
+        Assert.True(firstTripHeader.HideHeaderName);
+        Assert.True(lastTripHeader.HideHeaderName);
+        Assert.True(string.IsNullOrEmpty(firstTripHeader.Formula));
+        Assert.True(string.IsNullOrEmpty(lastTripHeader.Formula));
 
         // Assert - Amt/Trip and Amt/Dist are separate ARRAYFORMULAs referencing this sheet's own columns
+        // (Total/Trips/Distance stay at columns G/C/H regardless of First Trip/Last Trip being added)
         Assert.NotNull(amountPerTripHeader.Formula);
         Assert.Contains("G1:G/IF(C1:C=0,1,C1:C)", amountPerTripHeader.Formula);
         Assert.NotNull(amountPerDistanceHeader.Formula);
@@ -362,16 +373,25 @@ public class MapperGetSheetTests
     {
         // Act
         var sheet = LocationMapper.GetSheet();
+        var firstTripHeader = sheet.Headers.First(h => h.Name.ToString() == "First Trip");
+        var lastTripHeader = sheet.Headers.First(h => h.Name.ToString() == "Last Trip");
         var amountPerTripHeader = sheet.Headers.First(h => h.Name.ToString() == "Amt/Trip");
         var amountPerDistanceHeader = sheet.Headers.First(h => h.Name.ToString() == "Amt/Dist");
 
-        // Assert - QUERY groups by Place/Address, counting Col2 (Address), and sums Pay/Tips/Bonus/Total/Dist
+        // Assert - QUERY groups by Place/Address, counting Col2 (Address), and sums Pay/Tips/Bonus/Total/Dist,
+        // plus min/max First Trip/Last Trip from Date
         var queryFormula = sheet.Headers[0].Formula;
         Assert.NotNull(queryFormula);
         Assert.Contains("count(Col2)", queryFormula);
-        Assert.Contains("label Col1 'Place', Col2 'Address', count(Col2) 'Trips', sum(Col3) 'Pay', sum(Col4) 'Tips', sum(Col5) 'Bonus', sum(Col6) 'Total', sum(Col7) 'Dist'", queryFormula);
+        Assert.Contains("select Col1, Col2, count(Col2), sum(Col3), sum(Col4), sum(Col5), sum(Col6), sum(Col7), min(Col8), max(Col9)", queryFormula);
+        Assert.Contains("label Col1 'Place', Col2 'Address', count(Col2) 'Trips', sum(Col3) 'Pay', sum(Col4) 'Tips', sum(Col5) 'Bonus', sum(Col6) 'Total', sum(Col7) 'Dist', min(Col8) 'First Trip', max(Col9) 'Last Trip'", queryFormula);
 
-        // Regression: same HideHeaderName gap as DeliveryMapper - formulas must survive row-data conversion
+        // Assert - First Trip and Last Trip are produced by the query, not formulas of their own
+        Assert.True(firstTripHeader.HideHeaderName);
+        Assert.True(lastTripHeader.HideHeaderName);
+
+        // Regression: same HideHeaderName gap as DeliveryMapper - Amt/Trip/Amt/Dist formulas must
+        // survive row-data conversion
         Assert.False(amountPerTripHeader.HideHeaderName);
         Assert.False(amountPerDistanceHeader.HideHeaderName);
 

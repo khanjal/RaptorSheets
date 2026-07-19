@@ -2,6 +2,7 @@ using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace RaptorSheets.Gig.Entities;
 
@@ -31,6 +32,14 @@ public class LocationEntity : SheetRowEntityBase
 
     [Column(SheetsConfig.HeaderNames.Distance, FormatEnum.DISTANCE)]
     public decimal? Distance { get; set; }
+
+    [Column(SheetsConfig.HeaderNames.VisitFirst)]
+    [JsonPropertyName("firstTrip")]
+    public string FirstTrip { get; set; } = "";
+
+    [Column(SheetsConfig.HeaderNames.VisitLast)]
+    [JsonPropertyName("lastTrip")]
+    public string LastTrip { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING)]
     public decimal AmountPerTrip { get; set; }
