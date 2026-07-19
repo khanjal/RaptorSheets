@@ -637,5 +637,40 @@ public class GoogleFormulaBuilderTests
         Assert.StartsWith("=QUERY({Trips!A2:A,Trips!B2:B},\"select Col1, Col2, count(Col1)", result);
     }
 
+    [Fact]
+    public void BuildQueryGroupTwoColumns_WithAggregateColumns_ShouldSupportMixedFunctions()
+    {
+        // Arrange
+        var aggregateColumns = new (string Header, string Range, string AggregateFunction)[]
+        {
+            ("Pay", "Trips!C2:C", "sum"),
+            ("First Trip", "Trips!D2:D", "min"),
+            ("Last Trip", "Trips!D2:D", "max")
+        };
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count", aggregateColumns);
+
+        // Assert
+        Assert.StartsWith("=QUERY({Trips!A2:A,Trips!B2:B,Trips!C2:C,Trips!D2:D,Trips!D2:D},", result);
+        Assert.Contains("select Col1, Col2, count(Col1), sum(Col3), min(Col4), max(Col5)", result);
+        Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Count', sum(Col3) 'Pay', min(Col4) 'First Trip', max(Col5) 'Last Trip'", result);
+    }
+
+    [Fact]
+    public void BuildQueryGroupTwoColumns_SumOnlyOverload_ShouldDelegateToAggregateOverload()
+    {
+        // Arrange
+        var sumColumns = new[] { ("Pay", "Trips!C2:C") };
+
+        // Act
+        var viaSumOverload = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count", sumColumns);
+        var viaAggregateOverload = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count",
+            new (string, string, string)[] { ("Pay", "Trips!C2:C", "sum") });
+
+        // Assert - both overloads produce an identical formula
+        Assert.Equal(viaAggregateOverload, viaSumOverload);
+    }
+
     #endregion
 }

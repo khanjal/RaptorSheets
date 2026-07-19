@@ -142,19 +142,29 @@ public static class GoogleFormulaBuilder
     /// </summary>
     public static string BuildQueryGroupTwoColumns(string header1, string header2, string range1, string range2, string countHeader, IEnumerable<(string Header, string Range)> sumColumns, bool countColumnIsSecond = false)
     {
-        var countExpr = countColumnIsSecond ? "count(Col2)" : "count(Col1)";
-        var sumColumnList = sumColumns.ToList();
+        return BuildQueryGroupTwoColumns(header1, header2, range1, range2, countHeader, sumColumns.Select(s => (s.Header, s.Range, AggregateFunction: "sum")), countColumnIsSecond);
+    }
 
-        var ranges = "{" + range1 + "," + range2 + string.Concat(sumColumnList.Select(s => "," + s.Range)) + "}";
+    /// <summary>
+    /// Builds a QUERY formula that groups two parallel ranges by the first two columns
+    /// and returns a header row, a count column, and one or more aggregated columns
+    /// (e.g. sum(Pay), min(Date), max(Date)) per group.
+    /// </summary>
+    public static string BuildQueryGroupTwoColumns(string header1, string header2, string range1, string range2, string countHeader, IEnumerable<(string Header, string Range, string AggregateFunction)> aggregateColumns, bool countColumnIsSecond = false)
+    {
+        var countExpr = countColumnIsSecond ? "count(Col2)" : "count(Col1)";
+        var aggregateColumnList = aggregateColumns.ToList();
+
+        var ranges = "{" + range1 + "," + range2 + string.Concat(aggregateColumnList.Select(a => "," + a.Range)) + "}";
 
         var selectColumns = new List<string> { "Col1", "Col2", countExpr };
         var labelClauses = new List<string> { "Col1 '" + header1 + "'", "Col2 '" + header2 + "'", countExpr + " '" + countHeader + "'" };
 
-        for (var i = 0; i < sumColumnList.Count; i++)
+        for (var i = 0; i < aggregateColumnList.Count; i++)
         {
-            var sumExpr = $"sum(Col{i + 3})";
-            selectColumns.Add(sumExpr);
-            labelClauses.Add(sumExpr + " '" + sumColumnList[i].Header + "'");
+            var aggregateExpr = $"{aggregateColumnList[i].AggregateFunction}(Col{i + 3})";
+            selectColumns.Add(aggregateExpr);
+            labelClauses.Add(aggregateExpr + " '" + aggregateColumnList[i].Header + "'");
         }
 
         var innerQuery = "\"select " + string.Join(", ", selectColumns) +

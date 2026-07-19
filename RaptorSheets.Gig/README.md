@@ -182,8 +182,8 @@ Business expense tracking:
 ### Summary Helpers
 These sheets provide aggregated summaries derived from the `Trips` data. They are generated using query formulas in the mappers and are typically protected/read-only.
 
-- **Deliveries**: Aggregates trips by `Name` and `Address` into `Name | Address | Trips | Pay | Tips | Bonus | Total | Dist | Amt/Trip | Amt/Dist`. Implemented by `DeliveryMapper` and exposed via `SheetsConfig.Deliveries`.
-- **Locations**: Aggregates trips by `Place` and `Address` into `Place | Address | Trips | Pay | Tips | Bonus | Total | Dist | Amt/Trip | Amt/Dist`. Implemented by `LocationMapper` and exposed via `SheetsConfig.Locations`.
+- **Deliveries**: Aggregates trips by `Name` and `Address` into `Name | Address | Trips | Pay | Tips | Bonus | Total | Dist | First Trip | Last Trip | Amt/Trip | Amt/Dist`. Implemented by `DeliveryMapper` and exposed via `SheetsConfig.Deliveries`.
+- **Locations**: Aggregates trips by `Place` and `Address` into `Place | Address | Trips | Pay | Tips | Bonus | Total | Dist | First Trip | Last Trip | Amt/Trip | Amt/Dist`. Implemented by `LocationMapper` and exposed via `SheetsConfig.Locations`.
 
 These summary sheets are created as part of the normal sheet creation flow (`CreateAllSheets`) when present in the `SheetsConfig.SheetUtilities.GetAllSheetNames()` ordering.
 
@@ -330,6 +330,8 @@ public class DeliveryEntity
     public decimal? Bonus { get; set; }
     public decimal? Total { get; set; }
     public decimal? Distance { get; set; }
+    public string FirstTrip { get; set; } = "";
+    public string LastTrip { get; set; } = "";
     public decimal AmountPerTrip { get; set; }
     public decimal AmountPerDistance { get; set; }
 }
@@ -347,6 +349,8 @@ public class LocationEntity
     public decimal? Bonus { get; set; }
     public decimal? Total { get; set; }
     public decimal? Distance { get; set; }
+    public string FirstTrip { get; set; } = "";
+    public string LastTrip { get; set; } = "";
     public decimal AmountPerTrip { get; set; }
     public decimal AmountPerDistance { get; set; }
 }
