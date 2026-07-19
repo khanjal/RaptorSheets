@@ -1,4 +1,6 @@
 using Google.Apis.Sheets.v4.Data;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
@@ -21,8 +23,10 @@ public static class SheetPropertyHelper
         }).ToList();
     }
 
-    public static PropertyEntity ProcessSheetData(string sheetName, Spreadsheet? sheetInfo)
+    public static PropertyEntity ProcessSheetData(string sheetName, Spreadsheet? sheetInfo, ILogger? logger = null)
     {
+        logger ??= NullLogger.Instance;
+
         var property = new PropertyEntity
         {
             Name = sheetName,
@@ -38,12 +42,12 @@ public static class SheetPropertyHelper
         var sheetData = sheetInfo?.Sheets?.FirstOrDefault(x => x.Properties.Title == sheetName);
         if (sheetData == null)
         {
-            Console.WriteLine($"Warning: Sheet '{sheetName}' not found in API response");
+            logger.LogWarning("Sheet '{SheetName}' not found in API response", sheetName);
             return property;
         }
 
         PopulateSheetBasicInfo(property, sheetData);
-        ParseSheetDataRanges(property, sheetData);
+        ParseSheetDataRanges(property, sheetData, logger);
 
         return property;
     }
@@ -56,11 +60,13 @@ public static class SheetPropertyHelper
         property.Attributes[PropertyEnum.MAX_ROW.GetDescription()] = maxRow.ToString();
     }
 
-    public static void ParseSheetDataRanges(PropertyEntity property, Sheet sheetData)
+    public static void ParseSheetDataRanges(PropertyEntity property, Sheet sheetData, ILogger? logger = null)
     {
+        logger ??= NullLogger.Instance;
+
         if (sheetData.Data == null || sheetData.Data.Count == 0)
         {
-            Console.WriteLine($"Warning: No data returned for sheet '{property.Name}' ranges");
+            logger.LogWarning("No data returned for sheet '{SheetName}' ranges", property.Name);
             return;
         }
 

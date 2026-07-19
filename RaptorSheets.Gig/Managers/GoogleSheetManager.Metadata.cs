@@ -106,7 +106,7 @@ public partial class GoogleSheetManager
                 if (!string.IsNullOrEmpty(property.Id) || existingSheets.Any(s => 
                     string.Equals(s, property.Name, StringComparison.OrdinalIgnoreCase)))
                 {
-                    var processedProperty = SheetPropertyHelper.ProcessSheetData(property.Name, sheetInfo);
+                    var processedProperty = SheetPropertyHelper.ProcessSheetData(property.Name, sheetInfo, _logger);
                     properties[i] = processedProperty;
                 }
             }
@@ -159,6 +159,32 @@ public partial class GoogleSheetManager
         { SheetsConfig.SheetNames.Weekly, WeeklyMapper.GetSheet },
         { SheetsConfig.SheetNames.Yearly, YearlyMapper.GetSheet }
     };
+
+    /// <summary>
+    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known RaptorSheets
+    /// sheet. Unlike <see cref="CheckSheetHeaders"/>, this only needs sheet tab metadata (no grid/cell
+    /// data), so it's safe to call with a cheap <c>GetSheetInfo()</c> (no ranges) result. Known-sheet
+    /// header validation (missing/renamed/reordered columns) is handled separately, per-sheet, by
+    /// <see cref="HeaderHelpers.CheckSheetHeaders(IList{object}, Models.Google.SheetModel)"/> using data
+    /// already fetched via batchGet - it does not need to be repeated here.
+    /// </summary>
+    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
+    {
+        var messages = new List<MessageEntity>();
+
+        if (sheetInfoResponse == null)
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
+            return messages;
+        }
+
+        var sheets = sheetInfoResponse.Sheets ?? new List<Sheet>();
+        var unknownSheets = sheets.Where(s => !s_headerFactories.ContainsKey(s.Properties.Title));
+
+        messages.AddRange(GetUnknownSheetWarnings(unknownSheets));
+
+        return messages;
+    }
 
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {

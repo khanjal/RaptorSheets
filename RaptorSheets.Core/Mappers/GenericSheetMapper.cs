@@ -21,8 +21,12 @@ public static class GenericSheetMapper<T> where T : class, new()
     private static readonly List<(PropertyInfo Property, ColumnAttribute Column)> _inputColumnProperties = 
         _columnProperties.Where(p => p.Column.IsInput).ToList();
 
-    private static readonly List<(PropertyInfo Property, ColumnAttribute Column)> _outputColumnProperties = 
+    private static readonly List<(PropertyInfo Property, ColumnAttribute Column)> _outputColumnProperties =
         _columnProperties.Where(p => p.Column.IsOutput).ToList();
+
+    // Cached once per T instead of looked up by name on every row.
+    private static readonly PropertyInfo? _rowIdProperty = typeof(T).GetProperty("RowId");
+    private static readonly PropertyInfo? _savedProperty = typeof(T).GetProperty("Saved");
 
     /// <summary>
     /// Gets all column properties (both input and output)
@@ -70,12 +74,11 @@ public static class GenericSheetMapper<T> where T : class, new()
             }
 
             var entity = new T();
-            
+
             // Set RowId if the entity has this property
-            var rowIdProperty = typeof(T).GetProperty("RowId");
-            if (rowIdProperty != null && rowIdProperty.CanWrite)
+            if (_rowIdProperty != null && _rowIdProperty.CanWrite)
             {
-                rowIdProperty.SetValue(entity, rowId);
+                _rowIdProperty.SetValue(entity, rowId);
             }
 
             // Map each property based on Column attribute
@@ -83,18 +86,17 @@ public static class GenericSheetMapper<T> where T : class, new()
             {
                 var headerName = columnAttr.GetEffectiveHeaderName();
                 var cellValue = GetValueFromSheet(headerName, row, headers, columnAttr.FieldType, property);
-                
+
                 if (cellValue != null && property.CanWrite)
                 {
                     property.SetValue(entity, cellValue);
                 }
             }
-            
+
             // Set Saved property if it exists
-            var savedProperty = typeof(T).GetProperty("Saved");
-            if (savedProperty != null && savedProperty.CanWrite && savedProperty.PropertyType == typeof(bool))
+            if (_savedProperty != null && _savedProperty.CanWrite && _savedProperty.PropertyType == typeof(bool))
             {
-                savedProperty.SetValue(entity, true);
+                _savedProperty.SetValue(entity, true);
             }
 
             entities.Add(entity);
@@ -267,8 +269,6 @@ public static class GenericSheetMapper<T> where T : class, new()
         FieldType fieldType,
         PropertyInfo property)
     {
-        Console.WriteLine($"Mapping header: {headerName}, FieldType: {fieldType}");
-        
         // Check if property is nullable
         bool isNullable = property.PropertyType.IsGenericType && 
                          property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>);
@@ -301,7 +301,6 @@ public static class GenericSheetMapper<T> where T : class, new()
             _ => HeaderHelpers.GetStringValue(headerName, values, headers)
         };
 
-        Console.WriteLine($"Raw value for header '{headerName}': {value}");
         return value;
     }
 

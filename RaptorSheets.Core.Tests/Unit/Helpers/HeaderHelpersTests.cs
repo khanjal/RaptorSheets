@@ -366,4 +366,71 @@ public class HeaderHelpersTests
         Assert.NotNull(result);
         Assert.Empty(result);
     }
+
+    // GetHeaderKey (used internally by every GetXValue) matches columns by name, not position,
+    // so a user swapping two columns in the sheet must still map to the correct values. This also
+    // exercises the O(1) reverse-index cache introduced to replace the old linear scan.
+    [Fact]
+    public void GetStringValue_WithSwappedColumnOrder_ShouldStillMatchByName()
+    {
+        // Arrange - "Name" and "Date" are swapped relative to a "natural" A, B order
+        var headers = new Dictionary<int, string> { { 0, "Date" }, { 1, "Name" } };
+        var values = new List<object> { "2023-10-01", "Alice" };
+
+        // Act
+        var name = HeaderHelpers.GetStringValue("Name", values, headers);
+        var date = HeaderHelpers.GetStringValue("Date", values, headers);
+
+        // Assert
+        Assert.Equal("Alice", name);
+        Assert.Equal("2023-10-01", date);
+    }
+
+    [Fact]
+    public void GetIntValue_WithReorderedColumns_ShouldStillMatchByName()
+    {
+        // Arrange - deliberately out of "natural" order
+        var headers = new Dictionary<int, string> { { 0, "Name" }, { 1, "Amount" }, { 2, "Id" } };
+        var values = new List<object> { "Bob", "42", "7" };
+
+        // Act & Assert
+        Assert.Equal(7, HeaderHelpers.GetIntValue("Id", values, headers));
+        Assert.Equal(42, HeaderHelpers.GetIntValue("Amount", values, headers));
+        Assert.Equal("Bob", HeaderHelpers.GetStringValue("Name", values, headers));
+    }
+
+    [Fact]
+    public void GetStringValue_WithDistinctHeaderInstancesSameNames_ShouldEachMatchOwnValues()
+    {
+        // Arrange - two distinct Dictionary instances (as happens once per sheet in real mapping),
+        // same header names but different column order, to confirm the per-instance reverse-index
+        // cache doesn't leak/collide between them.
+        var headersA = new Dictionary<int, string> { { 0, "Name" }, { 1, "Id" } };
+        var valuesA = new List<object> { "Alice", "1" };
+
+        var headersB = new Dictionary<int, string> { { 0, "Id" }, { 1, "Name" } };
+        var valuesB = new List<object> { "2", "Bob" };
+
+        // Act
+        var nameA = HeaderHelpers.GetStringValue("Name", valuesA, headersA);
+        var nameB = HeaderHelpers.GetStringValue("Name", valuesB, headersB);
+
+        // Assert
+        Assert.Equal("Alice", nameA);
+        Assert.Equal("Bob", nameB);
+    }
+
+    [Fact]
+    public void GetStringValue_WithUnknownColumnName_ShouldReturnEmptyNotThrow()
+    {
+        // Arrange
+        var headers = new Dictionary<int, string> { { 0, "Known" } };
+        var values = new List<object> { "value" };
+
+        // Act
+        var result = HeaderHelpers.GetStringValue("DoesNotExist", values, headers);
+
+        // Assert
+        Assert.Equal("", result);
+    }
 }

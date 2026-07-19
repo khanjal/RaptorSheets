@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using RaptorSheets.Core.Models.Google;
 
 namespace RaptorSheets.Core.Factories;
@@ -13,13 +15,16 @@ public static class SheetModelFactory
     /// </summary>
     /// <param name="sheetCreator">Function that creates the sheet model</param>
     /// <param name="sheetName">Name of the sheet being created for error reporting</param>
+    /// <param name="logger">Optional logger; defaults to a no-op logger if not provided</param>
     /// <returns>Sheet model or null if creation fails</returns>
-    public static SheetModel? CreateSheet(Func<SheetModel> sheetCreator, string sheetName)
+    public static SheetModel? CreateSheet(Func<SheetModel> sheetCreator, string sheetName, ILogger? logger = null)
     {
+        logger ??= NullLogger.Instance;
+
         try
         {
             var sheet = sheetCreator();
-            
+
             // Basic validation
             if (string.IsNullOrWhiteSpace(sheet.Name))
             {
@@ -35,8 +40,7 @@ public static class SheetModelFactory
         }
         catch (Exception ex)
         {
-            // Log the error - in a real implementation you'd use proper logging
-            Console.WriteLine($"Error creating sheet {sheetName}: {ex.Message}");
+            logger.LogError(ex, "Error creating sheet {SheetName}", sheetName);
             return null;
         }
     }
@@ -44,13 +48,13 @@ public static class SheetModelFactory
     /// <summary>
     /// Create multiple sheet models with batch validation
     /// </summary>
-    public static Dictionary<string, SheetModel> CreateSheets(Dictionary<string, Func<SheetModel>> sheetCreators)
+    public static Dictionary<string, SheetModel> CreateSheets(Dictionary<string, Func<SheetModel>> sheetCreators, ILogger? logger = null)
     {
         var sheets = new Dictionary<string, SheetModel>();
 
         foreach (var (sheetName, sheetCreator) in sheetCreators)
         {
-            var sheet = CreateSheet(sheetCreator, sheetName);
+            var sheet = CreateSheet(sheetCreator, sheetName, logger);
             if (sheet != null)
             {
                 sheets[sheetName] = sheet;

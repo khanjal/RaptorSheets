@@ -1,4 +1,5 @@
 using Google.Apis.Sheets.v4.Data;
+using Microsoft.Extensions.Logging;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
@@ -155,7 +156,7 @@ public partial class GoogleSheetManager
         catch (Exception ex)
         {
             // Non-fatal - proceed without ordering if we couldn't compute it
-            Console.WriteLine($"Warning: unable to compute insertion indices: {ex.Message}");
+            _logger.LogWarning(ex, "Unable to compute insertion indices");
         }
 
         var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
@@ -241,7 +242,7 @@ public partial class GoogleSheetManager
                 // If we couldn't fetch spreadsheet metadata, skip restoration to avoid creating all sheets
                 if (spreadsheetInfo == null)
                 {
-                    Console.WriteLine("Warning: unable to fetch spreadsheet metadata; skipping missing-sheet restoration");
+                    _logger.LogWarning("Unable to fetch spreadsheet metadata; skipping missing-sheet restoration");
                 }
                 else
                 {
@@ -278,7 +279,7 @@ public partial class GoogleSheetManager
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error while restoring missing sheets: {ex.Message}");
+                _logger.LogError(ex, "Error while restoring missing sheets");
             }
         }
 
@@ -291,16 +292,20 @@ public partial class GoogleSheetManager
         else
         {
             messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
-            
-            var ranges = sheets.Select(sheet => $"{sheet}!{GoogleConfig.HeaderRange}").ToList();
 
-            if(spreadsheetInfo == null) {
-                spreadsheetInfo = await _googleSheetService.GetSheetInfo(ranges);
+            // Cheap metadata-only call (no grid data / no ranges) - used only to detect unknown/extra
+            // sheet tabs. Known-sheet header validation (including reordered/renamed columns) is
+            // already done below by GigSheetHelpers.MapData using the header row already present in
+            // the batchGet response, so a second, expensive IncludeGridData=true round trip across
+            // all sheet ranges isn't needed here.
+            if (spreadsheetInfo == null)
+            {
+                spreadsheetInfo = await _googleSheetService.GetSheetInfo();
             }
 
             if (spreadsheetInfo != null)
             {
-                messages.AddRange(CheckSheetHeaders(spreadsheetInfo));
+                messages.AddRange(CheckUnknownSheets(spreadsheetInfo));
             }
 
             data = GigSheetHelpers.MapData(response) ?? new SheetEntity();
