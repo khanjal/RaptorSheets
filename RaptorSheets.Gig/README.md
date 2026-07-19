@@ -182,8 +182,8 @@ Business expense tracking:
 ### Summary Helpers
 These sheets provide aggregated summaries derived from the `Trips` data. They are generated using query formulas in the mappers and are typically protected/read-only.
 
-- **TripSummary**: Aggregates trips by `Name` and `Address` into `Name | Address | Count`. Implemented by `TripSummaryMapper` and exposed via `SheetsConfig.TripSummary`.
-- **PlaceSummary**: Aggregates trips by `Place` and `Address` into `Place | Address | Count`. Implemented by `PlaceSummaryMapper` and exposed via `SheetsConfig.PlaceSummary`.
+- **Deliveries**: Aggregates trips by `Name` and `Address` into `Name | Address | Trips | Pay | Tips | Bonus | Total | Dist | Amt/Trip | Amt/Dist`. Implemented by `DeliveryMapper` and exposed via `SheetsConfig.Deliveries`.
+- **Locations**: Aggregates trips by `Place` and `Address` into `Place | Address | Trips | Pay | Tips | Bonus | Total | Dist | Amt/Trip | Amt/Dist`. Implemented by `LocationMapper` and exposed via `SheetsConfig.Locations`.
 
 These summary sheets are created as part of the normal sheet creation flow (`CreateAllSheets`) when present in the `SheetsConfig.SheetUtilities.GetAllSheetNames()` ordering.
 
@@ -318,23 +318,37 @@ public class ExpenseEntity
 }
 ```
 
-### TripSummary Entity
+### Delivery Entity
 ```csharp
-public class TripSummaryEntity
+public class DeliveryEntity
 {
     public string Name { get; set; } = "";
     public string Address { get; set; } = "";
-    public int Count { get; set; }
+    public int Trips { get; set; }
+    public decimal? Pay { get; set; }
+    public decimal? Tips { get; set; }
+    public decimal? Bonus { get; set; }
+    public decimal? Total { get; set; }
+    public decimal? Distance { get; set; }
+    public decimal AmountPerTrip { get; set; }
+    public decimal AmountPerDistance { get; set; }
 }
 ```
 
-### PlaceSummary Entity
+### Location Entity
 ```csharp
-public class PlaceSummaryEntity
+public class LocationEntity
 {
     public string Place { get; set; } = "";
     public string Address { get; set; } = "";
-    public int Count { get; set; }
+    public int Trips { get; set; }
+    public decimal? Pay { get; set; }
+    public decimal? Tips { get; set; }
+    public decimal? Bonus { get; set; }
+    public decimal? Total { get; set; }
+    public decimal? Distance { get; set; }
+    public decimal AmountPerTrip { get; set; }
+    public decimal AmountPerDistance { get; set; }
 }
 ```
 

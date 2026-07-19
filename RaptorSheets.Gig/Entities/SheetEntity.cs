@@ -27,11 +27,11 @@ public class SheetEntity
     [JsonPropertyName("addresses")]
     public List<AddressEntity> Addresses { get; set; } = [];
 
-    [JsonPropertyName("tripSummary")]
-    public List<TripSummaryEntity> TripSummary { get; set; } = [];
+    [JsonPropertyName("deliveries")]
+    public List<DeliveryEntity> Deliveries { get; set; } = [];
 
-    [JsonPropertyName("placeSummary")]
-    public List<PlaceSummaryEntity> PlaceSummary { get; set; } = [];
+    [JsonPropertyName("locations")]
+    public List<LocationEntity> Locations { get; set; } = [];
 
     [JsonPropertyName("names")]
     public List<NameEntity> Names { get; set; } = [];

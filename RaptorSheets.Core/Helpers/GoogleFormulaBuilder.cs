@@ -136,6 +136,35 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
+    /// Builds a QUERY formula that groups two parallel ranges by the first two columns
+    /// and returns a header row, a count column, and one or more summed columns
+    /// (e.g. Pay, Tips, Bonus, Total) aggregated per group.
+    /// </summary>
+    public static string BuildQueryGroupTwoColumns(string header1, string header2, string range1, string range2, string countHeader, IEnumerable<(string Header, string Range)> sumColumns, bool countColumnIsSecond = false)
+    {
+        var countExpr = countColumnIsSecond ? "count(Col2)" : "count(Col1)";
+        var sumColumnList = sumColumns.ToList();
+
+        var ranges = "{" + range1 + "," + range2 + string.Concat(sumColumnList.Select(s => "," + s.Range)) + "}";
+
+        var selectColumns = new List<string> { "Col1", "Col2", countExpr };
+        var labelClauses = new List<string> { "Col1 '" + header1 + "'", "Col2 '" + header2 + "'", countExpr + " '" + countHeader + "'" };
+
+        for (var i = 0; i < sumColumnList.Count; i++)
+        {
+            var sumExpr = $"sum(Col{i + 3})";
+            selectColumns.Add(sumExpr);
+            labelClauses.Add(sumExpr + " '" + sumColumnList[i].Header + "'");
+        }
+
+        var innerQuery = "\"select " + string.Join(", ", selectColumns) +
+            " where Col1 is not null and Col2 is not null group by Col1, Col2 order by Col1 asc, " + countExpr +
+            " desc label " + string.Join(", ", labelClauses) + "\",0";
+
+        return "=QUERY(" + ranges + "," + innerQuery + ")";
+    }
+
+    /// <summary>
     /// Builds a complete ARRAYFORMULA for unique values
     /// </summary>
     public static string BuildArrayFormulaUnique(string keyRange, string header, string sourceRange)

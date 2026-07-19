@@ -31,8 +31,8 @@ public class MapperGetSheetTests
         new object[] { WeekdayMapper.GetSheet(), SheetsConfig.WeekdaySheet },
         new object[] { WeeklyMapper.GetSheet(), SheetsConfig.WeeklySheet },
         new object[] { YearlyMapper.GetSheet(), SheetsConfig.YearlySheet },
-        new object[] { TripSummaryMapper.GetSheet(), SheetsConfig.TripSummary },
-        new object[] { PlaceSummaryMapper.GetSheet(), SheetsConfig.PlaceSummary },
+        new object[] { DeliveryMapper.GetSheet(), SheetsConfig.Deliveries },
+        new object[] { LocationMapper.GetSheet(), SheetsConfig.Locations },
     };
 
     [Theory]

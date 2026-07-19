@@ -46,8 +46,8 @@ public static class GigSheetHelpers
         { SheetsConfig.SheetNames.Monthly, MonthlyMapper.GetSheet },
         { SheetsConfig.SheetNames.Names, NameMapper.GetSheet },
         { SheetsConfig.SheetNames.Places, PlaceMapper.GetSheet },
-        { SheetsConfig.SheetNames.TripSummary, TripSummaryMapper.GetSheet },
-        { SheetsConfig.SheetNames.PlaceSummary, PlaceSummaryMapper.GetSheet },
+        { SheetsConfig.SheetNames.Deliveries, DeliveryMapper.GetSheet },
+        { SheetsConfig.SheetNames.Locations, LocationMapper.GetSheet },
         { SheetsConfig.SheetNames.Regions, RegionMapper.GetSheet },
         { SheetsConfig.SheetNames.Setup, () => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet) },
         { SheetsConfig.SheetNames.Services, ServiceMapper.GetSheet },
@@ -98,16 +98,16 @@ public static class GigSheetHelpers
                 se.Places = GenericSheetMapper<PlaceEntity>.MapFromRangeData(values);
             }
         },
-        { SheetsConfig.SheetNames.TripSummary, (se, values) => {
+        { SheetsConfig.SheetNames.Deliveries, (se, values) => {
                 var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TripSummaryMapper.GetSheet()));
-                se.TripSummary = GenericSheetMapper<TripSummaryEntity>.MapFromRangeData(values);
+                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, DeliveryMapper.GetSheet()));
+                se.Deliveries = GenericSheetMapper<DeliveryEntity>.MapFromRangeData(values);
             }
         },
-        { SheetsConfig.SheetNames.PlaceSummary, (se, values) => {
+        { SheetsConfig.SheetNames.Locations, (se, values) => {
                 var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, PlaceSummaryMapper.GetSheet()));
-                se.PlaceSummary = GenericSheetMapper<PlaceSummaryEntity>.MapFromRangeData(values);
+                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, LocationMapper.GetSheet()));
+                se.Locations = GenericSheetMapper<LocationEntity>.MapFromRangeData(values);
             }
         },
         { SheetsConfig.SheetNames.Regions, (se, values) => {

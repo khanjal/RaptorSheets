@@ -711,10 +711,10 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             $"{readData.Trips.Count} trips, {readData.Expenses.Count} expenses");
 
         // --- New: validate behavior when a summary sheet is missing ---
-        // Delete a lightweight summary sheet (TripSummary) and re-run a read to verify
+        // Delete a lightweight summary sheet (Deliveries) and re-run a read to verify
         // missing-sheet / empty-header diagnostics are produced by the manager.
-        System.Diagnostics.Debug.WriteLine("➡ Deleting TripSummary to validate missing-sheet detection...");
-        var deleteResult = await GoogleSheetManager!.DeleteSheets(new List<string> { SheetsConfig.SheetNames.TripSummary });
+        System.Diagnostics.Debug.WriteLine("➡ Deleting Deliveries to validate missing-sheet detection...");
+        var deleteResult = await GoogleSheetManager!.DeleteSheets(new List<string> { SheetsConfig.SheetNames.Deliveries });
         var deleteErrors = deleteResult.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
         if (deleteErrors.Count > 0)
         {
@@ -727,12 +727,12 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // Re-read metadata and sheet data (include all sheets to detect missing summaries)
         var readAfterDelete = await GetAllSheetData();
 
-        // We expect either a message indicating missing header/empty sheet for TripSummary
+        // We expect either a message indicating missing header/empty sheet for Deliveries
         // or an informational creation notice that asks the caller to retry shortly.
         var allMessages = readAfterDelete.Messages ?? new List<MessageEntity>();
 
         var headerMessages = allMessages
-            .Where(m => m.Message != null && m.Message.Contains("TripSummary", StringComparison.OrdinalIgnoreCase))
+            .Where(m => m.Message != null && m.Message.Contains("Deliveries", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         // Detect the informational creation notice produced when the manager created missing sheets
@@ -742,18 +742,18 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
         var hasCreationNotice = creationNotice != null;
 
-        // If a creation notice exists, ensure it references the TripSummary sheet
+        // If a creation notice exists, ensure it references the Deliveries sheet
         if (hasCreationNotice)
         {
-            Assert.True(creationNotice.Message.IndexOf("TripSummary", StringComparison.OrdinalIgnoreCase) >= 0,
-                $"Creation notice should include TripSummary. Notice: {creationNotice.Message}");
+            Assert.True(creationNotice.Message.IndexOf("Deliveries", StringComparison.OrdinalIgnoreCase) >= 0,
+                $"Creation notice should include Deliveries. Notice: {creationNotice.Message}");
         }
 
         // Require either explicit header/missing-sheet messages or the creation notice
         Assert.True(headerMessages.Count > 0 || hasCreationNotice,
-            "Expected header/missing-sheet messages or creation notice for TripSummary after deletion");
+            "Expected header/missing-sheet messages or creation notice for Deliveries after deletion");
 
-        System.Diagnostics.Debug.WriteLine("   ✓ Missing-sheet detection validated (TripSummary)");
+        System.Diagnostics.Debug.WriteLine("   ✓ Missing-sheet detection validated (Deliveries)");
         }
 
     /// <summary>
