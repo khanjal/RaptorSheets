@@ -1,4 +1,6 @@
 using Google.Apis.Sheets.v4.Data;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Services;
@@ -49,19 +51,21 @@ public interface IGoogleSheetManager
 public partial class GoogleSheetManager : IGoogleSheetManager
 {
     private readonly RaptorSheets.Core.Services.IGoogleSheetService _googleSheetService;
+    private readonly ILogger _logger;
 
-    public GoogleSheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService)
+    public GoogleSheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
     {
         _googleSheetService = googleSheetService ?? throw new ArgumentNullException(nameof(googleSheetService));
+        _logger = logger ?? NullLogger.Instance;
     }
 
-    public GoogleSheetManager(string accessToken, string spreadsheetId)
-        : this(new RaptorSheets.Core.Services.GoogleSheetService(accessToken, spreadsheetId))
+    public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
+        : this(new RaptorSheets.Core.Services.GoogleSheetService(accessToken, spreadsheetId, logger), logger)
     {
     }
 
-    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId)
-        : this(new RaptorSheets.Core.Services.GoogleSheetService(parameters, spreadsheetId))
+    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
+        : this(new RaptorSheets.Core.Services.GoogleSheetService(parameters, spreadsheetId, logger), logger)
     {
     }
 }

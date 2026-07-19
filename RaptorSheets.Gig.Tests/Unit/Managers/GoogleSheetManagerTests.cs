@@ -375,6 +375,81 @@ public class GoogleSheetManagerTests
 
     #endregion
 
+    #region CheckUnknownSheets Tests
+
+    // CheckUnknownSheets is the lighter-weight replacement used on GetSheets' success path -
+    // it only needs sheet tab metadata (Properties.Title), not grid/cell data, so it works
+    // correctly even from a Spreadsheet fetched without IncludeGridData.
+
+    [Fact]
+    public void CheckUnknownSheets_WithNullSpreadsheet_ShouldReturnErrorMessage()
+    {
+        // Act
+#pragma warning disable CS8625
+        var result = GoogleSheetManager.CheckUnknownSheets(null);
+#pragma warning restore CS8625
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Contains("Unable to retrieve sheet(s)", result[0].Message);
+    }
+
+    [Fact]
+    public void CheckUnknownSheets_WithOnlyKnownSheets_ShouldReturnNoWarnings()
+    {
+        // Arrange - no grid Data at all, mirroring a cheap GetSheetInfo() (no ranges) response
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet>
+            {
+                new() { Properties = new SheetProperties { Title = "Shifts" } },
+                new() { Properties = new SheetProperties { Title = "Trips" } }
+            }
+        };
+
+        // Act
+        var result = GoogleSheetManager.CheckUnknownSheets(spreadsheet);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void CheckUnknownSheets_WithUnknownTab_ShouldReturnWarning()
+    {
+        // Arrange
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet>
+            {
+                new() { Properties = new SheetProperties { Title = "Shifts" } },
+                new() { Properties = new SheetProperties { Title = "SomeRandomTab" } }
+            }
+        };
+
+        // Act
+        var result = GoogleSheetManager.CheckUnknownSheets(spreadsheet);
+
+        // Assert
+        Assert.Contains(result, m => m.Message.Contains("SomeRandomTab") && m.Message.Contains("does not match any known sheet name"));
+    }
+
+    [Fact]
+    public void CheckUnknownSheets_WithNoSheets_ShouldReturnEmpty()
+    {
+        // Arrange
+        var spreadsheet = new Spreadsheet { Sheets = new List<Sheet>() };
+
+        // Act
+        var result = GoogleSheetManager.CheckUnknownSheets(spreadsheet);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    #endregion
+
     #region Static Helper Method Tests
 
     [Theory]

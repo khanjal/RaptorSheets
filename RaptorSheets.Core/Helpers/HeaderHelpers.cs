@@ -3,6 +3,7 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Models.Google;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace RaptorSheets.Core.Helpers;
@@ -12,6 +13,11 @@ public static class HeaderHelpers
     // Regex patterns with timeout to prevent potential performance issues
     private static readonly Regex NonDigitRegex = new(@"[^\d]", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
     private static readonly Regex NonDecimalRegex = new(@"[^\d.-]", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+
+    // Reverse (name -> index) lookup index, built once per distinct `headers` dictionary instance
+    // (i.e. once per sheet, since ParserHeader is only called once per sheet and the same instance
+    // is reused for every row) instead of linearly scanned on every single cell read.
+    private static readonly ConditionalWeakTable<Dictionary<int, string>, Dictionary<string, int>> HeaderIndexCache = new();
 
     public static IList<object> GetHeadersFromCellData(IList<CellData>? cellData)
     {
@@ -100,19 +106,14 @@ public static class HeaderHelpers
 
         if (columnId >= values.Count || columnId < 0 || values[columnId] == null)
         {
-            Console.WriteLine($"Column '{columnName}' is out of range or null.");
             return null;
         }
 
         var value = values[columnId]?.ToString()?.Trim();
 
-        // Log the raw value for debugging purposes
-        Console.WriteLine($"Raw value for column '{columnName}': {value}");
-
         // If the string contains a decimal point, it's not a valid integer
         if (value?.Contains('.') == true)
         {
-            Console.WriteLine($"Column '{columnName}' contains decimal point - not a valid integer.");
             return null;
         }
 
@@ -120,22 +121,16 @@ public static class HeaderHelpers
         var isNegative = value?.StartsWith("-") == true;
         value = NonDigitRegex.Replace(value ?? string.Empty, ""); // Remove all non-digit characters with timeout
 
-        // Log the filtered value for debugging purposes
-        Console.WriteLine($"Filtered value for column '{columnName}': {value}");
-
         if (value == "-" || string.IsNullOrEmpty(value))
         {
-            Console.WriteLine($"Column '{columnName}' has an empty or invalid value after filtering.");
             return null;  // Make empty values into nulls.
         }
 
         if (int.TryParse(value, out int result))
         {
-            Console.WriteLine($"Parsed value for column '{columnName}': {result}");
             return isNegative ? -result : result;
         }
 
-        Console.WriteLine($"Failed to parse value for column '{columnName}': {value}");
         return null;
     }
     
@@ -151,47 +146,54 @@ public static class HeaderHelpers
 
         if (columnId >= values.Count || columnId < 0 || values[columnId] == null)
         {
-            Console.WriteLine($"Column '{columnName}' is out of range or null.");
             return null;
         }
 
         var value = values[columnId]?.ToString()?.Trim();
 
-        // Log the raw value for debugging purposes
-        Console.WriteLine($"Raw value for column '{columnName}': {value}");
-
         value = NonDecimalRegex.Replace(value ?? string.Empty, ""); // Remove all special currency symbols except for .'s and -'s with timeout
-
-        // Log the filtered value for debugging purposes
-        Console.WriteLine($"Filtered value for column '{columnName}': {value}");
 
         if (value == "-" || value == "")
         {
-            Console.WriteLine($"Column '{columnName}' has an empty or invalid value after filtering.");
             return null;  // Make account -'s into nulls.
         }
 
         if (decimal.TryParse(value, out decimal result))
         {
-            Console.WriteLine($"Parsed value for column '{columnName}': {result}");
             return result;
         }
 
-        Console.WriteLine($"Failed to parse value for column '{columnName}': {value}");
         return null;
     }
 
     private static int GetHeaderKey(Dictionary<int, string> header, string value)
     {
-        try
-        {
-            return header.First(x => x.Value.Trim() == value.Trim()).Key;
-        }
-        catch (Exception)
+        if (header == null || value == null)
         {
             return -1;
         }
 
+        var index = HeaderIndexCache.GetValue(header, BuildHeaderIndex);
+        return index.TryGetValue(value.Trim(), out var key) ? key : -1;
+    }
+
+    // Builds a name -> column index map from the parsed header row. Header matching stays
+    // name-based (not positional), so reordered or swapped columns are still handled correctly -
+    // this only changes lookup from an O(n) scan to an O(1) dictionary lookup.
+    private static Dictionary<string, int> BuildHeaderIndex(Dictionary<int, string> header)
+    {
+        var index = new Dictionary<string, int>();
+
+        foreach (var (columnIndex, name) in header)
+        {
+            var trimmedName = name?.Trim() ?? "";
+            if (!string.IsNullOrEmpty(trimmedName) && !index.ContainsKey(trimmedName))
+            {
+                index[trimmedName] = columnIndex;
+            }
+        }
+
+        return index;
     }
     
     public static List<MessageEntity> CheckSheetHeaders(IList<object> values, SheetModel sheetModel)

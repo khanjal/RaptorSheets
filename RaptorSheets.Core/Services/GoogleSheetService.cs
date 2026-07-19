@@ -1,4 +1,6 @@
 ﻿using Google.Apis.Sheets.v4.Data;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Wrappers;
@@ -24,15 +26,18 @@ public class GoogleSheetService : IGoogleSheetService
 {
     private readonly SheetServiceWrapper _sheetService;
     private readonly string _range = GoogleConfig.Range;
+    private readonly ILogger _logger;
 
-    public GoogleSheetService(string accessToken, string spreadsheetId)
+    public GoogleSheetService(string accessToken, string spreadsheetId, ILogger? logger = null)
     {
         _sheetService = new SheetServiceWrapper(accessToken, spreadsheetId);
+        _logger = logger ?? NullLogger.Instance;
     }
 
-    public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId)
+    public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
     {
         _sheetService = new SheetServiceWrapper(parameters, spreadsheetId);
+        _logger = logger ?? NullLogger.Instance;
     }
 
     public async Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range)
@@ -45,7 +50,7 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            _logger.LogError(ex, "Error appending data to range '{Range}'", range);
             return null;
         }
     }
@@ -60,7 +65,7 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            _logger.LogError(ex, "Error batch updating values");
             return null;
         }
     }
@@ -74,7 +79,7 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            _logger.LogError(ex, "Error batch updating spreadsheet");
             return null;
         }
     }
@@ -83,7 +88,7 @@ public class GoogleSheetService : IGoogleSheetService
     {
         return await GetBatchData(sheets, null);
     }
-    
+
     public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range)
     {
         if (sheets == null || sheets.Count < 1)
@@ -100,11 +105,11 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            _logger.LogError(ex, "Error batch getting data for sheets '{Sheets}'", string.Join(", ", sheets));
             return null;
         }
     }
-   
+
     public async Task<ValueRange?> GetSheetData(string sheet)
     {
         if (string.IsNullOrWhiteSpace(sheet)) return null;
@@ -118,7 +123,7 @@ public class GoogleSheetService : IGoogleSheetService
         catch (Exception ex)
         {
             // NotFound (invalid spreadsheetId/range) or BadRequest (invalid sheet name)
-            Console.WriteLine($"Error getting values for sheet '{sheet}': {ex.Message}");
+            _logger.LogError(ex, "Error getting values for sheet '{Sheet}'", sheet);
             return null;
         }
     }
@@ -137,7 +142,7 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            _logger.LogError(ex, "Error getting sheet info for ranges '{Ranges}'", ranges == null ? "(none)" : string.Join(", ", ranges));
             return null;
         }
     }
@@ -152,7 +157,7 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            _logger.LogError(ex, "Error updating data for range '{Range}'", range);
             return null;
         }
     }
