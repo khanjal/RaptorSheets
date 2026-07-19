@@ -1,5 +1,6 @@
 ﻿using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
@@ -318,6 +319,66 @@ public class MapperGetSheetTests
             Assert.Contains("INDEX(SPLIT(", yearHeader.Formula);
             Assert.Contains(",0,2)", yearHeader.Formula.Replace(" ","")); // Ignore spaces
         }
+    }
+
+    [Fact]
+    public void DeliveryMapper_GetSheet_ShouldGenerateGroupedSummaryFormulas()
+    {
+        // Act
+        var sheet = DeliveryMapper.GetSheet();
+        var tripsHeader = sheet.Headers.First(h => h.Name.ToString() == "Trips");
+        var amountPerTripHeader = sheet.Headers.First(h => h.Name.ToString() == "Amt/Trip");
+        var amountPerDistanceHeader = sheet.Headers.First(h => h.Name.ToString() == "Amt/Dist");
+
+        // Assert - QUERY formula groups by Name/Address and sums Pay/Tips/Bonus/Total/Dist
+        var queryFormula = sheet.Headers[0].Formula;
+        Assert.NotNull(queryFormula);
+        Assert.StartsWith("=QUERY({", queryFormula);
+        Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Trips', sum(Col3) 'Pay', sum(Col4) 'Tips', sum(Col5) 'Bonus', sum(Col6) 'Total', sum(Col7) 'Dist'", queryFormula);
+
+        // Assert - Trips is the renamed Count column produced by the query, not a formula of its own
+        Assert.True(tripsHeader.HideHeaderName);
+
+        // Assert - Amt/Trip and Amt/Dist are separate ARRAYFORMULAs referencing this sheet's own columns
+        Assert.NotNull(amountPerTripHeader.Formula);
+        Assert.Contains("G1:G/IF(C1:C=0,1,C1:C)", amountPerTripHeader.Formula);
+        Assert.NotNull(amountPerDistanceHeader.Formula);
+        Assert.Contains("G1:G/IF(H1:H=0,1,H1:H)", amountPerDistanceHeader.Formula);
+
+        // Regression: EnsureHeaderPlaceholders(1) hides header *names* for spilled columns, but
+        // Amt/Trip and Amt/Dist have their own formulas and must not be silently dropped when the
+        // sheet is converted to row data (see SheetHelpers.HeadersToRowData).
+        Assert.False(amountPerTripHeader.HideHeaderName);
+        Assert.False(amountPerDistanceHeader.HideHeaderName);
+
+        var rowData = SheetHelpers.HeadersToRowData(sheet);
+        var cells = rowData[0].Values;
+        Assert.NotNull(cells[sheet.Headers.IndexOf(amountPerTripHeader)].UserEnteredValue);
+        Assert.NotNull(cells[sheet.Headers.IndexOf(amountPerDistanceHeader)].UserEnteredValue);
+    }
+
+    [Fact]
+    public void LocationMapper_GetSheet_ShouldGenerateGroupedSummaryFormulas()
+    {
+        // Act
+        var sheet = LocationMapper.GetSheet();
+        var amountPerTripHeader = sheet.Headers.First(h => h.Name.ToString() == "Amt/Trip");
+        var amountPerDistanceHeader = sheet.Headers.First(h => h.Name.ToString() == "Amt/Dist");
+
+        // Assert - QUERY groups by Place/Address, counting Col2 (Address), and sums Pay/Tips/Bonus/Total/Dist
+        var queryFormula = sheet.Headers[0].Formula;
+        Assert.NotNull(queryFormula);
+        Assert.Contains("count(Col2)", queryFormula);
+        Assert.Contains("label Col1 'Place', Col2 'Address', count(Col2) 'Trips', sum(Col3) 'Pay', sum(Col4) 'Tips', sum(Col5) 'Bonus', sum(Col6) 'Total', sum(Col7) 'Dist'", queryFormula);
+
+        // Regression: same HideHeaderName gap as DeliveryMapper - formulas must survive row-data conversion
+        Assert.False(amountPerTripHeader.HideHeaderName);
+        Assert.False(amountPerDistanceHeader.HideHeaderName);
+
+        var rowData = SheetHelpers.HeadersToRowData(sheet);
+        var cells = rowData[0].Values;
+        Assert.NotNull(cells[sheet.Headers.IndexOf(amountPerTripHeader)].UserEnteredValue);
+        Assert.NotNull(cells[sheet.Headers.IndexOf(amountPerDistanceHeader)].UserEnteredValue);
     }
 
     //GetDataValidation

@@ -584,5 +584,58 @@ public class GoogleFormulaBuilderTests
         Assert.Contains("+-1,\"ddd\")", result);
     }
 
+    [Fact]
+    public void BuildQueryGroupTwoColumns_ShouldGenerateValidQuery()
+    {
+        // Act
+        var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count");
+
+        // Assert
+        Assert.StartsWith("=QUERY({Trips!A2:A,Trips!B2:B},\"select Col1, Col2, count(Col1)", result);
+        Assert.Contains("group by Col1, Col2 order by Col1 asc, count(Col1) desc", result);
+        Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Count'", result);
+    }
+
+    [Fact]
+    public void BuildQueryGroupTwoColumns_WithCountColumnIsSecond_ShouldCountColTwo()
+    {
+        // Act
+        var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Place", "Address", "Trips!A2:A", "Trips!B2:B", "Count", countColumnIsSecond: true);
+
+        // Assert
+        Assert.Contains("count(Col2)", result);
+        Assert.DoesNotContain("count(Col1)", result);
+    }
+
+    [Fact]
+    public void BuildQueryGroupTwoColumns_WithSumColumns_ShouldAppendSumSelectAndLabels()
+    {
+        // Arrange
+        var sumColumns = new[]
+        {
+            ("Pay", "Trips!C2:C"),
+            ("Tips", "Trips!D2:D")
+        };
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count", sumColumns);
+
+        // Assert
+        Assert.StartsWith("=QUERY({Trips!A2:A,Trips!B2:B,Trips!C2:C,Trips!D2:D},", result);
+        Assert.Contains("select Col1, Col2, count(Col1), sum(Col3), sum(Col4)", result);
+        Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Count', sum(Col3) 'Pay', sum(Col4) 'Tips'", result);
+    }
+
+    [Fact]
+    public void BuildQueryGroupTwoColumns_WithNoSumColumns_ShouldOmitSumClauses()
+    {
+        // Act
+        var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count", Array.Empty<(string, string)>());
+
+        // Assert
+        Assert.DoesNotContain("sum(", result);
+        Assert.StartsWith("=QUERY({Trips!A2:A,Trips!B2:B},\"select Col1, Col2, count(Col1)", result);
+    }
+
     #endregion
 }
