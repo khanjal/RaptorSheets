@@ -1,8 +1,9 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
-using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
+using RaptorSheets.Core.Registries;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
@@ -12,12 +13,17 @@ namespace RaptorSheets.Gig.Helpers;
 
 /// <summary>
 /// Helper methods for Google Sheets operations in the Gig domain.
-/// 
+///
 /// HYBRID APPROACH:
 /// Uses both constants and enums for optimal performance and maintainability:
 /// - Switch statements use normalized strings for performance
 /// - Enums provide type safety for API operations
 /// - Constants ensure consistent string values throughout
+///
+/// Per-sheet dispatch (headers, row mapping, missing-sheet detection) is delegated to a shared
+/// RaptorSheets.Core.Registries.SheetRegistry&lt;SheetEntity&gt; instead of hand-rolled dictionaries/loops,
+/// so the same orchestration is reused by other domain packages (see RaptorSheets.Stock) without
+/// requiring a generic Cell/Row entity model.
 /// </summary>
 public static class GigSheetHelpers
 {
@@ -37,157 +43,83 @@ public static class GigSheetHelpers
         return SheetsConfig.SheetUtilities.GetAllSheetNames();
     }
 
-    // Sheet name -> SheetModel factory (case-insensitive)
-    private static readonly Dictionary<string, Func<SheetModel>> s_sheetFactories = new(StringComparer.OrdinalIgnoreCase)
-    {
-        { SheetsConfig.SheetNames.Addresses, AddressMapper.GetSheet },
-        { SheetsConfig.SheetNames.Daily, DailyMapper.GetSheet },
-        { SheetsConfig.SheetNames.Expenses, () => GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet) },
-        { SheetsConfig.SheetNames.Monthly, MonthlyMapper.GetSheet },
-        { SheetsConfig.SheetNames.Names, NameMapper.GetSheet },
-        { SheetsConfig.SheetNames.Places, PlaceMapper.GetSheet },
-        { SheetsConfig.SheetNames.Deliveries, DeliveryMapper.GetSheet },
-        { SheetsConfig.SheetNames.Locations, LocationMapper.GetSheet },
-        { SheetsConfig.SheetNames.Regions, RegionMapper.GetSheet },
-        { SheetsConfig.SheetNames.Setup, () => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet) },
-        { SheetsConfig.SheetNames.Services, ServiceMapper.GetSheet },
-        { SheetsConfig.SheetNames.Shifts, ShiftMapper.GetSheet },
-        { SheetsConfig.SheetNames.Trips, TripMapper.GetSheet },
-        { SheetsConfig.SheetNames.Types, TypeMapper.GetSheet },
-        { SheetsConfig.SheetNames.Weekdays, WeekdayMapper.GetSheet },
-        { SheetsConfig.SheetNames.Weekly, WeeklyMapper.GetSheet },
-        { SheetsConfig.SheetNames.Yearly, YearlyMapper.GetSheet }
-    };
+    private static readonly SheetRegistry<SheetEntity> s_registry = BuildRegistry();
 
-    // Sheet name -> processor action (case-insensitive)
-    private static readonly Dictionary<string, Action<SheetEntity, IList<IList<object>>>> s_sheetProcessors = new(StringComparer.OrdinalIgnoreCase)
+    private static SheetRegistry<SheetEntity> BuildRegistry()
     {
-        { SheetsConfig.SheetNames.Addresses, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, AddressMapper.GetSheet()));
-                se.Addresses = GenericSheetMapper<AddressEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Daily, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, DailyMapper.GetSheet()));
-                se.Daily = GenericSheetMapper<DailyEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Expenses, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet)));
-                se.Expenses = GenericSheetMapper<ExpenseEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Monthly, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, MonthlyMapper.GetSheet()));
-                se.Monthly = GenericSheetMapper<MonthlyEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Names, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, NameMapper.GetSheet()));
-                se.Names = GenericSheetMapper<NameEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Places, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, PlaceMapper.GetSheet()));
-                se.Places = GenericSheetMapper<PlaceEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Deliveries, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, DeliveryMapper.GetSheet()));
-                se.Deliveries = GenericSheetMapper<DeliveryEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Locations, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, LocationMapper.GetSheet()));
-                se.Locations = GenericSheetMapper<LocationEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Regions, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, RegionMapper.GetSheet()));
-                se.Regions = GenericSheetMapper<RegionEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Services, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, ServiceMapper.GetSheet()));
-                se.Services = GenericSheetMapper<ServiceEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Setup, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet)));
-                se.Setup = GenericSheetMapper<SetupEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Shifts, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, ShiftMapper.GetSheet()));
-                se.Shifts = GenericSheetMapper<ShiftEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Trips, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TripMapper.GetSheet()));
-                se.Trips = GenericSheetMapper<TripEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Types, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TypeMapper.GetSheet()));
-                se.Types = GenericSheetMapper<TypeEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Weekdays, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, WeekdayMapper.GetSheet()));
-                se.Weekdays = GenericSheetMapper<WeekdayEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Weekly, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, WeeklyMapper.GetSheet()));
-                se.Weekly = GenericSheetMapper<WeeklyEntity>.MapFromRangeData(values);
-            }
-        },
-        { SheetsConfig.SheetNames.Yearly, (se, values) => {
-                var headers = values[0];
-                se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, YearlyMapper.GetSheet()));
-                se.Yearly = GenericSheetMapper<YearlyEntity>.MapFromRangeData(values);
-            }
-        }
-    };
+        var registry = new SheetRegistry<SheetEntity>();
+
+        registry.RegisterGeneric<SheetEntity, AddressEntity>(SheetsConfig.SheetNames.Addresses, AddressMapper.GetSheet, (se, rows) => se.Addresses = rows);
+        registry.RegisterGeneric<SheetEntity, DailyEntity>(SheetsConfig.SheetNames.Daily, DailyMapper.GetSheet, (se, rows) => se.Daily = rows);
+        registry.RegisterGeneric<SheetEntity, ExpenseEntity>(SheetsConfig.SheetNames.Expenses, () => GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet), (se, rows) => se.Expenses = rows);
+        registry.RegisterGeneric<SheetEntity, MonthlyEntity>(SheetsConfig.SheetNames.Monthly, MonthlyMapper.GetSheet, (se, rows) => se.Monthly = rows);
+        registry.RegisterGeneric<SheetEntity, NameEntity>(SheetsConfig.SheetNames.Names, NameMapper.GetSheet, (se, rows) => se.Names = rows);
+        registry.RegisterGeneric<SheetEntity, PlaceEntity>(SheetsConfig.SheetNames.Places, PlaceMapper.GetSheet, (se, rows) => se.Places = rows);
+        registry.RegisterGeneric<SheetEntity, DeliveryEntity>(SheetsConfig.SheetNames.Deliveries, DeliveryMapper.GetSheet, (se, rows) => se.Deliveries = rows);
+        registry.RegisterGeneric<SheetEntity, LocationEntity>(SheetsConfig.SheetNames.Locations, LocationMapper.GetSheet, (se, rows) => se.Locations = rows);
+        registry.RegisterGeneric<SheetEntity, RegionEntity>(SheetsConfig.SheetNames.Regions, RegionMapper.GetSheet, (se, rows) => se.Regions = rows);
+        registry.RegisterGeneric<SheetEntity, SetupEntity>(SheetsConfig.SheetNames.Setup, () => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet), (se, rows) => se.Setup = rows);
+        registry.RegisterGeneric<SheetEntity, ServiceEntity>(SheetsConfig.SheetNames.Services, ServiceMapper.GetSheet, (se, rows) => se.Services = rows);
+        registry.RegisterGeneric<SheetEntity, ShiftEntity>(SheetsConfig.SheetNames.Shifts, ShiftMapper.GetSheet, (se, rows) => se.Shifts = rows);
+        registry.RegisterGeneric<SheetEntity, TripEntity>(SheetsConfig.SheetNames.Trips, TripMapper.GetSheet, (se, rows) => se.Trips = rows);
+        registry.RegisterGeneric<SheetEntity, TypeEntity>(SheetsConfig.SheetNames.Types, TypeMapper.GetSheet, (se, rows) => se.Types = rows);
+        registry.RegisterGeneric<SheetEntity, WeekdayEntity>(SheetsConfig.SheetNames.Weekdays, WeekdayMapper.GetSheet, (se, rows) => se.Weekdays = rows);
+        registry.RegisterGeneric<SheetEntity, WeeklyEntity>(SheetsConfig.SheetNames.Weekly, WeeklyMapper.GetSheet, (se, rows) => se.Weekly = rows);
+        registry.RegisterGeneric<SheetEntity, YearlyEntity>(SheetsConfig.SheetNames.Yearly, YearlyMapper.GetSheet, (se, rows) => se.Yearly = rows);
+
+        return registry;
+    }
 
     public static List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet)
     {
-        var spreadsheetSheets = spreadsheet.Sheets.Select(x => x.Properties.Title).ToList();
-        var sheetData = new List<SheetModel>();
+        return s_registry.GetMissingSheets(spreadsheet, GetSheetNames());
+    }
 
-        var sheetNames = GetSheetNames();
+    /// <summary>
+    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Gig sheet.
+    /// Only needs sheet tab metadata (no grid/cell data) - safe to call with a cheap, no-ranges
+    /// spreadsheet fetch. Known-sheet header validation happens separately via <see cref="MapData(BatchGetValuesByDataFilterResponse)"/>.
+    /// </summary>
+    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
+    {
+        return s_registry.CheckUnknownSheets(spreadsheet);
+    }
 
-        // Loop through all sheets to see if they exist.
-        foreach (var name in sheetNames)
-        {
-            if (spreadsheetSheets.Any(s => string.Equals(s, name, StringComparison.OrdinalIgnoreCase)))
-            {
-                continue;
-            }
+    /// <summary>
+    /// Full header validation against grid-data (IncludeGridData=true) spreadsheet metadata.
+    /// </summary>
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
+    {
+        return s_registry.CheckSheetHeaders(spreadsheet);
+    }
 
-            if (s_sheetFactories.TryGetValue(name, out var factory))
-            {
-                sheetData.Add(factory());
-            }
-        }
+    /// <summary>
+    /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
+    /// missing entirely and where they should be inserted, for use with
+    /// <see cref="RaptorSheets.Core.Helpers.ColumnInsertionHelper"/>.
+    /// </summary>
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        return s_registry.CheckSheetHeaders(spreadsheet, out missingColumns);
+    }
 
-        return sheetData;
+    /// <summary>
+    /// Detects columns missing entirely from a batchGet response, reusing the header row already
+    /// present in each range - no extra API call. SheetId is left at 0; the caller fills it in.
+    /// </summary>
+    public static Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(BatchGetValuesByDataFilterResponse response)
+    {
+        return s_registry.DetectMissingColumns(response);
+    }
+
+    public static SheetModel? GetSheetLayout(string sheetName)
+    {
+        return s_registry.GetSheetLayout(sheetName);
+    }
+
+    public static List<SheetModel> GetSheetLayouts(IEnumerable<string> sheetNames)
+    {
+        return s_registry.GetSheetLayouts(sheetNames);
     }
 
     public static DataValidationRule GetDataValidation(ValidationEnum validation, string? range = "")
@@ -237,53 +169,11 @@ public static class GigSheetHelpers
 
     public static SheetEntity? MapData(Spreadsheet spreadsheet)
     {
-        var sheetEntity = new SheetEntity
-        {
-            Properties = new PropertyEntity
-            {
-                Name = spreadsheet.Properties.Title,
-            }
-        };
-
-        var sheetValues = SheetHelpers.GetSheetValues(spreadsheet);
-        foreach (var sheet in spreadsheet.Sheets)
-        {
-            var values = sheetValues[sheet.Properties.Title];
-            ProcessSheetData(sheetEntity, sheet.Properties.Title, values);
-        }
-
-        return sheetEntity;
+        return s_registry.MapData(spreadsheet);
     }
 
     public static SheetEntity? MapData(BatchGetValuesByDataFilterResponse response)
     {
-        if (response.ValueRanges == null)
-        {
-            return null;
-        }
-
-        var sheetEntity = new SheetEntity();
-
-        foreach (var matchedValue in response.ValueRanges)
-        {
-            var sheetRange = matchedValue.DataFilters[0].A1Range;
-            var values = matchedValue.ValueRange.Values;
-            ProcessSheetData(sheetEntity, sheetRange, values);
-        }
-
-        return sheetEntity;
-    }
-
-    private static void ProcessSheetData(SheetEntity sheetEntity, string sheetName, IList<IList<object>> values)
-    {
-        if (values == null || values.Count == 0)
-        {
-            return;
-        }
-
-        if (s_sheetProcessors.TryGetValue(sheetName, out var processor))
-        {
-            processor(sheetEntity, values);
-        }
+        return s_registry.MapData(response);
     }
 }

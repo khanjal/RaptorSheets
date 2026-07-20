@@ -228,6 +228,33 @@ public static class GoogleRequestHelpers
         return insertRequest;
     }
 
+    /// <summary>
+    /// Generates a request to insert one or more columns at a specific position.
+    /// </summary>
+    /// <param name="sheetId">The sheet ID to insert columns into.</param>
+    /// <param name="startIndex">The column index to start inserting at (0-based).</param>
+    /// <param name="endIndex">The column index to end inserting at (exclusive, 0-based).</param>
+    /// <param name="inheritFromBefore">If true, inherits formatting from the column before the insertion point.</param>
+    public static Request GenerateInsertColumnDimension(int sheetId, int startIndex, int endIndex, bool inheritFromBefore = true)
+    {
+        var insertRequest = new Request
+        {
+            InsertDimension = new InsertDimensionRequest
+            {
+                Range = new DimensionRange
+                {
+                    SheetId = sheetId,
+                    Dimension = "COLUMNS",
+                    StartIndex = startIndex,
+                    EndIndex = endIndex
+                },
+                InheritFromBefore = inheritFromBefore
+            }
+        };
+
+        return insertRequest;
+    }
+
     public static BatchGetValuesByDataFilterRequest GenerateBatchGetValuesByDataFilterRequest(List<string> sheets, string? range = "")
     {
         if (sheets == null || sheets.Count < 1)
@@ -332,7 +359,7 @@ public static class GoogleRequestHelpers
         return new Request { AddSheet = sheetRequest };
     }
 
-    public static Request GenerateUpdateCellsRequest(int sheetId, int rowIndex, IList<RowData> rows) 
+    public static Request GenerateUpdateCellsRequest(int sheetId, int rowIndex, IList<RowData> rows, int startColumnIndex = 0)
     {
         // Indexes are 1 less than rowIds
         var range = new GridRange
@@ -340,6 +367,8 @@ public static class GoogleRequestHelpers
             SheetId = sheetId,
             StartRowIndex = rowIndex,
             EndRowIndex = rowIndex + 1,
+            StartColumnIndex = startColumnIndex,
+            EndColumnIndex = startColumnIndex + rows.Max(r => r.Values?.Count ?? 0),
         };
 
         // Create Sheet Data

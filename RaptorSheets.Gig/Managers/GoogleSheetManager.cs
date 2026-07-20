@@ -1,9 +1,9 @@
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Managers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Core.Services;
 using RaptorSheets.Gig.Entities;
 
 namespace RaptorSheets.Gig.Managers;
@@ -33,7 +33,10 @@ public interface IGoogleSheetManager
     Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
     SheetModel? GetSheetLayout(string sheet);
     List<SheetModel> GetSheetLayouts(List<string> sheets);
-    
+
+    // Header Management
+    Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
+
     // Demo Data Generation
     SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null);
 }
@@ -48,24 +51,20 @@ public interface IGoogleSheetManager
 /// - GoogleSheetManager.Demo.cs (Demo data generation)
 /// - GoogleSheetManager.Helpers.cs (Private helpers)
 /// </summary>
-public partial class GoogleSheetManager : IGoogleSheetManager
+public partial class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
 {
-    private readonly RaptorSheets.Core.Services.IGoogleSheetService _googleSheetService;
-    private readonly ILogger _logger;
-
     public GoogleSheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
+        : base(googleSheetService, logger)
     {
-        _googleSheetService = googleSheetService ?? throw new ArgumentNullException(nameof(googleSheetService));
-        _logger = logger ?? NullLogger.Instance;
     }
 
     public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
-        : this(new RaptorSheets.Core.Services.GoogleSheetService(accessToken, spreadsheetId, logger), logger)
+        : base(accessToken, spreadsheetId, logger)
     {
     }
 
     public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
-        : this(new RaptorSheets.Core.Services.GoogleSheetService(parameters, spreadsheetId, logger), logger)
+        : base(parameters, spreadsheetId, logger)
     {
     }
 }

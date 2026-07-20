@@ -1,11 +1,14 @@
 using Google.Apis.Sheets.v4.Data;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Registries;
+using RaptorSheets.Stock.Constants;
 using RaptorSheets.Stock.Enums;
 using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Stock.Entities;
-using RaptorSheets.Stock.Constants;
 
 namespace RaptorSheets.Stock.Helpers;
 
@@ -23,39 +26,86 @@ public static class StockSheetHelpers
         return sheets;
     }
 
+    private static readonly SheetRegistry<SheetEntity> s_registry = BuildRegistry();
+
+    private static SheetRegistry<SheetEntity> BuildRegistry()
+    {
+        var registry = new SheetRegistry<SheetEntity>();
+
+        registry.Register(SheetEnum.ACCOUNTS.GetDescription(), () => SheetsConfig.AccountSheet, (se, values) =>
+        {
+            var headers = values[0];
+            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.AccountSheet));
+            se.Accounts = AccountMapper.MapFromRangeData(values);
+        });
+
+        registry.Register(SheetEnum.STOCKS.GetDescription(), () => SheetsConfig.StockSheet, (se, values) =>
+        {
+            var headers = values[0];
+            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.StockSheet));
+            se.Stocks = StockMapper.MapFromRangeData(values);
+        });
+
+        registry.Register(SheetEnum.TICKERS.GetDescription(), () => SheetsConfig.TickerSheet, (se, values) =>
+        {
+            var headers = values[0];
+            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.TickerSheet));
+            se.Tickers = TickerMapper.MapFromRangeData(values);
+        });
+
+        return registry;
+    }
+
     public static List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet)
     {
-        var spreadsheetSheets = spreadsheet.Sheets.Select(x => x.Properties.Title.ToUpper()).ToList();
-        var sheetData = new List<SheetModel>();
+        var canonicalNames = Enum.GetValues<SheetEnum>().Select(e => e.GetDescription());
+        return s_registry.GetMissingSheets(spreadsheet, canonicalNames);
+    }
 
-        // Loop through all sheets to see if they exist.
-        foreach (var name in Enum.GetNames<SheetEnum>())
-        {
-            SheetEnum sheetEnum = (SheetEnum)Enum.Parse(typeof(SheetEnum), name);
+    /// <summary>
+    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Stock sheet.
+    /// Only needs sheet tab metadata (no grid/cell data).
+    /// </summary>
+    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
+    {
+        return s_registry.CheckUnknownSheets(spreadsheet);
+    }
 
-            if (spreadsheetSheets.Contains(name))
-            {
-                continue;
-            }
+    /// <summary>
+    /// Full header validation against grid-data (IncludeGridData=true) spreadsheet metadata.
+    /// </summary>
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
+    {
+        return s_registry.CheckSheetHeaders(spreadsheet);
+    }
 
-            // Get data for each missing sheet.
-            switch (sheetEnum)
-            {
-                case SheetEnum.ACCOUNTS:
-                    sheetData.Add(AccountMapper.GetSheet());
-                    break;
-                case SheetEnum.STOCKS:
-                    sheetData.Add(StockMapper.GetSheet());
-                    break;
-                case SheetEnum.TICKERS:
-                    sheetData.Add(TickerMapper.GetSheet());
-                    break;
-                default:
-                    break;
-            }
-        }
+    /// <summary>
+    /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
+    /// missing entirely and where they should be inserted, for use with
+    /// <see cref="RaptorSheets.Core.Helpers.ColumnInsertionHelper"/>.
+    /// </summary>
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        return s_registry.CheckSheetHeaders(spreadsheet, out missingColumns);
+    }
 
-        return sheetData;
+    /// <summary>
+    /// Detects columns missing entirely from a batchGet response, reusing the header row already
+    /// present in each range - no extra API call. SheetId is left at 0; the caller fills it in.
+    /// </summary>
+    public static Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(BatchGetValuesByDataFilterResponse response)
+    {
+        return s_registry.DetectMissingColumns(response);
+    }
+
+    public static SheetModel? GetSheetLayout(string sheetName)
+    {
+        return s_registry.GetSheetLayout(sheetName);
+    }
+
+    public static List<SheetModel> GetSheetLayouts(IEnumerable<string> sheetNames)
+    {
+        return s_registry.GetSheetLayouts(sheetNames);
     }
 
     public static DataValidationRule GetDataValidation(ValidationEnum validation)
@@ -91,39 +141,6 @@ public static class StockSheetHelpers
 
     public static SheetEntity? MapData(BatchGetValuesByDataFilterResponse response)
     {
-        if (response.ValueRanges == null)
-        {
-            return null;
-        }
-
-        var sheet = new SheetEntity();
-
-        // TODO: Figure out a better way to handle looping with message and entity mapping in the switch.
-        foreach (var matchedValue in response.ValueRanges)
-        {
-            var sheetRange = matchedValue.DataFilters[0].A1Range;
-            var values = matchedValue.ValueRange.Values;
-            var headers = values[0];
-
-            Enum.TryParse(sheetRange.ToUpper(), out SheetEnum sheetEnum);
-
-            switch (sheetEnum)
-            {
-                case SheetEnum.ACCOUNTS:
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.AccountSheet));
-                    sheet.Accounts = AccountMapper.MapFromRangeData(values);
-                    break;
-                case SheetEnum.STOCKS:
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.StockSheet));
-                    sheet.Stocks = StockMapper.MapFromRangeData(values);
-                    break;
-                case SheetEnum.TICKERS:
-                    sheet.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.TickerSheet));
-                    sheet.Tickers = TickerMapper.MapFromRangeData(values);
-                    break;
-            }
-        }
-
-        return sheet;
+        return s_registry.MapData(response);
     }
 }

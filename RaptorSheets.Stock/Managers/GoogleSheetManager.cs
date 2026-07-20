@@ -1,12 +1,14 @@
 ﻿using Google.Apis.Sheets.v4.Data;
+using Microsoft.Extensions.Logging;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Managers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Stock.Entities;
-using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Stock.Helpers;
 using RaptorSheets.Core.Models.Google;
 using SheetEnum = RaptorSheets.Stock.Enums.SheetEnum;
@@ -23,20 +25,24 @@ public interface IGoogleSheetManager
     public Task<SheetEntity> GetSheets(List<Enums.SheetEnum> sheets);
     public SheetModel? GetSheetLayout(string sheet);
     public List<SheetModel> GetSheetLayouts(List<string> sheets);
+    public Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
 }
 
-public class GoogleSheetManager : IGoogleSheetManager
+public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
 {
-    private readonly GoogleSheetService _googleSheetService;
-
-    public GoogleSheetManager(string accessToken, string spreadsheetId)
+    public GoogleSheetManager(IGoogleSheetService googleSheetService, ILogger? logger = null)
+        : base(googleSheetService, logger)
     {
-        _googleSheetService = new GoogleSheetService(accessToken, spreadsheetId);
     }
 
-    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId)
+    public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
+        : base(accessToken, spreadsheetId, logger)
     {
-        _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
+    }
+
+    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
+        : base(parameters, spreadsheetId, logger)
+    {
     }
 
     public async Task<SheetEntity> AddSheetData(List<Enums.SheetEnum> sheets, SheetEntity sheetEntity)
@@ -86,50 +92,36 @@ public class GoogleSheetManager : IGoogleSheetManager
         return sheetEntity;
     }
 
+    /// <summary>
+    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Stock sheet.
+    /// Only needs sheet tab metadata (no grid/cell data).
+    /// </summary>
+    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
+    {
+        return StockSheetHelpers.CheckUnknownSheets(sheetInfoResponse);
+    }
+
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
-        var messages = new List<MessageEntity>();
+        return StockSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
+    }
 
-        if (sheetInfoResponse == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
-            return messages;
-        }
+    /// <summary>
+    /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
+    /// missing entirely and where they should be inserted, for use with <see cref="InsertMissingColumns"/>.
+    /// </summary>
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        return StockSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
+    }
 
-        var headerMessages = new List<MessageEntity>();
-        // Loop through sheets to check headers.
-        foreach (var sheet in sheetInfoResponse.Sheets)
-        {
-            var sheetEnum = (Enums.SheetEnum)Enum.Parse(typeof(Enums.SheetEnum), sheet.Properties.Title.ToUpper());
-            var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
-
-            switch (sheetEnum)
-            {
-                case Enums.SheetEnum.ACCOUNTS:
-                    // headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, AccountMapper.GetSheet()));
-                    break;
-                case Enums.SheetEnum.STOCKS:
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, StockMapper.GetSheet()));
-                    break;
-                case Enums.SheetEnum.TICKERS:
-                    // headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, TickerMapper.GetSheet()));
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        if (headerMessages.Count > 0)
-        {
-            messages.Add(MessageHelpers.CreateWarningMessage($"Found sheet header issue(s)", MessageTypeEnum.CHECK_SHEET));
-            messages.AddRange(headerMessages);
-        }
-        else
-        {
-            messages.Add(MessageHelpers.CreateInfoMessage($"No sheet header issues found", MessageTypeEnum.CHECK_SHEET));
-        }
-
-        return messages;
+    /// <summary>
+    /// Physically inserts columns detected as missing by <see cref="CheckSheetHeaders(Spreadsheet, out Dictionary{string, List{ColumnInsertionInfo}})"/>
+    /// at their expected position, and writes the header text into each newly-inserted column.
+    /// </summary>
+    public async Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        return await ColumnInsertionHelper.InsertMissingColumnsAsync<SheetEntity>(_googleSheetService, missingColumns);
     }
 
     public async Task<SheetEntity> CreateSheets()
@@ -196,6 +188,8 @@ public class GoogleSheetManager : IGoogleSheetManager
 
         var response = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
 
+        Spreadsheet? spreadsheetInfo = null;
+
         if (response == null)
         {
             messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
@@ -204,6 +198,36 @@ public class GoogleSheetManager : IGoogleSheetManager
         {
             messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
             data = StockSheetHelpers.MapData(response);
+
+            // Auto-heal: insert any expected INPUT columns missing entirely, at their correct
+            // canonical position (not appended at the end). HideHeaderName columns (populated by a
+            // spilling QUERY formula) are never candidates - HeaderHelpers.CheckSheetHeaders already
+            // excludes them. Detection reuses the header row already in `response` (no extra API
+            // call); a metadata fetch for SheetId only happens when something is actually missing
+            // (rare), and is reused below for the spreadsheet-name lookup if needed.
+            var missingColumns = StockSheetHelpers.DetectMissingColumns(response);
+            if (missingColumns.Count > 0)
+            {
+                spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+
+                if (spreadsheetInfo?.Sheets != null)
+                {
+                    foreach (var (sheetName, columns) in missingColumns)
+                    {
+                        var sheetId = spreadsheetInfo.Sheets
+                            .FirstOrDefault(s => string.Equals(s.Properties.Title, sheetName, StringComparison.OrdinalIgnoreCase))
+                            ?.Properties.SheetId ?? 0;
+
+                        foreach (var column in columns)
+                        {
+                            column.SheetId = sheetId;
+                        }
+                    }
+
+                    var insertResult = await InsertMissingColumns(missingColumns);
+                    messages.AddRange(insertResult.Messages);
+                }
+            }
         }
 
         // Only get spreadsheet name when all sheets are requested.
@@ -213,7 +237,7 @@ public class GoogleSheetManager : IGoogleSheetManager
             return data;
         }
 
-        var spreadsheet = await _googleSheetService.GetSheetInfo();
+        var spreadsheet = spreadsheetInfo ?? await _googleSheetService.GetSheetInfo();
         var spreadsheetName = SheetHelpers.GetSpreadsheetTitle(spreadsheet);
 
         if (string.IsNullOrEmpty(spreadsheetName))
@@ -241,23 +265,7 @@ public class GoogleSheetManager : IGoogleSheetManager
     {
         try
         {
-            // Try to parse as enum
-            var sheetExists = Enum.TryParse(sheet.ToUpper(), out Enums.SheetEnum sheetEnum) 
-                && Enum.IsDefined(typeof(Enums.SheetEnum), sheetEnum);
-
-            if (!sheetExists)
-            {
-                return null;
-            }
-
-            // Get the appropriate mapper's sheet model
-            return sheetEnum switch
-            {
-                Enums.SheetEnum.ACCOUNTS => AccountMapper.GetSheet(),
-                Enums.SheetEnum.STOCKS => StockMapper.GetSheet(),
-                Enums.SheetEnum.TICKERS => TickerMapper.GetSheet(),
-                _ => null
-            };
+            return StockSheetHelpers.GetSheetLayout(sheet);
         }
         catch (Exception)
         {
