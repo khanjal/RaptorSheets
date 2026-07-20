@@ -103,6 +103,15 @@ public static class GigSheetHelpers
         return s_registry.CheckSheetHeaders(spreadsheet, out missingColumns);
     }
 
+    /// <summary>
+    /// Detects columns missing entirely from a batchGet response, reusing the header row already
+    /// present in each range - no extra API call. SheetId is left at 0; the caller fills it in.
+    /// </summary>
+    public static Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(BatchGetValuesByDataFilterResponse response)
+    {
+        return s_registry.DetectMissingColumns(response);
+    }
+
     public static SheetModel? GetSheetLayout(string sheetName)
     {
         return s_registry.GetSheetLayout(sheetName);

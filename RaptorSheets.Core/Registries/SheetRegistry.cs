@@ -66,6 +66,42 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     }
 
     /// <summary>
+    /// Detects columns missing entirely from a batchGet response, reusing the header row already
+    /// present in each range - no extra API call needed. SheetId is left at 0 on each result; the
+    /// caller fills it in from spreadsheet metadata it already has (e.g. the cheap, no-ranges
+    /// GetSheetInfo() call already used for unknown-sheet detection) before acting on it.
+    /// </summary>
+    public Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(BatchGetValuesByDataFilterResponse? response)
+    {
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>();
+
+        if (response?.ValueRanges == null)
+        {
+            return missingColumns;
+        }
+
+        foreach (var matchedValue in response.ValueRanges)
+        {
+            var sheetName = matchedValue.DataFilters[0].A1Range;
+            var values = matchedValue.ValueRange.Values;
+
+            if (values == null || values.Count == 0 || !_factories.TryGetValue(sheetName, out var factory))
+            {
+                continue;
+            }
+
+            HeaderHelpers.CheckSheetHeaders(values[0], factory(), out var insertionInfo);
+
+            if (insertionInfo.Count > 0)
+            {
+                missingColumns[sheetName] = insertionInfo;
+            }
+        }
+
+        return missingColumns;
+    }
+
+    /// <summary>
     /// Builds an entity from a full Spreadsheet (grid-data) response.
     /// </summary>
     public TEntity MapData(Spreadsheet spreadsheet)
