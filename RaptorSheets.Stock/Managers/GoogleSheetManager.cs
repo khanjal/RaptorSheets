@@ -188,6 +188,8 @@ public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
 
         var response = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
 
+        Spreadsheet? spreadsheetInfo = null;
+
         if (response == null)
         {
             messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
@@ -196,6 +198,36 @@ public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
         {
             messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
             data = StockSheetHelpers.MapData(response);
+
+            // Auto-heal: insert any expected INPUT columns missing entirely, at their correct
+            // canonical position (not appended at the end). HideHeaderName columns (populated by a
+            // spilling QUERY formula) are never candidates - HeaderHelpers.CheckSheetHeaders already
+            // excludes them. Detection reuses the header row already in `response` (no extra API
+            // call); a metadata fetch for SheetId only happens when something is actually missing
+            // (rare), and is reused below for the spreadsheet-name lookup if needed.
+            var missingColumns = StockSheetHelpers.DetectMissingColumns(response);
+            if (missingColumns.Count > 0)
+            {
+                spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+
+                if (spreadsheetInfo?.Sheets != null)
+                {
+                    foreach (var (sheetName, columns) in missingColumns)
+                    {
+                        var sheetId = spreadsheetInfo.Sheets
+                            .FirstOrDefault(s => string.Equals(s.Properties.Title, sheetName, StringComparison.OrdinalIgnoreCase))
+                            ?.Properties.SheetId ?? 0;
+
+                        foreach (var column in columns)
+                        {
+                            column.SheetId = sheetId;
+                        }
+                    }
+
+                    var insertResult = await InsertMissingColumns(missingColumns);
+                    messages.AddRange(insertResult.Messages);
+                }
+            }
         }
 
         // Only get spreadsheet name when all sheets are requested.
@@ -205,7 +237,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
             return data;
         }
 
-        var spreadsheet = await _googleSheetService.GetSheetInfo();
+        var spreadsheet = spreadsheetInfo ?? await _googleSheetService.GetSheetInfo();
         var spreadsheetName = SheetHelpers.GetSpreadsheetTitle(spreadsheet);
 
         if (string.IsNullOrEmpty(spreadsheetName))

@@ -309,6 +309,34 @@ public partial class GoogleSheetManager
             }
 
             data = GigSheetHelpers.MapData(response) ?? new SheetEntity();
+
+            // Auto-heal: if any expected INPUT columns are missing entirely, insert them at their
+            // correct position (matching the canonical header order, not appended at the end) and
+            // write their header text. HideHeaderName columns (populated by a spilling QUERY
+            // formula, e.g. Delivery/Location's Pay/Tips/.../First Trip/Last Trip) are never
+            // candidates here - HeaderHelpers.CheckSheetHeaders already excludes them, since
+            // inserting one would land inside the query's contiguous spill range and break it.
+            // Detection reuses the header row already in `response` (no extra API call); SheetId
+            // comes from the same cheap metadata fetch used above for CheckUnknownSheets. Only the
+            // actual insert costs a real API call, and only when something is genuinely missing.
+            var missingColumns = GigSheetHelpers.DetectMissingColumns(response);
+            if (missingColumns.Count > 0 && spreadsheetInfo?.Sheets != null)
+            {
+                foreach (var (sheetName, columns) in missingColumns)
+                {
+                    var sheetId = spreadsheetInfo.Sheets
+                        .FirstOrDefault(s => string.Equals(s.Properties.Title, sheetName, StringComparison.OrdinalIgnoreCase))
+                        ?.Properties.SheetId ?? 0;
+
+                    foreach (var column in columns)
+                    {
+                        column.SheetId = sheetId;
+                    }
+                }
+
+                var insertResult = await InsertMissingColumns(missingColumns);
+                messages.AddRange(insertResult.Messages);
+            }
         }
 
         if (spreadsheetInfo != null)
