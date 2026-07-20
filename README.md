@@ -147,20 +147,30 @@ await service.ExecuteBatchUpdate(requests);
 
 ## 🏗️ Architecture
 
+Domain packages (Gig, Stock, and future domains) stay thin: each owns only its strongly-typed
+entities/mappers, a `SheetRegistry<TEntity>`, and its write operations. All domain-agnostic
+orchestration — reading/mapping sheets, self-healing missing sheets/columns, sheet properties, tab
+names, layouts, and header validation — lives once in `RaptorSheets.Core` and is inherited via
+`GoogleSheetManagerBase<TEntity>`. The goal is to keep as much logic in Core as possible so a new
+domain is essentially entities + a registry, not a re-implemented manager.
+
 ```
-Your Custom Application
+Your Custom Application  /  Domain Packages (RaptorSheets.Gig, RaptorSheets.Stock, …)
        ↓
-TypedField System
-  ├── ColumnAttribute (Configuration)
-  ├── BaseEntityRepository<T> (CRUD Operations)
-  ├── TypedEntityMapper<T> (Conversion)
-  └── Schema Validation (Type Safety)
+Domain layer (per package — the only code a new domain writes)
+  ├── SheetEntity + typed entities (Trips, Accounts, …) with ColumnAttribute
+  ├── Mappers (GenericSheetMapper<T> or hand-rolled)
+  ├── SheetRegistry<TEntity> (name → headers + row mapping + missing-column detection)
+  └── GoogleSheetManager : GoogleSheetManagerBase<TEntity>
+        └── supplies registry + canonical sheet names + CreateMissingSheetsAsync; write ops
        ↓
-RaptorSheets.Core
-  ├── GoogleSheetService (High-level operations)
-  ├── SheetServiceWrapper (API abstraction)  
-  ├── Models & Entities (Type safety)
-  └── Extensions & Helpers (Utilities)
+RaptorSheets.Core (shared — inherited, not re-copied per domain)
+  ├── GoogleSheetManagerBase<TEntity> (GetSheets orchestration, properties, tab names,
+  │     layouts, InsertMissingColumns, missing-column auto-heal)
+  ├── SheetRegistry<TEntity> (per-sheet dispatch: MapData / GetMissingSheets / header checks)
+  ├── GoogleSheetService + SheetServiceWrapper (API abstraction)
+  ├── TypedField System (ColumnAttribute, BaseEntityRepository<T>, TypedEntityMapper<T>)
+  └── Models, Entities, Extensions & Helpers (SheetPropertyHelper, ColumnInsertionHelper, …)
        ↓
 Google Sheets API v4
 ```
@@ -197,6 +207,10 @@ Built on RaptorSheets.Core, these packages provide domain-specific functionality
 | Package | Version | Purpose | Documentation |
 |---------|---------|---------|---------------|
 | **[RaptorSheets.Gig](https://www.nuget.org/packages/RaptorSheets.Gig/)** | [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) | Complete gig work tracking with automated analytics | **[📖 Gig Guide](RaptorSheets.Gig/README.md)** |
+| **RaptorSheets.Stock** | _in development_ | Investment/portfolio tracking (accounts, stocks, tickers) | **[📖 Stock Guide](RaptorSheets.Stock/README.md)** |
+
+Every domain package is a thin layer over the shared `GoogleSheetManagerBase<TEntity>` in Core, so
+they all get the same read/heal/metadata/layout behavior for free — see [🏗️ Architecture](#️-architecture).
 
 > **Looking for gig work tracking?** Check out **[RaptorSheets.Gig](RaptorSheets.Gig/README.md)** - a complete solution for freelancers and gig workers with pre-built sheets for trips, shifts, earnings, and comprehensive analytics.
 
@@ -279,6 +293,56 @@ public class ProductManager
     }
 }
 ```
+
+### Multi-sheet domain managers (recommended)
+
+For a package that manages several related sheets (like Gig or Stock), inherit
+`GoogleSheetManagerBase<TEntity>` instead of hand-rolling a manager. You supply a
+`SheetRegistry<TEntity>`, the canonical ordered sheet-name list, and one method describing how to
+(re)create missing sheets — and you inherit `GetSheets`/`GetAllSheets` orchestration, sheet
+properties, tab names, layouts, `InsertMissingColumns`, and missing-column auto-healing:
+
+```csharp
+// 1. A top-level entity implementing ISheetEntity (Properties + Messages + your typed rows)
+public class SheetEntity : ISheetEntity
+{
+    public PropertyEntity Properties { get; set; } = new();
+    public List<MessageEntity> Messages { get; set; } = [];
+    public List<ProductEntity> Products { get; set; } = [];
+}
+
+// 2. A registry mapping each sheet name to its headers + row mapping (RegisterGeneric uses
+//    GenericSheetMapper<T>; Register lets you plug a hand-rolled mapper)
+public static class CatalogSheetHelpers
+{
+    public static SheetRegistry<SheetEntity> Registry { get; } = Build();
+
+    private static SheetRegistry<SheetEntity> Build()
+    {
+        var registry = new SheetRegistry<SheetEntity>();
+        registry.RegisterGeneric<SheetEntity, ProductEntity>(
+            "Products", ProductMapper.GetSheet, (se, rows) => se.Products = rows);
+        return registry;
+    }
+}
+
+// 3. A manager that is little more than "hand Core the registry + names + how to create sheets"
+public class CatalogManager : GoogleSheetManagerBase<SheetEntity>
+{
+    public CatalogManager(string accessToken, string spreadsheetId, ILogger? logger = null)
+        : base(accessToken, spreadsheetId, CatalogSheetHelpers.Registry, ["Products"], logger) { }
+
+    // The one required domain hook: restore sheets found missing during GetSheets self-heal.
+    protected override Task<SheetEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap)
+        => CreateSheets(missingIndexMap); // your own create logic
+
+    // ...plus your domain write operations (CreateSheets, ChangeSheetData, DeleteSheets)
+}
+```
+
+`GetSheets`, `GetAllSheets`, `GetSheetProperties`, `GetAllSheetTabNames`, `GetSheetLayout(s)`,
+`InsertMissingColumns`, `GetSpreadsheetInfo`, and `GetBatchData` all come from the base — no
+per-domain re-implementation.
 
 **See [RaptorSheets.Gig](RaptorSheets.Gig/README.md) as a complete example of a specialized package built on the TypedField system.**
 

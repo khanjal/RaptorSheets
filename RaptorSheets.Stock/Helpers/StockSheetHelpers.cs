@@ -26,6 +26,13 @@ public static class StockSheetHelpers
         return sheets;
     }
 
+    /// <summary>
+    /// The shared registry backing this domain's header/row-mapping/missing-column orchestration.
+    /// Exposed so <see cref="RaptorSheets.Core.Managers.GoogleSheetManagerBase"/>'s generic
+    /// GetSheetsCoreAsync/AutoHealMissingColumnsAsync can operate on it directly.
+    /// </summary>
+    public static SheetRegistry<SheetEntity> Registry => s_registry;
+
     private static readonly SheetRegistry<SheetEntity> s_registry = BuildRegistry();
 
     private static SheetRegistry<SheetEntity> BuildRegistry()

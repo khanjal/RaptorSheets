@@ -359,6 +359,15 @@ public class LocationEntity
 
 ## Manager Usage
 
+> **Architecture note:** `GoogleSheetManager` inherits `GoogleSheetManagerBase<SheetEntity>` from
+> `RaptorSheets.Core`. The shared base implements all domain-agnostic behavior — `GetSheets`/
+> `GetAllSheets` orchestration (batch read → self-heal missing sheets → unknown-tab detection → map →
+> auto-heal missing columns → spreadsheet name), sheet properties, tab names, layouts,
+> `InsertMissingColumns`, `GetSpreadsheetInfo`, and `GetBatchData`. The Gig package only adds its
+> strongly-typed entities/mappers, its `SheetRegistry<SheetEntity>` (`GigSheetHelpers.Registry`), and
+> its Gig-specific write operations (ordered `CreateSheets`, `ChangeSheetData`, `DeleteSheets`, demo
+> data). The public API below is unchanged by this — it's just implemented once in Core now.
+
 ### GoogleSheetManager Interface
 ```csharp
 public interface IGoogleSheetManager

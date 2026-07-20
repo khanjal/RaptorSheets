@@ -49,10 +49,17 @@ public class GoogleSheetManagerTests
 
         var result = await _googleSheetManager.GetSheets(new List<Enums.SheetEnum> { _sheetEnum });
         Assert.NotNull(result);
-        Assert.Equal(1, result!.Messages?.Count);
-        Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages?[0].Level);
-        Assert.Contains(_sheetEnum.ToString(), result!.Messages?[0].Message);
-        Assert.True(result!.Messages?[0].Time >= _currentTime);
+        // Shared orchestration (GoogleSheetManagerBase<TEntity>.GetSheets) preserves per-sheet
+        // header-validation messages from MapData and appends unknown-tab detection, so the
+        // "Retrieved sheet(s)" INFO is no longer guaranteed to be first. Assert the order-independent
+        // invariant: an INFO message naming the requested sheet is present.
+        Assert.NotEmpty(result!.Messages);
+        // The shared orchestration lists provider sheet names (descriptions) in the "Retrieved
+        // sheet(s)" INFO, e.g. "Accounts" rather than the enum identifier "ACCOUNTS".
+        var retrievedMessage = result!.Messages.FirstOrDefault(m =>
+            m.Level == MessageLevelEnum.INFO.GetDescription() && m.Message.Contains(_sheetEnum.GetDescription()));
+        Assert.NotNull(retrievedMessage);
+        Assert.True(retrievedMessage!.Time >= _currentTime);
     }
 
     [FactCheckUserSecrets]
@@ -61,8 +68,9 @@ public class GoogleSheetManagerTests
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
         var result = await googleSheetManager.GetSheets();
         Assert.NotNull(result);
-        Assert.Equal(2, result!.Messages.Count);
-
+        // Shared orchestration returns the "Unable to retrieve sheet(s)" ERROR once the batch fetch
+        // and metadata self-heal both fail; assert every message is an ERROR rather than an exact count.
+        Assert.NotEmpty(result!.Messages);
         result!.Messages.ForEach(x => Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), x.Level));
     }
 

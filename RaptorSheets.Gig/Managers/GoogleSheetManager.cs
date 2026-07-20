@@ -5,6 +5,7 @@ using RaptorSheets.Core.Managers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Entities;
+using RaptorSheets.Gig.Helpers;
 
 namespace RaptorSheets.Gig.Managers;
 
@@ -51,20 +52,29 @@ public interface IGoogleSheetManager
 /// - GoogleSheetManager.Demo.cs (Demo data generation)
 /// - GoogleSheetManager.Helpers.cs (Private helpers)
 /// </summary>
-public partial class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
+public partial class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSheetManager
 {
     public GoogleSheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
-        : base(googleSheetService, logger)
+        : base(googleSheetService, GigSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
     public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
-        : base(accessToken, spreadsheetId, logger)
+        : base(accessToken, spreadsheetId, GigSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
     public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
-        : base(parameters, spreadsheetId, logger)
+        : base(parameters, spreadsheetId, GigSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
+    }
+
+    /// <summary>
+    /// Restores sheets found missing entirely during <see cref="GetSheets"/> self-heal, using Gig's
+    /// own ordered/indexed creation so the desired positions are preserved.
+    /// </summary>
+    protected override Task<SheetEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap)
+    {
+        return CreateSheets(missingIndexMap);
     }
 }

@@ -1,4 +1,4 @@
-﻿using Google.Apis.Sheets.v4.Data;
+using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Constants;
@@ -28,21 +28,37 @@ public interface IGoogleSheetManager
     public Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
 }
 
-public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
+public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSheetManager
 {
+    private static List<string> CanonicalSheetNames()
+        => Enum.GetValues<SheetEnum>().Select(e => e.GetDescription()).ToList();
+
     public GoogleSheetManager(IGoogleSheetService googleSheetService, ILogger? logger = null)
-        : base(googleSheetService, logger)
+        : base(googleSheetService, StockSheetHelpers.Registry, CanonicalSheetNames(), logger)
     {
     }
 
     public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
-        : base(accessToken, spreadsheetId, logger)
+        : base(accessToken, spreadsheetId, StockSheetHelpers.Registry, CanonicalSheetNames(), logger)
     {
     }
 
     public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
-        : base(parameters, spreadsheetId, logger)
+        : base(parameters, spreadsheetId, StockSheetHelpers.Registry, CanonicalSheetNames(), logger)
     {
+    }
+
+    /// <summary>
+    /// Restores sheets found missing entirely during <see cref="GoogleSheetManagerBase{TEntity}.GetSheets"/>
+    /// self-heal. Stock doesn't support Gig's index-ordered creation, so the desired-index map's
+    /// ordering is not preserved - only which sheets need to exist.
+    /// </summary>
+    protected override async Task<SheetEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap)
+    {
+        var missingSheets = missingIndexMap.Keys
+            .Select(name => name.GetValueFromName<Enums.SheetEnum>())
+            .ToList();
+        return await CreateSheets(missingSheets);
     }
 
     public async Task<SheetEntity> AddSheetData(List<Enums.SheetEnum> sheets, SheetEntity sheetEntity)
@@ -94,7 +110,8 @@ public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
 
     /// <summary>
     /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Stock sheet.
-    /// Only needs sheet tab metadata (no grid/cell data).
+    /// Only needs sheet tab metadata (no grid/cell data). Static so callers can use it off the type
+    /// without a manager instance; thin shim over <see cref="StockSheetHelpers"/>.
     /// </summary>
     public static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
     {
@@ -108,20 +125,12 @@ public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
 
     /// <summary>
     /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
-    /// missing entirely and where they should be inserted, for use with <see cref="InsertMissingColumns"/>.
+    /// missing entirely and where they should be inserted, for use with
+    /// <see cref="GoogleSheetManagerBase{TEntity}.InsertMissingColumns"/>.
     /// </summary>
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
     {
         return StockSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
-    }
-
-    /// <summary>
-    /// Physically inserts columns detected as missing by <see cref="CheckSheetHeaders(Spreadsheet, out Dictionary{string, List{ColumnInsertionInfo}})"/>
-    /// at their expected position, and writes the header text into each newly-inserted column.
-    /// </summary>
-    public async Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
-    {
-        return await ColumnInsertionHelper.InsertMissingColumnsAsync<SheetEntity>(_googleSheetService, missingColumns);
     }
 
     public async Task<SheetEntity> CreateSheets()
@@ -172,127 +181,16 @@ public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
 
     public async Task<SheetEntity> GetSheets()
     {
-        // TODO Add check sheets here where it can add missing sheets.
-
-        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
-        var response = await GetSheets(sheets);
-
-        return response ?? new SheetEntity();
+        return await GetAllSheets();
     }
 
     public async Task<SheetEntity> GetSheets(List<Enums.SheetEnum> sheets)
     {
-        var data = new SheetEntity();
-        var messages = new List<MessageEntity>();
-        var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
-
-        var response = await _googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
-
-        Spreadsheet? spreadsheetInfo = null;
-
-        if (response == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
-        }
-        else
-        {
-            messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
-            data = StockSheetHelpers.MapData(response);
-
-            // Auto-heal: insert any expected INPUT columns missing entirely, at their correct
-            // canonical position (not appended at the end). HideHeaderName columns (populated by a
-            // spilling QUERY formula) are never candidates - HeaderHelpers.CheckSheetHeaders already
-            // excludes them. Detection reuses the header row already in `response` (no extra API
-            // call); a metadata fetch for SheetId only happens when something is actually missing
-            // (rare), and is reused below for the spreadsheet-name lookup if needed.
-            var missingColumns = StockSheetHelpers.DetectMissingColumns(response);
-            if (missingColumns.Count > 0)
-            {
-                spreadsheetInfo = await _googleSheetService.GetSheetInfo();
-
-                if (spreadsheetInfo?.Sheets != null)
-                {
-                    foreach (var (sheetName, columns) in missingColumns)
-                    {
-                        var sheetId = spreadsheetInfo.Sheets
-                            .FirstOrDefault(s => string.Equals(s.Properties.Title, sheetName, StringComparison.OrdinalIgnoreCase))
-                            ?.Properties.SheetId ?? 0;
-
-                        foreach (var column in columns)
-                        {
-                            column.SheetId = sheetId;
-                        }
-                    }
-
-                    var insertResult = await InsertMissingColumns(missingColumns);
-                    messages.AddRange(insertResult.Messages);
-                }
-            }
-        }
-
-        // Only get spreadsheet name when all sheets are requested.
-        if (sheets.Count < Enum.GetNames(typeof(Enums.SheetEnum)).Length)
-        {
-            data!.Messages = messages;
-            return data;
-        }
-
-        var spreadsheet = spreadsheetInfo ?? await _googleSheetService.GetSheetInfo();
-        var spreadsheetName = SheetHelpers.GetSpreadsheetTitle(spreadsheet);
-
-        if (string.IsNullOrEmpty(spreadsheetName))
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage("Unable to get spreadsheet name", MessageTypeEnum.GENERAL));
-        }
-        else
-        {
-            messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved spreadsheet name: {spreadsheetName}", MessageTypeEnum.GENERAL));
-            data!.Properties.Name = spreadsheetName;
-        }
-
-        data!.Messages = messages;
-        return data;
-    }
-
-    /// <summary>
-    /// Gets the strongly-typed sheet layout/configuration for a specific sheet.
-    /// This includes formulas, colors, notes, formats, and all other sheet properties.
-    /// Useful for examining what the expected sheet structure should be.
-    /// </summary>
-    /// <param name="sheet">The name of the sheet to get configuration for</param>
-    /// <returns>SheetModel containing the complete sheet configuration, or null if sheet not found</returns>
-    public SheetModel? GetSheetLayout(string sheet)
-    {
-        try
-        {
-            return StockSheetHelpers.GetSheetLayout(sheet);
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Gets the strongly-typed sheet layouts/configurations for multiple sheets.
-    /// This includes formulas, colors, notes, formats, and all other sheet properties.
-    /// Useful for examining what the expected sheet structure should be.
-    /// </summary>
-    /// <param name="sheets">List of sheet names to get configurations for</param>
-    /// <returns>List of SheetModels containing complete sheet configurations (excludes sheets not found)</returns>
-    public List<SheetModel> GetSheetLayouts(List<string> sheets)
-    {
-        var sheetModels = new List<SheetModel>();
-
-        foreach (var sheet in sheets)
-        {
-            var sheetModel = GetSheetLayout(sheet);
-            if (sheetModel != null)
-            {
-                sheetModels.Add(sheetModel);
-            }
-        }
-
-        return sheetModels;
+        // Orchestration (batchGet -> self-heal missing sheets -> unknown-tab detection -> map data ->
+        // auto-heal missing columns -> spreadsheet name) is inherited from
+        // GoogleSheetManagerBase<SheetEntity>.GetSheets(List<string>). Missing sheets are restored via
+        // this domain's CreateMissingSheetsAsync override (enum-based CreateSheets).
+        var sheetNames = sheets.Select(x => x.GetDescription()).ToList();
+        return await GetSheets(sheetNames);
     }
 }

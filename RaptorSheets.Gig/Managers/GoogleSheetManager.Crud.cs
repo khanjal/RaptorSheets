@@ -4,7 +4,6 @@ using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Helpers;
@@ -216,148 +215,9 @@ public partial class GoogleSheetManager
         return await GetSheets([sheet]);
     }
 
-    public async Task<SheetEntity> GetAllSheets()
-    {
-        var sheets = GenerateSheetsHelpers.GetSheetNames();
-        var response = await GetSheets(sheets);
-        return response ?? new SheetEntity();
-    }
-
-    public async Task<SheetEntity> GetSheets(List<string> sheets)
-    {
-        var data = new SheetEntity();
-        var messages = new List<MessageEntity>();
-        var stringSheetList = string.Join(", ", sheets.Select(t => t.ToString()));
-
-        // First attempt: try to fetch directly
-        var response = await _googleSheetService.GetBatchData(sheets, null);
-        Spreadsheet? spreadsheetInfo = null;
-
-        // If the batch fetch failed, check for missing sheets and restore them.
-        if (response == null)
-        {
-            try
-            {
-                spreadsheetInfo = await _googleSheetService.GetSheetInfo();
-                // If we couldn't fetch spreadsheet metadata, skip restoration to avoid creating all sheets
-                if (spreadsheetInfo == null)
-                {
-                    _logger.LogWarning("Unable to fetch spreadsheet metadata; skipping missing-sheet restoration");
-                }
-                else
-                {
-                    // Pass the full ordered sheet list so indices are computed correctly
-                    var allSheets = GenerateSheetsHelpers.GetSheetNames();
-                    var missingIndexMap = SheetInitializationHelper.GetMissingSheets(spreadsheetInfo, allSheets);
-                    if (missingIndexMap.Count > 0)
-                    {
-                        // CreateSheets applies full config (headers, formats, protections) and uses the index map for ordering
-                        var createResult = await CreateSheets(missingIndexMap);
-
-                        // If creation returned errors, surface them and return immediately.
-                        if (createResult.Messages.Any(m => m.Level == MessageLevelEnum.ERROR.GetDescription()))
-                        {
-                            messages.AddRange(createResult.Messages);
-                            var errorReturn = new SheetEntity();
-                            errorReturn.Messages.AddRange(messages);
-                            return errorReturn;
-                        }
-
-                        // Creation succeeded. Do not attempt an immediate re-fetch — return an informational
-                        // SheetEntity instructing the caller to retry the GetSheets call later so Google
-                        // has time to materialize data in newly-created auxiliary sheets.
-                        var createdNames = string.Join(", ", missingIndexMap.Keys);
-                        var info = MessageHelpers.CreateInfoMessage(
-                            $"Created missing sheets: {createdNames}. Sheets may take a few seconds to become readable — please retry the request shortly.",
-                            MessageTypeEnum.GET_SHEETS);
-
-                        var createdReturn = new SheetEntity();
-                        createdReturn.Messages.Add(info);
-                        return createdReturn;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while restoring missing sheets");
-            }
-        }
-
-        if (response == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
-            data.Messages.AddRange(messages);
-            return data;
-        }
-        else
-        {
-            messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
-
-            // Cheap metadata-only call (no grid data / no ranges) - used only to detect unknown/extra
-            // sheet tabs. Known-sheet header validation (including reordered/renamed columns) is
-            // already done below by GigSheetHelpers.MapData using the header row already present in
-            // the batchGet response, so a second, expensive IncludeGridData=true round trip across
-            // all sheet ranges isn't needed here.
-            if (spreadsheetInfo == null)
-            {
-                spreadsheetInfo = await _googleSheetService.GetSheetInfo();
-            }
-
-            if (spreadsheetInfo != null)
-            {
-                messages.AddRange(CheckUnknownSheets(spreadsheetInfo));
-            }
-
-            data = GigSheetHelpers.MapData(response) ?? new SheetEntity();
-
-            // Auto-heal: if any expected INPUT columns are missing entirely, insert them at their
-            // correct position (matching the canonical header order, not appended at the end) and
-            // write their header text. HideHeaderName columns (populated by a spilling QUERY
-            // formula, e.g. Delivery/Location's Pay/Tips/.../First Trip/Last Trip) are never
-            // candidates here - HeaderHelpers.CheckSheetHeaders already excludes them, since
-            // inserting one would land inside the query's contiguous spill range and break it.
-            // Detection reuses the header row already in `response` (no extra API call); SheetId
-            // comes from the same cheap metadata fetch used above for CheckUnknownSheets. Only the
-            // actual insert costs a real API call, and only when something is genuinely missing.
-            var missingColumns = GigSheetHelpers.DetectMissingColumns(response);
-            if (missingColumns.Count > 0 && spreadsheetInfo?.Sheets != null)
-            {
-                foreach (var (sheetName, columns) in missingColumns)
-                {
-                    var sheetId = spreadsheetInfo.Sheets
-                        .FirstOrDefault(s => string.Equals(s.Properties.Title, sheetName, StringComparison.OrdinalIgnoreCase))
-                        ?.Properties.SheetId ?? 0;
-
-                    foreach (var column in columns)
-                    {
-                        column.SheetId = sheetId;
-                    }
-                }
-
-                var insertResult = await InsertMissingColumns(missingColumns);
-                messages.AddRange(insertResult.Messages);
-            }
-        }
-
-        if (spreadsheetInfo != null)
-        {
-            data.Properties.Name = spreadsheetInfo.Properties.Title;
-        }
-
-        data.Messages.AddRange(messages);
-
-        return data;
-    }
-
-    public async Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null)
-    {
-        return await _googleSheetService.GetSheetInfo(ranges);
-    }
-
-    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets)
-    {
-        return await _googleSheetService.GetBatchData(sheets);
-    }
+    // GetAllSheets(), GetSheets(List<string>), GetSpreadsheetInfo, and GetBatchData are inherited
+    // from GoogleSheetManagerBase<SheetEntity>. Missing-sheet self-heal is wired via the overridden
+    // CreateMissingSheetsAsync in GoogleSheetManager.cs (Gig's ordered/indexed CreateSheets).
 
     #endregion
 
