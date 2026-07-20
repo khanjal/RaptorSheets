@@ -10,7 +10,7 @@ namespace RaptorSheets.Gig.Entities;
 /// Sheet order is determined by the declaration order in SheetsConfig.SheetNames.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public class SheetEntity
+public class SheetEntity : ISheetEntity
 {
     [JsonPropertyName("properties")]
     public PropertyEntity Properties { get; set; } = new();

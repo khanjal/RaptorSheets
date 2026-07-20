@@ -1,10 +1,12 @@
 ﻿using Google.Apis.Sheets.v4.Data;
+using Microsoft.Extensions.Logging;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Managers;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Stock.Helpers;
@@ -25,18 +27,21 @@ public interface IGoogleSheetManager
     public List<SheetModel> GetSheetLayouts(List<string> sheets);
 }
 
-public class GoogleSheetManager : IGoogleSheetManager
+public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
 {
-    private readonly GoogleSheetService _googleSheetService;
-
-    public GoogleSheetManager(string accessToken, string spreadsheetId)
+    public GoogleSheetManager(IGoogleSheetService googleSheetService, ILogger? logger = null)
+        : base(googleSheetService, logger)
     {
-        _googleSheetService = new GoogleSheetService(accessToken, spreadsheetId);
     }
 
-    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId)
+    public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
+        : base(accessToken, spreadsheetId, logger)
     {
-        _googleSheetService = new GoogleSheetService(parameters, spreadsheetId);
+    }
+
+    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
+        : base(parameters, spreadsheetId, logger)
+    {
     }
 
     public async Task<SheetEntity> AddSheetData(List<Enums.SheetEnum> sheets, SheetEntity sheetEntity)

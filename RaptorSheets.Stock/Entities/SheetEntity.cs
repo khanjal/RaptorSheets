@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace RaptorSheets.Stock.Entities;
 
-public class SheetEntity
+public class SheetEntity : ISheetEntity
 {
     [JsonPropertyName("properties")]
     public PropertyEntity Properties { get; set; } = new();
