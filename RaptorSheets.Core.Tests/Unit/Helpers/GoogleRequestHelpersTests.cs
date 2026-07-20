@@ -516,4 +516,64 @@ public class GoogleRequestHelpersTests
         Assert.Equal(sheetId, request.UpdateSheetProperties.Properties.SheetId);
         Assert.Equal(index, request.UpdateSheetProperties.Properties.Index);
     }
+
+    [Fact]
+    public void GenerateInsertColumnDimension_BuildsColumnsInsertRequest()
+    {
+        // Arrange
+        var sheetId = 7;
+        var startIndex = 3;
+        var endIndex = 4;
+
+        // Act
+        var request = GoogleRequestHelpers.GenerateInsertColumnDimension(sheetId, startIndex, endIndex);
+
+        // Assert
+        Assert.NotNull(request.InsertDimension);
+        Assert.Equal("COLUMNS", request.InsertDimension.Range.Dimension);
+        Assert.Equal(sheetId, request.InsertDimension.Range.SheetId);
+        Assert.Equal(startIndex, request.InsertDimension.Range.StartIndex);
+        Assert.Equal(endIndex, request.InsertDimension.Range.EndIndex);
+        Assert.True(request.InsertDimension.InheritFromBefore);
+    }
+
+    [Fact]
+    public void GenerateInsertColumnDimension_WithInheritFromBeforeFalse_SetsFlagFalse()
+    {
+        var request = GoogleRequestHelpers.GenerateInsertColumnDimension(1, 0, 1, inheritFromBefore: false);
+
+        Assert.False(request.InsertDimension.InheritFromBefore);
+    }
+
+    [Fact]
+    public void GenerateUpdateCellsRequest_DefaultStartColumn_TargetsColumnZero()
+    {
+        // Arrange
+        var rows = new List<RowData> { new() { Values = [new CellData(), new CellData()] } };
+
+        // Act
+        var request = GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId: 5, rowIndex: 2, rows: rows);
+
+        // Assert
+        Assert.NotNull(request.UpdateCells);
+        Assert.Equal(0, request.UpdateCells.Range.StartColumnIndex);
+        Assert.Equal(2, request.UpdateCells.Range.EndColumnIndex);
+        Assert.Equal(2, request.UpdateCells.Range.StartRowIndex);
+        Assert.Equal(3, request.UpdateCells.Range.EndRowIndex);
+    }
+
+    [Fact]
+    public void GenerateUpdateCellsRequest_WithStartColumnIndex_TargetsThatColumn()
+    {
+        // Arrange - a single-cell row being written at a specific inserted column position
+        var rows = new List<RowData> { new() { Values = [new CellData()] } };
+
+        // Act
+        var request = GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId: 5, rowIndex: 0, rows: rows, startColumnIndex: 4);
+
+        // Assert - this is the fix for the original ported implementation, which always wrote to
+        // column 0 regardless of where the column was actually inserted
+        Assert.Equal(4, request.UpdateCells.Range.StartColumnIndex);
+        Assert.Equal(5, request.UpdateCells.Range.EndColumnIndex);
+    }
 }

@@ -2,6 +2,7 @@ using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 
 namespace RaptorSheets.Core.Registries;
@@ -153,7 +154,20 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     /// </summary>
     public List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
     {
+        return CheckSheetHeaders(spreadsheet, out _);
+    }
+
+    /// <summary>
+    /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
+    /// missing entirely and where they should be inserted (per sheet), so a caller can act on it
+    /// via <see cref="ColumnInsertionHelper.InsertMissingColumnsAsync{TEntity}"/>.
+    /// </summary>
+    /// <param name="spreadsheet">Spreadsheet with grid data (IncludeGridData=true)</param>
+    /// <param name="missingColumns">Sheet name -> missing columns for that sheet (empty if none found)</param>
+    public List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
         var messages = new List<MessageEntity>();
+        missingColumns = [];
 
         if (spreadsheet == null)
         {
@@ -165,7 +179,30 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
         var knownSheets = sheets.Where(s => _factories.ContainsKey(s.Properties.Title)).ToList();
         var unknownSheets = sheets.Except(knownSheets);
 
-        var headerMessages = KnownSheetHeaderMessages(knownSheets).ToList();
+        var headerMessages = new List<MessageEntity>();
+
+        foreach (var sheet in knownSheets)
+        {
+            var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
+
+            if (!_factories.TryGetValue(sheet.Properties.Title, out var factory))
+            {
+                continue;
+            }
+
+            headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, factory(), out var insertionInfo));
+
+            if (insertionInfo.Count > 0)
+            {
+                foreach (var info in insertionInfo)
+                {
+                    info.SheetId = sheet.Properties.SheetId ?? 0;
+                }
+
+                missingColumns[sheet.Properties.Title] = insertionInfo;
+            }
+        }
+
         messages.AddRange(UnknownSheetWarnings(unknownSheets));
 
         if (headerMessages.Count > 0)
@@ -179,22 +216,6 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
         }
 
         return messages;
-    }
-
-    private IEnumerable<MessageEntity> KnownSheetHeaderMessages(IEnumerable<Sheet> knownSheets)
-    {
-        foreach (var sheet in knownSheets)
-        {
-            var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
-
-            if (_factories.TryGetValue(sheet.Properties.Title, out var factory))
-            {
-                foreach (var msg in HeaderHelpers.CheckSheetHeaders(sheetHeader, factory()))
-                {
-                    yield return msg;
-                }
-            }
-        }
     }
 
     private static IEnumerable<MessageEntity> UnknownSheetWarnings(IEnumerable<Sheet> unknownSheets)

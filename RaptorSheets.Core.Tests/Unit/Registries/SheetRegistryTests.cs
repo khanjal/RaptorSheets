@@ -385,4 +385,79 @@ public class SheetRegistryTests
         Assert.Single(layouts);
         Assert.Equal("Widgets", layouts[0].Name);
     }
+
+    // CheckSheetHeaders(spreadsheet, out missingColumns) - the overload that also detects columns
+    // missing entirely, for use with RaptorSheets.Core.Helpers.ColumnInsertionHelper.
+
+    private static SheetModel TestSheetModelWithTwoColumns() => new()
+    {
+        Name = "Widgets",
+        Headers = [new SheetCellModel { Name = "Name" }, new SheetCellModel { Name = "Price" }]
+    };
+
+    [Fact]
+    public void CheckSheetHeaders_OutParam_WithMissingColumn_PopulatesSheetIdFromSpreadsheet()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModelWithTwoColumns, (_, _) => { });
+
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new Sheet
+                {
+                    Properties = new SheetProperties { Title = "Widgets", SheetId = 99 },
+                    Data =
+                    [
+                        // Only "Name" present - "Price" is missing entirely
+                        new GridData { RowData = [new RowData { Values = [new CellData { FormattedValue = "Name" }] }] }
+                    ]
+                }
+            ]
+        };
+
+        var messages = registry.CheckSheetHeaders(spreadsheet, out var missingColumns);
+
+        Assert.True(missingColumns.ContainsKey("Widgets"));
+        var missing = Assert.Single(missingColumns["Widgets"]);
+        Assert.Equal("Price", missing.ColumnName);
+        Assert.Equal(1, missing.ColumnIndex);
+        Assert.Equal(99, missing.SheetId);
+        Assert.Contains(messages, m => m.Message.Contains("Found sheet header issue(s)"));
+    }
+
+    [Fact]
+    public void CheckSheetHeaders_OutParam_WithNoMissingColumns_ReturnsEmptyDictionary()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModel, (_, _) => { });
+
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new Sheet
+                {
+                    Properties = new SheetProperties { Title = "Widgets", SheetId = 1 },
+                    Data = [new GridData { RowData = [new RowData { Values = [new CellData { FormattedValue = "Name" }] }] }]
+                }
+            ]
+        };
+
+        registry.CheckSheetHeaders(spreadsheet, out var missingColumns);
+
+        Assert.Empty(missingColumns);
+    }
+
+    [Fact]
+    public void CheckSheetHeaders_OutParam_WithNullSpreadsheet_ReturnsEmptyDictionary()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+
+        var messages = registry.CheckSheetHeaders(null!, out var missingColumns);
+
+        Assert.Empty(missingColumns);
+        Assert.Single(messages);
+    }
 }

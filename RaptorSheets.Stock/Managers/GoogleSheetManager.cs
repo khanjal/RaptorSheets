@@ -7,6 +7,7 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Managers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Helpers;
 using RaptorSheets.Core.Models.Google;
@@ -24,6 +25,7 @@ public interface IGoogleSheetManager
     public Task<SheetEntity> GetSheets(List<Enums.SheetEnum> sheets);
     public SheetModel? GetSheetLayout(string sheet);
     public List<SheetModel> GetSheetLayouts(List<string> sheets);
+    public Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
 }
 
 public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
@@ -102,6 +104,24 @@ public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
         return StockSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
+    }
+
+    /// <summary>
+    /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
+    /// missing entirely and where they should be inserted, for use with <see cref="InsertMissingColumns"/>.
+    /// </summary>
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        return StockSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
+    }
+
+    /// <summary>
+    /// Physically inserts columns detected as missing by <see cref="CheckSheetHeaders(Spreadsheet, out Dictionary{string, List{ColumnInsertionInfo}})"/>
+    /// at their expected position, and writes the header text into each newly-inserted column.
+    /// </summary>
+    public async Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        return await ColumnInsertionHelper.InsertMissingColumnsAsync<SheetEntity>(_googleSheetService, missingColumns);
     }
 
     public async Task<SheetEntity> CreateSheets()

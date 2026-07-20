@@ -2,6 +2,7 @@ using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -198,7 +199,22 @@ public static class HeaderHelpers
     
     public static List<MessageEntity> CheckSheetHeaders(IList<object> values, SheetModel sheetModel)
     {
+        return CheckSheetHeaders(values, sheetModel, out _);
+    }
+
+    /// <summary>
+    /// Checks sheet headers against the expected model and additionally reports which expected
+    /// columns are missing entirely (not found anywhere in the row), with the index/letter they
+    /// should be inserted at according to the model's canonical column order. Callers that don't
+    /// need auto-insertion can use the simpler overload above.
+    /// </summary>
+    /// <param name="values">Actual header values from the sheet</param>
+    /// <param name="sheetModel">Expected sheet model with header definitions</param>
+    /// <param name="insertionInfo">Output list of columns that need to be inserted (SheetId left at 0 - the caller fills that in from spreadsheet metadata)</param>
+    public static List<MessageEntity> CheckSheetHeaders(IList<object> values, SheetModel sheetModel, out List<ColumnInsertionInfo> insertionInfo)
+    {
         var messages = new List<MessageEntity>();
+        insertionInfo = [];
 
         // If there are no header values (sheet empty or header row missing), return a single, clear message
         if (values == null || values.Count == 0 || values.All(v => string.IsNullOrWhiteSpace(v?.ToString())))
@@ -217,7 +233,15 @@ public static class HeaderHelpers
 
             if (!values.Any(x => string.Equals(x?.ToString()?.Trim(), sheetHeader.Name, StringComparison.OrdinalIgnoreCase)))
             {
-                messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
+                insertionInfo.Add(new ColumnInsertionInfo
+                {
+                    SheetName = sheetModel.Name,
+                    ColumnIndex = index,
+                    ColumnName = sheetHeader.Name,
+                    ColumnLetter = SheetHelpers.GetColumnName(index)
+                });
+
+                messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}] - can be inserted", MessageTypeEnum.CHECK_SHEET));
             }
             else
             {

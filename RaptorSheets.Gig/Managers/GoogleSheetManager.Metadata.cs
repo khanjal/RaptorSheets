@@ -2,8 +2,11 @@ using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Helpers;
 
 namespace RaptorSheets.Gig.Managers;
@@ -123,6 +126,24 @@ public partial class GoogleSheetManager
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
         return GigSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
+    }
+
+    /// <summary>
+    /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
+    /// missing entirely and where they should be inserted, for use with <see cref="InsertMissingColumns"/>.
+    /// </summary>
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        return GigSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
+    }
+
+    /// <summary>
+    /// Physically inserts columns detected as missing by <see cref="CheckSheetHeaders(Spreadsheet, out Dictionary{string, List{ColumnInsertionInfo}})"/>
+    /// at their expected position, and writes the header text into each newly-inserted column.
+    /// </summary>
+    public async Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        return await ColumnInsertionHelper.InsertMissingColumnsAsync<SheetEntity>(_googleSheetService, missingColumns);
     }
 
     #endregion

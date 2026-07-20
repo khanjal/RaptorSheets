@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Registries;
 using RaptorSheets.Gig.Constants;
@@ -90,6 +91,16 @@ public static class GigSheetHelpers
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
     {
         return s_registry.CheckSheetHeaders(spreadsheet);
+    }
+
+    /// <summary>
+    /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
+    /// missing entirely and where they should be inserted, for use with
+    /// <see cref="RaptorSheets.Core.Helpers.ColumnInsertionHelper"/>.
+    /// </summary>
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        return s_registry.CheckSheetHeaders(spreadsheet, out missingColumns);
     }
 
     public static SheetModel? GetSheetLayout(string sheetName)
