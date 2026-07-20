@@ -519,4 +519,40 @@ public class HeaderHelpersTests
 
         Assert.Contains(messages, m => m.Message.Contains("Missing column [Header2]"));
     }
+
+    // HideHeaderName columns (e.g. Delivery/Location's "First Trip"/"Last Trip") are populated by
+    // a spilling QUERY formula placed in an earlier header cell, not written as their own
+    // standalone cell - they must never be treated as insertable, since a physical column insert
+    // would land inside the query's contiguous spill range and break it.
+
+    [Fact]
+    public void CheckSheetHeaders_WithMissingHideHeaderNameColumn_ShouldNotAddToInsertionInfo()
+    {
+        // Arrange - "QueryLabel" is missing and marked HideHeaderName (populated by a spilling
+        // QUERY elsewhere on the sheet), "Regular" is missing and is a normal column
+        var values = new List<object> { "Header1" };
+        var sheetModel = new SheetModel
+        {
+            Name = "TestSheet",
+            Headers =
+            [
+                new SheetCellModel { Name = "Header1" },
+                new SheetCellModel { Name = "QueryLabel", HideHeaderName = true },
+                new SheetCellModel { Name = "Regular" }
+            ]
+        };
+
+        // Act
+        var messages = HeaderHelpers.CheckSheetHeaders(values, sheetModel, out var insertionInfo);
+
+        // Assert - only the regular column is a candidate for insertion
+        Assert.Single(insertionInfo);
+        Assert.Equal("Regular", insertionInfo[0].ColumnName);
+        Assert.DoesNotContain(insertionInfo, i => i.ColumnName == "QueryLabel");
+
+        // The HideHeaderName column still gets reported as missing, but without the
+        // "can be inserted" claim, since it isn't one
+        Assert.Contains(messages, m => m.Message.Contains("Missing column [QueryLabel]") && !m.Message.Contains("can be inserted"));
+        Assert.Contains(messages, m => m.Message.Contains("Missing column [Regular] - can be inserted"));
+    }
 }

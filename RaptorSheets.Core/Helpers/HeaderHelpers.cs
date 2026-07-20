@@ -233,15 +233,29 @@ public static class HeaderHelpers
 
             if (!values.Any(x => string.Equals(x?.ToString()?.Trim(), sheetHeader.Name, StringComparison.OrdinalIgnoreCase)))
             {
-                insertionInfo.Add(new ColumnInsertionInfo
+                // HideHeaderName columns are populated by a spilling QUERY formula placed in an
+                // earlier header cell (see SheetHelpers' use of the flag when writing headers) -
+                // they never have their own standalone header cell to insert, and physically
+                // inserting a column here would land inside the query's contiguous spill range
+                // and break it. They're also expected to read back empty whenever the sheet
+                // currently has no underlying rows for the query to spill, so this isn't
+                // necessarily a real problem - just never a candidate for insertion.
+                if (!sheetHeader.HideHeaderName)
                 {
-                    SheetName = sheetModel.Name,
-                    ColumnIndex = index,
-                    ColumnName = sheetHeader.Name,
-                    ColumnLetter = SheetHelpers.GetColumnName(index)
-                });
+                    insertionInfo.Add(new ColumnInsertionInfo
+                    {
+                        SheetName = sheetModel.Name,
+                        ColumnIndex = index,
+                        ColumnName = sheetHeader.Name,
+                        ColumnLetter = SheetHelpers.GetColumnName(index)
+                    });
 
-                messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}] - can be inserted", MessageTypeEnum.CHECK_SHEET));
+                    messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}] - can be inserted", MessageTypeEnum.CHECK_SHEET));
+                }
+                else
+                {
+                    messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
+                }
             }
             else
             {
