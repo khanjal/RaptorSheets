@@ -74,6 +74,34 @@ public static class GigSheetHelpers
         return s_registry.GetMissingSheets(spreadsheet, GetSheetNames());
     }
 
+    /// <summary>
+    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Gig sheet.
+    /// Only needs sheet tab metadata (no grid/cell data) - safe to call with a cheap, no-ranges
+    /// spreadsheet fetch. Known-sheet header validation happens separately via <see cref="MapData(BatchGetValuesByDataFilterResponse)"/>.
+    /// </summary>
+    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
+    {
+        return s_registry.CheckUnknownSheets(spreadsheet);
+    }
+
+    /// <summary>
+    /// Full header validation against grid-data (IncludeGridData=true) spreadsheet metadata.
+    /// </summary>
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
+    {
+        return s_registry.CheckSheetHeaders(spreadsheet);
+    }
+
+    public static SheetModel? GetSheetLayout(string sheetName)
+    {
+        return s_registry.GetSheetLayout(sheetName);
+    }
+
+    public static List<SheetModel> GetSheetLayouts(IEnumerable<string> sheetNames)
+    {
+        return s_registry.GetSheetLayouts(sheetNames);
+    }
+
     public static DataValidationRule GetDataValidation(ValidationEnum validation, string? range = "")
     {
         var dataValidation = new DataValidationRule();

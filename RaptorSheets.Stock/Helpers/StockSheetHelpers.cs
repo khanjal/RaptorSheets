@@ -1,4 +1,5 @@
 using Google.Apis.Sheets.v4.Data;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Helpers;
@@ -58,6 +59,33 @@ public static class StockSheetHelpers
     {
         var canonicalNames = Enum.GetValues<SheetEnum>().Select(e => e.GetDescription());
         return s_registry.GetMissingSheets(spreadsheet, canonicalNames);
+    }
+
+    /// <summary>
+    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Stock sheet.
+    /// Only needs sheet tab metadata (no grid/cell data).
+    /// </summary>
+    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
+    {
+        return s_registry.CheckUnknownSheets(spreadsheet);
+    }
+
+    /// <summary>
+    /// Full header validation against grid-data (IncludeGridData=true) spreadsheet metadata.
+    /// </summary>
+    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
+    {
+        return s_registry.CheckSheetHeaders(spreadsheet);
+    }
+
+    public static SheetModel? GetSheetLayout(string sheetName)
+    {
+        return s_registry.GetSheetLayout(sheetName);
+    }
+
+    public static List<SheetModel> GetSheetLayouts(IEnumerable<string> sheetNames)
+    {
+        return s_registry.GetSheetLayouts(sheetNames);
     }
 
     public static DataValidationRule GetDataValidation(ValidationEnum validation)

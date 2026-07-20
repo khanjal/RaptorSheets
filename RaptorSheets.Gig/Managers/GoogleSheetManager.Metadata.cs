@@ -2,13 +2,9 @@ using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
-using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
-using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Helpers;
-using RaptorSheets.Gig.Mappers;
 
 namespace RaptorSheets.Gig.Managers;
 
@@ -23,31 +19,6 @@ public partial class GoogleSheetManager
     public async Task<List<PropertyEntity>> GetAllSheetProperties()
     {
         return await GetSheetProperties(SheetsConfig.SheetUtilities.GetAllSheetNames());
-    }
-
-    private static IEnumerable<MessageEntity> GetHeaderMessagesForKnownSheets(IEnumerable<Sheet> knownSheets)
-    {
-        foreach (var sheet in knownSheets)
-        {
-            var sheetName = sheet.Properties.Title;
-            var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
-
-            if (s_headerFactories.TryGetValue(sheetName, out var factory))
-            {
-                foreach (var msg in HeaderHelpers.CheckSheetHeaders(sheetHeader, factory()))
-                {
-                    yield return msg;
-                }
-            }
-        }
-    }
-
-    private static IEnumerable<MessageEntity> GetUnknownSheetWarnings(IEnumerable<Sheet> unknownSheets)
-    {
-        foreach (var sheet in unknownSheets)
-        {
-            yield return MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageTypeEnum.CHECK_SHEET);
-        }
     }
 
     public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets)
@@ -138,82 +109,20 @@ public partial class GoogleSheetManager
 
     #region Header Validation
 
-    // Sheet name -> SheetModel factory (case-insensitive) used for header checks
-    private static readonly Dictionary<string, Func<SheetModel>> s_headerFactories = new(StringComparer.OrdinalIgnoreCase)
-    {
-        { SheetsConfig.SheetNames.Addresses, AddressMapper.GetSheet },
-        { SheetsConfig.SheetNames.Daily, DailyMapper.GetSheet },
-        { SheetsConfig.SheetNames.Expenses, () => GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet) },
-        { SheetsConfig.SheetNames.Monthly, MonthlyMapper.GetSheet },
-        { SheetsConfig.SheetNames.Names, NameMapper.GetSheet },
-        { SheetsConfig.SheetNames.Places, PlaceMapper.GetSheet },
-        { SheetsConfig.SheetNames.Deliveries, DeliveryMapper.GetSheet },
-        { SheetsConfig.SheetNames.Locations, LocationMapper.GetSheet },
-        { SheetsConfig.SheetNames.Regions, RegionMapper.GetSheet },
-        { SheetsConfig.SheetNames.Services, ServiceMapper.GetSheet },
-        { SheetsConfig.SheetNames.Setup, () => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet) },
-        { SheetsConfig.SheetNames.Shifts, ShiftMapper.GetSheet },
-        { SheetsConfig.SheetNames.Trips, TripMapper.GetSheet },
-        { SheetsConfig.SheetNames.Types, TypeMapper.GetSheet },
-        { SheetsConfig.SheetNames.Weekdays, WeekdayMapper.GetSheet },
-        { SheetsConfig.SheetNames.Weekly, WeeklyMapper.GetSheet },
-        { SheetsConfig.SheetNames.Yearly, YearlyMapper.GetSheet }
-    };
-
     /// <summary>
-    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known RaptorSheets
-    /// sheet. Unlike <see cref="CheckSheetHeaders"/>, this only needs sheet tab metadata (no grid/cell
-    /// data), so it's safe to call with a cheap <c>GetSheetInfo()</c> (no ranges) result. Known-sheet
-    /// header validation (missing/renamed/reordered columns) is handled separately, per-sheet, by
-    /// <see cref="HeaderHelpers.CheckSheetHeaders(IList{object}, Models.Google.SheetModel)"/> using data
-    /// already fetched via batchGet - it does not need to be repeated here.
+    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Gig sheet.
+    /// Only needs sheet tab metadata (no grid/cell data), so it's safe to call with a cheap
+    /// <c>GetSheetInfo()</c> (no ranges) result. Known-sheet header validation (missing/renamed/
+    /// reordered columns) is handled separately, per-sheet, using data already fetched via batchGet.
     /// </summary>
     public static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
     {
-        var messages = new List<MessageEntity>();
-
-        if (sheetInfoResponse == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
-            return messages;
-        }
-
-        var sheets = sheetInfoResponse.Sheets ?? new List<Sheet>();
-        var unknownSheets = sheets.Where(s => !s_headerFactories.ContainsKey(s.Properties.Title));
-
-        messages.AddRange(GetUnknownSheetWarnings(unknownSheets));
-
-        return messages;
+        return GigSheetHelpers.CheckUnknownSheets(sheetInfoResponse);
     }
 
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
-        var messages = new List<MessageEntity>();
-
-        if (sheetInfoResponse == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
-            return messages;
-        }
-        // Separate known and unknown sheets to simplify logic
-        var sheets = sheetInfoResponse.Sheets ?? new List<Sheet>();
-        var knownSheets = sheets.Where(s => s_headerFactories.ContainsKey(s.Properties.Title));
-        var unknownSheets = sheets.Except(knownSheets);
-
-        var headerMessages = GetHeaderMessagesForKnownSheets(knownSheets).ToList();
-        messages.AddRange(GetUnknownSheetWarnings(unknownSheets));
-
-        if (headerMessages.Count > 0)
-        {
-            messages.Add(MessageHelpers.CreateWarningMessage($"Found sheet header issue(s)", MessageTypeEnum.CHECK_SHEET));
-            messages.AddRange(headerMessages);
-        }
-        else
-        {
-            messages.Add(MessageHelpers.CreateInfoMessage($"No sheet header issues found", MessageTypeEnum.CHECK_SHEET));
-        }
-
-        return messages;
+        return GigSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
     }
 
     #endregion
@@ -231,14 +140,7 @@ public partial class GoogleSheetManager
     {
         try
         {
-            // Use the centralized factory map for sheet layouts (case-insensitive)
-            if (string.IsNullOrEmpty(sheet))
-                return null;
-
-            if (s_headerFactories.TryGetValue(sheet, out var factory))
-                return factory();
-
-            return null;
+            return GigSheetHelpers.GetSheetLayout(sheet);
         }
         catch (Exception)
         {

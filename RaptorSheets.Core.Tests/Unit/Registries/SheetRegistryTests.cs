@@ -252,4 +252,137 @@ public class SheetRegistryTests
         Assert.NotNull(result);
         Assert.NotEmpty(result.Messages);
     }
+
+    [Fact]
+    public void CheckUnknownSheets_WithNullSpreadsheet_ShouldReturnErrorMessage()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+
+        var result = registry.CheckUnknownSheets(null!);
+
+        Assert.Single(result);
+        Assert.Contains("Unable to retrieve sheet(s)", result[0].Message);
+    }
+
+    [Fact]
+    public void CheckUnknownSheets_WithUnregisteredTab_ShouldWarn()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModel, (_, _) => { });
+
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new Sheet { Properties = new SheetProperties { Title = "Widgets" } },
+                new Sheet { Properties = new SheetProperties { Title = "Gadgets" } }
+            ]
+        };
+
+        var result = registry.CheckUnknownSheets(spreadsheet);
+
+        Assert.Contains(result, m => m.Message.Contains("Gadgets") && m.Message.Contains("does not match any known sheet name"));
+    }
+
+    [Fact]
+    public void CheckSheetHeaders_WithNullSpreadsheet_ShouldReturnErrorMessage()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+
+        var result = registry.CheckSheetHeaders(null!);
+
+        Assert.Single(result);
+        Assert.Contains("Unable to retrieve sheet(s)", result[0].Message);
+    }
+
+    [Fact]
+    public void CheckSheetHeaders_WithMatchingHeader_ShouldReportNoIssues()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModel, (_, _) => { });
+
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new Sheet
+                {
+                    Properties = new SheetProperties { Title = "Widgets" },
+                    Data =
+                    [
+                        new GridData
+                        {
+                            RowData = [new RowData { Values = [new CellData { FormattedValue = "Name" }] }]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        var result = registry.CheckSheetHeaders(spreadsheet);
+
+        Assert.Contains(result, m => m.Message.Contains("No sheet header issues found"));
+    }
+
+    [Fact]
+    public void CheckSheetHeaders_WithMismatchedHeader_ShouldReportIssue()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModel, (_, _) => { });
+
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new Sheet
+                {
+                    Properties = new SheetProperties { Title = "Widgets" },
+                    Data =
+                    [
+                        new GridData
+                        {
+                            RowData = [new RowData { Values = [new CellData { FormattedValue = "WrongHeader" }] }]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        var result = registry.CheckSheetHeaders(spreadsheet);
+
+        Assert.Contains(result, m => m.Message.Contains("Found sheet header issue(s)"));
+    }
+
+    [Fact]
+    public void GetSheetLayout_WithRegisteredSheet_ReturnsModel()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModel, (_, _) => { });
+
+        var layout = registry.GetSheetLayout("Widgets");
+
+        Assert.NotNull(layout);
+        Assert.Equal("Widgets", layout.Name);
+    }
+
+    [Fact]
+    public void GetSheetLayout_WithUnknownSheet_ReturnsNull()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+
+        Assert.Null(registry.GetSheetLayout("Unknown"));
+        Assert.Null(registry.GetSheetLayout(""));
+    }
+
+    [Fact]
+    public void GetSheetLayouts_WithMixedNames_ReturnsOnlyRegistered()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModel, (_, _) => { });
+
+        var layouts = registry.GetSheetLayouts(["Widgets", "Unknown"]);
+
+        Assert.Single(layouts);
+        Assert.Equal("Widgets", layouts[0].Name);
+    }
 }

@@ -82,6 +82,72 @@ public class GoogleSheetManagerTests
     }
 
     [Fact]
+    public void CheckSheetHeaders_WithMismatchedAccountsHeader_ShouldReportIssue()
+    {
+        // Accounts (and Tickers) header validation used to be silently skipped (dead/commented-out
+        // switch cases) - this confirms the shared registry-backed implementation actually checks them.
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new()
+                {
+                    Properties = new SheetProperties { Title = "Accounts" },
+                    Data =
+                    [
+                        new()
+                        {
+                            RowData =
+                            [
+                                new() { Values = [new() { FormattedValue = "NotARealHeader" }] }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+
+        Assert.Contains(result, m => m.Message.Contains("Found sheet header issue(s)"));
+    }
+
+    [Fact]
+    public void CheckUnknownSheets_WithUnknownTab_ShouldReturnWarning()
+    {
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new() { Properties = new SheetProperties { Title = "Stocks" } },
+                new() { Properties = new SheetProperties { Title = "SomeRandomTab" } }
+            ]
+        };
+
+        var result = GoogleSheetManager.CheckUnknownSheets(spreadsheet);
+
+        Assert.Contains(result, m => m.Message.Contains("SomeRandomTab") && m.Message.Contains("does not match any known sheet name"));
+    }
+
+    [Fact]
+    public void CheckUnknownSheets_WithOnlyKnownSheets_ShouldReturnNoWarnings()
+    {
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new() { Properties = new SheetProperties { Title = "Accounts" } },
+                new() { Properties = new SheetProperties { Title = "Stocks" } },
+                new() { Properties = new SheetProperties { Title = "Tickers" } }
+            ]
+        };
+
+        var result = GoogleSheetManager.CheckUnknownSheets(spreadsheet);
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
     public void GetSheetLayout_WithValidSheet_ReturnsModel()
     {
         var manager = new GoogleSheetManager("token", "spreadsheet");

@@ -1,5 +1,6 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 
@@ -119,6 +120,121 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
         }
 
         return missing;
+    }
+
+    /// <summary>
+    /// Checks a spreadsheet's tab names for sheets that don't correspond to any registered sheet.
+    /// Unlike <see cref="CheckSheetHeaders"/>, this only needs sheet tab metadata (no grid/cell
+    /// data), so it's safe to call with a cheap metadata-only spreadsheet fetch.
+    /// </summary>
+    public List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
+    {
+        var messages = new List<MessageEntity>();
+
+        if (spreadsheet == null)
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage("Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
+            return messages;
+        }
+
+        var sheets = spreadsheet.Sheets ?? [];
+        var unknownSheets = sheets.Where(s => !_factories.ContainsKey(s.Properties.Title));
+
+        messages.AddRange(UnknownSheetWarnings(unknownSheets));
+
+        return messages;
+    }
+
+    /// <summary>
+    /// Full header validation: for every known sheet present in <paramref name="spreadsheet"/>,
+    /// checks its actual header row (from grid data) against the registered SheetModel's expected
+    /// headers (missing/renamed/reordered columns); for every unrecognized tab, adds a warning.
+    /// Requires grid data (IncludeGridData=true) on <paramref name="spreadsheet"/>.
+    /// </summary>
+    public List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
+    {
+        var messages = new List<MessageEntity>();
+
+        if (spreadsheet == null)
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage("Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
+            return messages;
+        }
+
+        var sheets = spreadsheet.Sheets ?? [];
+        var knownSheets = sheets.Where(s => _factories.ContainsKey(s.Properties.Title)).ToList();
+        var unknownSheets = sheets.Except(knownSheets);
+
+        var headerMessages = KnownSheetHeaderMessages(knownSheets).ToList();
+        messages.AddRange(UnknownSheetWarnings(unknownSheets));
+
+        if (headerMessages.Count > 0)
+        {
+            messages.Add(MessageHelpers.CreateWarningMessage("Found sheet header issue(s)", MessageTypeEnum.CHECK_SHEET));
+            messages.AddRange(headerMessages);
+        }
+        else
+        {
+            messages.Add(MessageHelpers.CreateInfoMessage("No sheet header issues found", MessageTypeEnum.CHECK_SHEET));
+        }
+
+        return messages;
+    }
+
+    private IEnumerable<MessageEntity> KnownSheetHeaderMessages(IEnumerable<Sheet> knownSheets)
+    {
+        foreach (var sheet in knownSheets)
+        {
+            var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
+
+            if (_factories.TryGetValue(sheet.Properties.Title, out var factory))
+            {
+                foreach (var msg in HeaderHelpers.CheckSheetHeaders(sheetHeader, factory()))
+                {
+                    yield return msg;
+                }
+            }
+        }
+    }
+
+    private static IEnumerable<MessageEntity> UnknownSheetWarnings(IEnumerable<Sheet> unknownSheets)
+    {
+        foreach (var sheet in unknownSheets)
+        {
+            yield return MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageTypeEnum.CHECK_SHEET);
+        }
+    }
+
+    /// <summary>
+    /// Gets the SheetModel (headers/formulas/formats) for a registered sheet by name, or null if unknown.
+    /// </summary>
+    public SheetModel? GetSheetLayout(string sheetName)
+    {
+        if (string.IsNullOrEmpty(sheetName))
+        {
+            return null;
+        }
+
+        return _factories.TryGetValue(sheetName, out var factory) ? factory() : null;
+    }
+
+    /// <summary>
+    /// Gets SheetModels for every requested name that's registered, silently skipping unknown ones.
+    /// </summary>
+    public List<SheetModel> GetSheetLayouts(IEnumerable<string> sheetNames)
+    {
+        var models = new List<SheetModel>();
+
+        foreach (var name in sheetNames)
+        {
+            var model = GetSheetLayout(name);
+            if (model != null)
+            {
+                models.Add(model);
+            }
+        }
+
+        return models;
     }
 }
 

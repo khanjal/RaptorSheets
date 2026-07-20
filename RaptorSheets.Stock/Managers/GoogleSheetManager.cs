@@ -8,7 +8,6 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Managers;
 using RaptorSheets.Stock.Entities;
-using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Stock.Helpers;
 using RaptorSheets.Core.Models.Google;
 using SheetEnum = RaptorSheets.Stock.Enums.SheetEnum;
@@ -91,50 +90,18 @@ public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
         return sheetEntity;
     }
 
+    /// <summary>
+    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Stock sheet.
+    /// Only needs sheet tab metadata (no grid/cell data).
+    /// </summary>
+    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
+    {
+        return StockSheetHelpers.CheckUnknownSheets(sheetInfoResponse);
+    }
+
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
-        var messages = new List<MessageEntity>();
-
-        if (sheetInfoResponse == null)
-        {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
-            return messages;
-        }
-
-        var headerMessages = new List<MessageEntity>();
-        // Loop through sheets to check headers.
-        foreach (var sheet in sheetInfoResponse.Sheets)
-        {
-            var sheetEnum = (Enums.SheetEnum)Enum.Parse(typeof(Enums.SheetEnum), sheet.Properties.Title.ToUpper());
-            var sheetHeader = HeaderHelpers.GetHeadersFromCellData(sheet.Data?[0]?.RowData?[0]?.Values);
-
-            switch (sheetEnum)
-            {
-                case Enums.SheetEnum.ACCOUNTS:
-                    // headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, AccountMapper.GetSheet()));
-                    break;
-                case Enums.SheetEnum.STOCKS:
-                    headerMessages.AddRange(HeaderHelpers.CheckSheetHeaders(sheetHeader, StockMapper.GetSheet()));
-                    break;
-                case Enums.SheetEnum.TICKERS:
-                    // headerMessages.AddRange(HeaderHelper.CheckSheetHeaders(sheetHeader, TickerMapper.GetSheet()));
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        if (headerMessages.Count > 0)
-        {
-            messages.Add(MessageHelpers.CreateWarningMessage($"Found sheet header issue(s)", MessageTypeEnum.CHECK_SHEET));
-            messages.AddRange(headerMessages);
-        }
-        else
-        {
-            messages.Add(MessageHelpers.CreateInfoMessage($"No sheet header issues found", MessageTypeEnum.CHECK_SHEET));
-        }
-
-        return messages;
+        return StockSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
     }
 
     public async Task<SheetEntity> CreateSheets()
@@ -246,23 +213,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase, IGoogleSheetManager
     {
         try
         {
-            // Try to parse as enum
-            var sheetExists = Enum.TryParse(sheet.ToUpper(), out Enums.SheetEnum sheetEnum) 
-                && Enum.IsDefined(typeof(Enums.SheetEnum), sheetEnum);
-
-            if (!sheetExists)
-            {
-                return null;
-            }
-
-            // Get the appropriate mapper's sheet model
-            return sheetEnum switch
-            {
-                Enums.SheetEnum.ACCOUNTS => AccountMapper.GetSheet(),
-                Enums.SheetEnum.STOCKS => StockMapper.GetSheet(),
-                Enums.SheetEnum.TICKERS => TickerMapper.GetSheet(),
-                _ => null
-            };
+            return StockSheetHelpers.GetSheetLayout(sheet);
         }
         catch (Exception)
         {
