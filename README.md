@@ -303,12 +303,17 @@ For a package that manages several related sheets (like Gig or Stock), inherit
 properties, tab names, layouts, `InsertMissingColumns`, and missing-column auto-healing:
 
 ```csharp
-// 1. A top-level entity implementing ISheetEntity (Properties + Messages + your typed rows)
-public class SheetEntity : ISheetEntity
+// 1. A Sheets container holding your typed row collections, and a top-level SheetEntity built on
+//    SheetEntityBase<TSheets> (Properties/Sheets/Messages come from Core). Row collections live
+//    under Sheets rather than flat on SheetEntity, so a domain sheet can never collide with the
+//    reserved Properties/Messages members.
+public class CatalogSheets
 {
-    public PropertyEntity Properties { get; set; } = new();
-    public List<MessageEntity> Messages { get; set; } = [];
     public List<ProductEntity> Products { get; set; } = [];
+}
+
+public class SheetEntity : SheetEntityBase<CatalogSheets>
+{
 }
 
 // 2. A registry mapping each sheet name to its headers + row mapping (RegisterGeneric uses
@@ -321,7 +326,7 @@ public static class CatalogSheetHelpers
     {
         var registry = new SheetRegistry<SheetEntity>();
         registry.RegisterGeneric<SheetEntity, ProductEntity>(
-            "Products", ProductMapper.GetSheet, (se, rows) => se.Products = rows);
+            "Products", ProductMapper.GetSheet, (se, rows) => se.Sheets.Products = rows);
         return registry;
     }
 }

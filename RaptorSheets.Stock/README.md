@@ -1,8 +1,9 @@
 # RaptorSheets.Stock
 
-> **Status: in development.** The read path (sheets, mapping, self-heal, header validation) works and
-> is tested; write operations beyond sheet creation (`ChangeSheetData`, `DeleteSheets`) are not
-> implemented yet. APIs may change.
+> **Status: in development.** The read path (sheets, mapping, self-heal, header validation) and sheet
+> creation/deletion work and are tested. `ChangeSheetData` is wired for the Stocks sheet's `Shares`
+> column only - Accounts and Tickers are fully formula/`GOOGLEFINANCE`-driven rollups with nothing
+> else for a user to change. APIs may still change.
 
 ## Overview
 
@@ -33,6 +34,7 @@ dotnet add package RaptorSheets.Stock
 ## Quick Start
 
 ```csharp
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Managers;
 using RaptorSheets.Stock.Enums;
 
@@ -40,14 +42,52 @@ using RaptorSheets.Stock.Enums;
 var manager = new GoogleSheetManager("your-access-token", "spreadsheet-id");
 
 // Create the stock sheets
-await manager.CreateSheets();
+await manager.CreateAllSheets();
 
 // Read everything (batch read → self-heal missing sheets → map → auto-heal missing columns)
-var data = await manager.GetSheets();
-Console.WriteLine($"Accounts: {data.Accounts.Count}, Stocks: {data.Stocks.Count}");
+var data = await manager.GetAllSheets();
+Console.WriteLine($"Accounts: {data.Sheets.Accounts.Count}, Stocks: {data.Sheets.Stocks.Count}");
 
-// Read a subset by enum
-var subset = await manager.GetSheets(new List<SheetEnum> { SheetEnum.ACCOUNTS });
+// Read a subset by name
+var subset = await manager.GetSheets(new List<string> { SheetEnum.ACCOUNTS.GetDescription() });
+```
+
+## Data Operations
+
+### Creating and Deleting Sheets
+```csharp
+// Create all predefined sheets
+await manager.CreateAllSheets();
+
+// Create specific sheets
+await manager.CreateSheets(new List<string> { "Accounts", "Stocks" });
+
+// Delete everything (creates a temporary safety sheet first if it would otherwise leave zero
+// sheets in the spreadsheet, since Google Sheets requires at least one to remain)
+await manager.DeleteAllSheets();
+
+// Delete specific sheets
+await manager.DeleteSheets(new List<string> { "Tickers" });
+```
+
+### Updating Data
+`Shares` on the Stocks sheet is the only field a user can actually edit - every other column on
+Accounts/Stocks/Tickers is a cross-sheet formula or a live `GOOGLEFINANCE` pull, so there's nothing
+else for `ChangeSheetData` to change:
+
+```csharp
+var sheetEntity = new SheetEntity
+{
+    Sheets =
+    {
+        Stocks = new List<StockEntity>
+        {
+            new() { RowId = 2, Shares = 10 } // RowId identifies the existing row to update
+        }
+    }
+};
+
+var result = await manager.ChangeSheetData(new List<string> { "Stocks" }, sheetEntity);
 ```
 
 ## Inherited from Core
@@ -59,8 +99,11 @@ no Stock-specific code:
 - `GetSheetProperties` / `GetAllSheetProperties`, `GetAllSheetTabNames`
 - `GetSheetLayout` / `GetSheetLayouts`
 - `InsertMissingColumns`, `GetSpreadsheetInfo`, `GetBatchData`
+- `CreateSheets` / `CreateAllSheets`, `DeleteSheets` / `DeleteAllSheets` — ordered creation and
+  temp-sheet-safe deletion, same as Gig; Stock supplies its own `GenerateSheetsRequest` override
+  with its fully-configured `AddSheet` requests
 
-Stock-specific: `CreateSheets` (enum-based), `AddSheetData`, and the static `CheckSheetHeaders` /
+Stock-specific: `ChangeSheetData` (Shares only, see above) and the static `CheckSheetHeaders` /
 `CheckUnknownSheets` helpers.
 
 ## Related

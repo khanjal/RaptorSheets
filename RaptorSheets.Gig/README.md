@@ -35,59 +35,49 @@ var manager = new GoogleSheetManager(credentials, spreadsheetId);
 await manager.CreateAllSheets();
 
 // Get your data
-var data = await manager.GetSheets();
+var data = await manager.GetAllSheets();
 ```
 
 ## Demo Setup
 
-Create a demo spreadsheet with realistic sample data to explore RaptorSheets.Gig capabilities or set up test environments.
+Generate realistic sample data to explore RaptorSheets.Gig capabilities or set up test environments.
 
-### Option 1: Create a Complete Demo Spreadsheet
-
-Perfect for new users or demos. Creates all sheets and populates with 30 days of realistic gig data:
+`GenerateDemoData` only *builds* a populated `SheetEntity` in memory — it doesn't touch a
+spreadsheet by itself. Create the sheets (if they don't already exist) and write the data with
+`ChangeSheetData`, same as any other write:
 
 ```csharp
 var manager = new GoogleSheetManager(credentials, spreadsheetId);
 
-// Creates all sheets and adds sample data
-var result = await manager.SetupDemo();
+// Create the sheets (skip this if they already exist)
+await manager.CreateAllSheets();
+
+// Generate 30 days of realistic demo data (Shifts, Trips, Expenses)
+var demoData = manager.GenerateDemoData();
+
+// Write it to the spreadsheet
+var result = await manager.ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData);
 
 Console.WriteLine("✅ Demo spreadsheet ready!");
 ```
 
-### Option 2: Populate an Existing Spreadsheet
-
-If you already have sheets created, just add sample data:
-
-```csharp
-// Populate existing sheets with demo data
-var result = await manager.PopulateDemoData();
-
-Console.WriteLine($"Added demo data: {result.Shifts.Count} shifts, {result.Trips.Count} trips");
-```
-
-### Custom Date Ranges
-
-Specify custom date ranges for your demo data:
+### Custom Date Ranges and Reproducible Data
 
 ```csharp
 // Last 90 days
-await manager.SetupDemo(
+var demoData = manager.GenerateDemoData(
     startDate: DateTime.Today.AddDays(-90),
     endDate: DateTime.Today
 );
 
 // Specific quarter
-await manager.SetupDemo(
+var demoData = manager.GenerateDemoData(
     startDate: new DateTime(2024, 1, 1),
     endDate: new DateTime(2024, 3, 31)
 );
 
-// Full year
-await manager.PopulateDemoData(
-    startDate: new DateTime(2024, 1, 1),
-    endDate: new DateTime(2024, 12, 31)
-);
+// Deterministic output (same seed → same data, useful for tests)
+var demoData = manager.GenerateDemoData(seed: 42);
 ```
 
 ### What Demo Data Includes
@@ -129,9 +119,11 @@ public async Task CreateDemoSpreadsheet()
     
     var spreadsheetId = spreadsheet.SpreadsheetId;
     
-    // 2. Set up demo with sample data
+    // 2. Create the sheets and write generated demo data to them
     var manager = new GoogleSheetManager(credentials, spreadsheetId);
-    var result = await manager.SetupDemo();
+    await manager.CreateAllSheets();
+    var demoData = manager.GenerateDemoData();
+    var result = await manager.ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData);
     
     // 3. View your demo
     Console.WriteLine($"✅ Demo ready at: https://docs.google.com/spreadsheets/d/{spreadsheetId}");
@@ -142,8 +134,8 @@ public async Task CreateDemoSpreadsheet()
 
 **"Unable to save data" Error**
 - Ensure spreadsheet exists and has write permissions
-- Use `SetupDemo()` for new spreadsheets (creates sheets first)
-- Use `PopulateDemoData()` only when sheets already exist
+- Call `CreateAllSheets()` first if the sheets don't exist yet - `GenerateDemoData()` only builds
+  the data in memory, it doesn't create sheets or write anything by itself
 
 **No Data Appearing**
 - Verify date range is valid (startDate < endDate)
@@ -372,16 +364,30 @@ public class LocationEntity
 ```csharp
 public interface IGoogleSheetManager
 {
+    // CRUD Operations
     Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
     Task<SheetEntity> CreateAllSheets();
     Task<SheetEntity> CreateSheets(List<string> sheets);
+    Task<SheetEntity> DeleteAllSheets();
+    Task<SheetEntity> DeleteSheets(List<string> sheets);
     Task<SheetEntity> GetSheet(string sheet);
     Task<SheetEntity> GetAllSheets();
     Task<SheetEntity> GetSheets(List<string> sheets);
+
+    // Metadata & Properties
     Task<List<PropertyEntity>> GetAllSheetProperties();
     Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
-    Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null);
-    Task<SheetEntity> PopulateDemoData(DateTime? startDate = null, DateTime? endDate = null);
+    Task<List<string>> GetAllSheetTabNames();
+    Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null);
+    Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
+    SheetModel? GetSheetLayout(string sheet);
+    List<SheetModel> GetSheetLayouts(List<string> sheets);
+
+    // Header Management
+    Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
+
+    // Demo Data Generation - builds data in memory only, see Demo Setup above for writing it
+    SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null);
 }
 ```
 
@@ -431,14 +437,14 @@ var allData = await manager.GetAllSheets();
 
 // Get specific sheet
 var tripData = await manager.GetSheet("Trips");
-Console.WriteLine($"Found {tripData.Trips.Count} trips");
+Console.WriteLine($"Found {tripData.Sheets.Trips.Count} trips");
 
 // Get multiple sheets efficiently
 var sheets = new List<string> { "Trips", "Shifts" };
 var data = await manager.GetSheets(sheets);
 
-// Access the data
-foreach (var trip in data.Trips)
+// Access the data - row collections live under Sheets, not flat on the entity
+foreach (var trip in data.Sheets.Trips)
 {
     Console.WriteLine($"Trip: {trip.Date} - ${trip.Pay} + ${trip.Tip}");
 }
@@ -464,7 +470,7 @@ var newTrips = new List<TripEntity>
     }
 };
 
-var sheetEntity = new SheetEntity { Trips = newTrips };
+var sheetEntity = new SheetEntity { Sheets = { Trips = newTrips } };
 
 // Update the sheet
 var result = await manager.ChangeSheetData(["Trips"], sheetEntity);
@@ -482,12 +488,15 @@ if (result.Messages.Any(m => m.Level == "Error"))
 
 ### Working with Multiple Data Types
 ```csharp
-// Update multiple sheet types at once
+// Update multiple sheet types at once - row collections live under Sheets
 var sheetEntity = new SheetEntity
 {
-    Trips = new List<TripEntity> { /* trip data */ },
-    Shifts = new List<ShiftEntity> { /* shift data */ },
-    Expenses = new List<ExpenseEntity> { /* expense data */ }
+    Sheets =
+    {
+        Trips = new List<TripEntity> { /* trip data */ },
+        Shifts = new List<ShiftEntity> { /* shift data */ },
+        Expenses = new List<ExpenseEntity> { /* expense data */ }
+    }
 };
 
 var sheetsToUpdate = new List<string> { "Trips", "Shifts", "Expenses" };
@@ -515,7 +524,7 @@ var tripProperties = await manager.GetSheetProperties(["Trips"]);
 
 ### Error Handling and Messages
 ```csharp
-var result = await manager.GetSheets();
+var result = await manager.GetAllSheets();
 
 // Process different message types
 foreach (var message in result.Messages)
@@ -628,9 +637,12 @@ var todayExpenses = new List<ExpenseEntity>
 // Update all data at once
 var sheetEntity = new SheetEntity
 {
-    Shifts = [todayShift],
-    Trips = todayTrips,
-    Expenses = todayExpenses
+    Sheets =
+    {
+        Shifts = [todayShift],
+        Trips = todayTrips,
+        Expenses = todayExpenses
+    }
 };
 
 var result = await manager.ChangeSheetData(
@@ -652,12 +664,12 @@ foreach (var message in result.Messages)
 var weekData = await manager.GetSheets(["Trips", "Shifts", "Expenses", "Weekly"]);
 
 // Calculate weekly totals
-var weekTrips = weekData.Trips.Where(t => IsCurrentWeek(t.Date)).ToList();
+var weekTrips = weekData.Sheets.Trips.Where(t => IsCurrentWeek(t.Date)).ToList();
 var totalEarnings = weekTrips.Sum(t => (t.Pay ?? 0) + (t.Tip ?? 0) + (t.Bonus ?? 0));
 var totalDistance = weekTrips.Sum(t => t.Distance ?? 0);
 var totalTrips = weekTrips.Count;
 
-var weekExpenses = weekData.Expenses.Where(e => IsCurrentWeek(e.Date)).ToList();
+var weekExpenses = weekData.Sheets.Expenses.Where(e => IsCurrentWeek(e.Date)).ToList();
 var totalExpenses = weekExpenses.Sum(e => e.Amount ?? 0);
 
 Console.WriteLine($"Week Summary:");
@@ -700,7 +712,7 @@ var batchSize = 100; // Process in batches
 for (int i = 0; i < tripEntities.Count; i += batchSize)
 {
     var batch = tripEntities.Skip(i).Take(batchSize).ToList();
-    var batchEntity = new SheetEntity { Trips = batch };
+    var batchEntity = new SheetEntity { Sheets = { Trips = batch } };
     
     var result = await manager.ChangeSheetData(["Trips"], batchEntity);
     
@@ -722,9 +734,9 @@ var result = await manager.ChangeSheetData(
 );
 
 // Avoid: Multiple separate calls
-await manager.ChangeSheetData(["Trips"], new SheetEntity { Trips = trips });
-await manager.ChangeSheetData(["Shifts"], new SheetEntity { Shifts = shifts });
-await manager.ChangeSheetData(["Expenses"], new SheetEntity { Expenses = expenses });
+await manager.ChangeSheetData(["Trips"], new SheetEntity { Sheets = { Trips = trips } });
+await manager.ChangeSheetData(["Shifts"], new SheetEntity { Sheets = { Shifts = shifts } });
+await manager.ChangeSheetData(["Expenses"], new SheetEntity { Sheets = { Expenses = expenses } });
 ```
 
 ### 2. Data Validation
@@ -794,7 +806,7 @@ async Task<SheetEntity> UpdateWithRetry(List<string> sheets, SheetEntity data, i
 ### Debug Information
 ```csharp
 // Enable detailed logging by examining all messages
-var result = await manager.GetSheets();
+var result = await manager.GetAllSheets();
 
 Console.WriteLine("=== Operation Details ===");
 foreach (var message in result.Messages)
@@ -804,9 +816,9 @@ foreach (var message in result.Messages)
 }
 
 Console.WriteLine($"\n=== Data Summary ===");
-Console.WriteLine($"Trips: {result.Trips?.Count ?? 0}");
-Console.WriteLine($"Shifts: {result.Shifts?.Count ?? 0}");
-Console.WriteLine($"Expenses: {result.Expenses?.Count ?? 0}");
+Console.WriteLine($"Trips: {result.Sheets.Trips.Count}");
+Console.WriteLine($"Shifts: {result.Sheets.Shifts.Count}");
+Console.WriteLine($"Expenses: {result.Sheets.Expenses.Count}");
 ```
 
 ## Support
