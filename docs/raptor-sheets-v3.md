@@ -105,9 +105,12 @@ create/delete surface; Stock is unaffected throughout (still 41 tests, untouched
    build a request for an ad-hoc name like `"TempSheet"`. Needs a `List<string>`-capable generator
    (or a minimal bare-`AddSheet` builder for non-domain sheets) before overriding
    `GenerateSheetsRequest`.
-3. **`ChangeSheetData`** stays per-domain (needs per-entity request-builders), but the *dispatch
-   scaffold* (accessor-map + switch, currently hand-rolled in Gig) is a repeatable pattern a shared
-   Core helper could take a domain-supplied map for.
+3. **Done (2026-07-20):** `ChangeSheetData` dispatch scaffold extracted to Core. The accessor-map +
+   separate request-building switch (which could drift out of sync) became one
+   `GoogleRequestHelpers.SheetChangeAccessor<TEntity>` record (GetCount + GetData + BuildRequests) +
+   `ResolveSheetsWithData`/`BuildChangeRequests`. Gig now declares one accessor dict as its single
+   source of truth; the request-builders themselves stay per-domain (still need per-entity mappers),
+   as expected. Job/Home get the same dispatch for free.
 4. **Stock write ops**: still lacks `ChangeSheetData`/`DeleteSheets` entirely (in development,
    expected).
 5. **Done (2026-07-20):** `GigRequestHelpers.cs` split the same way — `CreateDeleteRequests`,
@@ -121,15 +124,17 @@ create/delete surface; Stock is unaffected throughout (still 41 tests, untouched
    duplicate-logic bug found along the way: `DailyMapper`'s YEAR case hand-rolled the same
    ARRAYFORMULA Core's `BuildArrayFormulaYear` already builds — swapped to the builder call.
    `ApplyCommonFormats`/`ApplyFormatsByHeaderEnum` (genuinely Gig-specific) untouched.
-7. **TODO — revisit `GoogleRequestHelpers.CreateUpdateCellRequests<T>`/`ChangeSheetData<T>`**
-   (moved to Core in item 5 above, but only relocated as-is — not re-examined for their own
-   shape). Worth checking: the `GetEntityAction<T>`/`GetEntityRowId<T>` reflection-by-string-name
-   (`typeof(T).GetProperty("Action"/"RowId")`) could likely use a typed interface (like
-   `ISheetEntity` already does for `Properties`/`Messages`) instead of reflection, and/or reuse
-   whatever property-caching pattern `GenericSheetMapper<T>` already has (the v3 perf investigation
-   flagged uncached reflection as a real cost elsewhere). Also worth asking whether
-   `CreateUpdateCellRequests<T>`'s append/update split and `ChangeSheetData<T>`'s
-   save/delete split could be simplified now that they're one level removed from any domain.
+7. **Done (2026-07-20):** Revisited `GoogleRequestHelpers.CreateUpdateCellRequests<T>`/
+   `ChangeSheetData<T>`. The `GetEntityAction<T>`/`GetEntityRowId<T>` reflection-by-string-name
+   (`typeof(T).GetProperty("Action"/"RowId")` on every call, in filter loops) was replaced by
+   constraining `where T : SheetRowEntityBase` and reading `entity.Action`/`entity.RowId` directly —
+   the two reflection helpers were deleted. `SheetRowEntityBase` (RowId/Action/Saved) moved from
+   Gig to `RaptorSheets.Core.Entities` (it was fully generic). Side finding fixed: `SetupEntity`
+   hand-rolled its own RowId/Action/Saved (missing the `[JsonPropertyName]` camelCase attributes the
+   other 15 entities inherit) — now inherits the base. **BREAKING**: Setup's JSON keys change
+   PascalCase→camelCase (see the breaking-changes section below — this is exactly the kind of thing
+   worth doing before Job/Home). The append/update and save/delete split reads cleanly as-is; not
+   changed.
 8. **Done (2026-07-20):** Full scan of the remaining `RaptorSheets.Gig/Helpers` files plus
    `Mappers/` for dead code / Core-movable helpers. One finding:
    `CreateSheetsHelpers.OrderSheetTitlesByIndex` was fully generic — moved into Core's
@@ -178,6 +183,13 @@ exist: gig-logger's frontend + Lambda are the only consumers today, so breakage 
 contained - the same changes get more expensive once two more domains are built on top of the
 current shape. Breaking gig-logger is an accepted cost here, to be fixed after, not a reason to hold
 back.
+
+**Already shipped (2026-07-20) — first breaking change of this kind:** `SetupEntity`'s JSON keys
+changed PascalCase→camelCase (`RowId`/`Action`/`Saved` → `rowId`/`action`/`saved`) when it was moved
+onto `SheetRowEntityBase` (item 7 in the list above). Every other row entity already serialized
+camelCase; Setup was the lone inconsistency. **gig-logger's frontend must be updated to read the new
+Setup casing.** This is the pattern for the rest: when the scan finds more of these, fix them here
+and patch gig-logger after.
 
 ---
 
