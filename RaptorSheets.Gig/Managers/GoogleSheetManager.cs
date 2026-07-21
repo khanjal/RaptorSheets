@@ -84,172 +84,28 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         return CreateSheets(missingIndexMap);
     }
 
+    /// <summary>
+    /// Backs <see cref="GoogleSheetManagerBase{TEntity}.CreateSheets"/> and
+    /// <see cref="GoogleSheetManagerBase{TEntity}.DeleteSheets"/> (for temp-sheet creation) with
+    /// Gig's fully-configured AddSheet requests (headers, formatting, validation, colors).
+    /// </summary>
+    protected override BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
+    {
+        return GenerateSheetsHelpers.Generate(sheetNames);
+    }
+
     #endregion
 
     #region Create Operations
 
-    public async Task<SheetEntity> CreateAllSheets()
-    {
-        return await CreateSheets(SheetsConfig.SheetUtilities.GetAllSheetNames());
-    }
-
+    // CreateAllSheets() and CreateSheets(List<string>, Dictionary<string,int>?) are inherited from
+    // GoogleSheetManagerBase<SheetEntity>, backed by GenerateSheetsRequest above. This 1-arg overload
+    // only exists because C# requires exact arity to implicitly satisfy IGoogleSheetManager's
+    // single-parameter CreateSheets(List<string>) - an inherited method's optional parameter doesn't
+    // count for interface matching the way it does for ordinary callers.
     public async Task<SheetEntity> CreateSheets(List<string> sheets)
     {
-        // Delegate to the overload that accepts an optional existing index map
         return await CreateSheets(sheets, null);
-    }
-
-    /// <summary>
-    /// Creates sheets and uses the provided existing title->index map to compute insertion indices
-    /// (avoids an extra GetSheetInfo call if the caller already has spreadsheet metadata).
-    /// </summary>
-    public async Task<SheetEntity> CreateSheets(List<string> sheets, Dictionary<string,int>? existingIndexMap)
-    {
-        var sheetEntity = new SheetEntity();
-        var batchUpdateSpreadsheetRequest = GenerateSheetsHelpers.Generate(sheets);
-
-        // Fetch spreadsheet info once and reuse below to avoid duplicate API calls
-        Spreadsheet? spreadsheetInfo = null;
-
-        try
-        {
-            // Move default sheet (e.g., "Sheet1") to end in the same batch to minimize API calls
-            spreadsheetInfo = await _googleSheetService.GetSheetInfo();
-            var defaultSheet = spreadsheetInfo?.Sheets?.FirstOrDefault(s =>
-                string.Equals(s.Properties.Title, "Sheet1", StringComparison.OrdinalIgnoreCase));
-
-            if (defaultSheet != null && defaultSheet.Properties.SheetId.HasValue)
-            {
-                var existingCount = spreadsheetInfo!.Sheets!.Count;
-                var targetIndex = GoogleRequestHelpers.ComputeEndIndex(existingCount, sheets.Count);
-                batchUpdateSpreadsheetRequest.Requests.Add(
-                    GoogleRequestHelpers.GenerateUpdateSheetIndex(defaultSheet.Properties.SheetId.Value, targetIndex)
-                );
-            }
-        }
-        catch
-        {
-            // Warn but proceed with creation
-            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage(
-                "Could not move default sheet to end; proceeding with creation",
-                MessageTypeEnum.CREATE_SHEET));
-        }
-
-        // Attempt to compute desired positions for requested sheets and add index update
-        // requests so created sheets are placed in the expected order.
-        try
-        {
-            // Attempt to compute desired positions for requested sheets and add index update
-            // requests so created sheets are placed in the expected order.
-            IList<Request>? insertionRequests = null;
-            int existingRawCount = 0;
-
-            // Get the canonical ordered sheet list for index computation
-            var allSheets = GenerateSheetsHelpers.GetSheetNames();
-
-            // Reuse `spreadsheetInfo` fetched earlier when possible to avoid an extra API call.
-            Spreadsheet? currentInfo = spreadsheetInfo;
-            if (currentInfo == null)
-            {
-                try
-                {
-                    currentInfo = await _googleSheetService.GetSheetInfo();
-                }
-                catch
-                {
-                    // ignore - ordering may still be possible using provided maps
-                }
-            }
-
-            // If the caller passed a map whose keys overlap the requested sheets, treat it
-            // as a desired-index map (title -> desired index for newly-created sheets).
-            var providedMapIsDesiredIndices = existingIndexMap != null && existingIndexMap.Keys.Any(k => sheets.Contains(k, StringComparer.OrdinalIgnoreCase));
-
-            if (providedMapIsDesiredIndices)
-            {
-                // We'll apply the provided indices directly below without calling the ordering helper
-            }
-            else
-            {
-                if (existingIndexMap != null && existingIndexMap.Count > 0)
-                {
-                    existingRawCount = currentInfo?.Sheets?.Count ?? existingIndexMap.Count;
-                    insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(existingIndexMap, existingRawCount, allSheets);
-                }
-                else if (currentInfo != null)
-                {
-                    insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(currentInfo, allSheets);
-                }
-            }
-
-            // Determine the mapping from title -> desired index either from the ordering helper
-            // or directly from the provided desired-index map.
-            var targetIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-            if (providedMapIsDesiredIndices && existingIndexMap != null)
-            {
-                foreach (var kv in existingIndexMap.Where(kv => sheets.Contains(kv.Key, StringComparer.OrdinalIgnoreCase)))
-                    targetIndexMap[kv.Key] = kv.Value;
-            }
-            else if (insertionRequests != null)
-            {
-                foreach (var r in insertionRequests)
-                {
-                    var title = r?.AddSheet?.Properties?.Title;
-                    var idx = r?.AddSheet?.Properties?.Index;
-                    if (!string.IsNullOrEmpty(title) && idx.HasValue)
-                        targetIndexMap[title] = idx.Value;
-                }
-            }
-
-            if (targetIndexMap.Count > 0)
-            {
-                // Find AddSheet requests we will actually send (generated by GenerateSheetsHelpers)
-                var createdAdds = batchUpdateSpreadsheetRequest.Requests
-                    .Where(r => r.AddSheet != null && r.AddSheet.Properties != null && !string.IsNullOrEmpty(r.AddSheet.Properties.Title))
-                    .ToList();
-
-                // Assign desired Index directly on the AddSheet properties so sheets are created at the target index
-                foreach (var add in createdAdds)
-                {
-                    var title = add.AddSheet.Properties.Title;
-                    if (string.IsNullOrEmpty(title)) continue;
-
-                    if (targetIndexMap.TryGetValue(title, out var desiredIndex) && desiredIndex >= 0)
-                    {
-                        add.AddSheet.Properties.Index = desiredIndex;
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Non-fatal - proceed without ordering if we couldn't compute it
-            _logger.LogWarning(ex, "Unable to compute insertion indices");
-        }
-
-        var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
-
-
-        // No sheets created if null.
-        if (response == null)
-        {
-            foreach (var sheet in sheets)
-            {
-                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{sheet} not created", MessageTypeEnum.CREATE_SHEET));
-            }
-
-            return sheetEntity;
-        }
-
-        var sheetTitles = response.Replies.Where(x => x.AddSheet != null).Select(x => x.AddSheet.Properties.Title).ToList();
-
-        foreach (var sheetTitle in sheetTitles)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage($"{sheetTitle.ToUpperInvariant()} created", MessageTypeEnum.CREATE_SHEET));
-        }
-
-        return sheetEntity;
     }
 
     /// <summary>
@@ -410,113 +266,9 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
     #endregion
 
-    #region Delete Operations
-
-    public async Task<SheetEntity> DeleteAllSheets()
-    {
-        return await DeleteSheets(SheetsConfig.SheetUtilities.GetAllSheetNames());
-    }
-
-    public async Task<SheetEntity> DeleteSheets(List<string> sheets)
-    {
-        var sheetEntity = new SheetEntity();
-        try
-        {
-            var existingSheetsToDelete = await GetExistingSheetsToDelete(sheets, sheetEntity);
-            if (existingSheetsToDelete.Count == 0) return sheetEntity;
-
-            var allTabNames = await GetAllSheetTabNames();
-            var needsTempSheet = NeedsTempSheet(existingSheetsToDelete, allTabNames);
-            var tempSheetName = needsTempSheet ? "TempSheet" : null;
-
-            var requests = BuildDeletionRequests(existingSheetsToDelete, tempSheetName);
-
-            if (!string.IsNullOrEmpty(tempSheetName))
-            {
-                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
-                    $"Creating '{tempSheetName}' as safety sheet to maintain spreadsheet integrity",
-                    MessageTypeEnum.DELETE_SHEET));
-            }
-
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
-                $"Deleting {existingSheetsToDelete.Count} of {allTabNames.Count} sheets",
-                MessageTypeEnum.DELETE_SHEET));
-
-            var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-            var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest);
-
-            if (result != null)
-            {
-                sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
-                    "Sheet deletion completed successfully",
-                    MessageTypeEnum.DELETE_SHEET));
-            }
-            else
-            {
-                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage(
-                    "Sheet deletion failed - unable to execute batch request",
-                    MessageTypeEnum.DELETE_SHEET));
-            }
-        }
-        catch (Exception ex)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage(
-                $"Error deleting sheets: {ex.Message}",
-                MessageTypeEnum.DELETE_SHEET));
-        }
-
-        return sheetEntity;
-    }
-
-    private async Task<List<PropertyEntity>> GetExistingSheetsToDelete(List<string> sheets, SheetEntity sheetEntity)
-    {
-        var allSheetProperties = await GetAllSheetProperties();
-        var existingSheets = allSheetProperties
-            .Where(p => !string.IsNullOrEmpty(p.Id) &&
-                       int.TryParse(p.Id, out _) &&
-                       sheets.Contains(p.Name, StringComparer.OrdinalIgnoreCase))
-            .ToList();
-
-        if (existingSheets.Count == 0)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage(
-                "No sheets found to delete",
-                MessageTypeEnum.DELETE_SHEET));
-        }
-
-        return existingSheets;
-    }
-
-    private List<Request> BuildDeletionRequests(List<PropertyEntity> sheetsToDelete, string? tempSheetName)
-    {
-        var requests = new List<Request>();
-
-        if (!string.IsNullOrEmpty(tempSheetName))
-        {
-            var tempRequests = GenerateSheetsHelpers.Generate([tempSheetName]).Requests;
-            requests.AddRange(tempRequests);
-        }
-
-        var deleteRequests = GoogleRequestHelpers.GenerateDeleteSheetRequests(sheetsToDelete);
-        requests.AddRange(deleteRequests);
-
-        return requests;
-    }
-
-    private static bool NeedsTempSheet(List<PropertyEntity> sheetsToDelete, List<string> allTabNames)
-    {
-        var sheetsToDeleteNames = sheetsToDelete.Select(s => s.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        // Check if we're deleting all existing sheets (excluding any existing TempSheet)
-        var remainingSheets = allTabNames.Where(tabName =>
-            !sheetsToDeleteNames.Contains(tabName) &&
-            !tabName.Equals("TempSheet", StringComparison.OrdinalIgnoreCase)).ToList();
-
-        // Only need a temp sheet if we're deleting all non-temp sheets
-        return remainingSheets.Count == 0;
-    }
-
-    #endregion
+    // DeleteAllSheets() and DeleteSheets(List<string>) are inherited from
+    // GoogleSheetManagerBase<SheetEntity>, backed by GenerateSheetsRequest above (for temp-sheet
+    // creation) and GetAllSheetProperties/GetAllSheetTabNames (also inherited).
 
     #region Header Validation
 
