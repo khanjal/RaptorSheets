@@ -58,6 +58,31 @@ public class GoogleSheetManagerGenericBaseTests
     private static TestManager BuildManager(IGoogleSheetService service)
         => new(service, BuildRegistry(), [SheetName]);
 
+    // A second concrete subclass that DOES override GenerateSheetsRequest, mirroring Gig/Stock -
+    // exercises CreateSheets/DeleteSheets, which TestManager above can't (it deliberately leaves the
+    // default unimplemented to cover that guard).
+    private sealed class TestManagerWithGeneration : GoogleSheetManagerBase<TestEntity>
+    {
+        public TestManagerWithGeneration(IGoogleSheetService service, SheetRegistry<TestEntity> registry, List<string> canonical, ILogger? logger = null)
+            : base(service, registry, canonical, logger) { }
+
+        protected override Task<TestEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap)
+            => Task.FromResult(new TestEntity());
+
+        protected override BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
+        {
+            var request = new BatchUpdateSpreadsheetRequest { Requests = [] };
+            foreach (var name in sheetNames)
+            {
+                request.Requests.Add(new Request { AddSheet = new AddSheetRequest { Properties = new SheetProperties { Title = name } } });
+            }
+            return request;
+        }
+    }
+
+    private static TestManagerWithGeneration BuildGeneratingManager(IGoogleSheetService service, List<string>? canonicalNames = null)
+        => new(service, BuildRegistry(), canonicalNames ?? [SheetName]);
+
     [Fact]
     public void Constructor_WithNullRegistry_ShouldThrow()
     {
@@ -175,5 +200,187 @@ public class GoogleSheetManagerGenericBaseTests
 
         Assert.Equal(1, manager.CreateMissingCalls);
         Assert.Contains(result.Messages, m => m.Message.Contains("Created missing sheets") && m.Message.Contains(SheetName));
+    }
+
+    [Fact]
+    public async Task CreateSheets_WithoutGenerateSheetsRequestOverride_Throws()
+    {
+        // TestManager (unlike TestManagerWithGeneration) deliberately doesn't override
+        // GenerateSheetsRequest - mirrors a domain that hasn't wired up CreateSheets/DeleteSheets yet.
+        var manager = BuildManager(new Mock<IGoogleSheetService>().Object);
+
+        await Assert.ThrowsAsync<NotSupportedException>(() => manager.CreateSheets([SheetName]));
+    }
+
+    [Fact]
+    public async Task CreateAllSheets_HappyPath_ReturnsCreatedMessages()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>()))
+            .ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() }); // no default "Sheet1" present
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse
+            {
+                Replies = new List<Response> { new() { AddSheet = new AddSheetResponse { Properties = new SheetProperties { Title = SheetName } } } }
+            });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        var result = await manager.CreateAllSheets();
+
+        Assert.Contains(result.Messages, m => m.Message.Contains(SheetName.ToUpperInvariant()) && m.Message.Contains("created"));
+    }
+
+    [Fact]
+    public async Task CreateSheets_WithNullBatchResponse_ReturnsNotCreatedMessages()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync((Spreadsheet?)null);
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .ReturnsAsync((BatchUpdateSpreadsheetResponse?)null);
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        var result = await manager.CreateSheets([SheetName]);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains($"{SheetName} not created"));
+    }
+
+    [Fact]
+    public async Task CreateSheets_WithDefaultSheetPresent_RelocatesItInTheSameBatch()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheetWithDefaultSheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = "Sheet1", SheetId = 0 } } }
+        };
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheetWithDefaultSheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .Callback<BatchUpdateSpreadsheetRequest>(r => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        await manager.CreateSheets([SheetName]);
+
+        Assert.NotNull(captured);
+        Assert.Contains(captured!.Requests, r => r.UpdateSheetProperties != null);
+    }
+
+    [Fact]
+    public async Task CreateSheets_WithExistingIndexMap_AppliesProvidedIndices()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .Callback<BatchUpdateSpreadsheetRequest>(r => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        await manager.CreateSheets([SheetName], new Dictionary<string, int> { [SheetName] = 3 });
+
+        var addRequest = captured!.Requests.Single(r => r.AddSheet != null);
+        Assert.Equal(3, addRequest.AddSheet.Properties.Index);
+    }
+
+    [Fact]
+    public async Task DeleteAllSheets_WithNoExistingSheets_ReturnsInfoMessage()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        var result = await manager.DeleteAllSheets();
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("No sheets found to delete"));
+    }
+
+    [Fact]
+    public async Task DeleteSheets_WhenDeletingAllRemainingSheets_CreatesTempSheetFirst()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = SheetName, SheetId = 111 } } }
+        };
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        var result = await manager.DeleteSheets([SheetName]);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Creating 'TempSheet' as safety sheet"));
+        Assert.Contains(result.Messages, m => m.Message.Contains("Sheet deletion completed successfully"));
+    }
+
+    [Fact]
+    public async Task DeleteSheets_WhenOtherSheetsRemain_DoesNotCreateTempSheet()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet>
+            {
+                new() { Properties = new SheetProperties { Title = SheetName, SheetId = 111 } },
+                new() { Properties = new SheetProperties { Title = "OtherSheet", SheetId = 222 } }
+            }
+        };
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        var result = await manager.DeleteSheets([SheetName]);
+
+        Assert.DoesNotContain(result.Messages, m => m.Message.Contains("safety sheet"));
+        Assert.Contains(result.Messages, m => m.Message.Contains("Sheet deletion completed successfully"));
+    }
+
+    [Fact]
+    public async Task DeleteSheets_WithNullBatchResponse_ReturnsErrorMessage()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet>
+            {
+                new() { Properties = new SheetProperties { Title = SheetName, SheetId = 111 } },
+                new() { Properties = new SheetProperties { Title = "OtherSheet", SheetId = 222 } }
+            }
+        };
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .ReturnsAsync((BatchUpdateSpreadsheetResponse?)null);
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        var result = await manager.DeleteSheets([SheetName]);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Sheet deletion failed"));
+    }
+
+    [Fact]
+    public async Task DeleteSheets_WhenServiceThrows_ReturnsErrorMessage()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo()).ThrowsAsync(new InvalidOperationException("boom"));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ThrowsAsync(new InvalidOperationException("boom"));
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        var result = await manager.DeleteSheets([SheetName]);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Error deleting sheets") && m.Message.Contains("boom"));
     }
 }
