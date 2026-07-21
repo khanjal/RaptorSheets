@@ -465,30 +465,30 @@ public static class GoogleRequestHelpers
     }
 
     /// <summary>
-    /// Generic method to handle sheet data changes for any entity type
+    /// Generic method to handle sheet data changes for any row entity type
     /// </summary>
     public static List<Request> ChangeSheetData<T>(List<T> entities, PropertyEntity? sheetProperties, Func<List<T>, PropertyEntity?, IEnumerable<Request>> createUpdateRequests)
-        where T : class
+        where T : SheetRowEntityBase
     {
         var requests = new List<Request>();
 
         // Append/Update requests FIRST - this ensures row IDs are correct before any deletions
-        var saveEntities = entities?.Where(x => GetEntityAction(x) != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        var saveEntities = entities?.Where(x => x.Action != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
         requests.AddRange(createUpdateRequests(saveEntities, sheetProperties));
 
         // Delete requests AFTER updates - delete from highest row ID to lowest to prevent shifting issues
-        var deleteEntities = entities?.Where(x => GetEntityAction(x) == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
-        var rowIds = deleteEntities.Select(x => GetEntityRowId(x)).ToList();
+        var deleteEntities = entities?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        var rowIds = deleteEntities.Select(x => x.RowId).ToList();
         requests.AddRange(CreateDeleteRequests(rowIds, sheetProperties));
 
         return requests;
     }
 
     /// <summary>
-    /// Generic method to create update cell requests for any entity type
+    /// Generic method to create update cell requests for any row entity type
     /// </summary>
     public static IEnumerable<Request> CreateUpdateCellRequests<T>(List<T> entities, PropertyEntity? sheetProperties, Func<List<T>, IList<object>, IList<RowData>> mapToRowData)
-        where T : class
+        where T : SheetRowEntityBase
     {
         var headers = sheetProperties?.Attributes[PropertyEnum.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
         var maxRow = int.Parse(sheetProperties?.Attributes[PropertyEnum.MAX_ROW.GetDescription()] ?? "0");
@@ -501,39 +501,21 @@ public static class GoogleRequestHelpers
 
         var requests = new List<Request>();
 
-        var appendEntities = entities.Where(x => GetEntityRowId(x) > maxRow).ToList();
+        var appendEntities = entities.Where(x => x.RowId > maxRow).ToList();
         if (appendEntities.Count > 0)
         {
             var appendData = mapToRowData(appendEntities, headers!);
             requests.Add(GenerateAppendCells(sheetId, appendData));
         }
 
-        var updateEntities = entities.Where(x => GetEntityRowId(x) <= maxRow).ToList();
+        var updateEntities = entities.Where(x => x.RowId <= maxRow).ToList();
         foreach (var entity in updateEntities)
         {
             var rowData = mapToRowData([entity], headers!);
-            requests.Add(GenerateUpdateCellsRequest(sheetId, GetEntityRowId(entity) - 1, rowData));
+            requests.Add(GenerateUpdateCellsRequest(sheetId, entity.RowId - 1, rowData));
         }
 
         return requests;
-    }
-
-    /// <summary>
-    /// Helper method to get Action property from any entity using reflection
-    /// </summary>
-    public static string GetEntityAction<T>(T entity) where T : class
-    {
-        var actionProperty = typeof(T).GetProperty("Action");
-        return actionProperty?.GetValue(entity)?.ToString() ?? string.Empty;
-    }
-
-    /// <summary>
-    /// Helper method to get RowId property from any entity using reflection
-    /// </summary>
-    public static int GetEntityRowId<T>(T entity) where T : class
-    {
-        var rowIdProperty = typeof(T).GetProperty("RowId");
-        return (int)(rowIdProperty?.GetValue(entity) ?? 0);
     }
 
     #endregion

@@ -525,18 +525,21 @@ public class GigRequestHelpersTests
     [Fact]
     public void GenericHelpers_ShouldWorkWithAllEntityTypes()
     {
-        // Arrange
+        // Arrange - Action/RowId are now typed SheetRowEntityBase properties (no reflection),
+        // so "works with all entity types" is a compile-time guarantee; this test just confirms
+        // the values round-trip correctly for each concrete entity.
         var setupEntity = new SetupEntity { RowId = 1, Action = ActionTypeEnum.INSERT.GetDescription() };
         var tripEntity = new TripEntity { RowId = 2, Action = ActionTypeEnum.UPDATE.GetDescription() };
         var shiftEntity = new ShiftEntity { RowId = 3, Action = ActionTypeEnum.DELETE.GetDescription() };
         var expenseEntity = new ExpenseEntity { RowId = 4, Action = ActionTypeEnum.INSERT.GetDescription() };
 
-        // Act & Assert - Should not throw exceptions
-        var setupAction = GoogleRequestHelpers.GetEntityAction(setupEntity);
-        var tripRowId = GoogleRequestHelpers.GetEntityRowId(tripEntity);
-        var shiftAction = GoogleRequestHelpers.GetEntityAction(shiftEntity);
-        var expenseRowId = GoogleRequestHelpers.GetEntityRowId(expenseEntity);
+        // Act
+        var setupAction = setupEntity.Action;
+        var tripRowId = tripEntity.RowId;
+        var shiftAction = shiftEntity.Action;
+        var expenseRowId = expenseEntity.RowId;
 
+        // Assert
         Assert.Equal(ActionTypeEnum.INSERT.GetDescription(), setupAction);
         Assert.Equal(2, tripRowId);
         Assert.Equal(ActionTypeEnum.DELETE.GetDescription(), shiftAction);

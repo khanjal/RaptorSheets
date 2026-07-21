@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace RaptorSheets.Gig.Entities;
+namespace RaptorSheets.Core.Entities;
 
 /// <summary>
 /// Base class for sheet row entities that support update/save logic.
