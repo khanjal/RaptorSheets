@@ -205,6 +205,7 @@ public static class SheetsConfig
         Name = SheetNames.Appliances,
         TabColor = ColorEnum.BLUE,
         CellColor = ColorEnum.LIGHT_GRAY,
+        FontColor = ColorEnum.WHITE, // BLUE is a dark TabColor - see ColorEnum for the dark/light list
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ApplianceEntity>()
@@ -215,6 +216,7 @@ public static class SheetsConfig
         Name = SheetNames.Projects,
         TabColor = ColorEnum.GREEN,
         CellColor = ColorEnum.LIGHT_GREEN,
+        FontColor = ColorEnum.WHITE, // GREEN is a dark TabColor - see ColorEnum for the dark/light list
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ProjectEntity>()
@@ -245,6 +247,7 @@ public static class SheetsConfig
         Name = SheetNames.Paints,
         TabColor = ColorEnum.MAGENTA,
         CellColor = ColorEnum.PINK,
+        FontColor = ColorEnum.WHITE, // MAGENTA is a dark TabColor - see ColorEnum for the dark/light list
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PaintEntity>()
