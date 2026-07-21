@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
-    <ProjectReference Include="..\RaptorSheets.Common\RaptorSheets.Common.csproj" />
   </ItemGroup>
 
 </Project>
