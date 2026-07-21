@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Google.Apis.Sheets.v4.Data;
 using Moq;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Stock.Managers;
 using Xunit;
@@ -54,7 +55,7 @@ public class GetSheetsBehaviorTests
         var manager = new GoogleSheetManager(mockService.Object);
 
         // Act
-        var result = await manager.GetSheets(new List<SheetEnum> { SheetEnum.ACCOUNTS });
+        var result = await manager.GetSheets(new List<string> { SheetEnum.ACCOUNTS.GetDescription() });
 
         // Assert
         Assert.Equal("MyStockSheet", result.Properties.Name);
@@ -85,7 +86,7 @@ public class GetSheetsBehaviorTests
         var manager = new GoogleSheetManager(mockService.Object);
 
         // Act
-        var result = await manager.GetSheets(new List<SheetEnum> { SheetEnum.ACCOUNTS });
+        var result = await manager.GetSheets(new List<string> { SheetEnum.ACCOUNTS.GetDescription() });
 
         // Assert
         Assert.Contains(result.Messages, m => m.Message.Contains("SomeRandomTab") && m.Message.Contains("does not match any known sheet name"));
@@ -127,7 +128,12 @@ public class GetSheetsBehaviorTests
         var manager = new GoogleSheetManager(mockService.Object);
 
         // Act - Accounts is missing from the spreadsheet (only Stocks/Tickers exist above).
-        var result = await manager.GetSheets(new List<SheetEnum> { SheetEnum.ACCOUNTS, SheetEnum.STOCKS, SheetEnum.TICKERS });
+        var result = await manager.GetSheets(new List<string>
+        {
+            SheetEnum.ACCOUNTS.GetDescription(),
+            SheetEnum.STOCKS.GetDescription(),
+            SheetEnum.TICKERS.GetDescription()
+        });
 
         // Assert
         Assert.Contains(result.Messages, m => m.Message.Contains("Created missing sheets") && m.Message.Contains("Accounts"));

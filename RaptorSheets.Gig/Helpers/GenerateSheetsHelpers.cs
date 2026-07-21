@@ -2,6 +2,7 @@
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Managers;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
@@ -81,6 +82,10 @@ public static class GenerateSheetsHelpers
             var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase) => WeekdayMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase) => WeeklyMapper.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase) => YearlyMapper.GetSheet(),
+            // DeleteSheets' temp-sheet safety mechanism (GoogleSheetManagerBase<TEntity>.DeleteSheets)
+            // asks for a bare AddSheet request for this specific ad-hoc, non-domain name - anything
+            // else unrecognized is a genuine caller error and should still throw.
+            var s when string.Equals(s, GoogleSheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase) => new SheetModel { Name = s },
             _ => throw new NotImplementedException($"Sheet model not found for: {sheet}"),
         };
     }

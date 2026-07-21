@@ -105,12 +105,8 @@ scaffold — deprioritized, will be a while, listed last on purpose.
    gig-logger Angular frontend ported: `trips`/`shifts`/etc. move under a nested `sheets` key
    (~49 non-spec `.ts` files, central `sheet.interface.ts`), and `SetupEntity`'s
    `RowId`/`Action`/`Saved` keys read as camelCase now.
-2. **Stock parity with Gig (next)** — add `DeleteSheets`/ordered `CreateSheets` (blocked on
-   Stock's `GenerateSheetHelpers.Generate` taking `List<Enums.SheetEnum>`, not `List<string>` — needs
-   a `List<string>`-capable generator, or a minimal bare-`AddSheet` builder for non-domain sheets,
-   before overriding `GenerateSheetsRequest`) and the still-missing `ChangeSheetData`. Doing this
-   against Gig as the reference implementation is the point: it's what will show which parts of a
-   base `SheetEntity`/manager genuinely generalize vs. which are Gig-specific.
+2. **Done (2026-07-21) — Stock parity with Gig: `DeleteSheets`/`ChangeSheetData`, API surface fully
+   aligned.** See the write-up below.
 3. **Scaffold `RaptorSheets.Job` as the proof-of-concept (deprioritized, last)** — the real test of
    whether this consolidation worked. Should be: entities + mappers + a `SheetRegistry<TEntity>` +
    a manager that's little more than a constructor + `CreateMissingSheetsAsync` +
@@ -255,6 +251,61 @@ not used anywhere else), then deleted the redundant manual `RowId` from `Account
 unchanged and green. Stock's mappers (`AccountMapper`/`StockMapper`/`TickerMapper`) still hand-roll
 `MapFromRangeData` per entity (don't use `GenericSheetMapper<T>` the way Gig does) and were
 untouched - `RowId = id` in each still compiles against the inherited property.
+
+### Done (2026-07-21) — Stock parity: `DeleteSheets`/`ChangeSheetData`, API surface aligned to Gig
+
+**Key finding that shaped the scope:** auditing `AccountMapper`/`StockMapper`/`TickerMapper.GetSheet()`
+found all three of Stock's sheets are almost entirely cross-sheet formulas (`SUMIF`/`COUNTIF`/
+`MULTIPLY`/`SUBTRACT`) or live `GOOGLEFINANCE` pulls. Across all 17 properties on Accounts/Stocks/
+Tickers, **`StockEntity.Shares` is the only genuinely user-editable field** - unlike Gig, where
+Trips/Shifts/Expenses/Setup are real user-entered logs. `ChangeSheetData` was scoped accordingly
+(user decision): wired for Shares only, not scaffolded for all three sheets.
+
+**Dormant Gig bug found and fixed along the way.** `GoogleSheetManagerBase<TEntity>.DeleteSheets`'s
+temp-sheet safety mechanism (created when deleting every sheet, since Google Sheets requires ≥1 to
+remain) calls a domain's `GenerateSheetsRequest(["TempSheet"])`. Gig's
+`GenerateSheetsHelpers.GetSheetModel` had no case for that ad-hoc name and fell through to
+`throw new NotImplementedException` - caught by `DeleteSheets`'s try/catch and turned into a silent
+error message, meaning **`DeleteAllSheets()` most likely already failed to actually finish deleting
+for Gig** whenever nothing else remained (exercised today only by
+`GoogleSheetsIntegrationFixture.InitializeAsync`, which logs but doesn't fail on delete errors, so
+this was never surfaced as a test failure). Fixed at the root: promoted
+`GoogleSheetManagerBase`'s `private const string TempSheetName = "TempSheet"` to `public` on the
+non-generic base, and changed both Gig's `GenerateSheetsHelpers.GetSheetModel` and Stock's new
+string-keyed equivalent to return a bare `new SheetModel { Name = sheet }` for that one recognized
+ad-hoc name specifically (still throwing for genuinely unknown/typo'd names).
+
+**Stock's `GenerateSheetHelpers.Generate`** converted from `List<Enums.SheetEnum>` to
+`List<string>` (matching Gig's shape exactly), with a `GetSheetModel(string)` that resolves via
+`GetValueFromName<SheetEnum>` + a real-match check (same pattern used elsewhere for this
+false-positive-prone helper), falling back to the bare TempSheet model above or throwing. Also
+dropped the old implementation's static mutable fields (`_batchUpdateSpreadsheetRequest`/
+`_repeatCellRequests`) in favor of parameters, matching Gig's cleaner shape.
+
+**Stock's manager** now overrides `GenerateSheetsRequest`, which unlocks
+`GoogleSheetManagerBase<TEntity>`'s `DeleteSheets`/`DeleteAllSheets`/`CreateAllSheets`/ordered
+`CreateSheets` for free by inheritance - zero new code needed for those beyond the override.
+`CreateMissingSheetsAsync` simplified to call the base's string-keyed `CreateSheets` directly
+(no more enum round-trip). Added `ChangeSheetData(List<string>, SheetEntity)` with a one-entry
+accessor dict (Stocks only - Accounts/Tickers get none, same as Gig's read-only summary sheets).
+New `StockRequestHelpers.cs` (mirrors `GigRequestHelpers.cs`) plus `StockMapper.MapToRowData`
+(replaces the never-called dead `MapToRangeData`) - hand-rolled rather than routed through
+`GenericSheetMapper<T>`, since Stock's entities carry no `[Column]` attributes and adding one only
+for `Shares` would incorrectly mark it writable on `AccountEntity`/`TickerEntity` too (same property,
+inherited from `CostEntity`, but a formula/rollup in those two contexts - a footgun worth avoiding
+rather than fixing generically here).
+
+**API surface fully aligned to Gig (user decision, breaking to Stock's interface - acceptable, still
+in development):** removed `AddSheetData` (already broken/dead - only ever handled one sheet, and
+even then just added a message and never actually appended anything), and the `List<Enums.SheetEnum>`-
+based `CreateSheets`/`GetSheets`/`GetSheets()` public methods, in favor of Gig-shaped
+`ChangeSheetData`/`CreateAllSheets`/`CreateSheets(List<string>)`/`DeleteAllSheets`/
+`DeleteSheets(List<string>)`/`GetSheet(string)`/`GetAllSheets`/`GetSheets(List<string>)`. Updated
+~11 call sites across 3 test files (`GoogleSheetManagerTests.cs` unit + integration,
+`GetSheetsBehaviorTests.cs`) to the new signatures; added new coverage for `ChangeSheetData`
+(Shares happy path + no-data path), `DeleteSheets` (empty list + real names), and
+`GenerateSheetHelpers.Generate` (known sheet, TempSheet fallback, unknown-name throw, empty list).
+Verified: Core 898 / Stock 48 (was 41) / Gig 558 unit tests, all green, build clean.
 
 ---
 

@@ -1,3 +1,4 @@
+using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
@@ -56,76 +57,35 @@ public static class StockMapper
         return entities;
     }
 
-    public static IList<IList<object?>> MapToRangeData(List<StockEntity> entities, IList<object> headers)
+    /// <summary>
+    /// Maps StockEntity to Google Sheets RowData for ChangeSheetData/CreateUpdateCellRequests.
+    /// Shares is the only genuinely user-editable column on the Stocks sheet - every other column
+    /// (Account/Ticker/Name/AverageCost/CostTotal/CurrentPrice/CurrentTotal/Return/PeRatio/52-week
+    /// high-low/MaxHigh/MinLow) is a cross-sheet formula or GOOGLEFINANCE pull, so writing to those
+    /// would clobber the array formula. Non-Shares columns get an empty CellData placeholder to
+    /// preserve column position without overwriting anything.
+    /// </summary>
+    public static IList<RowData> MapToRowData(List<StockEntity> entities, IList<object> headers)
     {
-        var rangeData = new List<IList<object?>>();
+        var rows = new List<RowData>();
 
         foreach (var entity in entities)
         {
-            var objectList = new List<object?>();
+            var cells = new List<CellData>();
 
             foreach (var header in headers)
             {
                 var headerEnum = header!.ToString()!.Trim().GetValueFromName<HeaderEnum>();
-                // Console.WriteLine($"Header: {headerEnum}");
 
-                switch (headerEnum)
-                {
-                    case HeaderEnum.ACCOUNT:
-                        objectList.Add(entity.Account);
-                        break;
-                    case HeaderEnum.TICKER:
-                        objectList.Add(entity.Ticker);
-                        break;
-                    case HeaderEnum.NAME:
-                        objectList.Add(entity.Name);
-                        break;
-                    case HeaderEnum.SHARES:
-                        objectList.Add(entity.Shares);
-                        break;
-                    case HeaderEnum.AVERAGE_COST:
-                        objectList.Add(entity.AverageCost);
-                        break;
-                    case HeaderEnum.COST_TOTAL:
-                        objectList.Add(entity.CostTotal);
-                        break;
-                    case HeaderEnum.CURRENT_PRICE:
-                        objectList.Add(entity.CurrentPrice);
-                        break;
-                    case HeaderEnum.CURRENT_TOTAL:
-                        objectList.Add(entity.CurrentTotal);
-                        break;
-                    case HeaderEnum.RETURN:
-                        objectList.Add(entity.Return);
-                        break;
-                    case HeaderEnum.PE_RATIO:
-                        objectList.Add(entity.PeRatio);
-                        break;
-                    case HeaderEnum.WEEK_HIGH_52:
-                        objectList.Add(entity.WeekHigh52);
-                        break;
-                    case HeaderEnum.WEEK_LOW_52:
-                        objectList.Add(entity.WeekLow52);
-                        break;
-                    case HeaderEnum.MAX_HIGH:
-                        objectList.Add(entity.MaxHigh);
-                        break;
-                    case HeaderEnum.MIN_LOW:
-                        objectList.Add(entity.MinLow);
-                        break;
-                    default:
-                        objectList.Add(null);
-                        break;
-                }
+                cells.Add(headerEnum == HeaderEnum.SHARES
+                    ? new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double)entity.Shares } }
+                    : new CellData());
             }
 
-            // Console.WriteLine("Map Shift");
-            // Console.WriteLine(JsonSerializer.Serialize(objectList));
-
-            rangeData.Add(objectList);
+            rows.Add(new RowData { Values = cells });
         }
 
-        return rangeData;
+        return rows;
     }
 
     public static SheetModel GetSheet()

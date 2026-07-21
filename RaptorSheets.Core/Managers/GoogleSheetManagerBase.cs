@@ -20,6 +20,15 @@ namespace RaptorSheets.Core.Managers;
 /// </summary>
 public abstract class GoogleSheetManagerBase
 {
+    /// <summary>
+    /// Name of the throwaway safety sheet <see cref="GoogleSheetManagerBase{TEntity}.DeleteSheets"/>
+    /// creates (via a domain's <see cref="GoogleSheetManagerBase{TEntity}.GenerateSheetsRequest"/>)
+    /// when deleting every existing sheet, since Google Sheets requires at least one to remain.
+    /// Public so a domain's sheet-request generator can recognize this specific ad-hoc name and build
+    /// a bare AddSheet request for it instead of treating it as an unknown/invalid sheet.
+    /// </summary>
+    public const string TempSheetName = "TempSheet";
+
     protected readonly IGoogleSheetService _googleSheetService;
     protected readonly ILogger _logger;
 
@@ -273,8 +282,6 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     #endregion
 
     #region Sheet Deletion
-
-    private const string TempSheetName = "TempSheet";
 
     /// <summary>
     /// Deletes every canonical sheet for this domain.
