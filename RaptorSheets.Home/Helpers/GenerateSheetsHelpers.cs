@@ -16,43 +16,7 @@ public static class GenerateSheetsHelpers
 {
     public static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
-        if (sheets.Count == 0)
-        {
-            return new BatchUpdateSpreadsheetRequest { Requests = new List<Request>() };
-        }
-
-        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
-        {
-            Requests = []
-        };
-        var repeatCellRequests = new List<RepeatCellRequest>();
-
-        foreach (var sheet in sheets)
-        {
-            var sheetModel = GetSheetModel(sheet);
-            var random = new Random();
-            sheetModel.Id = random.Next();
-
-            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
-
-            var appendDimension = GoogleRequestHelpers.GenerateAppendDimension(sheetModel);
-            if (appendDimension != null)
-            {
-                batchUpdateSpreadsheetRequest.Requests.Add(appendDimension);
-            }
-
-            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
-            GenerateHeadersFormatAndProtection(sheetModel, batchUpdateSpreadsheetRequest, repeatCellRequests);
-            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
-            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
-        }
-
-        foreach (var request in repeatCellRequests)
-        {
-            batchUpdateSpreadsheetRequest.Requests.Add(new Request { RepeatCell = request });
-        }
-
-        return batchUpdateSpreadsheetRequest;
+        return SheetGenerationHelper.Generate(sheets, GetSheetModel, GetDataValidation);
     }
 
     public static List<string> GetSheetNames()
@@ -80,56 +44,9 @@ public static class GenerateSheetsHelpers
         };
     }
 
-    private static void GenerateHeadersFormatAndProtection(
-        SheetModel sheet,
-        BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest,
-        List<RepeatCellRequest> repeatCellRequests)
+    private static DataValidationRule? GetDataValidation(SheetCellModel header)
     {
-        // Ensure headers have proper Column/Index assignments prior to formatting
-        sheet.Headers.UpdateColumns();
-
-        foreach (var header in sheet.Headers)
-        {
-            var range = new GridRange
-            {
-                SheetId = sheet.Id,
-                StartColumnIndex = header.Index,
-                EndColumnIndex = header.Index + 1,
-                StartRowIndex = 1,
-            };
-
-            // If whole sheet isn't protected then protect formula columns
-            if (!string.IsNullOrEmpty(header.Formula) && !sheet.ProtectSheet)
-            {
-                batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateColumnProtection(range));
-            }
-
-            if (header.Format == null && string.IsNullOrEmpty(header.Validation) && string.IsNullOrEmpty(header.FormatPattern))
-            {
-                continue;
-            }
-
-            var repeatCellModel = new RepeatCellModel
-            {
-                GridRange = range,
-            };
-
-            if (header.Format != null || !string.IsNullOrEmpty(header.FormatPattern))
-            {
-                var formatToUse = header.Format ?? FormatEnum.NUMBER;
-
-                repeatCellModel.CellFormat = !string.IsNullOrEmpty(header.FormatPattern)
-                    ? SheetHelpers.GetCellFormat(formatToUse, header.FormatPattern)
-                    : SheetHelpers.GetCellFormat(formatToUse);
-            }
-
-            if (!string.IsNullOrEmpty(header.Validation))
-            {
-                var columnRange = $"{header.Column}2:{header.Column}";
-                repeatCellModel.DataValidation = HomeSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>(), columnRange);
-            }
-
-            repeatCellRequests.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
-        }
+        var columnRange = $"{header.Column}2:{header.Column}";
+        return HomeSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>(), columnRange);
     }
 }
