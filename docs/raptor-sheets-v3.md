@@ -130,13 +130,18 @@ create/delete surface; Stock is unaffected throughout (still 41 tests, untouched
    flagged uncached reflection as a real cost elsewhere). Also worth asking whether
    `CreateUpdateCellRequests<T>`'s append/update split and `ChangeSheetData<T>`'s
    save/delete split could be simplified now that they're one level removed from any domain.
-8. **TODO — full scan of `RaptorSheets.Gig` for more dead code / Core-movable helpers.** Every
-   pass so far (formulas, `GigRequestHelpers`, `GigSheetConfigurationHelpers`) was found by
-   spot-checking one file at a time, not a systematic sweep — there's likely more of both dead code
-   and generic-but-stranded-in-Gig helpers we haven't looked at yet (`CreateSheetsHelpers.cs`,
-   `MapperFormulaHelper.cs`, and anything under `Mappers/`/`Entities/` not yet checked). Do a full
-   file-by-file scan of `RaptorSheets.Gig/Helpers` (and beyond) the same way, not just the ones
-   that happened to get pointed out.
+8. **Done (2026-07-20):** Full scan of the remaining `RaptorSheets.Gig/Helpers` files plus
+   `Mappers/` for dead code / Core-movable helpers. One finding:
+   `CreateSheetsHelpers.OrderSheetTitlesByIndex` was fully generic — moved into Core's
+   `SheetOrderingHelper` (`CreateSheetsHelpers.cs` deleted, was down to this one method).
+   Everything else checked out as genuinely domain-specific and correctly placed:
+   `MapperFormulaHelper` (keyed off Gig's `HeaderEnum` + `GigFormulaBuilder`),
+   `GenerateSheetsHelpers` (dispatches to Gig's own mappers — this *is* Gig's
+   `GenerateSheetsRequest` override, the same thing Job/Home will write their own version
+   of), `DemoHelpers` (single method, fake-gig-entity generator), and all of `Mappers/`
+   (one class per entity, no hidden generic utility or copy-pasted helpers found via
+   cross-file scan). `Entities/` not scanned (plain `[Column]`-attributed POCOs — low
+   expected value, no logic to find).
 
 ### Future / open to breaking changes — restructure `SheetEntity` to nest domain sheet collections
 
