@@ -43,33 +43,9 @@ public static class GigFormulas
 
     #endregion
 
-    #region Gig-Specific Date Formulas
-
-    /// <summary>
-    /// Week number with year for gig tracking: WEEKNUM({dateRange},2)&"-"&YEAR({dateRange})
-    /// Placeholders: {dateRange}
-    /// </summary>
-    public const string WeekNumberWithYear = "WEEKNUM({dateRange},2)&\"-\"&YEAR({dateRange})";
-
-    /// <summary>
-    /// Month number with year for gig tracking: MONTH({dateRange})&"-"&YEAR({dateRange})
-    /// Placeholders: {dateRange}
-    /// </summary>
-    public const string MonthNumberWithYear = "MONTH({dateRange})&\"-\"&YEAR({dateRange})";
-
-    /// <summary>
-    /// Date range calculation for week begin: DATE({yearRange},1,1)+(({weekRange}-1)*7)-WEEKDAY(DATE({yearRange},1,1),3)
-    /// Placeholders: {yearRange}, {weekRange}
-    /// </summary>
-    public const string WeekBeginDate = "DATE({yearRange},1,1)+(({weekRange}-1)*7)-WEEKDAY(DATE({yearRange},1,1),3)";
-
-    /// <summary>
-    /// Date range calculation for week end: DATE({yearRange},1,7)+(({weekRange}-1)*7)-WEEKDAY(DATE({yearRange},1,1),3)
-    /// Placeholders: {yearRange}, {weekRange}
-    /// </summary>
-    public const string WeekEndDate = "DATE({yearRange},1,7)+(({weekRange}-1)*7)-WEEKDAY(DATE({yearRange},1,1),3)";
-
-    #endregion
+    // Gig-Specific Date Formulas region removed: WeekNumberWithYear, MonthNumberWithYear,
+    // WeekBeginDate, WeekEndDate were pure date math with no gig-specific logic and moved to
+    // RaptorSheets.Core.Constants.GoogleFormulas.
 
     #region Gig-Specific Lookup Formulas
 
@@ -147,16 +123,6 @@ public static class GigFormulas
 
     #endregion
 
-    #region Mapper-Specific Formulas
-
-    /// <summary>
-    /// Complex rolling average for time series analysis using DAVERAGE with transpose matrix
-    /// Formula: DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})
-    /// This creates a cumulative average by building a growing dataset for each row
-    /// The DAVERAGE function with empty criteria averages all rows up to the current position
-    /// Placeholders: {totalRange}
-    /// </summary>
-    public const string RollingAverageFormula = "DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})";
-
-    #endregion
+    // Mapper-Specific Formulas region removed: RollingAverageFormula was a generic statistical
+    // formula with no gig-specific logic and moved to RaptorSheets.Core.Constants.GoogleFormulas.
 }

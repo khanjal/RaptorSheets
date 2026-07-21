@@ -48,10 +48,10 @@ public static class DailyMapper
                     header.Format = FormatEnum.NUMBER;
                     break;
                 case HeaderEnum.WEEK:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekNumber(dateRange, HeaderEnum.WEEK.GetDescription(), dateRange);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekNumber(dateRange, HeaderEnum.WEEK.GetDescription(), dateRange);
                     break;
                 case HeaderEnum.MONTH:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaMonthNumber(dateRange, HeaderEnum.MONTH.GetDescription(), dateRange);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonthNumber(dateRange, HeaderEnum.MONTH.GetDescription(), dateRange);
                     break;
                 case HeaderEnum.YEAR:
                     header.Formula = $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{HeaderEnum.YEAR.GetDescription()}\",ISBLANK({dateRange}), \"\",true,YEAR({dateRange})))";

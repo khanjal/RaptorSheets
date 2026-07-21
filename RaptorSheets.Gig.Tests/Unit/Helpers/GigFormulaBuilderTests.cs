@@ -78,76 +78,10 @@ public class GigFormulaBuilderTests
         Assert.Contains("/IF(", result);
     }
 
-    [Fact]
-    public void BuildArrayFormulaWeekNumber_ShouldGenerateWeekWithYear()
-    {
-        // Arrange
-        var dateRange = "$B:$B";
-
-        // Act
-        var result = GigFormulaBuilder.BuildArrayFormulaWeekNumber(TestKeyRange, TestHeader, dateRange);
-
-        // Assert
-        Assert.Contains("=ARRAYFORMULA(", result);
-        Assert.Contains("WEEKNUM(", result);
-        Assert.Contains("YEAR(", result);
-        Assert.Contains("&\"-\"&", result); // Week-Year separator
-        Assert.Contains(dateRange, result);
-    }
-
-    [Fact]
-    public void BuildArrayFormulaMonthNumber_ShouldGenerateMonthWithYear()
-    {
-        // Arrange
-        var dateRange = "$B:$B";
-
-        // Act
-        var result = GigFormulaBuilder.BuildArrayFormulaMonthNumber(TestKeyRange, TestHeader, dateRange);
-
-        // Assert
-        Assert.Contains("=ARRAYFORMULA(", result);
-        Assert.Contains("MONTH(", result);
-        Assert.Contains("YEAR(", result);
-        Assert.Contains("&\"-\"&", result); // Month-Year separator
-        Assert.Contains(dateRange, result);
-    }
-
-    [Fact]
-    public void BuildArrayFormulaWeekBegin_ShouldGenerateWeekStartCalculation()
-    {
-        // Arrange
-        var yearRange = "$C:$C";
-        var weekRange = "$D:$D";
-
-        // Act
-        var result = GigFormulaBuilder.BuildArrayFormulaWeekBegin(TestKeyRange, TestHeader, yearRange, weekRange);
-
-        // Assert
-        Assert.Contains("=ARRAYFORMULA(", result);
-        Assert.Contains("DATE(", result);
-        Assert.Contains("WEEKDAY(", result);
-        Assert.Contains(yearRange, result);
-        Assert.Contains(weekRange, result);
-        Assert.Contains("*7", result); // Week calculation
-    }
-
-    [Fact]
-    public void BuildArrayFormulaWeekEnd_ShouldGenerateWeekEndCalculation()
-    {
-        // Arrange
-        var yearRange = "$C:$C";
-        var weekRange = "$D:$D";
-
-        // Act
-        var result = GigFormulaBuilder.BuildArrayFormulaWeekEnd(TestKeyRange, TestHeader, yearRange, weekRange);
-
-        // Assert
-        Assert.Contains("=ARRAYFORMULA(", result);
-        Assert.Contains("DATE(", result);
-        Assert.Contains(",1,7)", result); // Week end calculation
-        Assert.Contains(yearRange, result);
-        Assert.Contains(weekRange, result);
-    }
+    // BuildArrayFormulaWeekNumber/MonthNumber/WeekBegin/WeekEnd tests removed: those builders
+    // (pure date math, no gig-specific logic) moved to
+    // RaptorSheets.Core.Tests.Unit.Helpers.GoogleFormulaBuilderTests (WeekBegin/WeekEnd moved
+    // under their WeekBeginDate/WeekEndDate names, matching what production mappers call).
 
     [Fact]
     public void BuildArrayFormulaCurrentAmount_ShouldGenerateWeekdayLookup()
@@ -459,25 +393,8 @@ public class GigFormulaBuilderTests
         Assert.Contains(shiftKeyRange, result);
     }
 
-    [Fact]
-    public void BuildArrayFormulaRollingAverage_ShouldGenerateComplexAverage()
-    {
-        // Arrange
-        var totalRange = "$B:$B";
-
-        // Act
-        var result = GigFormulaBuilder.BuildArrayFormulaRollingAverage(TestKeyRange, TestHeader, totalRange);
-
-        // Assert
-        Assert.Contains("=ARRAYFORMULA(", result);
-        Assert.Contains("DAVERAGE(", result);
-        Assert.Contains("transpose(", result);
-        Assert.Contains("TRANSPOSE(", result);
-        Assert.Contains("sequence(", result);
-        Assert.Contains("rows(" + totalRange + ")", result);
-        Assert.Contains("ROW(" + totalRange + ")", result);
-        Assert.Contains(totalRange, result);
-    }
+    // BuildArrayFormulaRollingAverage test removed: moved to
+    // RaptorSheets.Core.Tests.Unit.Helpers.GoogleFormulaBuilderTests.
 
     [Fact]
     public void BuildArrayFormulaDualFieldVisit_WithFirstVisit_ShouldUseTrueSortOrder()

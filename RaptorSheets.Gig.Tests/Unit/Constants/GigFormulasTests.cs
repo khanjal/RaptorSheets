@@ -60,57 +60,10 @@ public class GigFormulasTests
         Assert.Contains("/IF(", formula);
     }
 
-    [Fact]
-    public void WeekNumberWithYear_ShouldContainWeekAndYearFunctions()
-    {
-        // Act
-        var formula = GigFormulas.WeekNumberWithYear;
-
-        // Assert
-        Assert.Contains("WEEKNUM(", formula);
-        Assert.Contains("YEAR(", formula);
-        Assert.Contains("&\"-\"&", formula);
-        Assert.Contains("{dateRange}", formula);
-    }
-
-    [Fact]
-    public void MonthNumberWithYear_ShouldContainMonthAndYearFunctions()
-    {
-        // Act
-        var formula = GigFormulas.MonthNumberWithYear;
-
-        // Assert
-        Assert.Contains("MONTH(", formula);
-        Assert.Contains("YEAR(", formula);
-        Assert.Contains("&\"-\"&", formula);
-        Assert.Contains("{dateRange}", formula);
-    }
-
-    [Fact]
-    public void WeekBeginDate_ShouldContainWeekCalculationLogic()
-    {
-        // Act
-        var formula = GigFormulas.WeekBeginDate;
-
-        // Assert
-        Assert.Contains("DATE({yearRange},1,1)", formula);
-        Assert.Contains("(({weekRange}-1)*7)", formula);
-        Assert.Contains("WEEKDAY(DATE({yearRange},1,1),3)", formula);
-        Assert.Contains("{yearRange}", formula);
-        Assert.Contains("{weekRange}", formula);
-    }
-
-    [Fact]
-    public void WeekEndDate_ShouldContainWeekEndCalculationLogic()
-    {
-        // Act
-        var formula = GigFormulas.WeekEndDate;
-
-        // Assert
-        Assert.Contains("DATE({yearRange},1,7)", formula); // Week end uses day 7
-        Assert.Contains("(({weekRange}-1)*7)", formula);
-        Assert.Contains("WEEKDAY(DATE({yearRange},1,1),3)", formula);
-    }
+    // WeekNumberWithYear/MonthNumberWithYear/WeekBeginDate/WeekEndDate tests removed: those
+    // constants (pure date math, no gig-specific logic) moved to
+    // RaptorSheets.Core.Constants.GoogleFormulas; coverage moved to
+    // RaptorSheets.Core.Tests.Unit.Constants.GoogleFormulasTests.
 
     [Fact]
     public void CurrentAmountLookup_ShouldContainTodayLogic()
@@ -176,7 +129,6 @@ public class GigFormulasTests
     [Theory]
     [InlineData("TotalIncomeFormula")]
     [InlineData("AmountPerTripFormula")]
-    [InlineData("WeekNumberWithYear")]
     [InlineData("CurrentAmountLookup")]
     public void AllGigFormulas_ShouldNotBeNullOrEmpty(string formulaName)
     {
@@ -199,10 +151,6 @@ public class GigFormulasTests
             GigFormulas.AmountPerTripFormula,
             GigFormulas.AmountPerDistanceFormula,
             GigFormulas.AmountPerTimeFormula,
-            GigFormulas.WeekNumberWithYear,
-            GigFormulas.MonthNumberWithYear,
-            GigFormulas.WeekBeginDate,
-            GigFormulas.WeekEndDate,
             GigFormulas.CurrentAmountLookup,
             GigFormulas.PreviousAmountLookup,
             GigFormulas.PreviousDayAverage,
@@ -213,8 +161,7 @@ public class GigFormulasTests
             GigFormulas.TotalTimeActiveWithFallback,
             GigFormulas.TotalTimeWithOmit,
             GigFormulas.ShiftTotalWithTripSum,
-            GigFormulas.ShiftTotalTrips,
-            GigFormulas.RollingAverageFormula
+            GigFormulas.ShiftTotalTrips
         };
 
         // Act & Assert
@@ -331,21 +278,8 @@ public class GigFormulasTests
         Assert.Contains("{shiftKeyRange}", formula);
     }
 
-    [Fact]
-    public void RollingAverageFormula_ShouldContainComplexAverageLogic()
-    {
-        // Act
-        var formula = GigFormulas.RollingAverageFormula;
-
-        // Assert
-        Assert.Contains("DAVERAGE(", formula);
-        Assert.Contains("transpose(", formula);
-        Assert.Contains("TRANSPOSE(", formula);
-        Assert.Contains("sequence(", formula);
-        Assert.Contains("rows({totalRange})", formula);
-        Assert.Contains("ROW({totalRange})", formula);
-        Assert.Contains("{totalRange}", formula);
-    }
+    // RollingAverageFormula_ShouldContainComplexAverageLogic test removed: moved to
+    // RaptorSheets.Core.Tests.Unit.Constants.GoogleFormulasTests.
 
     [Fact]
     public void DualFieldVisitLookup_ShouldContainDualVlookupLogic()

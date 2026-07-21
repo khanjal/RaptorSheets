@@ -138,6 +138,74 @@ public class GoogleFormulasTests
     }
 
     [Fact]
+    public void WeekNumberWithYear_ShouldContainWeekAndYearFunctions()
+    {
+        // Act
+        var formula = GoogleFormulas.WeekNumberWithYear;
+
+        // Assert
+        Assert.Contains("WEEKNUM(", formula);
+        Assert.Contains("YEAR(", formula);
+        Assert.Contains("&\"-\"&", formula);
+        Assert.Contains("{dateRange}", formula);
+    }
+
+    [Fact]
+    public void MonthNumberWithYear_ShouldContainMonthAndYearFunctions()
+    {
+        // Act
+        var formula = GoogleFormulas.MonthNumberWithYear;
+
+        // Assert
+        Assert.Contains("MONTH(", formula);
+        Assert.Contains("YEAR(", formula);
+        Assert.Contains("&\"-\"&", formula);
+        Assert.Contains("{dateRange}", formula);
+    }
+
+    [Fact]
+    public void WeekBeginDate_ShouldContainWeekCalculationLogic()
+    {
+        // Act
+        var formula = GoogleFormulas.WeekBeginDate;
+
+        // Assert
+        Assert.Contains("DATE({yearRange},1,1)", formula);
+        Assert.Contains("(({weekRange}-1)*7)", formula);
+        Assert.Contains("WEEKDAY(DATE({yearRange},1,1),3)", formula);
+        Assert.Contains("{yearRange}", formula);
+        Assert.Contains("{weekRange}", formula);
+    }
+
+    [Fact]
+    public void WeekEndDate_ShouldContainWeekEndCalculationLogic()
+    {
+        // Act
+        var formula = GoogleFormulas.WeekEndDate;
+
+        // Assert
+        Assert.Contains("DATE({yearRange},1,7)", formula); // Week end uses day 7
+        Assert.Contains("(({weekRange}-1)*7)", formula);
+        Assert.Contains("WEEKDAY(DATE({yearRange},1,1),3)", formula);
+    }
+
+    [Fact]
+    public void RollingAverageFormula_ShouldContainComplexAverageLogic()
+    {
+        // Act
+        var formula = GoogleFormulas.RollingAverageFormula;
+
+        // Assert
+        Assert.Contains("DAVERAGE(", formula);
+        Assert.Contains("transpose(", formula);
+        Assert.Contains("TRANSPOSE(", formula);
+        Assert.Contains("sequence(", formula);
+        Assert.Contains("rows({totalRange})", formula);
+        Assert.Contains("ROW({totalRange})", formula);
+        Assert.Contains("{totalRange}", formula);
+    }
+
+    [Fact]
     public void ZeroDivisionProtection_ShouldContainIfLogic()
     {
         // Act

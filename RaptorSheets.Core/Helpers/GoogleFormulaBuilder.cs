@@ -33,6 +33,9 @@ public static class GoogleFormulaBuilder
     private const string PlaceholderDelimiter = "{delimiter}";
     private const string PlaceholderIndex = "{index}";
     private const string PlaceholderOffset = "{offset}";
+    private const string PlaceholderYearRange = "{yearRange}";
+    private const string PlaceholderWeekRange = "{weekRange}";
+    private const string PlaceholderTotalRange = "{totalRange}";
 
     #region Generic ARRAYFORMULA Builders
 
@@ -268,6 +271,76 @@ public static class GoogleFormulaBuilder
             .Replace(PlaceholderKeyRange, keyRange)
             .Replace(PlaceholderHeader, header)
             .Replace(PlaceholderFormula, weekdayFormula);
+    }
+
+    /// <summary>
+    /// Builds week number with year formula (e.g. "32-2026")
+    /// </summary>
+    public static string BuildArrayFormulaWeekNumber(string keyRange, string header, string dateRange)
+    {
+        var weekFormula = GoogleFormulas.WeekNumberWithYear.Replace(PlaceholderDateRange, dateRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, weekFormula);
+    }
+
+    /// <summary>
+    /// Builds month number with year formula (e.g. "7-2026")
+    /// </summary>
+    public static string BuildArrayFormulaMonthNumber(string keyRange, string header, string dateRange)
+    {
+        var monthFormula = GoogleFormulas.MonthNumberWithYear.Replace(PlaceholderDateRange, dateRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, monthFormula);
+    }
+
+    /// <summary>
+    /// Builds week begin date calculation from a year and ISO week number
+    /// </summary>
+    public static string BuildArrayFormulaWeekBeginDate(string keyRange, string header, string yearRange, string weekRange)
+    {
+        var beginFormula = GoogleFormulas.WeekBeginDate
+            .Replace(PlaceholderYearRange, yearRange)
+            .Replace(PlaceholderWeekRange, weekRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, beginFormula);
+    }
+
+    /// <summary>
+    /// Builds week end date calculation from a year and ISO week number
+    /// </summary>
+    public static string BuildArrayFormulaWeekEndDate(string keyRange, string header, string yearRange, string weekRange)
+    {
+        var endFormula = GoogleFormulas.WeekEndDate
+            .Replace(PlaceholderYearRange, yearRange)
+            .Replace(PlaceholderWeekRange, weekRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, endFormula);
+    }
+
+    /// <summary>
+    /// Builds a rolling (cumulative) average formula for time series analysis
+    /// </summary>
+    public static string BuildArrayFormulaRollingAverage(string keyRange, string header, string totalRange)
+    {
+        var averageFormula = GoogleFormulas.RollingAverageFormula
+            .Replace(PlaceholderTotalRange, totalRange);
+
+        return GoogleFormulas.ArrayFormulaBase
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, averageFormula);
     }
 
     /// <summary>

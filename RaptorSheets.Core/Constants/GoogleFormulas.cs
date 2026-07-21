@@ -138,6 +138,39 @@ public static class GoogleFormulas
     /// </summary>
     public const string SplitStringByIndex = "IFERROR(INDEX(SPLIT({sourceRange}, \"{delimiter}\"), 0, {index}), 0)";
 
+    /// <summary>
+    /// Week number with year: WEEKNUM({dateRange},2)&"-"&YEAR({dateRange})
+    /// Placeholders: {dateRange}
+    /// </summary>
+    public const string WeekNumberWithYear = "WEEKNUM({dateRange},2)&\"-\"&YEAR({dateRange})";
+
+    /// <summary>
+    /// Month number with year: MONTH({dateRange})&"-"&YEAR({dateRange})
+    /// Placeholders: {dateRange}
+    /// </summary>
+    public const string MonthNumberWithYear = "MONTH({dateRange})&\"-\"&YEAR({dateRange})";
+
+    /// <summary>
+    /// Date range calculation for week begin: DATE({yearRange},1,1)+(({weekRange}-1)*7)-WEEKDAY(DATE({yearRange},1,1),3)
+    /// Placeholders: {yearRange}, {weekRange}
+    /// </summary>
+    public const string WeekBeginDate = "DATE({yearRange},1,1)+(({weekRange}-1)*7)-WEEKDAY(DATE({yearRange},1,1),3)";
+
+    /// <summary>
+    /// Date range calculation for week end: DATE({yearRange},1,7)+(({weekRange}-1)*7)-WEEKDAY(DATE({yearRange},1,1),3)
+    /// Placeholders: {yearRange}, {weekRange}
+    /// </summary>
+    public const string WeekEndDate = "DATE({yearRange},1,7)+(({weekRange}-1)*7)-WEEKDAY(DATE({yearRange},1,1),3)";
+
+    /// <summary>
+    /// Complex rolling average for time series analysis using DAVERAGE with transpose matrix.
+    /// Formula: DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})
+    /// Creates a cumulative average by building a growing dataset for each row; the DAVERAGE
+    /// function with empty criteria averages all rows up to the current position.
+    /// Placeholders: {totalRange}
+    /// </summary>
+    public const string RollingAverageFormula = "DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})";
+
     #endregion
 
     #region Conditional Logic
