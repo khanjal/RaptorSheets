@@ -151,20 +151,20 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         new(StringComparer.OrdinalIgnoreCase)
         {
             [SheetsConfig.SheetNames.Expenses] = new(
-                entity => entity.Expenses.Count,
-                entity => entity.Expenses,
+                entity => entity.Sheets.Expenses.Count,
+                entity => entity.Sheets.Expenses,
                 (data, properties) => GigRequestHelpers.ChangeExpensesSheetData(data as List<ExpenseEntity> ?? [], properties)),
             [SheetsConfig.SheetNames.Setup] = new(
-                entity => entity.Setup.Count,
-                entity => entity.Setup,
+                entity => entity.Sheets.Setup.Count,
+                entity => entity.Sheets.Setup,
                 (data, properties) => GigRequestHelpers.ChangeSetupSheetData(data as List<SetupEntity> ?? [], properties)),
             [SheetsConfig.SheetNames.Shifts] = new(
-                entity => entity.Shifts.Count,
-                entity => entity.Shifts,
+                entity => entity.Sheets.Shifts.Count,
+                entity => entity.Sheets.Shifts,
                 (data, properties) => GigRequestHelpers.ChangeShiftSheetData(data as List<ShiftEntity> ?? [], properties)),
             [SheetsConfig.SheetNames.Trips] = new(
-                entity => entity.Trips.Count,
-                entity => entity.Trips,
+                entity => entity.Sheets.Trips.Count,
+                entity => entity.Sheets.Trips,
                 (data, properties) => GigRequestHelpers.ChangeTripSheetData(data as List<TripEntity> ?? [], properties))
         };
 

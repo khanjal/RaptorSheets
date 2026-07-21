@@ -43,21 +43,21 @@ public static class StockSheetHelpers
         {
             var headers = values[0];
             se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.AccountSheet));
-            se.Accounts = AccountMapper.MapFromRangeData(values);
+            se.Sheets.Accounts = AccountMapper.MapFromRangeData(values);
         });
 
         registry.Register(SheetEnum.STOCKS.GetDescription(), () => SheetsConfig.StockSheet, (se, values) =>
         {
             var headers = values[0];
             se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.StockSheet));
-            se.Stocks = StockMapper.MapFromRangeData(values);
+            se.Sheets.Stocks = StockMapper.MapFromRangeData(values);
         });
 
         registry.Register(SheetEnum.TICKERS.GetDescription(), () => SheetsConfig.TickerSheet, (se, values) =>
         {
             var headers = values[0];
             se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.TickerSheet));
-            se.Tickers = TickerMapper.MapFromRangeData(values);
+            se.Sheets.Tickers = TickerMapper.MapFromRangeData(values);
         });
 
         return registry;

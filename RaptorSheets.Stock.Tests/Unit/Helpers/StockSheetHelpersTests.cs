@@ -81,7 +81,7 @@ namespace RaptorSheets.Stock.Tests.Unit.Helpers
 
             // Assert
             Assert.NotNull(result);
-            Assert.NotNull(result.Accounts);
+            Assert.NotNull(result.Sheets.Accounts);
         }
     }
 }

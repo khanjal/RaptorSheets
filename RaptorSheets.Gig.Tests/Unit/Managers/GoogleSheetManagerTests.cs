@@ -615,7 +615,7 @@ public class GoogleSheetManagerTests
         var sheets = new List<string> { "Expenses" };
         var sheetEntity = new SheetEntity
         {
-            Expenses = { new ExpenseEntity { Name = "Test", Amount = 100 } }
+            Sheets = { Expenses = { new ExpenseEntity { Name = "Test", Amount = 100 } } }
         };
         
         // Act

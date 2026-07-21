@@ -8,15 +8,9 @@ public class SheetEntity : ISheetEntity
     [JsonPropertyName("properties")]
     public PropertyEntity Properties { get; set; } = new();
 
-    [JsonPropertyName("accounts")]
-    public List<AccountEntity> Accounts { get; set; } = [];
+    [JsonPropertyName("sheets")]
+    public StockSheets Sheets { get; set; } = new();
 
-    [JsonPropertyName("stocks")]
-    public List<StockEntity> Stocks { get; set; } = [];
-
-    [JsonPropertyName("tickers")]
-    public List<TickerEntity> Tickers { get; set; } = [];
-
-   [JsonPropertyName("messages")]
+    [JsonPropertyName("messages")]
     public List<MessageEntity> Messages { get; set; } = [];
 }

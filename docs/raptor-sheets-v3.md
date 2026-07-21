@@ -148,9 +148,30 @@ create/delete surface; Stock is unaffected throughout (still 41 tests, untouched
    cross-file scan). `Entities/` not scanned (plain `[Column]`-attributed POCOs — low
    expected value, no logic to find).
 
-### Future / open to breaking changes — restructure `SheetEntity` to nest domain sheet collections
+### Done (2026-07-20) — restructured `SheetEntity` to nest domain sheet collections ⚠️ BREAKING
 
-Not started; bigger and separate from the additive Core-consolidation work above, but worth
+**Shipped (RaptorSheets C# side).** Row collections moved off `SheetEntity` into a nested
+`Sheets` container: Gig gained `RaptorSheets.Gig/Entities/GigSheets.cs` (18 collections),
+Stock gained `StockSheets.cs` (3). `SheetEntity` is now `{ Properties, Sheets, Messages }` and
+`ISheetEntity` is unchanged (`Sheets` is domain-typed, referenced directly by the registry
+`assign` delegates, so Core needn't know about it). New wire shape:
+`{"properties":{...}, "sheets":{"trips":[...], ...}, "messages":[...]}` — verified by serialization.
+
+Blast radius handled compiler-driven (make the structural change → every stale `.Trips` becomes a
+build error → fix): registry delegates in `GigSheetHelpers`/`StockSheetHelpers` (`se.X` →
+`se.Sheets.X`), the manager accessor dict, `DemoHelpers`, and ~5 test files (Gig unit 558 / Stock 41
+/ Core 898 all unchanged — purely structural; Gig integration re-run against the live sheet).
+
+**⚠️ FRONTEND FOLLOW-UP REQUIRED (gig-logger, separate repo — NOT done):** the Angular frontend
+reads `trips`/`shifts`/etc. as **top-level** JSON keys across ~49 non-spec `.ts` files (~85 with
+specs), with a central `src/app/shared/interfaces/sheets/sheet.interface.ts`. They must move under a
+`sheets` object. Until that lands, gig-logger is broken against the new RaptorSheets payload. This is
+the accepted, pre-agreed cost of doing the break now (before Job/Home) rather than later. (Also still
+pending from item 7 above: Setup's `RowId/Action/Saved` casing PascalCase→camelCase.)
+
+<details><summary>Original proposal (superseded by the above)</summary>
+
+Bigger and separate from the additive Core-consolidation work above, but worth
 tracking here since it's a data-model question the original (rejected) V3 proposal also touched on.
 
 **Current shape** (both `RaptorSheets.Gig/Entities/SheetEntity.cs` and
@@ -174,6 +195,8 @@ needs to change, and whether this should land before or after `RaptorSheets.Job`
 it before means only Gig/Stock need migrating; doing it after means a 3rd/4th domain too). Explicitly
 open to a breaking change here if the resulting shape is cleaner - not constrained to
 backwards-compatible steps the way the manager/formula consolidation work was.
+
+</details>
 
 **TODO — scan for other breaking-change candidates, not just this one.** `SheetEntity` nesting is
 one example found by inspection, not the result of a systematic look. Do a deliberate pass over the
