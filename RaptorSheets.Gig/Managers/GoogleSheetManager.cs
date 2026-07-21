@@ -143,32 +143,47 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
     #region Update Operations
 
-    // Static readonly dictionary to avoid recreation on every call
-    private static readonly Dictionary<string, (Func<SheetEntity, int> GetCount, Func<SheetEntity, object> GetData)> _sheetAccessors =
+    // Single source of truth for the ChangeSheetData dispatch: count/data accessors AND request
+    // builder per sheet, instead of a separate accessor map plus an easily-out-of-sync switch.
+    // Shared dispatch logic (ResolveSheetsWithData/BuildChangeRequests) lives in
+    // GoogleRequestHelpers so any domain can reuse the same pattern with its own map.
+    private static readonly Dictionary<string, GoogleRequestHelpers.SheetChangeAccessor<SheetEntity>> _sheetAccessors =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            [SheetsConfig.SheetNames.Expenses] = (entity => entity.Expenses.Count, entity => entity.Expenses),
-            [SheetsConfig.SheetNames.Setup] = (entity => entity.Setup.Count, entity => entity.Setup),
-            [SheetsConfig.SheetNames.Shifts] = (entity => entity.Shifts.Count, entity => entity.Shifts),
-            [SheetsConfig.SheetNames.Trips] = (entity => entity.Trips.Count, entity => entity.Trips)
+            [SheetsConfig.SheetNames.Expenses] = new(
+                entity => entity.Expenses.Count,
+                entity => entity.Expenses,
+                (data, properties) => GigRequestHelpers.ChangeExpensesSheetData(data as List<ExpenseEntity> ?? [], properties)),
+            [SheetsConfig.SheetNames.Setup] = new(
+                entity => entity.Setup.Count,
+                entity => entity.Setup,
+                (data, properties) => GigRequestHelpers.ChangeSetupSheetData(data as List<SetupEntity> ?? [], properties)),
+            [SheetsConfig.SheetNames.Shifts] = new(
+                entity => entity.Shifts.Count,
+                entity => entity.Shifts,
+                (data, properties) => GigRequestHelpers.ChangeShiftSheetData(data as List<ShiftEntity> ?? [], properties)),
+            [SheetsConfig.SheetNames.Trips] = new(
+                entity => entity.Trips.Count,
+                entity => entity.Trips,
+                (data, properties) => GigRequestHelpers.ChangeTripSheetData(data as List<TripEntity> ?? [], properties))
         };
 
     public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity)
     {
-        var changes = GetSheetChanges(sheets, sheetEntity);
+        var (sheetsWithData, resolveMessages) = GoogleRequestHelpers.ResolveSheetsWithData(sheets, sheetEntity, _sheetAccessors);
+        sheetEntity.Messages.AddRange(resolveMessages);
 
-        if (changes.Count == 0)
+        if (sheetsWithData.Count == 0)
         {
             sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageTypeEnum.GENERAL));
             return sheetEntity;
         }
 
         var sheetInfo = await GetSheetProperties(sheets);
-        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
-        {
-            Requests = BuildBatchUpdateRequests(changes, sheetInfo, sheetEntity)
-        };
+        var (requests, buildMessages) = GoogleRequestHelpers.BuildChangeRequests(sheetsWithData, sheetEntity, _sheetAccessors, sheetInfo);
+        sheetEntity.Messages.AddRange(buildMessages);
 
+        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
         var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
 
         if (batchUpdateSpreadsheetResponse == null)
@@ -182,80 +197,6 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         }
 
         return sheetEntity;
-    }
-
-    private static Dictionary<string, object> GetSheetChanges(List<string> sheets, SheetEntity sheetEntity)
-    {
-        var changes = new Dictionary<string, object>();
-        foreach (var sheet in sheets)
-        {
-            var result = TryAddSheetChange(sheet, sheetEntity, changes);
-            if (result == null)
-            {
-                // Only add error if the sheet is not recognized at all
-                sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
-            }
-            // If result is false (recognized but no data), do nothing
-        }
-        return changes;
-    }
-
-    /// <summary>
-    /// Attempts to add sheet data to the changes dictionary if the sheet is recognized and contains data.
-    /// </summary>
-    /// <param name="sheet">The name of the sheet to check (case-insensitive)</param>
-    /// <param name="sheetEntity">The entity containing all sheet data</param>
-    /// <param name="changes">Dictionary to add changes to if data exists</param>
-    /// <returns>
-    /// true if the sheet was recognized and data was added to changes;
-    /// false if the sheet was recognized but contains no data;
-    /// null if the sheet name is not recognized
-    /// </returns>
-    private static bool? TryAddSheetChange(string sheet, SheetEntity sheetEntity, Dictionary<string, object> changes)
-    {
-        // Check if the sheet is recognized
-        if (!_sheetAccessors.TryGetValue(sheet, out var accessor))
-        {
-            return null; // Sheet not recognized
-        }
-
-        // Check if the sheet has data
-        if (accessor.GetCount(sheetEntity) > 0)
-        {
-            changes.Add(sheet, accessor.GetData(sheetEntity));
-            return true; // Data added successfully
-        }
-
-        return false; // Recognized but no data
-    }
-
-    private static List<Request> BuildBatchUpdateRequests(Dictionary<string, object> changes, List<PropertyEntity> sheetInfo, SheetEntity sheetEntity)
-    {
-        var requests = new List<Request>();
-        foreach (var change in changes)
-        {
-            var sheetName = change.Key;
-                var properties = sheetInfo.FirstOrDefault(x => string.Equals(x.Name, sheetName, StringComparison.OrdinalIgnoreCase));
-
-            switch (sheetName)
-            {
-                case SheetsConfig.SheetNames.Expenses:
-                    requests.AddRange(GigRequestHelpers.ChangeExpensesSheetData(change.Value as List<ExpenseEntity> ?? [], properties));
-                    break;
-                case SheetsConfig.SheetNames.Setup:
-                    requests.AddRange(GigRequestHelpers.ChangeSetupSheetData(change.Value as List<SetupEntity> ?? [], properties));
-                    break;
-                case SheetsConfig.SheetNames.Shifts:
-                    requests.AddRange(GigRequestHelpers.ChangeShiftSheetData(change.Value as List<ShiftEntity> ?? [], properties));
-                    break;
-                case SheetsConfig.SheetNames.Trips:
-                    requests.AddRange(GigRequestHelpers.ChangeTripSheetData(change.Value as List<TripEntity> ?? [], properties));
-                    break;
-            }
-
-            sheetEntity.Messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {sheetName.ToUpperInvariant()}", MessageTypeEnum.SAVE_DATA));
-        }
-        return requests;
     }
 
     #endregion

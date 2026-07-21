@@ -518,5 +518,70 @@ public static class GoogleRequestHelpers
         return requests;
     }
 
+    /// <summary>
+    /// Per-sheet accessor for the <c>ChangeSheetData</c> dispatch pattern: how to read a count/data
+    /// from the domain's top-level entity, and how to turn that data into batch-update requests.
+    /// A domain manager builds one <c>Dictionary&lt;string, SheetChangeAccessor&lt;TEntity&gt;&gt;</c>
+    /// (keyed by sheet name) as its single source of truth, replacing what would otherwise be a
+    /// count/data accessor map plus a separate, easily-out-of-sync request-building switch.
+    /// </summary>
+    public readonly record struct SheetChangeAccessor<TEntity>(
+        Func<TEntity, int> GetCount,
+        Func<TEntity, object> GetData,
+        Func<object, PropertyEntity?, IEnumerable<Request>> BuildRequests);
+
+    /// <summary>
+    /// Resolves which requested sheets actually have data to save, given a domain-supplied
+    /// <see cref="SheetChangeAccessor{TEntity}"/> map. Adds an error message for any requested sheet
+    /// not present in the map. Deliberately cheap/synchronous - callers should only proceed to the
+    /// (async, API-calling) sheet-properties lookup and <see cref="BuildChangeRequests{TEntity}"/> if
+    /// the returned list is non-empty.
+    /// </summary>
+    public static (List<string> SheetsWithData, List<MessageEntity> Messages) ResolveSheetsWithData<TEntity>(
+        List<string> sheets, TEntity sheetEntity, IReadOnlyDictionary<string, SheetChangeAccessor<TEntity>> accessors)
+    {
+        var messages = new List<MessageEntity>();
+        var sheetsWithData = new List<string>();
+
+        foreach (var sheet in sheets)
+        {
+            if (!accessors.TryGetValue(sheet, out var accessor))
+            {
+                messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
+                continue;
+            }
+
+            if (accessor.GetCount(sheetEntity) > 0)
+            {
+                sheetsWithData.Add(sheet);
+            }
+        }
+
+        return (sheetsWithData, messages);
+    }
+
+    /// <summary>
+    /// Builds batch-update requests (plus a "Saving data: X" info message per sheet) for sheets
+    /// already confirmed to have data via <see cref="ResolveSheetsWithData{TEntity}"/>.
+    /// </summary>
+    public static (List<Request> Requests, List<MessageEntity> Messages) BuildChangeRequests<TEntity>(
+        List<string> sheetsWithData, TEntity sheetEntity, IReadOnlyDictionary<string, SheetChangeAccessor<TEntity>> accessors,
+        List<PropertyEntity> sheetInfo)
+    {
+        var requests = new List<Request>();
+        var messages = new List<MessageEntity>();
+
+        foreach (var sheet in sheetsWithData)
+        {
+            var accessor = accessors[sheet];
+            var data = accessor.GetData(sheetEntity);
+            var properties = sheetInfo.FirstOrDefault(x => string.Equals(x.Name, sheet, StringComparison.OrdinalIgnoreCase));
+            requests.AddRange(accessor.BuildRequests(data, properties));
+            messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {sheet.ToUpperInvariant()}", MessageTypeEnum.SAVE_DATA));
+        }
+
+        return (requests, messages);
+    }
+
     #endregion
 }
