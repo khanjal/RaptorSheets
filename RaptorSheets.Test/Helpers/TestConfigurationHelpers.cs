@@ -50,4 +50,11 @@ public static class TestConfigurationHelpers
 
         return _configuration["spreadsheets:home"] ?? string.Empty;
     }
+
+    public static string GetJobSpreadsheet()
+    {
+        GetConfiguration();
+
+        return _configuration["spreadsheets:job"] ?? string.Empty;
+    }
 }
