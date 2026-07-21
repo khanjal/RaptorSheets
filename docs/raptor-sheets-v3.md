@@ -359,6 +359,19 @@ concrete findings; verified all suites green after each:
   its entities deliberately carry no `[Column]` attributes (see the Stock parity write-up above).
   Different, already-appropriate solutions for each domain's actual shape - nothing to lift.
 
+**Separate finding, not a duplication issue - repo hygiene:** `RaptorSheets.Common/` is a real,
+git-tracked project (`Enums/HeaderEnum.cs` - NAME/VALUE, `Enums/SheetEnum.cs` - SETUP,
+`RaptorSheets.Common.csproj`) that is **not listed in `RaptorSheets.sln`** at all, and is referenced
+only via one `<ProjectReference>` from `RaptorSheets.Test.Common.csproj` - which is why it silently
+builds as a transitive dependency without ever showing up as a solution error. Nothing in the repo
+actually uses `RaptorSheets.Common.Enums.*` (`grep -rl "RaptorSheets.Common" --include=*.cs` outside
+its own folder returns nothing). Looks like a pre-`RaptorSheets.Core` leftover. Not touched - deleting
+a tracked project is a bigger call than a refactor, left for the user to decide. (Also noted in
+passing: `RaptorSheets.Job`, `RaptorSheets.Job.Tests`, `RaptorSheets.Shared`, `RaptorSheets.Tests`,
+`RaptorSheets.Tests.Common` are local-disk-only folders - build artifacts and empty directories, not
+in git, not in the `.sln` - harmless, unrelated to the actual `RaptorSheets.Job` scaffold work still
+to come.)
+
 Verified: Core 898 / Stock 48 / Gig 558 unit tests, all green, build clean, throughout.
 
 ---
