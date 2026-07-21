@@ -199,14 +199,34 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
             }
             else
             {
+                // Scope the canonical ordering to sheets that are actually relevant to this batch:
+                // sheets already present (they anchor relative position) plus sheets actually being
+                // requested here. Canonical sheets that are neither present nor requested must be
+                // excluded - otherwise BuildAddSheetRequests computes target indices as if the full
+                // canonical set were being inserted, while GenerateSheetsRequest(sheets) only ever
+                // creates AddSheet requests for the requested subset. The resulting index can then
+                // exceed the sheet count actually present after this batch, which Google Sheets
+                // rejects ("the new sheet index is too high").
                 if (existingIndexMap != null && existingIndexMap.Count > 0)
                 {
                     existingRawCount = currentInfo?.Sheets?.Count ?? existingIndexMap.Count;
-                    insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(existingIndexMap, existingRawCount, _canonicalSheetNames);
+                    var relevantCanonicalNames = _canonicalSheetNames
+                        .Where(name => existingIndexMap.ContainsKey(name) || sheets.Contains(name, StringComparer.OrdinalIgnoreCase))
+                        .ToList();
+                    insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(existingIndexMap, existingRawCount, relevantCanonicalNames);
                 }
                 else if (currentInfo != null)
                 {
-                    insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(currentInfo, _canonicalSheetNames);
+                    var existingTitles = (currentInfo.Sheets ?? new List<Sheet>())
+                        .Select(s => s?.Properties?.Title)
+                        .Where(t => !string.IsNullOrEmpty(t))
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
+
+                    var relevantCanonicalNames = _canonicalSheetNames
+                        .Where(name => existingTitles.Contains(name) || sheets.Contains(name, StringComparer.OrdinalIgnoreCase))
+                        .ToList();
+
+                    insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(currentInfo, relevantCanonicalNames);
                 }
             }
 
