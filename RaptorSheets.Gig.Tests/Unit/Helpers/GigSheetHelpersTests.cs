@@ -231,11 +231,11 @@ public class GigSheetHelpersTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotNull(result.Shifts);
+        Assert.NotNull(result.Sheets.Shifts);
         
         // Updated expectation: Should handle the mapping gracefully
         // (may be empty if headers don't match exactly, but shouldn't crash)
-        Assert.True(result.Shifts.Count > 0, "Should handle shift mapping without crashing");
+        Assert.True(result.Sheets.Shifts.Count > 0, "Should handle shift mapping without crashing");
     }
 
     [Fact]

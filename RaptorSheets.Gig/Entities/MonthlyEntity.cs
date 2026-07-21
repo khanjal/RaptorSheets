@@ -1,17 +1,14 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Entities;
 
 [ExcludeFromCodeCoverage]
-public class MonthlyEntity 
+public class MonthlyEntity : SheetRowEntityBase
 {
-    [JsonPropertyName("rowId")]
-    public int RowId { get; set; }
-
     [Column(SheetsConfig.HeaderNames.Month)]
     public string Month { get; set; } = "";
 

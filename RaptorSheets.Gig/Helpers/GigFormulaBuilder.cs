@@ -97,66 +97,6 @@ public static class GigFormulaBuilder
 
     #endregion
 
-    #region Gig Date/Time Formula Builders
-
-    /// <summary>
-    /// Builds week number with year formula for gig tracking
-    /// </summary>
-    public static string BuildArrayFormulaWeekNumber(string keyRange, string header, string dateRange)
-    {
-        var weekFormula = GigFormulas.WeekNumberWithYear.Replace("{dateRange}", dateRange);
-
-        return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", weekFormula);
-    }
-
-    /// <summary>
-    /// Builds month number with year formula for gig tracking
-    /// </summary>
-    public static string BuildArrayFormulaMonthNumber(string keyRange, string header, string dateRange)
-    {
-        var monthFormula = GigFormulas.MonthNumberWithYear.Replace("{dateRange}", dateRange);
-
-        return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", monthFormula);
-    }
-
-    /// <summary>
-    /// Builds week begin date calculation
-    /// </summary>
-    public static string BuildArrayFormulaWeekBegin(string keyRange, string header, string yearRange, string weekRange)
-    {
-        var beginFormula = GigFormulas.WeekBeginDate
-            .Replace("{yearRange}", yearRange)
-            .Replace("{weekRange}", weekRange);
-
-        return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", beginFormula);
-    }
-
-    /// <summary>
-    /// Builds week end date calculation
-    /// </summary>
-    public static string BuildArrayFormulaWeekEnd(string keyRange, string header, string yearRange, string weekRange)
-    {
-        var endFormula = GigFormulas.WeekEndDate
-            .Replace("{yearRange}", yearRange)
-            .Replace("{weekRange}", weekRange);
-
-        return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", endFormula);
-    }
-
-    #endregion
-
     #region Gig Business Logic Formula Builders
 
     /// <summary>
@@ -354,54 +294,6 @@ public static class GigFormulaBuilder
             .Replace("{keyRange}", keyRange)
             .Replace("{header}", header)
             .Replace("{formula}", totalTripsFormula);
-    }
-
-    #endregion
-
-    #region Advanced Time Series Formula Builders
-
-    /// <summary>
-    /// Builds rolling average formula for time series analysis
-    /// </summary>
-    public static string BuildArrayFormulaRollingAverage(string keyRange, string header, string totalRange)
-    {
-        var averageFormula = GigFormulas.RollingAverageFormula
-            .Replace("{totalRange}", totalRange);
-
-        return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", averageFormula);
-    }
-
-    /// <summary>
-    /// Builds week begin date calculation from year and week number
-    /// </summary>
-    public static string BuildArrayFormulaWeekBeginDate(string keyRange, string header, string yearRange, string weekRange)
-    {
-        var beginFormula = GigFormulas.WeekBeginDate
-            .Replace("{yearRange}", yearRange)
-            .Replace("{weekRange}", weekRange);
-
-        return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", beginFormula);
-    }
-
-    /// <summary>
-    /// Builds week end date calculation from year and week number
-    /// </summary>
-    public static string BuildArrayFormulaWeekEndDate(string keyRange, string header, string yearRange, string weekRange)
-    {
-        var endFormula = GigFormulas.WeekEndDate
-            .Replace("{yearRange}", yearRange)
-            .Replace("{weekRange}", weekRange);
-
-        return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", endFormula);
     }
 
     #endregion

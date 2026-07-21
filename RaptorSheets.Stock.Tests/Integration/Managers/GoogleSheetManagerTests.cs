@@ -6,7 +6,6 @@ using RaptorSheets.Stock.Managers;
 using RaptorSheets.Stock.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
 using Xunit;
-using SheetEnum = RaptorSheets.Stock.Enums.SheetEnum;
 
 namespace RaptorSheets.Stock.Tests.Integration.Managers;
 
@@ -37,7 +36,7 @@ public class GoogleSheetManagerTests
         if (_googleSheetManager == null)
             throw new InvalidOperationException("GoogleSheetManager is not initialized.");
 
-        var result = await _googleSheetManager.GetSheets();
+        var result = await _googleSheetManager.GetAllSheets();
         Assert.NotNull(result);
     }
 
@@ -47,22 +46,30 @@ public class GoogleSheetManagerTests
         if (_googleSheetManager == null)
             throw new InvalidOperationException("GoogleSheetManager is not initialized.");
 
-        var result = await _googleSheetManager.GetSheets(new List<Enums.SheetEnum> { _sheetEnum });
+        var result = await _googleSheetManager.GetSheets(new List<string> { _sheetEnum.GetDescription() });
         Assert.NotNull(result);
-        Assert.Equal(1, result!.Messages?.Count);
-        Assert.Equal(MessageLevelEnum.INFO.GetDescription(), result!.Messages?[0].Level);
-        Assert.Contains(_sheetEnum.ToString(), result!.Messages?[0].Message);
-        Assert.True(result!.Messages?[0].Time >= _currentTime);
+        // Shared orchestration (GoogleSheetManagerBase<TEntity>.GetSheets) preserves per-sheet
+        // header-validation messages from MapData and appends unknown-tab detection, so the
+        // "Retrieved sheet(s)" INFO is no longer guaranteed to be first. Assert the order-independent
+        // invariant: an INFO message naming the requested sheet is present.
+        Assert.NotEmpty(result!.Messages);
+        // The shared orchestration lists provider sheet names (descriptions) in the "Retrieved
+        // sheet(s)" INFO, e.g. "Accounts" rather than the enum identifier "ACCOUNTS".
+        var retrievedMessage = result!.Messages.FirstOrDefault(m =>
+            m.Level == MessageLevelEnum.INFO.GetDescription() && m.Message.Contains(_sheetEnum.GetDescription()));
+        Assert.NotNull(retrievedMessage);
+        Assert.True(retrievedMessage!.Time >= _currentTime);
     }
 
     [FactCheckUserSecrets]
     public async Task GivenGetSheet_WithInvalidSpreadsheetId_ReturnErrorMessages()
     {
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
-        var result = await googleSheetManager.GetSheets();
+        var result = await googleSheetManager.GetAllSheets();
         Assert.NotNull(result);
-        Assert.Equal(2, result!.Messages.Count);
-
+        // Shared orchestration returns the "Unable to retrieve sheet(s)" ERROR once the batch fetch
+        // and metadata self-heal both fail; assert every message is an ERROR rather than an exact count.
+        Assert.NotEmpty(result!.Messages);
         result!.Messages.ForEach(x => Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), x.Level));
     }
 
@@ -70,7 +77,7 @@ public class GoogleSheetManagerTests
     public async Task GivenGetSheet_WithInvalidSpreadsheetIdAndSheet_ReturnSheetErrorMessage()
     {
         var googleSheetManager = new GoogleSheetManager(_credential, "invalid");
-        var result = await googleSheetManager.GetSheets(new List<Enums.SheetEnum> { _sheetEnum });
+        var result = await googleSheetManager.GetSheets(new List<string> { _sheetEnum.GetDescription() });
         Assert.NotNull(result);
         Assert.Equal(1, result!.Messages?.Count);
         Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result!.Messages?[0].Level);
@@ -78,11 +85,11 @@ public class GoogleSheetManagerTests
     }
 
     [FactCheckUserSecrets]
-    public async Task GivenAddSheetData_WithValidSheetId_ThenReturnEmpty()
+    public async Task GivenChangeSheetData_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
-        googleSheetManager.Setup(x => x.AddSheetData(It.IsAny<List<SheetEnum>>(), It.IsAny<SheetEntity>())).ReturnsAsync(new SheetEntity());
-        var result = await googleSheetManager.Object.AddSheetData(new List<Enums.SheetEnum>(), new SheetEntity());
+        googleSheetManager.Setup(x => x.ChangeSheetData(It.IsAny<List<string>>(), It.IsAny<SheetEntity>())).ReturnsAsync(new SheetEntity());
+        var result = await googleSheetManager.Object.ChangeSheetData(new List<string>(), new SheetEntity());
         Assert.NotNull(result);
     }
 
@@ -90,8 +97,8 @@ public class GoogleSheetManagerTests
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
-        googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<SheetEnum>>())).ReturnsAsync(new SheetEntity());
-        var result = await googleSheetManager.Object.CreateSheets(new List<Enums.SheetEnum>());
+        googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<string>>())).ReturnsAsync(new SheetEntity());
+        var result = await googleSheetManager.Object.CreateSheets(new List<string>());
         Assert.NotNull(result);
     }
 
@@ -101,7 +108,7 @@ public class GoogleSheetManagerTests
         if (_googleSheetManager == null)
             throw new InvalidOperationException("GoogleSheetManager is not initialized.");
 
-        var result = await _googleSheetManager.CreateSheets(new List<Enums.SheetEnum> { _sheetEnum });
+        var result = await _googleSheetManager.CreateSheets(new List<string> { _sheetEnum.GetDescription() });
         Assert.NotNull(result);
         Assert.Equal(1, result.Messages?.Count);
         Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result.Messages?[0].Level);

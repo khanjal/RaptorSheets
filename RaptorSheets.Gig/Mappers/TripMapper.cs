@@ -61,22 +61,9 @@ public static class TripMapper
                         sheet.GetLocalRange(HeaderEnum.EXCLUDE.GetDescription()));
                     break;
                 case HeaderEnum.DAY:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(
-                        dateRange, 
-                        HeaderEnum.DAY.GetDescription(), 
-                        dateRange);
-                    break;
                 case HeaderEnum.MONTH:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonth(
-                        dateRange, 
-                        HeaderEnum.MONTH.GetDescription(), 
-                        dateRange);
-                    break;
                 case HeaderEnum.YEAR:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(
-                        dateRange, 
-                        HeaderEnum.YEAR.GetDescription(), 
-                        dateRange);
+                    MapperFormulaHelper.ConfigureDatePartHeader(header, headerEnum, dateRange);
                     break;
                 case HeaderEnum.AMOUNT_PER_TIME:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(

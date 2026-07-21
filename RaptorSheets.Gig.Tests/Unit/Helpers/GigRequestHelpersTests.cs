@@ -1,6 +1,7 @@
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Helpers;
 
@@ -16,7 +17,7 @@ public class GigRequestHelpersTests
         var sheetProperties = new PropertyEntity { Id = "1" };
 
         // Act
-        var result = GigRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties);
+        var result = GoogleRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties);
 
         // Assert
         Assert.NotNull(result);
@@ -31,7 +32,7 @@ public class GigRequestHelpersTests
         var sheetProperties = new PropertyEntity(); // Use default instance instead of null
 
         // Act
-        var result = GigRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties);
+        var result = GoogleRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties);
 
         // Assert
         Assert.NotNull(result);
@@ -46,7 +47,7 @@ public class GigRequestHelpersTests
         var sheetProperties = new PropertyEntity { Id = "invalid" };
 
         // Act
-        var result = GigRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties);
+        var result = GoogleRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties);
 
         // Assert
         Assert.NotNull(result);
@@ -61,7 +62,7 @@ public class GigRequestHelpersTests
         var sheetProperties = new PropertyEntity { Id = "123" };
 
         // Act
-        var result = GigRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties).ToList();
+        var result = GoogleRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties).ToList();
 
         // Assert
         Assert.NotNull(result);
@@ -83,7 +84,7 @@ public class GigRequestHelpersTests
         var sheetProperties = new PropertyEntity { Id = "456" };
 
         // Act
-        var result = GigRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties).ToList();
+        var result = GoogleRequestHelpers.CreateDeleteRequests(rowIds, sheetProperties).ToList();
 
         // Assert
         Assert.NotNull(result);
@@ -524,18 +525,21 @@ public class GigRequestHelpersTests
     [Fact]
     public void GenericHelpers_ShouldWorkWithAllEntityTypes()
     {
-        // Arrange
+        // Arrange - Action/RowId are now typed SheetRowEntityBase properties (no reflection),
+        // so "works with all entity types" is a compile-time guarantee; this test just confirms
+        // the values round-trip correctly for each concrete entity.
         var setupEntity = new SetupEntity { RowId = 1, Action = ActionTypeEnum.INSERT.GetDescription() };
         var tripEntity = new TripEntity { RowId = 2, Action = ActionTypeEnum.UPDATE.GetDescription() };
         var shiftEntity = new ShiftEntity { RowId = 3, Action = ActionTypeEnum.DELETE.GetDescription() };
         var expenseEntity = new ExpenseEntity { RowId = 4, Action = ActionTypeEnum.INSERT.GetDescription() };
 
-        // Act & Assert - Should not throw exceptions
-        var setupAction = GigRequestHelpers.GetEntityAction(setupEntity);
-        var tripRowId = GigRequestHelpers.GetEntityRowId(tripEntity);
-        var shiftAction = GigRequestHelpers.GetEntityAction(shiftEntity);
-        var expenseRowId = GigRequestHelpers.GetEntityRowId(expenseEntity);
+        // Act
+        var setupAction = setupEntity.Action;
+        var tripRowId = tripEntity.RowId;
+        var shiftAction = shiftEntity.Action;
+        var expenseRowId = expenseEntity.RowId;
 
+        // Assert
         Assert.Equal(ActionTypeEnum.INSERT.GetDescription(), setupAction);
         Assert.Equal(2, tripRowId);
         Assert.Equal(ActionTypeEnum.DELETE.GetDescription(), shiftAction);

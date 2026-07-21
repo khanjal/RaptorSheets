@@ -576,4 +576,60 @@ public class GoogleRequestHelpersTests
         Assert.Equal(4, request.UpdateCells.Range.StartColumnIndex);
         Assert.Equal(5, request.UpdateCells.Range.EndColumnIndex);
     }
+
+    #region ChangeSheetData dispatch (ResolveSheetsWithData / BuildChangeRequests)
+
+    private sealed class TestRow : SheetRowEntityBase { }
+
+    private sealed class TestEntity
+    {
+        public List<TestRow> Alpha { get; set; } = [];
+        public List<TestRow> Beta { get; set; } = [];
+    }
+
+    private static Dictionary<string, GoogleRequestHelpers.SheetChangeAccessor<TestEntity>> BuildAccessors(int alphaRequestCount = 1) =>
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Alpha"] = new(
+                e => e.Alpha.Count,
+                e => e.Alpha,
+                (_, _) => Enumerable.Range(0, alphaRequestCount).Select(_ => new Request())),
+            ["Beta"] = new(
+                e => e.Beta.Count,
+                e => e.Beta,
+                (_, _) => [new Request()])
+        };
+
+    [Fact]
+    public void ResolveSheetsWithData_ReturnsOnlySheetsWithData_AndErrorsForUnknown()
+    {
+        var entity = new TestEntity { Alpha = [new TestRow()] }; // Beta empty
+        var accessors = BuildAccessors();
+
+        var (withData, messages) = GoogleRequestHelpers.ResolveSheetsWithData(
+            ["Alpha", "Beta", "Unknown"], entity, accessors);
+
+        Assert.Equal(["Alpha"], withData); // Beta recognized-but-empty -> excluded, no error
+        Assert.Single(messages);
+        Assert.Contains("Unknown", messages[0].Message);
+        Assert.Equal(MessageTypeEnum.GENERAL.GetDescription(), messages[0].Type);
+    }
+
+    [Fact]
+    public void BuildChangeRequests_BuildsRequestsAndInfoMessagePerSheet()
+    {
+        var entity = new TestEntity { Alpha = [new TestRow()] };
+        var accessors = BuildAccessors(alphaRequestCount: 3);
+        var sheetInfo = new List<PropertyEntity> { new() { Name = "Alpha", Id = "1" } };
+
+        var (requests, messages) = GoogleRequestHelpers.BuildChangeRequests(
+            ["Alpha"], entity, accessors, sheetInfo);
+
+        Assert.Equal(3, requests.Count);
+        Assert.Single(messages);
+        Assert.Contains("Saving data: ALPHA", messages[0].Message);
+        Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), messages[0].Type);
+    }
+
+    #endregion
 }

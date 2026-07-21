@@ -1,4 +1,5 @@
 using Google.Apis.Sheets.v4.Data;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Managers;
 using Xunit;
@@ -182,12 +183,14 @@ public class GoogleSheetManagerTests
     }
 
     [Fact]
-    public async Task AddSheetData_UnsupportedSheet_AddsErrorMessage()
+    public async Task ChangeSheetData_WithEmptyEntity_ReturnsWarningMessage()
     {
+        // Tickers has no accessor entry at all (fully formula-driven, nothing to change); Stocks
+        // has an accessor but an empty SheetEntity carries no Stocks rows to change either way.
         var manager = new GoogleSheetManager("token", "spreadsheet");
         var entity = new SheetEntity();
-        var result = await manager.AddSheetData([SheetEnum.TICKERS], entity);
-        Assert.Contains(result.Messages, m => m.Message.Contains("not supported") || m.Message.Contains("No data to add"));
+        var result = await manager.ChangeSheetData([SheetEnum.TICKERS.GetDescription(), SheetEnum.STOCKS.GetDescription()], entity);
+        Assert.Contains(result.Messages, m => m.Message.Contains("No data to change"));
     }
 
     [Fact]
@@ -195,7 +198,46 @@ public class GoogleSheetManagerTests
     {
         var manager = new GoogleSheetManager("token", "spreadsheet");
         // This will likely add error messages since the service is not mocked and will return null
-        var result = await manager.CreateSheets([SheetEnum.STOCKS]);
+        var result = await manager.CreateSheets([SheetEnum.STOCKS.GetDescription()]);
         Assert.Contains(result.Messages, m => m.Message.Contains("not created"));
+    }
+
+    [Fact]
+    public async Task ChangeSheetData_WithStockShares_ShouldProcessRequest()
+    {
+        // Shares is the only genuinely user-editable column on the Stocks sheet - everything else
+        // is a cross-sheet formula or GOOGLEFINANCE pull. This exercises the accessor -> Core's
+        // ChangeSheetData<T>/CreateUpdateCellRequests<T> -> StockMapper.MapToRowData path end to end.
+        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var sheetEntity = new SheetEntity
+        {
+            Sheets = { Stocks = { new StockEntity { RowId = 2, Shares = 10 } } }
+        };
+
+        var result = await manager.ChangeSheetData([SheetEnum.STOCKS.GetDescription()], sheetEntity);
+
+        Assert.NotNull(result);
+        // No mocked service, so this will fail to actually save, but should get past request-building
+        // and attempt the save (rather than short-circuiting on "No data to change").
+        Assert.DoesNotContain(result.Messages, m => m.Message.Contains("No data to change"));
+        Assert.Contains(result.Messages, m => m.Message.Contains("Unable to save data"));
+    }
+
+    [Fact]
+    public async Task DeleteSheets_WithEmptyList_ShouldReturnInfoMessage()
+    {
+        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var result = await manager.DeleteSheets([]);
+        Assert.Single(result.Messages);
+        Assert.Contains("No sheets found to delete", result.Messages[0].Message);
+    }
+
+    [Fact]
+    public async Task DeleteSheets_WithSheetNames_ShouldAttemptDeletion()
+    {
+        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var result = await manager.DeleteSheets([SheetEnum.STOCKS.GetDescription()]);
+        Assert.NotNull(result);
+        Assert.NotEmpty(result.Messages);
     }
 }

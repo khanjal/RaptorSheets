@@ -343,7 +343,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             Tip = 25m,
             Note = "Daily workflow test"
         };
-        testData.Shifts.Add(shift);
+        testData.Sheets.Shifts.Add(shift);
         
         // Add trips for this shift
         for (int i = 0; i < 3; i++)
@@ -359,7 +359,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
                 Tip = 3m + i,
                 Note = $"Daily trip {i + 1}"
             };
-            testData.Trips.Add(trip);
+            testData.Sheets.Trips.Add(trip);
         }
         
         // Act
@@ -368,10 +368,10 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         // Assert
         var readData = await GetSheetData();
-        var dailyShifts = readData.Shifts.Where(s => 
+        var dailyShifts = readData.Sheets.Shifts.Where(s => 
             s.Service?.Contains($"Test_{testRunId}") == true && 
             s.Region == "DailyWorkflow").ToList();
-        var dailyTrips = readData.Trips.Where(t => 
+        var dailyTrips = readData.Sheets.Trips.Where(t => 
             t.Service?.Contains($"Test_{testRunId}") == true).ToList();
         
         Assert.Single(dailyShifts);
@@ -406,7 +406,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
                 Amount = 25m + i * 10,
                 Description = $"Test_{testRunId}_expense"
             };
-            testData.Expenses.Add(expense);
+            testData.Sheets.Expenses.Add(expense);
         }
         
         // Act
@@ -415,7 +415,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         // Assert
         var readData = await GetSheetData();
-        var ourExpenses = readData.Expenses.Where(e => 
+        var ourExpenses = readData.Sheets.Expenses.Where(e => 
             e.Description?.Contains($"Test_{testRunId}") == true).ToList();
         
         var expenseCategories = ourExpenses.Select(e => e.Category).Distinct().ToList();
@@ -433,8 +433,8 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         var testData = CreateTestData(testRunId, shifts: 10, tripsPerShift: 5, expenses: 15);
         
-        System.Diagnostics.Debug.WriteLine($"📊 Inserting large dataset: {testData.Shifts.Count} shifts, " +
-            $"{testData.Trips.Count} trips, {testData.Expenses.Count} expenses");
+        System.Diagnostics.Debug.WriteLine($"📊 Inserting large dataset: {testData.Sheets.Shifts.Count} shifts, " +
+            $"{testData.Sheets.Trips.Count} trips, {testData.Sheets.Expenses.Count} expenses");
         
         // Act
         var startTime = DateTime.UtcNow;
@@ -458,45 +458,45 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     private void ValidateInsertResult(string testRunId, SheetEntity testData)
     {
-        System.Diagnostics.Debug.WriteLine($"   ✓ Inserted {testData.Shifts.Count} shifts, " +
-            $"{testData.Trips.Count} trips, {testData.Expenses.Count} expenses for test {testRunId}");
+        System.Diagnostics.Debug.WriteLine($"   ✓ Inserted {testData.Sheets.Shifts.Count} shifts, " +
+            $"{testData.Sheets.Trips.Count} trips, {testData.Sheets.Expenses.Count} expenses for test {testRunId}");
     }
 
     private List<ShiftEntity> ValidateInsertedShifts(string testRunId, SheetEntity readData, SheetEntity expectedData)
     {
-        var shifts = readData.Shifts.Where(s => 
+        var shifts = readData.Sheets.Shifts.Where(s => 
             s.Service?.Contains($"Test_{testRunId}") == true).ToList();
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {shifts.Count} shifts");
         
-        Assert.True(shifts.Count >= expectedData.Shifts.Count - 1, 
-            $"Should find ~{expectedData.Shifts.Count} shifts, found {shifts.Count}");
+        Assert.True(shifts.Count >= expectedData.Sheets.Shifts.Count - 1, 
+            $"Should find ~{expectedData.Sheets.Shifts.Count} shifts, found {shifts.Count}");
         
         return shifts;
     }
 
     private List<TripEntity> ValidateInsertedTrips(string testRunId, SheetEntity readData, SheetEntity expectedData)
     {
-        var trips = readData.Trips.Where(t => 
+        var trips = readData.Sheets.Trips.Where(t => 
             t.Service?.Contains($"Test_{testRunId}") == true).ToList();
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {trips.Count} trips");
         
-        Assert.True(trips.Count >= expectedData.Trips.Count - 2, 
-            $"Should find ~{expectedData.Trips.Count} trips, found {trips.Count}");
+        Assert.True(trips.Count >= expectedData.Sheets.Trips.Count - 2, 
+            $"Should find ~{expectedData.Sheets.Trips.Count} trips, found {trips.Count}");
         
         return trips;
     }
 
     private List<ExpenseEntity> ValidateInsertedExpenses(string testRunId, SheetEntity readData, SheetEntity expectedData)
     {
-        var expenses = readData.Expenses.Where(e => 
+        var expenses = readData.Sheets.Expenses.Where(e => 
             e.Description?.Contains($"Test_{testRunId}") == true).ToList();
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {expenses.Count} expenses");
         
-        Assert.True(expenses.Count >= expectedData.Expenses.Count - 1, 
-            $"Should find ~{expectedData.Expenses.Count} expenses, found {expenses.Count}");
+        Assert.True(expenses.Count >= expectedData.Sheets.Expenses.Count - 1, 
+            $"Should find ~{expectedData.Sheets.Expenses.Count} expenses, found {expenses.Count}");
         
         return expenses;
     }
@@ -577,7 +577,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     private void ValidateUpdatedShifts(string testRunId, SheetEntity updatedData)
     {
-        var updatedShifts = updatedData.Shifts.Where(s => 
+        var updatedShifts = updatedData.Sheets.Shifts.Where(s => 
             s.Note?.Contains($"UPDATED_{testRunId}") == true).ToList();
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {updatedShifts.Count} updated shifts");
@@ -592,7 +592,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     private void ValidateUpdatedTrips(string testRunId, SheetEntity updatedData)
     {
-        var updatedTrips = updatedData.Trips.Where(t => 
+        var updatedTrips = updatedData.Sheets.Trips.Where(t => 
             t.Note?.Contains($"UPDATED_{testRunId}") == true).ToList();
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {updatedTrips.Count} updated trips");
@@ -607,7 +607,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     private void ValidateUpdatedExpenses(string testRunId, SheetEntity updatedData)
     {
-        var updatedExpenses = updatedData.Expenses.Where(e => 
+        var updatedExpenses = updatedData.Sheets.Expenses.Where(e => 
             e.Description?.Contains($"UPDATED_{testRunId}") == true).ToList();
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {updatedExpenses.Count} updated expenses");
@@ -632,22 +632,22 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var baseDate = DateTime.Today;
         
         // Tag all data with test run ID
-        foreach (var shift in testData.Shifts)
+        foreach (var shift in testData.Sheets.Shifts)
         {
             shift.Service = $"Test_{testRunId}";
-            shift.Date = baseDate.AddDays(-testData.Shifts.IndexOf(shift)).ToString(CellFormatPatterns.Date);
+            shift.Date = baseDate.AddDays(-testData.Sheets.Shifts.IndexOf(shift)).ToString(CellFormatPatterns.Date);
         }
         
-        foreach (var trip in testData.Trips)
+        foreach (var trip in testData.Sheets.Trips)
         {
             trip.Service = $"Test_{testRunId}";
-            trip.Date = baseDate.AddDays(-testData.Trips.IndexOf(trip) / tripsPerShift).ToString(CellFormatPatterns.Date);
+            trip.Date = baseDate.AddDays(-testData.Sheets.Trips.IndexOf(trip) / tripsPerShift).ToString(CellFormatPatterns.Date);
         }
         
-        foreach (var expense in testData.Expenses)
+        foreach (var expense in testData.Sheets.Expenses)
         {
             expense.Description = $"Test_{testRunId}_expense";
-            expense.Date = baseDate.AddDays(-testData.Expenses.IndexOf(expense)).ToString(CellFormatPatterns.Date);
+            expense.Date = baseDate.AddDays(-testData.Sheets.Expenses.IndexOf(expense)).ToString(CellFormatPatterns.Date);
         }
         
         return testData;
@@ -679,8 +679,8 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // Use production demo helpers
         var demoData = CreateDemoData(startDate, endDate);
         
-        System.Diagnostics.Debug.WriteLine($"📊 Generated: {demoData.Shifts.Count} shifts, " +
-            $"{demoData.Trips.Count} trips, {demoData.Expenses.Count} expenses");
+        System.Diagnostics.Debug.WriteLine($"📊 Generated: {demoData.Sheets.Shifts.Count} shifts, " +
+            $"{demoData.Sheets.Trips.Count} trips, {demoData.Sheets.Expenses.Count} expenses");
 
         // Act - Insert demo data
         var startTime = DateTime.UtcNow;
@@ -700,15 +700,15 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
         // Validate data was inserted correctly
         var readData = await GetSheetData();
-        Assert.True(readData.Shifts.Count >= demoData.Shifts.Count * 0.95, 
-            $"Should find most shifts, found {readData.Shifts.Count} of {demoData.Shifts.Count}");
-        Assert.True(readData.Trips.Count >= demoData.Trips.Count * 0.95, 
-            $"Should find most trips, found {readData.Trips.Count} of {demoData.Trips.Count}");
-        Assert.True(readData.Expenses.Count >= demoData.Expenses.Count * 0.95,
-            $"Should find most expenses, found {readData.Expenses.Count} of {demoData.Expenses.Count}");
+        Assert.True(readData.Sheets.Shifts.Count >= demoData.Sheets.Shifts.Count * 0.95, 
+            $"Should find most shifts, found {readData.Sheets.Shifts.Count} of {demoData.Sheets.Shifts.Count}");
+        Assert.True(readData.Sheets.Trips.Count >= demoData.Sheets.Trips.Count * 0.95, 
+            $"Should find most trips, found {readData.Sheets.Trips.Count} of {demoData.Sheets.Trips.Count}");
+        Assert.True(readData.Sheets.Expenses.Count >= demoData.Sheets.Expenses.Count * 0.95,
+            $"Should find most expenses, found {readData.Sheets.Expenses.Count} of {demoData.Sheets.Expenses.Count}");
         
-        System.Diagnostics.Debug.WriteLine($"   ✓ Validated {readData.Shifts.Count} shifts, " +
-            $"{readData.Trips.Count} trips, {readData.Expenses.Count} expenses");
+        System.Diagnostics.Debug.WriteLine($"   ✓ Validated {readData.Sheets.Shifts.Count} shifts, " +
+            $"{readData.Sheets.Trips.Count} trips, {readData.Sheets.Expenses.Count} expenses");
 
         // --- New: validate behavior when a summary sheet is missing ---
         // Delete a lightweight summary sheet (Deliveries) and re-run a read to verify
@@ -774,21 +774,21 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
         // Assert - Verify the data was generated
         Assert.NotNull(demoData);
-        Assert.NotEmpty(demoData.Shifts);
-        Assert.NotEmpty(demoData.Trips);
+        Assert.NotEmpty(demoData.Sheets.Shifts);
+        Assert.NotEmpty(demoData.Sheets.Trips);
 
         // Log generated data for debugging
-        System.Diagnostics.Debug.WriteLine($"✅ Generated {demoData.Shifts.Count} shifts, {demoData.Trips.Count} trips, {demoData.Expenses.Count} expenses");
+        System.Diagnostics.Debug.WriteLine($"✅ Generated {demoData.Sheets.Shifts.Count} shifts, {demoData.Sheets.Trips.Count} trips, {demoData.Sheets.Expenses.Count} expenses");
 
         // Verify data structure
-        Assert.All(demoData.Shifts, shift =>
+        Assert.All(demoData.Sheets.Shifts, shift =>
         {
             Assert.NotNull(shift.Date);
             Assert.NotNull(shift.Service);
             Assert.True(shift.RowId > 0);
         });
 
-        Assert.All(demoData.Trips, trip =>
+        Assert.All(demoData.Sheets.Trips, trip =>
         {
             Assert.NotNull(trip.Date);
             Assert.NotNull(trip.Service);
@@ -814,19 +814,19 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         // Assert - Verify data structure
         Assert.NotNull(demoData);
-        Assert.NotEmpty(demoData.Shifts);
+        Assert.NotEmpty(demoData.Sheets.Shifts);
         
         // Verify all entities have valid structure
-        Assert.All(demoData.Shifts, shift =>
+        Assert.All(demoData.Sheets.Shifts, shift =>
         {
             Assert.NotNull(shift.Date);
             Assert.NotNull(shift.Service);
             Assert.True(shift.RowId > 0);
         });
         
-        if (demoData.Trips.Any())
+        if (demoData.Sheets.Trips.Any())
         {
-            Assert.All(demoData.Trips, trip =>
+            Assert.All(demoData.Sheets.Trips, trip =>
             {
                 Assert.NotNull(trip.Date);
                 Assert.NotNull(trip.Service);
@@ -834,9 +834,9 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             });
             
             // Verify shift-trip relationships exist
-            foreach (var shift in demoData.Shifts.Where(s => s.Trips > 0))
+            foreach (var shift in demoData.Sheets.Shifts.Where(s => s.Trips > 0))
             {
-                var relatedTrips = demoData.Trips.Where(t =>
+                var relatedTrips = demoData.Sheets.Trips.Where(t =>
                     t.Date == shift.Date &&
                     t.Service == shift.Service &&
                     t.Number == shift.Number).ToList();
@@ -848,8 +848,8 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             }
         }
         
-        System.Diagnostics.Debug.WriteLine($"✅ Validated demo data structure: {demoData.Shifts.Count} shifts, " +
-            $"{demoData.Trips.Count} trips, {demoData.Expenses.Count} expenses");
+        System.Diagnostics.Debug.WriteLine($"✅ Validated demo data structure: {demoData.Sheets.Shifts.Count} shifts, " +
+            $"{demoData.Sheets.Trips.Count} trips, {demoData.Sheets.Expenses.Count} expenses");
     }
 
     #endregion

@@ -673,4 +673,99 @@ public class GoogleFormulaBuilderTests
     }
 
     #endregion
+
+    #region Generic Date/Time and Rolling-Average Formula Builders
+
+    [Fact]
+    public void BuildArrayFormulaWeekNumber_ShouldGenerateWeekWithYear()
+    {
+        // Arrange
+        var dateRange = "$B:$B";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekNumber(TestKeyRange, TestHeader, dateRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("WEEKNUM(", result);
+        Assert.Contains("YEAR(", result);
+        Assert.Contains("&\"-\"&", result); // Week-Year separator
+        Assert.Contains(dateRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaMonthNumber_ShouldGenerateMonthWithYear()
+    {
+        // Arrange
+        var dateRange = "$B:$B";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaMonthNumber(TestKeyRange, TestHeader, dateRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("MONTH(", result);
+        Assert.Contains("YEAR(", result);
+        Assert.Contains("&\"-\"&", result); // Month-Year separator
+        Assert.Contains(dateRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaWeekBeginDate_ShouldGenerateWeekStartCalculation()
+    {
+        // Arrange
+        var yearRange = "$C:$C";
+        var weekRange = "$D:$D";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekBeginDate(TestKeyRange, TestHeader, yearRange, weekRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("DATE(", result);
+        Assert.Contains("WEEKDAY(", result);
+        Assert.Contains(yearRange, result);
+        Assert.Contains(weekRange, result);
+        Assert.Contains("*7", result); // Week calculation
+    }
+
+    [Fact]
+    public void BuildArrayFormulaWeekEndDate_ShouldGenerateWeekEndCalculation()
+    {
+        // Arrange
+        var yearRange = "$C:$C";
+        var weekRange = "$D:$D";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaWeekEndDate(TestKeyRange, TestHeader, yearRange, weekRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("DATE(", result);
+        Assert.Contains(",1,7)", result); // Week end calculation
+        Assert.Contains(yearRange, result);
+        Assert.Contains(weekRange, result);
+    }
+
+    [Fact]
+    public void BuildArrayFormulaRollingAverage_ShouldGenerateComplexAverage()
+    {
+        // Arrange
+        var totalRange = "$B:$B";
+
+        // Act
+        var result = GoogleFormulaBuilder.BuildArrayFormulaRollingAverage(TestKeyRange, TestHeader, totalRange);
+
+        // Assert
+        Assert.Contains("=ARRAYFORMULA(", result);
+        Assert.Contains("DAVERAGE(", result);
+        Assert.Contains("transpose(", result);
+        Assert.Contains("TRANSPOSE(", result);
+        Assert.Contains("sequence(", result);
+        Assert.Contains("rows(" + totalRange + ")", result);
+        Assert.Contains("ROW(" + totalRange + ")", result);
+        Assert.Contains(totalRange, result);
+    }
+
+    #endregion
 }

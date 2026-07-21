@@ -51,7 +51,7 @@ public static class YearlyMapper
                     break;
                 case HeaderEnum.AVERAGE:
                     // Formula to calculate rolling averages for yearly data.
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, HeaderEnum.AVERAGE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, HeaderEnum.AVERAGE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
 

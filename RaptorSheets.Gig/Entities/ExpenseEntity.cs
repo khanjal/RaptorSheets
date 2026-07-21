@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 

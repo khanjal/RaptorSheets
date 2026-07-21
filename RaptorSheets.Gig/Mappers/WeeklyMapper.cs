@@ -46,7 +46,7 @@ public static class WeeklyMapper
                     break;
                 case HeaderEnum.AVERAGE:
                     // Formula to calculate rolling averages for weekly data.
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, HeaderEnum.AVERAGE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, HeaderEnum.AVERAGE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()));
                     header.Format = FormatEnum.ACCOUNTING;
                     break;
                 case HeaderEnum.NUMBER:
@@ -58,7 +58,7 @@ public static class WeeklyMapper
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.YEAR.GetDescription(), keyRange, "-", 2);
                     break;
                 case HeaderEnum.DATE_BEGIN:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekBeginDate(
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekBeginDate(
                         keyRange, 
                         HeaderEnum.DATE_BEGIN.GetDescription(), 
                         sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription()),
@@ -66,7 +66,7 @@ public static class WeeklyMapper
                     header.Format = FormatEnum.DATE;
                     break;
                 case HeaderEnum.DATE_END:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaWeekEndDate(
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekEndDate(
                         keyRange, 
                         HeaderEnum.DATE_END.GetDescription(), 
                         sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription()),

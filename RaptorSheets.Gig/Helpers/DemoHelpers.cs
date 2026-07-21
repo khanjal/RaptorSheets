@@ -141,7 +141,7 @@ public static class DemoHelpers
         // Generate shift financial and travel data
         var shiftData = GenerateShiftData(context.Random, hasTrips);
 
-        context.SheetEntity.Shifts.Add(new ShiftEntity 
+        context.SheetEntity.Sheets.Shifts.Add(new ShiftEntity 
         {
             RowId = idContext.ShiftId++,
             Action = ActionTypeEnum.INSERT.GetDescription(),
@@ -183,7 +183,7 @@ public static class DemoHelpers
             {
                 tripContext = tripContext with { TripNumber = tripIndex + 1 };
                 var tripEntity = GenerateDemoTrip(tripContext, idContext.TripId++);
-                context.SheetEntity.Trips.Add(tripEntity);
+                context.SheetEntity.Sheets.Trips.Add(tripEntity);
             }
         }
     }
@@ -327,7 +327,7 @@ public static class DemoHelpers
                 _ => Math.Round((decimal)random.NextDouble() * 50 + 10, 2)
             };
             
-            sheetEntity.Expenses.Add(new ExpenseEntity
+            sheetEntity.Sheets.Expenses.Add(new ExpenseEntity
             {
                 RowId = idContext.ExpenseId++,
                 Action = ActionTypeEnum.INSERT.GetDescription(),

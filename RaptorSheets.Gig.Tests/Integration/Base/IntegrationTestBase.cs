@@ -53,12 +53,12 @@ public abstract class IntegrationTestBase
         var testData = DemoHelpers.GenerateDemoData(start, end);
 
         // Optionally trim to requested count
-        if (testData.Shifts.Count > shifts)
-            testData.Shifts = testData.Shifts.Take(shifts).ToList();
-        if (testData.Trips.Count > shifts * tripsPerShift)
-            testData.Trips = testData.Trips.Take(shifts * tripsPerShift).ToList();
-        if (testData.Expenses.Count > expenses)
-            testData.Expenses = testData.Expenses.Take(expenses).ToList();
+        if (testData.Sheets.Shifts.Count > shifts)
+            testData.Sheets.Shifts = testData.Sheets.Shifts.Take(shifts).ToList();
+        if (testData.Sheets.Trips.Count > shifts * tripsPerShift)
+            testData.Sheets.Trips = testData.Sheets.Trips.Take(shifts * tripsPerShift).ToList();
+        if (testData.Sheets.Expenses.Count > expenses)
+            testData.Sheets.Expenses = testData.Sheets.Expenses.Take(expenses).ToList();
 
         return testData;
     }
@@ -110,11 +110,11 @@ public abstract class IntegrationTestBase
         // Only pass sheets that actually have data to avoid "not supported" errors
         var sheetsWithData = new List<string>();
         
-        if (testData.Shifts.Count > 0)
+        if (testData.Sheets.Shifts.Count > 0)
             sheetsWithData.Add(SheetsConfig.SheetNames.Shifts);
-        if (testData.Trips.Count > 0)
+        if (testData.Sheets.Trips.Count > 0)
             sheetsWithData.Add(SheetsConfig.SheetNames.Trips);
-        if (testData.Expenses.Count > 0)
+        if (testData.Sheets.Expenses.Count > 0)
             sheetsWithData.Add(SheetsConfig.SheetNames.Expenses);
         
         if (sheetsWithData.Count == 0)
@@ -194,7 +194,7 @@ public abstract class IntegrationTestBase
         {
             var updated = updateAction(shift);
             updated.Action = ActionTypeEnum.UPDATE.GetDescription();
-            updateData.Shifts.Add(updated);
+            updateData.Sheets.Shifts.Add(updated);
         }
         
         // Only pass the Shifts sheet to avoid "not supported" errors for empty Trips/Expenses
@@ -223,7 +223,7 @@ public abstract class IntegrationTestBase
         {
             var updated = updateAction(trip);
             updated.Action = ActionTypeEnum.UPDATE.GetDescription();
-            updateData.Trips.Add(updated);
+            updateData.Sheets.Trips.Add(updated);
         }
         
         // Only pass the Trips sheet to avoid "not supported" errors for empty Shifts/Expenses
@@ -252,7 +252,7 @@ public abstract class IntegrationTestBase
         {
             var updated = updateAction(expense);
             updated.Action = ActionTypeEnum.UPDATE.GetDescription();
-            updateData.Expenses.Add(updated);
+            updateData.Sheets.Expenses.Add(updated);
         }
         
         // Only pass the Expenses sheet to avoid "not supported" errors for empty Shifts/Trips
@@ -279,17 +279,17 @@ public abstract class IntegrationTestBase
     
     protected static void ValidateDataCounts(SheetEntity actual, SheetEntity expected, string operation)
     {
-        Assert.True(actual.Shifts.Count >= expected.Shifts.Count - 1, 
-            $"{operation}: Expected ~{expected.Shifts.Count} shifts, got {actual.Shifts.Count}");
-        Assert.True(actual.Trips.Count >= expected.Trips.Count - 1, 
-            $"{operation}: Expected ~{expected.Trips.Count} trips, got {actual.Trips.Count}");
-        Assert.True(actual.Expenses.Count >= expected.Expenses.Count - 1, 
-            $"{operation}: Expected ~{expected.Expenses.Count} expenses, got {actual.Expenses.Count}");
+        Assert.True(actual.Sheets.Shifts.Count >= expected.Sheets.Shifts.Count - 1, 
+            $"{operation}: Expected ~{expected.Sheets.Shifts.Count} shifts, got {actual.Sheets.Shifts.Count}");
+        Assert.True(actual.Sheets.Trips.Count >= expected.Sheets.Trips.Count - 1, 
+            $"{operation}: Expected ~{expected.Sheets.Trips.Count} trips, got {actual.Sheets.Trips.Count}");
+        Assert.True(actual.Sheets.Expenses.Count >= expected.Sheets.Expenses.Count - 1, 
+            $"{operation}: Expected ~{expected.Sheets.Expenses.Count} expenses, got {actual.Sheets.Expenses.Count}");
     }
     
     protected static void ValidateNotEmpty(SheetEntity data, string operation)
     {
-        var totalEntities = data.Shifts.Count + data.Trips.Count + data.Expenses.Count;
+        var totalEntities = data.Sheets.Shifts.Count + data.Sheets.Trips.Count + data.Sheets.Expenses.Count;
         Assert.True(totalEntities > 0, $"{operation}: No data found in any sheets");
     }
     

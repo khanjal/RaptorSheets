@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Attributes;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
 using System.Diagnostics.CodeAnalysis;
@@ -22,7 +23,7 @@ public class YearlyEntity : SheetRowEntityBase
     public decimal? Pay { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Tips, FormatEnum.ACCOUNTING)]
-    public decimal? Tips { get; set; }
+    public decimal? Tip { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Bonus, FormatEnum.ACCOUNTING)]
     public decimal? Bonus { get; set; }

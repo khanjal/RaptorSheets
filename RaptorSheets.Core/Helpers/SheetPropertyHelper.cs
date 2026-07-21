@@ -6,11 +6,13 @@ using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 
-namespace RaptorSheets.Gig.Helpers;
+namespace RaptorSheets.Core.Helpers;
 
 /// <summary>
 /// Helper class for parsing Google Sheets property data.
 /// Handles the complex logic of extracting headers, row counts, and other metadata from Google Sheets API responses.
+/// Domain-agnostic: used by <see cref="RaptorSheets.Core.Managers.GoogleSheetManagerBase{TEntity}"/> so every
+/// domain package (Gig, Stock, and future domains) shares one property-parsing implementation.
 /// </summary>
 public static class SheetPropertyHelper
 {
@@ -55,7 +57,7 @@ public static class SheetPropertyHelper
     public static void PopulateSheetBasicInfo(PropertyEntity property, Sheet sheetData)
     {
         property.Id = sheetData.Properties.SheetId.ToString() ?? "";
-        
+
         var maxRow = sheetData.Properties.GridProperties?.RowCount ?? 1000;
         property.Attributes[PropertyEnum.MAX_ROW.GetDescription()] = maxRow.ToString();
     }
@@ -101,15 +103,15 @@ public static class SheetPropertyHelper
             case RangeType.HeadersOnly:
                 ProcessHeadersRange(property, dataRange);
                 break;
-                
+
             case RangeType.ColumnDataOnly:
                 ProcessColumnDataRange(property, dataRange);
                 break;
-                
+
             case RangeType.FullRange:
                 ProcessFullRange(property, dataRange);
                 break;
-                
+
             case RangeType.Unknown:
                 // Skip unknown range types
                 break;
@@ -124,7 +126,7 @@ public static class SheetPropertyHelper
         var headers = string.Join(",", firstRow.Values
             .Where(x => x.FormattedValue != null)
             .Select(x => x.FormattedValue));
-            
+
         property.Attributes[PropertyEnum.HEADERS.GetDescription()] = headers;
     }
 

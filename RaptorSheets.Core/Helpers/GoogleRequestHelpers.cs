@@ -445,4 +445,143 @@ public static class GoogleRequestHelpers
     {
         return existingSheetCount + newSheetCount;
     }
+
+    #region Generic Entity Change Requests
+
+    public static IEnumerable<Request> CreateDeleteRequests(List<int> rowIds, PropertyEntity? sheetProperties)
+    {
+        int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
+
+        if (rowIds.Count == 0 || sheetProperties == null || sheetId == 0)
+        {
+            return [];
+        }
+
+        // Use the efficient range-based approach for better performance
+        var indexRanges = GenerateIndexRanges(rowIds);
+        var requests = GenerateDeleteRequests(sheetId, indexRanges);
+
+        return requests;
+    }
+
+    /// <summary>
+    /// Generic method to handle sheet data changes for any row entity type
+    /// </summary>
+    public static List<Request> ChangeSheetData<T>(List<T> entities, PropertyEntity? sheetProperties, Func<List<T>, PropertyEntity?, IEnumerable<Request>> createUpdateRequests)
+        where T : SheetRowEntityBase
+    {
+        var requests = new List<Request>();
+
+        // Append/Update requests FIRST - this ensures row IDs are correct before any deletions
+        var saveEntities = entities?.Where(x => x.Action != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        requests.AddRange(createUpdateRequests(saveEntities, sheetProperties));
+
+        // Delete requests AFTER updates - delete from highest row ID to lowest to prevent shifting issues
+        var deleteEntities = entities?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        var rowIds = deleteEntities.Select(x => x.RowId).ToList();
+        requests.AddRange(CreateDeleteRequests(rowIds, sheetProperties));
+
+        return requests;
+    }
+
+    /// <summary>
+    /// Generic method to create update cell requests for any row entity type
+    /// </summary>
+    public static IEnumerable<Request> CreateUpdateCellRequests<T>(List<T> entities, PropertyEntity? sheetProperties, Func<List<T>, IList<object>, IList<RowData>> mapToRowData)
+        where T : SheetRowEntityBase
+    {
+        var headers = sheetProperties?.Attributes[PropertyEnum.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
+        var maxRow = int.Parse(sheetProperties?.Attributes[PropertyEnum.MAX_ROW.GetDescription()] ?? "0");
+        int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
+
+        if (entities.Count == 0 || sheetProperties == null || headers?.Count == 0 || sheetId == 0)
+        {
+            return [];
+        }
+
+        var requests = new List<Request>();
+
+        var appendEntities = entities.Where(x => x.RowId > maxRow).ToList();
+        if (appendEntities.Count > 0)
+        {
+            var appendData = mapToRowData(appendEntities, headers!);
+            requests.Add(GenerateAppendCells(sheetId, appendData));
+        }
+
+        var updateEntities = entities.Where(x => x.RowId <= maxRow).ToList();
+        foreach (var entity in updateEntities)
+        {
+            var rowData = mapToRowData([entity], headers!);
+            requests.Add(GenerateUpdateCellsRequest(sheetId, entity.RowId - 1, rowData));
+        }
+
+        return requests;
+    }
+
+    /// <summary>
+    /// Per-sheet accessor for the <c>ChangeSheetData</c> dispatch pattern: how to read a count/data
+    /// from the domain's top-level entity, and how to turn that data into batch-update requests.
+    /// A domain manager builds one <c>Dictionary&lt;string, SheetChangeAccessor&lt;TEntity&gt;&gt;</c>
+    /// (keyed by sheet name) as its single source of truth, replacing what would otherwise be a
+    /// count/data accessor map plus a separate, easily-out-of-sync request-building switch.
+    /// </summary>
+    public readonly record struct SheetChangeAccessor<TEntity>(
+        Func<TEntity, int> GetCount,
+        Func<TEntity, object> GetData,
+        Func<object, PropertyEntity?, IEnumerable<Request>> BuildRequests);
+
+    /// <summary>
+    /// Resolves which requested sheets actually have data to save, given a domain-supplied
+    /// <see cref="SheetChangeAccessor{TEntity}"/> map. Adds an error message for any requested sheet
+    /// not present in the map. Deliberately cheap/synchronous - callers should only proceed to the
+    /// (async, API-calling) sheet-properties lookup and <see cref="BuildChangeRequests{TEntity}"/> if
+    /// the returned list is non-empty.
+    /// </summary>
+    public static (List<string> SheetsWithData, List<MessageEntity> Messages) ResolveSheetsWithData<TEntity>(
+        List<string> sheets, TEntity sheetEntity, IReadOnlyDictionary<string, SheetChangeAccessor<TEntity>> accessors)
+    {
+        var messages = new List<MessageEntity>();
+        var sheetsWithData = new List<string>();
+
+        foreach (var sheet in sheets)
+        {
+            if (!accessors.TryGetValue(sheet, out var accessor))
+            {
+                messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
+                continue;
+            }
+
+            if (accessor.GetCount(sheetEntity) > 0)
+            {
+                sheetsWithData.Add(sheet);
+            }
+        }
+
+        return (sheetsWithData, messages);
+    }
+
+    /// <summary>
+    /// Builds batch-update requests (plus a "Saving data: X" info message per sheet) for sheets
+    /// already confirmed to have data via <see cref="ResolveSheetsWithData{TEntity}"/>.
+    /// </summary>
+    public static (List<Request> Requests, List<MessageEntity> Messages) BuildChangeRequests<TEntity>(
+        List<string> sheetsWithData, TEntity sheetEntity, IReadOnlyDictionary<string, SheetChangeAccessor<TEntity>> accessors,
+        List<PropertyEntity> sheetInfo)
+    {
+        var requests = new List<Request>();
+        var messages = new List<MessageEntity>();
+
+        foreach (var sheet in sheetsWithData)
+        {
+            var accessor = accessors[sheet];
+            var data = accessor.GetData(sheetEntity);
+            var properties = sheetInfo.FirstOrDefault(x => string.Equals(x.Name, sheet, StringComparison.OrdinalIgnoreCase));
+            requests.AddRange(accessor.BuildRequests(data, properties));
+            messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {sheet.ToUpperInvariant()}", MessageTypeEnum.SAVE_DATA));
+        }
+
+        return (requests, messages);
+    }
+
+    #endregion
 }

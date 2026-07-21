@@ -26,6 +26,13 @@ public static class StockSheetHelpers
         return sheets;
     }
 
+    /// <summary>
+    /// The shared registry backing this domain's header/row-mapping/missing-column orchestration.
+    /// Exposed so <see cref="RaptorSheets.Core.Managers.GoogleSheetManagerBase"/>'s generic
+    /// GetSheetsCoreAsync/AutoHealMissingColumnsAsync can operate on it directly.
+    /// </summary>
+    public static SheetRegistry<SheetEntity> Registry => s_registry;
+
     private static readonly SheetRegistry<SheetEntity> s_registry = BuildRegistry();
 
     private static SheetRegistry<SheetEntity> BuildRegistry()
@@ -36,21 +43,21 @@ public static class StockSheetHelpers
         {
             var headers = values[0];
             se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.AccountSheet));
-            se.Accounts = AccountMapper.MapFromRangeData(values);
+            se.Sheets.Accounts = AccountMapper.MapFromRangeData(values);
         });
 
         registry.Register(SheetEnum.STOCKS.GetDescription(), () => SheetsConfig.StockSheet, (se, values) =>
         {
             var headers = values[0];
             se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.StockSheet));
-            se.Stocks = StockMapper.MapFromRangeData(values);
+            se.Sheets.Stocks = StockMapper.MapFromRangeData(values);
         });
 
         registry.Register(SheetEnum.TICKERS.GetDescription(), () => SheetsConfig.TickerSheet, (se, values) =>
         {
             var headers = values[0];
             se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.TickerSheet));
-            se.Tickers = TickerMapper.MapFromRangeData(values);
+            se.Sheets.Tickers = TickerMapper.MapFromRangeData(values);
         });
 
         return registry;
@@ -110,23 +117,13 @@ public static class StockSheetHelpers
 
     public static DataValidationRule GetDataValidation(ValidationEnum validation)
     {
-        var dataValidation = new DataValidationRule();
-
-        switch (validation)
+        return validation switch
         {
-            case ValidationEnum.BOOLEAN:
-                dataValidation.Condition = new BooleanCondition { Type = "BOOLEAN" };
-                break;
-            case ValidationEnum.RANGE_ACCOUNT:
-            case ValidationEnum.RANGE_TICKER:
-                var values = new List<ConditionValue> { new() { UserEnteredValue = $"={GetSheetForRange(validation)?.GetDescription()}!A2:A" } };
-                dataValidation.Condition = new BooleanCondition { Type = "ONE_OF_RANGE", Values = values };
-                dataValidation.ShowCustomUi = true;
-                dataValidation.Strict = false;
-                break;
-        }
-
-        return dataValidation;
+            ValidationEnum.BOOLEAN => GoogleValidationHelper.CreateBooleanRule(),
+            ValidationEnum.RANGE_ACCOUNT or ValidationEnum.RANGE_TICKER
+                => GoogleValidationHelper.CreateOneOfRangeRule($"{GetSheetForRange(validation)?.GetDescription()}!A2:A"),
+            _ => new DataValidationRule()
+        };
     }
 
     private static SheetEnum? GetSheetForRange(ValidationEnum validationEnum)
