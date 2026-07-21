@@ -96,15 +96,26 @@ create/delete surface; Stock is unaffected throughout (still 41 tests, untouched
 
 ### Still open / next possibilities
 
-1. **Scaffold `RaptorSheets.Job` as the proof-of-concept** — the real test of whether this
-   consolidation worked. Should be: entities + mappers + a `SheetRegistry<TEntity>` + a manager
-   that's little more than a constructor + `CreateMissingSheetsAsync` + `GenerateSheetsRequest` +
-   its own write ops. If that's not ~100-150 lines, something's still not generic enough.
-2. **Stock adopting `DeleteSheets`/ordered `CreateSheets`**: blocked on a prerequisite — Stock's
-   `GenerateSheetHelpers.Generate` takes `List<Enums.SheetEnum>`, not `List<string>`, so it can't
-   build a request for an ad-hoc name like `"TempSheet"`. Needs a `List<string>`-capable generator
-   (or a minimal bare-`AddSheet` builder for non-domain sheets) before overriding
-   `GenerateSheetsRequest`.
+**Priority order (2026-07-21):** (1) Gig + gig-logger updated to the new wire format below,
+(2) Stock brought to parity with Gig (surfaces the most overlap for a shared base), (3) Job
+scaffold — deprioritized, will be a while, listed last on purpose.
+
+1. **Gig + gig-logger on the new format (highest priority right now)** — the two breaking changes
+   already shipped on the RaptorSheets side (`Sheets` nesting, Setup camelCase) still need the
+   gig-logger Angular frontend ported: `trips`/`shifts`/etc. move under a nested `sheets` key
+   (~49 non-spec `.ts` files, central `sheet.interface.ts`), and `SetupEntity`'s
+   `RowId`/`Action`/`Saved` keys read as camelCase now.
+2. **Stock parity with Gig (next)** — add `DeleteSheets`/ordered `CreateSheets` (blocked on
+   Stock's `GenerateSheetHelpers.Generate` taking `List<Enums.SheetEnum>`, not `List<string>` — needs
+   a `List<string>`-capable generator, or a minimal bare-`AddSheet` builder for non-domain sheets,
+   before overriding `GenerateSheetsRequest`) and the still-missing `ChangeSheetData`. Doing this
+   against Gig as the reference implementation is the point: it's what will show which parts of a
+   base `SheetEntity`/manager genuinely generalize vs. which are Gig-specific.
+3. **Scaffold `RaptorSheets.Job` as the proof-of-concept (deprioritized, last)** — the real test of
+   whether this consolidation worked. Should be: entities + mappers + a `SheetRegistry<TEntity>` +
+   a manager that's little more than a constructor + `CreateMissingSheetsAsync` +
+   `GenerateSheetsRequest` + its own write ops. If that's not ~100-150 lines, something's still not
+   generic enough.
 3. **Done (2026-07-20):** `ChangeSheetData` dispatch scaffold extracted to Core. The accessor-map +
    separate request-building switch (which could drift out of sync) became one
    `GoogleRequestHelpers.SheetChangeAccessor<TEntity>` record (GetCount + GetData + BuildRequests) +
@@ -213,6 +224,37 @@ onto `SheetRowEntityBase` (item 7 in the list above). Every other row entity alr
 camelCase; Setup was the lone inconsistency. **gig-logger's frontend must be updated to read the new
 Setup casing.** This is the pattern for the rest: when the scan finds more of these, fix them here
 and patch gig-logger after.
+
+### Done (2026-07-21) — `SheetEntityBase<TSheets>` added to Core
+
+Gig's and Stock's `SheetEntity` had become byte-for-byte identical in structure after the `Sheets`
+nesting above landed - `Properties`, a domain-typed `Sheets`, `Messages` - differing only in the
+concrete `Sheets` type. Added `RaptorSheets.Core.Entities.SheetEntityBase<TSheets>` (abstract,
+`where TSheets : new()`, implements `ISheetEntity`) holding that shared shape; Gig's `SheetEntity`
+is now `: SheetEntityBase<GigSheets>` and Stock's is `: SheetEntityBase<StockSheets>`, both bodies
+empty. `ISheetEntity` itself is untouched (still just `Properties`/`Messages`) - Core's generic
+algorithms (`SheetRegistry<TEntity>`, `ColumnInsertionHelper`, `GoogleSheetManagerBase<TEntity>`)
+still don't know about `Sheets`, so no second type parameter was needed there; `SheetEntityBase` is
+purely a convenience base for domains, not a new constraint Core reasons about. Non-breaking (same
+public shape/namespace/JSON per domain). Job/Home get this for free. Verified: Core 898 / Stock 41 /
+Gig 558 unit tests unchanged and green.
+
+### Done (2026-07-21) — Stock's row entities now inherit `SheetRowEntityBase`
+
+Same class of finding as Setup (item 7 above), found while extending the base-class pattern: Stock's
+`AccountEntity`/`StockEntity`/`TickerEntity` each hand-rolled their own bare `RowId` int instead of
+inheriting `SheetRowEntityBase` (`RowId`/`Action`/`Saved`) - and had no `Action`/`Saved` at all.
+This wasn't just duplication: it's a real blocker for **Stock write ops (item 4 below)**, since
+`GoogleRequestHelpers.ChangeSheetData<T>`/`CreateUpdateCellRequests<T>` are constrained
+`where T : SheetRowEntityBase` and read `entity.Action`/`entity.RowId` directly. Fixed by rooting
+the hierarchy at the base: `CostEntity : SheetRowEntityBase` (the common ancestor of all three, and
+not used anywhere else), then deleted the redundant manual `RowId` from `AccountEntity`/
+`StockEntity`/`TickerEntity` - they now inherit `RowId`/`Action`/`Saved` transitively through
+`CostEntity`/`PriceEntity`. Additive on the wire (`action`/`saved` are new JSON keys with defaults,
+`rowId` unchanged), not a rename/removal. Verified: Core 898 / Stock 41 / Gig 558 unit tests
+unchanged and green. Stock's mappers (`AccountMapper`/`StockMapper`/`TickerMapper`) still hand-roll
+`MapFromRangeData` per entity (don't use `GenericSheetMapper<T>` the way Gig does) and were
+untouched - `RowId = id` in each still compiles against the inherited property.
 
 ---
 

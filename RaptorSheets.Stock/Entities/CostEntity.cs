@@ -1,8 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using RaptorSheets.Core.Entities;
+using System.Text.Json.Serialization;
 
 namespace RaptorSheets.Stock.Entities;
 
-public class CostEntity
+public class CostEntity : SheetRowEntityBase
 {
     [JsonPropertyName("shares")]
     public decimal Shares { get; set; }
