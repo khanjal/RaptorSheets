@@ -43,4 +43,11 @@ public static class TestConfigurationHelpers
 
         return _configuration["spreadsheets:stock"] ?? string.Empty;
     }
+
+    public static string GetHomeSpreadsheet()
+    {
+        GetConfiguration();
+
+        return _configuration["spreadsheets:home"] ?? string.Empty;
+    }
 }
