@@ -43,10 +43,6 @@ public static class GigFormulas
 
     #endregion
 
-    // Gig-Specific Date Formulas region removed: WeekNumberWithYear, MonthNumberWithYear,
-    // WeekBeginDate, WeekEndDate were pure date math with no gig-specific logic and moved to
-    // RaptorSheets.Core.Constants.GoogleFormulas.
-
     #region Gig-Specific Lookup Formulas
 
     /// <summary>
@@ -122,7 +118,4 @@ public static class GigFormulas
     public const string ShiftTotalTrips = "{localTripsRange} + COUNTIF({tripKeyRange},{shiftKeyRange})";
 
     #endregion
-
-    // Mapper-Specific Formulas region removed: RollingAverageFormula was a generic statistical
-    // formula with no gig-specific logic and moved to RaptorSheets.Core.Constants.GoogleFormulas.
 }

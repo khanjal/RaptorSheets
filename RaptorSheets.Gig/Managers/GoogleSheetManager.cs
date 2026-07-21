@@ -98,11 +98,9 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
     #region Create Operations
 
-    // CreateAllSheets() and CreateSheets(List<string>, Dictionary<string,int>?) are inherited from
-    // GoogleSheetManagerBase<SheetEntity>, backed by GenerateSheetsRequest above. This 1-arg overload
-    // only exists because C# requires exact arity to implicitly satisfy IGoogleSheetManager's
-    // single-parameter CreateSheets(List<string>) - an inherited method's optional parameter doesn't
-    // count for interface matching the way it does for ordinary callers.
+    // This 1-arg overload exists because C# requires exact arity to implicitly satisfy
+    // IGoogleSheetManager's single-parameter CreateSheets(List<string>) - an inherited method's
+    // optional parameter doesn't count for interface matching the way it does for ordinary callers.
     public async Task<SheetEntity> CreateSheets(List<string> sheets)
     {
         return await CreateSheets(sheets, null);
@@ -140,10 +138,6 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
         return await GetSheets([sheet]);
     }
-
-    // GetAllSheets(), GetSheets(List<string>), GetSpreadsheetInfo, and GetBatchData are inherited
-    // from GoogleSheetManagerBase<SheetEntity>. Missing-sheet self-heal is wired via the overridden
-    // CreateMissingSheetsAsync above (Gig's ordered/indexed CreateSheets).
 
     #endregion
 
@@ -265,10 +259,6 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     }
 
     #endregion
-
-    // DeleteAllSheets() and DeleteSheets(List<string>) are inherited from
-    // GoogleSheetManagerBase<SheetEntity>, backed by GenerateSheetsRequest above (for temp-sheet
-    // creation) and GetAllSheetProperties/GetAllSheetTabNames (also inherited).
 
     #region Header Validation
 

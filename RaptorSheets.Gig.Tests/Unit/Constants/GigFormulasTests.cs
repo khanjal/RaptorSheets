@@ -60,11 +60,6 @@ public class GigFormulasTests
         Assert.Contains("/IF(", formula);
     }
 
-    // WeekNumberWithYear/MonthNumberWithYear/WeekBeginDate/WeekEndDate tests removed: those
-    // constants (pure date math, no gig-specific logic) moved to
-    // RaptorSheets.Core.Constants.GoogleFormulas; coverage moved to
-    // RaptorSheets.Core.Tests.Unit.Constants.GoogleFormulasTests.
-
     [Fact]
     public void CurrentAmountLookup_ShouldContainTodayLogic()
     {
@@ -277,9 +272,6 @@ public class GigFormulasTests
         Assert.Contains("{tripKeyRange}", formula);
         Assert.Contains("{shiftKeyRange}", formula);
     }
-
-    // RollingAverageFormula_ShouldContainComplexAverageLogic test removed: moved to
-    // RaptorSheets.Core.Tests.Unit.Constants.GoogleFormulasTests.
 
     [Fact]
     public void DualFieldVisitLookup_ShouldContainDualVlookupLogic()

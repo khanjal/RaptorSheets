@@ -78,11 +78,6 @@ public class GigFormulaBuilderTests
         Assert.Contains("/IF(", result);
     }
 
-    // BuildArrayFormulaWeekNumber/MonthNumber/WeekBegin/WeekEnd tests removed: those builders
-    // (pure date math, no gig-specific logic) moved to
-    // RaptorSheets.Core.Tests.Unit.Helpers.GoogleFormulaBuilderTests (WeekBegin/WeekEnd moved
-    // under their WeekBeginDate/WeekEndDate names, matching what production mappers call).
-
     [Fact]
     public void BuildArrayFormulaCurrentAmount_ShouldGenerateWeekdayLookup()
     {
@@ -392,9 +387,6 @@ public class GigFormulaBuilderTests
         Assert.Contains(tripKeyRange, result);
         Assert.Contains(shiftKeyRange, result);
     }
-
-    // BuildArrayFormulaRollingAverage test removed: moved to
-    // RaptorSheets.Core.Tests.Unit.Helpers.GoogleFormulaBuilderTests.
 
     [Fact]
     public void BuildArrayFormulaDualFieldVisit_WithFirstVisit_ShouldUseTrueSortOrder()

@@ -97,13 +97,6 @@ public static class GigFormulaBuilder
 
     #endregion
 
-    // Gig Date/Time Formula Builders region removed: BuildArrayFormulaWeekNumber, MonthNumber,
-    // WeekBegin/WeekEnd (pure date math, no gig logic) moved to
-    // RaptorSheets.Core.Helpers.GoogleFormulaBuilder as WeekNumber/MonthNumber/WeekBeginDate/
-    // WeekEndDate. The duplicate WeekBeginDate/WeekEndDate-named methods further down (identical
-    // formulas, different names - the ones production mappers actually call) were also removed
-    // for the same reason; see WeeklyMapper.cs.
-
     #region Gig Business Logic Formula Builders
 
     /// <summary>
@@ -304,10 +297,6 @@ public static class GigFormulaBuilder
     }
 
     #endregion
-
-    // Advanced Time Series Formula Builders region removed: BuildArrayFormulaRollingAverage,
-    // BuildArrayFormulaWeekBeginDate, BuildArrayFormulaWeekEndDate (pure date/stat math, no gig
-    // logic) moved to RaptorSheets.Core.Helpers.GoogleFormulaBuilder.
 
     #region Convenient Combo Methods
 
