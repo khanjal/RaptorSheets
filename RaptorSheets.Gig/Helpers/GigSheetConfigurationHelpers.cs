@@ -12,45 +12,6 @@ namespace RaptorSheets.Gig.Helpers;
 public static class GigSheetConfigurationHelpers
 {
     /// <summary>
-    /// Configure a sheet model with headers using the standardized pattern:
-    /// 1. Start from base configuration
-    /// 2. Update column indexes
-    /// 3. Apply header-specific configurations via action delegate
-    /// </summary>
-    /// <param name="baseSheet">Base sheet configuration from SheetsConfig</param>
-    /// <param name="headerConfigurator">Action to configure individual headers</param>
-    /// <returns>Configured sheet model</returns>
-    public static SheetModel ConfigureSheet(SheetModel baseSheet, Action<SheetCellModel, int> headerConfigurator)
-    {
-        // Ensure column indexes are properly assigned
-        baseSheet.Headers.UpdateColumns();
-
-        // Apply header-specific configurations
-        for (int i = 0; i < baseSheet.Headers.Count; i++)
-        {
-            headerConfigurator(baseSheet.Headers[i], i);
-        }
-
-        return baseSheet;
-    }
-
-    /// <summary>
-    /// Create a formula column with automatic array formula wrapping
-    /// </summary>
-    public static string CreateArrayFormula(string headerText, string keyRange, string formula)
-    {
-        return $"=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{headerText}\",ISBLANK({keyRange}), \"\",true,{formula}))";
-    }
-
-    /// <summary>
-    /// Create a simple date-based column formula (DAY, MONTH, YEAR)
-    /// </summary>
-    public static string CreateDatePartFormula(string headerText, string dateRange, string datePart)
-    {
-        return $"=ARRAYFORMULA(IFS(ROW({dateRange})=1,\"{headerText}\",ISBLANK({dateRange}), \"\",true,{datePart}({dateRange})))";
-    }
-
-    /// <summary>
     /// Apply common formatting patterns based on HeaderEnum values.
     /// This provides type safety and consistency compared to string-based matching.
     /// Only applies formatting for headers that match known HeaderEnum values.
