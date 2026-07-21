@@ -171,4 +171,23 @@ public static class SheetOrderingHelper
 
         return requests;
     }
+
+    /// <summary>
+    /// Orders sheet titles by their desired index (negative/missing indices - no preference -
+    /// sort last), with a stable alphabetical tiebreak. Used when creating sheets from a
+    /// title-&gt;desiredIndex map to produce a deterministic creation order.
+    /// </summary>
+    public static List<string> OrderSheetTitlesByIndex(Dictionary<string, int>? sheetsWithIndices)
+    {
+        if (sheetsWithIndices == null || sheetsWithIndices.Count == 0)
+        {
+            return [];
+        }
+
+        return sheetsWithIndices
+            .OrderBy(kv => kv.Value < 0 ? int.MaxValue : kv.Value)
+            .ThenBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(kv => kv.Key)
+            .ToList();
+    }
 }

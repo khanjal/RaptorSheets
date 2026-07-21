@@ -140,5 +140,20 @@ namespace RaptorSheets.Core.Tests.Unit.Helpers
                 Assert.Equal("NewOne", requests[0].AddSheet.Properties.Title);
                 Assert.Equal(0, requests[0].AddSheet.Properties.Index);
             }
+
+            [Fact]
+            public void OrderSheetTitlesByIndex_PlacesSpecifiedIndicesFirst()
+            {
+                var input = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["B"] = 2,
+                    ["A"] = 0,
+                    ["C"] = -1
+                };
+
+                var ordered = SheetOrderingHelper.OrderSheetTitlesByIndex(input);
+
+                Assert.Equal(new[] { "A", "B", "C" }, ordered);
+            }
     }
 }

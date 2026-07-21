@@ -117,7 +117,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         }
 
         // Order titles deterministically using a helper (stable, testable).
-        var sheets = CreateSheetsHelpers.OrderSheetTitlesByIndex(sheetsWithIndices);
+        var sheets = SheetOrderingHelper.OrderSheetTitlesByIndex(sheetsWithIndices);
 
         return await CreateSheets(sheets, sheetsWithIndices);
     }
