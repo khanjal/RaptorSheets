@@ -236,8 +236,29 @@ public static class MapperFormulaHelper
     {
         var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
         var headerName = headerEnum.GetDescription();
-        
+
         header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDualCountIf(keyRange, headerName, range1, range2);
         header.Format = FormatEnum.NUMBER;
+    }
+
+    /// <summary>
+    /// Configure the Day/Month/Year date-part headers shared by any sheet keyed off a Date column
+    /// (Trips, Shifts). No-op for any other header - callers should only reach this for a header
+    /// they've already matched as DAY/MONTH/YEAR.
+    /// </summary>
+    public static void ConfigureDatePartHeader(SheetCellModel header, HeaderEnum headerEnum, string dateRange)
+    {
+        switch (headerEnum)
+        {
+            case HeaderEnum.DAY:
+                header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
+                break;
+            case HeaderEnum.MONTH:
+                header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonth(dateRange, HeaderEnum.MONTH.GetDescription(), dateRange);
+                break;
+            case HeaderEnum.YEAR:
+                header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(dateRange, HeaderEnum.YEAR.GetDescription(), dateRange);
+                break;
+        }
     }
 }

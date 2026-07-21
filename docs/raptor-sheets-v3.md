@@ -307,6 +307,60 @@ based `CreateSheets`/`GetSheets`/`GetSheets()` public methods, in favor of Gig-s
 `GenerateSheetHelpers.Generate` (known sheet, TempSheet fallback, unknown-name throw, empty list).
 Verified: Core 898 / Stock 48 (was 41) / Gig 558 unit tests, all green, build clean.
 
+### Done (2026-07-21) — further pattern scan: more base-class/entity bugs, validation dedup, formula dedup
+
+Ran an `Explore`-agent sweep across Gig's per-entity mappers, Gig-vs-Stock helpers, both domains'
+entities, and test infrastructure, looking for anything still hand-copied that could move to Core
+(or that's duplicated between two mappers/entities in the same domain). Verified and acted on the
+concrete findings; verified all suites green after each:
+
+- **`MonthlyEntity` bug, same class as Setup/Stock's earlier fix:** the *only* one of Gig's 18 row
+  entities not inheriting `SheetRowEntityBase` - hand-rolled `RowId` only (correct casing, but
+  missing `Action`/`Saved` entirely, unlike its Daily/Weekly/Yearly siblings). Fixed:
+  `MonthlyEntity : SheetRowEntityBase`, manual `RowId` removed. Additive on the wire.
+- **`PriceEntity` casing bug (Stock):** `MaxHigh`/`MinLow` serialized as PascalCase
+  (`[JsonPropertyName("MaxHigh"/"MinLow")]`) while every sibling property on `CostEntity`/
+  `PriceEntity` (`peRatio`, `52WeekHigh`, `52WeekLow`, ...) is camelCase. Fixed to `"maxHigh"`/
+  `"minLow"`. Breaking to Stock's wire format for these two keys specifically - acceptable, Stock
+  still in development, no test pinned the old casing.
+- **`YearlyEntity.Tips` → `Tip` rename:** the only one of Daily/Weekly/Monthly/Yearly using the
+  plural C# property name for the same "Tips" header column (siblings all use `Tip`). No
+  `[JsonPropertyName]` override existed, so this also changes the JSON key from `"Tips"` to `"Tip"` -
+  breaking, but low-risk (no test or other production code referenced the property by name; mapped
+  purely via `[Column]` reflection).
+- **`GoogleValidationHelper` (new, Core):** `GigSheetHelpers.GetDataValidation`/
+  `StockSheetHelpers.GetDataValidation` built identical `DataValidationRule` shapes (a plain
+  `BOOLEAN` condition; a `ONE_OF_RANGE` dropdown condition with `ShowCustomUi=true`/`Strict=false`),
+  differing only in which enum members map to which sheet/range - genuinely domain-specific and left
+  alone. Extracted the two rule-building branches to `Core.Helpers.GoogleValidationHelper.
+  CreateBooleanRule()`/`CreateOneOfRangeRule(string range)`; both domains' `GetDataValidation` now
+  just dispatch to these plus their own enum→range switch.
+- **`MapperFormulaHelper.ConfigureDatePartHeader` (new, Gig):** `TripMapper`/`ShiftMapper` were the
+  only two of Gig's ~16 mappers with a hand-copied `DAY`/`MONTH`/`YEAR` formula-assignment block
+  (identical in both) instead of going through `MapperFormulaHelper` like every other mapper already
+  does for its shared patterns. Added `ConfigureDatePartHeader`, both mappers now call it.
+- **`FactCheckUserSecretsBase`/`TheoryCheckUserSecretsBase` (new, `RaptorSheets.Test.Common`):**
+  Gig.Tests' and Stock.Tests' `FactCheckUserSecrets`/`TheoryCheckUserSecrets` attributes were
+  identical except which `TestConfigurationHelpers.GetXSpreadsheet()` they called. Pulled the actual
+  skip-check into two base classes in Test.Common; each domain's attribute is now a one-line
+  subclass passing its own spreadsheet-ID getter. Job/Home need only the one-liner.
+
+**Evaluated, no action taken:**
+- Daily/Weekly/Monthly/Yearly summary entities share ~10-13 similarly-named properties, but coverage
+  varies enough per sheet (Daily has no Days/Number/Year; Monthly has no Day/Weekday/Week; Yearly has
+  none of Day/Weekday/Week) that a shared base would mostly hold optional/unused properties per
+  entity - not a clean fit, would be over-engineering for the size of the overlap.
+- Stock's `AccountMapper`/`StockMapper`/`TickerMapper` have a few internally-duplicated formula
+  blocks (identical `RETURN = SubtractRanges(...)` case in all three; identical `SumIf` block in two)
+  - real but small, and Stock has no `MapperFormulaHelper` equivalent yet. Deferred: worth doing if/
+  when Stock grows more mappers, not before.
+- `Constants/SheetsConfig.cs` in both domains: Gig generates headers via Core's generic
+  `EntitySheetConfigHelper.GenerateHeadersFromEntity<T>()`; Stock hand-composes header groups because
+  its entities deliberately carry no `[Column]` attributes (see the Stock parity write-up above).
+  Different, already-appropriate solutions for each domain's actual shape - nothing to lift.
+
+Verified: Core 898 / Stock 48 / Gig 558 unit tests, all green, build clean, throughout.
+
 ---
 
 ## Performance investigation (2026-07-19) — read this before the original plan below

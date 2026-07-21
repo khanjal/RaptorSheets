@@ -13,9 +13,9 @@ public class PriceEntity : CostEntity
     [JsonPropertyName("52WeekLow")]
     public decimal WeekLow52 { get; set; }
 
-    [JsonPropertyName("MaxHigh")]
+    [JsonPropertyName("maxHigh")]
     public decimal MaxHigh { get; set; }
 
-    [JsonPropertyName("MinLow")]
+    [JsonPropertyName("minLow")]
     public decimal MinLow { get; set; }
 }

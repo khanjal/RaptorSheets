@@ -1,5 +1,6 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
@@ -131,33 +132,15 @@ public static class GigSheetHelpers
 
     public static DataValidationRule GetDataValidation(ValidationEnum validation, string? range = "")
     {
-        var dataValidation = new DataValidationRule();
-
-        switch (validation)
+        return validation switch
         {
-            case ValidationEnum.BOOLEAN:
-                dataValidation.Condition = new BooleanCondition { Type = "BOOLEAN" };
-                break;
-            case ValidationEnum.RANGE_ADDRESS:
-            case ValidationEnum.RANGE_NAME:
-            case ValidationEnum.RANGE_PLACE:
-            case ValidationEnum.RANGE_REGION:
-            case ValidationEnum.RANGE_SERVICE:
-            case ValidationEnum.RANGE_TYPE:
-                var values = new List<ConditionValue> { new() { UserEnteredValue = $"={GetSheetForRange(validation)}!A2:A" } };
-                dataValidation.Condition = new BooleanCondition { Type = "ONE_OF_RANGE", Values = values };
-                dataValidation.ShowCustomUi = true;
-                dataValidation.Strict = false;
-                break;
-            case ValidationEnum.RANGE_SELF:
-                var selfValues = new List<ConditionValue> { new() { UserEnteredValue = $"={range}" } };
-                dataValidation.Condition = new BooleanCondition { Type = "ONE_OF_RANGE", Values = selfValues };
-                dataValidation.ShowCustomUi = true;
-                dataValidation.Strict = false;
-                break;
-        }
-
-        return dataValidation;
+            ValidationEnum.BOOLEAN => GoogleValidationHelper.CreateBooleanRule(),
+            ValidationEnum.RANGE_ADDRESS or ValidationEnum.RANGE_NAME or ValidationEnum.RANGE_PLACE
+                or ValidationEnum.RANGE_REGION or ValidationEnum.RANGE_SERVICE or ValidationEnum.RANGE_TYPE
+                => GoogleValidationHelper.CreateOneOfRangeRule($"{GetSheetForRange(validation)}!A2:A"),
+            ValidationEnum.RANGE_SELF => GoogleValidationHelper.CreateOneOfRangeRule($"{range}"),
+            _ => new DataValidationRule()
+        };
     }
 
     private static string? GetSheetForRange(ValidationEnum validationEnum)

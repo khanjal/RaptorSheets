@@ -117,23 +117,13 @@ public static class StockSheetHelpers
 
     public static DataValidationRule GetDataValidation(ValidationEnum validation)
     {
-        var dataValidation = new DataValidationRule();
-
-        switch (validation)
+        return validation switch
         {
-            case ValidationEnum.BOOLEAN:
-                dataValidation.Condition = new BooleanCondition { Type = "BOOLEAN" };
-                break;
-            case ValidationEnum.RANGE_ACCOUNT:
-            case ValidationEnum.RANGE_TICKER:
-                var values = new List<ConditionValue> { new() { UserEnteredValue = $"={GetSheetForRange(validation)?.GetDescription()}!A2:A" } };
-                dataValidation.Condition = new BooleanCondition { Type = "ONE_OF_RANGE", Values = values };
-                dataValidation.ShowCustomUi = true;
-                dataValidation.Strict = false;
-                break;
-        }
-
-        return dataValidation;
+            ValidationEnum.BOOLEAN => GoogleValidationHelper.CreateBooleanRule(),
+            ValidationEnum.RANGE_ACCOUNT or ValidationEnum.RANGE_TICKER
+                => GoogleValidationHelper.CreateOneOfRangeRule($"{GetSheetForRange(validation)?.GetDescription()}!A2:A"),
+            _ => new DataValidationRule()
+        };
     }
 
     private static SheetEnum? GetSheetForRange(ValidationEnum validationEnum)

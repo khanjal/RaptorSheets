@@ -1,15 +1,6 @@
-﻿using RaptorSheets.Test.Common.Constants;
+using RaptorSheets.Test.Common.Attributes;
 using RaptorSheets.Test.Common.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Data.Attributes;
 
-public sealed class TheoryCheckUserSecrets : TheoryAttribute
-{
-    public TheoryCheckUserSecrets()
-    {
-        if (!GoogleCredentialHelpers.IsCredentialAndSpreadsheetId(TestConfigurationHelpers.GetGigSpreadsheet()))
-        {
-            Skip = TestSkipMessages.MissingUserSecrets;
-        }
-    }
-}
+public sealed class TheoryCheckUserSecrets() : TheoryCheckUserSecretsBase(TestConfigurationHelpers.GetGigSpreadsheet());
