@@ -126,7 +126,7 @@ public class AddressMapperTests
         if (addressHeader != null)
         {
             Assert.NotNull(addressHeader.Formula);
-            Assert.Contains("Trips!", addressHeader.Formula); // Should reference Trips sheet
+            Assert.Contains("'Trips'!", addressHeader.Formula); // Should reference Trips sheet
         }
         
         if (tripsHeader != null)

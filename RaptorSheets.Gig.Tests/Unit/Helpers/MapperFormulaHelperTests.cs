@@ -61,8 +61,8 @@ public class MapperFormulaHelperTests
     }
 
     [Theory]
-    [InlineData(true, false, "SUMIF(", "SourceSheet!M1:M")]   // Scenario 1: Sum TOTAL_TRIPS (shift-level)
-    [InlineData(false, false, "SUMIF(", "SourceSheet!N1:N")]  // Scenario 2: Sum TRIPS column (daily/monthly)
+    [InlineData(true, false, "SUMIF(", "'SourceSheet'!M1:M")]   // Scenario 1: Sum TOTAL_TRIPS (shift-level)
+    [InlineData(false, false, "SUMIF(", "'SourceSheet'!N1:N")]  // Scenario 2: Sum TRIPS column (daily/monthly)
     [InlineData(false, true, "COUNTIF(", "B:B")] // Scenario 3: Count occurrences (trip-level, uses sourceKeyRange)
     public void ConfigureCommonAggregationHeaders_WithTripsHeader_ShouldUseCorrectSourceRange(
         bool useShiftTotals, bool countTrips, string expectedFormula, string expectedRange)

@@ -465,13 +465,21 @@ public class SheetRegistryTests
         Assert.Single(messages);
     }
 
-    // GetDependents - backs RefreshDependentSheetsAsync's "sheet B's headers changed, rewrite
-    // every sheet whose formulas cross-reference it" behavior (RaptorSheets.Core.Managers.
-    // GoogleSheetManagerBase{TEntity}). Edges are declared via Register(...dependsOn:...) /
-    // RegisterGeneric(...dependsOn:...).
+    // GetDependents - backs RefreshDependentSheetsAsync's "sheet B's headers changed, rewrite every
+    // sheet whose formulas cross-reference it" behavior (RaptorSheets.Core.Managers.
+    // GoogleSheetManagerBase{TEntity}). There's no manual dependency declaration - the graph is
+    // derived by building each registered sheet and scanning its headers' Formula text for the
+    // changed sheet's cross-sheet range pattern ('{name}'!, per ObjectExtensions.GetRange), so these
+    // tests build fixture SheetModels whose Formula literally contains that pattern.
+
+    private static SheetModel SheetModelReferencing(string ownName, params string[] referencedSheetNames) => new()
+    {
+        Name = ownName,
+        Headers = [.. referencedSheetNames.Select(referenced => new SheetCellModel { Name = referenced, Formula = $"=SUM('{referenced}'!A:A)" })]
+    };
 
     [Fact]
-    public void GetDependents_WithNoRegisteredDependents_ReturnsEmpty()
+    public void GetDependents_WithNoMatchingFormulas_ReturnsEmpty()
     {
         var registry = new SheetRegistry<TestSheetEntity>();
         registry.Register("Tickers", TestSheetModel, (_, _) => { });
@@ -486,7 +494,7 @@ public class SheetRegistryTests
     {
         var registry = new SheetRegistry<TestSheetEntity>();
         registry.Register("Tickers", TestSheetModel, (_, _) => { });
-        registry.Register("Stocks", TestSheetModel, (_, _) => { }, dependsOn: ["Tickers"]);
+        registry.Register("Stocks", () => SheetModelReferencing("Stocks", "Tickers"), (_, _) => { });
 
         var dependents = registry.GetDependents(["Tickers"]);
 
@@ -497,11 +505,29 @@ public class SheetRegistryTests
     public void GetDependents_IsCaseInsensitive()
     {
         var registry = new SheetRegistry<TestSheetEntity>();
-        registry.Register("Stocks", TestSheetModel, (_, _) => { }, dependsOn: ["Tickers"]);
+        registry.Register("Stocks", () => SheetModelReferencing("Stocks", "Tickers"), (_, _) => { });
 
         var dependents = registry.GetDependents(["tickers"]);
 
         Assert.Equal(["Stocks"], dependents);
+    }
+
+    [Fact]
+    public void GetDependents_WithFormulaMissingThePattern_IsNotADependent()
+    {
+        // "Tickers" appears in the formula text, but not as a real cross-sheet reference ('Tickers'!)
+        // - e.g. a coincidental substring - so it must not be detected as a dependency.
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Tickers", TestSheetModel, (_, _) => { });
+        registry.Register("Notes", () => new SheetModel
+        {
+            Name = "Notes",
+            Headers = [new SheetCellModel { Name = "Comment", Formula = "=\"See Tickers for details\"" }]
+        }, (_, _) => { });
+
+        var dependents = registry.GetDependents(["Tickers"]);
+
+        Assert.Empty(dependents);
     }
 
     [Fact]
@@ -511,9 +537,9 @@ public class SheetRegistryTests
         // surface Daily and Weekday, not just the sheet that directly reads Trip.
         var registry = new SheetRegistry<TestSheetEntity>();
         registry.Register("Trip", TestSheetModel, (_, _) => { });
-        registry.Register("Shift", TestSheetModel, (_, _) => { }, dependsOn: ["Trip"]);
-        registry.Register("Daily", TestSheetModel, (_, _) => { }, dependsOn: ["Shift"]);
-        registry.Register("Weekday", TestSheetModel, (_, _) => { }, dependsOn: ["Daily"]);
+        registry.Register("Shift", () => SheetModelReferencing("Shift", "Trip"), (_, _) => { });
+        registry.Register("Daily", () => SheetModelReferencing("Daily", "Shift"), (_, _) => { });
+        registry.Register("Weekday", () => SheetModelReferencing("Weekday", "Daily"), (_, _) => { });
 
         var dependents = registry.GetDependents(["Trip"]);
 
@@ -527,8 +553,8 @@ public class SheetRegistryTests
         // itself also depends on Trip, so Trip's closure would reach Shift twice without dedup.
         var registry = new SheetRegistry<TestSheetEntity>();
         registry.Register("Trip", TestSheetModel, (_, _) => { });
-        registry.Register("Shift", TestSheetModel, (_, _) => { }, dependsOn: ["Trip"]);
-        registry.Register("Region", TestSheetModel, (_, _) => { }, dependsOn: ["Trip", "Shift"]);
+        registry.Register("Shift", () => SheetModelReferencing("Shift", "Trip"), (_, _) => { });
+        registry.Register("Region", () => SheetModelReferencing("Region", "Trip", "Shift"), (_, _) => { });
 
         var dependents = registry.GetDependents(["Trip"]);
 
@@ -539,8 +565,8 @@ public class SheetRegistryTests
     public void GetDependents_WithCycle_DoesNotInfiniteLoop()
     {
         var registry = new SheetRegistry<TestSheetEntity>();
-        registry.Register("A", TestSheetModel, (_, _) => { }, dependsOn: ["B"]);
-        registry.Register("B", TestSheetModel, (_, _) => { }, dependsOn: ["A"]);
+        registry.Register("A", () => SheetModelReferencing("A", "B"), (_, _) => { });
+        registry.Register("B", () => SheetModelReferencing("B", "A"), (_, _) => { });
 
         var dependents = registry.GetDependents(["A"]);
 
@@ -553,7 +579,7 @@ public class SheetRegistryTests
         var registry = new SheetRegistry<TestSheetEntity>();
         registry.Register("Applications", TestSheetModel, (_, _) => { });
         registry.Register("Interviews", TestSheetModel, (_, _) => { });
-        registry.Register("Companies", TestSheetModel, (_, _) => { }, dependsOn: ["Applications", "Interviews"]);
+        registry.Register("Companies", () => SheetModelReferencing("Companies", "Applications", "Interviews"), (_, _) => { });
 
         var dependents = registry.GetDependents(["Applications", "Interviews"]);
 
@@ -561,11 +587,31 @@ public class SheetRegistryTests
     }
 
     [Fact]
-    public void RegisterGeneric_WithDependsOn_IsReflectedInGetDependents()
+    public void GetDependents_ReflectsCurrentFormulaOnEveryCall()
+    {
+        // The graph is derived fresh each call (never cached), so a mapper's formula changing
+        // between calls - the exact scenario this whole feature protects against - is picked up
+        // immediately without any re-registration step.
+        var registry = new SheetRegistry<TestSheetEntity>();
+        var stocksReferencesTickers = false;
+        registry.Register("Tickers", TestSheetModel, (_, _) => { });
+        registry.Register("Stocks", () => stocksReferencesTickers
+            ? SheetModelReferencing("Stocks", "Tickers")
+            : TestSheetModel(), (_, _) => { });
+
+        Assert.Empty(registry.GetDependents(["Tickers"]));
+
+        stocksReferencesTickers = true;
+
+        Assert.Equal(["Stocks"], registry.GetDependents(["Tickers"]));
+    }
+
+    [Fact]
+    public void RegisterGeneric_IsReflectedInGetDependents()
     {
         var registry = new SheetRegistry<TestSheetEntity>();
         registry.RegisterGeneric<TestSheetEntity, TestRowEntity>("Tickers", TestSheetModel, (e, rows) => e.Widgets = rows);
-        registry.RegisterGeneric<TestSheetEntity, TestRowEntity>("Stocks", TestSheetModel, (e, rows) => e.Widgets = rows, dependsOn: ["Tickers"]);
+        registry.RegisterGeneric<TestSheetEntity, TestRowEntity>("Stocks", () => SheetModelReferencing("Stocks", "Tickers"), (e, rows) => e.Widgets = rows);
 
         var dependents = registry.GetDependents(["Tickers"]);
 

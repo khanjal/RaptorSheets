@@ -866,13 +866,14 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
     /// <summary>
     /// Refreshes the header formulas (<see cref="RefreshHeaderFormulasAsync"/>) of every sheet
-    /// that transitively depends on any of <paramref name="changedSheetNames"/>, per each domain's
-    /// <c>Register(..., dependsOn: ...)</c> declarations (<see cref="Registries.SheetRegistry{TEntity}.GetDependents"/>).
-    /// Called automatically after self-healing a missing sheet, auto-healing missing columns, and
-    /// explicit sheet creation; also safe to call directly (e.g. after manually fixing a sheet) as
-    /// the general replacement for reapplying every dependent sheet by hand. Zero-cost no-op for
-    /// sheets/domains with no declared dependents. See <see cref="RefreshHeaderFormulasAsync"/> for
-    /// the optional <paramref name="spreadsheetInfo"/> reuse parameter.
+    /// that transitively depends on any of <paramref name="changedSheetNames"/> - detected
+    /// automatically by <see cref="Registries.SheetRegistry{TEntity}.GetDependents"/> from each
+    /// sheet's actual cross-sheet formulas, not a manually maintained list. Called automatically
+    /// after self-healing a missing sheet, auto-healing missing columns, and explicit sheet
+    /// creation; also safe to call directly (e.g. after manually fixing a sheet) as the general
+    /// replacement for reapplying every dependent sheet by hand. Zero-cost no-op for sheets with no
+    /// dependents. See <see cref="RefreshHeaderFormulasAsync"/> for the optional
+    /// <paramref name="spreadsheetInfo"/> reuse parameter.
     /// </summary>
     public async Task RefreshDependentSheetsAsync(IEnumerable<string> changedSheetNames, Spreadsheet? spreadsheetInfo = null)
     {

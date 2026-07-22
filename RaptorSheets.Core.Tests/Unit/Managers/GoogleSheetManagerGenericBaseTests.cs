@@ -387,7 +387,10 @@ public class GoogleSheetManagerGenericBaseTests
     // RefreshHeaderFormulasAsync / RefreshDependentSheetsAsync - the automated replacement for
     // manually "reapplying" a sheet to fix a stale cross-sheet formula reference (#REF!/#ERROR!/
     // #N/A caused by a referenced sheet's headers changing after a dependent's formula was
-    // written). "Base"/"Dependent" below mirror Stock's real Tickers/Stocks dependsOn edge.
+    // written). "Base"/"Dependent" below mirror Stock's real Tickers/Stocks dependency - Dependent's
+    // formula references Base via the same quoted 'Name'! pattern ObjectExtensions.GetRange
+    // produces, which is what SheetRegistry.GetDependents detects automatically (no manual
+    // dependency declaration).
 
     private const string BaseSheetName = "Base";
     private const string DependentSheetName = "Dependent";
@@ -395,14 +398,14 @@ public class GoogleSheetManagerGenericBaseTests
     private static SheetModel DependentSheetModel() => new()
     {
         Name = DependentSheetName,
-        Headers = [new SheetCellModel { Name = "Total", Formula = "=SUM(Base!A:A)" }]
+        Headers = [new SheetCellModel { Name = "Total", Formula = $"=SUM('{BaseSheetName}'!A:A)" }]
     };
 
     private static SheetRegistry<TestEntity> BuildRegistryWithDependency(List<SheetCellModel>? baseHeaders = null)
     {
         var registry = new SheetRegistry<TestEntity>();
         registry.Register(BaseSheetName, () => new SheetModel { Name = BaseSheetName, Headers = baseHeaders ?? [new SheetCellModel { Name = "Name" }] }, (_, _) => { });
-        registry.Register(DependentSheetName, DependentSheetModel, (_, _) => { }, dependsOn: [BaseSheetName]);
+        registry.Register(DependentSheetName, DependentSheetModel, (_, _) => { });
         return registry;
     }
 

@@ -488,6 +488,45 @@ public class GigSheetHelpersTests
         Assert.Equal("Complete Test Spreadsheet", result.Properties.Name);
         // The fact that it processes all sheets without throwing is the test
     }
-    
+
+    #endregion
+
+    #region Dependency Detection Tests
+
+    [Fact]
+    public void Registry_GetDependents_DetectsRealCrossSheetFormulaGraph()
+    {
+        // SheetRegistry.GetDependents derives dependencies dynamically by scanning each mapper's
+        // built formulas for other sheets' quoted range pattern ('Name'!) - no manual declaration.
+        // This confirms it actually finds Gig's real Trip -> Shift -> Daily -> Weekday/Weekly/Monthly
+        // -> Yearly chain (plus Region/Service depending on both Trip and Shift directly), not just
+        // synthetic fixtures, so RefreshDependentSheetsAsync rewrites the right sheets in production.
+        var tripDependents = GigSheetHelpers.Registry.GetDependents([SheetsConfig.SheetNames.Trips]);
+
+        Assert.Contains(SheetsConfig.SheetNames.Addresses, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Deliveries, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Locations, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Names, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Places, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Types, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Shifts, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Regions, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Services, tripDependents);
+        // Transitive: Daily depends on Shift, which depends on Trip.
+        Assert.Contains(SheetsConfig.SheetNames.Daily, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Weekdays, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Weekly, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Monthly, tripDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Yearly, tripDependents);
+
+        var dailyDependents = GigSheetHelpers.Registry.GetDependents([SheetsConfig.SheetNames.Daily]);
+
+        Assert.Contains(SheetsConfig.SheetNames.Weekdays, dailyDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Weekly, dailyDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Monthly, dailyDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Yearly, dailyDependents);
+        Assert.DoesNotContain(SheetsConfig.SheetNames.Shifts, dailyDependents);
+    }
+
     #endregion
 }

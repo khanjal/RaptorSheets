@@ -228,7 +228,7 @@ public class MapperGetSheetTests
         Assert.NotNull(nameHeader.Formula);
         Assert.StartsWith("={\"Name\";SORT(UNIQUE(", nameHeader.Formula);
         Assert.EndsWith("))}", nameHeader.Formula);
-        Assert.Contains("Trips!", nameHeader.Formula);
+        Assert.Contains("'Trips'!", nameHeader.Formula);
     }
 
     [Fact]
