@@ -60,13 +60,19 @@ public static class ColumnFormulas
         return MapLambda(columnTitle, mapArray, lambdaName, $"GOOGLEFINANCE({lambdaName},\"{attributeName}\")");
     }
 
+    // Pulling GOOGLEFINANCE's full history back to 1980 for every ticker at once is slow/rate-limited
+    // enough that it can take well over a minute to settle after first creation (unlike the other
+    // GOOGLEFINANCE-driven columns here, which resolve in seconds) - a trailing 2-year window still
+    // gives a meaningfully longer view than the 52-week high/low columns, without that cost.
+    private const string RecentHistoryStartDate = "TODAY()-730";
+
     public static string GoogleFinanceMax(string columnTitle, string mapArray, string lambdaName, string attributeName)
     {
-        return MapLambda(columnTitle, mapArray, lambdaName, $"MAX(INDEX(GOOGLEFINANCE({lambdaName}, \"{attributeName}\", DATE(1980,1,2), TODAY(), \"DAILY\"),,2))");
+        return MapLambda(columnTitle, mapArray, lambdaName, $"MAX(INDEX(GOOGLEFINANCE({lambdaName}, \"{attributeName}\", {RecentHistoryStartDate}, TODAY(), \"DAILY\"),,2))");
     }
 
     public static string GoogleFinanceMin(string columnTitle, string mapArray, string lambdaName, string attributeName)
     {
-        return MapLambda(columnTitle, mapArray, lambdaName, $"MIN(INDEX(GOOGLEFINANCE({lambdaName}, \"{attributeName}\", DATE(1980,1,2), TODAY(), \"DAILY\"),,2))");
+        return MapLambda(columnTitle, mapArray, lambdaName, $"MIN(INDEX(GOOGLEFINANCE({lambdaName}, \"{attributeName}\", {RecentHistoryStartDate}, TODAY(), \"DAILY\"),,2))");
     }
 }

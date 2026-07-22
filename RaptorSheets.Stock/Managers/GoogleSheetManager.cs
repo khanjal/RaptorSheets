@@ -10,6 +10,7 @@ using RaptorSheets.Core.Managers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Helpers;
+using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Core.Models.Google;
 using SheetName = RaptorSheets.Stock.Enums.SheetName;
 
@@ -187,7 +188,43 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     {
         var demoData = GenerateDemoData(seed);
         await ChangeSheetData([SheetName.STOCKS.GetDescription()], demoData);
+
+        // Inserting new tickers triggers Tickers' GOOGLEFINANCE-driven columns to recompute at the
+        // same moment Stocks' own formulas (which read from Tickers) re-evaluate. GOOGLEFINANCE
+        // resolves asynchronously, so both sheets can latch onto a transient #N/A mid-flight and
+        // never self-recover on their own - Tickers' own MaxHigh/MinLow (a GOOGLEFINANCE historical
+        // daily-range call, evaluated once per ticker via MAP/LAMBDA) is the slowest to settle, so a
+        // single short delay isn't reliably enough. Re-apply both sheets' header formulas twice,
+        // with increasing delays, to force a clean re-evaluation against settled data.
+        await Task.Delay(5000);
+        await RefreshHeaderFormulasAsync(SheetName.TICKERS.GetDescription(), TickerMapper.GetSheet());
+        await RefreshHeaderFormulasAsync(SheetName.STOCKS.GetDescription(), StockMapper.GetSheet());
+
+        await Task.Delay(15000);
+        await RefreshHeaderFormulasAsync(SheetName.TICKERS.GetDescription(), TickerMapper.GetSheet());
+        await RefreshHeaderFormulasAsync(SheetName.STOCKS.GetDescription(), StockMapper.GetSheet());
+
         return demoData;
+    }
+
+    /// <summary>
+    /// Re-writes a sheet's header row with its own (unchanged) formulas, forcing Google Sheets to
+    /// re-evaluate them fresh. See <see cref="PopulateDemoData"/> for why this is needed.
+    /// </summary>
+    private async Task RefreshHeaderFormulasAsync(string sheetName, SheetModel sheetModel)
+    {
+        var properties = await GetSheetProperties([sheetName]);
+        var sheetProperty = properties.FirstOrDefault(p =>
+            string.Equals(p.Name, sheetName, StringComparison.OrdinalIgnoreCase));
+
+        if (sheetProperty == null || !int.TryParse(sheetProperty.Id, out var sheetId))
+        {
+            return;
+        }
+
+        var headerRow = SheetHelpers.HeadersToRowData(sheetModel);
+        var request = GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, 0, headerRow);
+        await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = [request] });
     }
 
     /// <summary>

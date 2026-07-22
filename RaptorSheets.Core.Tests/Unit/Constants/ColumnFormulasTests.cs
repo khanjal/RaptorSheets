@@ -114,7 +114,7 @@ public class ColumnFormulasTests
     [Fact]
     public void GivenGoogleFinanceMax_ThenReturnString()
     {
-        var text = $"=MAP({_keyRange},LAMBDA({_name},IF(ROW({_name})=1,\"{_columnTitle}\",if(isblank({_name}),,MAX(INDEX(GOOGLEFINANCE({_name}, \"{_columnTitle}\", DATE(1980,1,2), TODAY(), \"DAILY\"),,2))))))";
+        var text = $"=MAP({_keyRange},LAMBDA({_name},IF(ROW({_name})=1,\"{_columnTitle}\",if(isblank({_name}),,MAX(INDEX(GOOGLEFINANCE({_name}, \"{_columnTitle}\", TODAY()-730, TODAY(), \"DAILY\"),,2))))))";
         var result = ColumnFormulas.GoogleFinanceMax(_columnTitle, _keyRange, _name, _columnTitle);
 
         Assert.Equal(text, result);
@@ -123,7 +123,7 @@ public class ColumnFormulasTests
     [Fact]
     public void GivenGoogleFinanceMin_ThenReturnString()
     {
-        var text = $"=MAP({_keyRange},LAMBDA({_name},IF(ROW({_name})=1,\"{_columnTitle}\",if(isblank({_name}),,MIN(INDEX(GOOGLEFINANCE({_name}, \"{_columnTitle}\", DATE(1980,1,2), TODAY(), \"DAILY\"),,2))))))";
+        var text = $"=MAP({_keyRange},LAMBDA({_name},IF(ROW({_name})=1,\"{_columnTitle}\",if(isblank({_name}),,MIN(INDEX(GOOGLEFINANCE({_name}, \"{_columnTitle}\", TODAY()-730, TODAY(), \"DAILY\"),,2))))))";
         var result = ColumnFormulas.GoogleFinanceMin(_columnTitle, _keyRange, _name, _columnTitle);
 
         Assert.Equal(text, result);
@@ -222,7 +222,7 @@ public class ColumnFormulasTests
         var result = ColumnFormulas.GoogleFinanceMax(_columnTitle, _keyRange, _name, _columnTitle);
         
         Assert.Contains("MAX", result);
-        Assert.Contains("DATE(1980,1,2)", result);
+        Assert.Contains("TODAY()-730", result);
         Assert.Contains("TODAY()", result);
         Assert.Contains("DAILY", result);
     }
@@ -231,9 +231,9 @@ public class ColumnFormulasTests
     public void GoogleFinanceMin_ShouldIncludeDateRange()
     {
         var result = ColumnFormulas.GoogleFinanceMin(_columnTitle, _keyRange, _name, _columnTitle);
-        
+
         Assert.Contains("MIN", result);
-        Assert.Contains("DATE(1980,1,2)", result);
+        Assert.Contains("TODAY()-730", result);
         Assert.Contains("TODAY()", result);
         Assert.Contains("DAILY", result);
     }
