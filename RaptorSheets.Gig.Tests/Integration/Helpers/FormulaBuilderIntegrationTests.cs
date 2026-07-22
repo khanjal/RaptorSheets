@@ -1,7 +1,7 @@
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Gig.Helpers;
-using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Sheets;
 
 namespace RaptorSheets.Gig.Tests.Integration.Helpers;
 
@@ -14,8 +14,8 @@ public class FormulaBuilderIntegrationTests
     public void GoogleFormulaBuilder_WithActualMapperData_ShouldGenerateValidFormulas()
     {
         // Arrange - Use actual mapper configuration
-        var tripSheet = TripMapper.GetSheet();
-        var placeSheet = PlaceMapper.GetSheet();
+        var tripSheet = TripSheet.GetSheet();
+        var placeSheet = PlaceSheet.GetSheet();
         
         // Get actual ranges from real sheet configuration
         var placeRange = placeSheet.GetLocalRange("Place");
@@ -47,7 +47,7 @@ public class FormulaBuilderIntegrationTests
     public void GigFormulaBuilder_WithActualMapperData_ShouldGenerateValidGigFormulas()
     {
         // Arrange - Use actual mapper configuration
-        var placeSheet = PlaceMapper.GetSheet();
+        var placeSheet = PlaceSheet.GetSheet();
         var placeRange = placeSheet.GetLocalRange("Place");
         
         // Simulate real range references
@@ -144,9 +144,9 @@ public class FormulaBuilderIntegrationTests
     public void FormulaBuildersWithActualSheetConfiguration_ShouldIntegrateCorrectly()
     {
         // Arrange - Get actual sheet configurations
-        var tripSheet = TripMapper.GetSheet();
-        var shiftSheet = ShiftMapper.GetSheet();
-        var dailySheet = DailyMapper.GetSheet();
+        var tripSheet = TripSheet.GetSheet();
+        var shiftSheet = ShiftSheet.GetSheet();
+        var dailySheet = DailySheet.GetSheet();
 
         // Act - Verify UpdateColumns works correctly with formula builders
         tripSheet.Headers.UpdateColumns();
@@ -174,9 +174,9 @@ public class FormulaBuilderIntegrationTests
         // This test verifies that the refactored mappers generate valid formulas
         
         // Arrange - Get actual configured sheets
-        var placeSheet = PlaceMapper.GetSheet();
-        var nameSheet = NameMapper.GetSheet();
-        var dailySheet = DailyMapper.GetSheet();
+        var placeSheet = PlaceSheet.GetSheet();
+        var nameSheet = NameSheet.GetSheet();
+        var dailySheet = DailySheet.GetSheet();
 
         // Act - Get formulas from actual headers
         var placeFormulas = placeSheet.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).Select(h => h.Formula).ToList();

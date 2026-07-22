@@ -202,7 +202,7 @@ public class GigSheetHelpersTests
     [Fact]
     public void MapData_WithBatchResponse_ShouldReturnSheetEntity()
     {
-        // Arrange - Use headers that match what ShiftMapper expects
+        // Arrange - Use headers that match what ShiftSheet expects
         var response = new BatchGetValuesByDataFilterResponse
         {
             ValueRanges = new List<MatchedValueRange>
@@ -217,7 +217,7 @@ public class GigSheetHelpersTests
                     {
                         Values = new List<IList<object>>
                         {
-                            // Use actual headers that ShiftMapper recognizes
+                            // Use actual headers that ShiftSheet recognizes
                             new List<object> { "Date", "Start", "Finish", "Service", "#", "Region" },
                             new List<object> { "2024-01-01", "09:00", "17:00", "TestService", "1", "Downtown" }
                         }
