@@ -9,6 +9,7 @@ using Xunit;
 
 namespace RaptorSheets.Stock.Tests.Integration.Managers;
 
+[Collection("StockSheetsIntegration")]
 public class GoogleSheetManagerTests
 {
     private readonly GoogleSheetManager? _googleSheetManager;
