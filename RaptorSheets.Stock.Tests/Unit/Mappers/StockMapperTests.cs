@@ -7,7 +7,7 @@ namespace RaptorSheets.Stock.Tests.Unit.Mappers;
 public class StockMapperTests
 {
     [Fact]
-    public void MapToRowData_WritesSharesOnly_LeavesOtherColumnsEmpty()
+    public void MapToRowData_WritesTickerAccountShares_LeavesFormulaColumnsEmpty()
     {
         var entities = new List<StockEntity> { new() { RowId = 2, Shares = 10, Account = "Fidelity", Ticker = "AAPL" } };
         var headers = new List<object> { "Account", "Ticker", "Shares", "Avg Cost" };
@@ -17,9 +17,9 @@ public class StockMapperTests
         Assert.Single(result);
         var cells = result[0].Values;
         Assert.Equal(4, cells.Count);
-        Assert.Null(cells[0].UserEnteredValue); // Account - formula/rollup column, not written
-        Assert.Null(cells[1].UserEnteredValue); // Ticker - formula/rollup column, not written
-        Assert.Equal(10, cells[2].UserEnteredValue?.NumberValue); // Shares - the one editable column
+        Assert.Equal("Fidelity", cells[0].UserEnteredValue?.StringValue); // Account - user-insertable
+        Assert.Equal("AAPL", cells[1].UserEnteredValue?.StringValue); // Ticker - user-insertable
+        Assert.Equal(10, cells[2].UserEnteredValue?.NumberValue); // Shares - user-insertable
         Assert.Null(cells[3].UserEnteredValue); // Avg Cost - formula/rollup column, not written
     }
 
@@ -41,10 +41,13 @@ public class StockMapperTests
     }
 
     [Fact]
-    public void MapToRowData_WithUnknownHeader_WritesEmptyPlaceholder()
+    public void MapToRowData_WithUnrecognizedFormulaColumnHeader_WritesEmptyPlaceholder()
     {
-        var entities = new List<StockEntity> { new() { RowId = 2, Shares = 3 } };
-        var headers = new List<object> { "Not A Real Header" };
+        // "Avg Cost" is a real header, but it's a formula/rollup column (see AVERAGE_COST's case
+        // in StockMapper.GetSheet()) - unlike Ticker/Account/Shares, MapToRowData must never write
+        // to it, even though the entity has other fields populated.
+        var entities = new List<StockEntity> { new() { RowId = 2, Shares = 3, Account = "Fidelity", Ticker = "AAPL" } };
+        var headers = new List<object> { "Avg Cost" };
 
         var result = StockMapper.MapToRowData(entities, headers);
 

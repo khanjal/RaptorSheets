@@ -59,11 +59,12 @@ public static class StockMapper
 
     /// <summary>
     /// Maps StockEntity to Google Sheets RowData for ChangeSheetData/CreateUpdateCellRequests.
-    /// Shares is the only genuinely user-editable column on the Stocks sheet - every other column
-    /// (Account/Ticker/Name/AverageCost/CostTotal/CurrentPrice/CurrentTotal/Return/PeRatio/52-week
-    /// high-low/MaxHigh/MinLow) is a cross-sheet formula or GOOGLEFINANCE pull, so writing to those
-    /// would clobber the array formula. Non-Shares columns get an empty CellData placeholder to
-    /// preserve column position without overwriting anything.
+    /// Ticker/Account/Shares are the only genuinely user-insertable columns on the Stocks sheet -
+    /// every other column (Name/AverageCost/CostTotal/CurrentPrice/CurrentTotal/Return/PeRatio/
+    /// 52-week high-low/MaxHigh/MinLow) is a header-row ARRAYFORMULA (GOOGLEFINANCE off this row's
+    /// own Ticker, or a cross-sheet pull from the Tickers reference sheet) that auto-extends over
+    /// newly appended rows, so writing to those would clobber the array formula. They get an empty
+    /// CellData placeholder to preserve column position without overwriting anything.
     /// </summary>
     public static IList<RowData> MapToRowData(List<StockEntity> entities, IList<object> headers)
     {
@@ -77,9 +78,13 @@ public static class StockMapper
             {
                 var headerEnum = header!.ToString()!.Trim().GetValueFromName<Header>();
 
-                cells.Add(headerEnum == Header.SHARES
-                    ? new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double)entity.Shares } }
-                    : new CellData());
+                cells.Add(headerEnum switch
+                {
+                    Header.TICKER => new CellData { UserEnteredValue = new ExtendedValue { StringValue = entity.Ticker } },
+                    Header.ACCOUNT => new CellData { UserEnteredValue = new ExtendedValue { StringValue = entity.Account } },
+                    Header.SHARES => new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double)entity.Shares } },
+                    _ => new CellData()
+                });
             }
 
             rows.Add(new RowData { Values = cells });
@@ -105,6 +110,15 @@ public static class StockMapper
 
             switch (headerEnum)
             {
+                case Header.NAME:
+                    // Ticker is the Stocks sheet's own key column (column A), so this resolves
+                    // directly against each row's own Ticker value - same GOOGLEFINANCE lookup
+                    // TickerMapper uses on the Tickers reference sheet, just applied locally.
+                    header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
+                                                                    keyRange,
+                                                                    Header.TICKER.GetDescription(),
+                                                                    GoogleFinanceAttributes.NAME.GetDescription());
+                    break;
                 case Header.AVERAGE_COST:
                     header.Note = ColumnNotes.AverageCost;
                     header.Format = Format.ACCOUNTING;
