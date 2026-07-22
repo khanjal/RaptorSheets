@@ -4,7 +4,7 @@ using RaptorSheets.Core.Models.Google;
 
 namespace RaptorSheets.Core.Tests.Data;
 
-public class TestSheetData
+public static class TestSheetData
 {
     public static SheetModel GetModelData()
     {
@@ -16,16 +16,16 @@ public class TestSheetData
 
         sheet.Headers.AddColumn(new SheetCellModel
         {
-            Name = HeaderEnum.FIRST_COLUMN.GetDescription(),
+            Name = Header.FIRST_COLUMN.GetDescription(),
             Formula = "Formula",
-            Format = FormatEnum.TEXT
+            Format = Format.TEXT
         });
 
         sheet.Headers.AddColumn(new SheetCellModel
         {
-            Name = HeaderEnum.SECOND_COLUMN.GetDescription(),
+            Name = Header.SECOND_COLUMN.GetDescription(),
             Formula = "None",
-            Format = FormatEnum.NUMBER
+            Format = Format.NUMBER
         });
 
         return sheet;

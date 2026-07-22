@@ -17,7 +17,7 @@ public class SheetsConfigUtilitiesTests
         Assert.Equal(17, sheetOrder.Count);
         Assert.Equal(SheetsConfig.SheetNames.Trips, sheetOrder[0]);      // First
         Assert.Equal(SheetsConfig.SheetNames.Shifts, sheetOrder[1]);     // Second
-        Assert.Equal(SheetsConfig.SheetNames.Setup, sheetOrder.Last());  // Last
+        Assert.Equal(SheetsConfig.SheetNames.Setup, sheetOrder[^1]);  // Last
     }
 
     [Fact]

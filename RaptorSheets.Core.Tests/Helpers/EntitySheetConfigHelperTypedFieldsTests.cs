@@ -18,15 +18,15 @@ public class EntitySheetConfigHelperColumnTests
         
         var currencyHeader = headers.FirstOrDefault(h => h.Name == "Currency");
         Assert.NotNull(currencyHeader);
-        Assert.Equal(FormatEnum.CURRENCY, currencyHeader.Format);
+        Assert.Equal(Format.CURRENCY, currencyHeader.Format);
         
         var dateHeader = headers.FirstOrDefault(h => h.Name == "Date");
         Assert.NotNull(dateHeader);
-        Assert.Equal(FormatEnum.DATE, dateHeader.Format);
+        Assert.Equal(Format.DATE, dateHeader.Format);
         
         var numberHeader = headers.FirstOrDefault(h => h.Name == "Number");
         Assert.NotNull(numberHeader);
-        Assert.Equal(FormatEnum.NUMBER, numberHeader.Format);
+        Assert.Equal(Format.NUMBER, numberHeader.Format);
     }
 
     [Fact]
@@ -55,19 +55,19 @@ public class EntitySheetConfigHelperColumnTests
     // Test entities for validation
     private class TestEntityWithColumns
     {
-        [Column("Currency", FormatEnum.CURRENCY)]
+        [Column("Currency", Format.CURRENCY)]
         public decimal? Currency { get; set; }
 
-        [Column("Date", FormatEnum.DATE)]
+        [Column("Date", Format.DATE)]
         public DateTime? Date { get; set; }
 
-        [Column("Number", FormatEnum.NUMBER)]
+        [Column("Number", Format.NUMBER)]
         public double? Number { get; set; }
 
-        [Column("CustomCurrency", isInput: false, formatPattern: "\"£\"#,##0.00", formatType: FormatEnum.CURRENCY)]
+        [Column("CustomCurrency", isInput: false, formatPattern: "\"£\"#,##0.00", formatType: Format.CURRENCY)]
         public decimal? CustomCurrency { get; set; }
 
-        [Column("String", FormatEnum.TEXT)]
+        [Column("String", Format.TEXT)]
         public string StringField { get; set; } = "";
     }
 }

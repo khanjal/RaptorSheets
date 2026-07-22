@@ -24,7 +24,7 @@ public interface ISheetServiceWrapper
 public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
 {
     private SheetsService _sheetsService = new();
-    private readonly string _spreadsheetId = "";
+    private readonly string _spreadsheetId;
 
     public SheetServiceWrapper(string accessToken, string spreadsheetId)
     {
@@ -77,12 +77,6 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
             // Specific argument exceptions during FromPrivateKey indicate malformed key material.
             credential = GoogleCredential.FromAccessToken("test-token");
         }
-        catch (Exception)
-        {
-            // For any unexpected exception, rethrow to avoid masking real configuration issues in production.
-            // Unit tests that expect fallback should provide malformed-key scenarios leading to known exceptions above.
-            throw;
-        }
 
         InitializeService(credential);
     }
@@ -117,15 +111,13 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
         throw new ArgumentException($"Missing required parameter. Expected one of: {string.Join(", ", candidates)}", nameof(parameters));
     }
 
-    private SheetsService InitializeService(Google.Apis.Http.IConfigurableHttpClientInitializer httpInitializer)
+    private void InitializeService(Google.Apis.Http.IConfigurableHttpClientInitializer httpInitializer)
     {
         _sheetsService = new SheetsService(new Initializer()
         {
             HttpClientInitializer = httpInitializer,
             ApplicationName = GoogleConfig.AppName
         });
-
-        return _sheetsService;
     }
 
     public async Task<AppendValuesResponse> AppendValues(string range, IList<IList<object>> values)

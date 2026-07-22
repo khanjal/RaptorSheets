@@ -28,7 +28,7 @@ public class CreateSheetsBehaviorTests
 
         var manager = new GoogleSheetManager(mockService.Object);
 
-        var result = await manager.CreateSheets(sheetsToCreate);
+        await manager.CreateSheets(sheetsToCreate);
 
         Assert.NotNull(capturedRequest);
 

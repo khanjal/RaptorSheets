@@ -115,7 +115,7 @@ public static class SheetsConfig
     }
 
     /// <summary>
-    /// Validation pattern name constants that map to <see cref="Enums.ValidationEnum"/> members.
+    /// Validation pattern name constants that map to <see cref="Enums.Validation"/> members.
     /// Used in <c>[Column(validationPattern: ...)]</c> attributes.
     /// </summary>
     public static class ValidationNames
@@ -203,9 +203,9 @@ public static class SheetsConfig
     public static SheetModel ApplianceSheet => new()
     {
         Name = SheetNames.Appliances,
-        TabColor = ColorEnum.BLUE,
-        CellColor = ColorEnum.LIGHT_GRAY,
-        FontColor = ColorEnum.WHITE, // BLUE is a dark TabColor - see ColorEnum for the dark/light list
+        TabColor = SheetColor.BLUE,
+        CellColor = SheetColor.LIGHT_GRAY,
+        FontColor = SheetColor.WHITE, // BLUE is a dark TabColor - see SheetColor for the dark/light list
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ApplianceEntity>()
@@ -214,9 +214,9 @@ public static class SheetsConfig
     public static SheetModel ProjectSheet => new()
     {
         Name = SheetNames.Projects,
-        TabColor = ColorEnum.GREEN,
-        CellColor = ColorEnum.LIGHT_GREEN,
-        FontColor = ColorEnum.WHITE, // GREEN is a dark TabColor - see ColorEnum for the dark/light list
+        TabColor = SheetColor.GREEN,
+        CellColor = SheetColor.LIGHT_GREEN,
+        FontColor = SheetColor.WHITE, // GREEN is a dark TabColor - see SheetColor for the dark/light list
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ProjectEntity>()
@@ -225,8 +225,8 @@ public static class SheetsConfig
     public static SheetModel MaintenanceSheet => new()
     {
         Name = SheetNames.Maintenance,
-        TabColor = ColorEnum.ORANGE,
-        CellColor = ColorEnum.LIGHT_RED,
+        TabColor = SheetColor.ORANGE,
+        CellColor = SheetColor.LIGHT_RED,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<MaintenanceEntity>()
@@ -235,8 +235,8 @@ public static class SheetsConfig
     public static SheetModel DoorSheet => new()
     {
         Name = SheetNames.Doors,
-        TabColor = ColorEnum.DARK_YELLOW,
-        CellColor = ColorEnum.LIGHT_YELLOW,
+        TabColor = SheetColor.DARK_YELLOW,
+        CellColor = SheetColor.LIGHT_YELLOW,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<DoorEntity>()
@@ -245,9 +245,9 @@ public static class SheetsConfig
     public static SheetModel PaintSheet => new()
     {
         Name = SheetNames.Paints,
-        TabColor = ColorEnum.MAGENTA,
-        CellColor = ColorEnum.PINK,
-        FontColor = ColorEnum.WHITE, // MAGENTA is a dark TabColor - see ColorEnum for the dark/light list
+        TabColor = SheetColor.MAGENTA,
+        CellColor = SheetColor.PINK,
+        FontColor = SheetColor.WHITE, // MAGENTA is a dark TabColor - see SheetColor for the dark/light list
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PaintEntity>()
@@ -256,9 +256,9 @@ public static class SheetsConfig
     public static SheetModel PowerSheet => new()
     {
         Name = SheetNames.Power,
-        TabColor = ColorEnum.RED,
-        CellColor = ColorEnum.LIGHT_RED,
-        FontColor = ColorEnum.WHITE,
+        TabColor = SheetColor.RED,
+        CellColor = SheetColor.LIGHT_RED,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PowerEntity>()
@@ -267,8 +267,8 @@ public static class SheetsConfig
     public static SheetModel RoomSheet => new()
     {
         Name = SheetNames.Rooms,
-        TabColor = ColorEnum.CYAN,
-        CellColor = ColorEnum.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<RoomEntity>()
@@ -277,8 +277,8 @@ public static class SheetsConfig
     public static SheetModel ContactSheet => new()
     {
         Name = SheetNames.Contacts,
-        TabColor = ColorEnum.CYAN,
-        CellColor = ColorEnum.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ContactEntity>()
@@ -287,9 +287,9 @@ public static class SheetsConfig
     public static SheetModel StatSheet => new()
     {
         Name = SheetNames.Stats,
-        TabColor = ColorEnum.PURPLE,
-        CellColor = ColorEnum.LIGHT_PURPLE,
-        FontColor = ColorEnum.WHITE,
+        TabColor = SheetColor.PURPLE,
+        CellColor = SheetColor.LIGHT_PURPLE,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<StatEntity>()

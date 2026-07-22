@@ -2,7 +2,7 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
-using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
+using Header = RaptorSheets.Gig.Enums.Header;
 using RaptorSheets.Gig.Constants;
 
 namespace RaptorSheets.Gig.Tests.Unit.Mappers;
@@ -113,13 +113,13 @@ public class ExpenseMapperTests
         Assert.True(result.Headers.Count >= 5, "Should have at least basic expense fields");
         
         // Verify essential headers exist with proper formatting
-        var dateHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.DATE.GetDescription());
+        var dateHeader = result.Headers.FirstOrDefault(h => h.Name == Header.DATE.GetDescription());
         Assert.NotNull(dateHeader);
-        Assert.Equal(FormatEnum.DATE, dateHeader.Format);
+        Assert.Equal(Format.DATE, dateHeader.Format);
         
-        var amountHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.AMOUNT.GetDescription());
+        var amountHeader = result.Headers.FirstOrDefault(h => h.Name == Header.AMOUNT.GetDescription());
         Assert.NotNull(amountHeader);
-        Assert.Equal(FormatEnum.ACCOUNTING, amountHeader.Format);
+        Assert.Equal(Format.ACCOUNTING, amountHeader.Format);
         
         // Verify all headers have proper column assignments
         Assert.All(result.Headers, header => 

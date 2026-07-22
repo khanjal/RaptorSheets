@@ -78,16 +78,16 @@ public class YearlyMapperTests
         Assert.True(result.Headers.Count > 0, "Yearly sheet should have headers");
 
         // Verify essential headers exist
-        var yearHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.YEAR.GetDescription());
+        var yearHeader = result.Headers.FirstOrDefault(h => h.Name == Header.YEAR.GetDescription());
         Assert.NotNull(yearHeader);
 
-        var daysHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.DAYS.GetDescription());
+        var daysHeader = result.Headers.FirstOrDefault(h => h.Name == Header.DAYS.GetDescription());
         Assert.NotNull(daysHeader);
-        Assert.Equal(FormatEnum.NUMBER, daysHeader.Format);
+        Assert.Equal(Format.NUMBER, daysHeader.Format);
 
-        var averageHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.AVERAGE.GetDescription());
+        var averageHeader = result.Headers.FirstOrDefault(h => h.Name == Header.AVERAGE.GetDescription());
         Assert.NotNull(averageHeader);
-        Assert.Equal(FormatEnum.ACCOUNTING, averageHeader.Format);
+        Assert.Equal(Format.ACCOUNTING, averageHeader.Format);
     }
 
     #endregion

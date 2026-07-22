@@ -6,7 +6,7 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Stock.Managers;
 using Xunit;
-using SheetEnum = RaptorSheets.Stock.Enums.SheetEnum;
+using SheetName = RaptorSheets.Stock.Enums.SheetName;
 
 namespace RaptorSheets.Stock.Tests.Unit.Managers;
 
@@ -14,8 +14,8 @@ namespace RaptorSheets.Stock.Tests.Unit.Managers;
 /// Covers GetSheets' orchestration now that it shares GoogleSheetManagerBase.GetSheetsCoreAsync with
 /// Gig: unknown-tab detection and spreadsheet-name population happen on every call (not just
 /// full-sheet-list requests, as before), and a batchGet failure triggers the same missing-sheet
-/// self-heal-and-recreate behavior Gig already had (Stock previously had none - see the removed
-/// "TODO Add check sheets here" in GoogleSheetManager.GetSheets()).
+/// self-heal-and-recreate behavior Gig already had (Stock previously had none - the placeholder
+/// comment in GoogleSheetManager.GetSheets() asking for this has since been removed).
 /// </summary>
 public class GetSheetsBehaviorTests
 {
@@ -55,7 +55,7 @@ public class GetSheetsBehaviorTests
         var manager = new GoogleSheetManager(mockService.Object);
 
         // Act
-        var result = await manager.GetSheets(new List<string> { SheetEnum.ACCOUNTS.GetDescription() });
+        var result = await manager.GetSheets(new List<string> { SheetName.ACCOUNTS.GetDescription() });
 
         // Assert
         Assert.Equal("MyStockSheet", result.Properties.Name);
@@ -86,7 +86,7 @@ public class GetSheetsBehaviorTests
         var manager = new GoogleSheetManager(mockService.Object);
 
         // Act
-        var result = await manager.GetSheets(new List<string> { SheetEnum.ACCOUNTS.GetDescription() });
+        var result = await manager.GetSheets(new List<string> { SheetName.ACCOUNTS.GetDescription() });
 
         // Assert
         Assert.Contains(result.Messages, m => m.Message.Contains("SomeRandomTab") && m.Message.Contains("does not match any known sheet name"));
@@ -130,9 +130,9 @@ public class GetSheetsBehaviorTests
         // Act - Accounts is missing from the spreadsheet (only Stocks/Tickers exist above).
         var result = await manager.GetSheets(new List<string>
         {
-            SheetEnum.ACCOUNTS.GetDescription(),
-            SheetEnum.STOCKS.GetDescription(),
-            SheetEnum.TICKERS.GetDescription()
+            SheetName.ACCOUNTS.GetDescription(),
+            SheetName.STOCKS.GetDescription(),
+            SheetName.TICKERS.GetDescription()
         });
 
         // Assert

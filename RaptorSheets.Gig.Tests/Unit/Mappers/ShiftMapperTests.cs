@@ -3,7 +3,7 @@ using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Mappers;
-using HeaderEnum = RaptorSheets.Gig.Enums.HeaderEnum;
+using Header = RaptorSheets.Gig.Enums.Header;
 
 namespace RaptorSheets.Gig.Tests.Unit.Mappers;
 
@@ -117,13 +117,13 @@ public class ShiftMapperTests
         Assert.True(result.Headers.Count > 10, "Shift sheet should have many columns");
         
         // Verify essential headers exist with proper configuration
-        var dateHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.DATE.GetDescription());
+        var dateHeader = result.Headers.FirstOrDefault(h => h.Name == Header.DATE.GetDescription());
         Assert.NotNull(dateHeader);
-        Assert.Equal(FormatEnum.DATE, dateHeader.Format);
+        Assert.Equal(Format.DATE, dateHeader.Format);
         
-        var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
+        var payHeader = result.Headers.FirstOrDefault(h => h.Name == Header.PAY.GetDescription());
         Assert.NotNull(payHeader);
-        Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
+        Assert.Equal(Format.ACCOUNTING, payHeader.Format);
         
         // Verify all headers have proper column assignments
         Assert.All(result.Headers, header => 

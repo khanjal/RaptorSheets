@@ -18,9 +18,9 @@ public class SheetsConfigTests
         var names = SheetsConfig.SheetUtilities.GetAllSheetNames();
 
         Assert.NotEmpty(names);
-        Assert.Equal(SheetsConfig.SheetNames.Applications, names.First());
+        Assert.Equal(SheetsConfig.SheetNames.Applications, names[0]);
         Assert.Contains(SheetsConfig.SheetNames.Interviews, names);
-        Assert.Equal(SheetsConfig.SheetNames.Setup, names.Last());
+        Assert.Equal(SheetsConfig.SheetNames.Setup, names[^1]);
     }
 
     [Fact]

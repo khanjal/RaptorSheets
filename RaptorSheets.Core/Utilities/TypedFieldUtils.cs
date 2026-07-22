@@ -146,18 +146,18 @@ public static class TypedFieldUtils
     /// Gets the format enum that corresponds to a field type
     /// </summary>
     /// <param name="fieldType">The field type</param>
-    /// <returns>Corresponding FormatEnum value</returns>
-    public static FormatEnum? GetFormatFromFieldType(FieldType? fieldType)
+    /// <returns>Corresponding Format value</returns>
+    public static Format? GetFormatFromFieldType(FieldType? fieldType)
     {
         return fieldType switch
         {
-            FieldType.Currency => FormatEnum.CURRENCY,
-            FieldType.Accounting => FormatEnum.ACCOUNTING,
-            FieldType.DateTime => FormatEnum.DATE,
-            FieldType.Number => FormatEnum.NUMBER,
-            FieldType.Integer => FormatEnum.NUMBER,
-            FieldType.Percentage => FormatEnum.PERCENT,
-            FieldType.String or FieldType.Email or FieldType.Url or FieldType.PhoneNumber => FormatEnum.TEXT,
+            FieldType.Currency => Format.CURRENCY,
+            FieldType.Accounting => Format.ACCOUNTING,
+            FieldType.DateTime => Format.DATE,
+            FieldType.Number => Format.NUMBER,
+            FieldType.Integer => Format.NUMBER,
+            FieldType.Percentage => Format.PERCENT,
+            FieldType.String or FieldType.Email or FieldType.Url or FieldType.PhoneNumber => Format.TEXT,
             _ => null
         };
     }
@@ -215,7 +215,7 @@ public static class TypedFieldUtils
         var digitsOnly = new string(value.Where(char.IsDigit).ToArray());
         
         // Remove US international code if present
-        if (digitsOnly.StartsWith("1") && digitsOnly.Length == 11)
+        if (digitsOnly.StartsWith('1') && digitsOnly.Length == 11)
         {
             digitsOnly = digitsOnly[1..];
         }
@@ -229,7 +229,7 @@ public static class TypedFieldUtils
         if (value is double serialNumber)
         {
             // Google Sheets uses 1900-01-01 as day 1, but Excel/Google treats 1900 as a leap year
-            var baseDate = new DateTime(1899, 12, 30);
+            var baseDate = new DateTime(1899, 12, 30, 0, 0, 0, DateTimeKind.Unspecified);
             return baseDate.AddDays(serialNumber);
         }
 
@@ -314,7 +314,7 @@ public static class TypedFieldUtils
         if (value is DateTime dateTime)
         {
             // Convert to Google Sheets serial number
-            var baseDate = new DateTime(1899, 12, 30);
+            var baseDate = new DateTime(1899, 12, 30, 0, 0, 0, DateTimeKind.Unspecified);
             return (dateTime - baseDate).TotalDays;
         }
         return value;

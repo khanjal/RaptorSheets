@@ -24,113 +24,113 @@ public static class WeekdayMapper
         sheet.Headers.UpdateColumns();
 
         var dailySheet = DailyMapper.GetSheet();
-        var keyRange = sheet.GetLocalRange(HeaderEnum.DAY.GetDescription());
-        var dailyDayRange = dailySheet.GetRange(HeaderEnum.DAY.GetDescription());
-        var dailyDateToTotalRange = dailySheet.GetRangeBetweenColumns(HeaderEnum.DATE.GetDescription(), HeaderEnum.TOTAL.GetDescription());
+        var keyRange = sheet.GetLocalRange(Header.DAY.GetDescription());
+        var dailyDayRange = dailySheet.GetRange(Header.DAY.GetDescription());
+        var dailyDateToTotalRange = dailySheet.GetRangeBetweenColumns(Header.DATE.GetDescription(), Header.TOTAL.GetDescription());
 
         // Configure specific headers unique to WeekdayMapper.
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
+            var headerEnum = header.Name.GetValueFromName<Header>();
 
             switch (headerEnum)
             {
-                case HeaderEnum.DAY:
+                case Header.DAY:
                     // Formula to generate unique weekday numbers from the Daily sheet.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.DAY.GetDescription(), dailySheet.GetRange(HeaderEnum.DAY.GetDescription(), 2));
-                    header.Format = FormatEnum.NUMBER;
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(Header.DAY.GetDescription(), dailySheet.GetRange(Header.DAY.GetDescription(), 2));
+                    header.Format = Format.NUMBER;
                     break;
-                case HeaderEnum.WEEKDAY:
+                case Header.WEEKDAY:
                     // Formula to generate weekday text based on day range.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(keyRange, HeaderEnum.WEEKDAY.GetDescription(), keyRange, 1);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(keyRange, Header.WEEKDAY.GetDescription(), keyRange, 1);
                     break;
-                case HeaderEnum.TRIPS:
+                case Header.TRIPS:
                     // Formula to sum trips by weekday number using the Daily sheet.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TRIPS.GetDescription(), 
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, Header.TRIPS.GetDescription(), 
                         dailyDayRange, 
-                        dailySheet.GetRange(HeaderEnum.TRIPS.GetDescription()));
-                    header.Format = FormatEnum.NUMBER;
+                        dailySheet.GetRange(Header.TRIPS.GetDescription()));
+                    header.Format = Format.NUMBER;
                     break;
-                case HeaderEnum.DAYS:
+                case Header.DAYS:
                     // Formula to count days by weekday number using the Daily sheet.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, HeaderEnum.DAYS.GetDescription(), 
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(keyRange, Header.DAYS.GetDescription(), 
                         dailyDayRange);
-                    header.Format = FormatEnum.NUMBER;
+                    header.Format = Format.NUMBER;
                     break;
-                case HeaderEnum.PAY:
+                case Header.PAY:
                     // Formula to sum pay by weekday number using the Daily sheet.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.PAY.GetDescription(), 
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, Header.PAY.GetDescription(), 
                         dailyDayRange, 
-                        dailySheet.GetRange(HeaderEnum.PAY.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                        dailySheet.GetRange(Header.PAY.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.TIPS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TIPS.GetDescription(), 
+                case Header.TIPS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, Header.TIPS.GetDescription(), 
                         dailyDayRange, 
-                        dailySheet.GetRange(HeaderEnum.TIPS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                        dailySheet.GetRange(Header.TIPS.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.BONUS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.BONUS.GetDescription(), 
+                case Header.BONUS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, Header.BONUS.GetDescription(), 
                         dailyDayRange, 
-                        dailySheet.GetRange(HeaderEnum.BONUS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                        dailySheet.GetRange(Header.BONUS.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.TOTAL:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(keyRange, HeaderEnum.TOTAL.GetDescription(), sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.TOTAL:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(keyRange, Header.TOTAL.GetDescription(), sheet.GetLocalRange(Header.PAY.GetDescription()), sheet.GetLocalRange(Header.TIPS.GetDescription()), sheet.GetLocalRange(Header.BONUS.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.CASH:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.CASH.GetDescription(), 
+                case Header.CASH:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, Header.CASH.GetDescription(), 
                         dailyDayRange, 
-                        dailySheet.GetRange(HeaderEnum.CASH.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                        dailySheet.GetRange(Header.CASH.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.AMOUNT_PER_TRIP:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(keyRange, HeaderEnum.AMOUNT_PER_TRIP.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.TRIPS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AMOUNT_PER_TRIP:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(keyRange, Header.AMOUNT_PER_TRIP.GetDescription(), sheet.GetLocalRange(Header.TOTAL.GetDescription()), sheet.GetLocalRange(Header.TRIPS.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.DISTANCE:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.DISTANCE.GetDescription(), 
+                case Header.DISTANCE:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, Header.DISTANCE.GetDescription(), 
                         dailyDayRange, 
-                        dailySheet.GetRange(HeaderEnum.DISTANCE.GetDescription()));
-                    header.Format = FormatEnum.DISTANCE;
+                        dailySheet.GetRange(Header.DISTANCE.GetDescription()));
+                    header.Format = Format.DISTANCE;
                     break;
-                case HeaderEnum.AMOUNT_PER_DISTANCE:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(keyRange, HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AMOUNT_PER_DISTANCE:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(keyRange, Header.AMOUNT_PER_DISTANCE.GetDescription(), sheet.GetLocalRange(Header.TOTAL.GetDescription()), sheet.GetLocalRange(Header.DISTANCE.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.TIME_TOTAL:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.TIME_TOTAL.GetDescription(), 
+                case Header.TIME_TOTAL:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, Header.TIME_TOTAL.GetDescription(), 
                         dailyDayRange, 
-                        dailySheet.GetRange(HeaderEnum.TIME_TOTAL.GetDescription()));
-                    header.Format = FormatEnum.DURATION;
+                        dailySheet.GetRange(Header.TIME_TOTAL.GetDescription()));
+                    header.Format = Format.DURATION;
                     break;
-                case HeaderEnum.AMOUNT_PER_TIME:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(keyRange, HeaderEnum.AMOUNT_PER_TIME.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.TIME_TOTAL.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AMOUNT_PER_TIME:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(keyRange, Header.AMOUNT_PER_TIME.GetDescription(), sheet.GetLocalRange(Header.TOTAL.GetDescription()), sheet.GetLocalRange(Header.TIME_TOTAL.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.AMOUNT_PER_DAY:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDay(keyRange, HeaderEnum.AMOUNT_PER_DAY.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), sheet.GetLocalRange(HeaderEnum.DAYS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AMOUNT_PER_DAY:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDay(keyRange, Header.AMOUNT_PER_DAY.GetDescription(), sheet.GetLocalRange(Header.TOTAL.GetDescription()), sheet.GetLocalRange(Header.DAYS.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.AMOUNT_CURRENT:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayAmount(keyRange, dailyDateToTotalRange, 0, HeaderEnum.AMOUNT_CURRENT.GetDescription());
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AMOUNT_CURRENT:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayAmount(keyRange, dailyDateToTotalRange, 0, Header.AMOUNT_CURRENT.GetDescription());
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.AMOUNT_PREVIOUS:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayAmount(keyRange, dailyDateToTotalRange, -7, HeaderEnum.AMOUNT_PREVIOUS.GetDescription());
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AMOUNT_PREVIOUS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayAmount(keyRange, dailyDateToTotalRange, -7, Header.AMOUNT_PREVIOUS.GetDescription());
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.AMOUNT_PER_PREVIOUS_DAY:
+                case Header.AMOUNT_PER_PREVIOUS_DAY:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaPreviousDayAverage(
                         keyRange,
-                        HeaderEnum.AMOUNT_PER_PREVIOUS_DAY.GetDescription(),
-                        sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()),
-                        sheet.GetLocalRange(HeaderEnum.AMOUNT_PREVIOUS.GetDescription()),
-                        sheet.GetLocalRange(HeaderEnum.DAYS.GetDescription())
+                        Header.AMOUNT_PER_PREVIOUS_DAY.GetDescription(),
+                        sheet.GetLocalRange(Header.TOTAL.GetDescription()),
+                        sheet.GetLocalRange(Header.AMOUNT_PREVIOUS.GetDescription()),
+                        sheet.GetLocalRange(Header.DAYS.GetDescription())
                     );
-                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Format = Format.ACCOUNTING;
                     break;
                 default:
                     break;

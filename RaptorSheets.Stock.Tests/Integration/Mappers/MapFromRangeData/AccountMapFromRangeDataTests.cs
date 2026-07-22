@@ -19,7 +19,7 @@ public class AccountMapFromRangeDataTests
     public AccountMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.ACCOUNTS.GetDescription()).First().ValueRange.Values;
+        _values = this.fixture.valueRanges?.First(x => x.DataFilters[0].A1Range == SheetName.ACCOUNTS.GetDescription()).ValueRange.Values;
         _entities = AccountMapper.MapFromRangeData(_values!);
     }
 

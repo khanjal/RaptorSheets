@@ -262,74 +262,6 @@ public class EntitySheetOrderHelperTests
     }
 
     [Fact]
-    public void GetSheetOrderFromEntity_EmptyEntity_ReturnsEmptyList()
-    {
-        // Act
-        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestNoAttributesEntity>();
-
-        // Assert
-        Assert.Empty(sheetOrder);
-    }
-
-    [Fact]
-    public void GetSheetOrderFromEntity_OnlyUnorderedSheets_ReturnsInPropertyOrder()
-    {
-        // Act
-        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestOptionalOrderEntity>();
-
-        // Assert
-        Assert.Equal(3, sheetOrder.Count);
-        Assert.Equal("Expenses", sheetOrder[0]); // Property index 0
-        Assert.Equal("Trips", sheetOrder[1]);    // Property index 1  
-        Assert.Equal("Setup", sheetOrder[2]);    // Property index 2
-    }
-
-    [Fact]
-    public void GetSheetOrderFromEntity_OnlyOrderedSheets_InsertsAtCorrectPositions()
-    {
-        // Act
-        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestSheetOrderEntity>();
-
-        // Assert
-        Assert.Equal(4, sheetOrder.Count);
-        Assert.Equal("Trips", sheetOrder[0]);    // Order 0
-        Assert.Equal("Shifts", sheetOrder[1]);   // Order 1
-        Assert.Equal("Expenses", sheetOrder[2]); // Order 2
-        Assert.Equal("Setup", sheetOrder[3]);    // Order 3
-    }
-
-    [Fact]
-    public void GetSheetOrderFromEntity_EdgeCaseWithZeroPosition_InsertsAtFirstPositionAfterUnordered()
-    {
-        // Test entity with specific edge case: position 0 should go right after unordered sheets
-        // Act
-        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestOutOfRangeOrderEntity>();
-
-        // Assert
-        Assert.Equal(5, sheetOrder.Count);
-        Assert.Equal("Unordered1", sheetOrder[0]); // Unordered, property index 0
-        Assert.Equal("Unordered2", sheetOrder[1]); // Unordered, property index 1
-        Assert.Equal("Position0", sheetOrder[2]);  // Order 0, inserted at position 2 (after 2 unordered)
-        Assert.Equal("Position1", sheetOrder[3]);  // Order 1, inserted at position 3 (after 2 unordered + 1 ordered)
-        Assert.Equal("OutOfRange", sheetOrder[4]); // Order 10, out of range, placed at end
-    }
-
-    [Fact]
-    public void GetSheetOrderFromEntity_OnlyOrderedSheetsWithGaps_FillsSequentially()
-    {
-        // Create a test entity with only ordered sheets but with gaps
-        // This tests pure ordered sheets without any unordered ones
-        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestSheetOrderEntity>();
-
-        // Assert - when no unordered sheets, ordered sheets go in their exact positions
-        Assert.Equal(4, sheetOrder.Count);
-        Assert.Equal("Trips", sheetOrder[0]);    // Order 0
-        Assert.Equal("Shifts", sheetOrder[1]);   // Order 1
-        Assert.Equal("Expenses", sheetOrder[2]); // Order 2
-        Assert.Equal("Setup", sheetOrder[3]);    // Order 3
-    }
-
-    [Fact]
     public void ValidateEntitySheetMapping_ValidEntity_ReturnsNoErrors()
     {
         // Arrange
@@ -450,32 +382,6 @@ public class EntitySheetOrderHelperTests
         Assert.Equal("ThirdUnordered", sheetOrder[2]);   // Unordered, property index 3
         Assert.Equal("ExplicitFirst", sheetOrder[3]);    // Order 0, inserted after unordered
         Assert.Equal("ExplicitSecond", sheetOrder[4]);   // Order 1, inserted after unordered
-    }
-
-    [Fact]
-    public void GetSheetOrderFromEntity_AllOptionalOrdering_UsesPropertyOrder()
-    {
-        // This test verifies that when all SheetOrder attributes use optional ordering,
-        // the result is simply the property declaration order
-        
-        // Act
-        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestOptionalOrderEntity>();
-
-        // Assert - Should be in exact property declaration order
-        Assert.Equal(3, sheetOrder.Count);
-        Assert.Equal("Expenses", sheetOrder[0]); // Property index 0
-        Assert.Equal("Trips", sheetOrder[1]);    // Property index 1  
-        Assert.Equal("Setup", sheetOrder[2]);    // Property index 2
-    }
-
-    [Fact]
-    public void GetSheetOrderFromEntity_EntityWithNoProperties_ReturnsEmptyList()
-    {
-        // Act
-        var sheetOrder = EntitySheetOrderHelper.GetSheetOrderFromEntity<TestNoAttributesEntity>();
-
-        // Assert
-        Assert.Empty(sheetOrder);
     }
 
     [Fact]

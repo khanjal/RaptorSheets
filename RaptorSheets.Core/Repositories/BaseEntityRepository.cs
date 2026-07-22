@@ -226,7 +226,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// Gets the format information for the entity's fields
     /// </summary>
     /// <returns>Dictionary of format information by header name</returns>
-    public virtual Dictionary<string, (Enums.FormatEnum? Format, string? NumberPattern)> GetFormatInfo()
+    public virtual Dictionary<string, (Enums.Format? Format, string? NumberPattern)> GetFormatInfo()
     {
         return TypedEntityMapper<T>.GetFormatInfo();
     }

@@ -119,7 +119,7 @@ public static class HeaderHelpers
         }
 
         // Handle negative numbers - preserve the minus sign but remove other non-digit characters
-        var isNegative = value?.StartsWith("-") == true;
+        var isNegative = value?.StartsWith('-') == true;
         value = NonDigitRegex.Replace(value ?? string.Empty, ""); // Remove all non-digit characters with timeout
 
         if (value == "-" || string.IsNullOrEmpty(value))
@@ -219,7 +219,7 @@ public static class HeaderHelpers
         // If there are no header values (sheet empty or header row missing), return a single, clear message
         if (values == null || values.Count == 0 || values.All(v => string.IsNullOrWhiteSpace(v?.ToString())))
         {
-            messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetModel.Name}]: No header row found or sheet is empty", MessageTypeEnum.CHECK_SHEET));
+            messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetModel.Name}]: No header row found or sheet is empty", MessageType.CHECK_SHEET));
             return messages;
         }
 
@@ -229,46 +229,58 @@ public static class HeaderHelpers
 
         foreach (var sheetHeader in sheetModel.Headers)
         {
-            var sheetColumn = $"{sheetModel.Name}!{SheetHelpers.GetColumnName(index)}";
-
-            if (!values.Any(x => string.Equals(x?.ToString()?.Trim(), sheetHeader.Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                // HideHeaderName columns are populated by a spilling QUERY formula placed in an
-                // earlier header cell (see SheetHelpers' use of the flag when writing headers) -
-                // they never have their own standalone header cell to insert, and physically
-                // inserting a column here would land inside the query's contiguous spill range
-                // and break it. They're also expected to read back empty whenever the sheet
-                // currently has no underlying rows for the query to spill, so this isn't
-                // necessarily a real problem - just never a candidate for insertion.
-                if (!sheetHeader.HideHeaderName)
-                {
-                    insertionInfo.Add(new ColumnInsertionInfo
-                    {
-                        SheetName = sheetModel.Name,
-                        ColumnIndex = index,
-                        ColumnName = sheetHeader.Name,
-                        ColumnLetter = SheetHelpers.GetColumnName(index)
-                    });
-
-                    messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}] - can be inserted", MessageTypeEnum.CHECK_SHEET));
-                }
-                else
-                {
-                    messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
-                }
-            }
-            else
-            {
-                if (index < headerArray.Length && !string.Equals(sheetHeader.Name, headerArray[index]?.Trim(), StringComparison.OrdinalIgnoreCase))
-                {
-                    var actual = headerArray[index]?.Trim() ?? "";
-                    messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Column [{actual}] should be [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
-                }
-            }
+            CheckSingleHeader(sheetHeader, index, values, headerArray, sheetModel, messages, insertionInfo);
             index++;
         }
 
-        // Check for extra columns that aren't in the expected sheet model (case-insensitive)
+        CheckExtraColumns(values, sheetModel, messages);
+
+        return messages;
+    }
+
+    private static void CheckSingleHeader(SheetCellModel sheetHeader, int index, IList<object> values, string[] headerArray, SheetModel sheetModel, List<MessageEntity> messages, List<ColumnInsertionInfo> insertionInfo)
+    {
+        var sheetColumn = $"{sheetModel.Name}!{SheetHelpers.GetColumnName(index)}";
+
+        if (!values.Any(x => string.Equals(x?.ToString()?.Trim(), sheetHeader.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            // HideHeaderName columns are populated by a spilling QUERY formula placed in an
+            // earlier header cell (see SheetHelpers' use of the flag when writing headers) -
+            // they never have their own standalone header cell to insert, and physically
+            // inserting a column here would land inside the query's contiguous spill range
+            // and break it. They're also expected to read back empty whenever the sheet
+            // currently has no underlying rows for the query to spill, so this isn't
+            // necessarily a real problem - just never a candidate for insertion.
+            if (!sheetHeader.HideHeaderName)
+            {
+                insertionInfo.Add(new ColumnInsertionInfo
+                {
+                    SheetName = sheetModel.Name,
+                    ColumnIndex = index,
+                    ColumnName = sheetHeader.Name,
+                    ColumnLetter = SheetHelpers.GetColumnName(index)
+                });
+
+                messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}] - can be inserted", MessageType.CHECK_SHEET));
+            }
+            else
+            {
+                messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}]", MessageType.CHECK_SHEET));
+            }
+
+            return;
+        }
+
+        if (index < headerArray.Length && !string.Equals(sheetHeader.Name, headerArray[index]?.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            var actual = headerArray[index]?.Trim() ?? "";
+            messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Column [{actual}] should be [{sheetHeader.Name}]", MessageType.CHECK_SHEET));
+        }
+    }
+
+    // Check for extra columns that aren't in the expected sheet model (case-insensitive)
+    private static void CheckExtraColumns(IList<object> values, SheetModel sheetModel, List<MessageEntity> messages)
+    {
         var expectedHeaders = sheetModel.Headers.Select(h => h.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
         for (int i = 0; i < values.Count; i++)
         {
@@ -276,10 +288,8 @@ public static class HeaderHelpers
             if (!string.IsNullOrEmpty(actualHeader) && !expectedHeaders.Contains(actualHeader))
             {
                 var sheetColumn = $"{sheetModel.Name}!{SheetHelpers.GetColumnName(i)}";
-                messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Extra column [{actualHeader}]", MessageTypeEnum.CHECK_SHEET));
+                messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Extra column [{actualHeader}]", MessageType.CHECK_SHEET));
             }
         }
-
-        return messages;
     }
 }

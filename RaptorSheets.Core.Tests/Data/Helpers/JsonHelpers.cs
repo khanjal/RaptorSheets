@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace RaptorSheets.Core.Tests.Data.Helpers;
 
 [ExcludeFromCodeCoverage]
-public class JsonHelpers
+public static class JsonHelpers
 {
     public static T? LoadJsonData<T>(string filename)
     {

@@ -1,6 +1,6 @@
 ﻿namespace RaptorSheets.Core.Enums;
 
-public enum SheetTypeEnum
+public enum SheetType
 {
     /// <summary>
     /// A sheet containing a grid. This is the default type.

@@ -3,4 +3,5 @@ using RaptorSheets.Test.Common.Helpers;
 
 namespace RaptorSheets.Gig.Tests.Data.Attributes;
 
-public sealed class FactCheckUserSecrets() : FactCheckUserSecretsBase(TestConfigurationHelpers.GetGigSpreadsheet());
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class FactCheckUserSecretsAttribute() : FactCheckUserSecretsBaseAttribute(TestConfigurationHelpers.GetGigSpreadsheet());

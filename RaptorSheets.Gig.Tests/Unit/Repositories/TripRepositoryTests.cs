@@ -1,4 +1,5 @@
 using Moq;
+using System.Globalization;
 using RaptorSheets.Gig.Repositories;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Core.Services;
@@ -40,7 +41,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
                 .ReturnsAsync(new ValueRange { Values = allRows });
 
             // Act
-            var result = await _repository.GetTripsByDateRangeAsync(DateTime.Parse("2025-11-01"), DateTime.Parse("2025-11-05"));
+            var result = await _repository.GetTripsByDateRangeAsync(DateTime.Parse("2025-11-01", CultureInfo.InvariantCulture), DateTime.Parse("2025-11-05", CultureInfo.InvariantCulture));
 
             // Assert
             Assert.Equal(2, result.Count);
@@ -50,8 +51,8 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
         public async Task GetTripsByDateRangeAsync_WithInvalidDateRange_ThrowsArgumentException()
         {
             // Arrange
-            var startDate = DateTime.Parse("2025-11-10");
-            var endDate = DateTime.Parse("2025-11-01");
+            var startDate = DateTime.Parse("2025-11-10", CultureInfo.InvariantCulture);
+            var endDate = DateTime.Parse("2025-11-01", CultureInfo.InvariantCulture);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => 
@@ -77,7 +78,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
 
             // Act
             var result = await _repository.GetTripsByDateRangeAsync(
-                DateTime.Parse("2025-11-01"), DateTime.Parse("2025-11-30"));
+                DateTime.Parse("2025-11-01", CultureInfo.InvariantCulture), DateTime.Parse("2025-11-30", CultureInfo.InvariantCulture));
 
             // Assert
             Assert.Empty(result);
@@ -160,7 +161,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
                 .ReturnsAsync(new ValueRange { Values = allRows });
 
             // Act
-            var result = await _repository.GetTotalEarningsAsync(DateTime.Parse("2025-11-01"), DateTime.Parse("2025-11-05"));
+            var result = await _repository.GetTotalEarningsAsync(DateTime.Parse("2025-11-01", CultureInfo.InvariantCulture), DateTime.Parse("2025-11-05", CultureInfo.InvariantCulture));
 
             // Assert
             Assert.Equal(380, result);

@@ -20,8 +20,8 @@ public static class ServiceMapper
         sheet.Headers.UpdateColumns();
 
         var shiftSheet = ShiftMapper.GetSheet();
-        var keyRange = sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription());
-        var shiftKeyRange = shiftSheet.GetRange(HeaderEnum.SERVICE.GetDescription());
+        var keyRange = sheet.GetLocalRange(Header.SERVICE.GetDescription());
+        var shiftKeyRange = shiftSheet.GetRange(Header.SERVICE.GetDescription());
 
         // Configure common aggregation patterns
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, shiftSheet, shiftKeyRange, useShiftTotals: true);
@@ -32,32 +32,32 @@ public static class ServiceMapper
         // Configure specific headers unique to ServiceMapper
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
             
             switch (headerEnum)
             {
-                case HeaderEnum.SERVICE:
+                case Header.SERVICE:
                     // Combine services from both trips and shifts
                     header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombined(
-                        HeaderEnum.SERVICE.GetDescription(), 
-                        TripMapper.GetSheet().GetRange(HeaderEnum.SERVICE.GetDescription(), 2), 
-                        ShiftMapper.GetSheet().GetRange(HeaderEnum.SERVICE.GetDescription(), 2));
+                        Header.SERVICE.GetDescription(), 
+                        TripMapper.GetSheet().GetRange(Header.SERVICE.GetDescription(), 2), 
+                        ShiftMapper.GetSheet().GetRange(Header.SERVICE.GetDescription(), 2));
                     break;
-                case HeaderEnum.VISIT_FIRST:
-                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), 
-                        SheetEnum.SHIFTS.GetDescription(), 
-                        shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
-                        shiftSheet.GetColumn(HeaderEnum.SERVICE.GetDescription()), true);
+                case Header.VISIT_FIRST:
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, Header.VISIT_FIRST.GetDescription(), 
+                        SheetName.SHIFTS.GetDescription(), 
+                        shiftSheet.GetColumn(Header.DATE.GetDescription()), 
+                        shiftSheet.GetColumn(Header.SERVICE.GetDescription()), true);
                     header.Note = ColumnNotes.DateFormat;
-                    header.Format = FormatEnum.DATE;
+                    header.Format = Format.DATE;
                     break;
-                case HeaderEnum.VISIT_LAST:
-                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), 
-                        SheetEnum.SHIFTS.GetDescription(), 
-                        shiftSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
-                        shiftSheet.GetColumn(HeaderEnum.SERVICE.GetDescription()), false);
+                case Header.VISIT_LAST:
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, Header.VISIT_LAST.GetDescription(), 
+                        SheetName.SHIFTS.GetDescription(), 
+                        shiftSheet.GetColumn(Header.DATE.GetDescription()), 
+                        shiftSheet.GetColumn(Header.SERVICE.GetDescription()), false);
                     header.Note = ColumnNotes.DateFormat;
-                    header.Format = FormatEnum.DATE;
+                    header.Format = Format.DATE;
                     break;
             }
         });

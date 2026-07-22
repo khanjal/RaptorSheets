@@ -46,18 +46,18 @@ public class TypeInferenceHelperTests
     }
 
     [Theory]
-    [InlineData(FieldType.Currency, FormatEnum.CURRENCY)]
-    [InlineData(FieldType.Accounting, FormatEnum.ACCOUNTING)]
-    [InlineData(FieldType.DateTime, FormatEnum.DATE)]
-    [InlineData(FieldType.Time, FormatEnum.TIME)]
-    [InlineData(FieldType.Duration, FormatEnum.DURATION)]
-    [InlineData(FieldType.Number, FormatEnum.NUMBER)]
-    [InlineData(FieldType.Percentage, FormatEnum.PERCENT)]
-    [InlineData(FieldType.Integer, FormatEnum.NUMBER)]
-    [InlineData(FieldType.Boolean, FormatEnum.TEXT)]
-    [InlineData(FieldType.String, FormatEnum.TEXT)]
-    [InlineData(FieldType.Distance, FormatEnum.NUMBER)]
-    public void GetDefaultFormatForFieldType_ReturnsCorrectFormat(FieldType fieldType, FormatEnum expected)
+    [InlineData(FieldType.Currency, Format.CURRENCY)]
+    [InlineData(FieldType.Accounting, Format.ACCOUNTING)]
+    [InlineData(FieldType.DateTime, Format.DATE)]
+    [InlineData(FieldType.Time, Format.TIME)]
+    [InlineData(FieldType.Duration, Format.DURATION)]
+    [InlineData(FieldType.Number, Format.NUMBER)]
+    [InlineData(FieldType.Percentage, Format.PERCENT)]
+    [InlineData(FieldType.Integer, Format.NUMBER)]
+    [InlineData(FieldType.Boolean, Format.TEXT)]
+    [InlineData(FieldType.String, Format.TEXT)]
+    [InlineData(FieldType.Distance, Format.NUMBER)]
+    public void GetDefaultFormatForFieldType_ReturnsCorrectFormat(FieldType fieldType, Format expected)
     {
         // Act
         var result = TypeInferenceHelper.GetDefaultFormatForFieldType(fieldType);
@@ -67,14 +67,14 @@ public class TypeInferenceHelperTests
     }
 
     [Theory]
-    [InlineData(FormatEnum.TIME, true)]
-    [InlineData(FormatEnum.DURATION, true)]
-    [InlineData(FormatEnum.DATE, true)]
-    [InlineData(FormatEnum.CURRENCY, false)]
-    [InlineData(FormatEnum.NUMBER, false)]
-    [InlineData(FormatEnum.TEXT, false)]
-    [InlineData(FormatEnum.ACCOUNTING, false)]
-    public void RequiresSpecialConversion_ReturnsCorrectValue(FormatEnum format, bool expected)
+    [InlineData(Format.TIME, true)]
+    [InlineData(Format.DURATION, true)]
+    [InlineData(Format.DATE, true)]
+    [InlineData(Format.CURRENCY, false)]
+    [InlineData(Format.NUMBER, false)]
+    [InlineData(Format.TEXT, false)]
+    [InlineData(Format.ACCOUNTING, false)]
+    public void RequiresSpecialConversion_ReturnsCorrectValue(Format format, bool expected)
     {
         // Act
         var result = TypeInferenceHelper.RequiresSpecialConversion(format);
@@ -84,15 +84,15 @@ public class TypeInferenceHelperTests
     }
 
     [Theory]
-    [InlineData(typeof(string), FormatEnum.TIME, FieldType.Time)]
-    [InlineData(typeof(string), FormatEnum.DURATION, FieldType.Duration)]
-    [InlineData(typeof(string), FormatEnum.DATE, FieldType.DateTime)]
-    [InlineData(typeof(string), FormatEnum.TEXT, FieldType.String)]
-    [InlineData(typeof(string), FormatEnum.CURRENCY, FieldType.String)]
-    [InlineData(typeof(decimal), FormatEnum.DISTANCE, FieldType.Number)]
-    [InlineData(typeof(int), FormatEnum.TIME, FieldType.Integer)]
+    [InlineData(typeof(string), Format.TIME, FieldType.Time)]
+    [InlineData(typeof(string), Format.DURATION, FieldType.Duration)]
+    [InlineData(typeof(string), Format.DATE, FieldType.DateTime)]
+    [InlineData(typeof(string), Format.TEXT, FieldType.String)]
+    [InlineData(typeof(string), Format.CURRENCY, FieldType.String)]
+    [InlineData(typeof(decimal), Format.DISTANCE, FieldType.Number)]
+    [InlineData(typeof(int), Format.TIME, FieldType.Integer)]
     public void InferFieldTypeFromFormat_WithStringAndSpecialFormat_ReturnsCorrectType(
-        Type propertyType, FormatEnum format, FieldType expected)
+        Type propertyType, Format format, FieldType expected)
     {
         // Act
         var result = TypeInferenceHelper.InferFieldTypeFromFormat(propertyType, format);
@@ -106,7 +106,7 @@ public class TypeInferenceHelperTests
     {
         // Arrange
         var propertyType = typeof(decimal?);
-        var format = FormatEnum.ACCOUNTING;
+        var format = Format.ACCOUNTING;
 
         // Act
         var result = TypeInferenceHelper.GetInferenceDescription(propertyType, format);
@@ -122,7 +122,7 @@ public class TypeInferenceHelperTests
     {
         // Arrange
         var propertyType = typeof(decimal);
-        var format = FormatEnum.DEFAULT;
+        var format = Format.DEFAULT;
 
         // Act
         var result = TypeInferenceHelper.GetInferenceDescription(propertyType, format);
@@ -134,10 +134,10 @@ public class TypeInferenceHelperTests
     }
 
     [Theory]
-    [InlineData(typeof(string), FormatEnum.TIME)]
-    [InlineData(typeof(string), FormatEnum.DURATION)]
-    [InlineData(typeof(string), FormatEnum.DATE)]
-    public void InferFieldTypeFromFormat_StringWithTimeFormats_OverridesBaseType(Type propertyType, FormatEnum format)
+    [InlineData(typeof(string), Format.TIME)]
+    [InlineData(typeof(string), Format.DURATION)]
+    [InlineData(typeof(string), Format.DATE)]
+    public void InferFieldTypeFromFormat_StringWithTimeFormats_OverridesBaseType(Type propertyType, Format format)
     {
         // Act
         var baseType = TypeInferenceHelper.InferFieldType(propertyType);

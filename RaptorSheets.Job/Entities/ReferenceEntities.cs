@@ -15,10 +15,10 @@ public class CompanyEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Company, isInput: false)]
     public string Company { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: Format.NUMBER)]
     public int ApplicationCount { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: Format.NUMBER)]
     public int InterviewCount { get; set; }
 }
 
@@ -31,10 +31,10 @@ public class PositionEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Position, isInput: false)]
     public string Position { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: Format.NUMBER)]
     public int ApplicationCount { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: Format.NUMBER)]
     public int InterviewCount { get; set; }
 }
 
@@ -88,10 +88,10 @@ public class SiteEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Site, isInput: true)]
     public string Site { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: Format.NUMBER)]
     public int ApplicationCount { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: Format.NUMBER)]
     public int InterviewCount { get; set; }
 }
 
@@ -104,10 +104,10 @@ public class DecisionEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Decision, isInput: true)]
     public string Decision { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: Format.NUMBER)]
     public int ApplicationCount { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: Format.NUMBER)]
     public int InterviewCount { get; set; }
 }
 
@@ -120,10 +120,10 @@ public class InterviewTypeEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.InterviewType, isInput: true)]
     public string InterviewType { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: Format.NUMBER)]
     public int ApplicationCount { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: Format.NUMBER)]
     public int InterviewCount { get; set; }
 }
 
@@ -136,10 +136,10 @@ public class InterviewOutcomeEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Outcome, isInput: true)]
     public string Outcome { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: Format.NUMBER)]
     public int ApplicationCount { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: Format.NUMBER)]
     public int InterviewCount { get; set; }
 }
 
@@ -152,10 +152,10 @@ public class ScheduleEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Schedule, isInput: true)]
     public string Schedule { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.ApplicationCount, isInput: false, formatType: Format.NUMBER)]
     public int ApplicationCount { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, formatType: Format.NUMBER)]
     public int InterviewCount { get; set; }
 }
 

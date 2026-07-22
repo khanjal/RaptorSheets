@@ -78,12 +78,12 @@ public class WeeklyMapperTests
         Assert.True(result.Headers.Count > 0, "Weekly sheet should have headers");
 
         // Verify essential headers exist
-        var weekHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.WEEK.GetDescription());
+        var weekHeader = result.Headers.FirstOrDefault(h => h.Name == Header.WEEK.GetDescription());
         Assert.NotNull(weekHeader);
 
-        var averageHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.AVERAGE.GetDescription());
+        var averageHeader = result.Headers.FirstOrDefault(h => h.Name == Header.AVERAGE.GetDescription());
         Assert.NotNull(averageHeader);
-        Assert.Equal(FormatEnum.ACCOUNTING, averageHeader.Format);
+        Assert.Equal(Format.ACCOUNTING, averageHeader.Format);
     }
 
     #endregion

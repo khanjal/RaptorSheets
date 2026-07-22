@@ -1,6 +1,6 @@
 ﻿namespace RaptorSheets.Core.Enums;
 
-public enum MessageTypeEnum
+public enum MessageType
 {
     GENERAL,
     ADD_DATA,

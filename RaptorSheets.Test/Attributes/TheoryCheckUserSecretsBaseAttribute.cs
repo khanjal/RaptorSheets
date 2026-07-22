@@ -5,11 +5,11 @@ using Xunit;
 namespace RaptorSheets.Test.Common.Attributes;
 
 /// <summary>
-/// Theory counterpart of <see cref="FactCheckUserSecretsBase"/> - see that type for the rationale.
+/// Theory counterpart of <see cref="FactCheckUserSecretsBaseAttribute"/> - see that type for the rationale.
 /// </summary>
-public abstract class TheoryCheckUserSecretsBase : TheoryAttribute
+public abstract class TheoryCheckUserSecretsBaseAttribute : TheoryAttribute
 {
-    protected TheoryCheckUserSecretsBase(string spreadsheetId)
+    protected TheoryCheckUserSecretsBaseAttribute(string spreadsheetId)
     {
         if (!GoogleCredentialHelpers.IsCredentialAndSpreadsheetId(spreadsheetId))
         {

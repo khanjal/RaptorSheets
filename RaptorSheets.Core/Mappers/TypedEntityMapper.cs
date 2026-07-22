@@ -155,12 +155,12 @@ public static class TypedEntityMapper<T> where T : class, new()
     /// Gets the format information for all typed fields in the entity
     /// </summary>
     /// <returns>Dictionary mapping header names to format information</returns>
-    public static Dictionary<string, (Enums.FormatEnum? Format, string? NumberPattern)> GetFormatInfo()
+    public static Dictionary<string, (Enums.Format? Format, string? NumberPattern)> GetFormatInfo()
     {
-        var formatInfo = new Dictionary<string, (Enums.FormatEnum? Format, string? NumberPattern)>();
+        var formatInfo = new Dictionary<string, (Enums.Format? Format, string? NumberPattern)>();
         var columnProperties = TypedFieldUtils.GetColumnProperties<T>();
         
-        foreach (var (property, columnAttr) in columnProperties)
+        foreach (var (_, columnAttr) in columnProperties)
         {
             var headerName = columnAttr.GetEffectiveHeaderName();
             var format = TypedFieldUtils.GetFormatFromFieldType(columnAttr.FieldType);

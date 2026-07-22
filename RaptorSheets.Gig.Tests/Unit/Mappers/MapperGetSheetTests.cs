@@ -32,8 +32,8 @@ public class MapperGetSheetTests
         new object[] { WeekdayMapper.GetSheet(), SheetsConfig.WeekdaySheet },
         new object[] { WeeklyMapper.GetSheet(), SheetsConfig.WeeklySheet },
         new object[] { YearlyMapper.GetSheet(), SheetsConfig.YearlySheet },
-        new object[] { DeliveryMapper.GetSheet(), SheetsConfig.Deliveries },
-        new object[] { LocationMapper.GetSheet(), SheetsConfig.Locations },
+        new object[] { DeliveryMapper.GetSheet(), SheetsConfig.DeliverySheet },
+        new object[] { LocationMapper.GetSheet(), SheetsConfig.LocationSheet },
     };
 
     [Theory]
@@ -60,7 +60,7 @@ public class MapperGetSheetTests
             if (result.ProtectSheet && !string.IsNullOrEmpty(resultHeader.Formula))
             {
                 // If it has a formula, it should start with =
-                Assert.True(resultHeader.Formula.StartsWith("="), 
+                Assert.True(resultHeader.Formula.StartsWith('='),
                     $"Protected sheet header '{resultHeader.Name}' with formula should start with =");
             }
         }
@@ -118,9 +118,9 @@ public class MapperGetSheetTests
     public void GetSheet_ShouldHaveProperFormatting(SheetModel sheet, SheetModel _)
     {
         // Act - Get headers with specific formats
-        var dateHeaders = sheet.Headers.Where(h => h.Format == FormatEnum.DATE).ToList();
-        var accountingHeaders = sheet.Headers.Where(h => h.Format == FormatEnum.ACCOUNTING).ToList();
-        var durationHeaders = sheet.Headers.Where(h => h.Format == FormatEnum.DURATION).ToList();
+        var dateHeaders = sheet.Headers.Where(h => h.Format == Format.DATE).ToList();
+        var accountingHeaders = sheet.Headers.Where(h => h.Format == Format.ACCOUNTING).ToList();
+        var durationHeaders = sheet.Headers.Where(h => h.Format == Format.DURATION).ToList();
 
         // Assert - Headers should have appropriate formats based on their names
         Assert.All(dateHeaders, header => 
@@ -256,9 +256,9 @@ public class MapperGetSheetTests
         var sheet = WeekdayMapper.GetSheet();
         
         // Check if headers exist before testing them
-        var weekdayHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.WEEKDAY.GetDescription());
-        var currentAmountHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.AMOUNT_CURRENT.GetDescription());
-        var previousAmountHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.AMOUNT_PREVIOUS.GetDescription());
+        var weekdayHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == Header.WEEKDAY.GetDescription());
+        var currentAmountHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == Header.AMOUNT_CURRENT.GetDescription());
+        var previousAmountHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == Header.AMOUNT_PREVIOUS.GetDescription());
 
         // Assert - Only test headers that exist
         if (weekdayHeader != null)
@@ -291,9 +291,9 @@ public class MapperGetSheetTests
         var sheet = MonthlyMapper.GetSheet();
         
         // Check if headers exist before testing them
-        var averageHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.AVERAGE.GetDescription());
-        var numberHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.NUMBER.GetDescription());
-        var yearHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == HeaderEnum.YEAR.GetDescription());
+        var averageHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == Header.AVERAGE.GetDescription());
+        var numberHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == Header.NUMBER.GetDescription());
+        var yearHeader = sheet.Headers.FirstOrDefault(h => h.Name.ToString() == Header.YEAR.GetDescription());
 
         // Assert - Only test headers that exist
         if (averageHeader != null)

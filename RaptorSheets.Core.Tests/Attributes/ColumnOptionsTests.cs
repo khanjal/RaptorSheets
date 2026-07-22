@@ -20,7 +20,7 @@ public class ColumnOptionsTests
         Assert.False(options.EnableValidation);
         Assert.Null(options.ValidationPattern);
         Assert.Null(options.Note);
-        Assert.Equal(FormatEnum.DEFAULT, options.FormatType);
+        Assert.Equal(Format.DEFAULT, options.FormatType);
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class ColumnOptionsTests
             .AsInput()
             .WithValidation("RangeService")
             .WithNote("Test note")
-            .WithFormatType(FormatEnum.CURRENCY)
+            .WithFormatType(Format.CURRENCY)
             .Build();
 
         // Assert
@@ -45,7 +45,7 @@ public class ColumnOptionsTests
         Assert.True(options.EnableValidation);
         Assert.Equal("RangeService", options.ValidationPattern);
         Assert.Equal("Test note", options.Note);
-        Assert.Equal(FormatEnum.CURRENCY, options.FormatType);
+        Assert.Equal(Format.CURRENCY, options.FormatType);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class ColumnOptionsTests
             EnableValidation = true,
             ValidationPattern = "RangeService",
             Note = "Payment field",
-            FormatType = FormatEnum.ACCOUNTING
+            FormatType = Format.ACCOUNTING
         };
 
         // Act
@@ -94,7 +94,7 @@ public class ColumnOptionsTests
 
         // Assert
         Assert.Equal("Pay", attribute.HeaderName);
-        Assert.Equal(FormatEnum.ACCOUNTING, attribute.FormatType);
+        Assert.Equal(Format.ACCOUNTING, attribute.FormatType);
         Assert.Equal("\"£\"#,##0.00", attribute.NumberFormatPattern);
         Assert.Equal(3, attribute.Order);
         Assert.True(attribute.IsInput);
@@ -135,7 +135,7 @@ public class ColumnOptionsTests
         Assert.True(attribute.IsInput);
         Assert.Equal(-1, attribute.Order);
         Assert.False(attribute.EnableValidation);
-        Assert.Equal(FormatEnum.DEFAULT, attribute.FormatType);
+        Assert.Equal(Format.DEFAULT, attribute.FormatType);
     }
 
     [Fact]

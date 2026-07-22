@@ -31,8 +31,7 @@ public static class GenerateSheetsHelpers
         foreach (var sheet in sheets)
         {
             var sheetModel = GetSheetModel(sheet);
-            var random = new Random();
-            sheetModel.Id = random.Next();
+            sheetModel.Id = Random.Shared.Next();
 
             batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
 
@@ -129,10 +128,10 @@ public static class GenerateSheetsHelpers
             // Apply formatting if Format or FormatPattern exists
             if (header.Format != null || !string.IsNullOrEmpty(header.FormatPattern))
             {
-                var formatToUse = header.Format ?? FormatEnum.NUMBER; // Default to NUMBER if only pattern provided
+                var formatToUse = header.Format ?? Format.NUMBER; // Default to NUMBER if only pattern provided
 
                 // FormatPattern is the single source of truth - it's always populated
-                // Either from custom pattern or derived from FormatEnum
+                // Either from custom pattern or derived from Format
                 repeatCellModel.CellFormat = !string.IsNullOrEmpty(header.FormatPattern)
                     ? SheetHelpers.GetCellFormat(formatToUse, header.FormatPattern)
                     : SheetHelpers.GetCellFormat(formatToUse);
@@ -141,7 +140,7 @@ public static class GenerateSheetsHelpers
             if (!string.IsNullOrEmpty(header.Validation))
             {
                 var columnRange = $"{header.Column}2:{header.Column}";
-                repeatCellModel.DataValidation = GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>(), columnRange);
+                repeatCellModel.DataValidation = GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<Validation>(), columnRange);
             }
 
             repeatCellRequests.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));

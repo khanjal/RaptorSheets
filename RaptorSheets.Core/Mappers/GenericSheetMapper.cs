@@ -15,14 +15,19 @@ namespace RaptorSheets.Core.Mappers;
 /// </summary>
 public static class GenericSheetMapper<T> where T : class, new()
 {
-    private static readonly List<(PropertyInfo Property, ColumnAttribute Column)> _columnProperties = 
+    // S2743: each closed generic type (GenericSheetMapper<GigTripEntity>, GenericSheetMapper<HomeApplianceEntity>,
+    // etc.) getting its own independent static field is exactly the point - this is a per-T reflection cache,
+    // not accidentally-shared state.
+#pragma warning disable S2743
+    private static readonly List<(PropertyInfo Property, ColumnAttribute Column)> _columnProperties =
         TypedFieldUtils.GetColumnProperties<T>();
 
-    private static readonly List<(PropertyInfo Property, ColumnAttribute Column)> _inputColumnProperties = 
+    private static readonly List<(PropertyInfo Property, ColumnAttribute Column)> _inputColumnProperties =
         _columnProperties.Where(p => p.Column.IsInput).ToList();
 
     private static readonly List<(PropertyInfo Property, ColumnAttribute Column)> _outputColumnProperties =
         _columnProperties.Where(p => p.Column.IsOutput).ToList();
+#pragma warning restore S2743
 
     // Cached once per T instead of looked up by name on every row.
     private static readonly PropertyInfo? _rowIdProperty = typeof(T).GetProperty("RowId");
@@ -239,7 +244,7 @@ public static class GenericSheetMapper<T> where T : class, new()
 
                 // Use the attribute's built-in method to get the effective format
                 var effectiveFormat = column.GetEffectiveFormat();
-                if (effectiveFormat.HasValue && effectiveFormat.Value != FormatEnum.DEFAULT)
+                if (effectiveFormat.HasValue && effectiveFormat.Value != Format.DEFAULT)
                 {
                     header.Format = effectiveFormat.Value;
                 }
@@ -418,11 +423,11 @@ public static class GenericSheetMapper<T> where T : class, new()
         // Use the same logic as GetSheet - get effective format from attribute
         var effectiveFormat = propertyInfo.Column.GetEffectiveFormat();
 
-        if (!effectiveFormat.HasValue || effectiveFormat.Value == FormatEnum.DEFAULT)
+        if (!effectiveFormat.HasValue || effectiveFormat.Value == Format.DEFAULT)
         {
             return new CellData
             {
-                UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.TEXT) // Default to TEXT format
+                UserEnteredFormat = SheetHelpers.GetCellFormat(Format.TEXT) // Default to TEXT format
             };
         }
 

@@ -19,7 +19,6 @@ public static class EntitySheetConfigHelper
     /// <returns>List of SheetCellModel headers in entity-defined order with automatic formatting</returns>
     public static List<SheetCellModel> GenerateHeadersFromEntity<T>()
     {
-        var entityType = typeof(T);
         var headers = new List<SheetCellModel>();
         var processedHeaders = new HashSet<string>();
 
@@ -43,63 +42,6 @@ public static class EntitySheetConfigHelper
         }
 
         return headers;
-    }
-
-    private static SheetCellModel CreateHeader(ColumnAttribute columnAttr, string headerName)
-    {
-        var header = new SheetCellModel
-        {
-            Name = headerName,
-            Format = columnAttr.GetEffectiveFormat()
-        };
-
-        // Populate FormatPattern - this becomes the single source of truth
-        if (!string.IsNullOrEmpty(columnAttr.NumberFormatPattern))
-        {
-            header.FormatPattern = columnAttr.NumberFormatPattern;
-
-            if (!header.Format.HasValue || header.Format.Value == Enums.FormatEnum.DEFAULT)
-            {
-                header.Format = InferFormatFromPattern(columnAttr.NumberFormatPattern);
-            }
-        }
-        else if (header.Format.HasValue && header.Format.Value != Enums.FormatEnum.DEFAULT)
-        {
-            header.FormatPattern = GetPatternForFormat(header.Format.Value);
-        }
-
-        return header;
-    }
-
-    private static void ApplyNotesAndValidation(SheetCellModel header, ColumnAttribute columnAttr)
-    {
-        if (!string.IsNullOrEmpty(columnAttr.Note))
-        {
-            header.Note = columnAttr.Note;
-        }
-
-        var numberPattern = TypedFieldUtils.GetNumberFormatPattern(columnAttr);
-        if (!string.IsNullOrEmpty(numberPattern) && numberPattern != "@")
-        {
-            if (string.IsNullOrEmpty(header.Note))
-            {
-                header.Note = $"Cell Format: {numberPattern}";
-            }
-            else
-            {
-                header.Note += $"\n\nCell Format: {numberPattern}";
-            }
-        }
-
-        if (columnAttr.EnableValidation)
-        {
-            var validationPattern = columnAttr.ValidationPattern ??
-                Constants.TypedFieldPatterns.GetDefaultPattern(columnAttr.FieldType);
-            if (!string.IsNullOrEmpty(validationPattern))
-            {
-                header.Validation = validationPattern;
-            }
-        }
     }
 
     /// <summary>
@@ -145,6 +87,63 @@ public static class EntitySheetConfigHelper
         }
 
         return entityHeaders;
+    }
+
+    private static SheetCellModel CreateHeader(ColumnAttribute columnAttr, string headerName)
+    {
+        var header = new SheetCellModel
+        {
+            Name = headerName,
+            Format = columnAttr.GetEffectiveFormat()
+        };
+
+        // Populate FormatPattern - this becomes the single source of truth
+        if (!string.IsNullOrEmpty(columnAttr.NumberFormatPattern))
+        {
+            header.FormatPattern = columnAttr.NumberFormatPattern;
+
+            if (!header.Format.HasValue || header.Format.Value == Enums.Format.DEFAULT)
+            {
+                header.Format = InferFormatFromPattern(columnAttr.NumberFormatPattern);
+            }
+        }
+        else if (header.Format.HasValue && header.Format.Value != Enums.Format.DEFAULT)
+        {
+            header.FormatPattern = GetPatternForFormat(header.Format.Value);
+        }
+
+        return header;
+    }
+
+    private static void ApplyNotesAndValidation(SheetCellModel header, ColumnAttribute columnAttr)
+    {
+        if (!string.IsNullOrEmpty(columnAttr.Note))
+        {
+            header.Note = columnAttr.Note;
+        }
+
+        var numberPattern = TypedFieldUtils.GetNumberFormatPattern(columnAttr);
+        if (!string.IsNullOrEmpty(numberPattern) && numberPattern != "@")
+        {
+            if (string.IsNullOrEmpty(header.Note))
+            {
+                header.Note = $"Cell Format: {numberPattern}";
+            }
+            else
+            {
+                header.Note += $"\n\nCell Format: {numberPattern}";
+            }
+        }
+
+        if (columnAttr.EnableValidation)
+        {
+            var validationPattern = columnAttr.ValidationPattern ??
+                Constants.TypedFieldPatterns.GetDefaultPattern(columnAttr.FieldType);
+            if (!string.IsNullOrEmpty(validationPattern))
+            {
+                header.Validation = validationPattern;
+            }
+        }
     }
 
     /// <summary>
@@ -215,32 +214,32 @@ public static class EntitySheetConfigHelper
 
 
     /// <summary>
-    /// Gets the default number format pattern for a given FormatEnum.
+    /// Gets the default number format pattern for a given Format.
     /// Returns null for formats that don't have a pattern (like TEXT).
     /// </summary>
-    private static string? GetPatternForFormat(Enums.FormatEnum format)
+    private static string? GetPatternForFormat(Enums.Format format)
     {
         return format switch
         {
-            Enums.FormatEnum.ACCOUNTING => Constants.CellFormatPatterns.Accounting,
-            Enums.FormatEnum.CURRENCY => Constants.CellFormatPatterns.Currency,
-            Enums.FormatEnum.DATE => Constants.CellFormatPatterns.Date,
-            Enums.FormatEnum.DISTANCE => Constants.CellFormatPatterns.Distance,
-            Enums.FormatEnum.DURATION => Constants.CellFormatPatterns.Duration,
-            Enums.FormatEnum.NUMBER => Constants.CellFormatPatterns.Number,
-            Enums.FormatEnum.TIME => Constants.CellFormatPatterns.Time,
-            Enums.FormatEnum.WEEKDAY => Constants.CellFormatPatterns.Weekday,
-            Enums.FormatEnum.TEXT => null, // TEXT doesn't have a pattern
-            Enums.FormatEnum.DEFAULT => null,
+            Enums.Format.ACCOUNTING => Constants.CellFormatPatterns.Accounting,
+            Enums.Format.CURRENCY => Constants.CellFormatPatterns.Currency,
+            Enums.Format.DATE => Constants.CellFormatPatterns.Date,
+            Enums.Format.DISTANCE => Constants.CellFormatPatterns.Distance,
+            Enums.Format.DURATION => Constants.CellFormatPatterns.Duration,
+            Enums.Format.NUMBER => Constants.CellFormatPatterns.Number,
+            Enums.Format.TIME => Constants.CellFormatPatterns.Time,
+            Enums.Format.WEEKDAY => Constants.CellFormatPatterns.Weekday,
+            Enums.Format.TEXT => null, // TEXT doesn't have a pattern
+            Enums.Format.DEFAULT => null,
             _ => null
         };
     }
 
     /// <summary>
-    /// Infers the FormatEnum from a number format pattern.
+    /// Infers the Format from a number format pattern.
     /// This allows using formatPattern alone without needing to specify formatType.
     /// </summary>
-    private static Enums.FormatEnum InferFormatFromPattern(string pattern)
+    private static Enums.Format InferFormatFromPattern(string pattern)
     {
         // Match against known patterns first
         var exactMatch = TryGetExactPatternMatch(pattern);
@@ -254,16 +253,16 @@ public static class EntitySheetConfigHelper
     /// <summary>
     /// Attempts to match the pattern against known exact patterns.
     /// </summary>
-    private static Enums.FormatEnum? TryGetExactPatternMatch(string pattern)
+    private static Enums.Format? TryGetExactPatternMatch(string pattern)
     {
-        if (pattern == Constants.CellFormatPatterns.Accounting) return Enums.FormatEnum.ACCOUNTING;
-        if (pattern == Constants.CellFormatPatterns.Currency) return Enums.FormatEnum.CURRENCY;
-        if (pattern == Constants.CellFormatPatterns.Date) return Enums.FormatEnum.DATE;
-        if (pattern == Constants.CellFormatPatterns.Distance) return Enums.FormatEnum.DISTANCE;
-        if (pattern == Constants.CellFormatPatterns.Duration) return Enums.FormatEnum.DURATION;
-        if (pattern == Constants.CellFormatPatterns.Number) return Enums.FormatEnum.NUMBER;
-        if (pattern == Constants.CellFormatPatterns.Time) return Enums.FormatEnum.TIME;
-        if (pattern == Constants.CellFormatPatterns.Weekday) return Enums.FormatEnum.WEEKDAY;
+        if (pattern == Constants.CellFormatPatterns.Accounting) return Enums.Format.ACCOUNTING;
+        if (pattern == Constants.CellFormatPatterns.Currency) return Enums.Format.CURRENCY;
+        if (pattern == Constants.CellFormatPatterns.Date) return Enums.Format.DATE;
+        if (pattern == Constants.CellFormatPatterns.Distance) return Enums.Format.DISTANCE;
+        if (pattern == Constants.CellFormatPatterns.Duration) return Enums.Format.DURATION;
+        if (pattern == Constants.CellFormatPatterns.Number) return Enums.Format.NUMBER;
+        if (pattern == Constants.CellFormatPatterns.Time) return Enums.Format.TIME;
+        if (pattern == Constants.CellFormatPatterns.Weekday) return Enums.Format.WEEKDAY;
         
         return null;
     }
@@ -271,42 +270,42 @@ public static class EntitySheetConfigHelper
     /// <summary>
     /// Infers format type using pattern-based heuristics when exact match is not found.
     /// </summary>
-    private static Enums.FormatEnum InferFormatFromPatternHeuristics(string pattern)
+    private static Enums.Format InferFormatFromPatternHeuristics(string pattern)
     {
         // Duration patterns: [h]:mm or similar
         if (IsDurationPattern(pattern))
-            return Enums.FormatEnum.DURATION;
+            return Enums.Format.DURATION;
 
         // Time patterns: contain h, m, s with colons
         if (IsTimePattern(pattern))
-            return Enums.FormatEnum.TIME;
+            return Enums.Format.TIME;
 
         // Date patterns: contain y, m, d
         if (IsDatePattern(pattern))
-            return Enums.FormatEnum.DATE;
+            return Enums.Format.DATE;
 
         // Weekday patterns: ddd or dddd
         if (IsWeekdayPattern(pattern))
-            return Enums.FormatEnum.WEEKDAY;
+            return Enums.Format.WEEKDAY;
 
         // Currency patterns: start with $ or contain currency symbols
         if (IsCurrencyPattern(pattern))
-            return Enums.FormatEnum.CURRENCY;
+            return Enums.Format.CURRENCY;
 
         // Accounting patterns: complex with underscores and parentheses for negatives
         if (IsAccountingPattern(pattern))
-            return Enums.FormatEnum.ACCOUNTING;
+            return Enums.Format.ACCOUNTING;
 
         // Percentage patterns: contain %
         if (IsPercentagePattern(pattern))
-            return Enums.FormatEnum.PERCENT;
+            return Enums.Format.PERCENT;
 
         // Number patterns: contain # or 0 but no special formatting
         if (IsNumberPattern(pattern))
-            return Enums.FormatEnum.NUMBER;
+            return Enums.Format.NUMBER;
 
         // Default fallback
-        return Enums.FormatEnum.NUMBER;
+        return Enums.Format.NUMBER;
     }
 
     private static bool IsDurationPattern(string pattern)
@@ -337,7 +336,7 @@ public static class EntitySheetConfigHelper
 
     private static bool IsCurrencyPattern(string pattern)
     {
-        return pattern.StartsWith("$") || pattern.StartsWith("\"$\"");
+        return pattern.StartsWith('$') || pattern.StartsWith("\"$\"");
     }
 
     private static bool IsAccountingPattern(string pattern)

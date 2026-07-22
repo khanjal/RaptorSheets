@@ -21,7 +21,11 @@ public class SheetRegistryTests
 
     private class TestRowEntity
     {
+        // Set via GenericSheetMapper<T>'s cached reflection (typeof(T).GetProperty("RowId")),
+        // not directly in this file - invisible to static analysis (S1144/S3459 false positive).
+#pragma warning disable S1144, S3459
         public int RowId { get; set; }
+#pragma warning restore S1144, S3459
 
         [Column("Name", isInput: true)]
         public string Name { get; set; } = "";

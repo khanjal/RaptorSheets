@@ -9,13 +9,13 @@ namespace RaptorSheets.Gig.Entities;
 [ExcludeFromCodeCoverage]
 public class ExpenseEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: Format.DATE)]
     public string Date { get; set; } = string.Empty;
     
     [Column(SheetsConfig.HeaderNames.Name, isInput: true)]
     public string Name { get; set; } = string.Empty;
     
-    [Column(SheetsConfig.HeaderNames.Amount, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Amount, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal Amount { get; set; }
     
     [Column(SheetsConfig.HeaderNames.Category, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeSelf)]

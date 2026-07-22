@@ -18,15 +18,15 @@ public class ProjectEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Details, isInput: true)]
     public string Details { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Started, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Started, isInput: true, note: ColumnNotes.DateFormat, formatType: Format.DATE)]
     public string Started { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Completed, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Completed, isInput: true, note: ColumnNotes.DateFormat, formatType: Format.DATE)]
     public string Completed { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Notes, isInput: true)]
     public string Notes { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.ApproximateCost, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.ApproximateCost, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? ApproximateCost { get; set; }
 }

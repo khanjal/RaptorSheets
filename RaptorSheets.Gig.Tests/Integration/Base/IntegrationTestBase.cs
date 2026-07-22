@@ -93,7 +93,7 @@ public abstract class IntegrationTestBase
         if (missingSheets.Count == 0) return true;
 
         var result = await GoogleSheetManager.CreateSheets(missingSheets);
-        var hasErrors = result.Messages.Any(m => m.Level == MessageLevelEnum.ERROR.GetDescription());
+        var hasErrors = result.Messages.Any(m => m.Level == MessageLevel.ERROR.GetDescription());
         
         if (!hasErrors)
         {
@@ -126,7 +126,7 @@ public abstract class IntegrationTestBase
         
         // Enhanced error checking - differentiate between critical errors and warnings
         var criticalErrors = result.Messages.Where(m => 
-            m.Level == MessageLevelEnum.ERROR.GetDescription() && 
+            m.Level == MessageLevel.ERROR.GetDescription() && 
             !IsExpectedError(m.Message)).ToList();
             
         if (criticalErrors.Count > 0)
@@ -144,7 +144,7 @@ public abstract class IntegrationTestBase
         }
         
         // Log warnings for debugging but don't fail
-        var warnings = result.Messages.Where(m => m.Level == MessageLevelEnum.WARNING.GetDescription()).ToList();
+        var warnings = result.Messages.Where(m => m.Level == MessageLevel.WARNING.GetDescription()).ToList();
         if (warnings.Count > 0)
         {
             var warningDetails = string.Join("; ", warnings.Select(m => $"{m.Type}: {m.Message}"));
@@ -193,7 +193,7 @@ public abstract class IntegrationTestBase
         foreach (var shift in shifts)
         {
             var updated = updateAction(shift);
-            updated.Action = ActionTypeEnum.UPDATE.GetDescription();
+            updated.Action = ActionType.UPDATE.GetDescription();
             updateData.Sheets.Shifts.Add(updated);
         }
         
@@ -202,7 +202,7 @@ public abstract class IntegrationTestBase
         var result = await GoogleSheetManager!.ChangeSheetData(shiftsSheetOnly, updateData);
         
         var criticalErrors = result.Messages.Where(m => 
-            m.Level == MessageLevelEnum.ERROR.GetDescription() && 
+            m.Level == MessageLevel.ERROR.GetDescription() && 
             !IsExpectedError(m.Message)).ToList();
             
         if (criticalErrors.Count > 0)
@@ -222,7 +222,7 @@ public abstract class IntegrationTestBase
         foreach (var trip in trips)
         {
             var updated = updateAction(trip);
-            updated.Action = ActionTypeEnum.UPDATE.GetDescription();
+            updated.Action = ActionType.UPDATE.GetDescription();
             updateData.Sheets.Trips.Add(updated);
         }
         
@@ -231,7 +231,7 @@ public abstract class IntegrationTestBase
         var result = await GoogleSheetManager!.ChangeSheetData(tripsSheetOnly, updateData);
         
         var criticalErrors = result.Messages.Where(m => 
-            m.Level == MessageLevelEnum.ERROR.GetDescription() && 
+            m.Level == MessageLevel.ERROR.GetDescription() && 
             !IsExpectedError(m.Message)).ToList();
             
         if (criticalErrors.Count > 0)
@@ -251,7 +251,7 @@ public abstract class IntegrationTestBase
         foreach (var expense in expenses)
         {
             var updated = updateAction(expense);
-            updated.Action = ActionTypeEnum.UPDATE.GetDescription();
+            updated.Action = ActionType.UPDATE.GetDescription();
             updateData.Sheets.Expenses.Add(updated);
         }
         
@@ -260,7 +260,7 @@ public abstract class IntegrationTestBase
         var result = await GoogleSheetManager!.ChangeSheetData(expensesSheetOnly, updateData);
         
         var criticalErrors = result.Messages.Where(m => 
-            m.Level == MessageLevelEnum.ERROR.GetDescription() && 
+            m.Level == MessageLevel.ERROR.GetDescription() && 
             !IsExpectedError(m.Message)).ToList();
             
         if (criticalErrors.Count > 0)
@@ -296,14 +296,7 @@ public abstract class IntegrationTestBase
     #endregion
 
     #region Utilities
-    
-    private static bool IsApiRelatedError(Exception ex) =>
-        ex.Message.Contains("credentials", StringComparison.OrdinalIgnoreCase) || 
-        ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase) || 
-        ex.Message.Contains("Requested entity was not found", StringComparison.OrdinalIgnoreCase) ||
-        ex.Message.Contains("API", StringComparison.OrdinalIgnoreCase) ||
-        ex.Message.Contains("sheet configuration issue", StringComparison.OrdinalIgnoreCase);
-    
+
     private static bool IsExpectedError(string message) =>
         message.Contains("not supported") ||  // Expected when sheet doesn't support certain operations
         message.Contains("already exists") ||  // Expected when trying to create existing sheets

@@ -2,7 +2,7 @@
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using System.Diagnostics.CodeAnalysis;
-using HeaderEnum = RaptorSheets.Stock.Enums.HeaderEnum;
+using Header = RaptorSheets.Stock.Enums.Header;
 
 namespace RaptorSheets.Stock.Constants;
 
@@ -11,15 +11,15 @@ public static class SheetsConfig
 {
     public static SheetModel AccountSheet => new()
     {
-        Name = Enums.SheetEnum.ACCOUNTS.GetDescription(),
-        CellColor = ColorEnum.LIGHT_GREEN,
-        TabColor = ColorEnum.GREEN,
+        Name = Enums.SheetName.ACCOUNTS.GetDescription(),
+        CellColor = SheetColor.LIGHT_GREEN,
+        TabColor = SheetColor.GREEN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.STOCKS.GetDescription() },
+            new SheetCellModel { Name = Header.ACCOUNT.GetDescription() },
+            new SheetCellModel { Name = Header.STOCKS.GetDescription() },
             .. CommonCostSheetHeaders,
             .. CommonReturnSheetHeaders
         ]
@@ -27,15 +27,15 @@ public static class SheetsConfig
 
     public static SheetModel StockSheet => new()
     {
-        Name = Enums.SheetEnum.STOCKS.GetDescription(),
-        CellColor = ColorEnum.LIGHT_CYAN,
-        TabColor = ColorEnum.CYAN,
+        Name = Enums.SheetName.STOCKS.GetDescription(),
+        CellColor = SheetColor.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.TICKER.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.ACCOUNT.GetDescription() },
+            new SheetCellModel { Name = Header.TICKER.GetDescription() },
+            new SheetCellModel { Name = Header.NAME.GetDescription() },
+            new SheetCellModel { Name = Header.ACCOUNT.GetDescription() },
             .. CommonPriceSheetHeaders,
             .. CommonHistorySheetHeaders
     ]
@@ -43,16 +43,16 @@ public static class SheetsConfig
 
     public static SheetModel TickerSheet => new()
     {
-        Name = Enums.SheetEnum.TICKERS.GetDescription(),
-        CellColor = ColorEnum.LIGHT_YELLOW,
-        TabColor = ColorEnum.ORANGE,
+        Name = Enums.SheetName.TICKERS.GetDescription(),
+        CellColor = SheetColor.LIGHT_YELLOW,
+        TabColor = SheetColor.ORANGE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = [
-            new SheetCellModel { Name = HeaderEnum.TICKER.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.NAME.GetDescription() },
-            new SheetCellModel { Name = HeaderEnum.ACCOUNTS.GetDescription() },
+            new SheetCellModel { Name = Header.TICKER.GetDescription() },
+            new SheetCellModel { Name = Header.NAME.GetDescription() },
+            new SheetCellModel { Name = Header.ACCOUNTS.GetDescription() },
             .. CommonPriceSheetHeaders,
             .. CommonHistorySheetHeaders
         ]
@@ -60,30 +60,30 @@ public static class SheetsConfig
 
     private static List<SheetCellModel> CommonCostSheetHeaders =>
     [
-        new SheetCellModel { Name = HeaderEnum.SHARES.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.AVERAGE_COST.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.COST_TOTAL.GetDescription() },
+        new SheetCellModel { Name = Header.SHARES.GetDescription() },
+        new SheetCellModel { Name = Header.AVERAGE_COST.GetDescription() },
+        new SheetCellModel { Name = Header.COST_TOTAL.GetDescription() },
     ];
 
     private static List<SheetCellModel> CommonPriceSheetHeaders =>
     [
         .. CommonCostSheetHeaders,
-        new SheetCellModel { Name = HeaderEnum.CURRENT_PRICE.GetDescription() },
+        new SheetCellModel { Name = Header.CURRENT_PRICE.GetDescription() },
         .. CommonReturnSheetHeaders,
     ];
 
     private static List<SheetCellModel> CommonReturnSheetHeaders =>
     [
-        new SheetCellModel { Name = HeaderEnum.CURRENT_TOTAL.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.RETURN.GetDescription() },
+        new SheetCellModel { Name = Header.CURRENT_TOTAL.GetDescription() },
+        new SheetCellModel { Name = Header.RETURN.GetDescription() },
     ];
 
     private static List<SheetCellModel> CommonHistorySheetHeaders =>
     [
-        new SheetCellModel { Name = HeaderEnum.PE_RATIO.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.WEEK_HIGH_52.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.WEEK_LOW_52.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.MAX_HIGH.GetDescription() },
-        new SheetCellModel { Name = HeaderEnum.MIN_LOW.GetDescription() }
+        new SheetCellModel { Name = Header.PE_RATIO.GetDescription() },
+        new SheetCellModel { Name = Header.WEEK_HIGH_52.GetDescription() },
+        new SheetCellModel { Name = Header.WEEK_LOW_52.GetDescription() },
+        new SheetCellModel { Name = Header.MAX_HIGH.GetDescription() },
+        new SheetCellModel { Name = Header.MIN_LOW.GetDescription() }
     ];
 }

@@ -106,8 +106,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Date,Number,Service" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
 
@@ -128,8 +128,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Date,Number,Service" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
         var trips = new List<TripEntity>(); // Use empty list instead of null
@@ -152,8 +152,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "5" }
+                { Property.HEADERS.GetDescription(), "Date,Number" },
+                { Property.MAX_ROW.GetDescription(), "5" }
             }
         };
 
@@ -189,8 +189,8 @@ public class GigRequestHelpersTests
             Id = "invalid",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "5" }
+                { Property.HEADERS.GetDescription(), "Date,Number" },
+                { Property.MAX_ROW.GetDescription(), "5" }
             }
         };
 
@@ -212,8 +212,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Date,Number,Service" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
 
@@ -237,8 +237,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Date,Number,Service" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
 
@@ -267,8 +267,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Date,Number,Service" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
 
@@ -296,8 +296,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Date,Number,Service" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
 
@@ -318,8 +318,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Date,Number,Service" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
         var shifts = new List<ShiftEntity>(); // Use empty list instead of null
@@ -342,8 +342,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Date,Number,Service" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
 
@@ -366,8 +366,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Number,Service" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Date,Number,Service" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
 
@@ -395,8 +395,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Name,Value" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "5" }
+                { Property.HEADERS.GetDescription(), "Name,Value" },
+                { Property.MAX_ROW.GetDescription(), "5" }
             }
         };
 
@@ -417,8 +417,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Name,Value" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "5" }
+                { Property.HEADERS.GetDescription(), "Name,Value" },
+                { Property.MAX_ROW.GetDescription(), "5" }
             }
         };
         var setup = new List<SetupEntity>(); // Use empty list instead of null
@@ -441,8 +441,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Name,Value,Description" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Name,Value,Description" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
 
@@ -465,8 +465,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Name,Value,Description" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "10" }
+                { Property.HEADERS.GetDescription(), "Name,Value,Description" },
+                { Property.MAX_ROW.GetDescription(), "10" }
             }
         };
 
@@ -490,9 +490,9 @@ public class GigRequestHelpersTests
         // Arrange
         var trips = new List<TripEntity>
         {
-            new() { RowId = 10, Action = ActionTypeEnum.INSERT.GetDescription() }, // New trip (append)
-            new() { RowId = 5, Action = ActionTypeEnum.UPDATE.GetDescription() }, // Update trip
-            new() { RowId = 15, Action = ActionTypeEnum.DELETE.GetDescription() } // Delete trip
+            new() { RowId = 10, Action = ActionType.INSERT.GetDescription() }, // New trip (append)
+            new() { RowId = 5, Action = ActionType.UPDATE.GetDescription() }, // Update trip
+            new() { RowId = 15, Action = ActionType.DELETE.GetDescription() } // Delete trip
         };
         
         var sheetProperties = new PropertyEntity 
@@ -500,8 +500,8 @@ public class GigRequestHelpersTests
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "Date,Service,Pay,Tips" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "8" }
+                { Property.HEADERS.GetDescription(), "Date,Service,Pay,Tips" },
+                { Property.MAX_ROW.GetDescription(), "8" }
             }
         };
 
@@ -528,10 +528,10 @@ public class GigRequestHelpersTests
         // Arrange - Action/RowId are now typed SheetRowEntityBase properties (no reflection),
         // so "works with all entity types" is a compile-time guarantee; this test just confirms
         // the values round-trip correctly for each concrete entity.
-        var setupEntity = new SetupEntity { RowId = 1, Action = ActionTypeEnum.INSERT.GetDescription() };
-        var tripEntity = new TripEntity { RowId = 2, Action = ActionTypeEnum.UPDATE.GetDescription() };
-        var shiftEntity = new ShiftEntity { RowId = 3, Action = ActionTypeEnum.DELETE.GetDescription() };
-        var expenseEntity = new ExpenseEntity { RowId = 4, Action = ActionTypeEnum.INSERT.GetDescription() };
+        var setupEntity = new SetupEntity { RowId = 1, Action = ActionType.INSERT.GetDescription() };
+        var tripEntity = new TripEntity { RowId = 2, Action = ActionType.UPDATE.GetDescription() };
+        var shiftEntity = new ShiftEntity { RowId = 3, Action = ActionType.DELETE.GetDescription() };
+        var expenseEntity = new ExpenseEntity { RowId = 4, Action = ActionType.INSERT.GetDescription() };
 
         // Act
         var setupAction = setupEntity.Action;
@@ -540,9 +540,9 @@ public class GigRequestHelpersTests
         var expenseRowId = expenseEntity.RowId;
 
         // Assert
-        Assert.Equal(ActionTypeEnum.INSERT.GetDescription(), setupAction);
+        Assert.Equal(ActionType.INSERT.GetDescription(), setupAction);
         Assert.Equal(2, tripRowId);
-        Assert.Equal(ActionTypeEnum.DELETE.GetDescription(), shiftAction);
+        Assert.Equal(ActionType.DELETE.GetDescription(), shiftAction);
         Assert.Equal(4, expenseRowId);
     }
 

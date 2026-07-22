@@ -12,7 +12,7 @@ public class TripEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
     // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, formatType: Format.DATE)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
@@ -30,48 +30,48 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Place, isInput: true, note: ColumnNotes.Place, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangePlace)]
     public string Place { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Pickup, isInput: true, note: ColumnNotes.Pickup, formatType: FormatEnum.TIME)]
+    [Column(SheetsConfig.HeaderNames.Pickup, isInput: true, note: ColumnNotes.Pickup, formatType: Format.TIME)]
     [JsonPropertyName("pickupTime")]
     public string Pickup { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Dropoff, isInput: true, formatType: FormatEnum.TIME)]
+    [Column(SheetsConfig.HeaderNames.Dropoff, isInput: true, formatType: Format.TIME)]
     [JsonPropertyName("dropoffTime")]
     public string Dropoff { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Duration, isInput: true, note: ColumnNotes.Duration, formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.Duration, isInput: true, note: ColumnNotes.Duration, formatType: Format.DURATION)]
     public string Duration { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Pay, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Pay, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Tips, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Bonus, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? Bonus { get; set; }
 
     // Output column (formula: Pay + Tips + Bonus) - defaults to isInput: false
-    [Column(SheetsConfig.HeaderNames.Total, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Total, Format.ACCOUNTING)]
     public decimal? Total { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Cash, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? Cash { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerStart,
         isInput: true,
-        formatType: FormatEnum.DISTANCE)]
+        formatType: Format.DISTANCE)]
     [JsonPropertyName("startOdometer")]
     public decimal? OdometerStart { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerEnd,
         isInput: true,
-        formatType: FormatEnum.DISTANCE)]
+        formatType: Format.DISTANCE)]
     [JsonPropertyName("endOdometer")]
     public decimal? OdometerEnd { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Distance,
         isInput: true,
-        formatType: FormatEnum.DISTANCE,
+        formatType: Format.DISTANCE,
         note: ColumnNotes.TripDistance)]
     public decimal? Distance { get; set; }
 
@@ -109,9 +109,9 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Year)]
     public string Year { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, Format.ACCOUNTING)]
     public decimal? AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, Format.ACCOUNTING)]
     public decimal? AmountPerDistance { get; set; }
 }

@@ -6,7 +6,7 @@ using RaptorSheets.Home.Helpers;
 namespace RaptorSheets.Home.Tests.Unit;
 
 /// <summary>
-/// Enforces the header-contrast convention documented on <see cref="ColorEnum"/>: a sheet's
+/// Enforces the header-contrast convention documented on <see cref="SheetColor"/>: a sheet's
 /// TabColor becomes the header row's background band (GoogleRequestHelpers.GenerateBandingRequest),
 /// while FontColor (defaults to BLACK) is the header row's text color. A dark TabColor with no
 /// explicit FontColor renders illegible header text - this test computes perceived brightness (YIQ)
@@ -38,7 +38,7 @@ public class HeaderContrastTests
     /// YIQ perceived-brightness formula (the same threshold used by common WCAG-adjacent contrast
     /// heuristics): below 0.5 reads as "dark" against black text.
     /// </summary>
-    private static bool IsDark(ColorEnum color)
+    private static bool IsDark(SheetColor color)
     {
         var rgb = SheetHelpers.GetColor(color);
         var yiq = ((rgb.Red ?? 0) * 299 + (rgb.Green ?? 0) * 587 + (rgb.Blue ?? 0) * 114) / 1000;

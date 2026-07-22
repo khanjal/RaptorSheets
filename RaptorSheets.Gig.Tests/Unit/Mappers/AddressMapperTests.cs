@@ -98,16 +98,16 @@ public class AddressMapperTests
         Assert.NotNull(result.Headers);
         
         // Verify key headers exist and have proper formats
-        var addressHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.ADDRESS.GetDescription());
+        var addressHeader = result.Headers.FirstOrDefault(h => h.Name == Header.ADDRESS.GetDescription());
         Assert.NotNull(addressHeader);
         
-        var tripsHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.TRIPS.GetDescription());
+        var tripsHeader = result.Headers.FirstOrDefault(h => h.Name == Header.TRIPS.GetDescription());
         Assert.NotNull(tripsHeader);
-        Assert.Equal(FormatEnum.NUMBER, tripsHeader.Format);
+        Assert.Equal(Format.NUMBER, tripsHeader.Format);
         
-        var distanceHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.DISTANCE.GetDescription());
+        var distanceHeader = result.Headers.FirstOrDefault(h => h.Name == Header.DISTANCE.GetDescription());
         Assert.NotNull(distanceHeader);
-        Assert.Equal(FormatEnum.DISTANCE, distanceHeader.Format);
+        Assert.Equal(Format.DISTANCE, distanceHeader.Format);
     }
 
     [Fact]
@@ -117,10 +117,10 @@ public class AddressMapperTests
         var sheet = AddressMapper.GetSheet();
         
         // Assert - Verify essential formula headers exist
-        var addressHeader = sheet.Headers.FirstOrDefault(h => h.Name == HeaderEnum.ADDRESS.GetDescription());
-        var tripsHeader = sheet.Headers.FirstOrDefault(h => h.Name == HeaderEnum.TRIPS.GetDescription());
-        var firstVisitHeader = sheet.Headers.FirstOrDefault(h => h.Name == HeaderEnum.VISIT_FIRST.GetDescription());
-        var lastVisitHeader = sheet.Headers.FirstOrDefault(h => h.Name == HeaderEnum.VISIT_LAST.GetDescription());
+        var addressHeader = sheet.Headers.FirstOrDefault(h => h.Name == Header.ADDRESS.GetDescription());
+        var tripsHeader = sheet.Headers.FirstOrDefault(h => h.Name == Header.TRIPS.GetDescription());
+        var firstVisitHeader = sheet.Headers.FirstOrDefault(h => h.Name == Header.VISIT_FIRST.GetDescription());
+        var lastVisitHeader = sheet.Headers.FirstOrDefault(h => h.Name == Header.VISIT_LAST.GetDescription());
 
         // Verify formulas are present (not empty)
         if (addressHeader != null)
@@ -138,13 +138,13 @@ public class AddressMapperTests
         if (firstVisitHeader != null)
         {
             Assert.NotNull(firstVisitHeader.Formula);
-            Assert.Equal(FormatEnum.DATE, firstVisitHeader.Format);
+            Assert.Equal(Format.DATE, firstVisitHeader.Format);
         }
         
         if (lastVisitHeader != null)
         {
             Assert.NotNull(lastVisitHeader.Formula);
-            Assert.Equal(FormatEnum.DATE, lastVisitHeader.Format);
+            Assert.Equal(Format.DATE, lastVisitHeader.Format);
         }
     }
     

@@ -35,9 +35,9 @@ public static class SheetPropertyHelper
             Id = "",
             Attributes = new Dictionary<string, string>
             {
-                { PropertyEnum.HEADERS.GetDescription(), "" },
-                { PropertyEnum.MAX_ROW.GetDescription(), "1000" },
-                { PropertyEnum.MAX_ROW_VALUE.GetDescription(), "1" }
+                { Property.HEADERS.GetDescription(), "" },
+                { Property.MAX_ROW.GetDescription(), "1000" },
+                { Property.MAX_ROW_VALUE.GetDescription(), "1" }
             }
         };
 
@@ -59,7 +59,7 @@ public static class SheetPropertyHelper
         property.Id = sheetData.Properties.SheetId.ToString() ?? "";
 
         var maxRow = sheetData.Properties.GridProperties?.RowCount ?? 1000;
-        property.Attributes[PropertyEnum.MAX_ROW.GetDescription()] = maxRow.ToString();
+        property.Attributes[Property.MAX_ROW.GetDescription()] = maxRow.ToString();
     }
 
     public static void ParseSheetDataRanges(PropertyEntity property, Sheet sheetData, ILogger? logger = null)
@@ -127,13 +127,13 @@ public static class SheetPropertyHelper
             .Where(x => x.FormattedValue != null)
             .Select(x => x.FormattedValue));
 
-        property.Attributes[PropertyEnum.HEADERS.GetDescription()] = headers;
+        property.Attributes[Property.HEADERS.GetDescription()] = headers;
     }
 
     public static void ProcessColumnDataRange(PropertyEntity property, GridData dataRange)
     {
         var maxRowValue = FindLastRowWithData(dataRange);
-        property.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()] = maxRowValue.ToString();
+        property.Attributes[Property.MAX_ROW_VALUE.GetDescription()] = maxRowValue.ToString();
     }
 
     public static void ProcessFullRange(PropertyEntity property, GridData dataRange)
@@ -147,7 +147,7 @@ public static class SheetPropertyHelper
 
         // Find last row with data in first column
         var maxRowValue = FindLastRowWithData(dataRange);
-        property.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()] = maxRowValue.ToString();
+        property.Attributes[Property.MAX_ROW_VALUE.GetDescription()] = maxRowValue.ToString();
     }
 
     public static int FindLastRowWithData(GridData dataRange)

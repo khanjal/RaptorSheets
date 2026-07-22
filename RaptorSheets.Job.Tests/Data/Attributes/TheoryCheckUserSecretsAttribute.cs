@@ -3,4 +3,5 @@ using RaptorSheets.Test.Common.Helpers;
 
 namespace RaptorSheets.Job.Tests.Data.Attributes;
 
-public sealed class TheoryCheckUserSecrets() : TheoryCheckUserSecretsBase(TestConfigurationHelpers.GetJobSpreadsheet());
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class TheoryCheckUserSecretsAttribute() : TheoryCheckUserSecretsBaseAttribute(TestConfigurationHelpers.GetJobSpreadsheet());

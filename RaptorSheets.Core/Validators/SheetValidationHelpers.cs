@@ -1,3 +1,4 @@
+using System.Globalization;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
@@ -22,7 +23,7 @@ public static class SheetValidationHelpers
             {
                 messages.Add(MessageHelpers.CreateErrorMessage(
                     $"Required parameter '{paramName}' is null or empty", 
-                    MessageTypeEnum.VALIDATION));
+                    MessageType.VALIDATION));
             }
         }
 
@@ -42,7 +43,7 @@ public static class SheetValidationHelpers
             {
                 messages.Add(MessageHelpers.CreateErrorMessage(
                     $"Required collection '{collectionName}' is null or empty", 
-                    MessageTypeEnum.VALIDATION));
+                    MessageType.VALIDATION));
             }
         }
 
@@ -60,13 +61,13 @@ public static class SheetValidationHelpers
         {
             messages.Add(MessageHelpers.CreateErrorMessage(
                 "Spreadsheet ID cannot be null or empty", 
-                MessageTypeEnum.VALIDATION));
+                MessageType.VALIDATION));
         }
         else if (spreadsheetId.Length < 40 || spreadsheetId.Length > 50)
         {
             messages.Add(MessageHelpers.CreateWarningMessage(
                 "Spreadsheet ID format may be invalid", 
-                MessageTypeEnum.VALIDATION));
+                MessageType.VALIDATION));
         }
 
         return messages;
@@ -79,11 +80,11 @@ public static class SheetValidationHelpers
     {
         var messages = new List<MessageEntity>();
 
-        if (!string.IsNullOrWhiteSpace(dateString) && !DateTime.TryParse(dateString, out _))
+        if (!string.IsNullOrWhiteSpace(dateString) && !DateTime.TryParse(dateString, CultureInfo.InvariantCulture, out _))
         {
             messages.Add(MessageHelpers.CreateErrorMessage(
                 $"Invalid date format in field '{fieldName}': {dateString}", 
-                MessageTypeEnum.VALIDATION));
+                MessageType.VALIDATION));
         }
 
         return messages;
@@ -100,7 +101,7 @@ public static class SheetValidationHelpers
         {
             messages.Add(MessageHelpers.CreateErrorMessage(
                 $"Field '{fieldName}' cannot be negative: {value}", 
-                MessageTypeEnum.VALIDATION));
+                MessageType.VALIDATION));
         }
 
         return messages;

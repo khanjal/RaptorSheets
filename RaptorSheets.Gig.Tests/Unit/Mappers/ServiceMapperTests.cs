@@ -78,16 +78,16 @@ public class ServiceMapperTests
         Assert.True(result.Headers.Count > 0, "Service sheet should have headers");
 
         // Verify essential headers exist
-        var serviceHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.SERVICE.GetDescription());
+        var serviceHeader = result.Headers.FirstOrDefault(h => h.Name == Header.SERVICE.GetDescription());
         Assert.NotNull(serviceHeader);
 
-        var visitFirstHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.VISIT_FIRST.GetDescription());
+        var visitFirstHeader = result.Headers.FirstOrDefault(h => h.Name == Header.VISIT_FIRST.GetDescription());
         Assert.NotNull(visitFirstHeader);
-        Assert.Equal(FormatEnum.DATE, visitFirstHeader.Format);
+        Assert.Equal(Format.DATE, visitFirstHeader.Format);
 
-        var visitLastHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.VISIT_LAST.GetDescription());
+        var visitLastHeader = result.Headers.FirstOrDefault(h => h.Name == Header.VISIT_LAST.GetDescription());
         Assert.NotNull(visitLastHeader);
-        Assert.Equal(FormatEnum.DATE, visitLastHeader.Format);
+        Assert.Equal(Format.DATE, visitLastHeader.Format);
     }
 
     #endregion

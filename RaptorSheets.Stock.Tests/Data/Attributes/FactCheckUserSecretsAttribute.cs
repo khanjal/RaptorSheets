@@ -3,4 +3,5 @@ using RaptorSheets.Test.Common.Helpers;
 
 namespace RaptorSheets.Stock.Tests.Data.Attributes;
 
-public sealed class FactCheckUserSecrets() : FactCheckUserSecretsBase(TestConfigurationHelpers.GetStockSpreadsheet());
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class FactCheckUserSecretsAttribute() : FactCheckUserSecretsBaseAttribute(TestConfigurationHelpers.GetStockSpreadsheet());

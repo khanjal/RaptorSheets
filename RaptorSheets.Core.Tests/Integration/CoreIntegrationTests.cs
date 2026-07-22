@@ -83,14 +83,14 @@ public class CoreIntegrationTests
         var testMessage = "Test operation completed";
 
         // Act
-        var infoMessage = MessageHelpers.CreateInfoMessage(testMessage, MessageTypeEnum.GET_SHEETS);
-        var warningMessage = MessageHelpers.CreateWarningMessage(testMessage, MessageTypeEnum.CHECK_SHEET);
-        var errorMessage = MessageHelpers.CreateErrorMessage(testMessage, MessageTypeEnum.ADD_DATA);
+        var infoMessage = MessageHelpers.CreateInfoMessage(testMessage, MessageType.GET_SHEETS);
+        var warningMessage = MessageHelpers.CreateWarningMessage(testMessage, MessageType.CHECK_SHEET);
+        var errorMessage = MessageHelpers.CreateErrorMessage(testMessage, MessageType.ADD_DATA);
 
         // Assert
-        Assert.Equal(MessageLevelEnum.INFO.UpperName(), infoMessage.Level);
-        Assert.Equal(MessageLevelEnum.WARNING.UpperName(), warningMessage.Level);
-        Assert.Equal(MessageLevelEnum.ERROR.UpperName(), errorMessage.Level);
+        Assert.Equal(MessageLevel.INFO.UpperName(), infoMessage.Level);
+        Assert.Equal(MessageLevel.WARNING.UpperName(), warningMessage.Level);
+        Assert.Equal(MessageLevel.ERROR.UpperName(), errorMessage.Level);
         
         Assert.All(new[] { infoMessage, warningMessage, errorMessage }, 
             msg => Assert.Equal(testMessage, msg.Message));
@@ -103,14 +103,14 @@ public class CoreIntegrationTests
         var sheet = new SheetModel
         {
             Name = "IntegrationTestSheet",
-            TabColor = ColorEnum.BLUE,
-            CellColor = ColorEnum.LIGHT_GRAY,
+            TabColor = SheetColor.BLUE,
+            CellColor = SheetColor.LIGHT_GRAY,
             Headers = new List<SheetCellModel>
             {
-                new SheetCellModel { Name = "ID", Format = FormatEnum.NUMBER },
-                new SheetCellModel { Name = "Name", Format = FormatEnum.TEXT },
-                new SheetCellModel { Name = "Date", Format = FormatEnum.DATE },
-                new SheetCellModel { Name = "Amount", Format = FormatEnum.ACCOUNTING }
+                new SheetCellModel { Name = "ID", Format = Format.NUMBER },
+                new SheetCellModel { Name = "Name", Format = Format.TEXT },
+                new SheetCellModel { Name = "Date", Format = Format.DATE },
+                new SheetCellModel { Name = "Amount", Format = Format.ACCOUNTING }
             }
         };
 
@@ -129,11 +129,11 @@ public class CoreIntegrationTests
     }
 
     [Theory]
-    [InlineData(ColorEnum.RED)]
-    [InlineData(ColorEnum.GREEN)]
-    [InlineData(ColorEnum.BLUE)]
-    [InlineData(ColorEnum.YELLOW)]
-    public void SheetHelpers_GetColor_ShouldReturnValidColors(ColorEnum color)
+    [InlineData(SheetColor.RED)]
+    [InlineData(SheetColor.GREEN)]
+    [InlineData(SheetColor.BLUE)]
+    [InlineData(SheetColor.YELLOW)]
+    public void SheetHelpers_GetColor_ShouldReturnValidColors(SheetColor color)
     {
         // Act
         var result = SheetHelpers.GetColor(color);
@@ -146,12 +146,12 @@ public class CoreIntegrationTests
     }
 
     [Theory]
-    [InlineData(FormatEnum.ACCOUNTING)]
-    [InlineData(FormatEnum.DATE)]
-    [InlineData(FormatEnum.TIME)]
-    [InlineData(FormatEnum.NUMBER)]
-    [InlineData(FormatEnum.TEXT)]
-    public void SheetHelpers_GetCellFormat_ShouldReturnValidFormats(FormatEnum format)
+    [InlineData(Format.ACCOUNTING)]
+    [InlineData(Format.DATE)]
+    [InlineData(Format.TIME)]
+    [InlineData(Format.NUMBER)]
+    [InlineData(Format.TEXT)]
+    public void SheetHelpers_GetCellFormat_ShouldReturnValidFormats(Format format)
     {
         // Act
         var result = SheetHelpers.GetCellFormat(format);
@@ -199,10 +199,10 @@ public class CoreIntegrationTests
     public void EnumExtensions_WithVariousEnums_ShouldWorkConsistently()
     {
         // Arrange & Act
-        var messageLevel = MessageLevelEnum.INFO.UpperName();
-        var messageType = MessageTypeEnum.GET_SHEETS.GetDescription();
-        var colorDescription = ColorEnum.BLUE.GetDescription();
-        var formatDescription = FormatEnum.DATE.GetDescription();
+        var messageLevel = MessageLevel.INFO.UpperName();
+        var messageType = MessageType.GET_SHEETS.GetDescription();
+        var colorDescription = SheetColor.BLUE.GetDescription();
+        var formatDescription = Format.DATE.GetDescription();
 
         // Assert
         Assert.Equal("INFO", messageLevel);
@@ -225,7 +225,7 @@ public class CoreIntegrationTests
                 new SheetCellModel 
                 { 
                     Name = "Status", 
-                    Format = FormatEnum.TEXT,
+                    Format = Format.TEXT,
                     Formula = ColumnFormulas.SortUnique("Status", "B:B")
                 }
             }

@@ -12,7 +12,7 @@ public static class LocationMapper
     public static SheetModel GetSheet()
     {
         // Use the centralized SheetsConfig model to avoid configuration drift
-        var sheet = SheetsConfig.Locations;
+        var sheet = SheetsConfig.LocationSheet;
 
         sheet.Headers.UpdateColumns();
 
@@ -54,13 +54,13 @@ public static class LocationMapper
         var firstTripHeader = sheet.Headers.FirstOrDefault(h => h.Name == SheetsConfig.HeaderNames.VisitFirst);
         if (firstTripHeader != null)
         {
-            firstTripHeader.Format = FormatEnum.DATE;
+            firstTripHeader.Format = Format.DATE;
         }
 
         var lastTripHeader = sheet.Headers.FirstOrDefault(h => h.Name == SheetsConfig.HeaderNames.VisitLast);
         if (lastTripHeader != null)
         {
-            lastTripHeader.Format = FormatEnum.DATE;
+            lastTripHeader.Format = Format.DATE;
         }
 
         // Amt/Trip and Amt/Dist are derived from the sheet's own spilled Trips/Total/Distance

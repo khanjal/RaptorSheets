@@ -124,34 +124,34 @@ public static class SheetsConfig
     }
 
     /// <summary>
-    /// Validation pattern name constants that map to ValidationEnum values.
+    /// Validation pattern name constants that map to Validation values.
     /// These are used in ColumnAttribute validationPattern parameters.
-    /// The string values match the ValidationEnum member names.
+    /// The string values match the Validation member names.
     /// </summary>
     public static class ValidationNames
     {
-        /// <summary>Maps to ValidationEnum.BOOLEAN</summary>
+        /// <summary>Maps to Validation.BOOLEAN</summary>
         public const string Boolean = "BOOLEAN";
         
-        /// <summary>Maps to ValidationEnum.RANGE_ADDRESS</summary>
+        /// <summary>Maps to Validation.RANGE_ADDRESS</summary>
         public const string RangeAddress = "RANGE_ADDRESS";
         
-        /// <summary>Maps to ValidationEnum.RANGE_NAME</summary>
+        /// <summary>Maps to Validation.RANGE_NAME</summary>
         public const string RangeName = "RANGE_NAME";
         
-        /// <summary>Maps to ValidationEnum.RANGE_PLACE</summary>
+        /// <summary>Maps to Validation.RANGE_PLACE</summary>
         public const string RangePlace = "RANGE_PLACE";
         
-        /// <summary>Maps to ValidationEnum.RANGE_REGION</summary>
+        /// <summary>Maps to Validation.RANGE_REGION</summary>
         public const string RangeRegion = "RANGE_REGION";
         
-        /// <summary>Maps to ValidationEnum.RANGE_SERVICE</summary>
+        /// <summary>Maps to Validation.RANGE_SERVICE</summary>
         public const string RangeService = "RANGE_SERVICE";
         
-        /// <summary>Maps to ValidationEnum.RANGE_TYPE</summary>
+        /// <summary>Maps to Validation.RANGE_TYPE</summary>
         public const string RangeType = "RANGE_TYPE";
         
-        /// <summary>Maps to ValidationEnum.RANGE_SELF</summary>
+        /// <summary>Maps to Validation.RANGE_SELF</summary>
         public const string RangeSelf = "RANGE_SELF";
     }
 
@@ -290,8 +290,8 @@ public static class SheetsConfig
     public static SheetModel AddressSheet => new()
     {
         Name = SheetNames.Addresses,
-        CellColor = ColorEnum.LIGHT_CYAN,
-        TabColor = ColorEnum.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -301,8 +301,8 @@ public static class SheetsConfig
     public static SheetModel DailySheet => new()
     {
         Name = SheetNames.Daily,
-        TabColor = ColorEnum.LIGHT_GREEN,
-        CellColor = ColorEnum.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GREEN,
+        CellColor = SheetColor.LIGHT_GRAY,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -312,8 +312,8 @@ public static class SheetsConfig
     public static SheetModel ExpenseSheet => new()
     {
         Name = SheetNames.Expenses,
-        TabColor = ColorEnum.ORANGE,
-        CellColor = ColorEnum.LIGHT_RED,
+        TabColor = SheetColor.ORANGE,
+        CellColor = SheetColor.LIGHT_RED,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ExpenseEntity>()
@@ -322,8 +322,8 @@ public static class SheetsConfig
     public static SheetModel MonthlySheet => new()
     {
         Name = SheetNames.Monthly,
-        TabColor = ColorEnum.LIGHT_GREEN,
-        CellColor = ColorEnum.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GREEN,
+        CellColor = SheetColor.LIGHT_GRAY,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -333,8 +333,8 @@ public static class SheetsConfig
     public static SheetModel NameSheet => new()
     {
         Name = SheetNames.Names,
-        TabColor = ColorEnum.CYAN,
-        CellColor = ColorEnum.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -344,8 +344,8 @@ public static class SheetsConfig
     public static SheetModel PlaceSheet => new()
     {
         Name = SheetNames.Places,
-        TabColor = ColorEnum.CYAN,
-        CellColor = ColorEnum.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -355,8 +355,8 @@ public static class SheetsConfig
     public static SheetModel RegionSheet => new()
     {
         Name = SheetNames.Regions,
-        TabColor = ColorEnum.CYAN,
-        CellColor = ColorEnum.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -366,9 +366,9 @@ public static class SheetsConfig
     public static SheetModel SetupSheet => new()
     {
         Name = SheetNames.Setup,
-        CellColor = ColorEnum.LIGHT_PURPLE,
-        TabColor = ColorEnum.PURPLE,
-        FontColor = ColorEnum.WHITE,
+        CellColor = SheetColor.LIGHT_PURPLE,
+        TabColor = SheetColor.PURPLE,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -378,8 +378,8 @@ public static class SheetsConfig
     public static SheetModel ServiceSheet => new()
     {
         Name = SheetNames.Services,
-        TabColor = ColorEnum.CYAN,
-        CellColor = ColorEnum.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -389,9 +389,9 @@ public static class SheetsConfig
     public static SheetModel ShiftSheet => new()
     {
         Name = SheetNames.Shifts,
-        TabColor = ColorEnum.RED,
-        CellColor = ColorEnum.LIGHT_RED,
-        FontColor = ColorEnum.WHITE,
+        TabColor = SheetColor.RED,
+        CellColor = SheetColor.LIGHT_RED,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ShiftEntity>()
@@ -400,31 +400,31 @@ public static class SheetsConfig
     public static SheetModel TripSheet => new()
     {
         Name = SheetNames.Trips,
-        TabColor = ColorEnum.DARK_YELLOW,
-        CellColor = ColorEnum.LIGHT_YELLOW,
+        TabColor = SheetColor.DARK_YELLOW,
+        CellColor = SheetColor.LIGHT_YELLOW,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TripEntity>()
     };
 
-    public static SheetModel Deliveries => new()
+    public static SheetModel DeliverySheet => new()
     {
         Name = SheetNames.Deliveries,
-        TabColor = ColorEnum.BLUE,
-        CellColor = ColorEnum.LIGHT_GRAY,
-        FontColor = ColorEnum.WHITE,
+        TabColor = SheetColor.BLUE,
+        CellColor = SheetColor.LIGHT_GRAY,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<DeliveryEntity>()
     };
 
-    public static SheetModel Locations => new()
+    public static SheetModel LocationSheet => new()
     {
         Name = SheetNames.Locations,
-        TabColor = ColorEnum.BLUE,
-        CellColor = ColorEnum.LIGHT_GRAY,
-        FontColor = ColorEnum.WHITE,
+        TabColor = SheetColor.BLUE,
+        CellColor = SheetColor.LIGHT_GRAY,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -434,8 +434,8 @@ public static class SheetsConfig
     public static SheetModel TypeSheet => new()
     {
         Name = SheetNames.Types,
-        TabColor = ColorEnum.CYAN,
-        CellColor = ColorEnum.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -445,8 +445,8 @@ public static class SheetsConfig
     public static SheetModel WeekdaySheet => new()
     {
         Name = SheetNames.Weekdays,
-        TabColor = ColorEnum.LIGHT_GREEN,
-        CellColor = ColorEnum.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GREEN,
+        CellColor = SheetColor.LIGHT_GRAY,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -456,8 +456,8 @@ public static class SheetsConfig
     public static SheetModel WeeklySheet => new()
     {
         Name = SheetNames.Weekly,
-        TabColor = ColorEnum.LIGHT_GREEN,
-        CellColor = ColorEnum.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GREEN,
+        CellColor = SheetColor.LIGHT_GRAY,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -467,8 +467,8 @@ public static class SheetsConfig
     public static SheetModel YearlySheet => new()
     {
         Name = SheetNames.Yearly,
-        TabColor = ColorEnum.LIGHT_GREEN,
-        CellColor = ColorEnum.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GREEN,
+        CellColor = SheetColor.LIGHT_GRAY,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,

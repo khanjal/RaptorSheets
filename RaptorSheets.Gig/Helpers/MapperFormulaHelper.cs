@@ -29,128 +29,103 @@ public static class MapperFormulaHelper
         bool useShiftTotals = false,
         bool countTrips = false)
     {
-        void SetHeaderFormulaAndFormat(SheetCellModel header, string formula, FormatEnum format)
-        {
-            header.Formula = formula;
-            header.Format = format;
-        }
-
-        string GetRange(HeaderEnum baseEnum, HeaderEnum totalEnum)
+        string GetRange(Header baseEnum, Header totalEnum)
             => useShiftTotals ? sourceSheet.GetRange(totalEnum.GetDescription()) : sourceSheet.GetRange(baseEnum.GetDescription());
 
         foreach (var header in sheet.Headers)
         {
-            var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
+            var headerEnum = header.Name.GetValueFromName<Header>();
             switch (headerEnum)
             {
-                case HeaderEnum.PAY:
-                    SetHeaderFormulaAndFormat(
-                        header,
-                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-                            keyRange, HeaderEnum.PAY.GetDescription(), sourceKeyRange, GetRange(HeaderEnum.PAY, HeaderEnum.TOTAL_PAY)),
-                        FormatEnum.ACCOUNTING);
+                case Header.PAY:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                        keyRange, Header.PAY.GetDescription(), sourceKeyRange, GetRange(Header.PAY, Header.TOTAL_PAY));
+                    header.Format = Format.ACCOUNTING;
                     break;
 
-                case HeaderEnum.TIPS:
-                case HeaderEnum.TIP:
-                    var tipsRange = useShiftTotals
-                        ? sourceSheet.GetRange(HeaderEnum.TOTAL_TIPS.GetDescription())
-                        : sourceSheet.GetRange(HeaderEnum.TIPS.GetDescription());
-                    var headerName = headerEnum == HeaderEnum.TIP
-                        ? HeaderEnum.TIP.GetDescription()
-                        : HeaderEnum.TIPS.GetDescription();
-                    SetHeaderFormulaAndFormat(
-                        header,
-                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, headerName, sourceKeyRange, tipsRange),
-                        FormatEnum.ACCOUNTING);
+                case Header.TIPS:
+                case Header.TIP:
+                    ConfigureTipsHeader(header, headerEnum, keyRange, sourceSheet, sourceKeyRange, useShiftTotals);
                     break;
 
-                case HeaderEnum.BONUS:
-                    SetHeaderFormulaAndFormat(
-                        header,
-                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-                            keyRange, HeaderEnum.BONUS.GetDescription(), sourceKeyRange, GetRange(HeaderEnum.BONUS, HeaderEnum.TOTAL_BONUS)),
-                        FormatEnum.ACCOUNTING);
+                case Header.BONUS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                        keyRange, Header.BONUS.GetDescription(), sourceKeyRange, GetRange(Header.BONUS, Header.TOTAL_BONUS));
+                    header.Format = Format.ACCOUNTING;
                     break;
 
-                case HeaderEnum.TOTAL:
-                    SetHeaderFormulaAndFormat(
-                        header,
-                        GigFormulaBuilder.BuildArrayFormulaTotal(
-                            keyRange, HeaderEnum.TOTAL.GetDescription(),
-                            sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()),
-                            sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()),
-                            sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription())),
-                        FormatEnum.ACCOUNTING);
+                case Header.TOTAL:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(
+                        keyRange, Header.TOTAL.GetDescription(),
+                        sheet.GetLocalRange(Header.PAY.GetDescription()),
+                        sheet.GetLocalRange(Header.TIPS.GetDescription()),
+                        sheet.GetLocalRange(Header.BONUS.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
 
-                case HeaderEnum.CASH:
-                    SetHeaderFormulaAndFormat(
-                        header,
-                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-                            keyRange, HeaderEnum.CASH.GetDescription(), sourceKeyRange, GetRange(HeaderEnum.CASH, HeaderEnum.TOTAL_CASH)),
-                        FormatEnum.ACCOUNTING);
+                case Header.CASH:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                        keyRange, Header.CASH.GetDescription(), sourceKeyRange, GetRange(Header.CASH, Header.TOTAL_CASH));
+                    header.Format = Format.ACCOUNTING;
                     break;
 
-                case HeaderEnum.TRIPS:
-                    if (countTrips)
-                    {
-                        // Scenario 3: Count trip occurrences (trip-level data with no TRIPS column)
-                        SetHeaderFormulaAndFormat(
-                            header,
-                            GoogleFormulaBuilder.BuildArrayFormulaCountIf(
-                                keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange),
-                            FormatEnum.NUMBER);
-                    }
-                    else
-                    {
-                        // Sum scenarios: check if using shift totals or daily/monthly data
-                        if (useShiftTotals)
-                        {
-                            // Scenario 1: Sum shift-level TOTAL_TRIPS column
-                            SetHeaderFormulaAndFormat(
-                                header,
-                                GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-                                    keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange, sourceSheet.GetRange(HeaderEnum.TOTAL_TRIPS.GetDescription())),
-                                FormatEnum.NUMBER);
-                        }
-                        else
-                        {
-                            // Scenario 2: Sum TRIPS column (daily/monthly aggregated data)
-                            SetHeaderFormulaAndFormat(
-                                header,
-                                GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-                                    keyRange, HeaderEnum.TRIPS.GetDescription(), sourceKeyRange, sourceSheet.GetRange(HeaderEnum.TRIPS.GetDescription())),
-                                FormatEnum.NUMBER);
-                        }
-                    }
+                case Header.TRIPS:
+                    ConfigureTripsHeader(header, keyRange, sourceSheet, sourceKeyRange, useShiftTotals, countTrips);
                     break;
 
-                case HeaderEnum.DAYS:
-                    SetHeaderFormulaAndFormat(
-                        header,
-                        GoogleFormulaBuilder.BuildArrayFormulaCountIf(
-                            keyRange, HeaderEnum.DAYS.GetDescription(), sourceKeyRange),
-                        FormatEnum.NUMBER);
+                case Header.DAYS:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(
+                        keyRange, Header.DAYS.GetDescription(), sourceKeyRange);
+                    header.Format = Format.NUMBER;
                     break;
 
-                case HeaderEnum.DISTANCE:
-                    SetHeaderFormulaAndFormat(
-                        header,
-                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-                            keyRange, HeaderEnum.DISTANCE.GetDescription(), sourceKeyRange, GetRange(HeaderEnum.DISTANCE, HeaderEnum.TOTAL_DISTANCE)),
-                        FormatEnum.DISTANCE);
+                case Header.DISTANCE:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                        keyRange, Header.DISTANCE.GetDescription(), sourceKeyRange, GetRange(Header.DISTANCE, Header.TOTAL_DISTANCE));
+                    header.Format = Format.DISTANCE;
                     break;
 
-                case HeaderEnum.TIME_TOTAL:
-                    SetHeaderFormulaAndFormat(
-                        header,
-                        GoogleFormulaBuilder.BuildArrayFormulaSumIf(
-                            keyRange, HeaderEnum.TIME_TOTAL.GetDescription(), sourceKeyRange, GetRange(HeaderEnum.TIME_TOTAL, HeaderEnum.TOTAL_TIME)),
-                        FormatEnum.DURATION);
+                case Header.TIME_TOTAL:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+                        keyRange, Header.TIME_TOTAL.GetDescription(), sourceKeyRange, GetRange(Header.TIME_TOTAL, Header.TOTAL_TIME));
+                    header.Format = Format.DURATION;
                     break;
             }
         }
+    }
+
+    private static void ConfigureTipsHeader(SheetCellModel header, Header headerEnum, string keyRange, SheetModel sourceSheet, string sourceKeyRange, bool useShiftTotals)
+    {
+        var tipsRange = useShiftTotals
+            ? sourceSheet.GetRange(Header.TOTAL_TIPS.GetDescription())
+            : sourceSheet.GetRange(Header.TIPS.GetDescription());
+        var headerName = headerEnum == Header.TIP
+            ? Header.TIP.GetDescription()
+            : Header.TIPS.GetDescription();
+
+        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, headerName, sourceKeyRange, tipsRange);
+        header.Format = Format.ACCOUNTING;
+    }
+
+    private static void ConfigureTripsHeader(SheetCellModel header, string keyRange, SheetModel sourceSheet, string sourceKeyRange, bool useShiftTotals, bool countTrips)
+    {
+        if (countTrips)
+        {
+            // Scenario 3: Count trip occurrences (trip-level data with no TRIPS column)
+            header.Formula = GoogleFormulaBuilder.BuildArrayFormulaCountIf(
+                keyRange, Header.TRIPS.GetDescription(), sourceKeyRange);
+            header.Format = Format.NUMBER;
+            return;
+        }
+
+        // Sum scenarios: shift-level TOTAL_TRIPS column, or daily/monthly aggregated TRIPS column
+        var sourceRange = useShiftTotals
+            ? sourceSheet.GetRange(Header.TOTAL_TRIPS.GetDescription())
+            : sourceSheet.GetRange(Header.TRIPS.GetDescription());
+
+        header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(
+            keyRange, Header.TRIPS.GetDescription(), sourceKeyRange, sourceRange);
+        header.Format = Format.NUMBER;
     }
 
     /// <summary>
@@ -160,33 +135,33 @@ public static class MapperFormulaHelper
     {
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
+            var headerEnum = header.Name.GetValueFromName<Header>();
             
             switch (headerEnum)
             {
-                case HeaderEnum.AMOUNT_PER_TRIP:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(keyRange, HeaderEnum.AMOUNT_PER_TRIP.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TRIPS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AMOUNT_PER_TRIP:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(keyRange, Header.AMOUNT_PER_TRIP.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL.GetDescription()), 
+                        sheet.GetLocalRange(Header.TRIPS.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.AMOUNT_PER_DISTANCE:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(keyRange, HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AMOUNT_PER_DISTANCE:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(keyRange, Header.AMOUNT_PER_DISTANCE.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL.GetDescription()), 
+                        sheet.GetLocalRange(Header.DISTANCE.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.AMOUNT_PER_TIME:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(keyRange, HeaderEnum.AMOUNT_PER_TIME.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TIME_TOTAL.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AMOUNT_PER_TIME:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(keyRange, Header.AMOUNT_PER_TIME.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL.GetDescription()), 
+                        sheet.GetLocalRange(Header.TIME_TOTAL.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.AMOUNT_PER_DAY:
-                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDay(keyRange, HeaderEnum.AMOUNT_PER_DAY.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.DAYS.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AMOUNT_PER_DAY:
+                    header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDay(keyRange, Header.AMOUNT_PER_DAY.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL.GetDescription()), 
+                        sheet.GetLocalRange(Header.DAYS.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
             }
         });
@@ -197,7 +172,7 @@ public static class MapperFormulaHelper
     /// </summary>
     public static void ConfigureUniqueValueHeader(SheetCellModel header, string sourceRange)
     {
-        var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
+        var headerEnum = header.Name.GetValueFromName<Header>();
         var headerName = headerEnum.GetDescription();
         
         header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(headerName, sourceRange);
@@ -205,14 +180,14 @@ public static class MapperFormulaHelper
         // Set validation if this is a dropdown source
         switch (headerEnum)
         {
-            case HeaderEnum.SERVICE:
-                header.Validation = ValidationEnum.RANGE_SERVICE.GetDescription();
+            case Header.SERVICE:
+                header.Validation = Validation.RANGE_SERVICE.GetDescription();
                 break;
-            case HeaderEnum.REGION:
-                header.Validation = ValidationEnum.RANGE_REGION.GetDescription();
+            case Header.REGION:
+                header.Validation = Validation.RANGE_REGION.GetDescription();
                 break;
-            case HeaderEnum.PLACE:
-                header.Validation = ValidationEnum.RANGE_PLACE.GetDescription();
+            case Header.PLACE:
+                header.Validation = Validation.RANGE_PLACE.GetDescription();
                 break;
         }
     }
@@ -223,7 +198,7 @@ public static class MapperFormulaHelper
     /// </summary>
     public static void ConfigureCombinedUniqueValueHeader(SheetCellModel header, string range1, string range2)
     {
-        var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
+        var headerEnum = header.Name.GetValueFromName<Header>();
         var headerName = headerEnum.GetDescription();
         
         header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueCombinedFiltered(headerName, range1, range2);
@@ -234,11 +209,11 @@ public static class MapperFormulaHelper
     /// </summary>
     public static void ConfigureDualCountHeader(SheetCellModel header, string keyRange, string range1, string range2)
     {
-        var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
+        var headerEnum = header.Name.GetValueFromName<Header>();
         var headerName = headerEnum.GetDescription();
 
         header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDualCountIf(keyRange, headerName, range1, range2);
-        header.Format = FormatEnum.NUMBER;
+        header.Format = Format.NUMBER;
     }
 
     /// <summary>
@@ -246,18 +221,18 @@ public static class MapperFormulaHelper
     /// (Trips, Shifts). No-op for any other header - callers should only reach this for a header
     /// they've already matched as DAY/MONTH/YEAR.
     /// </summary>
-    public static void ConfigureDatePartHeader(SheetCellModel header, HeaderEnum headerEnum, string dateRange)
+    public static void ConfigureDatePartHeader(SheetCellModel header, Header headerEnum, string dateRange)
     {
         switch (headerEnum)
         {
-            case HeaderEnum.DAY:
-                header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
+            case Header.DAY:
+                header.Formula = GoogleFormulaBuilder.BuildArrayFormulaDay(dateRange, Header.DAY.GetDescription(), dateRange);
                 break;
-            case HeaderEnum.MONTH:
-                header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonth(dateRange, HeaderEnum.MONTH.GetDescription(), dateRange);
+            case Header.MONTH:
+                header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonth(dateRange, Header.MONTH.GetDescription(), dateRange);
                 break;
-            case HeaderEnum.YEAR:
-                header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(dateRange, HeaderEnum.YEAR.GetDescription(), dateRange);
+            case Header.YEAR:
+                header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(dateRange, Header.YEAR.GetDescription(), dateRange);
                 break;
         }
     }

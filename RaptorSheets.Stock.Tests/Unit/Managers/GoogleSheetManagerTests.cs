@@ -3,7 +3,7 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Managers;
 using Xunit;
-using SheetEnum = RaptorSheets.Stock.Enums.SheetEnum;
+using SheetName = RaptorSheets.Stock.Enums.SheetName;
 
 namespace RaptorSheets.Stock.Tests.Unit.Managers;
 
@@ -189,7 +189,7 @@ public class GoogleSheetManagerTests
         // has an accessor but an empty SheetEntity carries no Stocks rows to change either way.
         var manager = new GoogleSheetManager("token", "spreadsheet");
         var entity = new SheetEntity();
-        var result = await manager.ChangeSheetData([SheetEnum.TICKERS.GetDescription(), SheetEnum.STOCKS.GetDescription()], entity);
+        var result = await manager.ChangeSheetData([SheetName.TICKERS.GetDescription(), SheetName.STOCKS.GetDescription()], entity);
         Assert.Contains(result.Messages, m => m.Message.Contains("No data to change"));
     }
 
@@ -198,7 +198,7 @@ public class GoogleSheetManagerTests
     {
         var manager = new GoogleSheetManager("token", "spreadsheet");
         // This will likely add error messages since the service is not mocked and will return null
-        var result = await manager.CreateSheets([SheetEnum.STOCKS.GetDescription()]);
+        var result = await manager.CreateSheets([SheetName.STOCKS.GetDescription()]);
         Assert.Contains(result.Messages, m => m.Message.Contains("not created"));
     }
 
@@ -214,7 +214,7 @@ public class GoogleSheetManagerTests
             Sheets = { Stocks = { new StockEntity { RowId = 2, Shares = 10 } } }
         };
 
-        var result = await manager.ChangeSheetData([SheetEnum.STOCKS.GetDescription()], sheetEntity);
+        var result = await manager.ChangeSheetData([SheetName.STOCKS.GetDescription()], sheetEntity);
 
         Assert.NotNull(result);
         // No mocked service, so this will fail to actually save, but should get past request-building
@@ -236,7 +236,7 @@ public class GoogleSheetManagerTests
     public async Task DeleteSheets_WithSheetNames_ShouldAttemptDeletion()
     {
         var manager = new GoogleSheetManager("token", "spreadsheet");
-        var result = await manager.DeleteSheets([SheetEnum.STOCKS.GetDescription()]);
+        var result = await manager.DeleteSheets([SheetName.STOCKS.GetDescription()]);
         Assert.NotNull(result);
         Assert.NotEmpty(result.Messages);
     }

@@ -64,7 +64,7 @@ public static class ColumnInsertionHelper
 
         if (missingColumns == null || missingColumns.Count == 0)
         {
-            entity.Messages.Add(MessageHelpers.CreateInfoMessage("No missing columns to insert", MessageTypeEnum.CHECK_SHEET));
+            entity.Messages.Add(MessageHelpers.CreateInfoMessage("No missing columns to insert", MessageType.CHECK_SHEET));
             return entity;
         }
 
@@ -74,7 +74,7 @@ public static class ColumnInsertionHelper
             {
                 entity.Messages.Add(MessageHelpers.CreateInfoMessage(
                     $"Inserting column '{column.ColumnName}' at index {column.ColumnIndex} in sheet '{sheetName}'",
-                    MessageTypeEnum.CHECK_SHEET));
+                    MessageType.CHECK_SHEET));
             }
         }
 
@@ -86,11 +86,11 @@ public static class ColumnInsertionHelper
         {
             entity.Messages.Add(MessageHelpers.CreateInfoMessage(
                 $"Successfully inserted {missingColumns.Sum(kv => kv.Value.Count)} missing column(s)",
-                MessageTypeEnum.CHECK_SHEET));
+                MessageType.CHECK_SHEET));
         }
         else
         {
-            entity.Messages.Add(MessageHelpers.CreateErrorMessage("Failed to insert missing columns", MessageTypeEnum.CHECK_SHEET));
+            entity.Messages.Add(MessageHelpers.CreateErrorMessage("Failed to insert missing columns", MessageType.CHECK_SHEET));
         }
 
         return entity;

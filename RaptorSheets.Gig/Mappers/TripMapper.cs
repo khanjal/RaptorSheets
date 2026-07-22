@@ -34,50 +34,50 @@ public static class TripMapper
     /// <param name="sheet">The Trips sheet model to configure.</param>
     private static void ConfigureTripFormulas(SheetModel sheet)
     {
-        var dateRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
+        var dateRange = sheet.GetLocalRange(Header.DATE.GetDescription());
 
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
 
             switch (headerEnum)
             {
-                case HeaderEnum.TOTAL:
+                case Header.TOTAL:
                     // Formula to calculate the total amount, including pay, tips, and bonus.
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(
                         dateRange, 
-                        HeaderEnum.TOTAL.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()));
+                        Header.TOTAL.GetDescription(), 
+                        sheet.GetLocalRange(Header.PAY.GetDescription()), 
+                        sheet.GetLocalRange(Header.TIPS.GetDescription()), 
+                        sheet.GetLocalRange(Header.BONUS.GetDescription()));
                     break;
-                case HeaderEnum.KEY:
+                case Header.KEY:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaTripKey(
                         dateRange, 
-                        HeaderEnum.KEY.GetDescription(), 
+                        Header.KEY.GetDescription(), 
                         dateRange, 
-                        sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.EXCLUDE.GetDescription()));
+                        sheet.GetLocalRange(Header.SERVICE.GetDescription()), 
+                        sheet.GetLocalRange(Header.NUMBER.GetDescription()), 
+                        sheet.GetLocalRange(Header.EXCLUDE.GetDescription()));
                     break;
-                case HeaderEnum.DAY:
-                case HeaderEnum.MONTH:
-                case HeaderEnum.YEAR:
+                case Header.DAY:
+                case Header.MONTH:
+                case Header.YEAR:
                     MapperFormulaHelper.ConfigureDatePartHeader(header, headerEnum, dateRange);
                     break;
-                case HeaderEnum.AMOUNT_PER_TIME:
+                case Header.AMOUNT_PER_TIME:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(
                         dateRange, 
-                        HeaderEnum.AMOUNT_PER_TIME.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.DURATION.GetDescription()));
+                        Header.AMOUNT_PER_TIME.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL.GetDescription()), 
+                        sheet.GetLocalRange(Header.DURATION.GetDescription()));
                     break;
-                case HeaderEnum.AMOUNT_PER_DISTANCE:
+                case Header.AMOUNT_PER_DISTANCE:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(
                         dateRange, 
-                        HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()));
+                        Header.AMOUNT_PER_DISTANCE.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL.GetDescription()), 
+                        sheet.GetLocalRange(Header.DISTANCE.GetDescription()));
                     break;
                 default:
                     // All other configuration (notes, validations, formatting) handled by ColumnAttribute

@@ -12,7 +12,7 @@ public static class DeliveryMapper
     public static SheetModel GetSheet()
     {
         // Use the centralized SheetsConfig model to avoid configuration drift
-        var sheet = SheetsConfig.Deliveries;
+        var sheet = SheetsConfig.DeliverySheet;
 
         // Ensure header indexes are assigned
         sheet.Headers.UpdateColumns();
@@ -58,13 +58,13 @@ public static class DeliveryMapper
         var firstTripHeader = sheet.Headers.FirstOrDefault(h => h.Name == SheetsConfig.HeaderNames.VisitFirst);
         if (firstTripHeader != null)
         {
-            firstTripHeader.Format = FormatEnum.DATE;
+            firstTripHeader.Format = Format.DATE;
         }
 
         var lastTripHeader = sheet.Headers.FirstOrDefault(h => h.Name == SheetsConfig.HeaderNames.VisitLast);
         if (lastTripHeader != null)
         {
-            lastTripHeader.Format = FormatEnum.DATE;
+            lastTripHeader.Format = Format.DATE;
         }
 
         // Amt/Trip and Amt/Dist are derived from the sheet's own spilled Trips/Total/Distance

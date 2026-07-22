@@ -47,6 +47,6 @@ public class SheetEntityOrderingTests
 
         // Should work in any compilation context
         Assert.Equal(SheetsConfig.SheetNames.Trips, sheetOrder1[0]); // Always first
-        Assert.Equal(SheetsConfig.SheetNames.Setup, sheetOrder1.Last()); // Always last
+        Assert.Equal(SheetsConfig.SheetNames.Setup, sheetOrder1[^1]); // Always last
     }
 }

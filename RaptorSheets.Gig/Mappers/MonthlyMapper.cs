@@ -20,8 +20,8 @@ public static class MonthlyMapper
         sheet.Headers.UpdateColumns();
 
         var dailySheet = DailyMapper.GetSheet();
-        var keyRange = sheet.GetLocalRange(HeaderEnum.MONTH.GetDescription());
-        var dailyKeyRange = dailySheet.GetRange(HeaderEnum.MONTH.GetDescription());
+        var keyRange = sheet.GetLocalRange(Header.MONTH.GetDescription());
+        var dailyKeyRange = dailySheet.GetRange(Header.MONTH.GetDescription());
 
         // Configure common aggregation patterns (eliminates major duplication)
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, dailySheet, dailyKeyRange, useShiftTotals: false);
@@ -32,22 +32,22 @@ public static class MonthlyMapper
         // Configure specific headers unique to MonthlyMapper
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
+            var headerEnum = header.Name.GetValueFromName<Header>();
 
             switch (headerEnum)
             {
-                case HeaderEnum.MONTH:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(HeaderEnum.MONTH.GetDescription(), dailySheet.GetRange(HeaderEnum.MONTH.GetDescription(), 2));
+                case Header.MONTH:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(Header.MONTH.GetDescription(), dailySheet.GetRange(Header.MONTH.GetDescription(), 2));
                     break;
-                case HeaderEnum.AVERAGE:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, HeaderEnum.AVERAGE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AVERAGE:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, Header.AVERAGE.GetDescription(), sheet.GetLocalRange(Header.TOTAL.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.NUMBER:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.NUMBER.GetDescription(), keyRange, "-", 1);
+                case Header.NUMBER:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, Header.NUMBER.GetDescription(), keyRange, "-", 1);
                     break;
-                case HeaderEnum.YEAR:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.YEAR.GetDescription(), keyRange, "-", 2);
+                case Header.YEAR:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, Header.YEAR.GetDescription(), keyRange, "-", 2);
                     break;
             }
         });

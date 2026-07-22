@@ -54,7 +54,7 @@ public abstract class IntegrationTestBase
         if (missingSheets.Count == 0) return true;
 
         var result = await GoogleSheetManager.CreateSheets(missingSheets);
-        var hasErrors = result.Messages.Any(m => m.Level == MessageLevelEnum.ERROR.GetDescription());
+        var hasErrors = result.Messages.Any(m => m.Level == MessageLevel.ERROR.GetDescription());
 
         if (!hasErrors)
         {
@@ -66,7 +66,7 @@ public abstract class IntegrationTestBase
 
     protected static List<MessageEntity> CriticalErrors(SheetEntity result) =>
         result.Messages
-            .Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription() && !IsExpectedError(m.Message))
+            .Where(m => m.Level == MessageLevel.ERROR.GetDescription() && !IsExpectedError(m.Message))
             .ToList();
 
     private static bool IsExpectedError(string message) =>

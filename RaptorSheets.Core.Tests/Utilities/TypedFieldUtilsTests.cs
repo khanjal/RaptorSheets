@@ -24,7 +24,7 @@ public class TypedFieldUtilsTests
         var dateProperty = properties.FirstOrDefault(p => 
             p.Column.GetEffectiveHeaderName().Equals(TypedFieldUtilsTestHelper.TestDateTimeHeader, StringComparison.OrdinalIgnoreCase));
         
-        Assert.Equal(FormatEnum.DATE, dateProperty.Column.FormatType);
+        Assert.Equal(Format.DATE, dateProperty.Column.FormatType);
     }
 
     [Fact]
@@ -66,49 +66,28 @@ public class TypedFieldUtilsTests
         var underlyingType = Nullable.GetUnderlyingType(targetType);
         bool isNullable = underlyingType != null;
         var actualType = underlyingType ?? targetType;
-        
-        if (actualType == typeof(int))
+
+        if (isNullable)
         {
-            if (isNullable)
-                Assert.Null(result);
-            else
-                Assert.Equal(0, result);
-        }
-        else if (actualType == typeof(bool))
-        {
-            if (isNullable)
-                Assert.Null(result);
-            else
-                Assert.False((bool?)result);
-        }
-        else if (actualType == typeof(DateTime))
-        {
-            if (isNullable)
-                Assert.Null(result);
-            else
-                Assert.Equal(DateTime.MinValue, result);
-        }
-        else if (actualType == typeof(decimal))
-        {
-            if (isNullable)
-                Assert.Null(result);
-            else
-                Assert.Equal(0.0m, result);
-        }
-        else if (actualType == typeof(double))
-        {
-            if (isNullable)
-                Assert.Null(result);
-            else
-                Assert.Equal(0.0, result);
+            Assert.Null(result);
         }
         else
         {
-            Assert.Null(result);
+            Assert.Equal(GetExpectedNonNullableDefault(actualType), result);
         }
 
         // Use the fieldType parameter to validate the expected field type
         Assert.Equal(fieldType, attribute.FieldType);
+    }
+
+    private static object? GetExpectedNonNullableDefault(Type actualType)
+    {
+        if (actualType == typeof(int)) return 0;
+        if (actualType == typeof(bool)) return false;
+        if (actualType == typeof(DateTime)) return DateTime.MinValue;
+        if (actualType == typeof(decimal)) return 0.0m;
+        if (actualType == typeof(double)) return 0.0;
+        return null;
     }
 
     [Fact]
@@ -154,13 +133,13 @@ public class TypedFieldUtilsTests
         [Column("TestString")]
         public string TestString { get; set; } = "";
 
-        [Column("TestCurrency", formatType: FormatEnum.CURRENCY)]
+        [Column("TestCurrency", formatType: Format.CURRENCY)]
         public decimal? TestCurrency { get; set; }
 
-        [Column("TestDateTime", formatType: FormatEnum.DATE)]
+        [Column("TestDateTime", formatType: Format.DATE)]
         public DateTime? TestDateTime { get; set; }
 
-        [Column("TestInteger", formatType: FormatEnum.NUMBER)]
+        [Column("TestInteger", formatType: Format.NUMBER)]
         public int? TestInteger { get; set; }
 
         [Column("TestBoolean")]

@@ -152,8 +152,8 @@ public class SheetHelpersTests
         Assert.Equal(2, result.Count);
         Assert.All(result, message => 
         {
-            Assert.Equal(MessageLevelEnum.ERROR.UpperName(), message.Level);
-            Assert.Equal(MessageTypeEnum.CHECK_SHEET.GetDescription(), message.Type);
+            Assert.Equal(MessageLevel.ERROR.UpperName(), message.Level);
+            Assert.Equal(MessageType.CHECK_SHEET.GetDescription(), message.Type);
             Assert.Contains("Unable to find sheet", message.Message);
         });
     }
@@ -170,8 +170,8 @@ public class SheetHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        Assert.Equal(MessageLevelEnum.INFO.UpperName(), result[0].Level);
-        Assert.Equal(MessageTypeEnum.CHECK_SHEET.GetDescription(), result[0].Type);
+        Assert.Equal(MessageLevel.INFO.UpperName(), result[0].Level);
+        Assert.Equal(MessageType.CHECK_SHEET.GetDescription(), result[0].Type);
         Assert.Equal("All sheets found", result[0].Message);
     }
 
@@ -467,26 +467,26 @@ public class SheetHelpersTests
     #region GetColor Tests
 
     [Theory]
-    [InlineData(ColorEnum.BLACK)]
-    [InlineData(ColorEnum.BLUE)]
-    [InlineData(ColorEnum.CYAN)]
-    [InlineData(ColorEnum.DARK_YELLOW)]
-    [InlineData(ColorEnum.GREEN)]
-    [InlineData(ColorEnum.LIGHT_CYAN)]
-    [InlineData(ColorEnum.LIGHT_GRAY)]
-    [InlineData(ColorEnum.LIGHT_GREEN)]
-    [InlineData(ColorEnum.LIGHT_PURPLE)]
-    [InlineData(ColorEnum.LIGHT_RED)]
-    [InlineData(ColorEnum.LIGHT_YELLOW)]
-    [InlineData(ColorEnum.LIME)]
-    [InlineData(ColorEnum.ORANGE)]
-    [InlineData(ColorEnum.MAGENTA)]
-    [InlineData(ColorEnum.PINK)]
-    [InlineData(ColorEnum.PURPLE)]
-    [InlineData(ColorEnum.RED)]
-    [InlineData(ColorEnum.WHITE)]
-    [InlineData(ColorEnum.YELLOW)]
-    public void GetColor_WithValidColorEnum_ShouldReturnColor(ColorEnum colorEnum)
+    [InlineData(SheetColor.BLACK)]
+    [InlineData(SheetColor.BLUE)]
+    [InlineData(SheetColor.CYAN)]
+    [InlineData(SheetColor.DARK_YELLOW)]
+    [InlineData(SheetColor.GREEN)]
+    [InlineData(SheetColor.LIGHT_CYAN)]
+    [InlineData(SheetColor.LIGHT_GRAY)]
+    [InlineData(SheetColor.LIGHT_GREEN)]
+    [InlineData(SheetColor.LIGHT_PURPLE)]
+    [InlineData(SheetColor.LIGHT_RED)]
+    [InlineData(SheetColor.LIGHT_YELLOW)]
+    [InlineData(SheetColor.LIME)]
+    [InlineData(SheetColor.ORANGE)]
+    [InlineData(SheetColor.MAGENTA)]
+    [InlineData(SheetColor.PINK)]
+    [InlineData(SheetColor.PURPLE)]
+    [InlineData(SheetColor.RED)]
+    [InlineData(SheetColor.WHITE)]
+    [InlineData(SheetColor.YELLOW)]
+    public void GetColor_WithValidColorEnum_ShouldReturnColor(SheetColor colorEnum)
     {
         // Act
         var result = SheetHelpers.GetColor(colorEnum);
@@ -499,19 +499,19 @@ public class SheetHelpersTests
     public void GetColor_WithSpecificColors_ShouldReturnCorrectColors()
     {
         // Act & Assert
-        Assert.Equivalent(Colors.Black, SheetHelpers.GetColor(ColorEnum.BLACK));
-        Assert.Equivalent(Colors.Blue, SheetHelpers.GetColor(ColorEnum.BLUE));
-        Assert.Equivalent(Colors.Cyan, SheetHelpers.GetColor(ColorEnum.CYAN));
-        Assert.Equivalent(Colors.Magenta, SheetHelpers.GetColor(ColorEnum.MAGENTA));
-        Assert.Equivalent(Colors.Magenta, SheetHelpers.GetColor(ColorEnum.PINK));
-        Assert.Equivalent(Colors.White, SheetHelpers.GetColor(ColorEnum.WHITE));
+        Assert.Equivalent(Colors.Black, SheetHelpers.GetColor(SheetColor.BLACK));
+        Assert.Equivalent(Colors.Blue, SheetHelpers.GetColor(SheetColor.BLUE));
+        Assert.Equivalent(Colors.Cyan, SheetHelpers.GetColor(SheetColor.CYAN));
+        Assert.Equivalent(Colors.Magenta, SheetHelpers.GetColor(SheetColor.MAGENTA));
+        Assert.Equivalent(Colors.Magenta, SheetHelpers.GetColor(SheetColor.PINK));
+        Assert.Equivalent(Colors.White, SheetHelpers.GetColor(SheetColor.WHITE));
     }
 
     [Fact]
     public void GetColor_WithInvalidColorEnum_ShouldReturnWhite()
     {
         // Act
-        var result = SheetHelpers.GetColor((ColorEnum)999);
+        var result = SheetHelpers.GetColor((SheetColor)999);
 
         // Assert
         Assert.Equivalent(Colors.White, result);
@@ -637,7 +637,7 @@ public class SheetHelpersTests
                 new() { Name = "Header1" },
                 new() { Name = "Header2", Formula = "=SUM(A1:A10)" }
             ],
-            FontColor = ColorEnum.BLACK
+            FontColor = SheetColor.BLACK
         };
 
         // Act
@@ -663,7 +663,7 @@ public class SheetHelpersTests
                 new() { Name = "Protected", Protect = true } // Formula defaults to empty string
             ],
             ProtectSheet = false,
-            FontColor = ColorEnum.RED
+            FontColor = SheetColor.RED
         };
 
         // Act
@@ -692,7 +692,7 @@ public class SheetHelpersTests
                 new() { Name = "Protected", Protect = true, Formula = null! } // Explicitly null
             ],
             ProtectSheet = false,
-            FontColor = ColorEnum.RED
+            FontColor = SheetColor.RED
         };
 
         // Act
@@ -750,15 +750,15 @@ public class SheetHelpersTests
     #region GetCellFormat Tests
 
     [Theory]
-    [InlineData(FormatEnum.ACCOUNTING, "NUMBER")]
-    [InlineData(FormatEnum.DATE, "DATE")]
-    [InlineData(FormatEnum.DISTANCE, "NUMBER")]
-    [InlineData(FormatEnum.DURATION, "DATE")]
-    [InlineData(FormatEnum.NUMBER, "NUMBER")]
-    [InlineData(FormatEnum.TEXT, "TEXT")]
-    [InlineData(FormatEnum.TIME, "DATE")]
-    [InlineData(FormatEnum.WEEKDAY, "DATE")]
-    public void GetCellFormat_WithValidFormatEnum_ShouldReturnCorrectType(FormatEnum format, string expectedType)
+    [InlineData(Format.ACCOUNTING, "NUMBER")]
+    [InlineData(Format.DATE, "DATE")]
+    [InlineData(Format.DISTANCE, "NUMBER")]
+    [InlineData(Format.DURATION, "DATE")]
+    [InlineData(Format.NUMBER, "NUMBER")]
+    [InlineData(Format.TEXT, "TEXT")]
+    [InlineData(Format.TIME, "DATE")]
+    [InlineData(Format.WEEKDAY, "DATE")]
+    public void GetCellFormat_WithValidFormatEnum_ShouldReturnCorrectType(Format format, string expectedType)
     {
         // Act
         var result = SheetHelpers.GetCellFormat(format);
@@ -766,7 +766,7 @@ public class SheetHelpersTests
         // Assert
         Assert.Equal(expectedType, result.NumberFormat.Type);
         // For TEXT format, Pattern is null, for others it should not be null
-        if (format == FormatEnum.TEXT)
+        if (format == Format.TEXT)
         {
             Assert.Null(result.NumberFormat.Pattern);
         }
@@ -780,16 +780,16 @@ public class SheetHelpersTests
     public void GetCellFormat_WithSpecificPatterns_ShouldReturnCorrectPatterns()
     {
         // Act & Assert
-        var accountingFormat = SheetHelpers.GetCellFormat(FormatEnum.ACCOUNTING);
+        var accountingFormat = SheetHelpers.GetCellFormat(Format.ACCOUNTING);
         Assert.Equal(CellFormatPatterns.Accounting, accountingFormat.NumberFormat.Pattern);
 
-        var dateFormat = SheetHelpers.GetCellFormat(FormatEnum.DATE);
+        var dateFormat = SheetHelpers.GetCellFormat(Format.DATE);
         Assert.Equal(CellFormatPatterns.Date, dateFormat.NumberFormat.Pattern);
 
-        var distanceFormat = SheetHelpers.GetCellFormat(FormatEnum.DISTANCE);
+        var distanceFormat = SheetHelpers.GetCellFormat(Format.DISTANCE);
         Assert.Equal(CellFormatPatterns.Distance, distanceFormat.NumberFormat.Pattern);
 
-        var textFormat = SheetHelpers.GetCellFormat(FormatEnum.TEXT);
+        var textFormat = SheetHelpers.GetCellFormat(Format.TEXT);
         Assert.Null(textFormat.NumberFormat.Pattern); // TEXT format doesn't have a pattern
     }
 
@@ -797,7 +797,7 @@ public class SheetHelpersTests
     public void GetCellFormat_WithDefaultFormat_ShouldReturnTextFormat()
     {
         // Act
-        var result = SheetHelpers.GetCellFormat(FormatEnum.DEFAULT);
+        var result = SheetHelpers.GetCellFormat(Format.DEFAULT);
 
         // Assert
         Assert.Equal("TEXT", result.NumberFormat.Type);
@@ -807,7 +807,7 @@ public class SheetHelpersTests
     public void GetCellFormat_WithInvalidFormat_ShouldReturnTextFormat()
     {
         // Act
-        var result = SheetHelpers.GetCellFormat((FormatEnum)999);
+        var result = SheetHelpers.GetCellFormat((Format)999);
 
         // Assert
         Assert.Equal("TEXT", result.NumberFormat.Type);

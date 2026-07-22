@@ -12,7 +12,7 @@ public class ColumnAttributeTests
     {
         // Arrange
         var customPattern = "0.000";
-        var column = new ColumnAttribute("Test", isInput: true, formatPattern: customPattern, formatType: FormatEnum.DISTANCE);
+        var column = new ColumnAttribute("Test", isInput: true, formatPattern: customPattern, formatType: Format.DISTANCE);
         column.SetFieldTypeFromProperty(typeof(decimal?));
         
         // Act
@@ -26,7 +26,7 @@ public class ColumnAttributeTests
     public void GetEffectiveNumberFormatPattern_WithExplicitFormatType_ReturnsFormatTypePattern()
     {
         // Arrange
-        var column = new ColumnAttribute("Distance", formatType: FormatEnum.DISTANCE);
+        var column = new ColumnAttribute("Distance", formatType: Format.DISTANCE);
         column.SetFieldTypeFromProperty(typeof(decimal?));
         
         // Act
@@ -40,7 +40,7 @@ public class ColumnAttributeTests
     public void GetEffectiveNumberFormatPattern_WithDurationFormat_ReturnsDurationPattern()
     {
         // Arrange
-        var column = new ColumnAttribute("Duration", formatType: FormatEnum.DURATION);
+        var column = new ColumnAttribute("Duration", formatType: Format.DURATION);
         column.SetFieldTypeFromProperty(typeof(string));
         
         // Act
@@ -54,7 +54,7 @@ public class ColumnAttributeTests
     public void GetEffectiveNumberFormatPattern_WithTimeFormat_ReturnsTimePattern()
     {
         // Arrange
-        var column = new ColumnAttribute("Time", formatType: FormatEnum.TIME);
+        var column = new ColumnAttribute("Time", formatType: Format.TIME);
         column.SetFieldTypeFromProperty(typeof(string));
         
         // Act
@@ -68,7 +68,7 @@ public class ColumnAttributeTests
     public void GetEffectiveNumberFormatPattern_WithAccountingFormat_ReturnsAccountingPattern()
     {
         // Arrange
-        var column = new ColumnAttribute("Amount", formatType: FormatEnum.ACCOUNTING);
+        var column = new ColumnAttribute("Amount", formatType: Format.ACCOUNTING);
         column.SetFieldTypeFromProperty(typeof(decimal?));
         
         // Act
@@ -82,7 +82,7 @@ public class ColumnAttributeTests
     public void GetEffectiveNumberFormatPattern_WithDefaultFormat_ReturnsFieldTypePattern()
     {
         // Arrange
-        var column = new ColumnAttribute("Amount"); // FormatEnum.DEFAULT
+        var column = new ColumnAttribute("Amount"); // Format.DEFAULT
         column.SetFieldTypeFromProperty(typeof(decimal?));
         
         // Act
@@ -97,7 +97,7 @@ public class ColumnAttributeTests
     {
         // Arrange
         var customPattern = "###.###";
-        var column = new ColumnAttribute("Test", isInput: true, formatPattern: customPattern, formatType: FormatEnum.CURRENCY);
+        var column = new ColumnAttribute("Test", isInput: true, formatPattern: customPattern, formatType: Format.CURRENCY);
         column.SetFieldTypeFromProperty(typeof(decimal?));
         
         // Act
@@ -112,7 +112,7 @@ public class ColumnAttributeTests
     public void GetEffectiveNumberFormatPattern_PriorityTest_FormatTypeOverridesFieldType()
     {
         // Arrange - decimal property with DISTANCE format should use distance pattern, not currency
-        var column = new ColumnAttribute("Distance", formatType: FormatEnum.DISTANCE);
+        var column = new ColumnAttribute("Distance", formatType: Format.DISTANCE);
         column.SetFieldTypeFromProperty(typeof(decimal?)); // Would normally be FieldType.Currency
         
         // Act
@@ -124,16 +124,16 @@ public class ColumnAttributeTests
     }
 
     [Theory]
-    [InlineData(FormatEnum.CURRENCY, typeof(decimal?))]
-    [InlineData(FormatEnum.ACCOUNTING, typeof(decimal?))]
-    [InlineData(FormatEnum.DATE, typeof(string))]
-    [InlineData(FormatEnum.TIME, typeof(string))]
-    [InlineData(FormatEnum.DURATION, typeof(string))]
-    [InlineData(FormatEnum.DISTANCE, typeof(decimal?))]
-    [InlineData(FormatEnum.NUMBER, typeof(double?))]
-    [InlineData(FormatEnum.PERCENT, typeof(decimal?))]
-    [InlineData(FormatEnum.TEXT, typeof(string))]
-    public void GetEffectiveNumberFormatPattern_WithVariousFormats_ReturnsCorrectPattern(FormatEnum formatType, Type propertyType)
+    [InlineData(Format.CURRENCY, typeof(decimal?))]
+    [InlineData(Format.ACCOUNTING, typeof(decimal?))]
+    [InlineData(Format.DATE, typeof(string))]
+    [InlineData(Format.TIME, typeof(string))]
+    [InlineData(Format.DURATION, typeof(string))]
+    [InlineData(Format.DISTANCE, typeof(decimal?))]
+    [InlineData(Format.NUMBER, typeof(double?))]
+    [InlineData(Format.PERCENT, typeof(decimal?))]
+    [InlineData(Format.TEXT, typeof(string))]
+    public void GetEffectiveNumberFormatPattern_WithVariousFormats_ReturnsCorrectPattern(Format formatType, Type propertyType)
     {
         // Arrange
         var column = new ColumnAttribute("Test", formatType: formatType);
@@ -149,15 +149,15 @@ public class ColumnAttributeTests
         // Verify it matches the expected pattern for the format type
         var expectedPattern = formatType switch
         {
-            FormatEnum.CURRENCY => CellFormatPatterns.Currency,
-            FormatEnum.ACCOUNTING => CellFormatPatterns.Accounting,
-            FormatEnum.DATE => CellFormatPatterns.Date,
-            FormatEnum.TIME => CellFormatPatterns.Time,
-            FormatEnum.DURATION => CellFormatPatterns.Duration,
-            FormatEnum.DISTANCE => CellFormatPatterns.Distance,
-            FormatEnum.NUMBER => CellFormatPatterns.Number,
-            FormatEnum.PERCENT => CellFormatPatterns.Percentage,
-            FormatEnum.TEXT => CellFormatPatterns.Text,
+            Format.CURRENCY => CellFormatPatterns.Currency,
+            Format.ACCOUNTING => CellFormatPatterns.Accounting,
+            Format.DATE => CellFormatPatterns.Date,
+            Format.TIME => CellFormatPatterns.Time,
+            Format.DURATION => CellFormatPatterns.Duration,
+            Format.DISTANCE => CellFormatPatterns.Distance,
+            Format.NUMBER => CellFormatPatterns.Number,
+            Format.PERCENT => CellFormatPatterns.Percentage,
+            Format.TEXT => CellFormatPatterns.Text,
             _ => CellFormatPatterns.Text
         };
         
@@ -168,7 +168,7 @@ public class ColumnAttributeTests
     public void GetEffectiveNumberFormatPattern_WithWeekdayFormat_ReturnsWeekdayPattern()
     {
         // Arrange
-        var column = new ColumnAttribute("Day", formatType: FormatEnum.WEEKDAY);
+        var column = new ColumnAttribute("Day", formatType: Format.WEEKDAY);
         column.SetFieldTypeFromProperty(typeof(string));
         
         // Act

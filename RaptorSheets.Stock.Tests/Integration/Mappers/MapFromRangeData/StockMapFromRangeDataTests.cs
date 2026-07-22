@@ -19,7 +19,7 @@ public class StockMapFromRangeDataTests
     public StockMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.STOCKS.GetDescription()).First().ValueRange.Values;
+        _values = this.fixture.valueRanges?.First(x => x.DataFilters[0].A1Range == SheetName.STOCKS.GetDescription()).ValueRange.Values;
         _entities = StockMapper.MapFromRangeData(_values!);
     }
 

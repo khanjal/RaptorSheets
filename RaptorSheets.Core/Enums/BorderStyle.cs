@@ -1,6 +1,6 @@
 namespace RaptorSheets.Core.Enums;
 
-public enum BorderStyleEnum
+public enum BorderStyle
 {
     /// <summary>
     /// Dotted line borders.

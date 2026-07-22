@@ -18,7 +18,7 @@ public class GoogleDataFixture : IAsyncLifetime // https://xunit.net/docs/shared
             return;
 
         var googleSheetService = new GoogleSheetService(credential, spreadsheetId);
-        var sheets = Enum.GetValues(typeof(SheetEnum)).Cast<SheetEnum>().ToList();
+        var sheets = Enum.GetValues(typeof(SheetName)).Cast<SheetName>().ToList();
         var result = await googleSheetService.GetBatchData(sheets.Select(x => x.GetDescription()).ToList());
 
         valueRanges = result?.ValueRanges;

@@ -333,7 +333,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var shift = new ShiftEntity
         {
             RowId = 2,
-            Action = ActionTypeEnum.INSERT.GetDescription(),
+            Action = ActionType.INSERT.GetDescription(),
             Date = today.ToString(CellFormatPatterns.Date),
             Service = $"Test_{testRunId}",
             Region = "DailyWorkflow",
@@ -351,7 +351,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             var trip = new TripEntity
             {
                 RowId = 2 + i,
-                Action = ActionTypeEnum.INSERT.GetDescription(),
+                Action = ActionType.INSERT.GetDescription(),
                 Date = today.ToString(CellFormatPatterns.Date),
                 Service = $"Test_{testRunId}",
                 Type = i % 2 == 0 ? "Pickup" : "Delivery",
@@ -377,7 +377,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         Assert.Single(dailyShifts);
         Assert.True(dailyTrips.Count >= 2, $"Should have at least 2 daily trips, found {dailyTrips.Count}");
         
-        var workflowShift = dailyShifts.First();
+        var workflowShift = dailyShifts[0];
         Assert.NotNull(workflowShift.Start);
         Assert.NotNull(workflowShift.Finish);
         Assert.True(workflowShift.Pay > 0, "Daily shift should have pay recorded");
@@ -399,7 +399,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             var expense = new ExpenseEntity
             {
                 RowId = 2 + i,
-                Action = ActionTypeEnum.INSERT.GetDescription(),
+                Action = ActionType.INSERT.GetDescription(),
                 Date = today.AddDays(-i).ToString(CellFormatPatterns.Date),  // Convert to string format
                 Category = categories[i],
                 Name = $"{categories[i]} Item",
@@ -445,7 +445,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine($"⏱️  Insert completed in {elapsed.TotalSeconds:F1}s");
         
         var criticalErrors = insertResult.Messages.Where(m => 
-            m.Level == MessageLevelEnum.ERROR.GetDescription() && 
+            m.Level == MessageLevel.ERROR.GetDescription() && 
             !IsExpectedError(m.Message)).ToList();
         
         Assert.Empty(criticalErrors);
@@ -456,13 +456,13 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     #region Validation Helper Methods
 
-    private void ValidateInsertResult(string testRunId, SheetEntity testData)
+    private static void ValidateInsertResult(string testRunId, SheetEntity testData)
     {
         System.Diagnostics.Debug.WriteLine($"   ✓ Inserted {testData.Sheets.Shifts.Count} shifts, " +
             $"{testData.Sheets.Trips.Count} trips, {testData.Sheets.Expenses.Count} expenses for test {testRunId}");
     }
 
-    private List<ShiftEntity> ValidateInsertedShifts(string testRunId, SheetEntity readData, SheetEntity expectedData)
+    private static List<ShiftEntity> ValidateInsertedShifts(string testRunId, SheetEntity readData, SheetEntity expectedData)
     {
         var shifts = readData.Sheets.Shifts.Where(s => 
             s.Service?.Contains($"Test_{testRunId}") == true).ToList();
@@ -475,7 +475,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         return shifts;
     }
 
-    private List<TripEntity> ValidateInsertedTrips(string testRunId, SheetEntity readData, SheetEntity expectedData)
+    private static List<TripEntity> ValidateInsertedTrips(string testRunId, SheetEntity readData, SheetEntity expectedData)
     {
         var trips = readData.Sheets.Trips.Where(t => 
             t.Service?.Contains($"Test_{testRunId}") == true).ToList();
@@ -488,7 +488,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         return trips;
     }
 
-    private List<ExpenseEntity> ValidateInsertedExpenses(string testRunId, SheetEntity readData, SheetEntity expectedData)
+    private static List<ExpenseEntity> ValidateInsertedExpenses(string testRunId, SheetEntity readData, SheetEntity expectedData)
     {
         var expenses = readData.Sheets.Expenses.Where(e => 
             e.Description?.Contains($"Test_{testRunId}") == true).ToList();
@@ -501,7 +501,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         return expenses;
     }
 
-    private void ValidateEntityStructures(
+    private static void ValidateEntityStructures(
         List<ShiftEntity> shifts, 
         List<TripEntity> trips, 
         List<ExpenseEntity> expenses)
@@ -534,7 +534,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine("   ✓ Entity structures valid");
     }
 
-    private void ValidateCrossEntityRelationships(List<ShiftEntity> shifts, List<TripEntity> trips)
+    private static void ValidateCrossEntityRelationships(List<ShiftEntity> shifts, List<TripEntity> trips)
     {
         System.Diagnostics.Debug.WriteLine("   🔍 Validating cross-entity relationships...");
         
@@ -550,7 +550,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {commonServices.Count} common services between shifts and trips");
     }
 
-    private void ValidateDateRanges(List<ShiftEntity> shifts, List<ExpenseEntity> expenses)
+    private static void ValidateDateRanges(List<ShiftEntity> shifts, List<ExpenseEntity> expenses)
     {
         System.Diagnostics.Debug.WriteLine("   🔍 Validating date ranges...");
         
@@ -575,7 +575,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine("   ✓ All dates within valid range");
     }
 
-    private void ValidateUpdatedShifts(string testRunId, SheetEntity updatedData)
+    private static void ValidateUpdatedShifts(string testRunId, SheetEntity updatedData)
     {
         var updatedShifts = updatedData.Sheets.Shifts.Where(s => 
             s.Note?.Contains($"UPDATED_{testRunId}") == true).ToList();
@@ -590,7 +590,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         });
     }
 
-    private void ValidateUpdatedTrips(string testRunId, SheetEntity updatedData)
+    private static void ValidateUpdatedTrips(string testRunId, SheetEntity updatedData)
     {
         var updatedTrips = updatedData.Sheets.Trips.Where(t => 
             t.Note?.Contains($"UPDATED_{testRunId}") == true).ToList();
@@ -605,7 +605,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         });
     }
 
-    private void ValidateUpdatedExpenses(string testRunId, SheetEntity updatedData)
+    private static void ValidateUpdatedExpenses(string testRunId, SheetEntity updatedData)
     {
         var updatedExpenses = updatedData.Sheets.Expenses.Where(e => 
             e.Description?.Contains($"UPDATED_{testRunId}") == true).ToList();
@@ -626,7 +626,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     private static string GenerateTestRunId() => DateTimeOffset.UtcNow.ToString("HHmmss");
 
-    private SheetEntity CreateTestData(string testRunId, int shifts, int tripsPerShift, int expenses)
+    private static SheetEntity CreateTestData(string testRunId, int shifts, int tripsPerShift, int expenses)
     {
         var testData = CreateSimpleTestData(shifts, tripsPerShift, expenses);
         var baseDate = DateTime.Today;
@@ -641,7 +641,12 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         foreach (var trip in testData.Sheets.Trips)
         {
             trip.Service = $"Test_{testRunId}";
+            // Integer division is intentional here: it buckets every tripsPerShift trips onto the
+            // same day offset (0, 0, 0, -1, -1, -1, ...), mirroring how CreateSimpleTestData groups
+            // trips under shifts. Casting to double would break the bucketing.
+#pragma warning disable S2184
             trip.Date = baseDate.AddDays(-testData.Sheets.Trips.IndexOf(trip) / tripsPerShift).ToString(CellFormatPatterns.Date);
+#pragma warning restore S2184
         }
         
         foreach (var expense in testData.Sheets.Expenses)
@@ -691,7 +696,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine($"⏱️  Insert completed in {elapsed.TotalSeconds:F1}s");
         
         var criticalErrors = (insertResult.Messages ?? new List<MessageEntity>())
-            .Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription() && !IsExpectedError(m.Message))
+            .Where(m => m.Level == MessageLevel.ERROR.GetDescription() && !IsExpectedError(m.Message))
             .ToList();
         
         Assert.Empty(criticalErrors);
@@ -715,7 +720,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // missing-sheet / empty-header diagnostics are produced by the manager.
         System.Diagnostics.Debug.WriteLine("➡ Deleting Deliveries to validate missing-sheet detection...");
         var deleteResult = await GoogleSheetManager!.DeleteSheets(new List<string> { SheetsConfig.SheetNames.Deliveries });
-        var deleteErrors = deleteResult.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
+        var deleteErrors = deleteResult.Messages.Where(m => m.Level == MessageLevel.ERROR.GetDescription()).ToList();
         if (deleteErrors.Count > 0)
         {
             System.Diagnostics.Debug.WriteLine($"⚠️  Deletion returned errors: {string.Join(';', deleteErrors.Select(e => e.Message))}");
@@ -737,8 +742,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
         // Detect the informational creation notice produced when the manager created missing sheets
         var creationNotice = allMessages
-            .Where(m => m.Message != null && m.Message.Contains("Sheets may take a few seconds", StringComparison.OrdinalIgnoreCase))
-            .FirstOrDefault();
+            .FirstOrDefault(m => m.Message != null && m.Message.Contains("Sheets may take a few seconds", StringComparison.OrdinalIgnoreCase));
 
         var hasCreationNotice = creationNotice != null;
 
@@ -895,7 +899,7 @@ public class GoogleSheetsIntegrationFixture : IAsyncLifetime
             // Delete all sheets to start fresh
             var deleteResult = await _manager.DeleteAllSheets();
             var deleteErrors = deleteResult.Messages.Where(m => 
-                m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
+                m.Level == MessageLevel.ERROR.GetDescription()).ToList();
             
             if (deleteErrors.Count > 0)
             {
@@ -912,7 +916,7 @@ public class GoogleSheetsIntegrationFixture : IAsyncLifetime
             System.Diagnostics.Debug.WriteLine("  📌 Creating all sheets fresh to validate creation process...");
             var createResult = await _manager.CreateAllSheets();
             var createErrors = createResult.Messages.Where(m => 
-                m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
+                m.Level == MessageLevel.ERROR.GetDescription()).ToList();
             
             if (createErrors.Count > 0)
             {
@@ -940,8 +944,8 @@ public class GoogleSheetsIntegrationFixture : IAsyncLifetime
             {
                 var headerValidation = GoogleSheetManager.CheckSheetHeaders(spreadsheetInfo);
                 var headerErrors = headerValidation.Where(m => 
-                    m.Level == MessageLevelEnum.ERROR.GetDescription() ||
-                    m.Level == MessageLevelEnum.WARNING.GetDescription()).ToList();
+                    m.Level == MessageLevel.ERROR.GetDescription() ||
+                    m.Level == MessageLevel.WARNING.GetDescription()).ToList();
                 
                 if (headerErrors.Count > 0)
                 {

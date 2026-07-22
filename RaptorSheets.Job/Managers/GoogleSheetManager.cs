@@ -1,3 +1,4 @@
+using System.Globalization;
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
 using RaptorSheets.Core.Entities;
@@ -114,7 +115,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
         if (!sheetExists)
         {
-            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageTypeEnum.GET_SHEETS)] };
+            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
         }
 
         return await GetSheets([sheet]);
@@ -156,7 +157,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
         if (sheetsWithData.Count == 0)
         {
-            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageTypeEnum.GENERAL));
+            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageType.GENERAL));
             return sheetEntity;
         }
 
@@ -169,7 +170,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
         if (batchUpdateSpreadsheetResponse == null)
         {
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageTypeEnum.SAVE_DATA));
+            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageType.SAVE_DATA));
         }
 
         return sheetEntity;
@@ -235,44 +236,83 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     {
         var start = startDate ?? DateTime.Today.AddDays(-30);
         var end = endDate ?? DateTime.Today;
+        // SonarQube S2245: Using Random is safe here - this generates demo/sample data, not security-sensitive values
+#pragma warning disable S2245
         var random = seed.HasValue ? new Random(seed.Value) : Random.Shared;
+#pragma warning restore S2245
 
         var sheetEntity = new SheetEntity();
+        var refData = BuildDemoReferenceData();
 
-        var companies = new[]
-        {
-            "TechCorp", "DataSystems Inc", "Cloud Solutions", "AI Innovations", "WebWorks",
-            "NextGen Labs", "Pioneer Software", "BrightPath Tech", "Nimbus Analytics", "Quantum Apps",
-            "Vertex Systems", "BluePeak Digital", "CoreStack", "Apex Dynamics", "Forge Data",
-            "Summit Software", "Sterling Systems", "Catalyst Labs", "Horizon Tech", "Meridian Solutions",
-            "Orbit Analytics", "Silverline Digital", "Maple Street Co", "Paramount Logic", "Bluewater Tech",
-            "Greenfield Apps", "UrbanGrid", "Solstice Software", "Ivory Tower Labs", "Praxis Systems", "NorthStar AI"
-        };
+        GenerateApplications(sheetEntity, random, refData, start, end);
 
-        var positions = new[]
-        {
-            "Software Engineer", "Senior Developer", "Data Scientist", "Product Manager", "UX Designer",
-            "QA Engineer", "DevOps Engineer", "Backend Engineer", "Frontend Engineer", "Engineering Manager",
-            "Solutions Architect", "Security Engineer", "Data Engineer", "Business Analyst", "Mobile Developer"
-        };
+        // Reference lists (informational - written by their sheet formulas, not by PopulateDemoData)
+        sheetEntity.Sheets.Sites.AddRange(refData.Sites.Select((s, i) => new SiteEntity { RowId = i + 1, Site = s }));
+        sheetEntity.Sheets.Decisions.AddRange(refData.Decisions.Select((d, i) => new DecisionEntity { RowId = i + 1, Decision = d }));
+        sheetEntity.Sheets.InterviewTypes.AddRange(refData.InterviewTypes.Select((t, i) => new InterviewTypeEntity { RowId = i + 1, InterviewType = t }));
+        sheetEntity.Sheets.InterviewOutcomes.AddRange(refData.Outcomes.Select((o, i) => new InterviewOutcomeEntity { RowId = i + 1, Outcome = o }));
+        sheetEntity.Sheets.Schedules.AddRange(refData.Schedules.Select((s, i) => new ScheduleEntity { RowId = i + 1, Schedule = s }));
 
-        var sites = new[] { "LinkedIn", "Indeed", "Glassdoor", "Company Website", "Wellfound", "ZipRecruiter" };
-        var decisions = new[] { "Pending", "Accepted", "Rejected", "Interview Scheduled", "On Hold" };
-        var schedules = new[] { "Full-time", "Part-time", "Contract", "Temporary", "Hybrid" };
+        GenerateInterviews(sheetEntity, random, refData);
 
+        return sheetEntity;
+    }
+
+    private static DemoReferenceData BuildDemoReferenceData()
+    {
+        return new DemoReferenceData(
+            Companies:
+            [
+                "TechCorp", "DataSystems Inc", "Cloud Solutions", "AI Innovations", "WebWorks",
+                "NextGen Labs", "Pioneer Software", "BrightPath Tech", "Nimbus Analytics", "Quantum Apps",
+                "Vertex Systems", "BluePeak Digital", "CoreStack", "Apex Dynamics", "Forge Data",
+                "Summit Software", "Sterling Systems", "Catalyst Labs", "Horizon Tech", "Meridian Solutions",
+                "Orbit Analytics", "Silverline Digital", "Maple Street Co", "Paramount Logic", "Bluewater Tech",
+                "Greenfield Apps", "UrbanGrid", "Solstice Software", "Ivory Tower Labs", "Praxis Systems", "NorthStar AI"
+            ],
+            Positions:
+            [
+                "Software Engineer", "Senior Developer", "Data Scientist", "Product Manager", "UX Designer",
+                "QA Engineer", "DevOps Engineer", "Backend Engineer", "Frontend Engineer", "Engineering Manager",
+                "Solutions Architect", "Security Engineer", "Data Engineer", "Business Analyst", "Mobile Developer"
+            ],
+            Sites: ["LinkedIn", "Indeed", "Glassdoor", "Company Website", "Wellfound", "ZipRecruiter"],
+            Decisions: ["Pending", "Accepted", "Rejected", "Interview Scheduled", "On Hold"],
+            Schedules: ["Full-time", "Part-time", "Contract", "Temporary", "Hybrid"],
+            Recruiters:
+            [
+                "Alice Johnson", "Michael Brown", "Olivia Davis", "Daniel Wilson", "Emma Thompson",
+                "James Anderson", "Sophia Martinez", "Liam Garcia", "Isabella Robinson", "Noah Clark",
+                "Ava Rodriguez", "Ethan Lewis", "Mia Walker", "Lucas Hall", "Amelia Young",
+                "Benjamin Allen", "Charlotte King", "Henry Wright", "Evelyn Scott", "Owen Green"
+            ],
+            Interviewers:
+            [
+                "Karen Miller", "Robert Moore", "Patricia Taylor", "John Jackson", "Linda White",
+                "Barbara Harris", "Elizabeth Martin", "Thomas Thompson", "Christopher Garcia", "Matthew Martinez",
+                "Anthony Robinson", "Mark Clark", "Steven Rodriguez", "Paul Lewis", "Andrew Lee",
+                "Rachel Walker", "Rebecca Hall", "Julia Allen", "Victoria Young", "Kevin Hernandez"
+            ],
+            InterviewTypes: ["Phone Screen", "Technical Interview", "Behavioral Interview", "On-Site", "Final Round"],
+            Outcomes: ["Passed", "Failed", "Pending", "Moved to Next Round"]
+        );
+    }
+
+    private static void GenerateApplications(SheetEntity sheetEntity, Random random, DemoReferenceData refData, DateTime start, DateTime end)
+    {
         var totalDays = Math.Max(1, (end.Date - start.Date).Days + 1);
         var originalTargetApplications = Math.Max(220, totalDays * 5);
 
         var maxPerCompany = 3;
-        var maxPossibleApplications = companies.Length * maxPerCompany;
+        var maxPossibleApplications = refData.Companies.Length * maxPerCompany;
         var targetApplications = Math.Min(originalTargetApplications, maxPossibleApplications);
 
         var applicationId = 2; // start at row 2 (row 1 reserved for headers)
-        var companyCounts = companies.ToDictionary(c => c, _ => 0);
+        var companyCounts = refData.Companies.ToDictionary(c => c, _ => 0);
 
         for (var i = 0; i < targetApplications; i++)
         {
-            var availableCompanies = companies.Where(c => companyCounts[c] < maxPerCompany).ToList();
+            var availableCompanies = refData.Companies.Where(c => companyCounts[c] < maxPerCompany).ToList();
             if (availableCompanies.Count == 0)
             {
                 break;
@@ -281,7 +321,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             var company = availableCompanies[random.Next(availableCompanies.Count)];
             companyCounts[company]++;
 
-            var position = positions[random.Next(positions.Length)];
+            var position = refData.Positions[random.Next(refData.Positions.Length)];
             var appDate = start.AddDays(random.Next(totalDays));
 
             var payLow = random.Next(70000, 180000);
@@ -294,8 +334,8 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
                 Company = company,
                 JobTitle = position,
                 Posting = $"https://example.com/job/{random.Next(100000, 999999)}",
-                Site = sites[random.Next(sites.Length)],
-                Decision = decisions[random.Next(decisions.Length)],
+                Site = refData.Sites[random.Next(refData.Sites.Length)],
+                Decision = refData.Decisions[random.Next(refData.Decisions.Length)],
                 PayLow = payLow,
                 PayHigh = payHigh,
                 Location = random.Next(3) switch
@@ -304,40 +344,14 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
                     1 => "Hybrid",
                     _ => "New York, NY"
                 },
-                Schedule = schedules[random.Next(schedules.Length)]
+                Schedule = refData.Schedules[random.Next(refData.Schedules.Length)]
             });
         }
+    }
 
-        // Reference lists (informational - written by their sheet formulas, not by PopulateDemoData)
-        sheetEntity.Sheets.Sites.AddRange(sites.Select((s, i) => new SiteEntity { RowId = i + 1, Site = s }));
-        sheetEntity.Sheets.Decisions.AddRange(decisions.Select((d, i) => new DecisionEntity { RowId = i + 1, Decision = d }));
-
-        var interviewTypes = new[] { "Phone Screen", "Technical Interview", "Behavioral Interview", "On-Site", "Final Round" };
-        sheetEntity.Sheets.InterviewTypes.AddRange(interviewTypes.Select((t, i) => new InterviewTypeEntity { RowId = i + 1, InterviewType = t }));
-
-        var outcomes = new[] { "Passed", "Failed", "Pending", "Moved to Next Round" };
-        sheetEntity.Sheets.InterviewOutcomes.AddRange(outcomes.Select((o, i) => new InterviewOutcomeEntity { RowId = i + 1, Outcome = o }));
-
-        sheetEntity.Sheets.Schedules.AddRange(schedules.Select((s, i) => new ScheduleEntity { RowId = i + 1, Schedule = s }));
-
-        // Interviews: about half of applications get interviews; popular combos get multiple rounds
-        var interviewId = 2;
-        var recruiters = new[]
-        {
-            "Alice Johnson", "Michael Brown", "Olivia Davis", "Daniel Wilson", "Emma Thompson",
-            "James Anderson", "Sophia Martinez", "Liam Garcia", "Isabella Robinson", "Noah Clark",
-            "Ava Rodriguez", "Ethan Lewis", "Mia Walker", "Lucas Hall", "Amelia Young",
-            "Benjamin Allen", "Charlotte King", "Henry Wright", "Evelyn Scott", "Owen Green"
-        };
-
-        var interviewers = new[]
-        {
-            "Karen Miller", "Robert Moore", "Patricia Taylor", "John Jackson", "Linda White",
-            "Barbara Harris", "Elizabeth Martin", "Thomas Thompson", "Christopher Garcia", "Matthew Martinez",
-            "Anthony Robinson", "Mark Clark", "Steven Rodriguez", "Paul Lewis", "Andrew Lee",
-            "Rachel Walker", "Rebecca Hall", "Julia Allen", "Victoria Young", "Kevin Hernandez"
-        };
-
+    // Interviews: about half of applications get interviews; popular combos get multiple rounds
+    private static void GenerateInterviews(SheetEntity sheetEntity, Random random, DemoReferenceData refData)
+    {
         var combos = sheetEntity.Sheets.Applications.Select(a => (a.Company, a.JobTitle)).Distinct().ToList();
         var multiInterviewCombos = new HashSet<(string Company, string JobTitle)>();
         var comboCount = Math.Max(8, combos.Count / 10);
@@ -352,68 +366,95 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             .Take(sheetEntity.Sheets.Applications.Count / 2)
             .ToList();
 
+        var interviewId = 2;
         foreach (var app in interviewCandidates)
         {
             var isMultiCombo = multiInterviewCombos.Contains((app.Company, app.JobTitle));
-
-            int interviewCount = isMultiCombo
-                ? random.Next(2, 6)
-                : (random.NextDouble() < 0.5 ? 1 : (random.NextDouble() < 0.2 ? 2 : 1));
-
-            var baseDate = DateTime.Parse(app.Date);
+            var interviewCount = DetermineInterviewCount(random, isMultiCombo);
+            var baseDate = DateTime.Parse(app.Date, CultureInfo.InvariantCulture);
 
             for (var round = 0; round < interviewCount; round++)
             {
-                var interviewDate = baseDate.AddDays(random.Next(0, 21) + round);
-                var startHour = random.Next(8, 17);
-                var startMinute = random.Next(0, 2) == 0 ? 0 : 30;
-                var durationMinutes = new[] { 30, 45, 60, 90 }[random.Next(4)];
-
-                var startTime = new DateTime(interviewDate.Year, interviewDate.Month, interviewDate.Day, startHour, startMinute, 0);
-                var endTime = startTime.AddMinutes(durationMinutes);
-
-                var recruiter = recruiters[random.Next(recruiters.Length)];
-                var recruiterContact = recruiter.ToLower().Replace(' ', '.') + "@example.com";
-
-                var numInterviewers = random.Next(1, 4);
-                var attendees = new List<string>();
-                for (var ai = 0; ai < numInterviewers; ai++)
-                {
-                    attendees.Add(interviewers[random.Next(interviewers.Length)]);
-                }
-
-                string interviewType;
-                if (isMultiCombo)
-                {
-                    var progression = new[] { "Phone Screen", "Technical Interview", "Behavioral Interview", "On-Site", "Final Round" };
-                    interviewType = progression[Math.Min(round, progression.Length - 1)];
-                }
-                else
-                {
-                    interviewType = interviewTypes[random.Next(interviewTypes.Length)];
-                }
-
-                sheetEntity.Sheets.Interviews.Add(new InterviewEntity
-                {
-                    RowId = interviewId++,
-                    Date = interviewDate.ToString("yyyy-MM-dd"),
-                    StartTime = startTime.ToString("hh:mm tt").ToLowerInvariant(),
-                    EndTime = endTime.ToString("hh:mm tt").ToLowerInvariant(),
-                    Duration = TimeSpan.FromMinutes(durationMinutes).ToString(@"hh\:mm"),
-                    Company = app.Company,
-                    JobTitle = app.JobTitle,
-                    InterviewType = interviewType,
-                    RecruiterName = recruiter,
-                    RecruiterContact = recruiterContact,
-                    Attendees = string.Join(", ", attendees),
-                    Outcome = outcomes[random.Next(outcomes.Length)],
-                    Notes = "Auto-generated interview"
-                });
+                var interview = BuildInterview(app, round, isMultiCombo, baseDate, random, refData);
+                interview.RowId = interviewId++;
+                sheetEntity.Sheets.Interviews.Add(interview);
             }
         }
-
-        return sheetEntity;
     }
+
+    private static int DetermineInterviewCount(Random random, bool isMultiCombo)
+    {
+        if (isMultiCombo)
+        {
+            return random.Next(2, 6);
+        }
+
+        if (random.NextDouble() < 0.5)
+        {
+            return 1;
+        }
+
+        return random.NextDouble() < 0.2 ? 2 : 1;
+    }
+
+    private static InterviewEntity BuildInterview(ApplicationEntity app, int round, bool isMultiCombo, DateTime baseDate, Random random, DemoReferenceData refData)
+    {
+        var interviewDate = baseDate.AddDays(random.Next(0, 21) + round);
+        var startHour = random.Next(8, 17);
+        var startMinute = random.Next(0, 2) == 0 ? 0 : 30;
+        var durationMinutes = new[] { 30, 45, 60, 90 }[random.Next(4)];
+
+        var startTime = new DateTime(interviewDate.Year, interviewDate.Month, interviewDate.Day, startHour, startMinute, 0, DateTimeKind.Unspecified);
+        var endTime = startTime.AddMinutes(durationMinutes);
+
+        var recruiter = refData.Recruiters[random.Next(refData.Recruiters.Length)];
+        var recruiterContact = recruiter.ToLower().Replace(' ', '.') + "@example.com";
+
+        var numInterviewers = random.Next(1, 4);
+        var attendees = new List<string>();
+        for (var ai = 0; ai < numInterviewers; ai++)
+        {
+            attendees.Add(refData.Interviewers[random.Next(refData.Interviewers.Length)]);
+        }
+
+        string interviewType;
+        if (isMultiCombo)
+        {
+            var progression = new[] { "Phone Screen", "Technical Interview", "Behavioral Interview", "On-Site", "Final Round" };
+            interviewType = progression[Math.Min(round, progression.Length - 1)];
+        }
+        else
+        {
+            interviewType = refData.InterviewTypes[random.Next(refData.InterviewTypes.Length)];
+        }
+
+        return new InterviewEntity
+        {
+            Date = interviewDate.ToString("yyyy-MM-dd"),
+            StartTime = startTime.ToString("hh:mm tt").ToLowerInvariant(),
+            EndTime = endTime.ToString("hh:mm tt").ToLowerInvariant(),
+            Duration = TimeSpan.FromMinutes(durationMinutes).ToString(@"hh\:mm"),
+            Company = app.Company,
+            JobTitle = app.JobTitle,
+            InterviewType = interviewType,
+            RecruiterName = recruiter,
+            RecruiterContact = recruiterContact,
+            Attendees = string.Join(", ", attendees),
+            Outcome = refData.Outcomes[random.Next(refData.Outcomes.Length)],
+            Notes = "Auto-generated interview"
+        };
+    }
+
+    private readonly record struct DemoReferenceData(
+        string[] Companies,
+        string[] Positions,
+        string[] Sites,
+        string[] Decisions,
+        string[] Schedules,
+        string[] Recruiters,
+        string[] Interviewers,
+        string[] InterviewTypes,
+        string[] Outcomes);
 
     #endregion
 }

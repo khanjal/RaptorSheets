@@ -28,7 +28,7 @@ public static class RoomMapper
                 lengthRange,
                 SheetsConfig.HeaderNames.SquareFeet,
                 $"IF(ISBLANK({widthRange}), \"\", {lengthRange}*{widthRange})");
-            squareFeet.Format = FormatEnum.NUMBER;
+            squareFeet.Format = Format.NUMBER;
         }
 
         return sheet;

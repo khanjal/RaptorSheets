@@ -3,4 +3,5 @@ using RaptorSheets.Test.Common.Helpers;
 
 namespace RaptorSheets.Stock.Tests.Data.Attributes;
 
-public sealed class TheoryCheckUserSecrets() : TheoryCheckUserSecretsBase(TestConfigurationHelpers.GetStockSpreadsheet());
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class TheoryCheckUserSecretsAttribute() : TheoryCheckUserSecretsBaseAttribute(TestConfigurationHelpers.GetStockSpreadsheet());

@@ -9,7 +9,7 @@ namespace RaptorSheets.Home.Entities;
 [ExcludeFromCodeCoverage]
 public class MaintenanceEntity : SheetRowEntityBase
 {
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: Format.DATE)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Problem, isInput: true)]
@@ -24,6 +24,6 @@ public class MaintenanceEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Solution, isInput: true)]
     public string Solution { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Amount, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Amount, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? Amount { get; set; }
 }

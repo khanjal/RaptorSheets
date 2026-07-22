@@ -20,21 +20,21 @@ public class GoogleSheetHelpersTests
         {
             var data = new TheoryData<SheetModel, BatchUpdateSpreadsheetRequest>
             {
-                { AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.ADDRESSES.GetDescription()]) },
-                { DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.DAILY.GetDescription()]) },
-                { GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet), GenerateSheetsHelpers.Generate([SheetEnum.EXPENSES.GetDescription()]) },
-                { MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.MONTHLY.GetDescription()]) },
-                { NameMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.NAMES.GetDescription()]) },
-                { PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.PLACES.GetDescription()]) },
-                { RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.REGIONS.GetDescription()]) },
-                { ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.SERVICES.GetDescription()]) },
-                { GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet), GenerateSheetsHelpers.Generate([SheetEnum.SETUP.GetDescription()]) },
-                { ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.SHIFTS.GetDescription()]) },
-                { TripMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.TRIPS.GetDescription()]) },
-                { TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.TYPES.GetDescription()]) },
-                { WeekdayMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.WEEKDAYS.GetDescription()]) },
-                { WeeklyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.WEEKLY.GetDescription()]) },
-                { YearlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetEnum.YEARLY.GetDescription()]) }
+                { AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.ADDRESSES.GetDescription()]) },
+                { DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.DAILY.GetDescription()]) },
+                { GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet), GenerateSheetsHelpers.Generate([SheetName.EXPENSES.GetDescription()]) },
+                { MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.MONTHLY.GetDescription()]) },
+                { NameMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.NAMES.GetDescription()]) },
+                { PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.PLACES.GetDescription()]) },
+                { RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.REGIONS.GetDescription()]) },
+                { ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SERVICES.GetDescription()]) },
+                { GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet), GenerateSheetsHelpers.Generate([SheetName.SETUP.GetDescription()]) },
+                { ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SHIFTS.GetDescription()]) },
+                { TripMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.TRIPS.GetDescription()]) },
+                { TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.TYPES.GetDescription()]) },
+                { WeekdayMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.WEEKDAYS.GetDescription()]) },
+                { WeeklyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.WEEKLY.GetDescription()]) },
+                { YearlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.YEARLY.GetDescription()]) }
             };
             return data;
         }

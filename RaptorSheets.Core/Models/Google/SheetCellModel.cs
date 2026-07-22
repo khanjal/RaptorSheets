@@ -15,7 +15,7 @@ public class SheetCellModel
     // a QUERY formula will populate the header text but formatting still needs to apply).
     public bool HideHeaderName { get; set; } = false;
     
-    public FormatEnum? Format { get; set; }
+    public Format? Format { get; set; }
     public string? FormatPattern { get; set; }
     public bool Protect { get; set; } = false;
     public string Validation { get; set; } = "";

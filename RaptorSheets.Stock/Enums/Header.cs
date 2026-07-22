@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace RaptorSheets.Stock.Enums;
 
-public enum HeaderEnum
+public enum Header
 {
     [Description("Account")]
     ACCOUNT,

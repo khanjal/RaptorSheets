@@ -18,7 +18,7 @@ public class MessageHelperTests
         var result = MessageHelpers.CreateMessage(message);
 
         // Assert
-        Assert.Equal(MessageTypeEnum.GENERAL.GetDescription(), result.Type);
+        Assert.Equal(MessageType.GENERAL.GetDescription(), result.Type);
         Assert.True(result.Time > 0);
     }
 
@@ -27,14 +27,14 @@ public class MessageHelperTests
     {
         // Arrange
         var message = "Error occurred";
-        var type = MessageTypeEnum.ADD_DATA;
+        var type = MessageType.ADD_DATA;
 
         // Act
         var result = MessageHelpers.CreateErrorMessage(message, type);
 
         // Assert
         Assert.Equal(message, result.Message);
-        Assert.Equal(MessageLevelEnum.ERROR.UpperName(), result.Level);
+        Assert.Equal(MessageLevel.ERROR.UpperName(), result.Level);
         Assert.Equal(type.GetDescription(), result.Type);
         Assert.True(result.Time > 0);
     }
@@ -44,14 +44,14 @@ public class MessageHelperTests
     {
         // Arrange
         var message = "Warning issued";
-        var type = MessageTypeEnum.CHECK_SHEET;
+        var type = MessageType.CHECK_SHEET;
 
         // Act
         var result = MessageHelpers.CreateWarningMessage(message, type);
 
         // Assert
         Assert.Equal(message, result.Message);
-        Assert.Equal(MessageLevelEnum.WARNING.UpperName(), result.Level);
+        Assert.Equal(MessageLevel.WARNING.UpperName(), result.Level);
         Assert.Equal(type.GetDescription(), result.Type);
         Assert.True(result.Time > 0);
     }
@@ -61,14 +61,14 @@ public class MessageHelperTests
     {
         // Arrange
         var message = "Information message";
-        var type = MessageTypeEnum.GET_SHEETS;
+        var type = MessageType.GET_SHEETS;
 
         // Act
         var result = MessageHelpers.CreateInfoMessage(message, type);
 
         // Assert
         Assert.Equal(message, result.Message);
-        Assert.Equal(MessageLevelEnum.INFO.UpperName(), result.Level);
+        Assert.Equal(MessageLevel.INFO.UpperName(), result.Level);
         Assert.Equal(type.GetDescription(), result.Type);
         Assert.True(result.Time > 0);
     }
@@ -81,14 +81,14 @@ public class MessageHelperTests
         { 
             Message = "Test message", 
             Level = "INFO", 
-            Type = MessageTypeEnum.UPDATE_DATA.GetDescription() 
+            Type = MessageType.UPDATE_DATA.GetDescription() 
         };
 
         // Act
         var result = MessageHelpers.CreateMessage(message);
 
         // Assert
-        Assert.Equal(MessageTypeEnum.UPDATE_DATA.GetDescription(), result.Type);
+        Assert.Equal(MessageType.UPDATE_DATA.GetDescription(), result.Type);
         Assert.Equal(message.Message, result.Message);
         Assert.Equal(message.Level, result.Level);
     }
@@ -108,7 +108,7 @@ public class MessageHelperTests
 
         // Assert
         Assert.Null(result.Message);
-        Assert.Equal(MessageTypeEnum.GENERAL.GetDescription(), result.Type);
+        Assert.Equal(MessageType.GENERAL.GetDescription(), result.Type);
     }
 
     [Theory]
@@ -129,7 +129,7 @@ public class MessageHelperTests
         var result = MessageHelpers.CreateMessage(message);
 
         // Assert
-        Assert.Equal(MessageTypeEnum.GENERAL.GetDescription(), result.Type);
+        Assert.Equal(MessageType.GENERAL.GetDescription(), result.Type);
     }
 
     [Theory]
@@ -139,14 +139,14 @@ public class MessageHelperTests
     public void CreateErrorMessage_WithEmptyMessage_ShouldHandleGracefully(string? messageText)
     {
         // Arrange
-        var type = MessageTypeEnum.ADD_DATA;
+        var type = MessageType.ADD_DATA;
 
         // Act
         var result = MessageHelpers.CreateErrorMessage(messageText!, type);
 
         // Assert
         Assert.Equal(messageText, result.Message);
-        Assert.Equal(MessageLevelEnum.ERROR.UpperName(), result.Level);
+        Assert.Equal(MessageLevel.ERROR.UpperName(), result.Level);
         Assert.Equal(type.GetDescription(), result.Type);
     }
 
@@ -166,14 +166,14 @@ public class MessageHelperTests
     }
 
     [Theory]
-    [InlineData(MessageTypeEnum.ADD_DATA)]
-    [InlineData(MessageTypeEnum.CHECK_SHEET)]
-    [InlineData(MessageTypeEnum.CREATE_SHEET)]
-    [InlineData(MessageTypeEnum.DELETE_DATA)]
-    [InlineData(MessageTypeEnum.GENERAL)]
-    [InlineData(MessageTypeEnum.GET_SHEETS)]
-    [InlineData(MessageTypeEnum.UPDATE_DATA)]
-    public void CreateMessage_WithAllMessageTypes_ShouldWorkCorrectly(MessageTypeEnum messageType)
+    [InlineData(MessageType.ADD_DATA)]
+    [InlineData(MessageType.CHECK_SHEET)]
+    [InlineData(MessageType.CREATE_SHEET)]
+    [InlineData(MessageType.DELETE_DATA)]
+    [InlineData(MessageType.GENERAL)]
+    [InlineData(MessageType.GET_SHEETS)]
+    [InlineData(MessageType.UPDATE_DATA)]
+    public void CreateMessage_WithAllMessageTypes_ShouldWorkCorrectly(MessageType messageType)
     {
         // Arrange
         var message = "Test message";
@@ -183,7 +183,7 @@ public class MessageHelperTests
 
         // Assert
         Assert.Equal(message, result.Message);
-        Assert.Equal(MessageLevelEnum.INFO.UpperName(), result.Level);
+        Assert.Equal(MessageLevel.INFO.UpperName(), result.Level);
         Assert.Equal(messageType.GetDescription(), result.Type);
     }
 }

@@ -15,7 +15,7 @@ public class ApplicationEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
 
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.ApplicationDate, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.ApplicationDate, formatType: Format.DATE)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Company, isInput: true, note: ColumnNotes.ApplicationCompany, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeCompany)]
@@ -32,7 +32,7 @@ public class ApplicationEntity : SheetRowEntityBase
 
     // Calculated columns
 
-    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, note: ColumnNotes.ApplicationInterviewCount, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.InterviewCount, isInput: false, note: ColumnNotes.ApplicationInterviewCount, formatType: Format.NUMBER)]
     public int InterviewCount { get; set; }
 
     // Input columns continued
@@ -40,12 +40,12 @@ public class ApplicationEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Decision, isInput: true, note: ColumnNotes.ApplicationDecision, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeDecision)]
     public string Decision { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.DecisionDate, isInput: true, note: ColumnNotes.ApplicationDecisionDate, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.DecisionDate, isInput: true, note: ColumnNotes.ApplicationDecisionDate, formatType: Format.DATE)]
     public string DecisionDate { get; set; } = "";
 
     // Calculated column
 
-    [Column(SheetsConfig.HeaderNames.DaysActive, isInput: false, note: ColumnNotes.ApplicationDaysActive, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.DaysActive, isInput: false, note: ColumnNotes.ApplicationDaysActive, formatType: Format.NUMBER)]
     public int? DaysActive { get; set; }
 
     // Input columns continued
@@ -53,15 +53,15 @@ public class ApplicationEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Notes, isInput: true, note: ColumnNotes.ApplicationNotes)]
     public string Notes { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.PayLow, isInput: true, note: ColumnNotes.ApplicationPayLow, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.PayLow, isInput: true, note: ColumnNotes.ApplicationPayLow, formatType: Format.ACCOUNTING)]
     public decimal? PayLow { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.PayHigh, isInput: true, note: ColumnNotes.ApplicationPayHigh, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.PayHigh, isInput: true, note: ColumnNotes.ApplicationPayHigh, formatType: Format.ACCOUNTING)]
     public decimal? PayHigh { get; set; }
 
     // Calculated column
 
-    [Column(SheetsConfig.HeaderNames.PayAvg, isInput: false, note: ColumnNotes.ApplicationPayAvg, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.PayAvg, isInput: false, note: ColumnNotes.ApplicationPayAvg, formatType: Format.ACCOUNTING)]
     public decimal? PayAvg { get; set; }
 
     // Input columns continued
@@ -73,7 +73,7 @@ public class ApplicationEntity : SheetRowEntityBase
     public string Schedule { get; set; } = "";
 
     // Duplicate counter for company+jobtitle combos (user-visible '#')
-    [Column(SheetsConfig.HeaderNames.Duplicate, isInput: false, note: ColumnNotes.ApplicationDuplicate, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.Duplicate, isInput: false, note: ColumnNotes.ApplicationDuplicate, formatType: Format.NUMBER)]
     public int? Duplicate { get; set; }
 
     // Calculated/linked columns - moved to the end so the Key column is not visible in primary input area

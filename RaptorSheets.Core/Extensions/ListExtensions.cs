@@ -41,8 +41,7 @@ public static class ListExtensions
             throw new ArgumentException("The list cannot be null or empty.", nameof(list));
         }
 
-        var rng = new Random();
-        int index = rng.Next(list.Count);
+        int index = Random.Shared.Next(list.Count);
         return list[index];
     }
 

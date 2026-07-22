@@ -132,9 +132,9 @@ public class GigSheetHelpersTests
     #region Data Validation Tests (Simplified)
     
     [Theory]
-    [InlineData(ValidationEnum.BOOLEAN, "BOOLEAN")]
-    [InlineData(ValidationEnum.RANGE_SERVICE, "ONE_OF_RANGE")]  // Test one representative range validation
-    public void GetDataValidation_ShouldReturnCorrectValidation(ValidationEnum validation, string expectedType)
+    [InlineData(Validation.BOOLEAN, "BOOLEAN")]
+    [InlineData(Validation.RANGE_SERVICE, "ONE_OF_RANGE")]  // Test one representative range validation
+    public void GetDataValidation_ShouldReturnCorrectValidation(Validation validation, string expectedType)
     {
         // Act
         var result = GigSheetHelpers.GetDataValidation(validation);
@@ -289,13 +289,13 @@ public class GigSheetHelpersTests
     #region Extended Data Validation Tests
     
     [Theory]
-    [InlineData(ValidationEnum.RANGE_ADDRESS)]
-    [InlineData(ValidationEnum.RANGE_NAME)]
-    [InlineData(ValidationEnum.RANGE_PLACE)]
-    [InlineData(ValidationEnum.RANGE_REGION)]
-    [InlineData(ValidationEnum.RANGE_SERVICE)]
-    [InlineData(ValidationEnum.RANGE_TYPE)]
-    public void GetDataValidation_WithRangeValidations_ShouldReturnCorrectSheetReference(ValidationEnum validation)
+    [InlineData(Validation.RANGE_ADDRESS)]
+    [InlineData(Validation.RANGE_NAME)]
+    [InlineData(Validation.RANGE_PLACE)]
+    [InlineData(Validation.RANGE_REGION)]
+    [InlineData(Validation.RANGE_SERVICE)]
+    [InlineData(Validation.RANGE_TYPE)]
+    public void GetDataValidation_WithRangeValidations_ShouldReturnCorrectSheetReference(Validation validation)
     {
         // Act
         var result = GigSheetHelpers.GetDataValidation(validation);
@@ -318,7 +318,7 @@ public class GigSheetHelpersTests
         var customRange = "B2:B100";
 
         // Act
-        var result = GigSheetHelpers.GetDataValidation(ValidationEnum.RANGE_SELF, customRange);
+        var result = GigSheetHelpers.GetDataValidation(Validation.RANGE_SELF, customRange);
 
         // Assert
         Assert.NotNull(result);
@@ -335,7 +335,7 @@ public class GigSheetHelpersTests
     public void GetDataValidation_WithRangeSelfEmptyRange_ShouldHandleEmptyString()
     {
         // Act
-        var result = GigSheetHelpers.GetDataValidation(ValidationEnum.RANGE_SELF, "");
+        var result = GigSheetHelpers.GetDataValidation(Validation.RANGE_SELF, "");
 
         // Assert
         Assert.NotNull(result);

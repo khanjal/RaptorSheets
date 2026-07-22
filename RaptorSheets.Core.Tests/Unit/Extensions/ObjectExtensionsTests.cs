@@ -7,36 +7,36 @@ namespace RaptorSheets.Core.Tests.Unit.Extensions;
 
 public class ObjectExtensionsTests
 {
-    SheetModel modelData = TestSheetData.GetModelData();
+    readonly SheetModel modelData = TestSheetData.GetModelData();
 
     [Theory]
-    [InlineData(HeaderEnum.FIRST_COLUMN, "A")]
-    [InlineData(HeaderEnum.SECOND_COLUMN, "B")]
-    public void GivenHeaders_ShouldGetColumn(HeaderEnum header, string column)
+    [InlineData(Header.FIRST_COLUMN, "A")]
+    [InlineData(Header.SECOND_COLUMN, "B")]
+    public void GivenHeaders_ShouldGetColumn(Header header, string column)
     {
         Assert.Equal(column, modelData.GetColumn(header.GetDescription()));
     }
 
     [Theory]
-    [InlineData(HeaderEnum.FIRST_COLUMN, "0")]
-    [InlineData(HeaderEnum.SECOND_COLUMN, "1")]
-    public void GivenHeaders_ShouldGetIndex(HeaderEnum header, string index)
+    [InlineData(Header.FIRST_COLUMN, "0")]
+    [InlineData(Header.SECOND_COLUMN, "1")]
+    public void GivenHeaders_ShouldGetIndex(Header header, string index)
     {
         Assert.Equal(index, modelData.GetIndex(header.GetDescription()));
     }
 
     [Theory]
-    [InlineData(HeaderEnum.FIRST_COLUMN, "A1:A")]
-    [InlineData(HeaderEnum.SECOND_COLUMN, "B1:B")]
-    public void GivenHeaders_ShouldGetRange(HeaderEnum header, string range)
+    [InlineData(Header.FIRST_COLUMN, "A1:A")]
+    [InlineData(Header.SECOND_COLUMN, "B1:B")]
+    public void GivenHeaders_ShouldGetRange(Header header, string range)
     {
         Assert.Equal($"{modelData.Name}!{range}", modelData.GetRange(header.GetDescription()));
     }
 
     [Theory]
-    [InlineData(HeaderEnum.FIRST_COLUMN, "A1:A")]
-    [InlineData(HeaderEnum.SECOND_COLUMN, "B1:B")]
-    public void GivenHeaders_ShouldGetLocalRange(HeaderEnum header, string range)
+    [InlineData(Header.FIRST_COLUMN, "A1:A")]
+    [InlineData(Header.SECOND_COLUMN, "B1:B")]
+    public void GivenHeaders_ShouldGetLocalRange(Header header, string range)
     {
         Assert.Equal(range, modelData.GetLocalRange(header.GetDescription()));
     }
@@ -135,12 +135,14 @@ public class ObjectExtensionsTests
     public void ObjectExtensions_CaseSensitivity_ShouldWork()
     {
         // Act
-        var lowerResult = modelData.GetColumn(HeaderEnum.FIRST_COLUMN.GetDescription().ToLower());
-        var upperResult = modelData.GetColumn(HeaderEnum.FIRST_COLUMN.GetDescription().ToUpper());
-        var correctResult = modelData.GetColumn(HeaderEnum.FIRST_COLUMN.GetDescription());
+        var lowerResult = modelData.GetColumn(Header.FIRST_COLUMN.GetDescription().ToLower());
+        var upperResult = modelData.GetColumn(Header.FIRST_COLUMN.GetDescription().ToUpper());
+        var correctResult = modelData.GetColumn(Header.FIRST_COLUMN.GetDescription());
 
-        // Assert (assuming case-sensitive implementation)
+        // Assert - GetColumn matches header names case-sensitively, so mismatched case
+        // does not match the actual "First Column" header and returns empty.
         Assert.Equal("A", correctResult);
-        // Depending on implementation, these might be empty or match
+        Assert.Equal("", lowerResult);
+        Assert.Equal("", upperResult);
     }
 }

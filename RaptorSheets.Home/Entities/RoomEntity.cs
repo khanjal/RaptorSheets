@@ -12,14 +12,14 @@ public class RoomEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Room, isInput: true)]
     public string Room { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.RoomLength, isInput: true, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.RoomLength, isInput: true, formatType: Format.NUMBER)]
     public decimal? Length { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.RoomWidth, isInput: true, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.RoomWidth, isInput: true, formatType: Format.NUMBER)]
     public decimal? Width { get; set; }
 
     // Calculated: L x W (configured in RoomMapper)
-    [Column(SheetsConfig.HeaderNames.SquareFeet, FormatEnum.NUMBER, ColumnNotes.SquareFeet)]
+    [Column(SheetsConfig.HeaderNames.SquareFeet, Format.NUMBER, ColumnNotes.SquareFeet)]
     public decimal? SquareFeet { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Level, isInput: true)]

@@ -16,8 +16,8 @@ public class SheetGenerationHelperTests
             ProtectSheet = protectSheet,
             Headers =
             [
-                new SheetCellModel { Name = "Date", Format = FormatEnum.DATE },
-                new SheetCellModel { Name = "Total", Formula = "=SUM(A:A)", Format = FormatEnum.ACCOUNTING },
+                new SheetCellModel { Name = "Date", Format = Format.DATE },
+                new SheetCellModel { Name = "Total", Formula = "=SUM(A:A)", Format = Format.ACCOUNTING },
                 new SheetCellModel { Name = "Category", Validation = "SomeRange!A2:A" },
                 new SheetCellModel { Name = "Notes" }
             ]

@@ -47,6 +47,6 @@ public static class GenerateSheetsHelpers
     private static DataValidationRule? GetDataValidation(SheetCellModel header)
     {
         var columnRange = $"{header.Column}2:{header.Column}";
-        return HomeSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>(), columnRange);
+        return HomeSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<Validation>(), columnRange);
     }
 }

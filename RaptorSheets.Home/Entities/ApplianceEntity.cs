@@ -24,7 +24,7 @@ public class ApplianceEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.SerialNumber, isInput: true)]
     public string SerialNumber { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.ManufactureDate, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.ManufactureDate, isInput: true, note: ColumnNotes.DateFormat, formatType: Format.DATE)]
     public string ManufactureDate { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.EnergySource, isInput: true)]
@@ -39,19 +39,19 @@ public class ApplianceEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Filter, isInput: true)]
     public string Filter { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.FilterDate, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.FilterDate, isInput: true, note: ColumnNotes.DateFormat, formatType: Format.DATE)]
     public string FilterDate { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.ReplacementMonths, isInput: true, note: ColumnNotes.ReplacementMonths, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.ReplacementMonths, isInput: true, note: ColumnNotes.ReplacementMonths, formatType: Format.NUMBER)]
     public int? ReplacementMonths { get; set; }
 
     // Calculated: Filter Date + Rpl. Mth (configured in ApplianceMapper)
-    [Column(SheetsConfig.HeaderNames.NextFilter, FormatEnum.DATE, ColumnNotes.NextFilter)]
+    [Column(SheetsConfig.HeaderNames.NextFilter, Format.DATE, ColumnNotes.NextFilter)]
     public string NextFilter { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Other, isInput: true)]
     public string Other { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.OriginalPrice, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.OriginalPrice, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? OriginalPrice { get; set; }
 }

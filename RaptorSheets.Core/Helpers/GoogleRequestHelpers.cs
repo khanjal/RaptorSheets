@@ -1,4 +1,4 @@
-﻿using Google.Apis.Sheets.v4.Data;
+using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
@@ -15,7 +15,7 @@ public static class GoogleRequestHelpers
         // Create Sheet Headers
         var appendCellsRequest = new AppendCellsRequest
         {
-            Fields = FieldEnum.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(),
+            Fields = Field.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(),
             Rows = SheetHelpers.HeadersToRowData(sheet!),
             SheetId = sheet!.Id
         };
@@ -28,7 +28,7 @@ public static class GoogleRequestHelpers
         // Create Sheet Data
         var appendCellsRequest = new AppendCellsRequest
         {
-            Fields = FieldEnum.USER_ENTERED_VALUE.GetDescription(),
+            Fields = Field.USER_ENTERED_VALUE.GetDescription(),
             Rows = rows,
             SheetId = sheetId
         };
@@ -47,7 +47,7 @@ public static class GoogleRequestHelpers
 
         var appendDimensionRequest = new AppendDimensionRequest
         {
-            Dimension = DimensionEnum.COLUMNS.GetDescription(),
+            Dimension = Dimension.COLUMNS.GetDescription(),
             Length = sheet.Headers.Count - defaultColumns,
             SheetId = sheet.Id
         };
@@ -61,7 +61,7 @@ public static class GoogleRequestHelpers
     {
         var appendDimensionRequest = new AppendDimensionRequest
         {
-            Dimension = DimensionEnum.ROWS.GetDescription(),
+            Dimension = Dimension.ROWS.GetDescription(),
             Length = rows,
             SheetId = sheetId
         };
@@ -79,7 +79,7 @@ public static class GoogleRequestHelpers
             {
                 BandedRangeId = sheet!.Id,
                 Range = new GridRange { SheetId = sheet.Id },
-                RowProperties = new BandingProperties { HeaderColor = SheetHelpers.GetColor(sheet!.TabColor), FirstBandColor = SheetHelpers.GetColor(ColorEnum.WHITE), SecondBandColor = SheetHelpers.GetColor(sheet!.CellColor) }
+                RowProperties = new BandingProperties { HeaderColor = SheetHelpers.GetColor(sheet!.TabColor), FirstBandColor = SheetHelpers.GetColor(SheetColor.WHITE), SecondBandColor = SheetHelpers.GetColor(sheet!.CellColor) }
             }
         };
         return new Request { AddBanding = addBandingRequest };
@@ -172,7 +172,7 @@ public static class GoogleRequestHelpers
             {
                 Range = new DimensionRange
                 {
-                    Dimension = DimensionEnum.ROWS.GetDescription(),
+                    Dimension = Dimension.ROWS.GetDescription(),
                     SheetId = sheetId,
                     StartIndex = rowId - 1, // Convert to 0-based index
                     EndIndex = rowId // Exclusive end, so this deletes exactly one row
@@ -195,7 +195,7 @@ public static class GoogleRequestHelpers
             {
                 Range = new DimensionRange
                 {
-                    Dimension = DimensionEnum.ROWS.GetDescription(),
+                    Dimension = Dimension.ROWS.GetDescription(),
                     SheetId = sheetId,
                     StartIndex = indexRange.Item1,
                     EndIndex = indexRange.Item2
@@ -324,7 +324,7 @@ public static class GoogleRequestHelpers
 
         var repeatCellRequest = new RepeatCellRequest
         {
-            Fields = FieldEnum.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(),
+            Fields = Field.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(),
             Range = repeatCellModel.GridRange,
             Cell = new CellData()
         };
@@ -374,7 +374,7 @@ public static class GoogleRequestHelpers
         // Create Sheet Data
         var updateCellsRequest = new UpdateCellsRequest
         {
-            Fields = FieldEnum.USER_ENTERED_VALUE.GetDescription(),
+            Fields = Field.USER_ENTERED_VALUE.GetDescription(),
             Rows = rows,
             Range = range,
         };
@@ -399,7 +399,7 @@ public static class GoogleRequestHelpers
         var batchUpdateValuesRequest = new BatchUpdateValuesRequest
         {
             Data = valueRanges,
-            ValueInputOption = ValueInputOptionEnum.USER_ENTERED.GetDescription()
+            ValueInputOption = ValueInputOption.USER_ENTERED.GetDescription()
         };
 
         return batchUpdateValuesRequest;
@@ -473,11 +473,11 @@ public static class GoogleRequestHelpers
         var requests = new List<Request>();
 
         // Append/Update requests FIRST - this ensures row IDs are correct before any deletions
-        var saveEntities = entities?.Where(x => x.Action != ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        var saveEntities = entities?.Where(x => x.Action != ActionType.DELETE.GetDescription()).ToList() ?? [];
         requests.AddRange(createUpdateRequests(saveEntities, sheetProperties));
 
         // Delete requests AFTER updates - delete from highest row ID to lowest to prevent shifting issues
-        var deleteEntities = entities?.Where(x => x.Action == ActionTypeEnum.DELETE.GetDescription()).ToList() ?? [];
+        var deleteEntities = entities?.Where(x => x.Action == ActionType.DELETE.GetDescription()).ToList() ?? [];
         var rowIds = deleteEntities.Select(x => x.RowId).ToList();
         requests.AddRange(CreateDeleteRequests(rowIds, sheetProperties));
 
@@ -490,8 +490,8 @@ public static class GoogleRequestHelpers
     public static IEnumerable<Request> CreateUpdateCellRequests<T>(List<T> entities, PropertyEntity? sheetProperties, Func<List<T>, IList<object>, IList<RowData>> mapToRowData)
         where T : SheetRowEntityBase
     {
-        var headers = sheetProperties?.Attributes[PropertyEnum.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
-        var maxRow = int.Parse(sheetProperties?.Attributes[PropertyEnum.MAX_ROW.GetDescription()] ?? "0");
+        var headers = sheetProperties?.Attributes[Property.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
+        var maxRow = int.Parse(sheetProperties?.Attributes[Property.MAX_ROW.GetDescription()] ?? "0");
         int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
 
         if (entities.Count == 0 || sheetProperties == null || headers?.Count == 0 || sheetId == 0)
@@ -547,7 +547,7 @@ public static class GoogleRequestHelpers
         {
             if (!accessors.TryGetValue(sheet, out var accessor))
             {
-                messages.Add(MessageHelpers.CreateErrorMessage($"{ActionTypeEnum.UPDATE} data: {sheet} not supported", MessageTypeEnum.GENERAL));
+                messages.Add(MessageHelpers.CreateErrorMessage($"{ActionType.UPDATE} data: {sheet} not supported", MessageType.GENERAL));
                 continue;
             }
 
@@ -577,7 +577,7 @@ public static class GoogleRequestHelpers
             var data = accessor.GetData(sheetEntity);
             var properties = sheetInfo.FirstOrDefault(x => string.Equals(x.Name, sheet, StringComparison.OrdinalIgnoreCase));
             requests.AddRange(accessor.BuildRequests(data, properties));
-            messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {sheet.ToUpperInvariant()}", MessageTypeEnum.SAVE_DATA));
+            messages.Add(MessageHelpers.CreateInfoMessage($"Saving data: {sheet.ToUpperInvariant()}", MessageType.SAVE_DATA));
         }
 
         return (requests, messages);

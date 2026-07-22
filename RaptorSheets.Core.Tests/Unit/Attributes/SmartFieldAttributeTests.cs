@@ -7,6 +7,10 @@ namespace RaptorSheets.Core.Tests.Unit.Attributes;
 
 public class SmartFieldAttributeTests
 {
+    // Every property below is looked up by name string via reflection
+    // (typeof(TestEntity).GetProperties().First(p => p.Name == "...")) rather than referenced
+    // directly, so the analyzer can't see the usage and flags them as unused (S1144 false positive).
+#pragma warning disable S1144
     private class TestEntity
     {
         [SmartField]
@@ -50,6 +54,7 @@ public class SmartFieldAttributeTests
         public decimal? NullableDecimal { get; set; }
         public int? NullableInt { get; set; }
     }
+#pragma warning restore S1144
 
     [Fact]
     public void InferFieldType_ShouldReturnCorrectFieldType()
@@ -119,6 +124,10 @@ public class SmartFieldAttributeTests
         Assert.Equal(expectedType, result);
     }
 
+    // S4144: each Theory below necessarily shares InferFieldType_ShouldDetectCurrencyType's body
+    // shape (that's how xUnit parameterization works) - splitting by FieldType category keeps
+    // failures traceable to a specific inference rule instead of one giant merged theory.
+#pragma warning disable S4144
     [Theory]
     [InlineData("PercentComplete", FieldType.Percentage)]
     [InlineData("RateOfReturn", FieldType.Percentage)]
@@ -151,6 +160,7 @@ public class SmartFieldAttributeTests
         // Assert
         Assert.Equal(expectedType, result);
     }
+#pragma warning restore S4144
 
     [Fact]
     public void InferFieldType_ShouldHandleFloatAsNumber()
@@ -166,6 +176,9 @@ public class SmartFieldAttributeTests
         Assert.Equal(FieldType.Number, result);
     }
 
+    // S4144: same rationale as above - distinct InlineData category (nullable value types), same
+    // necessary body shape.
+#pragma warning disable S4144
     [Theory]
     [InlineData("NullableDecimal", FieldType.Number)]
     [InlineData("NullableInt", FieldType.Integer)]
@@ -181,6 +194,7 @@ public class SmartFieldAttributeTests
         // Assert
         Assert.Equal(expectedType, result);
     }
+#pragma warning restore S4144
 
     [Fact]
     public void InferHeaderName_ShouldReturnCorrectHeaderName()

@@ -44,7 +44,7 @@ public class GoogleSheetManagerTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        Assert.Equal(MessageTypeEnum.GENERAL.GetDescription(), result[0].Type);
+        Assert.Equal(MessageType.GENERAL.GetDescription(), result[0].Type);
         Assert.Contains("Unable to retrieve sheet(s)", result[0].Message);
     }
 
@@ -58,7 +58,7 @@ public class GoogleSheetManagerTests
             {
                 new()
                 {
-                    Properties = new SheetProperties { Title = SheetEnum.SHIFTS.GetDescription() },
+                    Properties = new SheetProperties { Title = SheetName.SHIFTS.GetDescription() },
                     Data = new List<GridData>
                     {
                         new()
@@ -89,7 +89,7 @@ public class GoogleSheetManagerTests
         Assert.NotEmpty(result);
         
         // Should have messages about header validation
-        Assert.Contains(result, m => m.Type == MessageTypeEnum.CHECK_SHEET.GetDescription());
+        Assert.Contains(result, m => m.Type == MessageType.CHECK_SHEET.GetDescription());
     }
 
     [Fact]
@@ -481,7 +481,7 @@ public class GoogleSheetManagerTests
         Assert.NotNull(result);
         Assert.Single(result.Messages);
         Assert.Contains("does not exist", result.Messages[0].Message);
-        Assert.Equal(MessageTypeEnum.GET_SHEETS.GetDescription(), result.Messages[0].Type);
+        Assert.Equal(MessageType.GET_SHEETS.GetDescription(), result.Messages[0].Type);
     }
 
     [Fact]
@@ -551,7 +551,7 @@ public class GoogleSheetManagerTests
         
         // Should contain the "No data to change" warning message
         Assert.Contains(result.Messages, m => m.Message.Contains("No data to change"));
-        Assert.Contains(result.Messages, m => m.Level == MessageLevelEnum.WARNING.GetDescription());
+        Assert.Contains(result.Messages, m => m.Level == MessageLevel.WARNING.GetDescription());
     }
 
     [Fact]

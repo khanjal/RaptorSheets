@@ -8,7 +8,7 @@ namespace RaptorSheets.Gig.Enums;
 /// Descriptions map to SheetsConfig.SheetNames constants for consistency.
 /// Use enums for type safety and constants for switch statements and comparisons.
 /// </summary>
-public enum SheetEnum
+public enum SheetName
 {
     [Description(SheetsConfig.SheetNames.Addresses)]
     ADDRESSES,

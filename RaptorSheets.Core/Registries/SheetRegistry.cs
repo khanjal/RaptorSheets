@@ -66,6 +66,26 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     }
 
     /// <summary>
+    /// Builds an entity from a full Spreadsheet (grid-data) response.
+    /// </summary>
+    public TEntity MapData(Spreadsheet spreadsheet)
+    {
+        var entity = new TEntity();
+        entity.Properties.Name = spreadsheet.Properties.Title;
+
+        var sheetValues = SheetHelpers.GetSheetValues(spreadsheet);
+        foreach (var title in spreadsheet.Sheets.Select(sheet => sheet.Properties.Title))
+        {
+            if (sheetValues.TryGetValue(title, out var values))
+            {
+                Process(entity, title, values);
+            }
+        }
+
+        return entity;
+    }
+
+    /// <summary>
     /// Detects columns missing entirely from a batchGet response, reusing the header row already
     /// present in each range - no extra API call needed. SheetId is left at 0 on each result; the
     /// caller fills it in from spreadsheet metadata it already has (e.g. the cheap, no-ranges
@@ -99,26 +119,6 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
         }
 
         return missingColumns;
-    }
-
-    /// <summary>
-    /// Builds an entity from a full Spreadsheet (grid-data) response.
-    /// </summary>
-    public TEntity MapData(Spreadsheet spreadsheet)
-    {
-        var entity = new TEntity();
-        entity.Properties.Name = spreadsheet.Properties.Title;
-
-        var sheetValues = SheetHelpers.GetSheetValues(spreadsheet);
-        foreach (var sheet in spreadsheet.Sheets)
-        {
-            if (sheetValues.TryGetValue(sheet.Properties.Title, out var values))
-            {
-                Process(entity, sheet.Properties.Title, values);
-            }
-        }
-
-        return entity;
     }
 
     private void Process(TEntity entity, string sheetName, IList<IList<object>> values)
@@ -170,7 +170,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
 
         if (spreadsheet == null)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage("Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
+            messages.Add(MessageHelpers.CreateErrorMessage("Unable to retrieve sheet(s)", MessageType.GENERAL));
             return messages;
         }
 
@@ -207,7 +207,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
 
         if (spreadsheet == null)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage("Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
+            messages.Add(MessageHelpers.CreateErrorMessage("Unable to retrieve sheet(s)", MessageType.GENERAL));
             return messages;
         }
 
@@ -243,12 +243,12 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
 
         if (headerMessages.Count > 0)
         {
-            messages.Add(MessageHelpers.CreateWarningMessage("Found sheet header issue(s)", MessageTypeEnum.CHECK_SHEET));
+            messages.Add(MessageHelpers.CreateWarningMessage("Found sheet header issue(s)", MessageType.CHECK_SHEET));
             messages.AddRange(headerMessages);
         }
         else
         {
-            messages.Add(MessageHelpers.CreateInfoMessage("No sheet header issues found", MessageTypeEnum.CHECK_SHEET));
+            messages.Add(MessageHelpers.CreateInfoMessage("No sheet header issues found", MessageType.CHECK_SHEET));
         }
 
         return messages;
@@ -258,7 +258,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     {
         foreach (var sheet in unknownSheets)
         {
-            yield return MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageTypeEnum.CHECK_SHEET);
+            yield return MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageType.CHECK_SHEET);
         }
     }
 
