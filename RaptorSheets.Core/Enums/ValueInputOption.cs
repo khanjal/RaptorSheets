@@ -3,7 +3,7 @@
 /// <summary>
 /// How the input data should be interpreted.
 /// </summary>
-public enum ValueInputOptionEnum
+public enum ValueInputOption
 {
     /// <summary>
     /// The values will be parsed as if the user typed them into the UI. Numbers will stay as numbers,

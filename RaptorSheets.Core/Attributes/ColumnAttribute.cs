@@ -34,7 +34,7 @@ public class ColumnAttribute : Attribute
     /// Can differ from FieldType (e.g., FieldType=String but FormatType=DATE for date strings).
     /// If DEFAULT, uses format matching FieldType.
     /// </summary>
-    public FormatEnum FormatType { get; }
+    public Format FormatType { get; }
 
     /// <summary>
     /// Gets the custom number format pattern for Google Sheets (uses default if not specified)
@@ -81,7 +81,7 @@ public class ColumnAttribute : Attribute
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
-        FormatType = FormatEnum.DEFAULT;
+        FormatType = Format.DEFAULT;
         NumberFormatPattern = null;
         Order = -1;
         IsInput = false;
@@ -97,7 +97,7 @@ public class ColumnAttribute : Attribute
     /// </summary>
     /// <param name="headerName">Header name for sheet column</param>
     /// <param name="formatType">Format type for Google Sheets display</param>
-    public ColumnAttribute(string headerName, FormatEnum formatType)
+    public ColumnAttribute(string headerName, Format formatType)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
@@ -119,7 +119,7 @@ public class ColumnAttribute : Attribute
     /// <param name="headerName">Header name for sheet column</param>
     /// <param name="formatType">Format type for Google Sheets display</param>
     /// <param name="note">Note/comment to display in Google Sheets</param>
-    public ColumnAttribute(string headerName, FormatEnum formatType, string note)
+    public ColumnAttribute(string headerName, Format formatType, string note)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
@@ -146,7 +146,7 @@ public class ColumnAttribute : Attribute
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
-        FormatType = FormatEnum.DEFAULT;
+        FormatType = Format.DEFAULT;
         NumberFormatPattern = null;
         Order = -1;
         IsInput = false;
@@ -200,7 +200,7 @@ public class ColumnAttribute : Attribute
         bool enableValidation = false,
         string? validationPattern = null,
         int order = -1,
-        FormatEnum formatType = FormatEnum.DEFAULT)
+        Format formatType = Format.DEFAULT)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
@@ -226,7 +226,7 @@ public class ColumnAttribute : Attribute
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         FieldType = fieldType;
         IsFieldTypeExplicit = true;
-        FormatType = FormatEnum.DEFAULT;
+        FormatType = Format.DEFAULT;
         NumberFormatPattern = null;
         Order = -1;
         IsInput = isInput;
@@ -278,7 +278,7 @@ public class ColumnAttribute : Attribute
         }
         
         // 2. Use FormatType pattern if explicitly specified (not DEFAULT)
-        if (FormatType != FormatEnum.DEFAULT)
+        if (FormatType != Format.DEFAULT)
         {
             return GetPatternFromFormatType(FormatType);
         }
@@ -288,22 +288,22 @@ public class ColumnAttribute : Attribute
     }
     
     /// <summary>
-    /// Gets the pattern for a specific FormatEnum
+    /// Gets the pattern for a specific Format
     /// </summary>
-    private static string GetPatternFromFormatType(FormatEnum formatType)
+    private static string GetPatternFromFormatType(Format formatType)
     {
         return formatType switch
         {
-            FormatEnum.ACCOUNTING => CellFormatPatterns.Accounting,
-            FormatEnum.CURRENCY => CellFormatPatterns.Currency,
-            FormatEnum.DATE => CellFormatPatterns.Date,
-            FormatEnum.DISTANCE => CellFormatPatterns.Distance,
-            FormatEnum.DURATION => CellFormatPatterns.Duration,
-            FormatEnum.NUMBER => CellFormatPatterns.Number,
-            FormatEnum.PERCENT => CellFormatPatterns.Percentage,
-            FormatEnum.TEXT => CellFormatPatterns.Text,
-            FormatEnum.TIME => CellFormatPatterns.Time,
-            FormatEnum.WEEKDAY => CellFormatPatterns.Weekday,
+            Format.ACCOUNTING => CellFormatPatterns.Accounting,
+            Format.CURRENCY => CellFormatPatterns.Currency,
+            Format.DATE => CellFormatPatterns.Date,
+            Format.DISTANCE => CellFormatPatterns.Distance,
+            Format.DURATION => CellFormatPatterns.Duration,
+            Format.NUMBER => CellFormatPatterns.Number,
+            Format.PERCENT => CellFormatPatterns.Percentage,
+            Format.TEXT => CellFormatPatterns.Text,
+            Format.TIME => CellFormatPatterns.Time,
+            Format.WEEKDAY => CellFormatPatterns.Weekday,
             _ => CellFormatPatterns.Text
         };
     }
@@ -317,28 +317,28 @@ public class ColumnAttribute : Attribute
     /// Gets the effective format enum for Google Sheets display.
     /// Returns the explicit FormatType if specified (not DEFAULT), otherwise defaults to format matching FieldType.
     /// </summary>
-    public FormatEnum? GetEffectiveFormat()
+    public Format? GetEffectiveFormat()
     {
         // Use explicit FormatType if provided (not DEFAULT), otherwise derive from FieldType
-        return FormatType != FormatEnum.DEFAULT ? FormatType : GetDefaultFormatFromFieldType(FieldType);
+        return FormatType != Format.DEFAULT ? FormatType : GetDefaultFormatFromFieldType(FieldType);
     }
 
     /// <summary>
-    /// Gets the default FormatEnum for a given field type.
+    /// Gets the default Format for a given field type.
     /// Used when FormatType is DEFAULT.
     /// </summary>
-    private static FormatEnum? GetDefaultFormatFromFieldType(FieldType fieldType)
+    private static Format? GetDefaultFormatFromFieldType(FieldType fieldType)
     {
         return fieldType switch
         {
-            FieldType.Currency => FormatEnum.CURRENCY,
-            FieldType.Accounting => FormatEnum.ACCOUNTING,
-            FieldType.DateTime => FormatEnum.DATE,
-            FieldType.Time => FormatEnum.TIME,
-            FieldType.Duration => FormatEnum.DURATION,
-            FieldType.Number => FormatEnum.NUMBER,
-            FieldType.Percentage => FormatEnum.PERCENT,
-            FieldType.String => FormatEnum.TEXT,
+            FieldType.Currency => Format.CURRENCY,
+            FieldType.Accounting => Format.ACCOUNTING,
+            FieldType.DateTime => Format.DATE,
+            FieldType.Time => Format.TIME,
+            FieldType.Duration => Format.DURATION,
+            FieldType.Number => Format.NUMBER,
+            FieldType.Percentage => Format.PERCENT,
+            FieldType.String => Format.TEXT,
             _ => null
         };
     }

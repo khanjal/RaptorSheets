@@ -9,57 +9,57 @@ namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 public class GigSheetConfigurationHelpersTests
 {
     [Theory]
-    [InlineData(HeaderEnum.DATE, FormatEnum.DATE)]
-    [InlineData(HeaderEnum.DATE_BEGIN, FormatEnum.DATE)]
-    [InlineData(HeaderEnum.DATE_END, FormatEnum.DATE)]
-    [InlineData(HeaderEnum.VISIT_FIRST, FormatEnum.DATE)]
-    [InlineData(HeaderEnum.VISIT_LAST, FormatEnum.DATE)]
-    [InlineData(HeaderEnum.TIME_START, FormatEnum.TIME)]
-    [InlineData(HeaderEnum.TIME_END, FormatEnum.TIME)]
-    [InlineData(HeaderEnum.DURATION, FormatEnum.DURATION)]
-    [InlineData(HeaderEnum.TIME_TOTAL, FormatEnum.DURATION)]
-    [InlineData(HeaderEnum.TIME_ACTIVE, FormatEnum.DURATION)]
-    [InlineData(HeaderEnum.TOTAL_TIME, FormatEnum.DURATION)]
-    [InlineData(HeaderEnum.TOTAL_TIME_ACTIVE, FormatEnum.DURATION)]
-    [InlineData(HeaderEnum.AMOUNT, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.PAY, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.TIP, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.TIPS, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.BONUS, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.CASH, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.TOTAL, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.TOTAL_BONUS, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.TOTAL_CASH, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.TOTAL_PAY, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.TOTAL_TIPS, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.TOTAL_GRAND, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.AVERAGE, FormatEnum.ACCOUNTING)]
-    [InlineData(HeaderEnum.DISTANCE, FormatEnum.DISTANCE)]
-    [InlineData(HeaderEnum.TOTAL_DISTANCE, FormatEnum.DISTANCE)]
-    [InlineData(HeaderEnum.NUMBER, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.ORDER_NUMBER, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.TRIPS, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.TRIPS_PER_DAY, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.TRIPS_PER_HOUR, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.TOTAL_TRIPS, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.VISITS, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.DAYS, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.NUMBER_OF_DAYS, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.DAYS_PER_VISIT, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.DAYS_SINCE_VISIT, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.ODOMETER_START, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.ODOMETER_END, FormatEnum.NUMBER)]
-    [InlineData(HeaderEnum.WEEKDAY, FormatEnum.WEEKDAY)]
-    [InlineData(HeaderEnum.ADDRESS, FormatEnum.TEXT)]
-    [InlineData(HeaderEnum.NAME, FormatEnum.TEXT)]
-    [InlineData(HeaderEnum.PLACE, FormatEnum.TEXT)]
-    [InlineData(HeaderEnum.REGION, FormatEnum.TEXT)]
-    [InlineData(HeaderEnum.SERVICE, FormatEnum.TEXT)]
-    [InlineData(HeaderEnum.TYPE, FormatEnum.TEXT)]
-    [InlineData(HeaderEnum.CATEGORY, FormatEnum.TEXT)]
-    [InlineData(HeaderEnum.DESCRIPTION, FormatEnum.TEXT)]
-    [InlineData(HeaderEnum.NOTE, FormatEnum.TEXT)]
-    public void ApplyFormatsByHeaderEnum_ShouldApplyCorrectFormat(HeaderEnum headerEnum, FormatEnum expectedFormat)
+    [InlineData(Header.DATE, Format.DATE)]
+    [InlineData(Header.DATE_BEGIN, Format.DATE)]
+    [InlineData(Header.DATE_END, Format.DATE)]
+    [InlineData(Header.VISIT_FIRST, Format.DATE)]
+    [InlineData(Header.VISIT_LAST, Format.DATE)]
+    [InlineData(Header.TIME_START, Format.TIME)]
+    [InlineData(Header.TIME_END, Format.TIME)]
+    [InlineData(Header.DURATION, Format.DURATION)]
+    [InlineData(Header.TIME_TOTAL, Format.DURATION)]
+    [InlineData(Header.TIME_ACTIVE, Format.DURATION)]
+    [InlineData(Header.TOTAL_TIME, Format.DURATION)]
+    [InlineData(Header.TOTAL_TIME_ACTIVE, Format.DURATION)]
+    [InlineData(Header.AMOUNT, Format.ACCOUNTING)]
+    [InlineData(Header.PAY, Format.ACCOUNTING)]
+    [InlineData(Header.TIP, Format.ACCOUNTING)]
+    [InlineData(Header.TIPS, Format.ACCOUNTING)]
+    [InlineData(Header.BONUS, Format.ACCOUNTING)]
+    [InlineData(Header.CASH, Format.ACCOUNTING)]
+    [InlineData(Header.TOTAL, Format.ACCOUNTING)]
+    [InlineData(Header.TOTAL_BONUS, Format.ACCOUNTING)]
+    [InlineData(Header.TOTAL_CASH, Format.ACCOUNTING)]
+    [InlineData(Header.TOTAL_PAY, Format.ACCOUNTING)]
+    [InlineData(Header.TOTAL_TIPS, Format.ACCOUNTING)]
+    [InlineData(Header.TOTAL_GRAND, Format.ACCOUNTING)]
+    [InlineData(Header.AVERAGE, Format.ACCOUNTING)]
+    [InlineData(Header.DISTANCE, Format.DISTANCE)]
+    [InlineData(Header.TOTAL_DISTANCE, Format.DISTANCE)]
+    [InlineData(Header.NUMBER, Format.NUMBER)]
+    [InlineData(Header.ORDER_NUMBER, Format.NUMBER)]
+    [InlineData(Header.TRIPS, Format.NUMBER)]
+    [InlineData(Header.TRIPS_PER_DAY, Format.NUMBER)]
+    [InlineData(Header.TRIPS_PER_HOUR, Format.NUMBER)]
+    [InlineData(Header.TOTAL_TRIPS, Format.NUMBER)]
+    [InlineData(Header.VISITS, Format.NUMBER)]
+    [InlineData(Header.DAYS, Format.NUMBER)]
+    [InlineData(Header.NUMBER_OF_DAYS, Format.NUMBER)]
+    [InlineData(Header.DAYS_PER_VISIT, Format.NUMBER)]
+    [InlineData(Header.DAYS_SINCE_VISIT, Format.NUMBER)]
+    [InlineData(Header.ODOMETER_START, Format.NUMBER)]
+    [InlineData(Header.ODOMETER_END, Format.NUMBER)]
+    [InlineData(Header.WEEKDAY, Format.WEEKDAY)]
+    [InlineData(Header.ADDRESS, Format.TEXT)]
+    [InlineData(Header.NAME, Format.TEXT)]
+    [InlineData(Header.PLACE, Format.TEXT)]
+    [InlineData(Header.REGION, Format.TEXT)]
+    [InlineData(Header.SERVICE, Format.TEXT)]
+    [InlineData(Header.TYPE, Format.TEXT)]
+    [InlineData(Header.CATEGORY, Format.TEXT)]
+    [InlineData(Header.DESCRIPTION, Format.TEXT)]
+    [InlineData(Header.NOTE, Format.TEXT)]
+    public void ApplyFormatsByHeaderEnum_ShouldApplyCorrectFormat(Header headerEnum, Format expectedFormat)
     {
         // Arrange
         var header = new SheetCellModel { Name = "TestHeader" };
@@ -76,13 +76,13 @@ public class GigSheetConfigurationHelpersTests
     {
         // Arrange
         var header = new SheetCellModel { Name = "TestHeader" };
-        var unknownHeader = HeaderEnum.KEY; // This doesn't have specific formatting
+        var unknownHeader = Header.KEY; // This doesn't have specific formatting
 
         // Act
         GigSheetConfigurationHelpers.ApplyFormatsByHeaderEnum(header, unknownHeader);
 
         // Assert
-        Assert.Equal(FormatEnum.DEFAULT, header.Format);
+        Assert.Equal(Format.DEFAULT, header.Format);
     }
 
     [Fact]
@@ -90,13 +90,13 @@ public class GigSheetConfigurationHelpersTests
     {
         // Arrange
         var header = new SheetCellModel { Name = "TestHeader" };
-        var headerName = SheetsConfig.HeaderNames.Date; // This maps to HeaderEnum.DATE
+        var headerName = SheetsConfig.HeaderNames.Date; // This maps to Header.DATE
 
         // Act
         GigSheetConfigurationHelpers.ApplyCommonFormats(header, headerName);
 
         // Assert
-        Assert.Equal(FormatEnum.DATE, header.Format);
+        Assert.Equal(Format.DATE, header.Format);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class GigSheetConfigurationHelpersTests
     {
         // Arrange
         var header = new SheetCellModel { Name = "TestHeader", Format = null };
-        var headerName = "Custom Date Field"; // This doesn't map to a HeaderEnum
+        var headerName = "Custom Date Field"; // This doesn't map to a Header
 
         // Act
         GigSheetConfigurationHelpers.ApplyCommonFormats(header, headerName);
@@ -164,7 +164,7 @@ public class GigSheetConfigurationHelpersTests
         GigSheetConfigurationHelpers.ApplyCommonFormats(header, headerName);
 
         // Assert
-        // Should leave header unchanged since it doesn't match a known HeaderEnum
+        // Should leave header unchanged since it doesn't match a known Header
         Assert.Null(header.Format);
     }
 }

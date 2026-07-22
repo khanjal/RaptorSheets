@@ -39,7 +39,7 @@ public class DoorEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.SerialNumber, isInput: true)]
     public string SerialNumber { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Installed, isInput: true, note: ColumnNotes.DateFormat, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Installed, isInput: true, note: ColumnNotes.DateFormat, formatType: Format.DATE)]
     public string Installed { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Notes, isInput: true)]

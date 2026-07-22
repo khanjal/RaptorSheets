@@ -1,6 +1,6 @@
 namespace RaptorSheets.Stock.Enums;
 
-public enum ValidationEnum
+public enum Validation
 {
     BOOLEAN,
     RANGE_ACCOUNT,

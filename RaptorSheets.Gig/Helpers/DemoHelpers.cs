@@ -144,7 +144,7 @@ public static class DemoHelpers
         context.SheetEntity.Sheets.Shifts.Add(new ShiftEntity 
         {
             RowId = idContext.ShiftId++,
-            Action = ActionTypeEnum.INSERT.GetDescription(),
+            Action = ActionType.INSERT.GetDescription(),
             Date = context.Date.ToString(CellFormatPatterns.Date),
             Number = shiftNumber,
             Service = service,
@@ -330,7 +330,7 @@ public static class DemoHelpers
             sheetEntity.Sheets.Expenses.Add(new ExpenseEntity
             {
                 RowId = idContext.ExpenseId++,
-                Action = ActionTypeEnum.INSERT.GetDescription(),
+                Action = ActionType.INSERT.GetDescription(),
                 Date = date.ToString(CellFormatPatterns.Date),  // Convert DateTime to string format
                 Category = category,
                 Name = $"{category} - Demo",
@@ -365,7 +365,7 @@ public static class DemoHelpers
         var tripEntity = new TripEntity
         {
             RowId = rowId,
-            Action = ActionTypeEnum.INSERT.GetDescription(),
+            Action = ActionType.INSERT.GetDescription(),
             Date = context.Date.ToString(CellFormatPatterns.Date),
             Number = context.ShiftNumber,
             Service = context.Service,

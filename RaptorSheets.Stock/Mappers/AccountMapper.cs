@@ -5,7 +5,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Stock.Constants;
 using RaptorSheets.Stock.Entities;
-using HeaderEnum = RaptorSheets.Stock.Enums.HeaderEnum;
+using Header = RaptorSheets.Stock.Enums.Header;
 
 namespace RaptorSheets.Stock.Mappers;
 
@@ -35,14 +35,14 @@ public static class AccountMapper
             AccountEntity entity = new()
             {
                 RowId = id,
-                Account = HeaderHelpers.GetStringValue(HeaderEnum.ACCOUNT.GetDescription(), value, headers),
-                Stocks = HeaderHelpers.GetDecimalValue(HeaderEnum.STOCKS.GetDescription(), value, headers),
-                Shares = HeaderHelpers.GetDecimalValue(HeaderEnum.SHARES.GetDescription(), value, headers),
-                AverageCost = HeaderHelpers.GetDecimalValue(HeaderEnum.AVERAGE_COST.GetDescription(), value, headers),
-                CostTotal = HeaderHelpers.GetDecimalValue(HeaderEnum.COST_TOTAL.GetDescription(), value, headers),
-                CurrentPrice = HeaderHelpers.GetDecimalValue(HeaderEnum.CURRENT_PRICE.GetDescription(), value, headers),
-                CurrentTotal = HeaderHelpers.GetDecimalValue(HeaderEnum.CURRENT_TOTAL.GetDescription(), value, headers),
-                Return = HeaderHelpers.GetDecimalValue(HeaderEnum.RETURN.GetDescription(), value, headers),
+                Account = HeaderHelpers.GetStringValue(Header.ACCOUNT.GetDescription(), value, headers),
+                Stocks = HeaderHelpers.GetDecimalValue(Header.STOCKS.GetDescription(), value, headers),
+                Shares = HeaderHelpers.GetDecimalValue(Header.SHARES.GetDescription(), value, headers),
+                AverageCost = HeaderHelpers.GetDecimalValue(Header.AVERAGE_COST.GetDescription(), value, headers),
+                CostTotal = HeaderHelpers.GetDecimalValue(Header.COST_TOTAL.GetDescription(), value, headers),
+                CurrentPrice = HeaderHelpers.GetDecimalValue(Header.CURRENT_PRICE.GetDescription(), value, headers),
+                CurrentTotal = HeaderHelpers.GetDecimalValue(Header.CURRENT_TOTAL.GetDescription(), value, headers),
+                Return = HeaderHelpers.GetDecimalValue(Header.RETURN.GetDescription(), value, headers),
             };
 
             entities.Add(entity);
@@ -61,48 +61,48 @@ public static class AccountMapper
         var keyRange = GoogleConfig.KeyRange;
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
 
             switch (headerEnum)
             {
-                case HeaderEnum.ACCOUNT:
+                case Header.ACCOUNT:
                     header.Formula = ColumnFormulas.SortUnique(headerEnum.GetDescription(),
-                                                                stockSheet.GetRange(HeaderEnum.ACCOUNT.GetDescription(), 2));
+                                                                stockSheet.GetRange(Header.ACCOUNT.GetDescription(), 2));
                     break;
 
-                case HeaderEnum.AVERAGE_COST:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.AVERAGE_COST:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.SumIfDivide(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    stockSheet.GetRange(HeaderEnum.ACCOUNT.GetDescription()),
+                                                                    stockSheet.GetRange(Header.ACCOUNT.GetDescription()),
                                                                     keyRange,
                                                                     stockSheet.GetRange(headerEnum.GetDescription()),
-                                                                    sheet.GetRange(HeaderEnum.STOCKS.GetDescription()));
+                                                                    sheet.GetRange(Header.STOCKS.GetDescription()));
                     break;
 
-                case HeaderEnum.COST_TOTAL:
-                case HeaderEnum.CURRENT_TOTAL:
-                case HeaderEnum.SHARES:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.COST_TOTAL:
+                case Header.CURRENT_TOTAL:
+                case Header.SHARES:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.SumIf(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    stockSheet.GetRange(HeaderEnum.ACCOUNT.GetDescription()),
+                                                                    stockSheet.GetRange(Header.ACCOUNT.GetDescription()),
                                                                     keyRange,
                                                                     stockSheet.GetRange(headerEnum.GetDescription()));
                     break;
 
-                case HeaderEnum.RETURN:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.RETURN:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.SubtractRanges(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    sheet.GetLocalRange(HeaderEnum.CURRENT_TOTAL.GetDescription()),
-                                                                    sheet.GetLocalRange(HeaderEnum.COST_TOTAL.GetDescription()));
+                                                                    sheet.GetLocalRange(Header.CURRENT_TOTAL.GetDescription()),
+                                                                    sheet.GetLocalRange(Header.COST_TOTAL.GetDescription()));
                     break;
 
-                case HeaderEnum.STOCKS:
+                case Header.STOCKS:
                     header.Formula = ColumnFormulas.CountIf(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    stockSheet.GetRange(HeaderEnum.ACCOUNT.GetDescription()),
+                                                                    stockSheet.GetRange(Header.ACCOUNT.GetDescription()),
                                                                     keyRange);
                     break;
 

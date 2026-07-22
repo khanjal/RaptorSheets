@@ -23,8 +23,8 @@ public static class TypeMapper
         sheet.Headers.UpdateColumns();
 
         var tripSheet = TripMapper.GetSheet();
-        var keyRange = sheet.GetLocalRange(HeaderEnum.TYPE.GetDescription());
-        var tripKeyRange = tripSheet.GetRange(HeaderEnum.TYPE.GetDescription());
+        var keyRange = sheet.GetLocalRange(Header.TYPE.GetDescription());
+        var tripKeyRange = tripSheet.GetRange(Header.TYPE.GetDescription());
 
         // Configure common aggregation patterns for trip-based data.
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, tripSheet, tripKeyRange, countTrips: true);
@@ -35,29 +35,29 @@ public static class TypeMapper
         // Configure specific headers unique to TypeMapper.
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
             
             switch (headerEnum)
             {
-                case HeaderEnum.TYPE:
+                case Header.TYPE:
                     // Formula to configure unique values for the Type column.
-                    MapperFormulaHelper.ConfigureUniqueValueHeader(header, tripSheet.GetRange(HeaderEnum.TYPE.GetDescription(), 2));
+                    MapperFormulaHelper.ConfigureUniqueValueHeader(header, tripSheet.GetRange(Header.TYPE.GetDescription(), 2));
                     break;
-                case HeaderEnum.VISIT_FIRST:
+                case Header.VISIT_FIRST:
                     // Formula to find the first visit date for each type.
-                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), 
-                        SheetEnum.TRIPS.GetDescription(), 
-                        tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
-                        tripSheet.GetColumn(HeaderEnum.TYPE.GetDescription()), true);
-                    header.Format = FormatEnum.DATE;
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, Header.VISIT_FIRST.GetDescription(), 
+                        SheetName.TRIPS.GetDescription(), 
+                        tripSheet.GetColumn(Header.DATE.GetDescription()), 
+                        tripSheet.GetColumn(Header.TYPE.GetDescription()), true);
+                    header.Format = Format.DATE;
                     break;
-                case HeaderEnum.VISIT_LAST:
+                case Header.VISIT_LAST:
                     // Formula to find the last visit date for each type.
-                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), 
-                        SheetEnum.TRIPS.GetDescription(), 
-                        tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
-                        tripSheet.GetColumn(HeaderEnum.TYPE.GetDescription()), false);
-                    header.Format = FormatEnum.DATE;
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, Header.VISIT_LAST.GetDescription(), 
+                        SheetName.TRIPS.GetDescription(), 
+                        tripSheet.GetColumn(Header.DATE.GetDescription()), 
+                        tripSheet.GetColumn(Header.TYPE.GetDescription()), false);
+                    header.Format = Format.DATE;
                     break;
 
                 // Additional cases for other headers can be added here.

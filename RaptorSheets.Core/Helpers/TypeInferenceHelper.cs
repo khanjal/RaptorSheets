@@ -36,27 +36,27 @@ public static class TypeInferenceHelper
     }
 
     /// <summary>
-    /// Infers the default FormatEnum from a FieldType.
-    /// Used when FormatEnum.DEFAULT is specified.
+    /// Infers the default Format from a FieldType.
+    /// Used when Format.DEFAULT is specified.
     /// </summary>
     /// <param name="fieldType">The field type to get default format for</param>
-    /// <returns>The default FormatEnum for the field type</returns>
-    public static FormatEnum GetDefaultFormatForFieldType(FieldType fieldType)
+    /// <returns>The default Format for the field type</returns>
+    public static Format GetDefaultFormatForFieldType(FieldType fieldType)
     {
         return fieldType switch
         {
-            FieldType.Currency => FormatEnum.CURRENCY,
-            FieldType.Accounting => FormatEnum.ACCOUNTING,
-            FieldType.DateTime => FormatEnum.DATE,
-            FieldType.Time => FormatEnum.TIME,
-            FieldType.Duration => FormatEnum.DURATION,
-            FieldType.Number => FormatEnum.NUMBER,
-            FieldType.Percentage => FormatEnum.PERCENT,
-            FieldType.Integer => FormatEnum.NUMBER,
-            FieldType.Boolean => FormatEnum.TEXT,
-            FieldType.String => FormatEnum.TEXT,
-            FieldType.Distance => FormatEnum.NUMBER,
-            _ => FormatEnum.TEXT
+            FieldType.Currency => Format.CURRENCY,
+            FieldType.Accounting => Format.ACCOUNTING,
+            FieldType.DateTime => Format.DATE,
+            FieldType.Time => Format.TIME,
+            FieldType.Duration => Format.DURATION,
+            FieldType.Number => Format.NUMBER,
+            FieldType.Percentage => Format.PERCENT,
+            FieldType.Integer => Format.NUMBER,
+            FieldType.Boolean => Format.TEXT,
+            FieldType.String => Format.TEXT,
+            FieldType.Distance => Format.NUMBER,
+            _ => Format.TEXT
         };
     }
 
@@ -64,22 +64,22 @@ public static class TypeInferenceHelper
     /// Determines if a format enum requires special string conversion.
     /// These formats (TIME, DURATION, DATE) need ToSerialTime/ToSerialDuration/ToSerialDate conversions.
     /// </summary>
-    public static bool RequiresSpecialConversion(FormatEnum format)
+    public static bool RequiresSpecialConversion(Format format)
     {
         return format switch
         {
-            FormatEnum.TIME => true,
-            FormatEnum.DURATION => true,
-            FormatEnum.DATE => true,
+            Format.TIME => true,
+            Format.DURATION => true,
+            Format.DATE => true,
             _ => false
         };
     }
 
     /// <summary>
-    /// Infers the FieldType that should be used when a specific FormatEnum is applied to a string property.
-    /// For example, FormatEnum.TIME on a string should use FieldType.Time for proper serialization.
+    /// Infers the FieldType that should be used when a specific Format is applied to a string property.
+    /// For example, Format.TIME on a string should use FieldType.Time for proper serialization.
     /// </summary>
-    public static FieldType InferFieldTypeFromFormat(Type propertyType, FormatEnum format)
+    public static FieldType InferFieldTypeFromFormat(Type propertyType, Format format)
     {
         // First get the base type inference
         var baseFieldType = InferFieldType(propertyType);
@@ -89,9 +89,9 @@ public static class TypeInferenceHelper
         {
             return format switch
             {
-                FormatEnum.TIME => FieldType.Time,
-                FormatEnum.DURATION => FieldType.Duration,
-                FormatEnum.DATE => FieldType.DateTime,
+                Format.TIME => FieldType.Time,
+                Format.DURATION => FieldType.Duration,
+                Format.DATE => FieldType.DateTime,
                 _ => baseFieldType
             };
         }
@@ -103,11 +103,11 @@ public static class TypeInferenceHelper
     /// Gets a user-friendly description of what type inference determined.
     /// Useful for debugging and error messages.
     /// </summary>
-    public static string GetInferenceDescription(Type propertyType, FormatEnum format)
+    public static string GetInferenceDescription(Type propertyType, Format format)
     {
         var underlyingType = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
         var fieldType = InferFieldTypeFromFormat(propertyType, format);
-        var defaultFormat = format == FormatEnum.DEFAULT 
+        var defaultFormat = format == Format.DEFAULT 
             ? GetDefaultFormatForFieldType(fieldType) 
             : format;
         

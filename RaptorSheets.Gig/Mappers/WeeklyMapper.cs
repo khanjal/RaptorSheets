@@ -24,8 +24,8 @@ public static class WeeklyMapper
         sheet.Headers.UpdateColumns();
 
         var dailySheet = DailyMapper.GetSheet();
-        var keyRange = sheet.GetLocalRange(HeaderEnum.WEEK.GetDescription());
-        var dailyKeyRange = dailySheet.GetRange(HeaderEnum.WEEK.GetDescription());
+        var keyRange = sheet.GetLocalRange(Header.WEEK.GetDescription());
+        var dailyKeyRange = dailySheet.GetRange(Header.WEEK.GetDescription());
 
         // Configure common aggregation patterns to reduce duplication.
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, dailySheet, dailyKeyRange, useShiftTotals: false);
@@ -36,42 +36,42 @@ public static class WeeklyMapper
         // Configure specific headers unique to WeeklyMapper.
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
+            var headerEnum = header.Name.GetValueFromName<Header>();
 
             switch (headerEnum)
             {
-                case HeaderEnum.WEEK:
+                case Header.WEEK:
                     // Formula to generate unique weekly values from the Daily sheet.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(HeaderEnum.WEEK.GetDescription(), dailySheet.GetRange(HeaderEnum.WEEK.GetDescription(), 2));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(Header.WEEK.GetDescription(), dailySheet.GetRange(Header.WEEK.GetDescription(), 2));
                     break;
-                case HeaderEnum.AVERAGE:
+                case Header.AVERAGE:
                     // Formula to calculate rolling averages for weekly data.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, HeaderEnum.AVERAGE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, Header.AVERAGE.GetDescription(), sheet.GetLocalRange(Header.TOTAL.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.NUMBER:
+                case Header.NUMBER:
                     // Formula to split weekly data by index.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.NUMBER.GetDescription(), keyRange, "-", 1);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, Header.NUMBER.GetDescription(), keyRange, "-", 1);
                     break;
-                case HeaderEnum.YEAR:
+                case Header.YEAR:
                     // Formula to extract year from weekly data.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, HeaderEnum.YEAR.GetDescription(), keyRange, "-", 2);
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSplitByIndex(keyRange, Header.YEAR.GetDescription(), keyRange, "-", 2);
                     break;
-                case HeaderEnum.DATE_BEGIN:
+                case Header.DATE_BEGIN:
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekBeginDate(
                         keyRange, 
-                        HeaderEnum.DATE_BEGIN.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription()),
-                        sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()));
-                    header.Format = FormatEnum.DATE;
+                        Header.DATE_BEGIN.GetDescription(), 
+                        sheet.GetLocalRange(Header.YEAR.GetDescription()),
+                        sheet.GetLocalRange(Header.NUMBER.GetDescription()));
+                    header.Format = Format.DATE;
                     break;
-                case HeaderEnum.DATE_END:
+                case Header.DATE_END:
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekEndDate(
                         keyRange, 
-                        HeaderEnum.DATE_END.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription()),
-                        sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()));
-                    header.Format = FormatEnum.DATE;
+                        Header.DATE_END.GetDescription(), 
+                        sheet.GetLocalRange(Header.YEAR.GetDescription()),
+                        sheet.GetLocalRange(Header.NUMBER.GetDescription()));
+                    header.Format = Format.DATE;
                     break;
             }
         });

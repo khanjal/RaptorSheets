@@ -2,7 +2,7 @@
 
 namespace RaptorSheets.Core.Enums;
 
-public enum FieldEnum
+public enum Field
 {
     /// <summary>
     /// Use this field to update value and format of a cell

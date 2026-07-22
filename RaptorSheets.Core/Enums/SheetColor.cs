@@ -10,7 +10,7 @@ namespace RaptorSheets.Core.Enums;
 /// Dark (needs a light FontColor when used as TabColor): BLACK, BLUE, GREEN, MAGENTA, PINK, PURPLE, RED.
 /// Light (default BLACK FontColor is fine): CYAN, DARK_YELLOW, LIGHT_*, LIME, ORANGE, WHITE, YELLOW.
 /// </summary>
-public enum ColorEnum
+public enum SheetColor
 {
     // DEFAULT BLACK
     BLACK = 0,

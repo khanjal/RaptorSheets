@@ -23,7 +23,7 @@ public class GoogleRequestHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.AppendCells);
-        Assert.Equal(FieldEnum.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(), result.AppendCells.Fields);
+        Assert.Equal(Field.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(), result.AppendCells.Fields);
         Assert.Equal(sheet.Id, result.AppendCells.SheetId);
     }
 
@@ -75,7 +75,7 @@ public class GoogleRequestHelpersTests
     public void GenerateBandingRequest_ShouldReturnValidRequest()
     {
         // Arrange
-        var sheet = new SheetModel { Id = 1, TabColor = ColorEnum.BLUE, CellColor = ColorEnum.GREEN };
+        var sheet = new SheetModel { Id = 1, TabColor = SheetColor.BLUE, CellColor = SheetColor.GREEN };
 
         // Act
         var result = GoogleRequestHelpers.GenerateBandingRequest(sheet);
@@ -112,7 +112,7 @@ public class GoogleRequestHelpersTests
         {
             Assert.NotNull(request.DeleteDimension);
             Assert.Equal(sheetId, request.DeleteDimension.Range.SheetId);
-            Assert.Equal(DimensionEnum.ROWS.GetDescription(), request.DeleteDimension.Range.Dimension);
+            Assert.Equal(Dimension.ROWS.GetDescription(), request.DeleteDimension.Range.Dimension);
             
             // Verify that start index is less than end index
             Assert.True(request.DeleteDimension.Range.StartIndex < request.DeleteDimension.Range.EndIndex,
@@ -281,7 +281,7 @@ public class GoogleRequestHelpersTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(FieldEnum.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(), result.Fields);
+        Assert.Equal(Field.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(), result.Fields);
         Assert.Equal(repeatCellModel.GridRange, result.Range);
         Assert.NotNull(result.Cell.UserEnteredFormat);
         Assert.NotNull(result.Cell.DataValidation);
@@ -315,7 +315,7 @@ public class GoogleRequestHelpersTests
         { 
             Id = 1, 
             Name = "TestSheet", 
-            TabColor = ColorEnum.BLUE, 
+            TabColor = SheetColor.BLUE, 
             FreezeColumnCount = 1, 
             FreezeRowCount = 1 
         };
@@ -612,7 +612,7 @@ public class GoogleRequestHelpersTests
         Assert.Equal(["Alpha"], withData); // Beta recognized-but-empty -> excluded, no error
         Assert.Single(messages);
         Assert.Contains("Unknown", messages[0].Message);
-        Assert.Equal(MessageTypeEnum.GENERAL.GetDescription(), messages[0].Type);
+        Assert.Equal(MessageType.GENERAL.GetDescription(), messages[0].Type);
     }
 
     [Fact]
@@ -628,7 +628,7 @@ public class GoogleRequestHelpersTests
         Assert.Equal(3, requests.Count);
         Assert.Single(messages);
         Assert.Contains("Saving data: ALPHA", messages[0].Message);
-        Assert.Equal(MessageTypeEnum.SAVE_DATA.GetDescription(), messages[0].Type);
+        Assert.Equal(MessageType.SAVE_DATA.GetDescription(), messages[0].Type);
     }
 
     #endregion

@@ -11,7 +11,7 @@ using RaptorSheets.Core.Models;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Helpers;
 using RaptorSheets.Core.Models.Google;
-using SheetEnum = RaptorSheets.Stock.Enums.SheetEnum;
+using SheetName = RaptorSheets.Stock.Enums.SheetName;
 
 namespace RaptorSheets.Stock.Managers;
 
@@ -41,7 +41,7 @@ public interface IGoogleSheetManager
 public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSheetManager
 {
     private static List<string> CanonicalSheetNames()
-        => Enum.GetValues<SheetEnum>().Select(e => e.GetDescription()).ToList();
+        => Enum.GetValues<SheetName>().Select(e => e.GetDescription()).ToList();
 
     public GoogleSheetManager(IGoogleSheetService googleSheetService, ILogger? logger = null)
         : base(googleSheetService, StockSheetHelpers.Registry, CanonicalSheetNames(), logger)
@@ -116,7 +116,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
         if (!sheetExists)
         {
-            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageTypeEnum.GET_SHEETS)] };
+            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
         }
 
         return await GetSheets([sheet]);
@@ -128,7 +128,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     private static readonly Dictionary<string, GoogleRequestHelpers.SheetChangeAccessor<SheetEntity>> _sheetAccessors =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            [SheetEnum.STOCKS.GetDescription()] = new(
+            [SheetName.STOCKS.GetDescription()] = new(
                 entity => entity.Sheets.Stocks.Count,
                 entity => entity.Sheets.Stocks,
                 (data, properties) => StockRequestHelpers.ChangeStockSheetData(data as List<StockEntity> ?? [], properties))
@@ -141,7 +141,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
         if (sheetsWithData.Count == 0)
         {
-            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageTypeEnum.GENERAL));
+            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageType.GENERAL));
             return sheetEntity;
         }
 
@@ -154,7 +154,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
         if (batchUpdateSpreadsheetResponse == null)
         {
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageTypeEnum.SAVE_DATA));
+            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageType.SAVE_DATA));
         }
 
         return sheetEntity;

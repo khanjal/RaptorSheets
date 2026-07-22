@@ -212,9 +212,9 @@ public static class SheetsConfig
     public static SheetModel ApplicationSheet => new()
     {
         Name = SheetNames.Applications,
-        CellColor = ColorEnum.LIGHT_CYAN,
-        TabColor = ColorEnum.BLUE,
-        FontColor = ColorEnum.WHITE,
+        CellColor = SheetColor.LIGHT_CYAN,
+        TabColor = SheetColor.BLUE,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = false,
@@ -224,9 +224,9 @@ public static class SheetsConfig
     public static SheetModel InterviewSheet => new()
     {
         Name = SheetNames.Interviews,
-        CellColor = ColorEnum.LIGHT_GRAY,
-        TabColor = ColorEnum.GREEN,
-        FontColor = ColorEnum.WHITE,
+        CellColor = SheetColor.LIGHT_GRAY,
+        TabColor = SheetColor.GREEN,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = false,
@@ -236,8 +236,8 @@ public static class SheetsConfig
     public static SheetModel CompanySheet => new()
     {
         Name = SheetNames.Companies,
-        CellColor = ColorEnum.LIGHT_CYAN,
-        TabColor = ColorEnum.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -247,8 +247,8 @@ public static class SheetsConfig
     public static SheetModel PositionSheet => new()
     {
         Name = SheetNames.Positions,
-        CellColor = ColorEnum.LIGHT_CYAN,
-        TabColor = ColorEnum.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -258,9 +258,9 @@ public static class SheetsConfig
     public static SheetModel CompanyDetailSheet => new()
     {
         Name = SheetNames.CompanyDetails,
-        CellColor = ColorEnum.LIGHT_PURPLE,
-        TabColor = ColorEnum.PURPLE,
-        FontColor = ColorEnum.WHITE,
+        CellColor = SheetColor.LIGHT_PURPLE,
+        TabColor = SheetColor.PURPLE,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = false,
@@ -270,9 +270,9 @@ public static class SheetsConfig
     public static SheetModel PositionDetailSheet => new()
     {
         Name = SheetNames.PositionDetails,
-        CellColor = ColorEnum.LIGHT_PURPLE,
-        TabColor = ColorEnum.PURPLE,
-        FontColor = ColorEnum.WHITE,
+        CellColor = SheetColor.LIGHT_PURPLE,
+        TabColor = SheetColor.PURPLE,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = false,
@@ -282,8 +282,8 @@ public static class SheetsConfig
     public static SheetModel SiteSheet => new()
     {
         Name = SheetNames.Sites,
-        CellColor = ColorEnum.LIGHT_GRAY,
-        TabColor = ColorEnum.LIGHT_GRAY,
+        CellColor = SheetColor.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GRAY,
         FreezeColumnCount = 0,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -293,8 +293,8 @@ public static class SheetsConfig
     public static SheetModel DecisionSheet => new()
     {
         Name = SheetNames.Decisions,
-        CellColor = ColorEnum.LIGHT_GRAY,
-        TabColor = ColorEnum.LIGHT_GRAY,
+        CellColor = SheetColor.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GRAY,
         FreezeColumnCount = 0,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -304,8 +304,8 @@ public static class SheetsConfig
     public static SheetModel InterviewTypeSheet => new()
     {
         Name = SheetNames.InterviewTypes,
-        CellColor = ColorEnum.LIGHT_GRAY,
-        TabColor = ColorEnum.LIGHT_GRAY,
+        CellColor = SheetColor.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GRAY,
         FreezeColumnCount = 0,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -315,8 +315,8 @@ public static class SheetsConfig
     public static SheetModel InterviewOutcomeSheet => new()
     {
         Name = SheetNames.InterviewOutcomes,
-        CellColor = ColorEnum.LIGHT_GRAY,
-        TabColor = ColorEnum.LIGHT_GRAY,
+        CellColor = SheetColor.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GRAY,
         FreezeColumnCount = 0,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -326,8 +326,8 @@ public static class SheetsConfig
     public static SheetModel ScheduleSheet => new()
     {
         Name = SheetNames.Schedules,
-        CellColor = ColorEnum.LIGHT_GRAY,
-        TabColor = ColorEnum.LIGHT_GRAY,
+        CellColor = SheetColor.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GRAY,
         FreezeColumnCount = 0,
         FreezeRowCount = 1,
         ProtectSheet = true,
@@ -337,9 +337,9 @@ public static class SheetsConfig
     public static SheetModel SetupSheet => new()
     {
         Name = SheetNames.Setup,
-        TabColor = ColorEnum.ORANGE,
-        CellColor = ColorEnum.LIGHT_YELLOW,
-        FontColor = ColorEnum.WHITE,
+        TabColor = SheetColor.ORANGE,
+        CellColor = SheetColor.LIGHT_YELLOW,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 0,
         FreezeRowCount = 1,
         ProtectSheet = false,

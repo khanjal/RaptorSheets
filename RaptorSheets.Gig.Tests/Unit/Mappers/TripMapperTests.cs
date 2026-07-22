@@ -124,14 +124,14 @@ public class TripMapperTests
         Assert.True(result.Headers.Count > 10, "Trip sheet should have many columns");
         
         // Verify essential headers exist with proper configuration
-        var dateHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.DATE.GetDescription());
+        var dateHeader = result.Headers.FirstOrDefault(h => h.Name == Header.DATE.GetDescription());
         Assert.NotNull(dateHeader);
-        Assert.Equal(FormatEnum.DATE, dateHeader.Format);
+        Assert.Equal(Format.DATE, dateHeader.Format);
         
-        var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
+        var payHeader = result.Headers.FirstOrDefault(h => h.Name == Header.PAY.GetDescription());
         Assert.NotNull(payHeader);
         // TripEntity uses FieldType.Currency which maps to ACCOUNTING format
-        Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
+        Assert.Equal(Format.ACCOUNTING, payHeader.Format);
         
         // Verify all headers have proper column assignments
         Assert.All(result.Headers, header => 

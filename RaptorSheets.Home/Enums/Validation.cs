@@ -7,7 +7,7 @@ namespace RaptorSheets.Home.Enums;
 /// Validation types for Google Sheets data validation.
 /// Description attributes map to the constant values in SheetsConfig.ValidationNames.
 /// </summary>
-public enum ValidationEnum
+public enum Validation
 {
     DEFAULT = 0,
 

@@ -102,10 +102,10 @@ public static class SheetGenerationHelper
 
             if (header.Format != null || !string.IsNullOrEmpty(header.FormatPattern))
             {
-                var formatToUse = header.Format ?? FormatEnum.NUMBER; // Default to NUMBER if only pattern provided
+                var formatToUse = header.Format ?? Format.NUMBER; // Default to NUMBER if only pattern provided
 
                 // FormatPattern is the single source of truth - always populated either from a
-                // custom pattern or derived from FormatEnum
+                // custom pattern or derived from Format
                 repeatCellModel.CellFormat = !string.IsNullOrEmpty(header.FormatPattern)
                     ? SheetHelpers.GetCellFormat(formatToUse, header.FormatPattern)
                     : SheetHelpers.GetCellFormat(formatToUse);

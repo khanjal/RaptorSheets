@@ -15,16 +15,16 @@ public class InterviewEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
 
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.InterviewDate, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.InterviewDate, formatType: Format.DATE)]
     public string Date { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.StartTime, isInput: true, note: ColumnNotes.InterviewStartTime, formatType: FormatEnum.TIME)]
+    [Column(SheetsConfig.HeaderNames.StartTime, isInput: true, note: ColumnNotes.InterviewStartTime, formatType: Format.TIME)]
     public string StartTime { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.EndTime, isInput: true, note: ColumnNotes.InterviewEndTime, formatType: FormatEnum.TIME)]
+    [Column(SheetsConfig.HeaderNames.EndTime, isInput: true, note: ColumnNotes.InterviewEndTime, formatType: Format.TIME)]
     public string EndTime { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Duration, isInput: true, note: ColumnNotes.InterviewDuration, formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.Duration, isInput: true, note: ColumnNotes.InterviewDuration, formatType: Format.DURATION)]
     public string Duration { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Company, isInput: true, note: ColumnNotes.InterviewCompany, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeCompany)]
@@ -41,7 +41,7 @@ public class InterviewEntity : SheetRowEntityBase
 
     // Calculated column
 
-    [Column(SheetsConfig.HeaderNames.InterviewRound, isInput: false, note: ColumnNotes.InterviewRound, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.InterviewRound, isInput: false, note: ColumnNotes.InterviewRound, formatType: Format.NUMBER)]
     public int InterviewRound { get; set; }
 
     // Input columns continued
@@ -62,7 +62,7 @@ public class InterviewEntity : SheetRowEntityBase
     public string Notes { get; set; } = "";
 
     // Duplicate counter for company+jobtitle combos (user-visible '#')
-    [Column(SheetsConfig.HeaderNames.Duplicate, isInput: false, note: ColumnNotes.InterviewDuplicate, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.Duplicate, isInput: false, note: ColumnNotes.InterviewDuplicate, formatType: Format.NUMBER)]
     public int? Duplicate { get; set; }
 
     // Calculated/linked columns - moved to the end so the Key is not directly edited in the main input area

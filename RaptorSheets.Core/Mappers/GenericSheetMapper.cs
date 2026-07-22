@@ -239,7 +239,7 @@ public static class GenericSheetMapper<T> where T : class, new()
 
                 // Use the attribute's built-in method to get the effective format
                 var effectiveFormat = column.GetEffectiveFormat();
-                if (effectiveFormat.HasValue && effectiveFormat.Value != FormatEnum.DEFAULT)
+                if (effectiveFormat.HasValue && effectiveFormat.Value != Format.DEFAULT)
                 {
                     header.Format = effectiveFormat.Value;
                 }
@@ -418,11 +418,11 @@ public static class GenericSheetMapper<T> where T : class, new()
         // Use the same logic as GetSheet - get effective format from attribute
         var effectiveFormat = propertyInfo.Column.GetEffectiveFormat();
 
-        if (!effectiveFormat.HasValue || effectiveFormat.Value == FormatEnum.DEFAULT)
+        if (!effectiveFormat.HasValue || effectiveFormat.Value == Format.DEFAULT)
         {
             return new CellData
             {
-                UserEnteredFormat = SheetHelpers.GetCellFormat(FormatEnum.TEXT) // Default to TEXT format
+                UserEnteredFormat = SheetHelpers.GetCellFormat(Format.TEXT) // Default to TEXT format
             };
         }
 

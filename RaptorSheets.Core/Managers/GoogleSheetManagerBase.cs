@@ -165,7 +165,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
             // Warn but proceed with creation
             entity.Messages.Add(MessageHelpers.CreateWarningMessage(
                 "Could not move default sheet to end; proceeding with creation",
-                MessageTypeEnum.CREATE_SHEET));
+                MessageType.CREATE_SHEET));
         }
 
         // Attempt to compute desired positions for requested sheets and add index update
@@ -283,7 +283,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         {
             foreach (var sheet in sheets)
             {
-                entity.Messages.Add(MessageHelpers.CreateErrorMessage($"{sheet} not created", MessageTypeEnum.CREATE_SHEET));
+                entity.Messages.Add(MessageHelpers.CreateErrorMessage($"{sheet} not created", MessageType.CREATE_SHEET));
             }
 
             return entity;
@@ -293,7 +293,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
         foreach (var sheetTitle in sheetTitles)
         {
-            entity.Messages.Add(MessageHelpers.CreateWarningMessage($"{sheetTitle.ToUpperInvariant()} created", MessageTypeEnum.CREATE_SHEET));
+            entity.Messages.Add(MessageHelpers.CreateWarningMessage($"{sheetTitle.ToUpperInvariant()} created", MessageType.CREATE_SHEET));
         }
 
         return entity;
@@ -334,12 +334,12 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
             {
                 entity.Messages.Add(MessageHelpers.CreateInfoMessage(
                     $"Creating '{tempSheetName}' as safety sheet to maintain spreadsheet integrity",
-                    MessageTypeEnum.DELETE_SHEET));
+                    MessageType.DELETE_SHEET));
             }
 
             entity.Messages.Add(MessageHelpers.CreateInfoMessage(
                 $"Deleting {existingSheetsToDelete.Count} of {allTabNames.Count} sheets",
-                MessageTypeEnum.DELETE_SHEET));
+                MessageType.DELETE_SHEET));
 
             var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
             var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest);
@@ -348,20 +348,20 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
             {
                 entity.Messages.Add(MessageHelpers.CreateInfoMessage(
                     "Sheet deletion completed successfully",
-                    MessageTypeEnum.DELETE_SHEET));
+                    MessageType.DELETE_SHEET));
             }
             else
             {
                 entity.Messages.Add(MessageHelpers.CreateErrorMessage(
                     "Sheet deletion failed - unable to execute batch request",
-                    MessageTypeEnum.DELETE_SHEET));
+                    MessageType.DELETE_SHEET));
             }
         }
         catch (Exception ex)
         {
             entity.Messages.Add(MessageHelpers.CreateErrorMessage(
                 $"Error deleting sheets: {ex.Message}",
-                MessageTypeEnum.DELETE_SHEET));
+                MessageType.DELETE_SHEET));
         }
 
         return entity;
@@ -380,7 +380,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         {
             entity.Messages.Add(MessageHelpers.CreateInfoMessage(
                 "No sheets found to delete",
-                MessageTypeEnum.DELETE_SHEET));
+                MessageType.DELETE_SHEET));
         }
 
         return existingSheets;
@@ -453,7 +453,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
                     {
                         var createResult = await CreateMissingSheetsAsync(missingIndexMap);
 
-                        if (createResult.Messages.Any(m => m.Level == MessageLevelEnum.ERROR.GetDescription()))
+                        if (createResult.Messages.Any(m => m.Level == MessageLevel.ERROR.GetDescription()))
                         {
                             messages.AddRange(createResult.Messages);
                             var errorReturn = new TEntity();
@@ -464,7 +464,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
                         var createdNames = string.Join(", ", missingIndexMap.Keys);
                         var info = MessageHelpers.CreateInfoMessage(
                             $"Created missing sheets: {createdNames}. Sheets may take a few seconds to become readable — please retry the request shortly.",
-                            MessageTypeEnum.GET_SHEETS);
+                            MessageType.GET_SHEETS);
 
                         var createdReturn = new TEntity();
                         createdReturn.Messages.Add(info);
@@ -480,12 +480,12 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
         if (response == null)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageType.GET_SHEETS));
             data.Messages.AddRange(messages);
             return data;
         }
 
-        messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageTypeEnum.GET_SHEETS));
+        messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageType.GET_SHEETS));
 
         // Cheap metadata-only call (no ranges / no grid data) - used for unknown-tab detection and
         // the spreadsheet title. Known-sheet header validation already happens below via
@@ -571,9 +571,9 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
                     Id = "",  // Empty ID indicates sheet doesn't exist
                     Attributes = new Dictionary<string, string>
                     {
-                        { PropertyEnum.HEADERS.GetDescription(), "" },
-                        { PropertyEnum.MAX_ROW.GetDescription(), "1000" },
-                        { PropertyEnum.MAX_ROW_VALUE.GetDescription(), "1" }
+                        { Property.HEADERS.GetDescription(), "" },
+                        { Property.MAX_ROW.GetDescription(), "1000" },
+                        { Property.MAX_ROW_VALUE.GetDescription(), "1" }
                     }
                 });
             }

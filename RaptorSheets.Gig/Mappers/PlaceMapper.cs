@@ -20,8 +20,8 @@ public static class PlaceMapper
         sheet.Headers.UpdateColumns();
 
         var tripSheet = TripMapper.GetSheet();
-        var keyRange = sheet.GetLocalRange(HeaderEnum.PLACE.GetDescription());
-        var tripKeyRange = tripSheet.GetRange(HeaderEnum.PLACE.GetDescription());
+        var keyRange = sheet.GetLocalRange(Header.PLACE.GetDescription());
+        var tripKeyRange = tripSheet.GetRange(Header.PLACE.GetDescription());
 
         // Configure common aggregation patterns (for trip-based data)
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(
@@ -37,26 +37,26 @@ public static class PlaceMapper
         // Configure specific headers unique to PlaceMapper
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
             
             switch (headerEnum)
             {
-                case HeaderEnum.PLACE:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.PLACE.GetDescription(), tripSheet.GetRange(HeaderEnum.PLACE.GetDescription(), 2));
+                case Header.PLACE:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(Header.PLACE.GetDescription(), tripSheet.GetRange(Header.PLACE.GetDescription(), 2));
                     break;
-                case HeaderEnum.VISIT_FIRST:
-                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_FIRST.GetDescription(), 
-                        SheetEnum.TRIPS.GetDescription(), 
-                        tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
-                        tripSheet.GetColumn(HeaderEnum.PLACE.GetDescription()), true);
-                    header.Format = FormatEnum.DATE;
+                case Header.VISIT_FIRST:
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, Header.VISIT_FIRST.GetDescription(), 
+                        SheetName.TRIPS.GetDescription(), 
+                        tripSheet.GetColumn(Header.DATE.GetDescription()), 
+                        tripSheet.GetColumn(Header.PLACE.GetDescription()), true);
+                    header.Format = Format.DATE;
                     break;
-                case HeaderEnum.VISIT_LAST:
-                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, HeaderEnum.VISIT_LAST.GetDescription(), 
-                        SheetEnum.TRIPS.GetDescription(), 
-                        tripSheet.GetColumn(HeaderEnum.DATE.GetDescription()), 
-                        tripSheet.GetColumn(HeaderEnum.PLACE.GetDescription()), false);
-                    header.Format = FormatEnum.DATE;
+                case Header.VISIT_LAST:
+                    header.Formula = GigFormulaBuilder.Common.BuildVisitDateLookup(keyRange, Header.VISIT_LAST.GetDescription(), 
+                        SheetName.TRIPS.GetDescription(), 
+                        tripSheet.GetColumn(Header.DATE.GetDescription()), 
+                        tripSheet.GetColumn(Header.PLACE.GetDescription()), false);
+                    header.Format = Format.DATE;
                     break;
             }
         });

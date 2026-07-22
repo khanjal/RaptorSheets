@@ -80,12 +80,12 @@ public class RegionMapperTests
         Assert.True(result.Headers.Count > 2, "Region sheet should have multiple columns");
 
         // Verify essential headers exist with proper configuration
-        var regionHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.REGION.GetDescription());
+        var regionHeader = result.Headers.FirstOrDefault(h => h.Name == Header.REGION.GetDescription());
         Assert.NotNull(regionHeader);
 
-        var tripsHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.TRIPS.GetDescription());
+        var tripsHeader = result.Headers.FirstOrDefault(h => h.Name == Header.TRIPS.GetDescription());
         Assert.NotNull(tripsHeader);
-        Assert.Equal(FormatEnum.NUMBER, tripsHeader.Format);
+        Assert.Equal(Format.NUMBER, tripsHeader.Format);
 
         // Verify all headers have proper column assignments
         Assert.All(result.Headers, header => 

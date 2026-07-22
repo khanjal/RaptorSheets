@@ -6,7 +6,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Stock.Constants;
 using RaptorSheets.Stock.Entities;
-using HeaderEnum = RaptorSheets.Stock.Enums.HeaderEnum;
+using Header = RaptorSheets.Stock.Enums.Header;
 
 namespace RaptorSheets.Stock.Mappers;
 
@@ -36,20 +36,20 @@ public static class StockMapper
             StockEntity entity = new()
             {
                 RowId = id,
-                Account = HeaderHelpers.GetStringValue(HeaderEnum.ACCOUNT.GetDescription(), value, headers),
-                Ticker = HeaderHelpers.GetStringValue(HeaderEnum.TICKER.GetDescription(), value, headers),
-                Name = HeaderHelpers.GetStringValue(HeaderEnum.NAME.GetDescription(), value, headers),
-                Shares = HeaderHelpers.GetDecimalValue(HeaderEnum.SHARES.GetDescription(), value, headers),
-                AverageCost = HeaderHelpers.GetDecimalValue(HeaderEnum.AVERAGE_COST.GetDescription(), value, headers),
-                CostTotal = HeaderHelpers.GetDecimalValue(HeaderEnum.COST_TOTAL.GetDescription(), value, headers),
-                CurrentPrice = HeaderHelpers.GetDecimalValue(HeaderEnum.CURRENT_PRICE.GetDescription(), value, headers),
-                CurrentTotal = HeaderHelpers.GetDecimalValue(HeaderEnum.CURRENT_TOTAL.GetDescription(), value, headers),
-                Return = HeaderHelpers.GetDecimalValue(HeaderEnum.RETURN.GetDescription(), value, headers),
-                PeRatio = HeaderHelpers.GetDecimalValue(HeaderEnum.PE_RATIO.GetDescription(), value, headers),
-                WeekHigh52 = HeaderHelpers.GetDecimalValue(HeaderEnum.WEEK_HIGH_52.GetDescription(), value, headers),
-                WeekLow52 = HeaderHelpers.GetDecimalValue(HeaderEnum.WEEK_LOW_52.GetDescription(), value, headers),
-                MaxHigh = HeaderHelpers.GetDecimalValue(HeaderEnum.MAX_HIGH.GetDescription(), value, headers),
-                MinLow = HeaderHelpers.GetDecimalValue(HeaderEnum.MIN_LOW.GetDescription(), value, headers),
+                Account = HeaderHelpers.GetStringValue(Header.ACCOUNT.GetDescription(), value, headers),
+                Ticker = HeaderHelpers.GetStringValue(Header.TICKER.GetDescription(), value, headers),
+                Name = HeaderHelpers.GetStringValue(Header.NAME.GetDescription(), value, headers),
+                Shares = HeaderHelpers.GetDecimalValue(Header.SHARES.GetDescription(), value, headers),
+                AverageCost = HeaderHelpers.GetDecimalValue(Header.AVERAGE_COST.GetDescription(), value, headers),
+                CostTotal = HeaderHelpers.GetDecimalValue(Header.COST_TOTAL.GetDescription(), value, headers),
+                CurrentPrice = HeaderHelpers.GetDecimalValue(Header.CURRENT_PRICE.GetDescription(), value, headers),
+                CurrentTotal = HeaderHelpers.GetDecimalValue(Header.CURRENT_TOTAL.GetDescription(), value, headers),
+                Return = HeaderHelpers.GetDecimalValue(Header.RETURN.GetDescription(), value, headers),
+                PeRatio = HeaderHelpers.GetDecimalValue(Header.PE_RATIO.GetDescription(), value, headers),
+                WeekHigh52 = HeaderHelpers.GetDecimalValue(Header.WEEK_HIGH_52.GetDescription(), value, headers),
+                WeekLow52 = HeaderHelpers.GetDecimalValue(Header.WEEK_LOW_52.GetDescription(), value, headers),
+                MaxHigh = HeaderHelpers.GetDecimalValue(Header.MAX_HIGH.GetDescription(), value, headers),
+                MinLow = HeaderHelpers.GetDecimalValue(Header.MIN_LOW.GetDescription(), value, headers),
             };
 
             entities.Add(entity);
@@ -75,9 +75,9 @@ public static class StockMapper
 
             foreach (var header in headers)
             {
-                var headerEnum = header!.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+                var headerEnum = header!.ToString()!.Trim().GetValueFromName<Header>();
 
-                cells.Add(headerEnum == HeaderEnum.SHARES
+                cells.Add(headerEnum == Header.SHARES
                     ? new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double)entity.Shares } }
                     : new CellData());
             }
@@ -100,58 +100,58 @@ public static class StockMapper
         for (int i = 0; i < sheet.Headers.Count; i++)
         {
             var header = sheet.Headers[i];
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
             var keyRange = GoogleConfig.KeyRange;
 
             switch (headerEnum)
             {
-                case HeaderEnum.AVERAGE_COST:
+                case Header.AVERAGE_COST:
                     header.Note = ColumnNotes.AverageCost;
-                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Format = Format.ACCOUNTING;
                     break;
-                case HeaderEnum.COST_TOTAL:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.COST_TOTAL:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.MultiplyRanges(headerEnum.GetDescription(), 
                                                                     keyRange, 
-                                                                    sheet.GetLocalRange(HeaderEnum.SHARES.GetDescription()), 
-                                                                    sheet.GetLocalRange(HeaderEnum.AVERAGE_COST.GetDescription()));
+                                                                    sheet.GetLocalRange(Header.SHARES.GetDescription()), 
+                                                                    sheet.GetLocalRange(Header.AVERAGE_COST.GetDescription()));
                     break;
-                case HeaderEnum.CURRENT_PRICE:
-                case HeaderEnum.MAX_HIGH:
-                case HeaderEnum.MIN_LOW:
-                case HeaderEnum.WEEK_HIGH_52:
-                case HeaderEnum.WEEK_LOW_52:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.CURRENT_PRICE:
+                case Header.MAX_HIGH:
+                case Header.MIN_LOW:
+                case Header.WEEK_HIGH_52:
+                case Header.WEEK_LOW_52:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.SumIf(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    tickerSheet.GetRange(HeaderEnum.TICKER.GetDescription()),
+                                                                    tickerSheet.GetRange(Header.TICKER.GetDescription()),
                                                                     keyRange,
                                                                     tickerSheet.GetRange(headerEnum.GetDescription()));
                     break;
-                case HeaderEnum.CURRENT_TOTAL:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.CURRENT_TOTAL:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.MultiplyRanges(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    sheet.GetLocalRange(HeaderEnum.SHARES.GetDescription()),
-                                                                    sheet.GetLocalRange(HeaderEnum.CURRENT_PRICE.GetDescription()));
+                                                                    sheet.GetLocalRange(Header.SHARES.GetDescription()),
+                                                                    sheet.GetLocalRange(Header.CURRENT_PRICE.GetDescription()));
                     break;
-                case HeaderEnum.PE_RATIO:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.PE_RATIO:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.SumIfBlank(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    tickerSheet.GetRange(HeaderEnum.TICKER.GetDescription()),
+                                                                    tickerSheet.GetRange(Header.TICKER.GetDescription()),
                                                                     keyRange,
                                                                     tickerSheet.GetRange(headerEnum.GetDescription()));
                     break;
-                case HeaderEnum.RETURN:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.RETURN:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.SubtractRanges(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    sheet.GetLocalRange(HeaderEnum.CURRENT_TOTAL.GetDescription()),
-                                                                    sheet.GetLocalRange(HeaderEnum.COST_TOTAL.GetDescription()));
+                                                                    sheet.GetLocalRange(Header.CURRENT_TOTAL.GetDescription()),
+                                                                    sheet.GetLocalRange(Header.COST_TOTAL.GetDescription()));
                     break;
-                case HeaderEnum.SHARES:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.SHARES:
+                    header.Format = Format.ACCOUNTING;
                     break;
                 default:
                     // Apply basic formatting based on header name patterns
@@ -172,10 +172,10 @@ public static class StockMapper
         
         if (lowerName.Contains("cost") || lowerName.Contains("price") || lowerName.Contains("total") || 
             lowerName.Contains("return") || lowerName.Contains("high") || lowerName.Contains("low"))
-            header.Format = FormatEnum.ACCOUNTING;
+            header.Format = Format.ACCOUNTING;
         else if (lowerName.Contains("ratio"))
-            header.Format = FormatEnum.NUMBER;
+            header.Format = Format.NUMBER;
         else
-            header.Format = FormatEnum.TEXT;
+            header.Format = Format.TEXT;
     }
 }

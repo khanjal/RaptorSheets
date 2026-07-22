@@ -31,7 +31,7 @@ public class SheetHelperTests
     public void GetColor_ShouldReturnValidColorObject()
     {
         // Arrange - Test one representative color
-        var testColor = ColorEnum.BLUE;
+        var testColor = SheetColor.BLUE;
 
         // Act
         var result = SheetHelpers.GetColor(testColor);
@@ -46,10 +46,10 @@ public class SheetHelperTests
     }
 
     [Theory]
-    [InlineData(FormatEnum.ACCOUNTING, "NUMBER", true)]
-    [InlineData(FormatEnum.DATE, "DATE", true)]
-    [InlineData(FormatEnum.TEXT, "TEXT", false)]
-    public void GetCellFormat_ShouldReturnValidFormat(FormatEnum format, string expectedType, bool hasPattern)
+    [InlineData(Format.ACCOUNTING, "NUMBER", true)]
+    [InlineData(Format.DATE, "DATE", true)]
+    [InlineData(Format.TEXT, "TEXT", false)]
+    public void GetCellFormat_ShouldReturnValidFormat(Format format, string expectedType, bool hasPattern)
     {
         // Act
         var result = SheetHelpers.GetCellFormat(format);

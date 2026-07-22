@@ -7,21 +7,21 @@ namespace RaptorSheets.Gig.Helpers;
 
 /// <summary>
 /// Gig-specific helper methods for standardizing sheet configuration patterns.
-/// Provides type-safe header formatting based on HeaderEnum constants instead of string matching.
+/// Provides type-safe header formatting based on Header constants instead of string matching.
 /// </summary>
 public static class GigSheetConfigurationHelpers
 {
     /// <summary>
-    /// Apply common formatting patterns based on HeaderEnum values.
+    /// Apply common formatting patterns based on Header values.
     /// This provides type safety and consistency compared to string-based matching.
-    /// Only applies formatting for headers that match known HeaderEnum values.
+    /// Only applies formatting for headers that match known Header values.
     /// </summary>
     /// <param name="header">The sheet cell model to format</param>
-    /// <param name="headerName">The header name to parse into HeaderEnum</param>
+    /// <param name="headerName">The header name to parse into Header</param>
     public static void ApplyCommonFormats(SheetCellModel header, string headerName)
     {
-        // Try to parse the header name into a HeaderEnum for type-safe formatting
-        var headerEnum = headerName.GetValueFromName<HeaderEnum>();
+        // Try to parse the header name into a Header for type-safe formatting
+        var headerEnum = headerName.GetValueFromName<Header>();
         
         // Check if GetValueFromName found a real match by comparing with the original string
         // GetValueFromName returns the first enum value if no match is found
@@ -30,7 +30,7 @@ public static class GigSheetConfigurationHelpers
         
         if (!isRealMatch)
         {
-            // No matching HeaderEnum found - leave header formatting unchanged
+            // No matching Header found - leave header formatting unchanged
             return;
         }
 
@@ -38,111 +38,111 @@ public static class GigSheetConfigurationHelpers
     }
 
     /// <summary>
-    /// Apply formatting based on HeaderEnum values using a switch statement for optimal performance.
+    /// Apply formatting based on Header values using a switch statement for optimal performance.
     /// </summary>
     /// <param name="header">The sheet cell model to format</param>
-    /// <param name="headerEnum">The HeaderEnum value</param>
-    public static void ApplyFormatsByHeaderEnum(SheetCellModel header, HeaderEnum headerEnum)
+    /// <param name="headerEnum">The Header value</param>
+    public static void ApplyFormatsByHeaderEnum(SheetCellModel header, Header headerEnum)
     {
         switch (headerEnum)
         {
             // Date formatting
-            case HeaderEnum.DATE:
-            case HeaderEnum.DATE_BEGIN:
-            case HeaderEnum.DATE_END:
-            case HeaderEnum.VISIT_FIRST:
-            case HeaderEnum.VISIT_LAST:
-                header.Format = FormatEnum.DATE;
+            case Header.DATE:
+            case Header.DATE_BEGIN:
+            case Header.DATE_END:
+            case Header.VISIT_FIRST:
+            case Header.VISIT_LAST:
+                header.Format = Format.DATE;
                 break;
 
             // Time formatting
-            case HeaderEnum.TIME_START:
-            case HeaderEnum.TIME_END:
-                header.Format = FormatEnum.TIME;
+            case Header.TIME_START:
+            case Header.TIME_END:
+                header.Format = Format.TIME;
                 break;
 
             // Duration formatting
-            case HeaderEnum.DURATION:
-            case HeaderEnum.TIME_TOTAL:
-            case HeaderEnum.TIME_ACTIVE:
-            case HeaderEnum.TOTAL_TIME:
-            case HeaderEnum.TOTAL_TIME_ACTIVE:
-                header.Format = FormatEnum.DURATION;
+            case Header.DURATION:
+            case Header.TIME_TOTAL:
+            case Header.TIME_ACTIVE:
+            case Header.TOTAL_TIME:
+            case Header.TOTAL_TIME_ACTIVE:
+                header.Format = Format.DURATION;
                 break;
 
             // Accounting/Money formatting
-            case HeaderEnum.AMOUNT:
-            case HeaderEnum.AMOUNT_CURRENT:
-            case HeaderEnum.AMOUNT_PREVIOUS:
-            case HeaderEnum.AMOUNT_PER_DAY:
-            case HeaderEnum.AMOUNT_PER_DISTANCE:
-            case HeaderEnum.AMOUNT_PER_PREVIOUS_DAY:
-            case HeaderEnum.AMOUNT_PER_TIME:
-            case HeaderEnum.AMOUNT_PER_TRIP:
-            case HeaderEnum.PAY:
-            case HeaderEnum.TIP:
-            case HeaderEnum.TIPS:
-            case HeaderEnum.BONUS:
-            case HeaderEnum.CASH:
-            case HeaderEnum.TOTAL:
-            case HeaderEnum.TOTAL_BONUS:
-            case HeaderEnum.TOTAL_CASH:
-            case HeaderEnum.TOTAL_PAY:
-            case HeaderEnum.TOTAL_TIPS:
-            case HeaderEnum.TOTAL_GRAND:
-            case HeaderEnum.AVERAGE:
-                header.Format = FormatEnum.ACCOUNTING;
+            case Header.AMOUNT:
+            case Header.AMOUNT_CURRENT:
+            case Header.AMOUNT_PREVIOUS:
+            case Header.AMOUNT_PER_DAY:
+            case Header.AMOUNT_PER_DISTANCE:
+            case Header.AMOUNT_PER_PREVIOUS_DAY:
+            case Header.AMOUNT_PER_TIME:
+            case Header.AMOUNT_PER_TRIP:
+            case Header.PAY:
+            case Header.TIP:
+            case Header.TIPS:
+            case Header.BONUS:
+            case Header.CASH:
+            case Header.TOTAL:
+            case Header.TOTAL_BONUS:
+            case Header.TOTAL_CASH:
+            case Header.TOTAL_PAY:
+            case Header.TOTAL_TIPS:
+            case Header.TOTAL_GRAND:
+            case Header.AVERAGE:
+                header.Format = Format.ACCOUNTING;
                 break;
 
             // Distance formatting
-            case HeaderEnum.DISTANCE:
-            case HeaderEnum.TOTAL_DISTANCE:
-                header.Format = FormatEnum.DISTANCE;
+            case Header.DISTANCE:
+            case Header.TOTAL_DISTANCE:
+                header.Format = Format.DISTANCE;
                 break;
 
             // Number formatting
-            case HeaderEnum.NUMBER:
-            case HeaderEnum.ORDER_NUMBER:
-            case HeaderEnum.TRIPS:
-            case HeaderEnum.TRIPS_PER_DAY:
-            case HeaderEnum.TRIPS_PER_HOUR:
-            case HeaderEnum.TOTAL_TRIPS:
-            case HeaderEnum.VISITS:
-            case HeaderEnum.DAYS:
-            case HeaderEnum.NUMBER_OF_DAYS:
-            case HeaderEnum.DAYS_PER_VISIT:
-            case HeaderEnum.DAYS_SINCE_VISIT:
-            case HeaderEnum.ODOMETER_START:
-            case HeaderEnum.ODOMETER_END:
-                header.Format = FormatEnum.NUMBER;
+            case Header.NUMBER:
+            case Header.ORDER_NUMBER:
+            case Header.TRIPS:
+            case Header.TRIPS_PER_DAY:
+            case Header.TRIPS_PER_HOUR:
+            case Header.TOTAL_TRIPS:
+            case Header.VISITS:
+            case Header.DAYS:
+            case Header.NUMBER_OF_DAYS:
+            case Header.DAYS_PER_VISIT:
+            case Header.DAYS_SINCE_VISIT:
+            case Header.ODOMETER_START:
+            case Header.ODOMETER_END:
+                header.Format = Format.NUMBER;
                 break;
 
             // Weekday formatting
-            case HeaderEnum.WEEKDAY:
-                header.Format = FormatEnum.WEEKDAY;
+            case Header.WEEKDAY:
+                header.Format = Format.WEEKDAY;
                 break;
 
             // Text formatting (explicit for clarity, though DEFAULT would work)
-            case HeaderEnum.ADDRESS:
-            case HeaderEnum.ADDRESS_START:
-            case HeaderEnum.ADDRESS_END:
-            case HeaderEnum.NAME:
-            case HeaderEnum.PLACE:
-            case HeaderEnum.PICKUP:
-            case HeaderEnum.DROPOFF:
-            case HeaderEnum.REGION:
-            case HeaderEnum.SERVICE:
-            case HeaderEnum.TYPE:
-            case HeaderEnum.CATEGORY:
-            case HeaderEnum.DESCRIPTION:
-            case HeaderEnum.NOTE:
-            case HeaderEnum.UNIT_END:
-                header.Format = FormatEnum.TEXT;
+            case Header.ADDRESS:
+            case Header.ADDRESS_START:
+            case Header.ADDRESS_END:
+            case Header.NAME:
+            case Header.PLACE:
+            case Header.PICKUP:
+            case Header.DROPOFF:
+            case Header.REGION:
+            case Header.SERVICE:
+            case Header.TYPE:
+            case Header.CATEGORY:
+            case Header.DESCRIPTION:
+            case Header.NOTE:
+            case Header.UNIT_END:
+                header.Format = Format.TEXT;
                 break;
 
             // Default case for headers that don't need specific formatting
             default:
-                header.Format = FormatEnum.DEFAULT;
+                header.Format = Format.DEFAULT;
                 break;
         }
     }

@@ -84,16 +84,16 @@ public class TypeMapperTests
         Assert.True(result.Headers.Count > 0, "Type sheet should have headers");
 
         // Verify essential headers exist
-        var typeHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.TYPE.GetDescription());
+        var typeHeader = result.Headers.FirstOrDefault(h => h.Name == Header.TYPE.GetDescription());
         Assert.NotNull(typeHeader);
 
-        var visitFirstHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.VISIT_FIRST.GetDescription());
+        var visitFirstHeader = result.Headers.FirstOrDefault(h => h.Name == Header.VISIT_FIRST.GetDescription());
         Assert.NotNull(visitFirstHeader);
-        Assert.Equal(FormatEnum.DATE, visitFirstHeader.Format);
+        Assert.Equal(Format.DATE, visitFirstHeader.Format);
 
-        var visitLastHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.VISIT_LAST.GetDescription());
+        var visitLastHeader = result.Headers.FirstOrDefault(h => h.Name == Header.VISIT_LAST.GetDescription());
         Assert.NotNull(visitLastHeader);
-        Assert.Equal(FormatEnum.DATE, visitLastHeader.Format);
+        Assert.Equal(Format.DATE, visitLastHeader.Format);
     }
 
     #endregion

@@ -1,6 +1,6 @@
 ﻿namespace RaptorSheets.Core.Enums;
 
-public enum DimensionEnum
+public enum Dimension
 {
     /// <summary>
     /// The column (vertical) dimension.

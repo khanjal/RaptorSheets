@@ -34,130 +34,130 @@ public static class ShiftMapper
     private static void ConfigureShiftFormulas(SheetModel sheet)
     {
         var tripSheet = TripMapper.GetSheet();
-        var dateRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
-        var keyRange = sheet.GetLocalRange(HeaderEnum.KEY.GetDescription());
+        var dateRange = sheet.GetLocalRange(Header.DATE.GetDescription());
+        var keyRange = sheet.GetLocalRange(Header.KEY.GetDescription());
 
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
 
             switch (headerEnum)
             {
-                case HeaderEnum.KEY:
+                case Header.KEY:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftKey(
                         dateRange, 
-                        HeaderEnum.KEY.GetDescription(), 
+                        Header.KEY.GetDescription(), 
                         dateRange, 
-                        sheet.GetLocalRange(HeaderEnum.SERVICE.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.NUMBER.GetDescription()));
+                        sheet.GetLocalRange(Header.SERVICE.GetDescription()), 
+                        sheet.GetLocalRange(Header.NUMBER.GetDescription()));
                     break;
-                case HeaderEnum.TOTAL_TIME_ACTIVE:
+                case Header.TOTAL_TIME_ACTIVE:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaTotalTimeActive(
                         dateRange, 
-                        HeaderEnum.TOTAL_TIME_ACTIVE.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TIME_ACTIVE.GetDescription()), 
-                        tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), 
+                        Header.TOTAL_TIME_ACTIVE.GetDescription(), 
+                        sheet.GetLocalRange(Header.TIME_ACTIVE.GetDescription()), 
+                        tripSheet.GetRange(Header.KEY.GetDescription()), 
                         keyRange, 
-                        tripSheet.GetRange(HeaderEnum.DURATION.GetDescription()));
+                        tripSheet.GetRange(Header.DURATION.GetDescription()));
                     break;
-                case HeaderEnum.TOTAL_TIME:
+                case Header.TOTAL_TIME:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaTotalTimeWithOmit(
                         dateRange, 
-                        HeaderEnum.TOTAL_TIME.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TIME_OMIT.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TIME_TOTAL.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_TIME_ACTIVE.GetDescription()));
+                        Header.TOTAL_TIME.GetDescription(), 
+                        sheet.GetLocalRange(Header.TIME_OMIT.GetDescription()), 
+                        sheet.GetLocalRange(Header.TIME_TOTAL.GetDescription()), 
+                        sheet.GetLocalRange(Header.TOTAL_TIME_ACTIVE.GetDescription()));
                     break;
-                case HeaderEnum.TOTAL_TRIPS:
+                case Header.TOTAL_TRIPS:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftTotalTrips(
                         dateRange, 
-                        HeaderEnum.TOTAL_TRIPS.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TRIPS.GetDescription()), 
-                        tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), 
+                        Header.TOTAL_TRIPS.GetDescription(), 
+                        sheet.GetLocalRange(Header.TRIPS.GetDescription()), 
+                        tripSheet.GetRange(Header.KEY.GetDescription()), 
                         keyRange);
                     break;
-                case HeaderEnum.TOTAL_PAY:
+                case Header.TOTAL_PAY:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftTotalWithTripSum(
                         dateRange, 
-                        HeaderEnum.TOTAL_PAY.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.PAY.GetDescription()), 
-                        tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), 
+                        Header.TOTAL_PAY.GetDescription(), 
+                        sheet.GetLocalRange(Header.PAY.GetDescription()), 
+                        tripSheet.GetRange(Header.KEY.GetDescription()), 
                         keyRange, 
-                        tripSheet.GetRange(HeaderEnum.PAY.GetDescription()));
+                        tripSheet.GetRange(Header.PAY.GetDescription()));
                     break;
-                case HeaderEnum.TOTAL_TIPS:
+                case Header.TOTAL_TIPS:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftTotalWithTripSum(
                         dateRange, 
-                        HeaderEnum.TOTAL_TIPS.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TIPS.GetDescription()), 
-                        tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), 
+                        Header.TOTAL_TIPS.GetDescription(), 
+                        sheet.GetLocalRange(Header.TIPS.GetDescription()), 
+                        tripSheet.GetRange(Header.KEY.GetDescription()), 
                         keyRange, 
-                        tripSheet.GetRange(HeaderEnum.TIPS.GetDescription()));
+                        tripSheet.GetRange(Header.TIPS.GetDescription()));
                     break;
-                case HeaderEnum.TOTAL_BONUS:
+                case Header.TOTAL_BONUS:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftTotalWithTripSum(
                         dateRange, 
-                        HeaderEnum.TOTAL_BONUS.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.BONUS.GetDescription()), 
-                        tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), 
+                        Header.TOTAL_BONUS.GetDescription(), 
+                        sheet.GetLocalRange(Header.BONUS.GetDescription()), 
+                        tripSheet.GetRange(Header.KEY.GetDescription()), 
                         keyRange, 
-                        tripSheet.GetRange(HeaderEnum.BONUS.GetDescription()));
+                        tripSheet.GetRange(Header.BONUS.GetDescription()));
                     break;
-                case HeaderEnum.TOTAL_GRAND:
+                case Header.TOTAL_GRAND:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaTotal(
                         dateRange, 
-                        HeaderEnum.TOTAL_GRAND.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_PAY.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_TIPS.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_BONUS.GetDescription()));
+                        Header.TOTAL_GRAND.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL_PAY.GetDescription()), 
+                        sheet.GetLocalRange(Header.TOTAL_TIPS.GetDescription()), 
+                        sheet.GetLocalRange(Header.TOTAL_BONUS.GetDescription()));
                     break;
-                case HeaderEnum.TOTAL_CASH:
+                case Header.TOTAL_CASH:
                     header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(
                         keyRange, 
-                        HeaderEnum.TOTAL_CASH.GetDescription(), 
-                        tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), 
-                        tripSheet.GetRange(HeaderEnum.CASH.GetDescription()));
+                        Header.TOTAL_CASH.GetDescription(), 
+                        tripSheet.GetRange(Header.KEY.GetDescription()), 
+                        tripSheet.GetRange(Header.CASH.GetDescription()));
                     break;
-                case HeaderEnum.TOTAL_DISTANCE:
+                case Header.TOTAL_DISTANCE:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaShiftTotalWithTripSum(
                         dateRange, 
-                        HeaderEnum.TOTAL_DISTANCE.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.DISTANCE.GetDescription()), 
-                        tripSheet.GetRange(HeaderEnum.KEY.GetDescription()), 
+                        Header.TOTAL_DISTANCE.GetDescription(), 
+                        sheet.GetLocalRange(Header.DISTANCE.GetDescription()), 
+                        tripSheet.GetRange(Header.KEY.GetDescription()), 
                         keyRange, 
-                        tripSheet.GetRange(HeaderEnum.DISTANCE.GetDescription()));
+                        tripSheet.GetRange(Header.DISTANCE.GetDescription()));
                     break;
-                case HeaderEnum.AMOUNT_PER_TRIP:
+                case Header.AMOUNT_PER_TRIP:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTrip(
                         dateRange, 
-                        HeaderEnum.AMOUNT_PER_TRIP.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS.GetDescription()));
+                        Header.AMOUNT_PER_TRIP.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL_GRAND.GetDescription()), 
+                        sheet.GetLocalRange(Header.TOTAL_TRIPS.GetDescription()));
                     break;
-                case HeaderEnum.AMOUNT_PER_TIME:
+                case Header.AMOUNT_PER_TIME:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(
                         dateRange, 
-                        HeaderEnum.AMOUNT_PER_TIME.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_TIME.GetDescription()));
+                        Header.AMOUNT_PER_TIME.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL_GRAND.GetDescription()), 
+                        sheet.GetLocalRange(Header.TOTAL_TIME.GetDescription()));
                     break;
-                case HeaderEnum.AMOUNT_PER_DISTANCE:
+                case Header.AMOUNT_PER_DISTANCE:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerDistance(
                         dateRange, 
-                        HeaderEnum.AMOUNT_PER_DISTANCE.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_GRAND.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_DISTANCE.GetDescription()));
+                        Header.AMOUNT_PER_DISTANCE.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL_GRAND.GetDescription()), 
+                        sheet.GetLocalRange(Header.TOTAL_DISTANCE.GetDescription()));
                     break;
-                case HeaderEnum.TRIPS_PER_HOUR:
+                case Header.TRIPS_PER_HOUR:
                     header.Formula = GigFormulaBuilder.BuildArrayFormulaAmountPerTime(
                         dateRange, 
-                        HeaderEnum.TRIPS_PER_HOUR.GetDescription(), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_TRIPS.GetDescription()), 
-                        sheet.GetLocalRange(HeaderEnum.TOTAL_TIME.GetDescription()));
+                        Header.TRIPS_PER_HOUR.GetDescription(), 
+                        sheet.GetLocalRange(Header.TOTAL_TRIPS.GetDescription()), 
+                        sheet.GetLocalRange(Header.TOTAL_TIME.GetDescription()));
                     break;
-                case HeaderEnum.DAY:
-                case HeaderEnum.MONTH:
-                case HeaderEnum.YEAR:
+                case Header.DAY:
+                case Header.MONTH:
+                case Header.YEAR:
                     MapperFormulaHelper.ConfigureDatePartHeader(header, headerEnum, dateRange);
                     break;
                 default:

@@ -24,7 +24,7 @@ public class TypedFieldUtilsTests
         var dateProperty = properties.FirstOrDefault(p => 
             p.Column.GetEffectiveHeaderName().Equals(TypedFieldUtilsTestHelper.TestDateTimeHeader, StringComparison.OrdinalIgnoreCase));
         
-        Assert.Equal(FormatEnum.DATE, dateProperty.Column.FormatType);
+        Assert.Equal(Format.DATE, dateProperty.Column.FormatType);
     }
 
     [Fact]
@@ -154,13 +154,13 @@ public class TypedFieldUtilsTests
         [Column("TestString")]
         public string TestString { get; set; } = "";
 
-        [Column("TestCurrency", formatType: FormatEnum.CURRENCY)]
+        [Column("TestCurrency", formatType: Format.CURRENCY)]
         public decimal? TestCurrency { get; set; }
 
-        [Column("TestDateTime", formatType: FormatEnum.DATE)]
+        [Column("TestDateTime", formatType: Format.DATE)]
         public DateTime? TestDateTime { get; set; }
 
-        [Column("TestInteger", formatType: FormatEnum.NUMBER)]
+        [Column("TestInteger", formatType: Format.NUMBER)]
         public int? TestInteger { get; set; }
 
         [Column("TestBoolean")]

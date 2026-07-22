@@ -39,21 +39,21 @@ public static class StockSheetHelpers
     {
         var registry = new SheetRegistry<SheetEntity>();
 
-        registry.Register(SheetEnum.ACCOUNTS.GetDescription(), () => SheetsConfig.AccountSheet, (se, values) =>
+        registry.Register(SheetName.ACCOUNTS.GetDescription(), () => SheetsConfig.AccountSheet, (se, values) =>
         {
             var headers = values[0];
             se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.AccountSheet));
             se.Sheets.Accounts = AccountMapper.MapFromRangeData(values);
         });
 
-        registry.Register(SheetEnum.STOCKS.GetDescription(), () => SheetsConfig.StockSheet, (se, values) =>
+        registry.Register(SheetName.STOCKS.GetDescription(), () => SheetsConfig.StockSheet, (se, values) =>
         {
             var headers = values[0];
             se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.StockSheet));
             se.Sheets.Stocks = StockMapper.MapFromRangeData(values);
         });
 
-        registry.Register(SheetEnum.TICKERS.GetDescription(), () => SheetsConfig.TickerSheet, (se, values) =>
+        registry.Register(SheetName.TICKERS.GetDescription(), () => SheetsConfig.TickerSheet, (se, values) =>
         {
             var headers = values[0];
             se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.TickerSheet));
@@ -65,7 +65,7 @@ public static class StockSheetHelpers
 
     public static List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet)
     {
-        var canonicalNames = Enum.GetValues<SheetEnum>().Select(e => e.GetDescription());
+        var canonicalNames = Enum.GetValues<SheetName>().Select(e => e.GetDescription());
         return s_registry.GetMissingSheets(spreadsheet, canonicalNames);
     }
 
@@ -115,23 +115,23 @@ public static class StockSheetHelpers
         return s_registry.GetSheetLayouts(sheetNames);
     }
 
-    public static DataValidationRule GetDataValidation(ValidationEnum validation)
+    public static DataValidationRule GetDataValidation(Validation validation)
     {
         return validation switch
         {
-            ValidationEnum.BOOLEAN => GoogleValidationHelper.CreateBooleanRule(),
-            ValidationEnum.RANGE_ACCOUNT or ValidationEnum.RANGE_TICKER
+            Validation.BOOLEAN => GoogleValidationHelper.CreateBooleanRule(),
+            Validation.RANGE_ACCOUNT or Validation.RANGE_TICKER
                 => GoogleValidationHelper.CreateOneOfRangeRule($"{GetSheetForRange(validation)?.GetDescription()}!A2:A"),
             _ => new DataValidationRule()
         };
     }
 
-    private static SheetEnum? GetSheetForRange(ValidationEnum validationEnum)
+    private static SheetName? GetSheetForRange(Validation validationEnum)
     {
         return validationEnum switch
         {
-            ValidationEnum.RANGE_ACCOUNT => SheetEnum.ACCOUNTS,
-            ValidationEnum.RANGE_TICKER => SheetEnum.TICKERS,
+            Validation.RANGE_ACCOUNT => SheetName.ACCOUNTS,
+            Validation.RANGE_TICKER => SheetName.TICKERS,
             _ => null
         };
     }

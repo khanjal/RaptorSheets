@@ -13,13 +13,13 @@ public class ShiftEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
     // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, formatType: FormatEnum.DATE)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, formatType: Format.DATE)]
     public string Date { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeStart, isInput: true, formatType: FormatEnum.TIME)]
+    [Column(SheetsConfig.HeaderNames.TimeStart, isInput: true, formatType: Format.TIME)]
     public string Start { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeEnd, isInput: true, formatType: FormatEnum.TIME)]
+    [Column(SheetsConfig.HeaderNames.TimeEnd, isInput: true, formatType: Format.TIME)]
     public string Finish { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
@@ -28,10 +28,10 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Number, isInput: true, note: ColumnNotes.ShiftNumber)]
     public int? Number { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TimeActive, isInput: true, note: ColumnNotes.ActiveTime, formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.TimeActive, isInput: true, note: ColumnNotes.ActiveTime, formatType: Format.DURATION)]
     public string Active { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeTotal, isInput: true, note: ColumnNotes.TotalTime, formatType: FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.TimeTotal, isInput: true, note: ColumnNotes.TotalTime, formatType: Format.DURATION)]
     public string Time { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.TimeOmit, isInput: true, note: ColumnNotes.TimeOmit, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.Boolean)]
@@ -41,16 +41,16 @@ public class ShiftEntity : SheetRowEntityBase
     public int? Trips { get; set; }
 
     // Financial properties
-    [Column(SheetsConfig.HeaderNames.Pay, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Pay, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? Pay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Tips, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Tips, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Bonus, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, isInput: true, formatType: FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Cash, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? Cash { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerStart,
@@ -81,43 +81,43 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Key, isInput: false, note: ColumnNotes.ShiftKey)]
     public string Key { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TotalTimeActive, FormatEnum.DURATION, ColumnNotes.TotalTimeActive)]
+    [Column(SheetsConfig.HeaderNames.TotalTimeActive, Format.DURATION, ColumnNotes.TotalTimeActive)]
     public string TotalActive { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TotalTime, FormatEnum.DURATION)]
+    [Column(SheetsConfig.HeaderNames.TotalTime, Format.DURATION)]
     public string TotalTime { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.TotalTrips, note: ColumnNotes.TotalTrips)]
     public int TotalTrips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalPay, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.TotalPay, Format.ACCOUNTING)]
     public decimal? TotalPay { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalTips, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.TotalTips, Format.ACCOUNTING)]
     public decimal? TotalTips { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalBonus, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.TotalBonus, Format.ACCOUNTING)]
     public decimal? TotalBonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalGrand, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.TotalGrand, Format.ACCOUNTING)]
     public decimal? GrandTotal { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalCash, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.TotalCash, Format.ACCOUNTING)]
     public decimal? TotalCash { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTrip, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTrip, Format.ACCOUNTING)]
     public decimal? AmountPerTrip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerTime, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.AmountPerTime, Format.ACCOUNTING)]
     public decimal? AmountPerTime { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TotalDistance, FormatEnum.DISTANCE, ColumnNotes.TotalDistance)]
+    [Column(SheetsConfig.HeaderNames.TotalDistance, Format.DISTANCE, ColumnNotes.TotalDistance)]
     public decimal? TotalDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.AmountPerDistance, FormatEnum.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.AmountPerDistance, Format.ACCOUNTING)]
     public decimal? AmountPerDistance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.TripsPerHour, FormatEnum.DISTANCE)]
+    [Column(SheetsConfig.HeaderNames.TripsPerHour, Format.DISTANCE)]
     public decimal? TripsPerHour { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Day)]

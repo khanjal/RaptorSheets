@@ -7,7 +7,7 @@ namespace RaptorSheets.Job.Enums;
 /// Sheet enumeration for type safety and IntelliSense support.
 /// Descriptions map to SheetsConfig.SheetNames constants.
 /// </summary>
-public enum SheetEnum
+public enum SheetName
 {
     [Description(SheetsConfig.SheetNames.Applications)]
     APPLICATIONS,

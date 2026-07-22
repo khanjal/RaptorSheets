@@ -32,7 +32,7 @@ public static class SheetHelpers
         // Loop through all sheets to see if they exist.
         foreach (var sheet in sheets)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find sheet {sheet}", MessageTypeEnum.CHECK_SHEET));
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to find sheet {sheet}", MessageType.CHECK_SHEET));
         }
 
         if (messages.Count > 0)
@@ -40,7 +40,7 @@ public static class SheetHelpers
             return messages;
         }
 
-        messages.Add(MessageHelpers.CreateInfoMessage("All sheets found", MessageTypeEnum.CHECK_SHEET));
+        messages.Add(MessageHelpers.CreateInfoMessage("All sheets found", MessageType.CHECK_SHEET));
 
         return messages;
     }
@@ -86,28 +86,28 @@ public static class SheetHelpers
     }
 
     // https://www.rapidtables.com/convert/color/hex-to-rgb.html
-    public static Color GetColor(ColorEnum colorEnum)
+    public static Color GetColor(SheetColor colorEnum)
     {
         return colorEnum switch
         {
-            ColorEnum.BLACK => Colors.Black,
-            ColorEnum.BLUE => Colors.Blue,
-            ColorEnum.CYAN => Colors.Cyan,
-            ColorEnum.DARK_YELLOW => Colors.DarkYellow,
-            ColorEnum.GREEN => Colors.Green,
-            ColorEnum.LIGHT_CYAN => Colors.LightCyan,
-            ColorEnum.LIGHT_GRAY => Colors.LightGray,
-            ColorEnum.LIGHT_GREEN => Colors.LightGreen,
-            ColorEnum.LIGHT_PURPLE => Colors.LightPurple,
-            ColorEnum.LIGHT_RED => Colors.LightRed,
-            ColorEnum.LIGHT_YELLOW => Colors.LightYellow,
-            ColorEnum.LIME => Colors.Lime,
-            ColorEnum.ORANGE => Colors.Orange,
-            ColorEnum.MAGENTA or ColorEnum.PINK => Colors.Magenta,
-            ColorEnum.PURPLE => Colors.Purple,
-            ColorEnum.RED => Colors.Red,
-            ColorEnum.WHITE => Colors.White,
-            ColorEnum.YELLOW => Colors.Yellow,
+            SheetColor.BLACK => Colors.Black,
+            SheetColor.BLUE => Colors.Blue,
+            SheetColor.CYAN => Colors.Cyan,
+            SheetColor.DARK_YELLOW => Colors.DarkYellow,
+            SheetColor.GREEN => Colors.Green,
+            SheetColor.LIGHT_CYAN => Colors.LightCyan,
+            SheetColor.LIGHT_GRAY => Colors.LightGray,
+            SheetColor.LIGHT_GREEN => Colors.LightGreen,
+            SheetColor.LIGHT_PURPLE => Colors.LightPurple,
+            SheetColor.LIGHT_RED => Colors.LightRed,
+            SheetColor.LIGHT_YELLOW => Colors.LightYellow,
+            SheetColor.LIME => Colors.Lime,
+            SheetColor.ORANGE => Colors.Orange,
+            SheetColor.MAGENTA or SheetColor.PINK => Colors.Magenta,
+            SheetColor.PURPLE => Colors.Purple,
+            SheetColor.RED => Colors.Red,
+            SheetColor.WHITE => Colors.White,
+            SheetColor.YELLOW => Colors.Yellow,
             _ => Colors.White,
         };
     }
@@ -189,7 +189,7 @@ public static class SheetHelpers
                 {
                     var border = new Border
                     {
-                        Style = BorderStyleEnum.SOLID_THICK.ToString()
+                        Style = BorderStyle.SOLID_THICK.ToString()
                     };
                     cell.UserEnteredFormat.Borders = new Borders { Bottom = border, Left = border, Right = border, Top = border };
                 }
@@ -224,21 +224,21 @@ public static class SheetHelpers
     }
 
     // https://developers.google.com/sheets/api/guides/formats
-    public static CellFormat GetCellFormat(FormatEnum format)
+    public static CellFormat GetCellFormat(Format format)
     {
         var cellFormat = new CellFormat
         {
             NumberFormat = format switch
             {
-                FormatEnum.ACCOUNTING => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Accounting },
-                FormatEnum.CURRENCY => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Currency },
-                FormatEnum.DATE => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Date },
-                FormatEnum.DISTANCE => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Distance },
-                FormatEnum.DURATION => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Duration },
-                FormatEnum.NUMBER => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Number },
-                FormatEnum.TEXT => new NumberFormat { Type = CellFormatPatterns.CellFormatText },
-                FormatEnum.TIME => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Time },
-                FormatEnum.WEEKDAY => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Weekday },
+                Format.ACCOUNTING => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Accounting },
+                Format.CURRENCY => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Currency },
+                Format.DATE => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Date },
+                Format.DISTANCE => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Distance },
+                Format.DURATION => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Duration },
+                Format.NUMBER => new NumberFormat { Type = CellFormatPatterns.CellFormatNumber, Pattern = CellFormatPatterns.Number },
+                Format.TEXT => new NumberFormat { Type = CellFormatPatterns.CellFormatText },
+                Format.TIME => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Time },
+                Format.WEEKDAY => new NumberFormat { Type = CellFormatPatterns.CellFormatDate, Pattern = CellFormatPatterns.Weekday },
                 _ => new NumberFormat { Type = CellFormatPatterns.CellFormatText }
             }
         };
@@ -248,12 +248,12 @@ public static class SheetHelpers
 
     /// <summary>
     /// Get cell format with a custom number format pattern.
-    /// This overload allows specifying a custom pattern that overrides the default for the FormatEnum.
+    /// This overload allows specifying a custom pattern that overrides the default for the Format.
     /// </summary>
     /// <param name="format">The format type</param>
     /// <param name="customPattern">Custom number format pattern (e.g., "#,##0.0")</param>
     /// <returns>CellFormat with the custom pattern applied</returns>
-    public static CellFormat GetCellFormat(FormatEnum format, string customPattern)
+    public static CellFormat GetCellFormat(Format format, string customPattern)
     {
         var cellFormat = GetCellFormat(format);
         

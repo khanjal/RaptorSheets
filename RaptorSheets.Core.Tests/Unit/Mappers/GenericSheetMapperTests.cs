@@ -17,10 +17,10 @@ public class GenericSheetMapperTests
         [Column("Name", isInput: true)]
         public string Name { get; set; } = "";
 
-        [Column("Date", isInput: true, formatType: FormatEnum.DATE)]
+        [Column("Date", isInput: true, formatType: Format.DATE)]
         public string Date { get; set; } = "";
 
-        [Column("Amount", isInput: true, formatType: FormatEnum.ACCOUNTING)]
+        [Column("Amount", isInput: true, formatType: Format.ACCOUNTING)]
         public decimal? Amount { get; set; }
 
         [Column("Count", isInput: true)]

@@ -31,7 +31,7 @@ public class GoogleSheetManagerTests
         var result = await _manager.ChangeSheetData(sheets, sheetEntity);
 
         Assert.Contains(result.Messages, m => m.Message.Contains("No data to change"));
-        Assert.Contains(result.Messages, m => m.Level == MessageLevelEnum.WARNING.GetDescription());
+        Assert.Contains(result.Messages, m => m.Level == MessageLevel.WARNING.GetDescription());
     }
 
     [Fact]

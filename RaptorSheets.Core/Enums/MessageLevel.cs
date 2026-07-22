@@ -1,6 +1,6 @@
 ﻿namespace RaptorSheets.Core.Enums;
 
-public enum MessageLevelEnum
+public enum MessageLevel
 {
     INFO,
     WARNING,

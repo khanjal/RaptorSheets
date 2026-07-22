@@ -333,7 +333,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var shift = new ShiftEntity
         {
             RowId = 2,
-            Action = ActionTypeEnum.INSERT.GetDescription(),
+            Action = ActionType.INSERT.GetDescription(),
             Date = today.ToString(CellFormatPatterns.Date),
             Service = $"Test_{testRunId}",
             Region = "DailyWorkflow",
@@ -351,7 +351,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             var trip = new TripEntity
             {
                 RowId = 2 + i,
-                Action = ActionTypeEnum.INSERT.GetDescription(),
+                Action = ActionType.INSERT.GetDescription(),
                 Date = today.ToString(CellFormatPatterns.Date),
                 Service = $"Test_{testRunId}",
                 Type = i % 2 == 0 ? "Pickup" : "Delivery",
@@ -399,7 +399,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             var expense = new ExpenseEntity
             {
                 RowId = 2 + i,
-                Action = ActionTypeEnum.INSERT.GetDescription(),
+                Action = ActionType.INSERT.GetDescription(),
                 Date = today.AddDays(-i).ToString(CellFormatPatterns.Date),  // Convert to string format
                 Category = categories[i],
                 Name = $"{categories[i]} Item",
@@ -445,7 +445,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine($"⏱️  Insert completed in {elapsed.TotalSeconds:F1}s");
         
         var criticalErrors = insertResult.Messages.Where(m => 
-            m.Level == MessageLevelEnum.ERROR.GetDescription() && 
+            m.Level == MessageLevel.ERROR.GetDescription() && 
             !IsExpectedError(m.Message)).ToList();
         
         Assert.Empty(criticalErrors);
@@ -691,7 +691,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine($"⏱️  Insert completed in {elapsed.TotalSeconds:F1}s");
         
         var criticalErrors = (insertResult.Messages ?? new List<MessageEntity>())
-            .Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription() && !IsExpectedError(m.Message))
+            .Where(m => m.Level == MessageLevel.ERROR.GetDescription() && !IsExpectedError(m.Message))
             .ToList();
         
         Assert.Empty(criticalErrors);
@@ -715,7 +715,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // missing-sheet / empty-header diagnostics are produced by the manager.
         System.Diagnostics.Debug.WriteLine("➡ Deleting Deliveries to validate missing-sheet detection...");
         var deleteResult = await GoogleSheetManager!.DeleteSheets(new List<string> { SheetsConfig.SheetNames.Deliveries });
-        var deleteErrors = deleteResult.Messages.Where(m => m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
+        var deleteErrors = deleteResult.Messages.Where(m => m.Level == MessageLevel.ERROR.GetDescription()).ToList();
         if (deleteErrors.Count > 0)
         {
             System.Diagnostics.Debug.WriteLine($"⚠️  Deletion returned errors: {string.Join(';', deleteErrors.Select(e => e.Message))}");
@@ -895,7 +895,7 @@ public class GoogleSheetsIntegrationFixture : IAsyncLifetime
             // Delete all sheets to start fresh
             var deleteResult = await _manager.DeleteAllSheets();
             var deleteErrors = deleteResult.Messages.Where(m => 
-                m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
+                m.Level == MessageLevel.ERROR.GetDescription()).ToList();
             
             if (deleteErrors.Count > 0)
             {
@@ -912,7 +912,7 @@ public class GoogleSheetsIntegrationFixture : IAsyncLifetime
             System.Diagnostics.Debug.WriteLine("  📌 Creating all sheets fresh to validate creation process...");
             var createResult = await _manager.CreateAllSheets();
             var createErrors = createResult.Messages.Where(m => 
-                m.Level == MessageLevelEnum.ERROR.GetDescription()).ToList();
+                m.Level == MessageLevel.ERROR.GetDescription()).ToList();
             
             if (createErrors.Count > 0)
             {
@@ -940,8 +940,8 @@ public class GoogleSheetsIntegrationFixture : IAsyncLifetime
             {
                 var headerValidation = GoogleSheetManager.CheckSheetHeaders(spreadsheetInfo);
                 var headerErrors = headerValidation.Where(m => 
-                    m.Level == MessageLevelEnum.ERROR.GetDescription() ||
-                    m.Level == MessageLevelEnum.WARNING.GetDescription()).ToList();
+                    m.Level == MessageLevel.ERROR.GetDescription() ||
+                    m.Level == MessageLevel.WARNING.GetDescription()).ToList();
                 
                 if (headerErrors.Count > 0)
                 {

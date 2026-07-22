@@ -84,17 +84,17 @@ public class NameMapperTests
         Assert.True(result.Headers.Count >= 5, "Should have basic name aggregation fields");
         
         // Verify essential headers exist with proper formatting
-        var nameHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.NAME.GetDescription());
+        var nameHeader = result.Headers.FirstOrDefault(h => h.Name == Header.NAME.GetDescription());
         Assert.NotNull(nameHeader);
         
-        var tripsHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.TRIPS.GetDescription());
+        var tripsHeader = result.Headers.FirstOrDefault(h => h.Name == Header.TRIPS.GetDescription());
         Assert.NotNull(tripsHeader);
-        Assert.Equal(FormatEnum.NUMBER, tripsHeader.Format);
+        Assert.Equal(Format.NUMBER, tripsHeader.Format);
         
-        var payHeader = result.Headers.FirstOrDefault(h => h.Name == HeaderEnum.PAY.GetDescription());
+        var payHeader = result.Headers.FirstOrDefault(h => h.Name == Header.PAY.GetDescription());
         Assert.NotNull(payHeader);
         // MapperFormulaHelper sets ACCOUNTING format for aggregation sheets
-        Assert.Equal(FormatEnum.ACCOUNTING, payHeader.Format);
+        Assert.Equal(Format.ACCOUNTING, payHeader.Format);
         
         // Verify all headers have proper column assignments
         Assert.All(result.Headers, header => 

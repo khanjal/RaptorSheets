@@ -146,18 +146,18 @@ public static class TypedFieldUtils
     /// Gets the format enum that corresponds to a field type
     /// </summary>
     /// <param name="fieldType">The field type</param>
-    /// <returns>Corresponding FormatEnum value</returns>
-    public static FormatEnum? GetFormatFromFieldType(FieldType? fieldType)
+    /// <returns>Corresponding Format value</returns>
+    public static Format? GetFormatFromFieldType(FieldType? fieldType)
     {
         return fieldType switch
         {
-            FieldType.Currency => FormatEnum.CURRENCY,
-            FieldType.Accounting => FormatEnum.ACCOUNTING,
-            FieldType.DateTime => FormatEnum.DATE,
-            FieldType.Number => FormatEnum.NUMBER,
-            FieldType.Integer => FormatEnum.NUMBER,
-            FieldType.Percentage => FormatEnum.PERCENT,
-            FieldType.String or FieldType.Email or FieldType.Url or FieldType.PhoneNumber => FormatEnum.TEXT,
+            FieldType.Currency => Format.CURRENCY,
+            FieldType.Accounting => Format.ACCOUNTING,
+            FieldType.DateTime => Format.DATE,
+            FieldType.Number => Format.NUMBER,
+            FieldType.Integer => Format.NUMBER,
+            FieldType.Percentage => Format.PERCENT,
+            FieldType.String or FieldType.Email or FieldType.Url or FieldType.PhoneNumber => Format.TEXT,
             _ => null
         };
     }

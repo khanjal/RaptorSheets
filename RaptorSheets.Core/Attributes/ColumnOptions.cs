@@ -46,7 +46,7 @@ public class ColumnOptions
     /// <summary>
     /// Gets or sets the format type for Google Sheets display (DEFAULT = use default from fieldType).
     /// </summary>
-    public FormatEnum FormatType { get; set; } = FormatEnum.DEFAULT;
+    public Format FormatType { get; set; } = Format.DEFAULT;
 
     /// <summary>
     /// Creates a new ColumnOptions instance with default values.
@@ -135,7 +135,7 @@ public class ColumnOptionsBuilder
     /// <summary>
     /// Sets the format type for Google Sheets display.
     /// </summary>
-    public ColumnOptionsBuilder WithFormatType(FormatEnum formatType)
+    public ColumnOptionsBuilder WithFormatType(Format formatType)
     {
         _options.FormatType = formatType;
         return this;

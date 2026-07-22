@@ -10,13 +10,13 @@ public class EnumHelpersTests
     [Fact]
     public void GivenEnumWithDescriptions_ThenReturnDescriptions()
     {
-        var result = EnumHelpers.GetListOfDescription<HeaderEnum>();
+        var result = EnumHelpers.GetListOfDescription<Header>();
 
         Assert.NotNull(result);
         Assert.Equal(3, result.Count);
 
-        Assert.Equal(HeaderEnum.FIRST_COLUMN.GetDescription(), result[0]);
-        Assert.Equal(HeaderEnum.SECOND_COLUMN.GetDescription(), result[1]);
-        Assert.Equal(HeaderEnum.THIRD_COLUMN.GetDescription(), result[2]);
+        Assert.Equal(Header.FIRST_COLUMN.GetDescription(), result[0]);
+        Assert.Equal(Header.SECOND_COLUMN.GetDescription(), result[1]);
+        Assert.Equal(Header.THIRD_COLUMN.GetDescription(), result[2]);
     }
 }

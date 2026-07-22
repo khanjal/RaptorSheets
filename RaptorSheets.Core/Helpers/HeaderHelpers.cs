@@ -219,7 +219,7 @@ public static class HeaderHelpers
         // If there are no header values (sheet empty or header row missing), return a single, clear message
         if (values == null || values.Count == 0 || values.All(v => string.IsNullOrWhiteSpace(v?.ToString())))
         {
-            messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetModel.Name}]: No header row found or sheet is empty", MessageTypeEnum.CHECK_SHEET));
+            messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetModel.Name}]: No header row found or sheet is empty", MessageType.CHECK_SHEET));
             return messages;
         }
 
@@ -250,11 +250,11 @@ public static class HeaderHelpers
                         ColumnLetter = SheetHelpers.GetColumnName(index)
                     });
 
-                    messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}] - can be inserted", MessageTypeEnum.CHECK_SHEET));
+                    messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}] - can be inserted", MessageType.CHECK_SHEET));
                 }
                 else
                 {
-                    messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
+                    messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}]", MessageType.CHECK_SHEET));
                 }
             }
             else
@@ -262,7 +262,7 @@ public static class HeaderHelpers
                 if (index < headerArray.Length && !string.Equals(sheetHeader.Name, headerArray[index]?.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
                     var actual = headerArray[index]?.Trim() ?? "";
-                    messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Column [{actual}] should be [{sheetHeader.Name}]", MessageTypeEnum.CHECK_SHEET));
+                    messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Column [{actual}] should be [{sheetHeader.Name}]", MessageType.CHECK_SHEET));
                 }
             }
             index++;
@@ -276,7 +276,7 @@ public static class HeaderHelpers
             if (!string.IsNullOrEmpty(actualHeader) && !expectedHeaders.Contains(actualHeader))
             {
                 var sheetColumn = $"{sheetModel.Name}!{SheetHelpers.GetColumnName(i)}";
-                messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Extra column [{actualHeader}]", MessageTypeEnum.CHECK_SHEET));
+                messages.Add(MessageHelpers.CreateWarningMessage($"[{sheetColumn}]: Extra column [{actualHeader}]", MessageType.CHECK_SHEET));
             }
         }
 

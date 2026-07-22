@@ -1,6 +1,6 @@
 namespace RaptorSheets.Core.Enums;
 
-public enum FormatEnum
+public enum Format
 {
     DEFAULT = 0,
     ACCOUNTING,

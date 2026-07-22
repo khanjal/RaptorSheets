@@ -53,14 +53,14 @@ public static class GenerateSheetHelpers
 
     /// <summary>
     /// Resolves a sheet name to its configured model. Anything matching a real
-    /// <see cref="Enums.SheetEnum"/> description gets its fully-configured domain sheet; the one
+    /// <see cref="Enums.SheetName"/> description gets its fully-configured domain sheet; the one
     /// recognized ad-hoc exception is <see cref="GoogleSheetManagerBase.TempSheetName"/>, which
     /// DeleteSheets' safety mechanism needs a bare AddSheet request for. Anything else is a genuine
     /// caller error.
     /// </summary>
     private static SheetModel GetSheetModel(string sheet)
     {
-        var sheetEnum = sheet.GetValueFromName<Enums.SheetEnum>();
+        var sheetEnum = sheet.GetValueFromName<Enums.SheetName>();
         var isKnownSheet = string.Equals(sheetEnum.GetDescription(), sheet, StringComparison.OrdinalIgnoreCase);
 
         if (isKnownSheet)
@@ -76,13 +76,13 @@ public static class GenerateSheetHelpers
         throw new NotImplementedException($"Sheet model not found for: {sheet}");
     }
 
-    private static SheetModel GetSheetModel(Enums.SheetEnum sheetEnum)
+    private static SheetModel GetSheetModel(Enums.SheetName sheetEnum)
     {
         return sheetEnum switch
         {
-            Enums.SheetEnum.ACCOUNTS => AccountMapper.GetSheet(),
-            Enums.SheetEnum.STOCKS => StockMapper.GetSheet(),
-            Enums.SheetEnum.TICKERS => TickerMapper.GetSheet(),
+            Enums.SheetName.ACCOUNTS => AccountMapper.GetSheet(),
+            Enums.SheetName.STOCKS => StockMapper.GetSheet(),
+            Enums.SheetName.TICKERS => TickerMapper.GetSheet(),
             _ => throw new NotImplementedException(),
         };
     }
@@ -118,8 +118,8 @@ public static class GenerateSheetHelpers
             var repeatCellModel = new RepeatCellModel
             {
                 GridRange = range,
-                CellFormat = (header.Format != null ? SheetHelpers.GetCellFormat((FormatEnum)header.Format) : null),
-                DataValidation = (header.Validation != null ? StockSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<ValidationEnum>()) : null)
+                CellFormat = (header.Format != null ? SheetHelpers.GetCellFormat((Format)header.Format) : null),
+                DataValidation = (header.Validation != null ? StockSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<Validation>()) : null)
             };
 
             repeatCellRequests.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));

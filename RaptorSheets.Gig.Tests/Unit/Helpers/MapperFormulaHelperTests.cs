@@ -12,15 +12,15 @@ public class MapperFormulaHelperTests
     #region ConfigureCommonAggregationHeaders Tests
 
     [Theory]
-    [InlineData("Pay", "SUMIF(", FormatEnum.ACCOUNTING)]
-    [InlineData("Tips", "SUMIF(", FormatEnum.ACCOUNTING)]
-    [InlineData("Bonus", "SUMIF(", FormatEnum.ACCOUNTING)]
-    [InlineData("Cash", "SUMIF(", FormatEnum.ACCOUNTING)]
-    [InlineData("Dist", "SUMIF(", FormatEnum.DISTANCE)]
-    [InlineData("Time", "SUMIF(", FormatEnum.DURATION)]
-    [InlineData("Days", "COUNTIF(", FormatEnum.NUMBER)]
+    [InlineData("Pay", "SUMIF(", Format.ACCOUNTING)]
+    [InlineData("Tips", "SUMIF(", Format.ACCOUNTING)]
+    [InlineData("Bonus", "SUMIF(", Format.ACCOUNTING)]
+    [InlineData("Cash", "SUMIF(", Format.ACCOUNTING)]
+    [InlineData("Dist", "SUMIF(", Format.DISTANCE)]
+    [InlineData("Time", "SUMIF(", Format.DURATION)]
+    [InlineData("Days", "COUNTIF(", Format.NUMBER)]
     public void ConfigureCommonAggregationHeaders_WithStandardHeaders_ShouldSetFormulaAndFormat(
-        string headerName, string expectedFormula, FormatEnum expectedFormat)
+        string headerName, string expectedFormula, Format expectedFormat)
     {
         // Arrange
         var sheet = CreateTestSheet(headerName);
@@ -44,10 +44,10 @@ public class MapperFormulaHelperTests
     {
         // Arrange
         var sheet = CreateTestSheetWithMultipleHeaders(
-            HeaderEnum.PAY.GetDescription(),
-            HeaderEnum.TIPS.GetDescription(),
-            HeaderEnum.BONUS.GetDescription(),
-            HeaderEnum.TOTAL.GetDescription());
+            Header.PAY.GetDescription(),
+            Header.TIPS.GetDescription(),
+            Header.BONUS.GetDescription(),
+            Header.TOTAL.GetDescription());
         sheet.Headers.UpdateColumns();
         var sourceSheet = CreateSourceSheet();
 
@@ -55,9 +55,9 @@ public class MapperFormulaHelperTests
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, "A:A", sourceSheet, "B:B");
 
         // Assert
-        var totalHeader = sheet.Headers.First(h => h.Name == HeaderEnum.TOTAL.GetDescription());
+        var totalHeader = sheet.Headers.First(h => h.Name == Header.TOTAL.GetDescription());
         Assert.Contains("+", totalHeader.Formula);
-        Assert.Equal(FormatEnum.ACCOUNTING, totalHeader.Format);
+        Assert.Equal(Format.ACCOUNTING, totalHeader.Format);
     }
 
     [Theory]
@@ -68,7 +68,7 @@ public class MapperFormulaHelperTests
         bool useShiftTotals, bool countTrips, string expectedFormula, string expectedRange)
     {
         // Arrange
-        var sheet = CreateTestSheet(HeaderEnum.TRIPS.GetDescription());
+        var sheet = CreateTestSheet(Header.TRIPS.GetDescription());
         var sourceSheet = CreateSourceSheet();
 
         // Act
@@ -78,7 +78,7 @@ public class MapperFormulaHelperTests
         var header = sheet.Headers.First();
         Assert.Contains(expectedFormula, header.Formula);
         Assert.Contains(expectedRange, header.Formula);
-        Assert.Equal(FormatEnum.NUMBER, header.Format);
+        Assert.Equal(Format.NUMBER, header.Format);
     }
 
     #endregion
@@ -104,7 +104,7 @@ public class MapperFormulaHelperTests
         var header = sheet.Headers.First(h => h.Name == ratioHeader);
         Assert.NotEmpty(header.Formula);
         Assert.Contains("/IF(", header.Formula); // Zero-safe division
-        Assert.Equal(FormatEnum.ACCOUNTING, header.Format);
+        Assert.Equal(Format.ACCOUNTING, header.Format);
     }
 
     #endregion
@@ -179,7 +179,7 @@ public class MapperFormulaHelperTests
         // Assert
         Assert.Contains("COUNTIF(", header.Formula);
         Assert.Contains("+COUNTIF(", header.Formula);
-        Assert.Equal(FormatEnum.NUMBER, header.Format);
+        Assert.Equal(Format.NUMBER, header.Format);
     }
 
     #endregion
@@ -242,20 +242,20 @@ public class MapperFormulaHelperTests
             Name = "SourceSheet",
             Headers = new List<SheetCellModel>
             {
-                new SheetCellModel { Name = HeaderEnum.PAY.GetDescription(), Index = 0, Column = "A" },
-                new SheetCellModel { Name = HeaderEnum.TIPS.GetDescription(), Index = 1, Column = "B" },
-                new SheetCellModel { Name = HeaderEnum.BONUS.GetDescription(), Index = 2, Column = "C" },
-                new SheetCellModel { Name = HeaderEnum.CASH.GetDescription(), Index = 3, Column = "D" },
-                new SheetCellModel { Name = HeaderEnum.DISTANCE.GetDescription(), Index = 4, Column = "E" },
-                new SheetCellModel { Name = HeaderEnum.TIME_TOTAL.GetDescription(), Index = 5, Column = "F" },
-                new SheetCellModel { Name = HeaderEnum.TOTAL_PAY.GetDescription(), Index = 6, Column = "G" },
-                new SheetCellModel { Name = HeaderEnum.TOTAL_TIPS.GetDescription(), Index = 7, Column = "H" },
-                new SheetCellModel { Name = HeaderEnum.TOTAL_BONUS.GetDescription(), Index = 8, Column = "I" },
-                new SheetCellModel { Name = HeaderEnum.TOTAL_CASH.GetDescription(), Index = 9, Column = "J" },
-                new SheetCellModel { Name = HeaderEnum.TOTAL_DISTANCE.GetDescription(), Index = 10, Column = "K" },
-                new SheetCellModel { Name = HeaderEnum.TOTAL_TIME.GetDescription(), Index = 11, Column = "L" },
-                new SheetCellModel { Name = HeaderEnum.TOTAL_TRIPS.GetDescription(), Index = 12, Column = "M" },
-                new SheetCellModel { Name = HeaderEnum.TRIPS.GetDescription(), Index = 13, Column = "N" }
+                new SheetCellModel { Name = Header.PAY.GetDescription(), Index = 0, Column = "A" },
+                new SheetCellModel { Name = Header.TIPS.GetDescription(), Index = 1, Column = "B" },
+                new SheetCellModel { Name = Header.BONUS.GetDescription(), Index = 2, Column = "C" },
+                new SheetCellModel { Name = Header.CASH.GetDescription(), Index = 3, Column = "D" },
+                new SheetCellModel { Name = Header.DISTANCE.GetDescription(), Index = 4, Column = "E" },
+                new SheetCellModel { Name = Header.TIME_TOTAL.GetDescription(), Index = 5, Column = "F" },
+                new SheetCellModel { Name = Header.TOTAL_PAY.GetDescription(), Index = 6, Column = "G" },
+                new SheetCellModel { Name = Header.TOTAL_TIPS.GetDescription(), Index = 7, Column = "H" },
+                new SheetCellModel { Name = Header.TOTAL_BONUS.GetDescription(), Index = 8, Column = "I" },
+                new SheetCellModel { Name = Header.TOTAL_CASH.GetDescription(), Index = 9, Column = "J" },
+                new SheetCellModel { Name = Header.TOTAL_DISTANCE.GetDescription(), Index = 10, Column = "K" },
+                new SheetCellModel { Name = Header.TOTAL_TIME.GetDescription(), Index = 11, Column = "L" },
+                new SheetCellModel { Name = Header.TOTAL_TRIPS.GetDescription(), Index = 12, Column = "M" },
+                new SheetCellModel { Name = Header.TRIPS.GetDescription(), Index = 13, Column = "N" }
             }
         };
     }

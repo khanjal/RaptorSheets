@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace RaptorSheets.Stock.Enums;
 
-public enum SheetEnum
+public enum SheetName
 {
     // Core
     [Description("Stocks")]

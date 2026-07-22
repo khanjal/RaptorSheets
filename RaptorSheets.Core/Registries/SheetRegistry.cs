@@ -170,7 +170,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
 
         if (spreadsheet == null)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage("Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
+            messages.Add(MessageHelpers.CreateErrorMessage("Unable to retrieve sheet(s)", MessageType.GENERAL));
             return messages;
         }
 
@@ -207,7 +207,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
 
         if (spreadsheet == null)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage("Unable to retrieve sheet(s)", MessageTypeEnum.GENERAL));
+            messages.Add(MessageHelpers.CreateErrorMessage("Unable to retrieve sheet(s)", MessageType.GENERAL));
             return messages;
         }
 
@@ -243,12 +243,12 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
 
         if (headerMessages.Count > 0)
         {
-            messages.Add(MessageHelpers.CreateWarningMessage("Found sheet header issue(s)", MessageTypeEnum.CHECK_SHEET));
+            messages.Add(MessageHelpers.CreateWarningMessage("Found sheet header issue(s)", MessageType.CHECK_SHEET));
             messages.AddRange(headerMessages);
         }
         else
         {
-            messages.Add(MessageHelpers.CreateInfoMessage("No sheet header issues found", MessageTypeEnum.CHECK_SHEET));
+            messages.Add(MessageHelpers.CreateInfoMessage("No sheet header issues found", MessageType.CHECK_SHEET));
         }
 
         return messages;
@@ -258,7 +258,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     {
         foreach (var sheet in unknownSheets)
         {
-            yield return MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageTypeEnum.CHECK_SHEET);
+            yield return MessageHelpers.CreateWarningMessage($"Sheet {sheet.Properties.Title} does not match any known sheet name", MessageType.CHECK_SHEET);
         }
     }
 

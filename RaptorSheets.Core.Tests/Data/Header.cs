@@ -2,7 +2,7 @@
 
 namespace RaptorSheets.Core.Tests.Data;
 
-public enum HeaderEnum
+public enum Header
 {
     [Description("First Column")]
     FIRST_COLUMN,

@@ -5,18 +5,18 @@ namespace RaptorSheets.Core.Tests.Unit.Extensions;
 
 public class RandomExtensionsTests
 {
-    private enum TestEnum
+    private enum Test
     {
         Value1,
         Value2,
         Value3
     }
 
-    private enum EmptyEnum
+    private enum Empty
     {
     }
 
-    private enum SingleValueEnum
+    private enum SingleValue
     {
         OnlyValue
     }
@@ -28,11 +28,11 @@ public class RandomExtensionsTests
         var random = new Random();
 
         // Act
-        var result = random.NextEnum<TestEnum>();
+        var result = random.NextEnum<Test>();
 
         // Assert
-        Assert.IsType<TestEnum>(result);
-        Assert.Contains(result, Enum.GetValues<TestEnum>());
+        Assert.IsType<Test>(result);
+        Assert.Contains(result, Enum.GetValues<Test>());
     }
 
     [Fact]
@@ -40,13 +40,13 @@ public class RandomExtensionsTests
     {
         // Arrange
         var random = new Random();
-        var values = Enum.GetValues<TestEnum>();
-        var results = new HashSet<TestEnum>();
+        var values = Enum.GetValues<Test>();
+        var results = new HashSet<Test>();
 
         // Act
         for (int i = 0; i < 100; i++)
         {
-            results.Add(random.NextEnum<TestEnum>());
+            results.Add(random.NextEnum<Test>());
         }
 
         // Assert
@@ -60,10 +60,10 @@ public class RandomExtensionsTests
         var random = new Random();
 
         // Act
-        var result = random.NextEnum<SingleValueEnum>();
+        var result = random.NextEnum<SingleValue>();
 
         // Assert
-        Assert.Equal(SingleValueEnum.OnlyValue, result);
+        Assert.Equal(SingleValue.OnlyValue, result);
     }
 
     [Fact]
@@ -71,12 +71,12 @@ public class RandomExtensionsTests
     {
         // Arrange
         var random = new Random();
-        var validValues = Enum.GetValues<TestEnum>();
+        var validValues = Enum.GetValues<Test>();
 
         // Act & Assert
         for (int i = 0; i < 50; i++)
         {
-            var result = random.NextEnum<TestEnum>();
+            var result = random.NextEnum<Test>();
             Assert.Contains(result, validValues);
         }
     }
@@ -92,8 +92,8 @@ public class RandomExtensionsTests
         var random2 = new Random(seed);
 
         // Act
-        var result1 = random1.NextEnum<TestEnum>();
-        var result2 = random2.NextEnum<TestEnum>();
+        var result1 = random1.NextEnum<Test>();
+        var result2 = random2.NextEnum<Test>();
 
         // Assert
         Assert.Equal(result1, result2);
@@ -106,10 +106,10 @@ public class RandomExtensionsTests
         var random = new Random();
 
         // Act
-        var result = random.NextEnum<TestEnum>();
+        var result = random.NextEnum<Test>();
 
         // Assert
-        Assert.True(Enum.IsDefined(typeof(TestEnum), result));
+        Assert.True(Enum.IsDefined(typeof(Test), result));
     }
 
 }

@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace RaptorSheets.Core.Enums;
 
-public enum PropertyEnum
+public enum Property
 {
 
     [Description("Headers")]

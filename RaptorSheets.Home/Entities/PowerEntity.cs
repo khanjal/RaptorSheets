@@ -18,7 +18,7 @@ public class PowerEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Position, isInput: true)]
     public string Position { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Amps, isInput: true, formatType: FormatEnum.NUMBER)]
+    [Column(SheetsConfig.HeaderNames.Amps, isInput: true, formatType: Format.NUMBER)]
     public int? Amps { get; set; }
 
     [Column(SheetsConfig.HeaderNames.Grounded, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.Boolean)]

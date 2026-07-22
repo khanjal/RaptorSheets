@@ -24,8 +24,8 @@ public static class YearlyMapper
         sheet.Headers.UpdateColumns();
 
         var monthlySheet = MonthlyMapper.GetSheet();
-        var keyRange = sheet.GetLocalRange(HeaderEnum.YEAR.GetDescription());
-        var monthlyKeyRange = monthlySheet.GetRange(HeaderEnum.YEAR.GetDescription());
+        var keyRange = sheet.GetLocalRange(Header.YEAR.GetDescription());
+        var monthlyKeyRange = monthlySheet.GetRange(Header.YEAR.GetDescription());
 
         // Configure common aggregation patterns from monthly data.
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, keyRange, monthlySheet, monthlyKeyRange, useShiftTotals: false);
@@ -36,23 +36,23 @@ public static class YearlyMapper
         // Configure specific headers unique to YearlyMapper.
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
+            var headerEnum = header.Name.GetValueFromName<Header>();
 
             switch (headerEnum)
             {
-                case HeaderEnum.YEAR:
+                case Header.YEAR:
                     // Formula to generate unique yearly values from the Monthly sheet.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(HeaderEnum.YEAR.GetDescription(), monthlySheet.GetRange(HeaderEnum.YEAR.GetDescription(), 2));
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFiltered(Header.YEAR.GetDescription(), monthlySheet.GetRange(Header.YEAR.GetDescription(), 2));
                     break;
-                case HeaderEnum.DAYS:
+                case Header.DAYS:
                     // Formula to sum days for yearly data.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, HeaderEnum.DAYS.GetDescription(), monthlyKeyRange, monthlySheet.GetRange(HeaderEnum.DAYS.GetDescription()));
-                    header.Format = FormatEnum.NUMBER;
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaSumIf(keyRange, Header.DAYS.GetDescription(), monthlyKeyRange, monthlySheet.GetRange(Header.DAYS.GetDescription()));
+                    header.Format = Format.NUMBER;
                     break;
-                case HeaderEnum.AVERAGE:
+                case Header.AVERAGE:
                     // Formula to calculate rolling averages for yearly data.
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, HeaderEnum.AVERAGE.GetDescription(), sheet.GetLocalRange(HeaderEnum.TOTAL.GetDescription()));
-                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaRollingAverage(keyRange, Header.AVERAGE.GetDescription(), sheet.GetLocalRange(Header.TOTAL.GetDescription()));
+                    header.Format = Format.ACCOUNTING;
                     break;
 
                 // Additional cases for other headers can be added here.

@@ -43,7 +43,7 @@ namespace RaptorSheets.Stock.Tests.Unit.Helpers
         public void GetDataValidation_ShouldReturnBooleanValidation()
         {
             // Act
-            var result = StockSheetHelpers.GetDataValidation(ValidationEnum.BOOLEAN);
+            var result = StockSheetHelpers.GetDataValidation(Validation.BOOLEAN);
 
             // Assert
             Assert.Equal("BOOLEAN", result.Condition.Type);
@@ -53,7 +53,7 @@ namespace RaptorSheets.Stock.Tests.Unit.Helpers
         public void GetDataValidation_ShouldReturnRangeValidation()
         {
             // Act
-            var result = StockSheetHelpers.GetDataValidation(ValidationEnum.RANGE_ACCOUNT);
+            var result = StockSheetHelpers.GetDataValidation(Validation.RANGE_ACCOUNT);
 
             // Assert
             Assert.Equal("ONE_OF_RANGE", result.Condition.Type);

@@ -14,13 +14,13 @@ public class GoogleSheetManagerTests
     private readonly GoogleSheetManager? _googleSheetManager;
 
     private readonly long _currentTime;
-    private readonly Enums.SheetEnum _sheetEnum;
+    private readonly Enums.SheetName _sheetEnum;
     private readonly Dictionary<string, string> _credential;
 
     public GoogleSheetManagerTests()
     {
         var random = new Random();
-        _sheetEnum = random.NextEnum<Enums.SheetEnum>();
+        _sheetEnum = random.NextEnum<Enums.SheetName>();
         _currentTime = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
 
         var spreadsheetId = TestConfigurationHelpers.GetStockSpreadsheet();
@@ -56,7 +56,7 @@ public class GoogleSheetManagerTests
         // The shared orchestration lists provider sheet names (descriptions) in the "Retrieved
         // sheet(s)" INFO, e.g. "Accounts" rather than the enum identifier "ACCOUNTS".
         var retrievedMessage = result!.Messages.FirstOrDefault(m =>
-            m.Level == MessageLevelEnum.INFO.GetDescription() && m.Message.Contains(_sheetEnum.GetDescription()));
+            m.Level == MessageLevel.INFO.GetDescription() && m.Message.Contains(_sheetEnum.GetDescription()));
         Assert.NotNull(retrievedMessage);
         Assert.True(retrievedMessage!.Time >= _currentTime);
     }
@@ -70,7 +70,7 @@ public class GoogleSheetManagerTests
         // Shared orchestration returns the "Unable to retrieve sheet(s)" ERROR once the batch fetch
         // and metadata self-heal both fail; assert every message is an ERROR rather than an exact count.
         Assert.NotEmpty(result!.Messages);
-        result!.Messages.ForEach(x => Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), x.Level));
+        result!.Messages.ForEach(x => Assert.Equal(MessageLevel.ERROR.GetDescription(), x.Level));
     }
 
     [FactCheckUserSecrets]
@@ -80,7 +80,7 @@ public class GoogleSheetManagerTests
         var result = await googleSheetManager.GetSheets(new List<string> { _sheetEnum.GetDescription() });
         Assert.NotNull(result);
         Assert.Equal(1, result!.Messages?.Count);
-        Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result!.Messages?[0].Level);
+        Assert.Equal(MessageLevel.ERROR.GetDescription(), result!.Messages?[0].Level);
         Assert.True(result!.Messages?[0].Time >= _currentTime);
     }
 
@@ -111,6 +111,6 @@ public class GoogleSheetManagerTests
         var result = await _googleSheetManager.CreateSheets(new List<string> { _sheetEnum.GetDescription() });
         Assert.NotNull(result);
         Assert.Equal(1, result.Messages?.Count);
-        Assert.Equal(MessageLevelEnum.ERROR.GetDescription(), result.Messages?[0].Level);
+        Assert.Equal(MessageLevel.ERROR.GetDescription(), result.Messages?[0].Level);
     }
 }

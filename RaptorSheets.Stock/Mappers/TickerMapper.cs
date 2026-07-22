@@ -5,7 +5,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Stock.Constants;
 using RaptorSheets.Stock.Entities;
-using HeaderEnum = RaptorSheets.Stock.Enums.HeaderEnum;
+using Header = RaptorSheets.Stock.Enums.Header;
 
 namespace RaptorSheets.Stock.Mappers;
 
@@ -35,20 +35,20 @@ public static class TickerMapper
             TickerEntity entity = new()
             {
                 RowId = id,
-                Ticker = HeaderHelpers.GetStringValue(HeaderEnum.TICKER.GetDescription(), value, headers),
-                Name = HeaderHelpers.GetStringValue(HeaderEnum.NAME.GetDescription(), value, headers),
-                Accounts = HeaderHelpers.GetIntValue(HeaderEnum.ACCOUNTS.GetDescription(), value, headers),
-                Shares = HeaderHelpers.GetDecimalValue(HeaderEnum.SHARES.GetDescription(), value, headers),
-                AverageCost = HeaderHelpers.GetDecimalValue(HeaderEnum.AVERAGE_COST.GetDescription(), value, headers),
-                CostTotal = HeaderHelpers.GetDecimalValue(HeaderEnum.COST_TOTAL.GetDescription(), value, headers),
-                CurrentPrice = HeaderHelpers.GetDecimalValue(HeaderEnum.CURRENT_PRICE.GetDescription(), value, headers),
-                CurrentTotal = HeaderHelpers.GetDecimalValue(HeaderEnum.CURRENT_TOTAL.GetDescription(), value, headers),
-                Return = HeaderHelpers.GetDecimalValue(HeaderEnum.RETURN.GetDescription(), value, headers),
-                PeRatio = HeaderHelpers.GetDecimalValue(HeaderEnum.PE_RATIO.GetDescription(), value, headers),
-                WeekHigh52 = HeaderHelpers.GetDecimalValue(HeaderEnum.WEEK_HIGH_52.GetDescription(), value, headers),
-                WeekLow52 = HeaderHelpers.GetDecimalValue(HeaderEnum.WEEK_LOW_52.GetDescription(), value, headers),
-                MaxHigh = HeaderHelpers.GetDecimalValue(HeaderEnum.MAX_HIGH.GetDescription(), value, headers),
-                MinLow = HeaderHelpers.GetDecimalValue(HeaderEnum.MIN_LOW.GetDescription(), value, headers)
+                Ticker = HeaderHelpers.GetStringValue(Header.TICKER.GetDescription(), value, headers),
+                Name = HeaderHelpers.GetStringValue(Header.NAME.GetDescription(), value, headers),
+                Accounts = HeaderHelpers.GetIntValue(Header.ACCOUNTS.GetDescription(), value, headers),
+                Shares = HeaderHelpers.GetDecimalValue(Header.SHARES.GetDescription(), value, headers),
+                AverageCost = HeaderHelpers.GetDecimalValue(Header.AVERAGE_COST.GetDescription(), value, headers),
+                CostTotal = HeaderHelpers.GetDecimalValue(Header.COST_TOTAL.GetDescription(), value, headers),
+                CurrentPrice = HeaderHelpers.GetDecimalValue(Header.CURRENT_PRICE.GetDescription(), value, headers),
+                CurrentTotal = HeaderHelpers.GetDecimalValue(Header.CURRENT_TOTAL.GetDescription(), value, headers),
+                Return = HeaderHelpers.GetDecimalValue(Header.RETURN.GetDescription(), value, headers),
+                PeRatio = HeaderHelpers.GetDecimalValue(Header.PE_RATIO.GetDescription(), value, headers),
+                WeekHigh52 = HeaderHelpers.GetDecimalValue(Header.WEEK_HIGH_52.GetDescription(), value, headers),
+                WeekLow52 = HeaderHelpers.GetDecimalValue(Header.WEEK_LOW_52.GetDescription(), value, headers),
+                MaxHigh = HeaderHelpers.GetDecimalValue(Header.MAX_HIGH.GetDescription(), value, headers),
+                MinLow = HeaderHelpers.GetDecimalValue(Header.MIN_LOW.GetDescription(), value, headers)
             };
 
             entities.Add(entity);
@@ -67,102 +67,102 @@ public static class TickerMapper
         var keyRange = GoogleConfig.KeyRange;
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<HeaderEnum>();
+            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
 
             switch (headerEnum)
             {
-                case HeaderEnum.ACCOUNTS:
+                case Header.ACCOUNTS:
                     header.Formula = ColumnFormulas.CountIf(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    stockSheet.GetRange(HeaderEnum.TICKER.GetDescription()),
+                                                                    stockSheet.GetRange(Header.TICKER.GetDescription()),
                                                                     keyRange);
                     break;
 
-                case HeaderEnum.AVERAGE_COST:
+                case Header.AVERAGE_COST:
                     header.Note = ColumnNotes.AverageCost;
-                    header.Format = FormatEnum.ACCOUNTING;
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.DivideRanges(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    sheet.GetLocalRange(HeaderEnum.COST_TOTAL.GetDescription()),
-                                                                    sheet.GetLocalRange(HeaderEnum.SHARES.GetDescription()));
+                                                                    sheet.GetLocalRange(Header.COST_TOTAL.GetDescription()),
+                                                                    sheet.GetLocalRange(Header.SHARES.GetDescription()));
                     break;
 
-                case HeaderEnum.COST_TOTAL:
-                case HeaderEnum.CURRENT_TOTAL:
-                case HeaderEnum.SHARES:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.COST_TOTAL:
+                case Header.CURRENT_TOTAL:
+                case Header.SHARES:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.SumIf(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    stockSheet.GetRange(HeaderEnum.TICKER.GetDescription()),
+                                                                    stockSheet.GetRange(Header.TICKER.GetDescription()),
                                                                     keyRange,
                                                                     stockSheet.GetRange(headerEnum.GetDescription()));
                     break;
 
-                case HeaderEnum.CURRENT_PRICE:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.CURRENT_PRICE:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    HeaderEnum.TICKER.GetDescription(),
+                                                                    Header.TICKER.GetDescription(),
                                                                     GoogleFinanceAttributes.PRICE.GetDescription());
                     break;
 
-                case HeaderEnum.MAX_HIGH:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.MAX_HIGH:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.GoogleFinanceMax(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    HeaderEnum.TICKER.GetDescription(),
+                                                                    Header.TICKER.GetDescription(),
                                                                     GoogleFinanceAttributes.HIGH.GetDescription());
                     break;
 
-                case HeaderEnum.MIN_LOW:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.MIN_LOW:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.GoogleFinanceMin(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    HeaderEnum.TICKER.GetDescription(),
+                                                                    Header.TICKER.GetDescription(),
                                                                     GoogleFinanceAttributes.LOW.GetDescription());
                     break;
 
-                case HeaderEnum.NAME:
+                case Header.NAME:
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    HeaderEnum.TICKER.GetDescription(),
+                                                                    Header.TICKER.GetDescription(),
                                                                     GoogleFinanceAttributes.NAME.GetDescription());
                     break;
 
-                case HeaderEnum.PE_RATIO:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.PE_RATIO:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    HeaderEnum.TICKER.GetDescription(),
+                                                                    Header.TICKER.GetDescription(),
                                                                     GoogleFinanceAttributes.PE_RATIO.GetDescription());
                     break;
 
-                case HeaderEnum.RETURN:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.RETURN:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.SubtractRanges(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    sheet.GetLocalRange(HeaderEnum.CURRENT_TOTAL.GetDescription()),
-                                                                    sheet.GetLocalRange(HeaderEnum.COST_TOTAL.GetDescription()));
+                                                                    sheet.GetLocalRange(Header.CURRENT_TOTAL.GetDescription()),
+                                                                    sheet.GetLocalRange(Header.COST_TOTAL.GetDescription()));
                     break;
 
-                case HeaderEnum.TICKER:
+                case Header.TICKER:
                     header.Formula = ColumnFormulas.SortUnique(headerEnum.GetDescription(),
                                                                     stockSheet.GetRange(headerEnum.GetDescription(), 2));
                     break;
                 
-                case HeaderEnum.WEEK_HIGH_52:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.WEEK_HIGH_52:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    HeaderEnum.TICKER.GetDescription(),
+                                                                    Header.TICKER.GetDescription(),
                                                                     GoogleFinanceAttributes.WEEK_HIGH_52.GetDescription());
                     break;
 
-                case HeaderEnum.WEEK_LOW_52:
-                    header.Format = FormatEnum.ACCOUNTING;
+                case Header.WEEK_LOW_52:
+                    header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
-                                                                    HeaderEnum.TICKER.GetDescription(),
+                                                                    Header.TICKER.GetDescription(),
                                                                     GoogleFinanceAttributes.WEEK_LOW_52.GetDescription());
                     break;
 

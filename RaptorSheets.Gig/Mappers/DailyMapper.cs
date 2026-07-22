@@ -20,8 +20,8 @@ public static class DailyMapper
         sheet.Headers.UpdateColumns();
 
         var shiftSheet = ShiftMapper.GetSheet();
-        var dateRange = sheet.GetLocalRange(HeaderEnum.DATE.GetDescription());
-        var shiftKeyRange = shiftSheet.GetRange(HeaderEnum.DATE.GetDescription());
+        var dateRange = sheet.GetLocalRange(Header.DATE.GetDescription());
+        var shiftKeyRange = shiftSheet.GetRange(Header.DATE.GetDescription());
 
         // Configure common aggregation patterns from shift data
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, dateRange, shiftSheet, shiftKeyRange, useShiftTotals: true);
@@ -32,29 +32,29 @@ public static class DailyMapper
         // Configure specific headers unique to DailyMapper
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header.Name.GetValueFromName<HeaderEnum>();
+            var headerEnum = header.Name.GetValueFromName<Header>();
 
             switch (headerEnum)
             {
-                case HeaderEnum.DATE:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(HeaderEnum.DATE.GetDescription(), shiftSheet.GetRange(HeaderEnum.DATE.GetDescription(), 2));
-                    header.Format = FormatEnum.DATE;
+                case Header.DATE:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(Header.DATE.GetDescription(), shiftSheet.GetRange(Header.DATE.GetDescription(), 2));
+                    header.Format = Format.DATE;
                     break;
-                case HeaderEnum.WEEKDAY:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(dateRange, HeaderEnum.WEEKDAY.GetDescription(), dateRange);
+                case Header.WEEKDAY:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekdayText(dateRange, Header.WEEKDAY.GetDescription(), dateRange);
                     break;
-                case HeaderEnum.DAY:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekday(dateRange, HeaderEnum.DAY.GetDescription(), dateRange);
-                    header.Format = FormatEnum.NUMBER;
+                case Header.DAY:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekday(dateRange, Header.DAY.GetDescription(), dateRange);
+                    header.Format = Format.NUMBER;
                     break;
-                case HeaderEnum.WEEK:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekNumber(dateRange, HeaderEnum.WEEK.GetDescription(), dateRange);
+                case Header.WEEK:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaWeekNumber(dateRange, Header.WEEK.GetDescription(), dateRange);
                     break;
-                case HeaderEnum.MONTH:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonthNumber(dateRange, HeaderEnum.MONTH.GetDescription(), dateRange);
+                case Header.MONTH:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaMonthNumber(dateRange, Header.MONTH.GetDescription(), dateRange);
                     break;
-                case HeaderEnum.YEAR:
-                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(dateRange, HeaderEnum.YEAR.GetDescription(), dateRange);
+                case Header.YEAR:
+                    header.Formula = GoogleFormulaBuilder.BuildArrayFormulaYear(dateRange, Header.YEAR.GetDescription(), dateRange);
                     break;
                 default:
                     break;

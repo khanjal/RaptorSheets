@@ -29,7 +29,7 @@ public static class ApplianceMapper
                 filterDateRange,
                 SheetsConfig.HeaderNames.NextFilter,
                 $"IF(ISBLANK({replacementMonthsRange}), \"\", EDATE({filterDateRange},{replacementMonthsRange}))");
-            nextFilter.Format = FormatEnum.DATE;
+            nextFilter.Format = Format.DATE;
         }
 
         return sheet;

@@ -133,7 +133,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
         if (!sheetExists)
         {
-            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageTypeEnum.GET_SHEETS)] };
+            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
         }
 
         return await GetSheets([sheet]);
@@ -175,7 +175,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
         if (sheetsWithData.Count == 0)
         {
-            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageTypeEnum.GENERAL));
+            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageType.GENERAL));
             return sheetEntity;
         }
 
@@ -193,7 +193,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             {
                 sheetEntity.Messages.AddRange(await HandleMissingSheets(spreadsheetInfo));
             }
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageTypeEnum.SAVE_DATA));
+            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageType.SAVE_DATA));
         }
 
         return sheetEntity;
@@ -260,7 +260,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         var messages = new List<MessageEntity>();
         if (spreadsheet != null)
         {
-            var missingSheets = SheetHelpers.CheckSheets<SheetEnum>(spreadsheet);
+            var missingSheets = SheetHelpers.CheckSheets<SheetName>(spreadsheet);
 
             if (missingSheets.Count != 0)
             {
@@ -277,7 +277,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         }
         else
         {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageTypeEnum.GET_SHEETS));
+            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s)", MessageType.GET_SHEETS));
         }
 
         return messages;

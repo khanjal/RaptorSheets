@@ -19,7 +19,7 @@ public class TickerMapFromRangeDataTests
     public TickerMapFromRangeDataTests(GoogleDataFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetEnum.TICKERS.GetDescription()).First().ValueRange.Values;
+        _values = this.fixture.valueRanges?.Where(x => x.DataFilters[0].A1Range == SheetName.TICKERS.GetDescription()).First().ValueRange.Values;
         _entities = TickerMapper.MapFromRangeData(_values!);
     }
 

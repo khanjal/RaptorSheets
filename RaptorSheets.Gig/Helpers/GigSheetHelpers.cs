@@ -130,29 +130,29 @@ public static class GigSheetHelpers
         return s_registry.GetSheetLayouts(sheetNames);
     }
 
-    public static DataValidationRule GetDataValidation(ValidationEnum validation, string? range = "")
+    public static DataValidationRule GetDataValidation(Validation validation, string? range = "")
     {
         return validation switch
         {
-            ValidationEnum.BOOLEAN => GoogleValidationHelper.CreateBooleanRule(),
-            ValidationEnum.RANGE_ADDRESS or ValidationEnum.RANGE_NAME or ValidationEnum.RANGE_PLACE
-                or ValidationEnum.RANGE_REGION or ValidationEnum.RANGE_SERVICE or ValidationEnum.RANGE_TYPE
+            Validation.BOOLEAN => GoogleValidationHelper.CreateBooleanRule(),
+            Validation.RANGE_ADDRESS or Validation.RANGE_NAME or Validation.RANGE_PLACE
+                or Validation.RANGE_REGION or Validation.RANGE_SERVICE or Validation.RANGE_TYPE
                 => GoogleValidationHelper.CreateOneOfRangeRule($"{GetSheetForRange(validation)}!A2:A"),
-            ValidationEnum.RANGE_SELF => GoogleValidationHelper.CreateOneOfRangeRule($"{range}"),
+            Validation.RANGE_SELF => GoogleValidationHelper.CreateOneOfRangeRule($"{range}"),
             _ => new DataValidationRule()
         };
     }
 
-    private static string? GetSheetForRange(ValidationEnum validationEnum)
+    private static string? GetSheetForRange(Validation validationEnum)
     {
         return validationEnum switch
         {
-            ValidationEnum.RANGE_ADDRESS => SheetsConfig.SheetNames.Addresses,
-            ValidationEnum.RANGE_NAME => SheetsConfig.SheetNames.Names,
-            ValidationEnum.RANGE_PLACE => SheetsConfig.SheetNames.Places,
-            ValidationEnum.RANGE_REGION => SheetsConfig.SheetNames.Regions,
-            ValidationEnum.RANGE_SERVICE => SheetsConfig.SheetNames.Services,
-            ValidationEnum.RANGE_TYPE => SheetsConfig.SheetNames.Types,
+            Validation.RANGE_ADDRESS => SheetsConfig.SheetNames.Addresses,
+            Validation.RANGE_NAME => SheetsConfig.SheetNames.Names,
+            Validation.RANGE_PLACE => SheetsConfig.SheetNames.Places,
+            Validation.RANGE_REGION => SheetsConfig.SheetNames.Regions,
+            Validation.RANGE_SERVICE => SheetsConfig.SheetNames.Services,
+            Validation.RANGE_TYPE => SheetsConfig.SheetNames.Types,
             _ => null
         };
     }

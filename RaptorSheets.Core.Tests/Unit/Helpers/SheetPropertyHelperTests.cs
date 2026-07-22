@@ -39,9 +39,9 @@ public class SheetPropertyHelperTests
 
         Assert.Equal("Trips", result.Name);
         Assert.Equal("", result.Id);
-        Assert.Equal("1000", result.Attributes[PropertyEnum.MAX_ROW.GetDescription()]);
-        Assert.Equal("1", result.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()]);
-        Assert.Equal("", result.Attributes[PropertyEnum.HEADERS.GetDescription()]);
+        Assert.Equal("1000", result.Attributes[Property.MAX_ROW.GetDescription()]);
+        Assert.Equal("1", result.Attributes[Property.MAX_ROW_VALUE.GetDescription()]);
+        Assert.Equal("", result.Attributes[Property.HEADERS.GetDescription()]);
     }
 
     [Fact]
@@ -76,8 +76,8 @@ public class SheetPropertyHelperTests
         var result = SheetPropertyHelper.ProcessSheetData("Trips", spreadsheet);
 
         Assert.Equal("42", result.Id);
-        Assert.Equal("500", result.Attributes[PropertyEnum.MAX_ROW.GetDescription()]);
-        Assert.Equal("Date,Pay", result.Attributes[PropertyEnum.HEADERS.GetDescription()]);
+        Assert.Equal("500", result.Attributes[Property.MAX_ROW.GetDescription()]);
+        Assert.Equal("Date,Pay", result.Attributes[Property.HEADERS.GetDescription()]);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class SheetPropertyHelperTests
         SheetPropertyHelper.PopulateSheetBasicInfo(property, sheetData);
 
         Assert.Equal("7", property.Id);
-        Assert.Equal("250", property.Attributes[PropertyEnum.MAX_ROW.GetDescription()]);
+        Assert.Equal("250", property.Attributes[Property.MAX_ROW.GetDescription()]);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class SheetPropertyHelperTests
 
         SheetPropertyHelper.PopulateSheetBasicInfo(property, sheetData);
 
-        Assert.Equal("1000", property.Attributes[PropertyEnum.MAX_ROW.GetDescription()]);
+        Assert.Equal("1000", property.Attributes[Property.MAX_ROW.GetDescription()]);
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class SheetPropertyHelperTests
 
         SheetPropertyHelper.ParseSheetDataRanges(property, sheetData);
 
-        Assert.Equal("A,B", property.Attributes[PropertyEnum.HEADERS.GetDescription()]);
+        Assert.Equal("A,B", property.Attributes[Property.HEADERS.GetDescription()]);
     }
 
     [Theory]
@@ -174,7 +174,7 @@ public class SheetPropertyHelperTests
 
         SheetPropertyHelper.ProcessDataRange(property, dataRange, RangeType.HeadersOnly);
 
-        Assert.Equal("A,B", property.Attributes[PropertyEnum.HEADERS.GetDescription()]);
+        Assert.Equal("A,B", property.Attributes[Property.HEADERS.GetDescription()]);
     }
 
     [Fact]
@@ -193,7 +193,7 @@ public class SheetPropertyHelperTests
 
         SheetPropertyHelper.ProcessDataRange(property, dataRange, RangeType.ColumnDataOnly);
 
-        Assert.Equal("2", property.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()]);
+        Assert.Equal("2", property.Attributes[Property.MAX_ROW_VALUE.GetDescription()]);
     }
 
     [Fact]
@@ -211,8 +211,8 @@ public class SheetPropertyHelperTests
 
         SheetPropertyHelper.ProcessDataRange(property, dataRange, RangeType.FullRange);
 
-        Assert.Equal("A,B", property.Attributes[PropertyEnum.HEADERS.GetDescription()]);
-        Assert.Equal("2", property.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()]);
+        Assert.Equal("A,B", property.Attributes[Property.HEADERS.GetDescription()]);
+        Assert.Equal("2", property.Attributes[Property.MAX_ROW_VALUE.GetDescription()]);
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public class SheetPropertyHelperTests
 
         SheetPropertyHelper.ProcessHeadersRange(property, dataRange);
 
-        Assert.Equal("A,C", property.Attributes[PropertyEnum.HEADERS.GetDescription()]);
+        Assert.Equal("A,C", property.Attributes[Property.HEADERS.GetDescription()]);
     }
 
     [Fact]
@@ -277,8 +277,8 @@ public class SheetPropertyHelperTests
 
         SheetPropertyHelper.ProcessFullRange(property, dataRange);
 
-        Assert.False(property.Attributes.ContainsKey(PropertyEnum.HEADERS.GetDescription()));
-        Assert.Equal("2", property.Attributes[PropertyEnum.MAX_ROW_VALUE.GetDescription()]);
+        Assert.False(property.Attributes.ContainsKey(Property.HEADERS.GetDescription()));
+        Assert.Equal("2", property.Attributes[Property.MAX_ROW_VALUE.GetDescription()]);
     }
 
     [Fact]

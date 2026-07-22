@@ -1,6 +1,6 @@
-﻿namespace RaptorSheets.Core.Enums
+namespace RaptorSheets.Core.Enums
 {
-    public enum ActionTypeEnum
+    public enum ActionType
     {
         // Default
         NONE = 0,

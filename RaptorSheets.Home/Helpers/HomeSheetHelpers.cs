@@ -86,24 +86,24 @@ public static class HomeSheetHelpers
         return s_registry.GetSheetLayouts(sheetNames);
     }
 
-    public static DataValidationRule GetDataValidation(ValidationEnum validation, string? range = "")
+    public static DataValidationRule GetDataValidation(Validation validation, string? range = "")
     {
         return validation switch
         {
-            ValidationEnum.BOOLEAN => GoogleValidationHelper.CreateBooleanRule(),
-            ValidationEnum.RANGE_ROOM or ValidationEnum.RANGE_CONTACT
+            Validation.BOOLEAN => GoogleValidationHelper.CreateBooleanRule(),
+            Validation.RANGE_ROOM or Validation.RANGE_CONTACT
                 => GoogleValidationHelper.CreateOneOfRangeRule($"{GetSheetForRange(validation)}!A2:A"),
-            ValidationEnum.RANGE_SELF => GoogleValidationHelper.CreateOneOfRangeRule($"{range}"),
+            Validation.RANGE_SELF => GoogleValidationHelper.CreateOneOfRangeRule($"{range}"),
             _ => new DataValidationRule()
         };
     }
 
-    private static string? GetSheetForRange(ValidationEnum validationEnum)
+    private static string? GetSheetForRange(Validation validationEnum)
     {
         return validationEnum switch
         {
-            ValidationEnum.RANGE_ROOM => SheetsConfig.SheetNames.Rooms,
-            ValidationEnum.RANGE_CONTACT => SheetsConfig.SheetNames.Contacts,
+            Validation.RANGE_ROOM => SheetsConfig.SheetNames.Rooms,
+            Validation.RANGE_CONTACT => SheetsConfig.SheetNames.Contacts,
             _ => null
         };
     }

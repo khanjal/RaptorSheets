@@ -23,7 +23,7 @@ public class GoogleSheetManagerHelpersTests
 
         Assert.NotNull(messages);
         Assert.Single(messages);
-        Assert.Equal(MessageTypeEnum.GET_SHEETS.GetDescription(), messages[0].Type);
+        Assert.Equal(MessageType.GET_SHEETS.GetDescription(), messages[0].Type);
         Assert.Contains("Unable to retrieve sheet(s)", messages[0].Message);
     }
 
@@ -34,7 +34,7 @@ public class GoogleSheetManagerHelpersTests
 
         var spreadsheet = new Spreadsheet
         {
-            Sheets = Enum.GetNames(typeof(SheetEnum))
+            Sheets = Enum.GetNames(typeof(SheetName))
                 .Select(n => new Sheet { Properties = new SheetProperties { Title = n } })
                 .ToList()
         };
