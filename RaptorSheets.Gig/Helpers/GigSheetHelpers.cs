@@ -1,14 +1,13 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Registries;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
-using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Sheets;
 
 namespace RaptorSheets.Gig.Helpers;
 
@@ -32,8 +31,8 @@ public static class GigSheetHelpers
     {
         var sheets = new List<SheetModel>
         {
-            ShiftMapper.GetSheet(),
-            TripMapper.GetSheet()
+            ShiftSheet.GetSheet(),
+            TripSheet.GetSheet()
         };
 
         return sheets;
@@ -57,23 +56,23 @@ public static class GigSheetHelpers
     {
         var registry = new SheetRegistry<SheetEntity>();
 
-        registry.RegisterGeneric<SheetEntity, AddressEntity>(SheetsConfig.SheetNames.Addresses, AddressMapper.GetSheet, (se, rows) => se.Sheets.Addresses = rows);
-        registry.RegisterGeneric<SheetEntity, DailyEntity>(SheetsConfig.SheetNames.Daily, DailyMapper.GetSheet, (se, rows) => se.Sheets.Daily = rows);
-        registry.RegisterGeneric<SheetEntity, ExpenseEntity>(SheetsConfig.SheetNames.Expenses, () => GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet), (se, rows) => se.Sheets.Expenses = rows);
-        registry.RegisterGeneric<SheetEntity, MonthlyEntity>(SheetsConfig.SheetNames.Monthly, MonthlyMapper.GetSheet, (se, rows) => se.Sheets.Monthly = rows);
-        registry.RegisterGeneric<SheetEntity, NameEntity>(SheetsConfig.SheetNames.Names, NameMapper.GetSheet, (se, rows) => se.Sheets.Names = rows);
-        registry.RegisterGeneric<SheetEntity, PlaceEntity>(SheetsConfig.SheetNames.Places, PlaceMapper.GetSheet, (se, rows) => se.Sheets.Places = rows);
-        registry.RegisterGeneric<SheetEntity, DeliveryEntity>(SheetsConfig.SheetNames.Deliveries, DeliveryMapper.GetSheet, (se, rows) => se.Sheets.Deliveries = rows);
-        registry.RegisterGeneric<SheetEntity, LocationEntity>(SheetsConfig.SheetNames.Locations, LocationMapper.GetSheet, (se, rows) => se.Sheets.Locations = rows);
-        registry.RegisterGeneric<SheetEntity, RegionEntity>(SheetsConfig.SheetNames.Regions, RegionMapper.GetSheet, (se, rows) => se.Sheets.Regions = rows);
-        registry.RegisterGeneric<SheetEntity, SetupEntity>(SheetsConfig.SheetNames.Setup, () => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet), (se, rows) => se.Sheets.Setup = rows);
-        registry.RegisterGeneric<SheetEntity, ServiceEntity>(SheetsConfig.SheetNames.Services, ServiceMapper.GetSheet, (se, rows) => se.Sheets.Services = rows);
-        registry.RegisterGeneric<SheetEntity, ShiftEntity>(SheetsConfig.SheetNames.Shifts, ShiftMapper.GetSheet, (se, rows) => se.Sheets.Shifts = rows);
-        registry.RegisterGeneric<SheetEntity, TripEntity>(SheetsConfig.SheetNames.Trips, TripMapper.GetSheet, (se, rows) => se.Sheets.Trips = rows);
-        registry.RegisterGeneric<SheetEntity, TypeEntity>(SheetsConfig.SheetNames.Types, TypeMapper.GetSheet, (se, rows) => se.Sheets.Types = rows);
-        registry.RegisterGeneric<SheetEntity, WeekdayEntity>(SheetsConfig.SheetNames.Weekdays, WeekdayMapper.GetSheet, (se, rows) => se.Sheets.Weekdays = rows);
-        registry.RegisterGeneric<SheetEntity, WeeklyEntity>(SheetsConfig.SheetNames.Weekly, WeeklyMapper.GetSheet, (se, rows) => se.Sheets.Weekly = rows);
-        registry.RegisterGeneric<SheetEntity, YearlyEntity>(SheetsConfig.SheetNames.Yearly, YearlyMapper.GetSheet, (se, rows) => se.Sheets.Yearly = rows);
+        registry.RegisterGeneric<SheetEntity, AddressEntity>(SheetsConfig.SheetNames.Addresses, AddressSheet.GetSheet, (se, rows) => se.Sheets.Addresses = rows);
+        registry.RegisterGeneric<SheetEntity, DailyEntity>(SheetsConfig.SheetNames.Daily, DailySheet.GetSheet, (se, rows) => se.Sheets.Daily = rows);
+        registry.RegisterGeneric<SheetEntity, ExpenseEntity>(SheetsConfig.SheetNames.Expenses, ExpenseSheet.GetSheet, (se, rows) => se.Sheets.Expenses = rows);
+        registry.RegisterGeneric<SheetEntity, MonthlyEntity>(SheetsConfig.SheetNames.Monthly, MonthlySheet.GetSheet, (se, rows) => se.Sheets.Monthly = rows);
+        registry.RegisterGeneric<SheetEntity, NameEntity>(SheetsConfig.SheetNames.Names, NameSheet.GetSheet, (se, rows) => se.Sheets.Names = rows);
+        registry.RegisterGeneric<SheetEntity, PlaceEntity>(SheetsConfig.SheetNames.Places, PlaceSheet.GetSheet, (se, rows) => se.Sheets.Places = rows);
+        registry.RegisterGeneric<SheetEntity, DeliveryEntity>(SheetsConfig.SheetNames.Deliveries, DeliverySheet.GetSheet, (se, rows) => se.Sheets.Deliveries = rows);
+        registry.RegisterGeneric<SheetEntity, LocationEntity>(SheetsConfig.SheetNames.Locations, LocationSheet.GetSheet, (se, rows) => se.Sheets.Locations = rows);
+        registry.RegisterGeneric<SheetEntity, RegionEntity>(SheetsConfig.SheetNames.Regions, RegionSheet.GetSheet, (se, rows) => se.Sheets.Regions = rows);
+        registry.RegisterGeneric<SheetEntity, SetupEntity>(SheetsConfig.SheetNames.Setup, SetupSheet.GetSheet, (se, rows) => se.Sheets.Setup = rows);
+        registry.RegisterGeneric<SheetEntity, ServiceEntity>(SheetsConfig.SheetNames.Services, ServiceSheet.GetSheet, (se, rows) => se.Sheets.Services = rows);
+        registry.RegisterGeneric<SheetEntity, ShiftEntity>(SheetsConfig.SheetNames.Shifts, ShiftSheet.GetSheet, (se, rows) => se.Sheets.Shifts = rows);
+        registry.RegisterGeneric<SheetEntity, TripEntity>(SheetsConfig.SheetNames.Trips, TripSheet.GetSheet, (se, rows) => se.Sheets.Trips = rows);
+        registry.RegisterGeneric<SheetEntity, TypeEntity>(SheetsConfig.SheetNames.Types, TypeSheet.GetSheet, (se, rows) => se.Sheets.Types = rows);
+        registry.RegisterGeneric<SheetEntity, WeekdayEntity>(SheetsConfig.SheetNames.Weekdays, WeekdaySheet.GetSheet, (se, rows) => se.Sheets.Weekdays = rows);
+        registry.RegisterGeneric<SheetEntity, WeeklyEntity>(SheetsConfig.SheetNames.Weekly, WeeklySheet.GetSheet, (se, rows) => se.Sheets.Weekly = rows);
+        registry.RegisterGeneric<SheetEntity, YearlyEntity>(SheetsConfig.SheetNames.Yearly, YearlySheet.GetSheet, (se, rows) => se.Sheets.Yearly = rows);
 
         return registry;
     }

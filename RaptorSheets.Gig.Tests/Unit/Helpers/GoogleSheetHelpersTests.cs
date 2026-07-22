@@ -2,13 +2,10 @@
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Gig.Constants;
-using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
-using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Sheets;
 
 namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
@@ -20,21 +17,21 @@ public class GoogleSheetHelpersTests
         {
             var data = new TheoryData<SheetModel, BatchUpdateSpreadsheetRequest>
             {
-                { AddressMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.ADDRESSES.GetDescription()]) },
-                { DailyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.DAILY.GetDescription()]) },
-                { GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet), GenerateSheetsHelpers.Generate([SheetName.EXPENSES.GetDescription()]) },
-                { MonthlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.MONTHLY.GetDescription()]) },
-                { NameMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.NAMES.GetDescription()]) },
-                { PlaceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.PLACES.GetDescription()]) },
-                { RegionMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.REGIONS.GetDescription()]) },
-                { ServiceMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SERVICES.GetDescription()]) },
-                { GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet), GenerateSheetsHelpers.Generate([SheetName.SETUP.GetDescription()]) },
-                { ShiftMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SHIFTS.GetDescription()]) },
-                { TripMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.TRIPS.GetDescription()]) },
-                { TypeMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.TYPES.GetDescription()]) },
-                { WeekdayMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.WEEKDAYS.GetDescription()]) },
-                { WeeklyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.WEEKLY.GetDescription()]) },
-                { YearlyMapper.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.YEARLY.GetDescription()]) }
+                { AddressSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.ADDRESSES.GetDescription()]) },
+                { DailySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.DAILY.GetDescription()]) },
+                { ExpenseSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.EXPENSES.GetDescription()]) },
+                { MonthlySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.MONTHLY.GetDescription()]) },
+                { NameSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.NAMES.GetDescription()]) },
+                { PlaceSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.PLACES.GetDescription()]) },
+                { RegionSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.REGIONS.GetDescription()]) },
+                { ServiceSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SERVICES.GetDescription()]) },
+                { SetupSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SETUP.GetDescription()]) },
+                { ShiftSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SHIFTS.GetDescription()]) },
+                { TripSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.TRIPS.GetDescription()]) },
+                { TypeSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.TYPES.GetDescription()]) },
+                { WeekdaySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.WEEKDAYS.GetDescription()]) },
+                { WeeklySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.WEEKLY.GetDescription()]) },
+                { YearlySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.YEARLY.GetDescription()]) }
             };
             return data;
         }
