@@ -464,51 +464,16 @@ public static class DemoHelpers
     private static TripEarningsData GenerateTripEarnings(Random random, string service)
     {
         // Earnings vary by service and type - based on CSV data patterns
-        decimal pay;
-        decimal? tip = null;
-        decimal? bonus = null;
-        decimal? cash = null;
+        var (pay, tip, bonus) = service switch
+        {
+            "DoorDash" or "Uber Eats" or "Grubhub" => GenerateDoorDashStyleEarnings(random),
+            "Instacart" or "Shipt" => GenerateShopStyleEarnings(random),
+            "Amazon Flex" => GenerateAmazonFlexEarnings(random),
+            _ => GenerateDefaultEarnings(random)
+        };
 
-        if (service == "DoorDash" || service == "Uber Eats" || service == "Grubhub")
-        {
-            // CSV shows DoorDash pay: $2.00-$10.75 in $0.25 increments (36 steps from $2.00)
-            var basePay = 2.00m + 0.25m * random.Next(0, 36); // $2.00 to $10.75 (0-35 * $0.25)
-            pay = Math.Round(basePay, 2);
-            
-            // Tips: 85% have tips, range $0.50-$16.25, most in $1-$10 range
-            if (random.NextDouble() < 0.85)
-            {
-                tip = random.NextDouble() < 0.7 
-                    ? Math.Round((decimal)random.NextDouble() * 9 + 1, 2)      // 70%: $1-$10
-                    : Math.Round((decimal)random.NextDouble() * 6.25m + 10, 2); // 15%: $10-$16.25
-            }
-            
-            // Bonus: very rare, usually $1.00 when present
-            bonus = random.NextDouble() < 0.08 ? 1.00m : null;
-        }
-        else if (service == "Instacart" || service == "Shipt")
-        {
-            // Shop types: CSV shows higher pay $5-$9, tips $0-$10
-            pay = Math.Round((decimal)random.NextDouble() * 4 + 5, 2); // $5–$9
-            tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 10 + 0.5m, 2) : null;
-            bonus = random.NextDouble() < 0.05 ? 1.00m : null;
-        }
-        else if (service == "Amazon Flex")
-        {
-            pay = Math.Round((decimal)random.NextDouble() * 20 + 15, 2);
-            tip = random.NextDouble() < 0.7 ? Math.Round((decimal)random.NextDouble() * 10, 2) : null;
-            bonus = random.NextDouble() < 0.05 ? 1.00m : null;
-        }
-        else
-        {
-            // Default: same as DoorDash - $2.00 to $10.75 in $0.25 increments
-            pay = Math.Round(2.00m + 0.25m * random.Next(0, 36), 2); // $2.00 to $10.75 (0-35 * $0.25)
-            tip = random.NextDouble() < 0.7 ? Math.Round((decimal)random.NextDouble() * 8 + 1, 2) : null;
-            bonus = random.NextDouble() < 0.05 ? 1.00m : null;
-        }
-        
         // Cash tips: very rare, $2-$10 when present (CSV shows ~3% occurrence)
-        cash = random.NextDouble() < 0.03 ? Math.Round((decimal)random.NextDouble() * 8 + 2, 2) : null;
+        decimal? cash = random.NextDouble() < 0.03 ? Math.Round((decimal)random.NextDouble() * 8 + 2, 2) : null;
 
         return new TripEarningsData
         {
@@ -517,6 +482,56 @@ public static class DemoHelpers
             Bonus = bonus,
             Cash = cash
         };
+    }
+
+    private static (decimal Pay, decimal? Tip, decimal? Bonus) GenerateDoorDashStyleEarnings(Random random)
+    {
+        // CSV shows DoorDash pay: $2.00-$10.75 in $0.25 increments (36 steps from $2.00)
+        var basePay = 2.00m + 0.25m * random.Next(0, 36); // $2.00 to $10.75 (0-35 * $0.25)
+        var pay = Math.Round(basePay, 2);
+
+        // Tips: 85% have tips, range $0.50-$16.25, most in $1-$10 range
+        decimal? tip = null;
+        if (random.NextDouble() < 0.85)
+        {
+            tip = random.NextDouble() < 0.7
+                ? Math.Round((decimal)random.NextDouble() * 9 + 1, 2)      // 70%: $1-$10
+                : Math.Round((decimal)random.NextDouble() * 6.25m + 10, 2); // 15%: $10-$16.25
+        }
+
+        // Bonus: very rare, usually $1.00 when present
+        decimal? bonus = random.NextDouble() < 0.08 ? 1.00m : null;
+
+        return (pay, tip, bonus);
+    }
+
+    private static (decimal Pay, decimal? Tip, decimal? Bonus) GenerateShopStyleEarnings(Random random)
+    {
+        // Shop types: CSV shows higher pay $5-$9, tips $0-$10
+        var pay = Math.Round((decimal)random.NextDouble() * 4 + 5, 2); // $5–$9
+        decimal? tip = random.NextDouble() < 0.8 ? Math.Round((decimal)random.NextDouble() * 10 + 0.5m, 2) : null;
+        decimal? bonus = random.NextDouble() < 0.05 ? 1.00m : null;
+
+        return (pay, tip, bonus);
+    }
+
+    private static (decimal Pay, decimal? Tip, decimal? Bonus) GenerateAmazonFlexEarnings(Random random)
+    {
+        var pay = Math.Round((decimal)random.NextDouble() * 20 + 15, 2);
+        decimal? tip = random.NextDouble() < 0.7 ? Math.Round((decimal)random.NextDouble() * 10, 2) : null;
+        decimal? bonus = random.NextDouble() < 0.05 ? 1.00m : null;
+
+        return (pay, tip, bonus);
+    }
+
+    private static (decimal Pay, decimal? Tip, decimal? Bonus) GenerateDefaultEarnings(Random random)
+    {
+        // Default: same as DoorDash - $2.00 to $10.75 in $0.25 increments
+        var pay = Math.Round(2.00m + 0.25m * random.Next(0, 36), 2); // $2.00 to $10.75 (0-35 * $0.25)
+        decimal? tip = random.NextDouble() < 0.7 ? Math.Round((decimal)random.NextDouble() * 8 + 1, 2) : null;
+        decimal? bonus = random.NextDouble() < 0.05 ? 1.00m : null;
+
+        return (pay, tip, bonus);
     }
 
     /// <summary>
