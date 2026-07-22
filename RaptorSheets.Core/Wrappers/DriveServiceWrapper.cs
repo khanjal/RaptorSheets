@@ -24,15 +24,13 @@ public class DriveServiceWrapper : DriveService, IDriveServiceWrapper
         InitializeService(credential);
     }
 
-    private DriveService InitializeService(GoogleCredential credential)
+    private void InitializeService(GoogleCredential credential)
     {
         _driveService = new DriveService(new Initializer()
         {
             HttpClientInitializer = credential,
             ApplicationName = GoogleConfig.AppName
         });
-
-        return _driveService;
     }
 
     public async Task<File> CreateSpreadsheet(string name)

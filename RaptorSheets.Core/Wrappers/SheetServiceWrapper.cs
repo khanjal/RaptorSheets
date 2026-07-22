@@ -117,15 +117,13 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
         throw new ArgumentException($"Missing required parameter. Expected one of: {string.Join(", ", candidates)}", nameof(parameters));
     }
 
-    private SheetsService InitializeService(Google.Apis.Http.IConfigurableHttpClientInitializer httpInitializer)
+    private void InitializeService(Google.Apis.Http.IConfigurableHttpClientInitializer httpInitializer)
     {
         _sheetsService = new SheetsService(new Initializer()
         {
             HttpClientInitializer = httpInitializer,
             ApplicationName = GoogleConfig.AppName
         });
-
-        return _sheetsService;
     }
 
     public async Task<AppendValuesResponse> AppendValues(string range, IList<IList<object>> values)

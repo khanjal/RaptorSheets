@@ -44,6 +44,51 @@ public static class EntitySheetConfigHelper
         return headers;
     }
 
+    /// <summary>
+    /// Generates sheet headers from an entity type and merges with additional headers.
+    /// Entity headers come first, followed by additional headers not in the entity.
+    /// </summary>
+    /// <typeparam name="T">The entity type to generate headers from</typeparam>
+    /// <param name="additionalHeaders">Additional headers to include (e.g., calculated columns)</param>
+    /// <returns>List of SheetCellModel headers with entity headers first and automatic formatting applied</returns>
+    public static List<SheetCellModel> GenerateHeadersFromEntity<T>(params SheetCellModel[] additionalHeaders)
+    {
+        var entityHeaders = GenerateHeadersFromEntity<T>();
+        var entityHeaderNames = entityHeaders.Select(h => h.Name).ToHashSet();
+
+        // Add additional headers that aren't already in the entity
+        foreach (var additionalHeader in additionalHeaders.Where(h => !entityHeaderNames.Contains(h.Name)))
+        {
+            entityHeaders.Add(additionalHeader);
+        }
+
+        return entityHeaders;
+    }
+
+    /// <summary>
+    /// Generates sheet headers from an entity type and merges with common header patterns.
+    /// </summary>
+    /// <typeparam name="T">The entity type to generate headers from</typeparam>
+    /// <param name="commonHeaderPatterns">Common header patterns to merge (e.g., CommonIncomeHeaders)</param>
+    /// <returns>List of SheetCellModel headers with entity ordering prioritized and automatic formatting applied</returns>
+    public static List<SheetCellModel> GenerateHeadersFromEntity<T>(params IEnumerable<SheetCellModel>[] commonHeaderPatterns)
+    {
+        var entityHeaders = GenerateHeadersFromEntity<T>();
+        var entityHeaderNames = entityHeaders.Select(h => h.Name).ToHashSet();
+
+        // Add headers from common patterns that aren't already in the entity
+        foreach (var pattern in commonHeaderPatterns)
+        {
+            foreach (var header in pattern.Where(h => !entityHeaderNames.Contains(h.Name)))
+            {
+                entityHeaders.Add(header);
+                entityHeaderNames.Add(header.Name);
+            }
+        }
+
+        return entityHeaders;
+    }
+
     private static SheetCellModel CreateHeader(ColumnAttribute columnAttr, string headerName)
     {
         var header = new SheetCellModel
@@ -99,51 +144,6 @@ public static class EntitySheetConfigHelper
                 header.Validation = validationPattern;
             }
         }
-    }
-
-    /// <summary>
-    /// Generates sheet headers from an entity type and merges with additional headers.
-    /// Entity headers come first, followed by additional headers not in the entity.
-    /// </summary>
-    /// <typeparam name="T">The entity type to generate headers from</typeparam>
-    /// <param name="additionalHeaders">Additional headers to include (e.g., calculated columns)</param>
-    /// <returns>List of SheetCellModel headers with entity headers first and automatic formatting applied</returns>
-    public static List<SheetCellModel> GenerateHeadersFromEntity<T>(params SheetCellModel[] additionalHeaders)
-    {
-        var entityHeaders = GenerateHeadersFromEntity<T>();
-        var entityHeaderNames = entityHeaders.Select(h => h.Name).ToHashSet();
-
-        // Add additional headers that aren't already in the entity
-        foreach (var additionalHeader in additionalHeaders.Where(h => !entityHeaderNames.Contains(h.Name)))
-        {
-            entityHeaders.Add(additionalHeader);
-        }
-
-        return entityHeaders;
-    }
-
-    /// <summary>
-    /// Generates sheet headers from an entity type and merges with common header patterns.
-    /// </summary>
-    /// <typeparam name="T">The entity type to generate headers from</typeparam>
-    /// <param name="commonHeaderPatterns">Common header patterns to merge (e.g., CommonIncomeHeaders)</param>
-    /// <returns>List of SheetCellModel headers with entity ordering prioritized and automatic formatting applied</returns>
-    public static List<SheetCellModel> GenerateHeadersFromEntity<T>(params IEnumerable<SheetCellModel>[] commonHeaderPatterns)
-    {
-        var entityHeaders = GenerateHeadersFromEntity<T>();
-        var entityHeaderNames = entityHeaders.Select(h => h.Name).ToHashSet();
-
-        // Add headers from common patterns that aren't already in the entity
-        foreach (var pattern in commonHeaderPatterns)
-        {
-            foreach (var header in pattern.Where(h => !entityHeaderNames.Contains(h.Name)))
-            {
-                entityHeaders.Add(header);
-                entityHeaderNames.Add(header.Name);
-            }
-        }
-
-        return entityHeaders;
     }
 
     /// <summary>

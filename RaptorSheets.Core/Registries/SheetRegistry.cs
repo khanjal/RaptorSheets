@@ -66,6 +66,26 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     }
 
     /// <summary>
+    /// Builds an entity from a full Spreadsheet (grid-data) response.
+    /// </summary>
+    public TEntity MapData(Spreadsheet spreadsheet)
+    {
+        var entity = new TEntity();
+        entity.Properties.Name = spreadsheet.Properties.Title;
+
+        var sheetValues = SheetHelpers.GetSheetValues(spreadsheet);
+        foreach (var title in spreadsheet.Sheets.Select(sheet => sheet.Properties.Title))
+        {
+            if (sheetValues.TryGetValue(title, out var values))
+            {
+                Process(entity, title, values);
+            }
+        }
+
+        return entity;
+    }
+
+    /// <summary>
     /// Detects columns missing entirely from a batchGet response, reusing the header row already
     /// present in each range - no extra API call needed. SheetId is left at 0 on each result; the
     /// caller fills it in from spreadsheet metadata it already has (e.g. the cheap, no-ranges
@@ -99,26 +119,6 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
         }
 
         return missingColumns;
-    }
-
-    /// <summary>
-    /// Builds an entity from a full Spreadsheet (grid-data) response.
-    /// </summary>
-    public TEntity MapData(Spreadsheet spreadsheet)
-    {
-        var entity = new TEntity();
-        entity.Properties.Name = spreadsheet.Properties.Title;
-
-        var sheetValues = SheetHelpers.GetSheetValues(spreadsheet);
-        foreach (var title in spreadsheet.Sheets.Select(sheet => sheet.Properties.Title))
-        {
-            if (sheetValues.TryGetValue(title, out var values))
-            {
-                Process(entity, title, values);
-            }
-        }
-
-        return entity;
     }
 
     private void Process(TEntity entity, string sheetName, IList<IList<object>> values)
