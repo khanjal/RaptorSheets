@@ -113,7 +113,7 @@ public class GoogleFileManagerTests
     [InlineData("   ")]
     [InlineData("My Budget Spreadsheet")]
     [InlineData("Spreadsheet with special chars: !@#$%")]
-    [InlineData("File with émojis ?? and unicode")]
+    [InlineData("File with ï¿½mojis ?? and unicode")]
     public async Task CreateFile_WithVariousNames_ShouldPassThroughToService(string fileName)
     {
         // Arrange
@@ -174,7 +174,12 @@ public class GoogleFileManagerTests
     {
         // Arrange
         var fileName = "Invalid File Name";
-        var expectedException = new ArgumentException("Invalid file name", nameof(fileName));
+        // This exception is a mock stand-in for whatever the wrapped Drive service might throw -
+        // "fileName" isn't a parameter of this test method, so S3928's real-parameter check is a
+        // false positive here.
+#pragma warning disable S3928
+        var expectedException = new ArgumentException("Invalid file name", "fileName");
+#pragma warning restore S3928
         
         _mockGoogleDriveService
             .Setup(x => x.CreateSpreadsheet(fileName))
@@ -384,7 +389,7 @@ public class GoogleFileManagerTests
         // Arrange
         var serviceResult = new List<PropertyEntity>
         {
-            new PropertyEntity { Id = "1", Name = "File with émojis ??" },
+            new PropertyEntity { Id = "1", Name = "File with ï¿½mojis ??" },
             new PropertyEntity { Id = "2", Name = "File with \"quotes\" and 'apostrophes'" },
             new PropertyEntity { Id = "3", Name = "File with\nnewlines\tand\ttabs" }
         };
@@ -399,7 +404,7 @@ public class GoogleFileManagerTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(3, result.Count);
-        Assert.Equal("File with émojis ??", result[0].Name);
+        Assert.Equal("File with ï¿½mojis ??", result[0].Name);
         Assert.Equal("File with \"quotes\" and 'apostrophes'", result[1].Name);
         Assert.Equal("File with\nnewlines\tand\ttabs", result[2].Name);
         _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(), Times.Once);

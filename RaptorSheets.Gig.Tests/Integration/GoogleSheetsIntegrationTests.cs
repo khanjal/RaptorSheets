@@ -641,7 +641,12 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         foreach (var trip in testData.Sheets.Trips)
         {
             trip.Service = $"Test_{testRunId}";
+            // Integer division is intentional here: it buckets every tripsPerShift trips onto the
+            // same day offset (0, 0, 0, -1, -1, -1, ...), mirroring how CreateSimpleTestData groups
+            // trips under shifts. Casting to double would break the bucketing.
+#pragma warning disable S2184
             trip.Date = baseDate.AddDays(-testData.Sheets.Trips.IndexOf(trip) / tripsPerShift).ToString(CellFormatPatterns.Date);
+#pragma warning restore S2184
         }
         
         foreach (var expense in testData.Sheets.Expenses)

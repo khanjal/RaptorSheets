@@ -360,9 +360,19 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         {
             var isMultiCombo = multiInterviewCombos.Contains((app.Company, app.JobTitle));
 
-            int interviewCount = isMultiCombo
-                ? random.Next(2, 6)
-                : (random.NextDouble() < 0.5 ? 1 : (random.NextDouble() < 0.2 ? 2 : 1));
+            int interviewCount;
+            if (isMultiCombo)
+            {
+                interviewCount = random.Next(2, 6);
+            }
+            else if (random.NextDouble() < 0.5)
+            {
+                interviewCount = 1;
+            }
+            else
+            {
+                interviewCount = random.NextDouble() < 0.2 ? 2 : 1;
+            }
 
             var baseDate = DateTime.Parse(app.Date, CultureInfo.InvariantCulture);
 

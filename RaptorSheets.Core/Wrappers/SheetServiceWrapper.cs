@@ -24,7 +24,7 @@ public interface ISheetServiceWrapper
 public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
 {
     private SheetsService _sheetsService = new();
-    private readonly string _spreadsheetId = "";
+    private readonly string _spreadsheetId;
 
     public SheetServiceWrapper(string accessToken, string spreadsheetId)
     {
@@ -76,12 +76,6 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
         {
             // Specific argument exceptions during FromPrivateKey indicate malformed key material.
             credential = GoogleCredential.FromAccessToken("test-token");
-        }
-        catch (Exception)
-        {
-            // For any unexpected exception, rethrow to avoid masking real configuration issues in production.
-            // Unit tests that expect fallback should provide malformed-key scenarios leading to known exceptions above.
-            throw;
         }
 
         InitializeService(credential);

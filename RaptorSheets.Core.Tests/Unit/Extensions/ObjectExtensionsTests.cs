@@ -7,7 +7,7 @@ namespace RaptorSheets.Core.Tests.Unit.Extensions;
 
 public class ObjectExtensionsTests
 {
-    SheetModel modelData = TestSheetData.GetModelData();
+    readonly SheetModel modelData = TestSheetData.GetModelData();
 
     [Theory]
     [InlineData(Header.FIRST_COLUMN, "A")]

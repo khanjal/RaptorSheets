@@ -47,12 +47,10 @@ public static class EnumExtensions
 
         foreach (var field in type.GetFields())
         {
-            if (Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) is DescriptionAttribute attribute)
+            if (Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) is DescriptionAttribute attribute
+                && string.Equals(attribute.Description, name, StringComparison.OrdinalIgnoreCase))
             {
-                if (string.Equals(attribute.Description, name, StringComparison.OrdinalIgnoreCase))
-                {
-                    return (T?)field.GetValue(null);
-                }
+                return (T?)field.GetValue(null);
             }
 
             if (string.Equals(field.Name, name, StringComparison.OrdinalIgnoreCase))
