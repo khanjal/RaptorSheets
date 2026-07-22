@@ -30,7 +30,7 @@ public class ObjectExtensionsTests
     [InlineData(Header.SECOND_COLUMN, "B1:B")]
     public void GivenHeaders_ShouldGetRange(Header header, string range)
     {
-        Assert.Equal($"{modelData.Name}!{range}", modelData.GetRange(header.GetDescription()));
+        Assert.Equal($"'{modelData.Name}'!{range}", modelData.GetRange(header.GetDescription()));
     }
 
     [Theory]
@@ -68,7 +68,7 @@ public class ObjectExtensionsTests
         var result = modelData.GetRange("NonExistent");
 
         // Assert
-        Assert.Equal($"{modelData.Name}!", result);
+        Assert.Equal($"'{modelData.Name}'!", result);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class ObjectExtensionsTests
         // Assert
         Assert.Equal("", column);
         Assert.Equal("", index);
-        Assert.Equal("EmptySheet!", range);
+        Assert.Equal("'EmptySheet'!", range);
         Assert.Equal("", localRange);
     }
 

@@ -66,4 +66,30 @@ public class MapperGetSheetTests
         Assert.Equal(sheet1.Name, sheet2.Name);
         Assert.Equal(sheet1.Headers.Count, sheet2.Headers.Count);
     }
+
+    [Fact]
+    public void Registry_GetDependents_DetectsRealCrossSheetFormulaGraph()
+    {
+        // SheetRegistry.GetDependents derives dependencies dynamically by scanning each mapper's
+        // built formulas for other sheets' quoted range pattern ('Name'!) - no manual declaration.
+        // This confirms it actually finds Job's real dependency graph (Companies/Positions/Sites/
+        // Decisions/Schedules depend on both Applications and Interviews; InterviewTypes/
+        // InterviewOutcomes depend on Interviews only), not just synthetic fixtures, so
+        // RefreshDependentSheetsAsync rewrites the right sheets in production.
+        var applicationDependents = JobSheetHelpers.Registry.GetDependents([SheetsConfig.SheetNames.Applications]);
+
+        Assert.Contains(SheetsConfig.SheetNames.Companies, applicationDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Positions, applicationDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Sites, applicationDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Decisions, applicationDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Schedules, applicationDependents);
+        Assert.DoesNotContain(SheetsConfig.SheetNames.InterviewTypes, applicationDependents);
+        Assert.DoesNotContain(SheetsConfig.SheetNames.InterviewOutcomes, applicationDependents);
+
+        var interviewDependents = JobSheetHelpers.Registry.GetDependents([SheetsConfig.SheetNames.Interviews]);
+
+        Assert.Contains(SheetsConfig.SheetNames.InterviewTypes, interviewDependents);
+        Assert.Contains(SheetsConfig.SheetNames.InterviewOutcomes, interviewDependents);
+        Assert.Contains(SheetsConfig.SheetNames.Companies, interviewDependents);
+    }
 }

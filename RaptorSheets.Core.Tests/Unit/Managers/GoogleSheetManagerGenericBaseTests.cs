@@ -383,4 +383,194 @@ public class GoogleSheetManagerGenericBaseTests
 
         Assert.Contains(result.Messages, m => m.Message.Contains("Error deleting sheets") && m.Message.Contains("boom"));
     }
+
+    // RefreshHeaderFormulasAsync / RefreshDependentSheetsAsync - the automated replacement for
+    // manually "reapplying" a sheet to fix a stale cross-sheet formula reference (#REF!/#ERROR!/
+    // #N/A caused by a referenced sheet's headers changing after a dependent's formula was
+    // written). "Base"/"Dependent" below mirror Stock's real Tickers/Stocks dependency - Dependent's
+    // formula references Base via the same quoted 'Name'! pattern ObjectExtensions.GetRange
+    // produces, which is what SheetRegistry.GetDependents detects automatically (no manual
+    // dependency declaration).
+
+    private const string BaseSheetName = "Base";
+    private const string DependentSheetName = "Dependent";
+
+    private static SheetModel DependentSheetModel() => new()
+    {
+        Name = DependentSheetName,
+        Headers = [new SheetCellModel { Name = "Total", Formula = $"=SUM('{BaseSheetName}'!A:A)" }]
+    };
+
+    private static SheetRegistry<TestEntity> BuildRegistryWithDependency(List<SheetCellModel>? baseHeaders = null)
+    {
+        var registry = new SheetRegistry<TestEntity>();
+        registry.Register(BaseSheetName, () => new SheetModel { Name = BaseSheetName, Headers = baseHeaders ?? [new SheetCellModel { Name = "Name" }] }, (_, _) => { });
+        registry.Register(DependentSheetName, DependentSheetModel, (_, _) => { });
+        return registry;
+    }
+
+    private static Spreadsheet SpreadsheetWith(params (string Title, int SheetId)[] sheets) => new()
+    {
+        Properties = new SpreadsheetProperties { Title = "Book" },
+        Sheets = sheets.Select(s => new Sheet { Properties = new SheetProperties { Title = s.Title, SheetId = s.SheetId } }).ToList()
+    };
+
+    [Fact]
+    public async Task RefreshHeaderFormulasAsync_WritesOneBatchRequestCoveringEverySheet()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((BaseSheetName, 10), (DependentSheetName, 42));
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+
+        var captured = new List<BatchUpdateSpreadsheetRequest>();
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .Callback<BatchUpdateSpreadsheetRequest>(r => captured.Add(r))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
+
+        await manager.RefreshHeaderFormulasAsync([BaseSheetName, DependentSheetName]);
+
+        var request = Assert.Single(captured);
+        Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 10);
+        Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
+    }
+
+    [Fact]
+    public async Task RefreshHeaderFormulasAsync_SkipsSheetsNotYetCreatedOrUnregistered()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        // Only "Base" exists live; "Dependent" hasn't been created yet, "Unknown" isn't registered at all.
+        var spreadsheet = SpreadsheetWith((BaseSheetName, 10));
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+
+        var captured = new List<BatchUpdateSpreadsheetRequest>();
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .Callback<BatchUpdateSpreadsheetRequest>(r => captured.Add(r))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
+
+        await manager.RefreshHeaderFormulasAsync([BaseSheetName, DependentSheetName, "Unknown"]);
+
+        var request = Assert.Single(captured);
+        var onlyRequest = Assert.Single(request.Requests);
+        Assert.Equal(10, onlyRequest.UpdateCells?.Range.SheetId);
+    }
+
+    [Fact]
+    public async Task RefreshDependentSheetsAsync_WithNoDependents_MakesNoApiCalls()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var manager = BuildManager(mockService.Object); // single-sheet registry, no dependsOn edges
+
+        await manager.RefreshDependentSheetsAsync([SheetName]);
+
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()), Times.Never);
+        mockService.Verify(s => s.GetSheetInfo(), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetSheets_SelfHealsMissingSheet_RefreshesAlreadyExistingDependentSheet()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+
+        // batchGet fails (Base is missing entirely) -> triggers the self-heal path.
+        mockService.Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
+
+        // Dependent already exists live; Base doesn't yet - matches the real "Tickers deleted,
+        // Stocks still references it" scenario.
+        var spreadsheet = SpreadsheetWith((DependentSheetName, 42));
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+
+        var captured = new List<BatchUpdateSpreadsheetRequest>();
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .Callback<BatchUpdateSpreadsheetRequest>(r => captured.Add(r))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
+
+        await manager.GetSheets([BaseSheetName, DependentSheetName]);
+
+        Assert.Contains(captured, r => r.Requests.Any(req => req.UpdateCells?.Range.SheetId == 42));
+    }
+
+    [Fact]
+    public async Task GetSheets_AutoHealsMissingColumn_RefreshesDependentSheetHeaders()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+
+        // Base's live header row is missing "Price" (present in the registered SheetModel below) -
+        // simulates a referenced sheet's column layout having drifted/shifted.
+        var response = new BatchGetValuesByDataFilterResponse
+        {
+            ValueRanges =
+            [
+                new MatchedValueRange
+                {
+                    DataFilters = [new DataFilter { A1Range = BaseSheetName }],
+                    ValueRange = new ValueRange { Values = new List<IList<object>> { new List<object> { "Name" } } }
+                },
+                new MatchedValueRange
+                {
+                    DataFilters = [new DataFilter { A1Range = DependentSheetName }],
+                    ValueRange = new ValueRange { Values = new List<IList<object>> { new List<object> { "Total" } } }
+                }
+            ]
+        };
+        mockService.Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>())).ReturnsAsync(response);
+
+        var spreadsheet = SpreadsheetWith((BaseSheetName, 10), (DependentSheetName, 42));
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+
+        var captured = new List<BatchUpdateSpreadsheetRequest>();
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .Callback<BatchUpdateSpreadsheetRequest>(r => captured.Add(r))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var baseHeaders = new List<SheetCellModel> { new() { Name = "Name" }, new() { Name = "Price" } };
+        var manager = new TestManager(mockService.Object, BuildRegistryWithDependency(baseHeaders), [BaseSheetName, DependentSheetName]);
+
+        await manager.GetSheets([BaseSheetName, DependentSheetName]);
+
+        // Column insertion (Base, sheetId 10) and the dependent header refresh (Dependent, sheetId
+        // 42) must land in the SAME BatchUpdateSpreadsheet call - not two separate API calls.
+        var request = Assert.Single(captured);
+        Assert.Contains(request.Requests, req => req.InsertDimension?.Range.SheetId == 10);
+        Assert.Contains(request.Requests, req => req.UpdateCells?.Range.SheetId == 42);
+    }
+
+    [Fact]
+    public async Task CreateSheets_WithExistingDependent_RefreshesItInTheSameBatchCall()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+
+        // Dependent already exists live (sheetId 42); Base is about to be created by this call.
+        var spreadsheet = SpreadsheetWith((DependentSheetName, 42));
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+
+        var captured = new List<BatchUpdateSpreadsheetRequest>();
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .Callback<BatchUpdateSpreadsheetRequest>(r => captured.Add(r))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse
+            {
+                Replies = [new Response { AddSheet = new AddSheetResponse { Properties = new SheetProperties { Title = BaseSheetName } } }]
+            });
+
+        var manager = new TestManagerWithGeneration(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
+
+        await manager.CreateSheets([BaseSheetName]);
+
+        // AddSheet (Base) and the dependent header refresh (Dependent, sheetId 42) must land in the
+        // SAME BatchUpdateSpreadsheet call - this is the exact "reapply headers in one call" behavior.
+        var request = Assert.Single(captured);
+        Assert.Contains(request.Requests, req => req.AddSheet?.Properties.Title == BaseSheetName);
+        Assert.Contains(request.Requests, req => req.UpdateCells?.Range.SheetId == 42);
+    }
 }

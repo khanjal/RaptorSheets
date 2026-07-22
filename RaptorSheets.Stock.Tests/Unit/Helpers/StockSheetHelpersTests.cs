@@ -61,6 +61,25 @@ namespace RaptorSheets.Stock.Tests.Unit.Helpers
         }
 
         [Fact]
+        public void Registry_GetDependents_DetectsRealCrossSheetFormulaGraph()
+        {
+            // SheetRegistry.GetDependents derives dependencies dynamically by scanning each mapper's
+            // built formulas for other sheets' quoted range pattern ('Name'!) - no manual
+            // declaration. This confirms it actually finds Stock's real graph:
+            // StockMapper.GetSheet() reads tickerSheet.GetRange(...), and AccountMapper.GetSheet()
+            // separately reads stockSheet.GetRange(...) - so Accounts transitively depends on
+            // Tickers too, through Stocks.
+            var tickersDependents = StockSheetHelpers.Registry.GetDependents(["Tickers"]);
+
+            Assert.Contains("Stocks", tickersDependents);
+            Assert.Contains("Accounts", tickersDependents);
+
+            var stocksDependents = StockSheetHelpers.Registry.GetDependents(["Stocks"]);
+
+            Assert.Contains("Accounts", stocksDependents);
+        }
+
+        [Fact]
         public void MapData_ShouldReturnSheetEntity()
         {
             // Arrange

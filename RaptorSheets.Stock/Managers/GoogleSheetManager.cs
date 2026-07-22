@@ -36,6 +36,11 @@ public interface IGoogleSheetManager
     SheetModel? GetSheetLayout(string sheet);
     List<SheetModel> GetSheetLayouts(List<string> sheets);
     Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
+
+    // Demo Data Generation
+    Task<SheetEntity> SetupDemo(int? seed = null);
+    Task<SheetEntity> PopulateDemoData(int? seed = null);
+    SheetEntity GenerateDemoData(int? seed = null);
 }
 
 public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSheetManager
@@ -122,9 +127,10 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         return await GetSheets([sheet]);
     }
 
-    // Only the Stocks sheet's Shares column is genuinely user-editable today - Accounts and Tickers
-    // are fully formula/GOOGLEFINANCE-driven rollups, so they get no accessor entry (same as Gig's
-    // read-only summary sheets - Daily/Weekly/Monthly/Yearly - having none).
+    // Only the Stocks sheet is genuinely user-writable today (Ticker/Account/Shares - see
+    // StockMapper.MapToRowData) - Accounts and Tickers are fully formula/GOOGLEFINANCE-driven
+    // rollups, so they get no accessor entry (same as Gig's read-only summary sheets -
+    // Daily/Weekly/Monthly/Yearly - having none).
     private static readonly Dictionary<string, GoogleRequestHelpers.SheetChangeAccessor<SheetEntity>> _sheetAccessors =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -159,4 +165,94 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
         return sheetEntity;
     }
+
+    #region Demo Data Generation
+
+    /// <summary>
+    /// Creates all sheets and then fills the Stocks sheet with realistic demo holdings.
+    /// </summary>
+    public async Task<SheetEntity> SetupDemo(int? seed = null)
+    {
+        await CreateAllSheets();
+        await Task.Delay(1500); // let freshly-created sheets become writable
+        return await PopulateDemoData(seed);
+    }
+
+    /// <summary>
+    /// Writes generated demo holdings into the Stocks sheet. Accounts/Tickers reference sheets and
+    /// every financial column (Name, AverageCost, CostTotal, CurrentPrice, ...) are auto-populated
+    /// by their own formulas, so only the Stocks sheet needs to be written.
+    /// </summary>
+    public async Task<SheetEntity> PopulateDemoData(int? seed = null)
+    {
+        var demoData = GenerateDemoData(seed);
+        await ChangeSheetData([SheetName.STOCKS.GetDescription()], demoData);
+
+        // Inserting new tickers triggers Tickers' GOOGLEFINANCE-driven columns to recompute at the
+        // same moment Stocks' own formulas (which read from Tickers) re-evaluate. GOOGLEFINANCE
+        // resolves asynchronously, so both sheets can latch onto a transient #N/A mid-flight and
+        // never self-recover on their own - Tickers' own MaxHigh/MinLow (a GOOGLEFINANCE historical
+        // daily-range call, evaluated once per ticker via MAP/LAMBDA) is the slowest to settle, so a
+        // single short delay isn't reliably enough. Re-apply both sheets' header formulas (inherited
+        // from GoogleSheetManagerBase) twice, with increasing delays, to force a clean re-evaluation
+        // against settled data.
+        var sheetNames = new[] { SheetName.TICKERS.GetDescription(), SheetName.STOCKS.GetDescription() };
+
+        await Task.Delay(5000);
+        await RefreshHeaderFormulasAsync(sheetNames);
+
+        await Task.Delay(15000);
+        await RefreshHeaderFormulasAsync(sheetNames);
+
+        return demoData;
+    }
+
+    /// <summary>
+    /// Generates a handful of realistic demo holdings (real, well-known ticker symbols across a
+    /// few demo accounts) without writing them to any spreadsheet. RowIds start at 2 so a
+    /// subsequent write lands them below the header row. Real tickers are used deliberately so the
+    /// Stocks sheet's GOOGLEFINANCE-driven columns (Name, CurrentPrice, 52-week high/low, ...)
+    /// resolve to real market data instead of #N/A.
+    /// </summary>
+    public SheetEntity GenerateDemoData(int? seed = null)
+    {
+        // SonarQube S2245: Using Random is safe here - this generates demo/sample data, not security-sensitive values
+#pragma warning disable S2245
+        var random = seed.HasValue ? new Random(seed.Value) : Random.Shared;
+#pragma warning restore S2245
+
+        var sheetEntity = new SheetEntity();
+
+        var tickers = new[] { "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "TSLA", "META", "JPM", "V", "KO" };
+        var accounts = new[] { "Test Brokerage", "Test 401k", "Test Roth IRA" };
+
+        // Pick a handful of distinct Account+Ticker combos so the Accounts/Tickers reference
+        // sheets have something meaningful to derive via their SORT/UNIQUE formulas.
+        var holdingCount = Math.Min(8, tickers.Length * accounts.Length);
+        var combos = new List<(string Account, string Ticker)>();
+        while (combos.Count < holdingCount)
+        {
+            var combo = (Account: accounts[random.Next(accounts.Length)], Ticker: tickers[random.Next(tickers.Length)]);
+            if (!combos.Contains(combo))
+            {
+                combos.Add(combo);
+            }
+        }
+
+        var rowId = 2; // start at row 2 (row 1 reserved for headers)
+        foreach (var (account, ticker) in combos)
+        {
+            sheetEntity.Sheets.Stocks.Add(new StockEntity
+            {
+                RowId = rowId++,
+                Account = account,
+                Ticker = ticker,
+                Shares = Math.Round((decimal)(random.NextDouble() * 49 + 1), 2) // 1-50 shares
+            });
+        }
+
+        return sheetEntity;
+    }
+
+    #endregion
 }

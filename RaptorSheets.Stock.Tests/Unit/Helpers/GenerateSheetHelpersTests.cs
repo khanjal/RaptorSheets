@@ -39,4 +39,25 @@ public class GenerateSheetHelpersTests
     {
         Assert.Throws<NotImplementedException>(() => GenerateSheetHelpers.Generate(["NotARealSheet"]));
     }
+
+    [Theory]
+    [InlineData("Stocks")]
+    [InlineData("Accounts")]
+    [InlineData("Tickers")]
+    public void Generate_ShouldNotApplyBooleanCheckboxValidation(string sheetName)
+    {
+        // Regression test: SheetCellModel.Validation is a non-nullable string defaulting to "",
+        // never null. A prior version of GenerateHeadersFormatAndProtection checked
+        // `header.Validation == null` (always false) instead of string.IsNullOrEmpty, so every
+        // formatted header fell through to "".GetValueFromName<Validation>() - which returns the
+        // enum's first member (BOOLEAN) as a fallback - putting a checkbox on nearly every column,
+        // even though none of Stock's columns are actually boolean.
+        var result = GenerateSheetHelpers.Generate([sheetName]);
+
+        var repeatCellRequests = result.Requests
+            .Where(r => r.RepeatCell?.Cell?.DataValidation?.Condition?.Type == "BOOLEAN")
+            .ToList();
+
+        Assert.Empty(repeatCellRequests);
+    }
 }

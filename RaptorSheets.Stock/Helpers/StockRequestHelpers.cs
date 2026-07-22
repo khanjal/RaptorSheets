@@ -9,8 +9,9 @@ namespace RaptorSheets.Stock.Helpers;
 /// <summary>
 /// Stock-specific wiring on top of Core's generic entity-change request builders
 /// (<see cref="GoogleRequestHelpers.ChangeSheetData{T}"/>/<see cref="GoogleRequestHelpers.CreateUpdateCellRequests{T}"/>) -
-/// same pattern as Gig's GigRequestHelpers. Only the Stocks sheet's Shares column is wired: Accounts
-/// and Tickers are fully formula/GOOGLEFINANCE-driven rollups with nothing for a user to change today.
+/// same pattern as Gig's GigRequestHelpers. Only the Stocks sheet is wired for writes (Ticker/
+/// Account/Shares - see <see cref="StockMapper.MapToRowData"/>): Accounts and Tickers are fully
+/// formula/GOOGLEFINANCE-driven rollups with nothing for a user to insert directly.
 /// </summary>
 public static class StockRequestHelpers
 {

@@ -2,24 +2,23 @@
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Enums;
 using RaptorSheets.Stock.Mappers;
-using RaptorSheets.Stock.Tests.Data;
 using RaptorSheets.Stock.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
 using Xunit;
 
 namespace RaptorSheets.Stock.Tests.Integration.Mappers.MapFromRangeData;
 
-[Collection("Google Data collection")]
+[Collection("StockSheetsIntegration")]
 public class AccountMapFromRangeDataTests
 {
-    readonly GoogleDataFixture fixture;
+    readonly StockSheetsIntegrationFixture fixture;
     private static IList<IList<object>>? _values;
     private static List<AccountEntity>? _entities;
 
-    public AccountMapFromRangeDataTests(GoogleDataFixture fixture)
+    public AccountMapFromRangeDataTests(StockSheetsIntegrationFixture fixture)
     {
         this.fixture = fixture;
-        _values = this.fixture.valueRanges?.First(x => x.DataFilters[0].A1Range == SheetName.ACCOUNTS.GetDescription()).ValueRange.Values;
+        _values = this.fixture.ValueRanges?.First(x => x.DataFilters[0].A1Range == SheetName.ACCOUNTS.GetDescription()).ValueRange.Values;
         _entities = AccountMapper.MapFromRangeData(_values!);
     }
 

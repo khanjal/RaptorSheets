@@ -5,7 +5,6 @@ using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Registries;
-using RaptorSheets.Stock.Constants;
 using RaptorSheets.Stock.Enums;
 using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Stock.Entities;
@@ -39,24 +38,28 @@ public static class StockSheetHelpers
     {
         var registry = new SheetRegistry<SheetEntity>();
 
-        registry.Register(SheetName.ACCOUNTS.GetDescription(), () => SheetsConfig.AccountSheet, (se, values) =>
+        // Register with each mapper's GetSheet() (not the bare SheetsConfig.XSheet) so the registry's
+        // factory returns the real, formula-laden SheetModel - GetSheetLayout/RefreshHeaderFormulasAsync
+        // and SheetRegistry.GetDependents' cross-sheet formula scan both rely on that, matching the
+        // convention Gig/Job already follow (e.g. TripMapper.GetSheet passed directly to RegisterGeneric).
+        registry.Register(SheetName.ACCOUNTS.GetDescription(), AccountMapper.GetSheet, (se, values) =>
         {
             var headers = values[0];
-            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.AccountSheet));
+            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, AccountMapper.GetSheet()));
             se.Sheets.Accounts = AccountMapper.MapFromRangeData(values);
         });
 
-        registry.Register(SheetName.STOCKS.GetDescription(), () => SheetsConfig.StockSheet, (se, values) =>
+        registry.Register(SheetName.STOCKS.GetDescription(), StockMapper.GetSheet, (se, values) =>
         {
             var headers = values[0];
-            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.StockSheet));
+            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, StockMapper.GetSheet()));
             se.Sheets.Stocks = StockMapper.MapFromRangeData(values);
         });
 
-        registry.Register(SheetName.TICKERS.GetDescription(), () => SheetsConfig.TickerSheet, (se, values) =>
+        registry.Register(SheetName.TICKERS.GetDescription(), TickerMapper.GetSheet, (se, values) =>
         {
             var headers = values[0];
-            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.TickerSheet));
+            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TickerMapper.GetSheet()));
             se.Sheets.Tickers = TickerMapper.MapFromRangeData(values);
         });
 

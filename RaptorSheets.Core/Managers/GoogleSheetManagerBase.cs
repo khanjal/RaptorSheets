@@ -146,6 +146,14 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
         await TryApplyInsertionOrderingAsync(batchUpdateSpreadsheetRequest, sheets, existingIndexMap, spreadsheetInfo);
 
+        // Fold header-formula refresh requests for any already-existing sheet that cross-references
+        // one being created here into this SAME batch, so creation and dependent-formula refresh
+        // happen atomically in one API call instead of two. Dependents are always pre-existing
+        // sheets (never one created in this call), so the pre-batch spreadsheetInfo is exactly what's
+        // needed to resolve their sheet IDs.
+        var dependentRefreshRequests = await BuildDependentRefreshRequestsAsync(sheets, spreadsheetInfo);
+        batchUpdateSpreadsheetRequest.Requests.AddRange(dependentRefreshRequests);
+
         var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
 
         // No sheets created if null.
@@ -558,6 +566,20 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
                 return (errorReturn, spreadsheetInfo);
             }
 
+            // Sheets already present that cross-reference a just-(re)created sheet were written
+            // against whatever that sheet's headers looked like before - refresh them now so they
+            // don't need a second, manual "reapply" pass to pick up the current layout. Reuses the
+            // spreadsheetInfo already fetched above instead of another GetSheetInfo() call.
+            //
+            // Unlike CreateSheets/AutoHealMissingColumnsAsync, this is intentionally a separate call
+            // rather than folded into whatever batch CreateMissingSheetsAsync issued: that method is
+            // an abstract per-domain hook, and while every current domain happens to implement it by
+            // delegating straight to CreateSheets (which already merges this in - see there), nothing
+            // guarantees a future override does the same. Keeping this as its own call is the robust
+            // fallback; for domains that *do* delegate to CreateSheets, this ends up idempotently
+            // re-sending the same header formulas as an extra, low-cost API call.
+            await RefreshDependentSheetsAsync(missingIndexMap.Keys, spreadsheetInfo);
+
             var createdNames = string.Join(", ", missingIndexMap.Keys);
             var info = MessageHelpers.CreateInfoMessage(
                 $"Created missing sheets: {createdNames}. Sheets may take a few seconds to become readable — please retry the request shortly.",
@@ -730,8 +752,151 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
             }
         }
 
-        var insertResult = await ColumnInsertionHelper.InsertMissingColumnsAsync<TEntity>(_googleSheetService, missingColumns);
+        // Fold header-formula refresh requests for any sheet that cross-references one of the
+        // sheets just healed into the SAME column-insertion batch, so both land in one atomic API
+        // call. Reuses the spreadsheetInfo already passed in rather than fetching it again.
+        var dependentRefreshRequests = await BuildDependentRefreshRequestsAsync(missingColumns.Keys, spreadsheetInfo);
+        var insertResult = await ColumnInsertionHelper.InsertMissingColumnsAsync<TEntity>(_googleSheetService, missingColumns, dependentRefreshRequests);
         messages.AddRange(insertResult.Messages);
+    }
+
+    /// <summary>
+    /// Re-writes the header row (names and formulas) for each given sheet using its *current*
+    /// in-memory SheetModel (via the registry's factory) rather than whatever is already live on
+    /// the sheet. This is the automated equivalent of manually "reapplying" a sheet to fix a
+    /// cross-sheet reference error: every domain's cross-sheet formulas are resolved once, at
+    /// write time, into a literal column-letter range (see <see cref="Extensions.ObjectExtensions.GetRange"/>),
+    /// so if a sheet's headers changed since a dependent's formula was written, the dependent's
+    /// live formula text goes stale until it's rewritten. Silently skips any name with no
+    /// registered layout or no live sheet ID (not created yet) - safe no-op. All sheets are
+    /// rewritten in a single batch request.
+    /// </summary>
+    /// <param name="spreadsheetInfo">
+    /// Reuse an already-fetched metadata-only Spreadsheet (e.g. from GetSheets/CreateSheets'
+    /// self-heal) to resolve sheet IDs instead of issuing another GetSheetInfo() call. Omit to
+    /// have this method fetch it itself (via <see cref="GetSheetProperties"/>).
+    /// </param>
+    public async Task RefreshHeaderFormulasAsync(IEnumerable<string> sheetNames, Spreadsheet? spreadsheetInfo = null)
+    {
+        var requests = await BuildHeaderFormulaRequestsAsync(sheetNames, spreadsheetInfo);
+
+        if (requests.Count == 0)
+        {
+            return;
+        }
+
+        await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = requests });
+    }
+
+    /// <summary>
+    /// Builds the same <see cref="Request"/>s <see cref="RefreshHeaderFormulasAsync"/> would send on
+    /// its own, without sending them - so a caller that's already assembling a
+    /// <see cref="BatchUpdateSpreadsheetRequest"/> (<see cref="CreateSheets"/>,
+    /// <see cref="AutoHealMissingColumnsAsync"/>) can fold the refresh into that same atomic batch
+    /// instead of issuing a second, separate API call.
+    /// </summary>
+    private async Task<List<Request>> BuildHeaderFormulaRequestsAsync(IEnumerable<string> sheetNames, Spreadsheet? spreadsheetInfo)
+    {
+        var names = sheetNames.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+        if (names.Count == 0)
+        {
+            return [];
+        }
+
+        var sheetIdsByName = spreadsheetInfo != null
+            ? ResolveSheetIdsFromSpreadsheet(names, spreadsheetInfo)
+            : await ResolveSheetIdsViaPropertiesAsync(names);
+
+        var requests = new List<Request>();
+
+        foreach (var name in names)
+        {
+            var sheetModel = _registry.GetSheetLayout(name);
+
+            if (sheetModel == null || !sheetIdsByName.TryGetValue(name, out var sheetId))
+            {
+                continue;
+            }
+
+            var headerRow = SheetHelpers.HeadersToRowData(sheetModel);
+            requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, 0, headerRow));
+        }
+
+        return requests;
+    }
+
+    private static Dictionary<string, int> ResolveSheetIdsFromSpreadsheet(List<string> names, Spreadsheet spreadsheetInfo)
+    {
+        var sheetIdsByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        if (spreadsheetInfo.Sheets == null)
+        {
+            return sheetIdsByName;
+        }
+
+        foreach (var name in names)
+        {
+            var sheet = spreadsheetInfo.Sheets.FirstOrDefault(s => string.Equals(s.Properties.Title, name, StringComparison.OrdinalIgnoreCase));
+
+            if (sheet?.Properties.SheetId != null)
+            {
+                sheetIdsByName[name] = sheet.Properties.SheetId.Value;
+            }
+        }
+
+        return sheetIdsByName;
+    }
+
+    private async Task<Dictionary<string, int>> ResolveSheetIdsViaPropertiesAsync(List<string> names)
+    {
+        var properties = await GetSheetProperties(names);
+        var sheetIdsByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var property in properties)
+        {
+            if (int.TryParse(property.Id, out var sheetId))
+            {
+                sheetIdsByName[property.Name] = sheetId;
+            }
+        }
+
+        return sheetIdsByName;
+    }
+
+    /// <summary>
+    /// Refreshes the header formulas (<see cref="RefreshHeaderFormulasAsync"/>) of every sheet
+    /// that transitively depends on any of <paramref name="changedSheetNames"/> - detected
+    /// automatically by <see cref="Registries.SheetRegistry{TEntity}.GetDependents"/> from each
+    /// sheet's actual cross-sheet formulas, not a manually maintained list. Called automatically
+    /// after self-healing a missing sheet, auto-healing missing columns, and explicit sheet
+    /// creation; also safe to call directly (e.g. after manually fixing a sheet) as the general
+    /// replacement for reapplying every dependent sheet by hand. Zero-cost no-op for sheets with no
+    /// dependents. See <see cref="RefreshHeaderFormulasAsync"/> for the optional
+    /// <paramref name="spreadsheetInfo"/> reuse parameter.
+    /// </summary>
+    public async Task RefreshDependentSheetsAsync(IEnumerable<string> changedSheetNames, Spreadsheet? spreadsheetInfo = null)
+    {
+        var requests = await BuildDependentRefreshRequestsAsync(changedSheetNames, spreadsheetInfo);
+
+        if (requests.Count == 0)
+        {
+            return;
+        }
+
+        await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = requests });
+    }
+
+    /// <summary>
+    /// Non-sending counterpart to <see cref="RefreshDependentSheetsAsync"/> - see
+    /// <see cref="BuildHeaderFormulaRequestsAsync"/> for why this exists (folding the refresh into
+    /// an already-in-flight batch instead of a second API call).
+    /// </summary>
+    private async Task<List<Request>> BuildDependentRefreshRequestsAsync(IEnumerable<string> changedSheetNames, Spreadsheet? spreadsheetInfo)
+    {
+        var dependents = _registry.GetDependents(changedSheetNames);
+
+        return dependents.Count == 0 ? [] : await BuildHeaderFormulaRequestsAsync(dependents, spreadsheetInfo);
     }
 
     #endregion

@@ -42,6 +42,62 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     public IReadOnlyDictionary<string, Func<SheetModel>> Factories => _factories;
 
     /// <summary>
+    /// Returns every registered sheet that transitively depends on any of
+    /// <paramref name="changedSheetNames"/>, so a caller (see
+    /// <see cref="Managers.GoogleSheetManagerBase{TEntity}.RefreshDependentSheetsAsync"/>) knows
+    /// which dependents' header formulas need rewriting after one of their referenced sheets is
+    /// created, healed, or otherwise changes.
+    ///
+    /// The graph isn't declared anywhere - it's derived by building each registered sheet (via its
+    /// factory) and checking whether any header's <see cref="SheetCellModel.Formula"/> contains the
+    /// current sheet's cross-sheet range pattern (<c>'{sheetName}'!</c>, always single-quoted - see
+    /// <see cref="Extensions.ObjectExtensions.GetRange"/>). This makes the graph self-updating and
+    /// impossible to forget to declare: a mapper that adds a new <c>otherSheet.GetRange(...)</c>
+    /// call is automatically picked up on the next call, with no separate registration step. BFS
+    /// order; a changed sheet is never included in its own result even if a cycle exists.
+    /// </summary>
+    public List<string> GetDependents(IEnumerable<string> changedSheetNames)
+    {
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var result = new List<string>();
+        var queue = new Queue<string>();
+
+        foreach (var name in changedSheetNames.Where(visited.Add))
+        {
+            queue.Enqueue(name);
+        }
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            var pattern = $"'{current}'!";
+
+            foreach (var (sheetName, factory) in _factories)
+            {
+                if (visited.Contains(sheetName))
+                {
+                    continue;
+                }
+
+                var sheetModel = factory();
+                var referencesCurrent = sheetModel.Headers.Any(h =>
+                    !string.IsNullOrEmpty(h.Formula) && h.Formula.Contains(pattern, StringComparison.OrdinalIgnoreCase));
+
+                if (!referencesCurrent)
+                {
+                    continue;
+                }
+
+                visited.Add(sheetName);
+                result.Add(sheetName);
+                queue.Enqueue(sheetName);
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Builds an entity from a batchGet response, dispatching each returned range to its
     /// registered processor by sheet name (taken from the range's DataFilter). Returns null if
     /// the response has no ranges to process (mirrors the historical per-domain behavior).
