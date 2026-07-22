@@ -24,4 +24,8 @@
     <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="RaptorSheets.Stock.Tests" />
+  </ItemGroup>
+
 </Project>

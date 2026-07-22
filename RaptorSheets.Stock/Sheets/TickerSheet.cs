@@ -7,9 +7,9 @@ using RaptorSheets.Stock.Constants;
 using RaptorSheets.Stock.Entities;
 using Header = RaptorSheets.Stock.Enums.Header;
 
-namespace RaptorSheets.Stock.Mappers;
+namespace RaptorSheets.Stock.Sheets;
 
-public static class TickerMapper
+public static class TickerSheet
 {
     public static List<TickerEntity> MapFromRangeData(IList<IList<object>> values)
     {
@@ -56,12 +56,36 @@ public static class TickerMapper
         return entities;
     }
 
+    /// <summary>
+    /// Bare sheet definition (name/colors/freeze/headers, no formulas) - internal so
+    /// AccountSheet/StockSheet can resolve this sheet's column positions for their own cross-sheet
+    /// formulas without recursing into this sheet's GetSheet(). Stocks and Tickers read each
+    /// other's columns, so both sides must stay on the bare accessor - see StockSheet.BaseSheet.
+    /// External callers should use GetSheet() instead.
+    /// </summary>
+    internal static SheetModel BaseSheet => new()
+    {
+        Name = Enums.SheetName.TICKERS.GetDescription(),
+        CellColor = SheetColor.LIGHT_YELLOW,
+        TabColor = SheetColor.ORANGE,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = true,
+        Headers = [
+            new SheetCellModel { Name = Header.TICKER.GetDescription() },
+            new SheetCellModel { Name = Header.NAME.GetDescription() },
+            new SheetCellModel { Name = Header.ACCOUNTS.GetDescription() },
+            .. SheetsConfig.CommonPriceSheetHeaders,
+            .. SheetsConfig.CommonHistorySheetHeaders
+        ]
+    };
+
     public static SheetModel GetSheet()
     {
-        var sheet = SheetsConfig.TickerSheet;
+        var sheet = BaseSheet;
         sheet.Headers.UpdateColumns();
 
-        var stockSheet = SheetsConfig.StockSheet;
+        var stockSheet = StockSheet.BaseSheet;
         stockSheet.Headers.UpdateColumns();
 
         var keyRange = GoogleConfig.KeyRange;
@@ -149,7 +173,7 @@ public static class TickerMapper
                     header.Formula = ColumnFormulas.SortUnique(headerEnum.GetDescription(),
                                                                     stockSheet.GetRange(headerEnum.GetDescription(), 2));
                     break;
-                
+
                 case Header.WEEK_HIGH_52:
                     header.Format = Format.ACCOUNTING;
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),

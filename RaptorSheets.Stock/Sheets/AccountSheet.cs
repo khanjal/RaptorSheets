@@ -7,9 +7,9 @@ using RaptorSheets.Stock.Constants;
 using RaptorSheets.Stock.Entities;
 using Header = RaptorSheets.Stock.Enums.Header;
 
-namespace RaptorSheets.Stock.Mappers;
+namespace RaptorSheets.Stock.Sheets;
 
-public static class AccountMapper
+public static class AccountSheet
 {
     public static List<AccountEntity> MapFromRangeData(IList<IList<object>> values)
     {
@@ -50,12 +50,34 @@ public static class AccountMapper
         return entities;
     }
 
+    /// <summary>
+    /// Bare sheet definition (name/colors/freeze/headers, no formulas) - internal so
+    /// StockSheet/TickerSheet can resolve this sheet's column positions for their own cross-sheet
+    /// formulas without recursing into this sheet's GetSheet(). External callers should use
+    /// GetSheet() instead.
+    /// </summary>
+    internal static SheetModel BaseSheet => new()
+    {
+        Name = Enums.SheetName.ACCOUNTS.GetDescription(),
+        CellColor = SheetColor.LIGHT_GREEN,
+        TabColor = SheetColor.GREEN,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = true,
+        Headers = [
+            new SheetCellModel { Name = Header.ACCOUNT.GetDescription() },
+            new SheetCellModel { Name = Header.STOCKS.GetDescription() },
+            .. SheetsConfig.CommonCostSheetHeaders,
+            .. SheetsConfig.CommonReturnSheetHeaders
+        ]
+    };
+
     public static SheetModel GetSheet()
     {
-        var sheet = SheetsConfig.AccountSheet;
+        var sheet = BaseSheet;
         sheet.Headers.UpdateColumns();
 
-        var stockSheet = SheetsConfig.StockSheet;
+        var stockSheet = StockSheet.BaseSheet;
         stockSheet.Headers.UpdateColumns();
 
         var keyRange = GoogleConfig.KeyRange;

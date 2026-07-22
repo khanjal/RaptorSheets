@@ -207,7 +207,7 @@ public class GoogleSheetManagerTests
     {
         // Ticker/Account/Shares are the genuinely user-insertable columns on the Stocks sheet -
         // everything else (including Name) is a header-row ARRAYFORMULA. This exercises the
-        // accessor -> Core's ChangeSheetData<T>/CreateUpdateCellRequests<T> -> StockMapper.MapToRowData
+        // accessor -> Core's ChangeSheetData<T>/CreateUpdateCellRequests<T> -> StockSheet.MapToRowData
         // path end to end.
         var manager = new GoogleSheetManager("token", "spreadsheet");
         var sheetEntity = new SheetEntity

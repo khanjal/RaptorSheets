@@ -1,19 +1,18 @@
 ﻿using System.Text.RegularExpressions;
 using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Stock.Constants;
-using RaptorSheets.Stock.Mappers;
+using RaptorSheets.Stock.Sheets;
 using Xunit;
 
-namespace RaptorSheets.Stock.Tests.Unit.Mappers;
+namespace RaptorSheets.Stock.Tests.Unit.Sheets;
 
 public class MapperGetSheetTests
 {
     public static IEnumerable<object[]> Sheets =>
     new List<object[]>
     {
-        new object[] { AccountMapper.GetSheet(), SheetsConfig.AccountSheet },
-        new object[] { StockMapper.GetSheet(), SheetsConfig.StockSheet },
-        new object[] { TickerMapper.GetSheet(), SheetsConfig.TickerSheet },
+        new object[] { AccountSheet.GetSheet(), AccountSheet.BaseSheet },
+        new object[] { StockSheet.GetSheet(), StockSheet.BaseSheet },
+        new object[] { TickerSheet.GetSheet(), TickerSheet.BaseSheet },
     };
 
     [Theory]
@@ -39,15 +38,15 @@ public class MapperGetSheetTests
     }
 
     [Fact]
-    public void StockMapper_CrossSheetFormulas_ShouldReferenceARealColumn()
+    public void StockSheet_CrossSheetFormulas_ShouldReferenceARealColumn()
     {
-        // Regression test: StockMapper.GetSheet() builds several formulas via tickerSheet.GetRange(...)
+        // Regression test: StockSheet.GetSheet() builds several formulas via tickerSheet.GetRange(...)
         // (CurrentPrice/PeRatio/52-week High-Low/MaxHigh/MinLow). That only resolves to a real column
-        // if tickerSheet.Headers.UpdateColumns() has already run - StockMapper.GetSheet() used to only
+        // if tickerSheet.Headers.UpdateColumns() has already run - StockSheet.GetSheet() used to only
         // call UpdateColumns() on its own Stocks sheet, so every tickerSheet.GetRange(...) call
         // resolved to a bare "'Tickers'!" (no column), producing invalid formula syntax (#ERROR! in
         // Sheets) on every column that referenced it.
-        var sheet = StockMapper.GetSheet();
+        var sheet = StockSheet.GetSheet();
 
         var crossSheetFormulaHeaders = sheet.Headers.Where(h => h.Formula?.Contains("'Tickers'!") == true);
 

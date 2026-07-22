@@ -1,10 +1,10 @@
 using RaptorSheets.Stock.Entities;
-using RaptorSheets.Stock.Mappers;
+using RaptorSheets.Stock.Sheets;
 using Xunit;
 
-namespace RaptorSheets.Stock.Tests.Unit.Mappers;
+namespace RaptorSheets.Stock.Tests.Unit.Sheets;
 
-public class StockMapperTests
+public class StockSheetTests
 {
     [Fact]
     public void MapToRowData_WritesTickerAccountShares_LeavesFormulaColumnsEmpty()
@@ -12,7 +12,7 @@ public class StockMapperTests
         var entities = new List<StockEntity> { new() { RowId = 2, Shares = 10, Account = "Fidelity", Ticker = "AAPL" } };
         var headers = new List<object> { "Account", "Ticker", "Shares", "Avg Cost" };
 
-        var result = StockMapper.MapToRowData(entities, headers);
+        var result = StockSheet.MapToRowData(entities, headers);
 
         Assert.Single(result);
         var cells = result[0].Values;
@@ -33,7 +33,7 @@ public class StockMapperTests
         };
         var headers = new List<object> { "Shares" };
 
-        var result = StockMapper.MapToRowData(entities, headers);
+        var result = StockSheet.MapToRowData(entities, headers);
 
         Assert.Equal(2, result.Count);
         Assert.Equal(5, result[0].Values[0].UserEnteredValue?.NumberValue);
@@ -44,12 +44,12 @@ public class StockMapperTests
     public void MapToRowData_WithUnrecognizedFormulaColumnHeader_WritesEmptyPlaceholder()
     {
         // "Avg Cost" is a real header, but it's a formula/rollup column (see AVERAGE_COST's case
-        // in StockMapper.GetSheet()) - unlike Ticker/Account/Shares, MapToRowData must never write
+        // in StockSheet.GetSheet()) - unlike Ticker/Account/Shares, MapToRowData must never write
         // to it, even though the entity has other fields populated.
         var entities = new List<StockEntity> { new() { RowId = 2, Shares = 3, Account = "Fidelity", Ticker = "AAPL" } };
         var headers = new List<object> { "Avg Cost" };
 
-        var result = StockMapper.MapToRowData(entities, headers);
+        var result = StockSheet.MapToRowData(entities, headers);
 
         Assert.Single(result[0].Values);
         Assert.Null(result[0].Values[0].UserEnteredValue);

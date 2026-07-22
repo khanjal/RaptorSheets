@@ -8,9 +8,9 @@ using RaptorSheets.Stock.Constants;
 using RaptorSheets.Stock.Entities;
 using Header = RaptorSheets.Stock.Enums.Header;
 
-namespace RaptorSheets.Stock.Mappers;
+namespace RaptorSheets.Stock.Sheets;
 
-public static class StockMapper
+public static class StockSheet
 {
     public static List<StockEntity> MapFromRangeData(IList<IList<object>> values)
     {
@@ -93,10 +93,34 @@ public static class StockMapper
         return rows;
     }
 
+    /// <summary>
+    /// Bare sheet definition (name/colors/freeze/headers, no formulas) - internal so
+    /// AccountSheet/TickerSheet can resolve this sheet's column positions for their own cross-sheet
+    /// formulas without recursing into this sheet's GetSheet(). Stocks and Tickers read each
+    /// other's columns (Stocks pulls Tickers' pricing, Tickers aggregates Stocks' holdings), so
+    /// both sides must stay on the bare accessor - calling each other's full GetSheet() here would
+    /// recurse infinitely. External callers should use GetSheet() instead.
+    /// </summary>
+    internal static SheetModel BaseSheet => new()
+    {
+        Name = Enums.SheetName.STOCKS.GetDescription(),
+        CellColor = SheetColor.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        Headers = [
+            new SheetCellModel { Name = Header.TICKER.GetDescription() },
+            new SheetCellModel { Name = Header.NAME.GetDescription() },
+            new SheetCellModel { Name = Header.ACCOUNT.GetDescription() },
+            .. SheetsConfig.CommonPriceSheetHeaders,
+            .. SheetsConfig.CommonHistorySheetHeaders
+        ]
+    };
+
     public static SheetModel GetSheet()
     {
-        var sheet = SheetsConfig.StockSheet;
-        var tickerSheet = SheetsConfig.TickerSheet;
+        var sheet = BaseSheet;
+        var tickerSheet = TickerSheet.BaseSheet;
 
         // Ensure column indexes are properly assigned - tickerSheet needs this too since several
         // headers below resolve cross-sheet ranges via tickerSheet.GetRange(...), which depends on
@@ -116,7 +140,7 @@ public static class StockMapper
                 case Header.NAME:
                     // Ticker is the Stocks sheet's own key column (column A), so this resolves
                     // directly against each row's own Ticker value - same GOOGLEFINANCE lookup
-                    // TickerMapper uses on the Tickers reference sheet, just applied locally.
+                    // TickerSheet uses on the Tickers reference sheet, just applied locally.
                     header.Formula = ColumnFormulas.GoogleFinanceBasic(headerEnum.GetDescription(),
                                                                     keyRange,
                                                                     Header.TICKER.GetDescription(),
@@ -128,9 +152,9 @@ public static class StockMapper
                     break;
                 case Header.COST_TOTAL:
                     header.Format = Format.ACCOUNTING;
-                    header.Formula = ColumnFormulas.MultiplyRanges(headerEnum.GetDescription(), 
-                                                                    keyRange, 
-                                                                    sheet.GetLocalRange(Header.SHARES.GetDescription()), 
+                    header.Formula = ColumnFormulas.MultiplyRanges(headerEnum.GetDescription(),
+                                                                    keyRange,
+                                                                    sheet.GetLocalRange(Header.SHARES.GetDescription()),
                                                                     sheet.GetLocalRange(Header.AVERAGE_COST.GetDescription()));
                     break;
                 case Header.CURRENT_PRICE:
@@ -176,7 +200,7 @@ public static class StockMapper
                     break;
             }
         }
-        
+
         return sheet;
     }
 
@@ -186,8 +210,8 @@ public static class StockMapper
     private static void ApplyBasicFormatting(SheetCellModel header, string headerName)
     {
         var lowerName = headerName.ToLowerInvariant();
-        
-        if (lowerName.Contains("cost") || lowerName.Contains("price") || lowerName.Contains("total") || 
+
+        if (lowerName.Contains("cost") || lowerName.Contains("price") || lowerName.Contains("total") ||
             lowerName.Contains("return") || lowerName.Contains("high") || lowerName.Contains("low"))
             header.Format = Format.ACCOUNTING;
         else if (lowerName.Contains("ratio"))
