@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Helpers;
@@ -5,26 +6,37 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Entities;
 
-namespace RaptorSheets.Job.Mappers;
+namespace RaptorSheets.Job.Sheets;
 
 /// <summary>
-/// Position mapper for Positions sheet configuration.
-/// For data mapping operations, use GenericSheetMapper<PositionEntity> directly.
+/// Positions sheet definition - layout and formulas for the Positions sheet.
+/// For data mapping operations, use GenericSheetMapper&lt;PositionEntity&gt; directly.
 /// </summary>
-public static class PositionMapper
+public static class PositionSheet
 {
+    internal static SheetModel BaseSheet => new()
+    {
+        Name = SheetsConfig.SheetNames.Positions,
+        CellColor = SheetColor.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = true,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PositionEntity>()
+    };
+
     public static SheetModel GetSheet()
     {
         return GenericSheetMapper<PositionEntity>.GetSheet(
-            SheetsConfig.PositionSheet,
+            BaseSheet,
             ConfigurePositionFormulas
         );
     }
 
     private static void ConfigurePositionFormulas(SheetModel sheet)
     {
-        var applicationSheet = ApplicationMapper.GetSheet();
-        var interviewSheet = InterviewMapper.GetSheet();
+        var applicationSheet = ApplicationSheet.GetSheet();
+        var interviewSheet = InterviewSheet.GetSheet();
 
         var positionRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Position);
         // Start source range at row 2 to exclude header row (consistent with Gig patterns)

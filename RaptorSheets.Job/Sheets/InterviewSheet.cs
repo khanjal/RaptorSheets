@@ -1,18 +1,32 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Entities;
 using RaptorSheets.Job.Helpers;
 
-namespace RaptorSheets.Job.Mappers;
+namespace RaptorSheets.Job.Sheets;
 
 /// <summary>
-/// Interview mapper for configuring the Interviews sheet with formulas, validations, and formatting.
-/// This mapper leverages the GenericSheetMapper for entity-driven configuration.
+/// Interviews sheet definition - layout and formulas for the Interviews sheet.
+/// This sheet leverages the GenericSheetMapper for entity-driven configuration.
 /// </summary>
-public static class InterviewMapper
+public static class InterviewSheet
 {
+    internal static SheetModel BaseSheet => new()
+    {
+        Name = SheetsConfig.SheetNames.Interviews,
+        CellColor = SheetColor.LIGHT_GRAY,
+        TabColor = SheetColor.GREEN,
+        FontColor = SheetColor.WHITE,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = false,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<InterviewEntity>()
+    };
+
     /// <summary>
     /// Retrieves the configured Interviews sheet.
     /// Includes formulas, validations, and formatting specific to the Interviews sheet.
@@ -20,7 +34,7 @@ public static class InterviewMapper
     public static SheetModel GetSheet()
     {
         return GenericSheetMapper<InterviewEntity>.GetSheet(
-            SheetsConfig.InterviewSheet,
+            BaseSheet,
             ConfigureInterviewFormulas
         );
     }

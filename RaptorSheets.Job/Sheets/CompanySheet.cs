@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Helpers;
@@ -5,26 +6,37 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Entities;
 
-namespace RaptorSheets.Job.Mappers;
+namespace RaptorSheets.Job.Sheets;
 
 /// <summary>
-/// Company mapper for Companies sheet configuration.
-/// For data mapping operations, use GenericSheetMapper<CompanyEntity> directly.
+/// Companies sheet definition - layout and formulas for the Companies sheet.
+/// For data mapping operations, use GenericSheetMapper&lt;CompanyEntity&gt; directly.
 /// </summary>
-public static class CompanyMapper
+public static class CompanySheet
 {
+    internal static SheetModel BaseSheet => new()
+    {
+        Name = SheetsConfig.SheetNames.Companies,
+        CellColor = SheetColor.LIGHT_CYAN,
+        TabColor = SheetColor.CYAN,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = true,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<CompanyEntity>()
+    };
+
     public static SheetModel GetSheet()
     {
         return GenericSheetMapper<CompanyEntity>.GetSheet(
-            SheetsConfig.CompanySheet,
+            BaseSheet,
             ConfigureCompanyFormulas
         );
     }
 
     private static void ConfigureCompanyFormulas(SheetModel sheet)
     {
-        var applicationSheet = ApplicationMapper.GetSheet();
-        var interviewSheet = InterviewMapper.GetSheet();
+        var applicationSheet = ApplicationSheet.GetSheet();
+        var interviewSheet = InterviewSheet.GetSheet();
 
         var companyRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Company);
         // Start source ranges at row 2 to exclude header row (matches Gig patterns)

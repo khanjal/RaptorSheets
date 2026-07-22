@@ -1,18 +1,32 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
+using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Entities;
 using RaptorSheets.Job.Helpers;
 
-namespace RaptorSheets.Job.Mappers;
+namespace RaptorSheets.Job.Sheets;
 
 /// <summary>
-/// Application mapper for configuring the Applications sheet with formulas, validations, and formatting.
-/// This mapper leverages the GenericSheetMapper for entity-driven configuration.
+/// Applications sheet definition - layout and formulas for the Applications sheet.
+/// This sheet leverages the GenericSheetMapper for entity-driven configuration.
 /// </summary>
-public static class ApplicationMapper
+public static class ApplicationSheet
 {
+    internal static SheetModel BaseSheet => new()
+    {
+        Name = SheetsConfig.SheetNames.Applications,
+        CellColor = SheetColor.LIGHT_CYAN,
+        TabColor = SheetColor.BLUE,
+        FontColor = SheetColor.WHITE,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        ProtectSheet = false,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ApplicationEntity>()
+    };
+
     /// <summary>
     /// Retrieves the configured Applications sheet.
     /// Includes formulas, validations, and formatting specific to the Applications sheet.
@@ -20,7 +34,7 @@ public static class ApplicationMapper
     public static SheetModel GetSheet()
     {
         return GenericSheetMapper<ApplicationEntity>.GetSheet(
-            SheetsConfig.ApplicationSheet,
+            BaseSheet,
             ConfigureApplicationFormulas
         );
     }
@@ -41,7 +55,7 @@ public static class ApplicationMapper
         var duplicateRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.Duplicate);
 
         // Interviews sheet key lookup (start at row 2 to exclude header)
-        var interviewSheet = InterviewMapper.GetSheet();
+        var interviewSheet = InterviewSheet.GetSheet();
         var interviewKeyLookup = interviewSheet.GetRange(SheetsConfig.HeaderNames.Key, 2);
 
         sheet.Headers.ForEach(header =>
