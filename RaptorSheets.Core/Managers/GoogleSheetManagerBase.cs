@@ -142,139 +142,9 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         var batchUpdateSpreadsheetRequest = GenerateSheetsRequest(sheets);
 
         // Fetch spreadsheet info once and reuse below to avoid duplicate API calls
-        Spreadsheet? spreadsheetInfo = null;
+        var spreadsheetInfo = await TryMoveDefaultSheetToEndAsync(batchUpdateSpreadsheetRequest, sheets, entity);
 
-        try
-        {
-            // Move default sheet (e.g., "Sheet1") to end in the same batch to minimize API calls
-            spreadsheetInfo = await _googleSheetService.GetSheetInfo();
-            var defaultSheet = spreadsheetInfo?.Sheets?.FirstOrDefault(s =>
-                string.Equals(s.Properties.Title, DefaultSheetName, StringComparison.OrdinalIgnoreCase));
-
-            if (defaultSheet != null && defaultSheet.Properties.SheetId.HasValue)
-            {
-                var existingCount = spreadsheetInfo!.Sheets!.Count;
-                var targetIndex = GoogleRequestHelpers.ComputeEndIndex(existingCount, sheets.Count);
-                batchUpdateSpreadsheetRequest.Requests.Add(
-                    GoogleRequestHelpers.GenerateUpdateSheetIndex(defaultSheet.Properties.SheetId.Value, targetIndex)
-                );
-            }
-        }
-        catch
-        {
-            // Warn but proceed with creation
-            entity.Messages.Add(MessageHelpers.CreateWarningMessage(
-                "Could not move default sheet to end; proceeding with creation",
-                MessageType.CREATE_SHEET));
-        }
-
-        // Attempt to compute desired positions for requested sheets and add index update
-        // requests so created sheets are placed in the expected order.
-        try
-        {
-            IList<Request>? insertionRequests = null;
-            int existingRawCount = 0;
-
-            // Reuse `spreadsheetInfo` fetched earlier when possible to avoid an extra API call.
-            Spreadsheet? currentInfo = spreadsheetInfo;
-            if (currentInfo == null)
-            {
-                try
-                {
-                    currentInfo = await _googleSheetService.GetSheetInfo();
-                }
-                catch
-                {
-                    // ignore - ordering may still be possible using provided maps
-                }
-            }
-
-            // If the caller passed a map whose keys overlap the requested sheets, treat it
-            // as a desired-index map (title -> desired index for newly-created sheets).
-            var providedMapIsDesiredIndices = existingIndexMap != null && existingIndexMap.Keys.Any(k => sheets.Contains(k, StringComparer.OrdinalIgnoreCase));
-
-            if (providedMapIsDesiredIndices)
-            {
-                // We'll apply the provided indices directly below without calling the ordering helper
-            }
-            else
-            {
-                // Scope the canonical ordering to sheets that are actually relevant to this batch:
-                // sheets already present (they anchor relative position) plus sheets actually being
-                // requested here. Canonical sheets that are neither present nor requested must be
-                // excluded - otherwise BuildAddSheetRequests computes target indices as if the full
-                // canonical set were being inserted, while GenerateSheetsRequest(sheets) only ever
-                // creates AddSheet requests for the requested subset. The resulting index can then
-                // exceed the sheet count actually present after this batch, which Google Sheets
-                // rejects ("the new sheet index is too high").
-                if (existingIndexMap != null && existingIndexMap.Count > 0)
-                {
-                    existingRawCount = currentInfo?.Sheets?.Count ?? existingIndexMap.Count;
-                    var relevantCanonicalNames = _canonicalSheetNames
-                        .Where(name => existingIndexMap.ContainsKey(name) || sheets.Contains(name, StringComparer.OrdinalIgnoreCase))
-                        .ToList();
-                    insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(existingIndexMap, existingRawCount, relevantCanonicalNames);
-                }
-                else if (currentInfo != null)
-                {
-                    var existingTitles = (currentInfo.Sheets ?? new List<Sheet>())
-                        .Select(s => s?.Properties?.Title)
-                        .Where(t => !string.IsNullOrEmpty(t))
-                        .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
-
-                    var relevantCanonicalNames = _canonicalSheetNames
-                        .Where(name => existingTitles.Contains(name) || sheets.Contains(name, StringComparer.OrdinalIgnoreCase))
-                        .ToList();
-
-                    insertionRequests = SheetOrderingHelper.BuildAddSheetRequests(currentInfo, relevantCanonicalNames);
-                }
-            }
-
-            // Determine the mapping from title -> desired index either from the ordering helper
-            // or directly from the provided desired-index map.
-            var targetIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-            if (providedMapIsDesiredIndices && existingIndexMap != null)
-            {
-                foreach (var kv in existingIndexMap.Where(kv => sheets.Contains(kv.Key, StringComparer.OrdinalIgnoreCase)))
-                    targetIndexMap[kv.Key] = kv.Value;
-            }
-            else if (insertionRequests != null)
-            {
-                foreach (var r in insertionRequests)
-                {
-                    var title = r?.AddSheet?.Properties?.Title;
-                    var idx = r?.AddSheet?.Properties?.Index;
-                    if (!string.IsNullOrEmpty(title) && idx.HasValue)
-                        targetIndexMap[title] = idx.Value;
-                }
-            }
-
-            if (targetIndexMap.Count > 0)
-            {
-                // Find AddSheet requests we will actually send (generated by GenerateSheetsRequest)
-                var createdAdds = batchUpdateSpreadsheetRequest.Requests
-                    .Where(r => r.AddSheet != null && r.AddSheet.Properties != null && !string.IsNullOrEmpty(r.AddSheet.Properties.Title))
-                    .ToList();
-
-                // Assign desired Index directly on the AddSheet properties so sheets are created at the target index
-                foreach (var properties in createdAdds.Select(add => add.AddSheet.Properties))
-                {
-                    var title = properties.Title;
-                    if (string.IsNullOrEmpty(title)) continue;
-
-                    if (targetIndexMap.TryGetValue(title, out var desiredIndex) && desiredIndex >= 0)
-                    {
-                        properties.Index = desiredIndex;
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Non-fatal - proceed without ordering if we couldn't compute it
-            _logger.LogWarning(ex, "Unable to compute insertion indices");
-        }
+        await TryApplyInsertionOrderingAsync(batchUpdateSpreadsheetRequest, sheets, existingIndexMap, spreadsheetInfo);
 
         var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
 
@@ -297,6 +167,179 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         }
 
         return entity;
+    }
+
+    /// <summary>
+    /// Moves Google's default sheet (e.g., "Sheet1"), if present, to the end of the spreadsheet in
+    /// the same batch to minimize API calls. Returns the fetched Spreadsheet either way (even on
+    /// failure after the fetch succeeded) so the caller can reuse it instead of fetching twice.
+    /// </summary>
+    private async Task<Spreadsheet?> TryMoveDefaultSheetToEndAsync(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, List<string> sheets, TEntity entity)
+    {
+        Spreadsheet? spreadsheetInfo = null;
+
+        try
+        {
+            spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+            var defaultSheet = spreadsheetInfo?.Sheets?.FirstOrDefault(s =>
+                string.Equals(s.Properties.Title, DefaultSheetName, StringComparison.OrdinalIgnoreCase));
+
+            if (defaultSheet != null && defaultSheet.Properties.SheetId.HasValue)
+            {
+                var existingCount = spreadsheetInfo!.Sheets!.Count;
+                var targetIndex = GoogleRequestHelpers.ComputeEndIndex(existingCount, sheets.Count);
+                batchUpdateSpreadsheetRequest.Requests.Add(
+                    GoogleRequestHelpers.GenerateUpdateSheetIndex(defaultSheet.Properties.SheetId.Value, targetIndex)
+                );
+            }
+        }
+        catch
+        {
+            // Warn but proceed with creation
+            entity.Messages.Add(MessageHelpers.CreateWarningMessage(
+                "Could not move default sheet to end; proceeding with creation",
+                MessageType.CREATE_SHEET));
+        }
+
+        return spreadsheetInfo;
+    }
+
+    /// <summary>
+    /// Attempts to compute desired positions for requested sheets and adds index update requests
+    /// to <paramref name="batchUpdateSpreadsheetRequest"/> so created sheets are placed in the
+    /// expected order. Non-fatal: any failure is logged and creation proceeds without ordering.
+    /// </summary>
+    private async Task TryApplyInsertionOrderingAsync(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, List<string> sheets, Dictionary<string, int>? existingIndexMap, Spreadsheet? spreadsheetInfo)
+    {
+        try
+        {
+            // Reuse `spreadsheetInfo` fetched earlier when possible to avoid an extra API call.
+            var currentInfo = spreadsheetInfo ?? await TryGetSheetInfoSilentlyAsync();
+
+            var targetIndexMap = ComputeTargetIndexMap(sheets, existingIndexMap, currentInfo);
+
+            ApplyTargetIndices(batchUpdateSpreadsheetRequest, targetIndexMap);
+        }
+        catch (Exception ex)
+        {
+            // Non-fatal - proceed without ordering if we couldn't compute it
+            _logger.LogWarning(ex, "Unable to compute insertion indices");
+        }
+    }
+
+    private async Task<Spreadsheet?> TryGetSheetInfoSilentlyAsync()
+    {
+        try
+        {
+            return await _googleSheetService.GetSheetInfo();
+        }
+        catch
+        {
+            // ignore - ordering may still be possible using provided maps
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Determines the mapping from title -&gt; desired index either directly from a caller-provided
+    /// desired-index map, or from <see cref="SheetOrderingHelper.BuildAddSheetRequests"/>.
+    /// </summary>
+    private Dictionary<string, int> ComputeTargetIndexMap(List<string> sheets, Dictionary<string, int>? existingIndexMap, Spreadsheet? currentInfo)
+    {
+        var targetIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        // If the caller passed a map whose keys overlap the requested sheets, treat it
+        // as a desired-index map (title -> desired index for newly-created sheets).
+        var providedMapIsDesiredIndices = existingIndexMap != null && existingIndexMap.Keys.Any(k => sheets.Contains(k, StringComparer.OrdinalIgnoreCase));
+
+        if (providedMapIsDesiredIndices)
+        {
+            foreach (var kv in existingIndexMap!.Where(kv => sheets.Contains(kv.Key, StringComparer.OrdinalIgnoreCase)))
+            {
+                targetIndexMap[kv.Key] = kv.Value;
+            }
+
+            return targetIndexMap;
+        }
+
+        var insertionRequests = ComputeInsertionRequests(sheets, existingIndexMap, currentInfo);
+
+        if (insertionRequests == null)
+        {
+            return targetIndexMap;
+        }
+
+        foreach (var r in insertionRequests)
+        {
+            var title = r?.AddSheet?.Properties?.Title;
+            var idx = r?.AddSheet?.Properties?.Index;
+            if (!string.IsNullOrEmpty(title) && idx.HasValue)
+            {
+                targetIndexMap[title] = idx.Value;
+            }
+        }
+
+        return targetIndexMap;
+    }
+
+    private IList<Request>? ComputeInsertionRequests(List<string> sheets, Dictionary<string, int>? existingIndexMap, Spreadsheet? currentInfo)
+    {
+        // Scope the canonical ordering to sheets that are actually relevant to this batch:
+        // sheets already present (they anchor relative position) plus sheets actually being
+        // requested here. Canonical sheets that are neither present nor requested must be
+        // excluded - otherwise BuildAddSheetRequests computes target indices as if the full
+        // canonical set were being inserted, while GenerateSheetsRequest(sheets) only ever
+        // creates AddSheet requests for the requested subset. The resulting index can then
+        // exceed the sheet count actually present after this batch, which Google Sheets
+        // rejects ("the new sheet index is too high").
+        if (existingIndexMap != null && existingIndexMap.Count > 0)
+        {
+            var existingRawCount = currentInfo?.Sheets?.Count ?? existingIndexMap.Count;
+            var relevantCanonicalNames = _canonicalSheetNames
+                .Where(name => existingIndexMap.ContainsKey(name) || sheets.Contains(name, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+            return SheetOrderingHelper.BuildAddSheetRequests(existingIndexMap, existingRawCount, relevantCanonicalNames);
+        }
+
+        if (currentInfo != null)
+        {
+            var existingTitles = (currentInfo.Sheets ?? new List<Sheet>())
+                .Select(s => s?.Properties?.Title)
+                .Where(t => !string.IsNullOrEmpty(t))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
+
+            var relevantCanonicalNames = _canonicalSheetNames
+                .Where(name => existingTitles.Contains(name) || sheets.Contains(name, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+
+            return SheetOrderingHelper.BuildAddSheetRequests(currentInfo, relevantCanonicalNames);
+        }
+
+        return null;
+    }
+
+    private static void ApplyTargetIndices(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, Dictionary<string, int> targetIndexMap)
+    {
+        if (targetIndexMap.Count == 0)
+        {
+            return;
+        }
+
+        // Find AddSheet requests we will actually send (generated by GenerateSheetsRequest) and
+        // assign desired Index directly on their properties so sheets are created at the target index.
+        var createdAdds = batchUpdateSpreadsheetRequest.Requests
+            .Where(r => r.AddSheet != null && r.AddSheet.Properties != null && !string.IsNullOrEmpty(r.AddSheet.Properties.Title));
+
+        foreach (var properties in createdAdds.Select(add => add.AddSheet.Properties))
+        {
+            var title = properties.Title;
+            if (string.IsNullOrEmpty(title)) continue;
+
+            if (targetIndexMap.TryGetValue(title, out var desiredIndex) && desiredIndex >= 0)
+            {
+                properties.Index = desiredIndex;
+            }
+        }
     }
 
     #endregion
