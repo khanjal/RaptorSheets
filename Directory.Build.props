@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    Runs the same C# analyzer engine that powers SonarCloud's CI checks (csharpsquid) locally,
+    at build time and in the IDE, so findings like naming conventions and Cognitive Complexity
+    show up immediately instead of only after a PR is pushed. See SonarCloud project
+    khanjal_RaptorSheets for the cloud-side rule configuration this mirrors.
+  -->
+  <ItemGroup>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.29.0.143774">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>
