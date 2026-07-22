@@ -110,7 +110,7 @@ public static class GenerateSheetHelpers
             }
 
             // If there's no format or validation then go to next header
-            if (header.Format == null && header.Validation == null)
+            if (header.Format == null && string.IsNullOrEmpty(header.Validation))
             {
                 return;
             }
@@ -119,7 +119,7 @@ public static class GenerateSheetHelpers
             {
                 GridRange = range,
                 CellFormat = (header.Format != null ? SheetHelpers.GetCellFormat((Format)header.Format) : null),
-                DataValidation = (header.Validation != null ? StockSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<Validation>()) : null)
+                DataValidation = (!string.IsNullOrEmpty(header.Validation) ? StockSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<Validation>()) : null)
             };
 
             repeatCellRequests.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
