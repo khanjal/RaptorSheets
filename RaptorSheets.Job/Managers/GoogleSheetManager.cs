@@ -1,3 +1,4 @@
+using System.Globalization;
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
 using RaptorSheets.Core.Entities;
@@ -360,7 +361,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
                 ? random.Next(2, 6)
                 : (random.NextDouble() < 0.5 ? 1 : (random.NextDouble() < 0.2 ? 2 : 1));
 
-            var baseDate = DateTime.Parse(app.Date);
+            var baseDate = DateTime.Parse(app.Date, CultureInfo.InvariantCulture);
 
             for (var round = 0; round < interviewCount; round++)
             {

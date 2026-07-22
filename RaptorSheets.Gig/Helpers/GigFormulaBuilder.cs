@@ -12,6 +12,13 @@ namespace RaptorSheets.Gig.Helpers;
 [ExcludeFromCodeCoverage]
 public static class GigFormulaBuilder
 {
+    // Placeholder constants (matches the pattern in Core's GoogleFormulaBuilder)
+    private const string PlaceholderKeyRange = "{keyRange}";
+    private const string PlaceholderHeader = "{header}";
+    private const string PlaceholderFormula = "{formula}";
+    private const string PlaceholderDateColumn = "{dateColumn}";
+    private const string PlaceholderTotalRange = "{totalRange}";
+
     #region Gig Financial Formula Builders
 
     /// <summary>
@@ -25,9 +32,9 @@ public static class GigFormulaBuilder
             .Replace("{bonusRange}", bonusRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", totalFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, totalFormula);
     }
 
     /// <summary>
@@ -36,14 +43,14 @@ public static class GigFormulaBuilder
     public static string BuildArrayFormulaAmountPerTrip(string keyRange, string header, string totalRange, string tripsRange)
     {
         var amountPerTripFormula = GigFormulas.AmountPerTripFormula
-            .Replace("{totalRange}", totalRange)
+            .Replace(PlaceholderTotalRange, totalRange)
             .Replace("{tripsRange}", tripsRange);
 
         return GoogleFormulas.ArrayFormulaBaseWithBlankCheck
-            .Replace("{keyRange}", keyRange)
+            .Replace(PlaceholderKeyRange, keyRange)
             .Replace("{blankCheckRange}", tripsRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", amountPerTripFormula);
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, amountPerTripFormula);
     }
 
     /// <summary>
@@ -53,14 +60,14 @@ public static class GigFormulaBuilder
     public static string BuildArrayFormulaAmountPerDistance(string keyRange, string header, string totalRange, string distanceRange)
     {
         var amountPerDistanceFormula = GigFormulas.AmountPerDistanceFormula
-            .Replace("{totalRange}", totalRange)
+            .Replace(PlaceholderTotalRange, totalRange)
             .Replace("{distanceRange}", distanceRange);
 
         return GoogleFormulas.ArrayFormulaBaseWithBlankCheck
-            .Replace("{keyRange}", keyRange)
+            .Replace(PlaceholderKeyRange, keyRange)
             .Replace("{blankCheckRange}", distanceRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", amountPerDistanceFormula);
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, amountPerDistanceFormula);
     }
 
     /// <summary>
@@ -70,14 +77,14 @@ public static class GigFormulaBuilder
     public static string BuildArrayFormulaAmountPerTime(string keyRange, string header, string totalRange, string timeRange)
     {
         var amountPerTimeFormula = GigFormulas.AmountPerTimeFormula
-            .Replace("{totalRange}", totalRange)
+            .Replace(PlaceholderTotalRange, totalRange)
             .Replace("{timeRange}", timeRange);
 
         return GoogleFormulas.ArrayFormulaBaseWithBlankCheck
-            .Replace("{keyRange}", keyRange)
+            .Replace(PlaceholderKeyRange, keyRange)
             .Replace("{blankCheckRange}", timeRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", amountPerTimeFormula);
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, amountPerTimeFormula);
     }
 
     /// <summary>
@@ -86,13 +93,13 @@ public static class GigFormulaBuilder
     public static string BuildArrayFormulaAmountPerDay(string keyRange, string header, string totalRange, string daysRange)
     {
         var amountPerDayFormula = GigFormulas.AmountPerDayFormula
-            .Replace("{totalRange}", totalRange)
+            .Replace(PlaceholderTotalRange, totalRange)
             .Replace("{daysRange}", daysRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", amountPerDayFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, amountPerDayFormula);
     }
 
     #endregion
@@ -107,14 +114,14 @@ public static class GigFormulaBuilder
         var currentAmountFormula = GigFormulas.CurrentAmountLookup
             .Replace("{dayRange}", dayRange)
             .Replace("{dailySheet}", dailySheet)
-            .Replace("{dateColumn}", dateColumn)
+            .Replace(PlaceholderDateColumn, dateColumn)
             .Replace("{totalColumn}", totalColumn)
             .Replace("{totalIndex}", totalIndex);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", currentAmountFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, currentAmountFormula);
     }
 
     /// <summary>
@@ -125,14 +132,14 @@ public static class GigFormulaBuilder
         var previousAmountFormula = GigFormulas.PreviousAmountLookup
             .Replace("{dayRange}", dayRange)
             .Replace("{dailySheet}", dailySheet)
-            .Replace("{dateColumn}", dateColumn)
+            .Replace(PlaceholderDateColumn, dateColumn)
             .Replace("{totalColumn}", totalColumn)
             .Replace("{totalIndex}", totalIndex);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", previousAmountFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, previousAmountFormula);
     }
 
     /// <summary>
@@ -141,14 +148,14 @@ public static class GigFormulaBuilder
     public static string BuildArrayFormulaPreviousDayAverage(string keyRange, string header, string totalRange, string previousRange, string daysRange)
     {
         var averageFormula = GigFormulas.PreviousDayAverage
-            .Replace("{totalRange}", totalRange)
+            .Replace(PlaceholderTotalRange, totalRange)
             .Replace("{previousRange}", previousRange)
             .Replace("{daysRange}", daysRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", averageFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, averageFormula);
     }
 
     /// <summary>
@@ -159,16 +166,16 @@ public static class GigFormulaBuilder
         var functionName = isFirst ? "MIN" : "MAX";
         var multipleVisitFormula = GigFormulas.MultipleFieldVisitLookup
             .Replace("MIN", functionName)
-            .Replace("{keyRange}", keyRange)
+            .Replace(PlaceholderKeyRange, keyRange)
             .Replace("{sourceSheet}", sourceSheet)
             .Replace("{keyColumn1}", keyColumn1)
             .Replace("{keyColumn2}", keyColumn2)
-            .Replace("{dateColumn}", dateColumn);
+            .Replace(PlaceholderDateColumn, dateColumn);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", multipleVisitFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, multipleVisitFormula);
     }
 
     /// <summary>
@@ -183,7 +190,7 @@ public static class GigFormulaBuilder
         var sortOrder = isFirst ? "True" : "False";
 
         var dualFieldFormula = GigFormulas.DualFieldVisitLookup
-            .Replace("{keyRange}", keyRange)
+            .Replace(PlaceholderKeyRange, keyRange)
             .Replace("{sourceSheet}", sourceSheet)
             .Replace("{keyColumn1Letter}", keyColumn1Letter)
             .Replace("{keyColumn2Letter}", keyColumn2Letter)
@@ -191,9 +198,9 @@ public static class GigFormulaBuilder
             .Replace("{sortOrder}", sortOrder);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", dualFieldFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, dualFieldFormula);
     }
 
     #endregion
@@ -206,8 +213,8 @@ public static class GigFormulaBuilder
     public static string BuildArrayFormulaShiftKey(string keyRange, string header, string dateRange, string serviceRange, string numberRange)
     {
         return "=ARRAYFORMULA(" + GigFormulas.ShiftKeyGeneration
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
             .Replace("{dateRange}", dateRange)
             .Replace("{serviceRange}", serviceRange)
             .Replace("{numberRange}", numberRange) + ")";
@@ -225,9 +232,9 @@ public static class GigFormulaBuilder
             .Replace("{excludeRange}", excludeRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", keyFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, keyFormula);
     }
 
     /// <summary>
@@ -242,9 +249,9 @@ public static class GigFormulaBuilder
             .Replace("{tripDurationRange}", tripDurationRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", timeActiveFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, timeActiveFormula);
     }
 
     /// <summary>
@@ -258,9 +265,9 @@ public static class GigFormulaBuilder
             .Replace("{totalActiveRange}", totalActiveRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", totalTimeFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, totalTimeFormula);
     }
 
     /// <summary>
@@ -275,9 +282,9 @@ public static class GigFormulaBuilder
             .Replace("{tripSumRange}", tripSumRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", shiftTotalFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, shiftTotalFormula);
     }
 
     /// <summary>
@@ -291,9 +298,9 @@ public static class GigFormulaBuilder
             .Replace("{shiftKeyRange}", shiftKeyRange);
 
         return GoogleFormulas.ArrayFormulaBase
-            .Replace("{keyRange}", keyRange)
-            .Replace("{header}", header)
-            .Replace("{formula}", totalTripsFormula);
+            .Replace(PlaceholderKeyRange, keyRange)
+            .Replace(PlaceholderHeader, header)
+            .Replace(PlaceholderFormula, totalTripsFormula);
     }
 
     #endregion
@@ -346,16 +353,16 @@ public static class GigFormulaBuilder
             var functionName = isFirst ? "MIN" : "MAX";
             var multipleVisitFormula = GigFormulas.MultipleFieldVisitLookup
                 .Replace("MIN", functionName)
-                .Replace("{keyRange}", keyRange)
+                .Replace(PlaceholderKeyRange, keyRange)
                 .Replace("{sourceSheet}", sourceSheet)
                 .Replace("{keyColumn1}", keyColumn1)
                 .Replace("{keyColumn2}", keyColumn2)
-                .Replace("{dateColumn}", dateColumn);
+                .Replace(PlaceholderDateColumn, dateColumn);
 
             return GoogleFormulas.ArrayFormulaBase
-                .Replace("{keyRange}", keyRange)
-                .Replace("{header}", header)
-                .Replace("{formula}", multipleVisitFormula);
+                .Replace(PlaceholderKeyRange, keyRange)
+                .Replace(PlaceholderHeader, header)
+                .Replace(PlaceholderFormula, multipleVisitFormula);
         }
     }
 

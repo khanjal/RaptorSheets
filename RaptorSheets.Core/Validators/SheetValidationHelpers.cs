@@ -1,3 +1,4 @@
+using System.Globalization;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
@@ -79,7 +80,7 @@ public static class SheetValidationHelpers
     {
         var messages = new List<MessageEntity>();
 
-        if (!string.IsNullOrWhiteSpace(dateString) && !DateTime.TryParse(dateString, out _))
+        if (!string.IsNullOrWhiteSpace(dateString) && !DateTime.TryParse(dateString, CultureInfo.InvariantCulture, out _))
         {
             messages.Add(MessageHelpers.CreateErrorMessage(
                 $"Invalid date format in field '{fieldName}': {dateString}", 
