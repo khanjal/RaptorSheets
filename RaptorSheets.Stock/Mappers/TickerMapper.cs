@@ -30,7 +30,7 @@ public static class TickerMapper
             if (value.Count < headers.Count)
             {
                 value.AddItems(headers.Count - value.Count);
-            };
+            }
 
             TickerEntity entity = new()
             {

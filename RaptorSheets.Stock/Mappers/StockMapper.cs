@@ -31,7 +31,7 @@ public static class StockMapper
             if (value.Count < headers.Count)
             {
                 value.AddItems(headers.Count - value.Count);
-            };
+            }
 
             StockEntity entity = new()
             {

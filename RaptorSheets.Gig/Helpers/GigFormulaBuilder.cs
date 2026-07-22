@@ -355,7 +355,7 @@ public static class GigFormulaBuilder
         /// <summary>
         /// Builds multiple field visit lookup for address tracking (checks multiple fields for matching)
         /// </summary>
-        public static string BuildMultipleFieldVisitLookup(string keyRange, string header, string sourceSheet, string dateColumn, string keyColumn1, string keyColumn2, string dateIndex, bool isFirst)
+        public static string BuildMultipleFieldVisitLookup(string keyRange, string header, string sourceSheet, string dateColumn, string keyColumn1, string keyColumn2, bool isFirst)
         {
             var functionName = isFirst ? "MIN" : "MAX";
             var multipleVisitFormula = GigFormulas.MultipleFieldVisitLookup

@@ -30,7 +30,7 @@ public static class AccountMapper
             if (value.Count < headers.Count)
             {
                 value.AddItems(headers.Count - value.Count);
-            };
+            }
 
             AccountEntity entity = new()
             {
