@@ -15,7 +15,7 @@ public class ColumnFormulasTests
     [Fact]
     public void GivenArrayFormula_ThenReturnString()
     {
-        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,{_formula})";
+        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,{_formula}))";
         var result = ColumnFormulas.ArrayFormula(_columnTitle, _keyRange, _formula);
 
         Assert.Equal(text, result);
@@ -24,7 +24,7 @@ public class ColumnFormulasTests
     [Fact]
     public void GivenCountIf_ThenReturnString()
     {
-        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,COUNTIF({_range},{_formula}))";
+        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,COUNTIF({_range},{_formula})))";
         var result = ColumnFormulas.CountIf(_columnTitle, _keyRange, _range, _formula);
 
         Assert.Equal(text, result);
@@ -42,7 +42,7 @@ public class ColumnFormulasTests
     [Fact]
     public void GivenSumIf_ThenReturnString()
     {
-        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,SUMIF({_range},{_formula},{_altRange}))";
+        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,SUMIF({_range},{_formula},{_altRange})))";
         var result = ColumnFormulas.SumIf(_columnTitle, _keyRange, _range, _formula, _altRange);
 
         Assert.Equal(text, result);
@@ -51,7 +51,7 @@ public class ColumnFormulasTests
     [Fact]
     public void GivenSumIfDivide_ThenReturnString()
     {
-        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,SUMIF({_range},{_formula},{_altRange})/{_range})";
+        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,SUMIF({_range},{_formula},{_altRange})/{_range}))";
         var result = ColumnFormulas.SumIfDivide(_columnTitle, _keyRange, _range, _formula, _altRange, _range);
 
         Assert.Equal(text, result);
@@ -60,7 +60,7 @@ public class ColumnFormulasTests
     [Fact]
     public void GivenSumIfBlank_ThenReturnString()
     {
-        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,IF(SUMIF({_range},{_formula},{_altRange})=0,\"\",SUMIF({_range},{_formula},{_altRange}))";
+        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,IF(SUMIF({_range},{_formula},{_altRange})=0,\"\",SUMIF({_range},{_formula},{_altRange}))))";
         var result = ColumnFormulas.SumIfBlank(_columnTitle, _keyRange, _range, _formula, _altRange);
 
         Assert.Equal(text, result);
@@ -69,7 +69,7 @@ public class ColumnFormulasTests
     [Fact]
     public void GivenDivideRanges_ThenReturnString()
     {
-        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,IFERROR({_range}/{_altRange},0))";
+        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,IFERROR({_range}/{_altRange},0)))";
         var result = ColumnFormulas.DivideRanges(_columnTitle, _keyRange, _range, _altRange);
 
         Assert.Equal(text, result);
@@ -78,7 +78,7 @@ public class ColumnFormulasTests
     [Fact]
     public void GivenMultiplyRanges_ThenReturnString()
     {
-        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,{_range}*{_altRange})";
+        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,{_range}*{_altRange}))";
         var result = ColumnFormulas.MultiplyRanges(_columnTitle, _keyRange, _range, _altRange);
 
         Assert.Equal(text, result);
@@ -87,7 +87,7 @@ public class ColumnFormulasTests
     [Fact]
     public void GivenSubtractRanges_ThenReturnString()
     {
-        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,{_range}-{_altRange})";
+        var text = $"=ARRAYFORMULA(IFS(ROW({_keyRange})=1,\"{_columnTitle}\",ISBLANK({_keyRange}), \"\",true,{_range}-{_altRange}))";
         var result = ColumnFormulas.SubtractRanges(_columnTitle, _keyRange, _range, _altRange);
 
         Assert.Equal(text, result);

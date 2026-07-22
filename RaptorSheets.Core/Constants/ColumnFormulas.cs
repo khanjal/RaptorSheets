@@ -5,7 +5,7 @@ public static class ColumnFormulas
     // Array Formulas
     public static string ArrayFormula(string columnTitle, string keyRange, string formula)
     {
-        return $"=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{columnTitle}\",ISBLANK({keyRange}), \"\",true,{formula})";
+        return $"=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{columnTitle}\",ISBLANK({keyRange}), \"\",true,{formula}))";
     }
 
     public static string CountIf(string columnTitle, string keyRange, string range, string criterion)
@@ -30,7 +30,7 @@ public static class ColumnFormulas
 
     public static string SumIfBlank(string columnTitle, string keyRange, string range, string criterion, string sumRange)
     {
-        return ArrayFormula(columnTitle, keyRange, $"IF(SUMIF({range},{criterion},{sumRange})=0,\"\",SUMIF({range},{criterion},{sumRange})");
+        return ArrayFormula(columnTitle, keyRange, $"IF(SUMIF({range},{criterion},{sumRange})=0,\"\",SUMIF({range},{criterion},{sumRange}))");
     }
 
     // ArrayFormula - Simple Math
