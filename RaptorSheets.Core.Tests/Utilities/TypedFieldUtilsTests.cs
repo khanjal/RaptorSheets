@@ -66,49 +66,28 @@ public class TypedFieldUtilsTests
         var underlyingType = Nullable.GetUnderlyingType(targetType);
         bool isNullable = underlyingType != null;
         var actualType = underlyingType ?? targetType;
-        
-        if (actualType == typeof(int))
+
+        if (isNullable)
         {
-            if (isNullable)
-                Assert.Null(result);
-            else
-                Assert.Equal(0, result);
-        }
-        else if (actualType == typeof(bool))
-        {
-            if (isNullable)
-                Assert.Null(result);
-            else
-                Assert.False((bool?)result);
-        }
-        else if (actualType == typeof(DateTime))
-        {
-            if (isNullable)
-                Assert.Null(result);
-            else
-                Assert.Equal(DateTime.MinValue, result);
-        }
-        else if (actualType == typeof(decimal))
-        {
-            if (isNullable)
-                Assert.Null(result);
-            else
-                Assert.Equal(0.0m, result);
-        }
-        else if (actualType == typeof(double))
-        {
-            if (isNullable)
-                Assert.Null(result);
-            else
-                Assert.Equal(0.0, result);
+            Assert.Null(result);
         }
         else
         {
-            Assert.Null(result);
+            Assert.Equal(GetExpectedNonNullableDefault(actualType), result);
         }
 
         // Use the fieldType parameter to validate the expected field type
         Assert.Equal(fieldType, attribute.FieldType);
+    }
+
+    private static object? GetExpectedNonNullableDefault(Type actualType)
+    {
+        if (actualType == typeof(int)) return 0;
+        if (actualType == typeof(bool)) return false;
+        if (actualType == typeof(DateTime)) return DateTime.MinValue;
+        if (actualType == typeof(decimal)) return 0.0m;
+        if (actualType == typeof(double)) return 0.0;
+        return null;
     }
 
     [Fact]
