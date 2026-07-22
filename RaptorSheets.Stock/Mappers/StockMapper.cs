@@ -97,10 +97,13 @@ public static class StockMapper
     {
         var sheet = SheetsConfig.StockSheet;
         var tickerSheet = SheetsConfig.TickerSheet;
-        
-        // Ensure column indexes are properly assigned
+
+        // Ensure column indexes are properly assigned - tickerSheet needs this too since several
+        // headers below resolve cross-sheet ranges via tickerSheet.GetRange(...), which depends on
+        // each header's Column having already been computed.
         sheet.Headers.UpdateColumns();
-        
+        tickerSheet.Headers.UpdateColumns();
+
         // Apply header-specific configurations
         for (int i = 0; i < sheet.Headers.Count; i++)
         {
