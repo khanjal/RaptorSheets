@@ -124,6 +124,10 @@ public class SmartFieldAttributeTests
         Assert.Equal(expectedType, result);
     }
 
+    // S4144: each Theory below necessarily shares InferFieldType_ShouldDetectCurrencyType's body
+    // shape (that's how xUnit parameterization works) - splitting by FieldType category keeps
+    // failures traceable to a specific inference rule instead of one giant merged theory.
+#pragma warning disable S4144
     [Theory]
     [InlineData("PercentComplete", FieldType.Percentage)]
     [InlineData("RateOfReturn", FieldType.Percentage)]
@@ -156,6 +160,7 @@ public class SmartFieldAttributeTests
         // Assert
         Assert.Equal(expectedType, result);
     }
+#pragma warning restore S4144
 
     [Fact]
     public void InferFieldType_ShouldHandleFloatAsNumber()
@@ -171,6 +176,9 @@ public class SmartFieldAttributeTests
         Assert.Equal(FieldType.Number, result);
     }
 
+    // S4144: same rationale as above - distinct InlineData category (nullable value types), same
+    // necessary body shape.
+#pragma warning disable S4144
     [Theory]
     [InlineData("NullableDecimal", FieldType.Number)]
     [InlineData("NullableInt", FieldType.Integer)]
@@ -186,6 +194,7 @@ public class SmartFieldAttributeTests
         // Assert
         Assert.Equal(expectedType, result);
     }
+#pragma warning restore S4144
 
     [Fact]
     public void InferHeaderName_ShouldReturnCorrectHeaderName()

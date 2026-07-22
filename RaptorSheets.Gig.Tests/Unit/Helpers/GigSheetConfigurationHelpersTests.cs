@@ -152,19 +152,4 @@ public class GigSheetConfigurationHelpersTests
         // Should leave header formatting unchanged
         Assert.Null(header.Format);
     }
-
-    [Fact]
-    public void ApplyCommonFormats_WithTimeActiveException_ShouldLeaveUnchanged()
-    {
-        // Arrange
-        var header = new SheetCellModel { Name = "TestHeader", Format = null };
-        var headerName = "Active Time"; // Unknown header
-
-        // Act
-        GigSheetConfigurationHelpers.ApplyCommonFormats(header, headerName);
-
-        // Assert
-        // Should leave header unchanged since it doesn't match a known Header
-        Assert.Null(header.Format);
-    }
 }

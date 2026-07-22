@@ -130,6 +130,11 @@ namespace RaptorSheets.Core.Tests.Unit.Extensions
             Assert.Null(result);
         }
 
+        // S4144: these Theory methods necessarily share a body shape with the EmptyOrWhitespace
+        // theories above (that's how xUnit parameterization works) - each covers a distinct input
+        // category (malformed values vs blank ones) via its own InlineData set and descriptive name,
+        // which is more useful on failure than one merged theory would be.
+#pragma warning disable S4144
         [Theory]
         [InlineData("2023-13-01")] // Invalid month
         [InlineData("2023-02-30")] // Invalid day for February
@@ -157,6 +162,7 @@ namespace RaptorSheets.Core.Tests.Unit.Extensions
             // Assert
             Assert.Null(result);
         }
+#pragma warning restore S4144
 
         [Theory]
         [InlineData("1900-01-01T00:00:00")]

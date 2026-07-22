@@ -73,6 +73,10 @@ public class GoogleFileManagerTests
         Assert.Throws<ArgumentNullException>(() => new GoogleFileManager(accessToken));
     }
 
+    // S4144: necessarily shares Constructor_WithVariousAccessTokens_ShouldInitialize's body shape
+    // (that's how xUnit parameterization works) - kept as its own theory since it targets a
+    // distinct input category (empty/whitespace) with a distinct, more descriptive name.
+#pragma warning disable S4144
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -82,6 +86,7 @@ public class GoogleFileManagerTests
         var manager = new GoogleFileManager(accessToken);
         Assert.NotNull(manager);
     }
+#pragma warning restore S4144
 
     #endregion
 
