@@ -139,8 +139,10 @@ public class ObjectExtensionsTests
         var upperResult = modelData.GetColumn(Header.FIRST_COLUMN.GetDescription().ToUpper());
         var correctResult = modelData.GetColumn(Header.FIRST_COLUMN.GetDescription());
 
-        // Assert (assuming case-sensitive implementation)
+        // Assert - GetColumn matches header names case-sensitively, so mismatched case
+        // does not match the actual "First Column" header and returns empty.
         Assert.Equal("A", correctResult);
-        // Depending on implementation, these might be empty or match
+        Assert.Equal("", lowerResult);
+        Assert.Equal("", upperResult);
     }
 }

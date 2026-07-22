@@ -7,6 +7,10 @@ namespace RaptorSheets.Core.Tests.Unit.Attributes;
 
 public class SmartFieldAttributeTests
 {
+    // Every property below is looked up by name string via reflection
+    // (typeof(TestEntity).GetProperties().First(p => p.Name == "...")) rather than referenced
+    // directly, so the analyzer can't see the usage and flags them as unused (S1144 false positive).
+#pragma warning disable S1144
     private class TestEntity
     {
         [SmartField]
@@ -50,6 +54,7 @@ public class SmartFieldAttributeTests
         public decimal? NullableDecimal { get; set; }
         public int? NullableInt { get; set; }
     }
+#pragma warning restore S1144
 
     [Fact]
     public void InferFieldType_ShouldReturnCorrectFieldType()

@@ -246,23 +246,4 @@ public class EntitySheetConfigHelperTests
         Assert.True(payIndex < addressIndex, "Base class properties should appear before derived class properties");
         Assert.Equal(1, headerNames.Count(h => h == TestHeaderNames.Pay)); // Should appear only once
     }
-
-    private class TestNoPropertiesEntity
-    {
-    }
-
-    private class TestDuplicateColumnEntity
-    {
-        [Column("DuplicateHeader")]
-        public string Property1 { get; set; } = "";
-
-        [Column("DuplicateHeader")]
-        public string Property2 { get; set; } = "";
-    }
-
-    private class TestInvalidColumnEntity
-    {
-        [Column("InvalidColumn")]
-        public string InvalidProperty { get; set; } = "";
-    }
 }

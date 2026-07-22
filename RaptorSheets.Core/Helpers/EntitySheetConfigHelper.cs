@@ -19,7 +19,6 @@ public static class EntitySheetConfigHelper
     /// <returns>List of SheetCellModel headers in entity-defined order with automatic formatting</returns>
     public static List<SheetCellModel> GenerateHeadersFromEntity<T>()
     {
-        var entityType = typeof(T);
         var headers = new List<SheetCellModel>();
         var processedHeaders = new HashSet<string>();
 

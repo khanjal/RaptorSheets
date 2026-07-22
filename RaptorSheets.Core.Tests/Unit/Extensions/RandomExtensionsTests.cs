@@ -12,10 +12,6 @@ public class RandomExtensionsTests
         Value3
     }
 
-    private enum Empty
-    {
-    }
-
     private enum SingleValue
     {
         OnlyValue
@@ -40,7 +36,6 @@ public class RandomExtensionsTests
     {
         // Arrange
         var random = new Random();
-        var values = Enum.GetValues<Test>();
         var results = new HashSet<Test>();
 
         // Act

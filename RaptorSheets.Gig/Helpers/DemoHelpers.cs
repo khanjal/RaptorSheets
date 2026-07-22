@@ -148,6 +148,7 @@ public static class DemoHelpers
             Date = context.Date.ToString(CellFormatPatterns.Date),
             Number = shiftNumber,
             Service = service,
+            Trips = tripsValue,
             Start = shiftStart.ToString("T"),
             Finish = shiftFinish.ToString("T"),
             Active = activeDuration.ToString(@"hh\:mm\:ss"),

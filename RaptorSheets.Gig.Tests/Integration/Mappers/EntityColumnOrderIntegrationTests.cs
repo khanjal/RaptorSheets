@@ -158,10 +158,6 @@ public class EntityColumnOrderIntegrationTests
         // This test verifies that the entity-driven ordering produces consistent results
         // with the sheet configuration
         
-        // Arrange
-        var originalSheet = SheetsConfig.AddressSheet;
-        var originalHeaderNames = originalSheet.Headers.Select(h => h.Name).ToList();
-
         // Act
         var entityProperties = TypedFieldUtils.GetColumnProperties<AddressEntity>();
         var entityHeaderNames = entityProperties.Select(p => p.Column.GetEffectiveHeaderName()).ToList();
@@ -184,6 +180,7 @@ public class EntityColumnOrderIntegrationTests
         // Address should be first (entity-specific property)
         Assert.Equal(0, addressIndex);
         Assert.True(tripsIndex > addressIndex, "Trips should come after Address");
+        Assert.True(payIndex > tripsIndex, "Pay should come after Trips");
     }
 
     [Fact]

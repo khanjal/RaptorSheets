@@ -296,14 +296,7 @@ public abstract class IntegrationTestBase
     #endregion
 
     #region Utilities
-    
-    private static bool IsApiRelatedError(Exception ex) =>
-        ex.Message.Contains("credentials", StringComparison.OrdinalIgnoreCase) || 
-        ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase) || 
-        ex.Message.Contains("Requested entity was not found", StringComparison.OrdinalIgnoreCase) ||
-        ex.Message.Contains("API", StringComparison.OrdinalIgnoreCase) ||
-        ex.Message.Contains("sheet configuration issue", StringComparison.OrdinalIgnoreCase);
-    
+
     private static bool IsExpectedError(string message) =>
         message.Contains("not supported") ||  // Expected when sheet doesn't support certain operations
         message.Contains("already exists") ||  // Expected when trying to create existing sheets
