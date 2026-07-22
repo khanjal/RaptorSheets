@@ -31,8 +31,7 @@ public static class GenerateSheetsHelpers
         foreach (var sheet in sheets)
         {
             var sheetModel = GetSheetModel(sheet);
-            var random = new Random();
-            sheetModel.Id = random.Next();
+            sheetModel.Id = Random.Shared.Next();
 
             batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
 

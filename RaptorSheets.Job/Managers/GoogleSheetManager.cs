@@ -236,7 +236,10 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     {
         var start = startDate ?? DateTime.Today.AddDays(-30);
         var end = endDate ?? DateTime.Today;
+        // SonarQube S2245: Using Random is safe here - this generates demo/sample data, not security-sensitive values
+#pragma warning disable S2245
         var random = seed.HasValue ? new Random(seed.Value) : Random.Shared;
+#pragma warning restore S2245
 
         var sheetEntity = new SheetEntity();
 

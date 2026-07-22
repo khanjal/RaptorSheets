@@ -15,10 +15,10 @@ public static class TickerMapper
     {
         var entities = new List<TickerEntity>();
         var headers = new Dictionary<int, string>();
-        values = values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
+        var filteredValues = values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).Select(x => x.ToList()).ToList();
         var id = 0;
 
-        foreach (List<object> value in values)
+        foreach (var value in filteredValues)
         {
             id++;
             if (id == 1)
