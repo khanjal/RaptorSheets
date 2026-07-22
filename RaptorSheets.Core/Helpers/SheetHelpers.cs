@@ -140,77 +140,64 @@ public static class SheetHelpers
     public static IList<RowData> HeadersToRowData(SheetModel sheet)
     {
         var rows = new List<RowData>();
-        var row = new RowData();
-        var cells = new List<CellData>();
-
-        foreach (var header in sheet.Headers)
+        var row = new RowData
         {
-            var cell = new CellData
-            {
-                UserEnteredFormat = new CellFormat
-                {
-                    TextFormat = new TextFormat
-                    {
-                        Bold = true,
-                        ForegroundColor = GetColor(sheet.FontColor),
-                    }
-                }
-            };
+            Values = sheet.Headers.Select(header => BuildHeaderCell(header, sheet)).ToList()
+        };
 
-            var value = new ExtendedValue();
-
-            // Use a formula if the header explicitly has one (non-empty) or if the header is protected.
-            // This ensures an empty-string formula only counts when protection is intended.
-            if (header.Protect || !string.IsNullOrEmpty(header.Formula))
-            {
-                // Distinguish between null and empty string formulas:
-                // - null => use the header Name as the formula value
-                // - empty string ("") => treat as an explicit empty formula
-                if (header.Formula != null)
-                {
-                    value.FormulaValue = header.Formula;
-                }
-                else
-                {
-                    value.FormulaValue = header.Name;
-                }
-
-                if (!sheet.ProtectSheet)
-                {
-                    var border = new Border
-                    {
-                        Style = BorderStyle.SOLID_THICK.ToString()
-                    };
-                    cell.UserEnteredFormat.Borders = new Borders { Bottom = border, Left = border, Right = border, Top = border };
-                }
-            }
-            else
-            {
-                value.StringValue = header.Name;
-            }
-
-            if (!string.IsNullOrEmpty(header.Note))
-            {
-                cell.Note = header.Note;
-            }
-
-            // If requested, do not set a UserEnteredValue so the cell remains empty (allows formula spills)
-            if (header.HideHeaderName)
-            {
-                cell.UserEnteredValue = null;
-            }
-            else
-            {
-                cell.UserEnteredValue = value;
-            }
-
-            cells.Add(cell);
-        }
-
-        row.Values = cells;
         rows.Add(row);
 
         return rows;
+    }
+
+    private static CellData BuildHeaderCell(SheetCellModel header, SheetModel sheet)
+    {
+        var cell = new CellData
+        {
+            UserEnteredFormat = new CellFormat
+            {
+                TextFormat = new TextFormat
+                {
+                    Bold = true,
+                    ForegroundColor = GetColor(sheet.FontColor),
+                }
+            }
+        };
+
+        var value = new ExtendedValue();
+
+        // Use a formula if the header explicitly has one (non-empty) or if the header is protected.
+        // This ensures an empty-string formula only counts when protection is intended.
+        if (header.Protect || !string.IsNullOrEmpty(header.Formula))
+        {
+            // Distinguish between null and empty string formulas:
+            // - null => use the header Name as the formula value
+            // - empty string ("") => treat as an explicit empty formula
+            value.FormulaValue = header.Formula ?? header.Name;
+
+            if (!sheet.ProtectSheet)
+            {
+                var border = new Border
+                {
+                    Style = BorderStyle.SOLID_THICK.ToString()
+                };
+                cell.UserEnteredFormat.Borders = new Borders { Bottom = border, Left = border, Right = border, Top = border };
+            }
+        }
+        else
+        {
+            value.StringValue = header.Name;
+        }
+
+        if (!string.IsNullOrEmpty(header.Note))
+        {
+            cell.Note = header.Note;
+        }
+
+        // If requested, do not set a UserEnteredValue so the cell remains empty (allows formula spills)
+        cell.UserEnteredValue = header.HideHeaderName ? null : value;
+
+        return cell;
     }
 
     // https://developers.google.com/sheets/api/guides/formats

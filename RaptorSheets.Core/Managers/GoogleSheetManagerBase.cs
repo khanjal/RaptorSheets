@@ -437,44 +437,12 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
         if (response == null)
         {
-            try
+            var (restoreResult, fetchedInfo) = await TryRestoreMissingSheetsAsync(messages);
+            spreadsheetInfo = fetchedInfo;
+
+            if (restoreResult != null)
             {
-                spreadsheetInfo = await _googleSheetService.GetSheetInfo();
-
-                if (spreadsheetInfo == null)
-                {
-                    _logger.LogWarning("Unable to fetch spreadsheet metadata; skipping missing-sheet restoration");
-                }
-                else
-                {
-                    var missingIndexMap = SheetInitializationHelper.GetMissingSheets(spreadsheetInfo, _canonicalSheetNames);
-
-                    if (missingIndexMap.Count > 0)
-                    {
-                        var createResult = await CreateMissingSheetsAsync(missingIndexMap);
-
-                        if (createResult.Messages.Any(m => m.Level == MessageLevel.ERROR.GetDescription()))
-                        {
-                            messages.AddRange(createResult.Messages);
-                            var errorReturn = new TEntity();
-                            errorReturn.Messages.AddRange(messages);
-                            return errorReturn;
-                        }
-
-                        var createdNames = string.Join(", ", missingIndexMap.Keys);
-                        var info = MessageHelpers.CreateInfoMessage(
-                            $"Created missing sheets: {createdNames}. Sheets may take a few seconds to become readable — please retry the request shortly.",
-                            MessageType.GET_SHEETS);
-
-                        var createdReturn = new TEntity();
-                        createdReturn.Messages.Add(info);
-                        return createdReturn;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while restoring missing sheets");
+                return restoreResult;
             }
         }
 
@@ -509,6 +477,58 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         data.Messages.AddRange(messages);
 
         return data;
+    }
+
+    /// <summary>
+    /// Attempts to self-heal from a null batchGet response by fetching spreadsheet metadata and
+    /// recreating any canonical sheets missing from it. Returns a non-null Result only when the
+    /// caller should return immediately (creation failed, or sheets were just created and need a
+    /// moment before they're readable); returns the fetched Spreadsheet either way so the caller
+    /// can reuse it instead of fetching metadata twice.
+    /// </summary>
+    private async Task<(TEntity? Result, Spreadsheet? SpreadsheetInfo)> TryRestoreMissingSheetsAsync(List<MessageEntity> messages)
+    {
+        try
+        {
+            var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+
+            if (spreadsheetInfo == null)
+            {
+                _logger.LogWarning("Unable to fetch spreadsheet metadata; skipping missing-sheet restoration");
+                return (null, null);
+            }
+
+            var missingIndexMap = SheetInitializationHelper.GetMissingSheets(spreadsheetInfo, _canonicalSheetNames);
+
+            if (missingIndexMap.Count == 0)
+            {
+                return (null, spreadsheetInfo);
+            }
+
+            var createResult = await CreateMissingSheetsAsync(missingIndexMap);
+
+            if (createResult.Messages.Any(m => m.Level == MessageLevel.ERROR.GetDescription()))
+            {
+                messages.AddRange(createResult.Messages);
+                var errorReturn = new TEntity();
+                errorReturn.Messages.AddRange(messages);
+                return (errorReturn, spreadsheetInfo);
+            }
+
+            var createdNames = string.Join(", ", missingIndexMap.Keys);
+            var info = MessageHelpers.CreateInfoMessage(
+                $"Created missing sheets: {createdNames}. Sheets may take a few seconds to become readable — please retry the request shortly.",
+                MessageType.GET_SHEETS);
+
+            var createdReturn = new TEntity();
+            createdReturn.Messages.Add(info);
+            return (createdReturn, spreadsheetInfo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while restoring missing sheets");
+            return (null, null);
+        }
     }
 
     /// <summary>
