@@ -14,8 +14,8 @@ namespace RaptorSheets.Stock.Tests.Unit.Managers;
 /// Covers GetSheets' orchestration now that it shares GoogleSheetManagerBase.GetSheetsCoreAsync with
 /// Gig: unknown-tab detection and spreadsheet-name population happen on every call (not just
 /// full-sheet-list requests, as before), and a batchGet failure triggers the same missing-sheet
-/// self-heal-and-recreate behavior Gig already had (Stock previously had none - see the removed
-/// "TODO Add check sheets here" in GoogleSheetManager.GetSheets()).
+/// self-heal-and-recreate behavior Gig already had (Stock previously had none - the placeholder
+/// comment in GoogleSheetManager.GetSheets() asking for this has since been removed).
 /// </summary>
 public class GetSheetsBehaviorTests
 {

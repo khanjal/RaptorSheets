@@ -289,14 +289,11 @@ public class GenericSheetMapperTests
         // Index 1: Date (DateTime) - DATE format  
         Assert.Equal("DATE", result.Values[1].UserEnteredFormat?.NumberFormat?.Type);
         
-        // TODO: Investigate why numeric formats (Currency, Integer, Number) are returning TEXT
-        // Index 2, 3, 5: Numeric fields currently return TEXT instead of NUMBER
-        // This may be related to how TypedFieldUtils.GetFormatFromFieldType interacts with the test entity
-        // For now, verify they have A format (not null) and move on
-        Assert.NotNull(result.Values[2].UserEnteredFormat?.NumberFormat); // Amount
-        Assert.NotNull(result.Values[3].UserEnteredFormat?.NumberFormat); // Count
-        Assert.NotNull(result.Values[5].UserEnteredFormat?.NumberFormat); // Distance
-        
+        // Index 2, 3, 5: Numeric fields (Amount/Count/Distance) - NUMBER format
+        Assert.Equal("NUMBER", result.Values[2].UserEnteredFormat?.NumberFormat?.Type); // Amount
+        Assert.Equal("NUMBER", result.Values[3].UserEnteredFormat?.NumberFormat?.Type); // Count
+        Assert.Equal("NUMBER", result.Values[5].UserEnteredFormat?.NumberFormat?.Type); // Distance
+
         // Index 4: Active (Boolean) - No specific format expected
         // Boolean fields typically don't have a number format
     }

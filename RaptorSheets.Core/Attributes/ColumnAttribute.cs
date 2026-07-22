@@ -325,26 +325,6 @@ public class ColumnAttribute : Attribute
     public Format? GetEffectiveFormat()
     {
         // Use explicit FormatType if provided (not DEFAULT), otherwise derive from FieldType
-        return FormatType != Format.DEFAULT ? FormatType : GetDefaultFormatFromFieldType(FieldType);
-    }
-
-    /// <summary>
-    /// Gets the default Format for a given field type.
-    /// Used when FormatType is DEFAULT.
-    /// </summary>
-    private static Format? GetDefaultFormatFromFieldType(FieldType fieldType)
-    {
-        return fieldType switch
-        {
-            FieldType.Currency => Format.CURRENCY,
-            FieldType.Accounting => Format.ACCOUNTING,
-            FieldType.DateTime => Format.DATE,
-            FieldType.Time => Format.TIME,
-            FieldType.Duration => Format.DURATION,
-            FieldType.Number => Format.NUMBER,
-            FieldType.Percentage => Format.PERCENT,
-            FieldType.String => Format.TEXT,
-            _ => null
-        };
+        return FormatType != Format.DEFAULT ? FormatType : TypeInferenceHelper.GetDefaultFormatForFieldType(FieldType);
     }
 }
