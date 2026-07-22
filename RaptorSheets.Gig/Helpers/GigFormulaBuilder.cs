@@ -182,6 +182,9 @@ public static class GigFormulaBuilder
     /// Builds ARRAYFORMULA with dual field visit lookup for addresses
     /// Uses VLOOKUP with QUERY and SORT to find first/last visit from two possible key columns
     /// </summary>
+    // 8 params: each is a genuinely distinct named range/flag needed to build this formula -
+    // grouping them into a parameter object wouldn't reduce complexity, just move it.
+#pragma warning disable S107
     public static string BuildArrayFormulaDualFieldVisit(string keyRange, string header, string sourceSheet, string dateColumnLetter, string keyColumn1Letter, string keyColumn2Letter, string dateIndex, bool isFirst)
     {
         // For first visit: sort by column 1 (the key) ascending to get alphabetically first match
@@ -202,6 +205,7 @@ public static class GigFormulaBuilder
             .Replace(PlaceholderHeader, header)
             .Replace(PlaceholderFormula, dualFieldFormula);
     }
+#pragma warning restore S107
 
     #endregion
 
@@ -340,10 +344,13 @@ public static class GigFormulaBuilder
         /// Builds dual field visit lookup for address tracking (checks two possible key columns)
         /// Uses VLOOKUP with QUERY and SORT for optimized performance
         /// </summary>
+        // 8 params: thin pass-through wrapper matching BuildArrayFormulaDualFieldVisit's signature.
+#pragma warning disable S107
         public static string BuildDualFieldVisitLookup(string keyRange, string header, string sourceSheet, string dateColumnLetter, string keyColumn1Letter, string keyColumn2Letter, string dateIndex, bool isFirst)
         {
             return BuildArrayFormulaDualFieldVisit(keyRange, header, sourceSheet, dateColumnLetter, keyColumn1Letter, keyColumn2Letter, dateIndex, isFirst);
         }
+#pragma warning restore S107
 
         /// <summary>
         /// Builds multiple field visit lookup for address tracking (checks multiple fields for matching)

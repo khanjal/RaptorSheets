@@ -407,7 +407,7 @@ public static class SheetsConfig
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TripEntity>()
     };
 
-    public static SheetModel Deliveries => new()
+    public static SheetModel DeliverySheet => new()
     {
         Name = SheetNames.Deliveries,
         TabColor = SheetColor.BLUE,
@@ -419,7 +419,7 @@ public static class SheetsConfig
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<DeliveryEntity>()
     };
 
-    public static SheetModel Locations => new()
+    public static SheetModel LocationSheet => new()
     {
         Name = SheetNames.Locations,
         TabColor = SheetColor.BLUE,

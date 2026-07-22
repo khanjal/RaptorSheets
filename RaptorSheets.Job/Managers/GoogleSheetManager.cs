@@ -370,7 +370,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
                 var startMinute = random.Next(0, 2) == 0 ? 0 : 30;
                 var durationMinutes = new[] { 30, 45, 60, 90 }[random.Next(4)];
 
-                var startTime = new DateTime(interviewDate.Year, interviewDate.Month, interviewDate.Day, startHour, startMinute, 0);
+                var startTime = new DateTime(interviewDate.Year, interviewDate.Month, interviewDate.Day, startHour, startMinute, 0, DateTimeKind.Unspecified);
                 var endTime = startTime.AddMinutes(durationMinutes);
 
                 var recruiter = recruiters[random.Next(recruiters.Length)];

@@ -12,7 +12,7 @@ public static class LocationMapper
     public static SheetModel GetSheet()
     {
         // Use the centralized SheetsConfig model to avoid configuration drift
-        var sheet = SheetsConfig.Locations;
+        var sheet = SheetsConfig.LocationSheet;
 
         sheet.Headers.UpdateColumns();
 

@@ -737,8 +737,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
         // Detect the informational creation notice produced when the manager created missing sheets
         var creationNotice = allMessages
-            .Where(m => m.Message != null && m.Message.Contains("Sheets may take a few seconds", StringComparison.OrdinalIgnoreCase))
-            .FirstOrDefault();
+            .FirstOrDefault(m => m.Message != null && m.Message.Contains("Sheets may take a few seconds", StringComparison.OrdinalIgnoreCase));
 
         var hasCreationNotice = creationNotice != null;
 

@@ -110,11 +110,11 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
         entity.Properties.Name = spreadsheet.Properties.Title;
 
         var sheetValues = SheetHelpers.GetSheetValues(spreadsheet);
-        foreach (var sheet in spreadsheet.Sheets)
+        foreach (var properties in spreadsheet.Sheets.Select(sheet => sheet.Properties))
         {
-            if (sheetValues.TryGetValue(sheet.Properties.Title, out var values))
+            if (sheetValues.TryGetValue(properties.Title, out var values))
             {
-                Process(entity, sheet.Properties.Title, values);
+                Process(entity, properties.Title, values);
             }
         }
 

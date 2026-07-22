@@ -192,6 +192,10 @@ public class ColumnAttribute : Attribute
     /// <param name="validationPattern">Custom validation pattern (null = use default for field type)</param>
     /// <param name="order">Column order priority (-1 = use declaration order)</param>
     /// <param name="formatType">Format type for Google Sheets display (DEFAULT = use default from fieldType)</param>
+    // 8 params is intentional: this is the convenience overload for named-argument call sites
+    // (used pervasively across every domain's entities); the ColumnOptions-based overload above
+    // is the designed escape hatch when more configuration is needed.
+#pragma warning disable S107
     public ColumnAttribute(
         string headerName,
         bool isInput,
@@ -213,6 +217,7 @@ public class ColumnAttribute : Attribute
         ValidationPattern = validationPattern;
         Note = note;
     }
+#pragma warning restore S107
 
     /// <summary>
     /// Initializes a column configuration with explicit FieldType and input flag.

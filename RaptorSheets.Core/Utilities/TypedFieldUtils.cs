@@ -229,7 +229,7 @@ public static class TypedFieldUtils
         if (value is double serialNumber)
         {
             // Google Sheets uses 1900-01-01 as day 1, but Excel/Google treats 1900 as a leap year
-            var baseDate = new DateTime(1899, 12, 30);
+            var baseDate = new DateTime(1899, 12, 30, 0, 0, 0, DateTimeKind.Unspecified);
             return baseDate.AddDays(serialNumber);
         }
 
@@ -314,7 +314,7 @@ public static class TypedFieldUtils
         if (value is DateTime dateTime)
         {
             // Convert to Google Sheets serial number
-            var baseDate = new DateTime(1899, 12, 30);
+            var baseDate = new DateTime(1899, 12, 30, 0, 0, 0, DateTimeKind.Unspecified);
             return (dateTime - baseDate).TotalDays;
         }
         return value;

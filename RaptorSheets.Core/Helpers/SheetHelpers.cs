@@ -10,19 +10,9 @@ public static class SheetHelpers
 {
     public static List<string> CheckSheets<TEnum>(Spreadsheet? sheetInfoResponse) where TEnum : Enum
     {
-        var missingSheets = new List<string>();
         var spreadsheetSheets = GetSpreadsheetSheets(sheetInfoResponse);
 
-        // Loop through all sheets to see if they exist.
-        foreach (var name in Enum.GetNames(typeof(TEnum)))
-        {
-            if (!spreadsheetSheets.Contains(name))
-            {
-                missingSheets.Add(name);
-            }
-        }
-
-        return missingSheets;
+        return Enum.GetNames(typeof(TEnum)).Where(name => !spreadsheetSheets.Contains(name)).ToList();
     }
 
     public static List<MessageEntity> CheckSheets(List<string> sheets)

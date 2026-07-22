@@ -258,14 +258,14 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
                     .ToList();
 
                 // Assign desired Index directly on the AddSheet properties so sheets are created at the target index
-                foreach (var add in createdAdds)
+                foreach (var addSheet in createdAdds.Select(add => add.AddSheet))
                 {
-                    var title = add.AddSheet.Properties.Title;
+                    var title = addSheet.Properties.Title;
                     if (string.IsNullOrEmpty(title)) continue;
 
                     if (targetIndexMap.TryGetValue(title, out var desiredIndex) && desiredIndex >= 0)
                     {
-                        add.AddSheet.Properties.Index = desiredIndex;
+                        addSheet.Properties.Index = desiredIndex;
                     }
                 }
             }

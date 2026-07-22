@@ -12,7 +12,7 @@ public static class DeliveryMapper
     public static SheetModel GetSheet()
     {
         // Use the centralized SheetsConfig model to avoid configuration drift
-        var sheet = SheetsConfig.Deliveries;
+        var sheet = SheetsConfig.DeliverySheet;
 
         // Ensure header indexes are assigned
         sheet.Headers.UpdateColumns();
