@@ -4,4 +4,4 @@ using RaptorSheets.Test.Common.Helpers;
 namespace RaptorSheets.Job.Tests.Data.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class FactCheckUserSecrets() : FactCheckUserSecretsBase(TestConfigurationHelpers.GetJobSpreadsheet());
+public sealed class FactCheckUserSecretsAttribute() : FactCheckUserSecretsBaseAttribute(TestConfigurationHelpers.GetJobSpreadsheet());

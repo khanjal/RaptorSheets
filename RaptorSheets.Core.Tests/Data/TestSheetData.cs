@@ -4,7 +4,7 @@ using RaptorSheets.Core.Models.Google;
 
 namespace RaptorSheets.Core.Tests.Data;
 
-public class TestSheetData
+public static class TestSheetData
 {
     public static SheetModel GetModelData()
     {

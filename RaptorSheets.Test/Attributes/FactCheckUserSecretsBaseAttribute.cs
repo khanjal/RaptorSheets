@@ -11,9 +11,9 @@ namespace RaptorSheets.Test.Common.Attributes;
 /// works per-domain and each passes its own domain's spreadsheet ID (GetGigSpreadsheet(),
 /// GetStockSpreadsheet(), etc.) - only that one call differs.
 /// </summary>
-public abstract class FactCheckUserSecretsBase : FactAttribute
+public abstract class FactCheckUserSecretsBaseAttribute : FactAttribute
 {
-    protected FactCheckUserSecretsBase(string spreadsheetId)
+    protected FactCheckUserSecretsBaseAttribute(string spreadsheetId)
     {
         if (!GoogleCredentialHelpers.IsCredentialAndSpreadsheetId(spreadsheetId))
         {

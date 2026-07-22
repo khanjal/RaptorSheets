@@ -4,4 +4,4 @@ using RaptorSheets.Test.Common.Helpers;
 namespace RaptorSheets.Home.Tests.Data.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class TheoryCheckUserSecrets() : TheoryCheckUserSecretsBase(TestConfigurationHelpers.GetHomeSpreadsheet());
+public sealed class TheoryCheckUserSecretsAttribute() : TheoryCheckUserSecretsBaseAttribute(TestConfigurationHelpers.GetHomeSpreadsheet());

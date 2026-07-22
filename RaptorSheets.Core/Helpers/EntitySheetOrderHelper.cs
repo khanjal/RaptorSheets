@@ -105,8 +105,8 @@ public static class EntitySheetOrderHelper
                 continue;
 
             ValidateSheetName(sheetOrderAttr, property, entityType, availableSheetsSet, errors);
-            ValidateOrder(sheetOrderAttr, property, entityType, usedOrders, errors);
-            ValidateSheetNameUniqueness(sheetOrderAttr, property, entityType, usedSheetNames, errors);
+            ValidateOrder(sheetOrderAttr, entityType, usedOrders, errors);
+            ValidateSheetNameUniqueness(sheetOrderAttr, entityType, usedSheetNames, errors);
         }
 
         return errors;
@@ -130,7 +130,6 @@ public static class EntitySheetOrderHelper
 
     private static void ValidateOrder(
         SheetOrderAttribute sheetOrderAttr,
-        PropertyInfo property,
         Type entityType,
         HashSet<int> usedOrders,
         List<string> errors)
@@ -147,7 +146,6 @@ public static class EntitySheetOrderHelper
 
     private static void ValidateSheetNameUniqueness(
         SheetOrderAttribute sheetOrderAttr,
-        PropertyInfo property,
         Type entityType,
         HashSet<string> usedSheetNames,
         List<string> errors)
