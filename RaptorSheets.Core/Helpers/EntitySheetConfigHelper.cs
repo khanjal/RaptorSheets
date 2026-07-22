@@ -336,7 +336,7 @@ public static class EntitySheetConfigHelper
 
     private static bool IsCurrencyPattern(string pattern)
     {
-        return pattern.StartsWith("$") || pattern.StartsWith("\"$\"");
+        return pattern.StartsWith('$') || pattern.StartsWith("\"$\"");
     }
 
     private static bool IsAccountingPattern(string pattern)

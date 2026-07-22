@@ -377,7 +377,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         Assert.Single(dailyShifts);
         Assert.True(dailyTrips.Count >= 2, $"Should have at least 2 daily trips, found {dailyTrips.Count}");
         
-        var workflowShift = dailyShifts.First();
+        var workflowShift = dailyShifts[0];
         Assert.NotNull(workflowShift.Start);
         Assert.NotNull(workflowShift.Finish);
         Assert.True(workflowShift.Pay > 0, "Daily shift should have pay recorded");
@@ -456,13 +456,13 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     #region Validation Helper Methods
 
-    private void ValidateInsertResult(string testRunId, SheetEntity testData)
+    private static void ValidateInsertResult(string testRunId, SheetEntity testData)
     {
         System.Diagnostics.Debug.WriteLine($"   ✓ Inserted {testData.Sheets.Shifts.Count} shifts, " +
             $"{testData.Sheets.Trips.Count} trips, {testData.Sheets.Expenses.Count} expenses for test {testRunId}");
     }
 
-    private List<ShiftEntity> ValidateInsertedShifts(string testRunId, SheetEntity readData, SheetEntity expectedData)
+    private static List<ShiftEntity> ValidateInsertedShifts(string testRunId, SheetEntity readData, SheetEntity expectedData)
     {
         var shifts = readData.Sheets.Shifts.Where(s => 
             s.Service?.Contains($"Test_{testRunId}") == true).ToList();
@@ -475,7 +475,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         return shifts;
     }
 
-    private List<TripEntity> ValidateInsertedTrips(string testRunId, SheetEntity readData, SheetEntity expectedData)
+    private static List<TripEntity> ValidateInsertedTrips(string testRunId, SheetEntity readData, SheetEntity expectedData)
     {
         var trips = readData.Sheets.Trips.Where(t => 
             t.Service?.Contains($"Test_{testRunId}") == true).ToList();
@@ -488,7 +488,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         return trips;
     }
 
-    private List<ExpenseEntity> ValidateInsertedExpenses(string testRunId, SheetEntity readData, SheetEntity expectedData)
+    private static List<ExpenseEntity> ValidateInsertedExpenses(string testRunId, SheetEntity readData, SheetEntity expectedData)
     {
         var expenses = readData.Sheets.Expenses.Where(e => 
             e.Description?.Contains($"Test_{testRunId}") == true).ToList();
@@ -501,7 +501,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         return expenses;
     }
 
-    private void ValidateEntityStructures(
+    private static void ValidateEntityStructures(
         List<ShiftEntity> shifts, 
         List<TripEntity> trips, 
         List<ExpenseEntity> expenses)
@@ -534,7 +534,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine("   ✓ Entity structures valid");
     }
 
-    private void ValidateCrossEntityRelationships(List<ShiftEntity> shifts, List<TripEntity> trips)
+    private static void ValidateCrossEntityRelationships(List<ShiftEntity> shifts, List<TripEntity> trips)
     {
         System.Diagnostics.Debug.WriteLine("   🔍 Validating cross-entity relationships...");
         
@@ -550,7 +550,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {commonServices.Count} common services between shifts and trips");
     }
 
-    private void ValidateDateRanges(List<ShiftEntity> shifts, List<ExpenseEntity> expenses)
+    private static void ValidateDateRanges(List<ShiftEntity> shifts, List<ExpenseEntity> expenses)
     {
         System.Diagnostics.Debug.WriteLine("   🔍 Validating date ranges...");
         
@@ -575,7 +575,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine("   ✓ All dates within valid range");
     }
 
-    private void ValidateUpdatedShifts(string testRunId, SheetEntity updatedData)
+    private static void ValidateUpdatedShifts(string testRunId, SheetEntity updatedData)
     {
         var updatedShifts = updatedData.Sheets.Shifts.Where(s => 
             s.Note?.Contains($"UPDATED_{testRunId}") == true).ToList();
@@ -590,7 +590,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         });
     }
 
-    private void ValidateUpdatedTrips(string testRunId, SheetEntity updatedData)
+    private static void ValidateUpdatedTrips(string testRunId, SheetEntity updatedData)
     {
         var updatedTrips = updatedData.Sheets.Trips.Where(t => 
             t.Note?.Contains($"UPDATED_{testRunId}") == true).ToList();
@@ -605,7 +605,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         });
     }
 
-    private void ValidateUpdatedExpenses(string testRunId, SheetEntity updatedData)
+    private static void ValidateUpdatedExpenses(string testRunId, SheetEntity updatedData)
     {
         var updatedExpenses = updatedData.Sheets.Expenses.Where(e => 
             e.Description?.Contains($"UPDATED_{testRunId}") == true).ToList();
@@ -626,7 +626,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     private static string GenerateTestRunId() => DateTimeOffset.UtcNow.ToString("HHmmss");
 
-    private SheetEntity CreateTestData(string testRunId, int shifts, int tripsPerShift, int expenses)
+    private static SheetEntity CreateTestData(string testRunId, int shifts, int tripsPerShift, int expenses)
     {
         var testData = CreateSimpleTestData(shifts, tripsPerShift, expenses);
         var baseDate = DateTime.Today;

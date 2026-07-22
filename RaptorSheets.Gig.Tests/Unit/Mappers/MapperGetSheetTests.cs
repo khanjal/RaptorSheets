@@ -60,7 +60,7 @@ public class MapperGetSheetTests
             if (result.ProtectSheet && !string.IsNullOrEmpty(resultHeader.Formula))
             {
                 // If it has a formula, it should start with =
-                Assert.True(resultHeader.Formula.StartsWith("="), 
+                Assert.True(resultHeader.Formula.StartsWith('='),
                     $"Protected sheet header '{resultHeader.Name}' with formula should start with =");
             }
         }

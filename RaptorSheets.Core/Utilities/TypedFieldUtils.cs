@@ -215,7 +215,7 @@ public static class TypedFieldUtils
         var digitsOnly = new string(value.Where(char.IsDigit).ToArray());
         
         // Remove US international code if present
-        if (digitsOnly.StartsWith("1") && digitsOnly.Length == 11)
+        if (digitsOnly.StartsWith('1') && digitsOnly.Length == 11)
         {
             digitsOnly = digitsOnly[1..];
         }

@@ -151,13 +151,13 @@ public static class ValidationMapper
             }
             else if (name == SheetsConfig.HeaderNames.ApplicationCount)
             {
-                header.Formula = applicationCountLookupOrFormula.StartsWith("=")
+                header.Formula = applicationCountLookupOrFormula.StartsWith('=')
                     ? applicationCountLookupOrFormula
                     : GoogleFormulaBuilder.BuildArrayFormulaCountIf(valueRange, SheetsConfig.HeaderNames.ApplicationCount, applicationCountLookupOrFormula);
             }
             else if (name == SheetsConfig.HeaderNames.InterviewCount)
             {
-                header.Formula = interviewCountLookupOrFormula.StartsWith("=")
+                header.Formula = interviewCountLookupOrFormula.StartsWith('=')
                     ? interviewCountLookupOrFormula
                     : GoogleFormulaBuilder.BuildArrayFormulaCountIf(valueRange, SheetsConfig.HeaderNames.InterviewCount, interviewCountLookupOrFormula);
             }

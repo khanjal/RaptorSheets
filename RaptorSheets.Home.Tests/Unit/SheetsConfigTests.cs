@@ -10,8 +10,8 @@ public class SheetsConfigTests
         var names = SheetsConfig.SheetUtilities.GetAllSheetNames();
 
         Assert.Equal(9, names.Count);
-        Assert.Equal(SheetsConfig.SheetNames.Appliances, names.First());
-        Assert.Equal(SheetsConfig.SheetNames.Stats, names.Last());
+        Assert.Equal(SheetsConfig.SheetNames.Appliances, names[0]);
+        Assert.Equal(SheetsConfig.SheetNames.Stats, names[^1]);
     }
 
     [Fact]

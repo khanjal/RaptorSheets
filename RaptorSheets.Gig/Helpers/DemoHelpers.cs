@@ -14,7 +14,7 @@ public static class DemoHelpers
     /// <summary>
     /// Context object for managing ID generation during demo data creation.
     /// </summary>
-    private class DemoIdContext
+    private sealed class DemoIdContext
     {
         public int ShiftId { get; set; } = 2;  // Start at 2 because row 1 is for headers
         public int TripId { get; set; } = 2;   // Start at 2 because row 1 is for headers
@@ -24,7 +24,7 @@ public static class DemoHelpers
     /// <summary>
     /// Context object for shift generation parameters.
     /// </summary>
-    private class ShiftGenerationContext
+    private sealed class ShiftGenerationContext
     {
         public required Random Random { get; init; }
         public required SheetEntity SheetEntity { get; init; }
@@ -37,7 +37,7 @@ public static class DemoHelpers
     /// <summary>
     /// Context object for trip generation parameters.
     /// </summary>
-    private record TripGenerationContext
+    private sealed record TripGenerationContext
     {
         public required Random Random { get; init; }
         public required DateTime Date { get; init; }
@@ -288,7 +288,7 @@ public static class DemoHelpers
     /// <summary>
     /// Container for shift financial and travel data.
     /// </summary>
-    private record ShiftDataResult
+    private sealed record ShiftDataResult
     {
         public decimal? OdometerStart { get; init; }
         public decimal? OdometerEnd { get; init; }
@@ -566,7 +566,7 @@ public static class DemoHelpers
     /// <summary>
     /// Container for trip travel data.
     /// </summary>
-    private record TripTravelData
+    private sealed record TripTravelData
     {
         public decimal? OdometerStart { get; init; }
         public decimal? OdometerEnd { get; init; }
@@ -576,7 +576,7 @@ public static class DemoHelpers
     /// <summary>
     /// Container for trip earnings data.
     /// </summary>
-    private record TripEarningsData
+    private sealed record TripEarningsData
     {
         public decimal Pay { get; init; }
         public decimal? Tip { get; init; }
@@ -587,7 +587,7 @@ public static class DemoHelpers
     /// <summary>
     /// Container for trip location data.
     /// </summary>
-    private record TripLocationData
+    private sealed record TripLocationData
     {
         public string Place { get; init; } = "";
         public string StartAddress { get; init; } = "";

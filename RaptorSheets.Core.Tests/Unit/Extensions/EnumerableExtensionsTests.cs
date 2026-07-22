@@ -102,8 +102,8 @@ public class EnumerableExtensionsTests
 
         // Assert
         Assert.Equal(1000, collection.Count);
-        Assert.Equal(1, collection.First());
-        Assert.Equal(1000, collection.Last());
+        Assert.Equal(1, collection[0]);
+        Assert.Equal(1000, collection[^1]);
         Assert.True(collection.SequenceEqual(itemsToAdd));
     }
 

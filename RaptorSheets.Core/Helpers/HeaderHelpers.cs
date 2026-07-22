@@ -119,7 +119,7 @@ public static class HeaderHelpers
         }
 
         // Handle negative numbers - preserve the minus sign but remove other non-digit characters
-        var isNegative = value?.StartsWith("-") == true;
+        var isNegative = value?.StartsWith('-') == true;
         value = NonDigitRegex.Replace(value ?? string.Empty, ""); // Remove all non-digit characters with timeout
 
         if (value == "-" || string.IsNullOrEmpty(value))

@@ -75,7 +75,7 @@ public class MapperFormulaHelperTests
         MapperFormulaHelper.ConfigureCommonAggregationHeaders(sheet, "A:A", sourceSheet, "B:B", useShiftTotals, countTrips);
 
         // Assert
-        var header = sheet.Headers.First();
+        var header = sheet.Headers[0];
         Assert.Contains(expectedFormula, header.Formula);
         Assert.Contains(expectedRange, header.Formula);
         Assert.Equal(Format.NUMBER, header.Format);

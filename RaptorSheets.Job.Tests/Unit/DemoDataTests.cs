@@ -18,7 +18,7 @@ public class DemoDataTests
         Assert.NotEmpty(demo.Sheets.Interviews);
 
         // Rows are numbered from 2 (row 1 is the header) so a write lands them below the header.
-        Assert.Equal(2, demo.Sheets.Applications.First().RowId);
+        Assert.Equal(2, demo.Sheets.Applications[0].RowId);
         Assert.All(demo.Sheets.Applications, a => Assert.False(string.IsNullOrEmpty(a.Company)));
         Assert.All(demo.Sheets.Interviews, i => Assert.False(string.IsNullOrEmpty(i.Company)));
     }
