@@ -22,24 +22,87 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     private readonly Dictionary<string, Action<TEntity, IList<IList<object>>>> _processors = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
+    /// Sheet -> sheets that read from it (reverse of the dependsOn edges passed to <see cref="Register"/>).
+    /// Backs <see cref="GetDependents"/>, which drives automatic header-formula refresh of dependent
+    /// sheets whenever a sheet they cross-reference is created/healed/changed - see
+    /// <see cref="Managers.GoogleSheetManagerBase{TEntity}.RefreshDependentSheetsAsync"/>.
+    /// </summary>
+    private readonly Dictionary<string, List<string>> _dependents = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Registers a sheet by name with its SheetModel factory (used for header/layout definitions
     /// and missing-sheet creation) and a processor that maps raw row values onto the entity. The
     /// processor is fully domain-owned - it can call RaptorSheets.Core.Mappers.GenericSheetMapper&lt;T&gt;
     /// (see <see cref="SheetRegistryExtensions.RegisterGeneric{TEntity, TRow}"/> for that common case)
     /// or a domain's own hand-rolled mapper; the registry doesn't need to know which.
     /// </summary>
-    public void Register(string sheetName, Func<SheetModel> sheetModelFactory, Action<TEntity, IList<IList<object>>> processor)
+    /// <param name="dependsOn">
+    /// Names of sheets whose headers this sheet's formulas cross-reference (e.g. via
+    /// <c>otherSheet.GetRange(...)</c> in its mapper's <c>GetSheet()</c>). Sheets named here don't
+    /// need to be registered yet/at all - edges are just names until resolved by <see cref="GetDependents"/>.
+    /// </param>
+    public void Register(string sheetName, Func<SheetModel> sheetModelFactory, Action<TEntity, IList<IList<object>>> processor, IEnumerable<string>? dependsOn = null)
     {
         ArgumentNullException.ThrowIfNull(sheetModelFactory);
         ArgumentNullException.ThrowIfNull(processor);
 
         _factories[sheetName] = sheetModelFactory;
         _processors[sheetName] = processor;
+
+        foreach (var dependency in dependsOn ?? [])
+        {
+            if (!_dependents.TryGetValue(dependency, out var dependents))
+            {
+                dependents = [];
+                _dependents[dependency] = dependents;
+            }
+
+            if (!dependents.Contains(sheetName, StringComparer.OrdinalIgnoreCase))
+            {
+                dependents.Add(sheetName);
+            }
+        }
     }
 
     public bool IsRegistered(string sheetName) => _factories.ContainsKey(sheetName);
 
     public IReadOnlyDictionary<string, Func<SheetModel>> Factories => _factories;
+
+    /// <summary>
+    /// Returns every sheet that transitively depends on any of <paramref name="changedSheetNames"/>
+    /// (per the <c>dependsOn</c> edges passed to <see cref="Register"/>), e.g. if Weekday depends on
+    /// Daily and Daily depends on Shift, a changed Shift returns both Daily and Weekday. BFS order;
+    /// a changed sheet is never included in its own result even if a cycle exists.
+    /// </summary>
+    public List<string> GetDependents(IEnumerable<string> changedSheetNames)
+    {
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var result = new List<string>();
+        var queue = new Queue<string>();
+
+        foreach (var name in changedSheetNames.Where(visited.Add))
+        {
+            queue.Enqueue(name);
+        }
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+
+            if (!_dependents.TryGetValue(current, out var directDependents))
+            {
+                continue;
+            }
+
+            foreach (var dependent in directDependents.Where(visited.Add))
+            {
+                result.Add(dependent);
+                queue.Enqueue(dependent);
+            }
+        }
+
+        return result;
+    }
 
     /// <summary>
     /// Builds an entity from a batchGet response, dispatching each returned range to its
@@ -306,7 +369,8 @@ public static class SheetRegistryExtensions
         this SheetRegistry<TEntity> registry,
         string sheetName,
         Func<SheetModel> sheetModelFactory,
-        Action<TEntity, List<TRow>> assign)
+        Action<TEntity, List<TRow>> assign,
+        IEnumerable<string>? dependsOn = null)
         where TEntity : class, ISheetEntity, new()
         where TRow : class, new()
     {
@@ -315,6 +379,6 @@ public static class SheetRegistryExtensions
             var headers = values[0];
             entity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, sheetModelFactory()));
             assign(entity, Mappers.GenericSheetMapper<TRow>.MapFromRangeData(values));
-        });
+        }, dependsOn);
     }
 }

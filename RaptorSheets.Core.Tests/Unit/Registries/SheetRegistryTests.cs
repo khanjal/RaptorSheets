@@ -464,4 +464,111 @@ public class SheetRegistryTests
         Assert.Empty(missingColumns);
         Assert.Single(messages);
     }
+
+    // GetDependents - backs RefreshDependentSheetsAsync's "sheet B's headers changed, rewrite
+    // every sheet whose formulas cross-reference it" behavior (RaptorSheets.Core.Managers.
+    // GoogleSheetManagerBase{TEntity}). Edges are declared via Register(...dependsOn:...) /
+    // RegisterGeneric(...dependsOn:...).
+
+    [Fact]
+    public void GetDependents_WithNoRegisteredDependents_ReturnsEmpty()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Tickers", TestSheetModel, (_, _) => { });
+
+        var dependents = registry.GetDependents(["Tickers"]);
+
+        Assert.Empty(dependents);
+    }
+
+    [Fact]
+    public void GetDependents_WithDirectDependency_ReturnsDependent()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Tickers", TestSheetModel, (_, _) => { });
+        registry.Register("Stocks", TestSheetModel, (_, _) => { }, dependsOn: ["Tickers"]);
+
+        var dependents = registry.GetDependents(["Tickers"]);
+
+        Assert.Equal(["Stocks"], dependents);
+    }
+
+    [Fact]
+    public void GetDependents_IsCaseInsensitive()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Stocks", TestSheetModel, (_, _) => { }, dependsOn: ["Tickers"]);
+
+        var dependents = registry.GetDependents(["tickers"]);
+
+        Assert.Equal(["Stocks"], dependents);
+    }
+
+    [Fact]
+    public void GetDependents_WithTransitiveChain_ReturnsFullClosure()
+    {
+        // Mirrors Gig's Trip -> Shift -> Daily -> Weekday chain: a changed Trip should also
+        // surface Daily and Weekday, not just the sheet that directly reads Trip.
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Trip", TestSheetModel, (_, _) => { });
+        registry.Register("Shift", TestSheetModel, (_, _) => { }, dependsOn: ["Trip"]);
+        registry.Register("Daily", TestSheetModel, (_, _) => { }, dependsOn: ["Shift"]);
+        registry.Register("Weekday", TestSheetModel, (_, _) => { }, dependsOn: ["Daily"]);
+
+        var dependents = registry.GetDependents(["Trip"]);
+
+        Assert.Equal(["Shift", "Daily", "Weekday"], dependents);
+    }
+
+    [Fact]
+    public void GetDependents_WithDiamondDependency_DoesNotDuplicateEntries()
+    {
+        // Mirrors Gig's Region/Service, which both depend on Trip and Shift directly - Shift
+        // itself also depends on Trip, so Trip's closure would reach Shift twice without dedup.
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Trip", TestSheetModel, (_, _) => { });
+        registry.Register("Shift", TestSheetModel, (_, _) => { }, dependsOn: ["Trip"]);
+        registry.Register("Region", TestSheetModel, (_, _) => { }, dependsOn: ["Trip", "Shift"]);
+
+        var dependents = registry.GetDependents(["Trip"]);
+
+        Assert.Equal(["Shift", "Region"], dependents);
+    }
+
+    [Fact]
+    public void GetDependents_WithCycle_DoesNotInfiniteLoop()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("A", TestSheetModel, (_, _) => { }, dependsOn: ["B"]);
+        registry.Register("B", TestSheetModel, (_, _) => { }, dependsOn: ["A"]);
+
+        var dependents = registry.GetDependents(["A"]);
+
+        Assert.Equal(["B"], dependents);
+    }
+
+    [Fact]
+    public void GetDependents_WithMultipleChangedSheets_MergesResults()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Applications", TestSheetModel, (_, _) => { });
+        registry.Register("Interviews", TestSheetModel, (_, _) => { });
+        registry.Register("Companies", TestSheetModel, (_, _) => { }, dependsOn: ["Applications", "Interviews"]);
+
+        var dependents = registry.GetDependents(["Applications", "Interviews"]);
+
+        Assert.Equal(["Companies"], dependents);
+    }
+
+    [Fact]
+    public void RegisterGeneric_WithDependsOn_IsReflectedInGetDependents()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.RegisterGeneric<TestSheetEntity, TestRowEntity>("Tickers", TestSheetModel, (e, rows) => e.Widgets = rows);
+        registry.RegisterGeneric<TestSheetEntity, TestRowEntity>("Stocks", TestSheetModel, (e, rows) => e.Widgets = rows, dependsOn: ["Tickers"]);
+
+        var dependents = registry.GetDependents(["Tickers"]);
+
+        Assert.Equal(["Stocks"], dependents);
+    }
 }

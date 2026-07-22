@@ -10,7 +10,6 @@ using RaptorSheets.Core.Managers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Helpers;
-using RaptorSheets.Stock.Mappers;
 using RaptorSheets.Core.Models.Google;
 using SheetName = RaptorSheets.Stock.Enums.SheetName;
 
@@ -194,37 +193,18 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         // resolves asynchronously, so both sheets can latch onto a transient #N/A mid-flight and
         // never self-recover on their own - Tickers' own MaxHigh/MinLow (a GOOGLEFINANCE historical
         // daily-range call, evaluated once per ticker via MAP/LAMBDA) is the slowest to settle, so a
-        // single short delay isn't reliably enough. Re-apply both sheets' header formulas twice,
-        // with increasing delays, to force a clean re-evaluation against settled data.
+        // single short delay isn't reliably enough. Re-apply both sheets' header formulas (inherited
+        // from GoogleSheetManagerBase) twice, with increasing delays, to force a clean re-evaluation
+        // against settled data.
+        var sheetNames = new[] { SheetName.TICKERS.GetDescription(), SheetName.STOCKS.GetDescription() };
+
         await Task.Delay(5000);
-        await RefreshHeaderFormulasAsync(SheetName.TICKERS.GetDescription(), TickerMapper.GetSheet());
-        await RefreshHeaderFormulasAsync(SheetName.STOCKS.GetDescription(), StockMapper.GetSheet());
+        await RefreshHeaderFormulasAsync(sheetNames);
 
         await Task.Delay(15000);
-        await RefreshHeaderFormulasAsync(SheetName.TICKERS.GetDescription(), TickerMapper.GetSheet());
-        await RefreshHeaderFormulasAsync(SheetName.STOCKS.GetDescription(), StockMapper.GetSheet());
+        await RefreshHeaderFormulasAsync(sheetNames);
 
         return demoData;
-    }
-
-    /// <summary>
-    /// Re-writes a sheet's header row with its own (unchanged) formulas, forcing Google Sheets to
-    /// re-evaluate them fresh. See <see cref="PopulateDemoData"/> for why this is needed.
-    /// </summary>
-    private async Task RefreshHeaderFormulasAsync(string sheetName, SheetModel sheetModel)
-    {
-        var properties = await GetSheetProperties([sheetName]);
-        var sheetProperty = properties.FirstOrDefault(p =>
-            string.Equals(p.Name, sheetName, StringComparison.OrdinalIgnoreCase));
-
-        if (sheetProperty == null || !int.TryParse(sheetProperty.Id, out var sheetId))
-        {
-            return;
-        }
-
-        var headerRow = SheetHelpers.HeadersToRowData(sheetModel);
-        var request = GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId, 0, headerRow);
-        await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = [request] });
     }
 
     /// <summary>

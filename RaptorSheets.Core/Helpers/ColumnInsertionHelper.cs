@@ -55,9 +55,15 @@ public static class ColumnInsertionHelper
     /// Inserts every missing column described in <paramref name="missingColumns"/> in a single
     /// batch request and returns a result entity describing what happened.
     /// </summary>
+    /// <param name="additionalRequests">
+    /// Extra requests folded into the same batch (e.g. dependent-sheet header-formula refreshes
+    /// from <see cref="Managers.GoogleSheetManagerBase{TEntity}.AutoHealMissingColumnsAsync"/>), so
+    /// they land in one atomic API call instead of a separate follow-up one.
+    /// </param>
     public static async Task<TEntity> InsertMissingColumnsAsync<TEntity>(
         IGoogleSheetService googleSheetService,
-        Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+        Dictionary<string, List<ColumnInsertionInfo>> missingColumns,
+        IEnumerable<Request>? additionalRequests = null)
         where TEntity : class, ISheetEntity, new()
     {
         var entity = new TEntity();
@@ -79,6 +85,12 @@ public static class ColumnInsertionHelper
         }
 
         var requests = BuildInsertRequests(missingColumns);
+
+        if (additionalRequests != null)
+        {
+            requests.AddRange(additionalRequests);
+        }
+
         var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
         var result = await googleSheetService.BatchUpdateSpreadsheet(batchRequest);
 

@@ -51,7 +51,7 @@ public static class StockSheetHelpers
             var headers = values[0];
             se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, SheetsConfig.StockSheet));
             se.Sheets.Stocks = StockMapper.MapFromRangeData(values);
-        });
+        }, dependsOn: [SheetName.TICKERS.GetDescription()]);
 
         registry.Register(SheetName.TICKERS.GetDescription(), () => SheetsConfig.TickerSheet, (se, values) =>
         {

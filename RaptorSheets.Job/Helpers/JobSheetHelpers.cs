@@ -37,17 +37,20 @@ public static class JobSheetHelpers
     {
         var registry = new SheetRegistry<SheetEntity>();
 
+        // dependsOn declares which other sheet(s) each mapper's GetSheet() cross-references via
+        // GetRange/GetLocalRange, so RefreshDependentSheetsAsync knows to rewrite this sheet's
+        // header formulas whenever one of those sheets is created/healed/changed.
         registry.RegisterGeneric<SheetEntity, ApplicationEntity>(SheetsConfig.SheetNames.Applications, ApplicationMapper.GetSheet, (se, rows) => se.Sheets.Applications = rows);
         registry.RegisterGeneric<SheetEntity, InterviewEntity>(SheetsConfig.SheetNames.Interviews, InterviewMapper.GetSheet, (se, rows) => se.Sheets.Interviews = rows);
         registry.RegisterGeneric<SheetEntity, CompanyDetailEntity>(SheetsConfig.SheetNames.CompanyDetails, () => GenericSheetMapper<CompanyDetailEntity>.GetSheet(SheetsConfig.CompanyDetailSheet), (se, rows) => se.Sheets.CompanyDetails = rows);
         registry.RegisterGeneric<SheetEntity, PositionDetailEntity>(SheetsConfig.SheetNames.PositionDetails, () => GenericSheetMapper<PositionDetailEntity>.GetSheet(SheetsConfig.PositionDetailSheet), (se, rows) => se.Sheets.PositionDetails = rows);
-        registry.RegisterGeneric<SheetEntity, CompanyEntity>(SheetsConfig.SheetNames.Companies, CompanyMapper.GetSheet, (se, rows) => se.Sheets.Companies = rows);
-        registry.RegisterGeneric<SheetEntity, PositionEntity>(SheetsConfig.SheetNames.Positions, PositionMapper.GetSheet, (se, rows) => se.Sheets.Positions = rows);
-        registry.RegisterGeneric<SheetEntity, SiteEntity>(SheetsConfig.SheetNames.Sites, ValidationMapper.GetSiteSheet, (se, rows) => se.Sheets.Sites = rows);
-        registry.RegisterGeneric<SheetEntity, DecisionEntity>(SheetsConfig.SheetNames.Decisions, ValidationMapper.GetDecisionSheet, (se, rows) => se.Sheets.Decisions = rows);
-        registry.RegisterGeneric<SheetEntity, InterviewTypeEntity>(SheetsConfig.SheetNames.InterviewTypes, ValidationMapper.GetInterviewTypeSheet, (se, rows) => se.Sheets.InterviewTypes = rows);
-        registry.RegisterGeneric<SheetEntity, InterviewOutcomeEntity>(SheetsConfig.SheetNames.InterviewOutcomes, ValidationMapper.GetInterviewOutcomeSheet, (se, rows) => se.Sheets.InterviewOutcomes = rows);
-        registry.RegisterGeneric<SheetEntity, ScheduleEntity>(SheetsConfig.SheetNames.Schedules, ValidationMapper.GetScheduleSheet, (se, rows) => se.Sheets.Schedules = rows);
+        registry.RegisterGeneric<SheetEntity, CompanyEntity>(SheetsConfig.SheetNames.Companies, CompanyMapper.GetSheet, (se, rows) => se.Sheets.Companies = rows, dependsOn: [SheetsConfig.SheetNames.Applications, SheetsConfig.SheetNames.Interviews]);
+        registry.RegisterGeneric<SheetEntity, PositionEntity>(SheetsConfig.SheetNames.Positions, PositionMapper.GetSheet, (se, rows) => se.Sheets.Positions = rows, dependsOn: [SheetsConfig.SheetNames.Applications, SheetsConfig.SheetNames.Interviews]);
+        registry.RegisterGeneric<SheetEntity, SiteEntity>(SheetsConfig.SheetNames.Sites, ValidationMapper.GetSiteSheet, (se, rows) => se.Sheets.Sites = rows, dependsOn: [SheetsConfig.SheetNames.Applications, SheetsConfig.SheetNames.Interviews]);
+        registry.RegisterGeneric<SheetEntity, DecisionEntity>(SheetsConfig.SheetNames.Decisions, ValidationMapper.GetDecisionSheet, (se, rows) => se.Sheets.Decisions = rows, dependsOn: [SheetsConfig.SheetNames.Applications, SheetsConfig.SheetNames.Interviews]);
+        registry.RegisterGeneric<SheetEntity, InterviewTypeEntity>(SheetsConfig.SheetNames.InterviewTypes, ValidationMapper.GetInterviewTypeSheet, (se, rows) => se.Sheets.InterviewTypes = rows, dependsOn: [SheetsConfig.SheetNames.Interviews]);
+        registry.RegisterGeneric<SheetEntity, InterviewOutcomeEntity>(SheetsConfig.SheetNames.InterviewOutcomes, ValidationMapper.GetInterviewOutcomeSheet, (se, rows) => se.Sheets.InterviewOutcomes = rows, dependsOn: [SheetsConfig.SheetNames.Interviews]);
+        registry.RegisterGeneric<SheetEntity, ScheduleEntity>(SheetsConfig.SheetNames.Schedules, ValidationMapper.GetScheduleSheet, (se, rows) => se.Sheets.Schedules = rows, dependsOn: [SheetsConfig.SheetNames.Applications, SheetsConfig.SheetNames.Interviews]);
         registry.RegisterGeneric<SheetEntity, SetupEntity>(SheetsConfig.SheetNames.Setup, ValidationMapper.GetSetupSheet, (se, rows) => se.Sheets.Setup = rows);
 
         return registry;
