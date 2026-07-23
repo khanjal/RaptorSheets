@@ -278,7 +278,9 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             new RoomEntity { RowId = 3, Room = kitchen, Length = 12, Width = 10, Level = "Main" },
             new RoomEntity { RowId = 4, Room = "Primary Bedroom", Length = 14, Width = 13, Level = "Upper" },
             new RoomEntity { RowId = 5, Room = "Bathroom", Length = 8, Width = 6, Level = "Upper" },
-            new RoomEntity { RowId = 6, Room = garage, Length = 20, Width = 20, Level = "Main" }
+            new RoomEntity { RowId = 6, Room = garage, Length = 20, Width = 20, Level = "Main" },
+            // Detached structures use Level to say so, instead of a floor like Main/Upper
+            new RoomEntity { RowId = 7, Room = "Shed", Length = 10, Width = 8, Level = "Shed" }
         ]);
 
         sheetEntity.Sheets.Contacts.AddRange(
@@ -292,7 +294,11 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         [
             new ApplianceEntity { RowId = 2, Type = "Refrigerator", Location = kitchen, Manufacturer = "LG", Model = "LRFVS3006S", FilterDate = "2026-01-15", ReplacementMonths = 6, OriginalPrice = 1899.99m },
             new ApplianceEntity { RowId = 3, Type = "Washer", Location = garage, Manufacturer = "Samsung", Model = "WF45T6000AW", OriginalPrice = 749.99m },
-            new ApplianceEntity { RowId = 4, Type = "Furnace", Location = garage, Manufacturer = "Carrier", Model = "59SC5", FilterDate = "2026-02-01", ReplacementMonths = 3, OriginalPrice = 3200.00m }
+            new ApplianceEntity { RowId = 4, Type = "Furnace", Location = garage, Manufacturer = "Carrier", Model = "59SC5", FilterDate = "2026-02-01", ReplacementMonths = 3, OriginalPrice = 3200.00m },
+            // Whole-property energy systems fit the same generic shape (EnergySource/Capacity cover
+            // what Filter/FilterDate cover for appliances that need it instead)
+            new ApplianceEntity { RowId = 5, Type = "Solar Panel System", Manufacturer = "SunPower", Model = "X22-370", EnergySource = "Solar", Capacity = "6.5 kW", OriginalPrice = 18500.00m },
+            new ApplianceEntity { RowId = 6, Type = "Generator", Location = garage, Manufacturer = "Generac", Model = "Guardian 22kW", EnergySource = "Propane", Capacity = "22 kW", OriginalPrice = 4500.00m }
         ]);
 
         sheetEntity.Sheets.Projects.AddRange(
@@ -333,7 +339,10 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             new StatEntity { RowId = 4, Name = "Built", Value = "1998" },
             new StatEntity { RowId = 5, Name = "Square Footage", Value = "2400" },
             new StatEntity { RowId = 6, Name = "Roof Type", Value = "Asphalt Shingle" },
-            new StatEntity { RowId = 7, Name = "Roof Installed", Value = "2015" }
+            new StatEntity { RowId = 7, Name = "Roof Installed", Value = "2015" },
+            // A second structure's roof is just another name/value pair - Stats isn't limited to one
+            // of each fact
+            new StatEntity { RowId = 8, Name = "Shed Roof Type", Value = "Metal" }
         ]);
 
         return sheetEntity;
