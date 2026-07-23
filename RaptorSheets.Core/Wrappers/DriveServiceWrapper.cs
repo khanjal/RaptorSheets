@@ -1,6 +1,7 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
-using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models;
 using System.Diagnostics.CodeAnalysis;
 using File = Google.Apis.Drive.v3.Data.File;
 
@@ -16,9 +17,11 @@ public interface IDriveServiceWrapper
 public class DriveServiceWrapper : DriveService, IDriveServiceWrapper
 {
     private DriveService _driveService = new();
+    private readonly GoogleRetryOptions _retryOptions;
 
-    public DriveServiceWrapper(string accessToken)
+    public DriveServiceWrapper(string accessToken, GoogleRetryOptions? retryOptions = null)
     {
+        _retryOptions = retryOptions ?? GoogleRetryOptions.Default;
         var credential = GoogleCredential.FromAccessToken(accessToken.Trim());
 
         InitializeService(credential);
@@ -26,11 +29,10 @@ public class DriveServiceWrapper : DriveService, IDriveServiceWrapper
 
     private void InitializeService(GoogleCredential credential)
     {
-        _driveService = new DriveService(new Initializer()
-        {
-            HttpClientInitializer = credential,
-            ApplicationName = GoogleConfig.AppName
-        });
+        _driveService = new DriveService(
+            GoogleServiceInitializerHelper.CreateInitializer(credential, _retryOptions));
+
+        GoogleServiceInitializerHelper.ApplyRateLimitBackOff(_driveService, _retryOptions);
     }
 
     public async Task<File> CreateSpreadsheet(string name)
