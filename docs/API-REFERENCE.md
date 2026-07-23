@@ -44,6 +44,53 @@ Low-level wrapper around Google Sheets API.
 | `UpdateValues(string spreadsheetId, string range, ValueRange valueRange)` | Update cell values |
 | `BatchUpdate(string spreadsheetId, BatchUpdateSpreadsheetRequest request)` | Batch operations |
 
+### Dependency Injection
+
+Each domain package exposes `AddRaptorSheets{Domain}` on `IServiceCollection`, backed by shared
+wiring in Core.
+
+| Registration | Registers |
+|--------------|-----------|
+| `AddRaptorSheets{Domain}()` | `ISheetManagerFactory<IGoogleSheetManager>` only |
+| `AddRaptorSheets{Domain}(options => ...)` | The factory **and** a singleton `IGoogleSheetManager` bound to those options |
+
+#### RaptorSheetsOptions
+
+| Property | Description |
+|----------|-------------|
+| `SpreadsheetId` | Required. The id segment of the spreadsheet URL. |
+| `AccessToken` | OAuth access token. Mutually exclusive with `ServiceAccountCredentials`. |
+| `ServiceAccountCredentials` | Service-account fields; keys may be camelCase or snake_case. Mutually exclusive with `AccessToken`. |
+| `Retry` | `GoogleRetryOptions` for transient-failure handling. |
+
+Validated at resolution — a missing spreadsheet id, no credential, or both credential kinds throws
+an `InvalidOperationException` naming the domain.
+
+#### ISheetManagerFactory&lt;TManager&gt;
+
+For spreadsheets chosen at runtime rather than at registration.
+
+| Method | Description |
+|--------|-------------|
+| `Create(string accessToken, string spreadsheetId, GoogleRetryOptions? retryOptions = null)` | Manager authenticated with an access token |
+| `Create(Dictionary<string, string> credentials, string spreadsheetId, GoogleRetryOptions? retryOptions = null)` | Manager authenticated with service-account credentials |
+
+### GoogleRetryOptions
+
+Controls automatic retry of transient Google API failures — 429 rate limiting, 503s, and transport
+exceptions. Passed via `RaptorSheetsOptions.Retry`, the factory's `retryOptions` argument, or the
+manager/service constructors.
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `Enabled` | `true` | Set false to surface transient failures immediately. |
+| `MaxRetries` | `3` | Attempts before the error is surfaced. Max 20. |
+| `BackOffDelta` | `1s` | **Base unit of the exponential curve, not the first delay.** Waits are roughly `delta * (2^attempt - 1)` with jitter. Max 1s — the underlying client rejects more. |
+| `MaxDelay` | `8s` | Ceiling on any single wait; beyond it, retrying stops. |
+
+At the defaults, actual waits land near 1.5s, 2.9s, and 4.3s — under ~9 seconds total, which fits
+inside a 30 second gateway timeout with room for the requests themselves.
+
 ### SheetHelpers
 
 Utility methods for sheet operations.

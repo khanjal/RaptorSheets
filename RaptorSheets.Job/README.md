@@ -31,4 +31,23 @@ await manager.SetupDemo();
 var data = await manager.GetAllSheets();
 ```
 
+### Dependency injection
+
+```csharp
+using RaptorSheets.Job.Extensions;
+
+// One spreadsheet, bound from configuration
+builder.Services.AddRaptorSheetsJob(options =>
+{
+    options.SpreadsheetId = builder.Configuration["Sheets:SpreadsheetId"];
+    options.AccessToken = builder.Configuration["Sheets:AccessToken"];
+});
+
+// Or, when the spreadsheet varies per request or per signed-in user
+builder.Services.AddRaptorSheetsJob();
+// ... then: factory.Create(userToken, userSpreadsheetId)
+```
+
+See [Getting Started](https://github.com/khanjal/RaptorSheets/blob/main/docs/GETTING-STARTED.md#dependency-injection) for details.
+
 See [RaptorSheets](https://github.com/khanjal/RaptorSheets) for authentication and full documentation.

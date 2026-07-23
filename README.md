@@ -243,6 +243,28 @@ var credentials = new Dictionary<string, string>
 var manager = new GoogleSheetManager(accessToken, spreadsheetId);
 ```
 
+### Dependency Injection
+Every domain package registers itself on `IServiceCollection`:
+
+```csharp
+using RaptorSheets.Gig.Extensions;
+
+// One spreadsheet, bound from configuration
+builder.Services.AddRaptorSheetsGig(options =>
+{
+    options.SpreadsheetId = builder.Configuration["Sheets:SpreadsheetId"];
+    options.AccessToken = builder.Configuration["Sheets:AccessToken"];
+});
+
+// Or, when each signed-in user has their own spreadsheet
+builder.Services.AddRaptorSheetsGig();
+// ... then: factory.Create(userToken, userSpreadsheetId)
+```
+
+`AddRaptorSheetsStock`, `AddRaptorSheetsJob`, and `AddRaptorSheetsHome` work the same way, and
+several domains can be registered side by side. See
+[Getting Started](docs/GETTING-STARTED.md#dependency-injection).
+
 ## 🏗️ Building Custom Packages
 
 RaptorSheets.Core with TypedField system is designed to be the foundation for domain-specific packages:

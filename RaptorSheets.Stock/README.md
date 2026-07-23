@@ -52,6 +52,25 @@ Console.WriteLine($"Accounts: {data.Sheets.Accounts.Count}, Stocks: {data.Sheets
 var subset = await manager.GetSheets(new List<string> { SheetEnum.ACCOUNTS.GetDescription() });
 ```
 
+### Dependency injection
+
+```csharp
+using RaptorSheets.Stock.Extensions;
+
+// One spreadsheet, bound from configuration
+builder.Services.AddRaptorSheetsStock(options =>
+{
+    options.SpreadsheetId = builder.Configuration["Sheets:SpreadsheetId"];
+    options.AccessToken = builder.Configuration["Sheets:AccessToken"];
+});
+
+// Or, when the spreadsheet varies per request or per signed-in user
+builder.Services.AddRaptorSheetsStock();
+// ... then: factory.Create(userToken, userSpreadsheetId)
+```
+
+See [Getting Started](https://github.com/khanjal/RaptorSheets/blob/main/docs/GETTING-STARTED.md#dependency-injection) for details.
+
 ## Data Operations
 
 ### Creating and Deleting Sheets

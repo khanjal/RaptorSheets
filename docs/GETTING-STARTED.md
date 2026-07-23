@@ -7,7 +7,8 @@ This guide will help you get up and running with RaptorSheets quickly, whether y
 2. [Prerequisites](#prerequisites)
 3. [Authentication Setup](#authentication-setup)
 4. [Quick Start Examples](#quick-start-examples)
-5. [Next Steps](#next-steps)
+5. [Dependency Injection](#dependency-injection)
+6. [Next Steps](#next-steps)
 
 ## Choose Your Package
 
@@ -177,6 +178,58 @@ foreach (var sheet in response.Sheets)
 var allData = await manager.GetSheets();
 ```
 
+## Dependency Injection
+
+Every domain package ships an `IServiceCollection` extension, so credentials come from configuration
+and the logger comes from the container. There are two shapes, depending on whether the spreadsheet
+is known at startup.
+
+### One spreadsheet, bound from configuration
+
+The shape a worker service or CLI wants:
+
+```csharp
+using RaptorSheets.Gig.Extensions;
+
+builder.Services.AddRaptorSheetsGig(options =>
+{
+    options.SpreadsheetId = builder.Configuration["Sheets:SpreadsheetId"];
+    options.AccessToken = builder.Configuration["Sheets:AccessToken"];
+});
+```
+
+`IGoogleSheetManager` is then injectable directly.
+
+### A different spreadsheet per request
+
+The shape a multi-tenant app wants, where each signed-in user has their own spreadsheet and
+credentials. Register without options and resolve the factory:
+
+```csharp
+builder.Services.AddRaptorSheetsGig();
+
+// ...
+
+public class TripsService(ISheetManagerFactory<IGoogleSheetManager> factory)
+{
+    public Task<SheetEntity> GetTripsAsync(string userToken, string userSpreadsheetId)
+    {
+        var manager = factory.Create(userToken, userSpreadsheetId);
+        return manager.GetSheet("Trips");
+    }
+}
+```
+
+The factory is registered either way, so you can bind a default spreadsheet *and* still create
+managers for other spreadsheets at runtime.
+
+`AddRaptorSheetsStock`, `AddRaptorSheetsJob`, and `AddRaptorSheetsHome` work identically, and several
+domains can be registered side by side against different spreadsheets.
+
+> Options are validated when the manager is resolved. A missing `SpreadsheetId`, no credential, or
+> both an access token *and* service-account credentials throws at startup with a message naming the
+> domain — not at the first API call.
+
 ## Next Steps
 
 ### For RaptorSheets.Core Users
@@ -204,7 +257,29 @@ var allData = await manager.GetSheets();
 ### Quota Limits
 - Google Sheets API has rate limits (100 requests per 100 seconds)
 - Use batch operations for bulk data operations
-- RaptorSheets automatically handles retries
+- RaptorSheets retries transient failures automatically — rate limiting (429), 503s, and transport
+  exceptions — with exponential backoff. Defaults keep the total wait under about 9 seconds so a
+  retry burst can't consume a typical request budget.
+- Tune or disable it with `GoogleRetryOptions`:
+
+```csharp
+var manager = new GoogleSheetManager(accessToken, spreadsheetId);
+
+// or, with explicit retry behavior:
+services.AddRaptorSheetsGig(options =>
+{
+    options.SpreadsheetId = spreadsheetId;
+    options.AccessToken = accessToken;
+    options.Retry = new GoogleRetryOptions
+    {
+        MaxRetries = 5,
+        BackOffDelta = TimeSpan.FromSeconds(1),  // exponential base unit, max 1s
+        MaxDelay = TimeSpan.FromSeconds(8)       // ceiling on any single wait
+    };
+});
+```
+
+If a 429 still surfaces after retries, the quota is genuinely exhausted rather than merely contended.
 
 ### Permission Errors
 - Share your spreadsheet with the service account email
