@@ -21,8 +21,8 @@ public class HomeSheets
     [JsonPropertyName("maintenance")]
     public List<MaintenanceEntity> Maintenance { get; set; } = [];
 
-    [JsonPropertyName("doors")]
-    public List<DoorEntity> Doors { get; set; } = [];
+    [JsonPropertyName("doorsWindows")]
+    public List<DoorWindowEntity> DoorsWindows { get; set; } = [];
 
     [JsonPropertyName("paints")]
     public List<PaintEntity> Paints { get; set; } = [];

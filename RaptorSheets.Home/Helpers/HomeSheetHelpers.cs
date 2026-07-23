@@ -40,7 +40,7 @@ public static class HomeSheetHelpers
         registry.RegisterGeneric<SheetEntity, ApplianceEntity>(SheetsConfig.SheetNames.Appliances, ApplianceSheet.GetSheet, (se, rows) => se.Sheets.Appliances = rows);
         registry.RegisterGeneric<SheetEntity, ProjectEntity>(SheetsConfig.SheetNames.Projects, ProjectSheet.GetSheet, (se, rows) => se.Sheets.Projects = rows);
         registry.RegisterGeneric<SheetEntity, MaintenanceEntity>(SheetsConfig.SheetNames.Maintenance, MaintenanceSheet.GetSheet, (se, rows) => se.Sheets.Maintenance = rows);
-        registry.RegisterGeneric<SheetEntity, DoorEntity>(SheetsConfig.SheetNames.Doors, DoorSheet.GetSheet, (se, rows) => se.Sheets.Doors = rows);
+        registry.RegisterGeneric<SheetEntity, DoorWindowEntity>(SheetsConfig.SheetNames.DoorsWindows, DoorWindowSheet.GetSheet, (se, rows) => se.Sheets.DoorsWindows = rows);
         registry.RegisterGeneric<SheetEntity, PaintEntity>(SheetsConfig.SheetNames.Paints, PaintSheet.GetSheet, (se, rows) => se.Sheets.Paints = rows);
         registry.RegisterGeneric<SheetEntity, PowerEntity>(SheetsConfig.SheetNames.Power, PowerSheet.GetSheet, (se, rows) => se.Sheets.Power = rows);
         registry.RegisterGeneric<SheetEntity, RoomEntity>(SheetsConfig.SheetNames.Rooms, RoomSheet.GetSheet, (se, rows) => se.Sheets.Rooms = rows);

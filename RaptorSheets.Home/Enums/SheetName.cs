@@ -18,8 +18,8 @@ public enum SheetName
     [Description(SheetsConfig.SheetNames.Maintenance)]
     MAINTENANCE,
 
-    [Description(SheetsConfig.SheetNames.Doors)]
-    DOORS,
+    [Description(SheetsConfig.SheetNames.DoorsWindows)]
+    DOORS_WINDOWS,
 
     [Description(SheetsConfig.SheetNames.Paints)]
     PAINTS,

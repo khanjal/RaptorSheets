@@ -60,6 +60,24 @@ public class HomeSheetsIntegrationTests : IntegrationTestBase
         Assert.False(string.IsNullOrWhiteSpace(fridge!.NextFilter));
     }
 
+    [FactCheckUserSecrets]
+    public async Task SetupDemo_CreatesSheetsAndPopulatesData()
+    {
+        SkipIfNoCredentials();
+
+        var result = await GoogleSheetManager!.SetupDemo(seed: 42);
+
+        Assert.NotEmpty(result.Sheets.Rooms);
+        Assert.NotEmpty(result.Sheets.DoorsWindows);
+        Assert.NotEmpty(result.Sheets.Stats);
+
+        await Task.Delay(2500);
+
+        var readBack = await GoogleSheetManager!.GetSheets([SheetsConfig.SheetNames.Rooms, SheetsConfig.SheetNames.Stats]);
+        Assert.NotEmpty(readBack.Sheets.Rooms);
+        Assert.Contains(readBack.Sheets.Stats, s => s.Name == "Roof Type");
+    }
+
     private static SheetEntity BuildTestData()
     {
         var data = new SheetEntity();

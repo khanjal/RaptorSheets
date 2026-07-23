@@ -38,6 +38,11 @@ public interface IGoogleSheetManager
 
     // Header Management
     Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
+
+    // Demo Data Generation
+    Task<SheetEntity> SetupDemo(int? seed = null);
+    Task<SheetEntity> PopulateDemoData(int? seed = null);
+    SheetEntity GenerateDemoData(int? seed = null);
 }
 
 /// <summary>
@@ -139,10 +144,10 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
                 entity => entity.Sheets.Maintenance.Count,
                 entity => entity.Sheets.Maintenance,
                 (data, properties) => HomeRequestHelpers.ChangeMaintenanceSheetData(data as List<MaintenanceEntity> ?? [], properties)),
-            [SheetsConfig.SheetNames.Doors] = new(
-                entity => entity.Sheets.Doors.Count,
-                entity => entity.Sheets.Doors,
-                (data, properties) => HomeRequestHelpers.ChangeDoorSheetData(data as List<DoorEntity> ?? [], properties)),
+            [SheetsConfig.SheetNames.DoorsWindows] = new(
+                entity => entity.Sheets.DoorsWindows.Count,
+                entity => entity.Sheets.DoorsWindows,
+                (data, properties) => HomeRequestHelpers.ChangeDoorWindowSheetData(data as List<DoorWindowEntity> ?? [], properties)),
             [SheetsConfig.SheetNames.Paints] = new(
                 entity => entity.Sheets.Paints.Count,
                 entity => entity.Sheets.Paints,
@@ -208,6 +213,139 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
     {
         return HomeSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
+    }
+
+    #endregion
+
+    #region Demo Data Generation
+
+    /// <summary>
+    /// Creates all sheets and then fills every sheet with a realistic sample household's worth of
+    /// demo data.
+    /// </summary>
+    public async Task<SheetEntity> SetupDemo(int? seed = null)
+    {
+        await CreateAllSheets();
+        await Task.Delay(1500); // let freshly-created sheets become writable
+        return await PopulateDemoData(seed);
+    }
+
+    /// <summary>
+    /// Writes generated demo data into every Home sheet in a single batch. Unlike Stock/Gig/Job,
+    /// every Home sheet is directly user-entered (none are formula-derived from another), so all
+    /// nine get written here rather than just one or two input sheets.
+    /// </summary>
+    public async Task<SheetEntity> PopulateDemoData(int? seed = null)
+    {
+        var demoData = GenerateDemoData(seed);
+
+        var sheetsToWrite = new List<string>
+        {
+            SheetsConfig.SheetNames.Rooms,
+            SheetsConfig.SheetNames.Contacts,
+            SheetsConfig.SheetNames.Appliances,
+            SheetsConfig.SheetNames.Projects,
+            SheetsConfig.SheetNames.Maintenance,
+            SheetsConfig.SheetNames.DoorsWindows,
+            SheetsConfig.SheetNames.Paints,
+            SheetsConfig.SheetNames.Power,
+            SheetsConfig.SheetNames.Stats
+        };
+
+        await ChangeSheetData(sheetsToWrite, demoData);
+        return demoData;
+    }
+
+    /// <summary>
+    /// Generates a small, realistic sample household's worth of data across every Home sheet,
+    /// without writing it anywhere. RowIds start at 2 (per sheet) so a subsequent write lands rows
+    /// below the header row. Deliberately a fixed, curated set rather than randomly generated volume
+    /// (unlike Gig/Job's demo data) - the goal is a clean example a user can look at and edit, not a
+    /// large synthetic dataset. <paramref name="seed"/> is accepted for API consistency with the
+    /// other domains' demo-data methods but isn't currently used.
+    /// </summary>
+    public SheetEntity GenerateDemoData(int? seed = null)
+    {
+        const string livingRoom = "Living Room";
+        const string kitchen = "Kitchen";
+        const string garage = "Garage";
+
+        var sheetEntity = new SheetEntity();
+
+        sheetEntity.Sheets.Rooms.AddRange(
+        [
+            new RoomEntity { RowId = 2, Room = livingRoom, Length = 15, Width = 12, Level = "Main" },
+            new RoomEntity { RowId = 3, Room = kitchen, Length = 12, Width = 10, Level = "Main" },
+            new RoomEntity { RowId = 4, Room = "Primary Bedroom", Length = 14, Width = 13, Level = "Upper" },
+            new RoomEntity { RowId = 5, Room = "Bathroom", Length = 8, Width = 6, Level = "Upper" },
+            new RoomEntity { RowId = 6, Room = garage, Length = 20, Width = 20, Level = "Main" },
+            // Detached structures use Level to say so, instead of a floor like Main/Upper
+            new RoomEntity { RowId = 7, Room = "Shed", Length = 10, Width = 8, Level = "Shed" }
+        ]);
+
+        sheetEntity.Sheets.Contacts.AddRange(
+        [
+            new ContactEntity { RowId = 2, Name = "Ace Plumbing", Number = "555-0100", Description = "Plumber" },
+            new ContactEntity { RowId = 3, Name = "Bright Spark Electric", Number = "555-0111", Description = "Electrician" },
+            new ContactEntity { RowId = 4, Name = "Cool Breeze HVAC", Number = "555-0122", Description = "HVAC Technician" }
+        ]);
+
+        sheetEntity.Sheets.Appliances.AddRange(
+        [
+            new ApplianceEntity { RowId = 2, Type = "Refrigerator", Location = kitchen, Manufacturer = "LG", Model = "LRFVS3006S", FilterDate = "2026-01-15", ReplacementMonths = 6, OriginalPrice = 1899.99m },
+            new ApplianceEntity { RowId = 3, Type = "Washer", Location = garage, Manufacturer = "Samsung", Model = "WF45T6000AW", OriginalPrice = 749.99m },
+            new ApplianceEntity { RowId = 4, Type = "Furnace", Location = garage, Manufacturer = "Carrier", Model = "59SC5", FilterDate = "2026-02-01", ReplacementMonths = 3, OriginalPrice = 3200.00m },
+            // Whole-property energy systems fit the same generic shape (EnergySource/Capacity cover
+            // what Filter/FilterDate cover for appliances that need it instead)
+            new ApplianceEntity { RowId = 5, Type = "Solar Panel System", Manufacturer = "SunPower", Model = "X22-370", EnergySource = "Solar", Capacity = "6.5 kW", OriginalPrice = 18500.00m },
+            new ApplianceEntity { RowId = 6, Type = "Generator", Location = garage, Manufacturer = "Generac", Model = "Guardian 22kW", EnergySource = "Propane", Capacity = "22 kW", OriginalPrice = 4500.00m }
+        ]);
+
+        sheetEntity.Sheets.Projects.AddRange(
+        [
+            new ProjectEntity { RowId = 2, Task = "Repaint Living Room", Area = livingRoom, Started = "2026-03-01", Completed = "2026-03-05", ApproximateCost = 250.00m },
+            new ProjectEntity { RowId = 3, Task = "Install Ceiling Fan", Area = "Primary Bedroom", Started = "2026-04-10", ApproximateCost = 180.00m }
+        ]);
+
+        sheetEntity.Sheets.Maintenance.AddRange(
+        [
+            new MaintenanceEntity { RowId = 2, Date = "2026-02-14", Problem = "Leaky kitchen faucet", CompanyPerson = "Ace Plumbing", Solution = "Replaced cartridge", Amount = 145.00m },
+            new MaintenanceEntity { RowId = 3, Date = "2026-05-02", Problem = "Outlet not working", CompanyPerson = "Bright Spark Electric", Solution = "Replaced GFI outlet", Amount = 95.00m }
+        ]);
+
+        sheetEntity.Sheets.DoorsWindows.AddRange(
+        [
+            new DoorWindowEntity { RowId = 2, Location = livingRoom, Type = "Front Door", Brand = "Therma-Tru", Installed = "2018-06-01" },
+            new DoorWindowEntity { RowId = 3, Location = kitchen, Type = "Sliding Door", Brand = "Andersen", Installed = "2018-06-01" },
+            new DoorWindowEntity { RowId = 4, Location = livingRoom, Type = "Bay Window", Brand = "Pella", Installed = "2015-09-12" }
+        ]);
+
+        sheetEntity.Sheets.Paints.AddRange(
+        [
+            new PaintEntity { RowId = 2, Brand = "Sherwin-Williams", Type = "Eggshell", Color = "Agreeable Gray", Location = livingRoom, Remaining = "3/4 gallon", Size = "1 gallon" },
+            new PaintEntity { RowId = 3, Brand = "Benjamin Moore", Type = "Satin", Color = "White Dove", Location = kitchen, Remaining = "1/2 gallon", Size = "1 gallon" }
+        ]);
+
+        sheetEntity.Sheets.Power.AddRange(
+        [
+            new PowerEntity { RowId = 2, Location = kitchen, Type = "Outlet", Position = "Countertop", Amps = 20, Grounded = true, GFI = true },
+            new PowerEntity { RowId = 3, Location = garage, Type = "Outlet", Position = "Workbench", Amps = 20, Grounded = true, GFI = true }
+        ]);
+
+        sheetEntity.Sheets.Stats.AddRange(
+        [
+            new StatEntity { RowId = 2, Name = "Beds", Value = "3" },
+            new StatEntity { RowId = 3, Name = "Baths", Value = "2" },
+            new StatEntity { RowId = 4, Name = "Built", Value = "1998" },
+            new StatEntity { RowId = 5, Name = "Square Footage", Value = "2400" },
+            new StatEntity { RowId = 6, Name = "Roof Type", Value = "Asphalt Shingle" },
+            new StatEntity { RowId = 7, Name = "Roof Installed", Value = "2015" },
+            // A second structure's roof is just another name/value pair - Stats isn't limited to one
+            // of each fact
+            new StatEntity { RowId = 8, Name = "Shed Roof Type", Value = "Metal" }
+        ]);
+
+        return sheetEntity;
     }
 
     #endregion

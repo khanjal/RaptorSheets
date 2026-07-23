@@ -6,8 +6,13 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Home.Entities;
 
+/// <summary>
+/// Covers both doors and windows - they share the same shape (a dimensioned opening/fixture with a
+/// brand, model, and install date), so one sheet holds both. <see cref="Type"/> is free text (e.g.
+/// "Front Door", "Bay Window", "Sliding Door") and is what distinguishes the two.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public class DoorEntity : SheetRowEntityBase
+public class DoorWindowEntity : SheetRowEntityBase
 {
     [Column(SheetsConfig.HeaderNames.Location, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRoom)]
     public string Location { get; set; } = "";

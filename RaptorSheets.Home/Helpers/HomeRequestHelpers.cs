@@ -28,10 +28,10 @@ public static class HomeRequestHelpers
         => GoogleRequestHelpers.ChangeSheetData(maintenance, sheetProperties, (entities, props) =>
             GoogleRequestHelpers.CreateUpdateCellRequests(entities, props, GenericSheetMapper<MaintenanceEntity>.MapToRowData));
 
-    // DOORS
-    public static List<Request> ChangeDoorSheetData(List<DoorEntity> doors, PropertyEntity? sheetProperties)
-        => GoogleRequestHelpers.ChangeSheetData(doors, sheetProperties, (entities, props) =>
-            GoogleRequestHelpers.CreateUpdateCellRequests(entities, props, GenericSheetMapper<DoorEntity>.MapToRowData));
+    // DOORS & WINDOWS
+    public static List<Request> ChangeDoorWindowSheetData(List<DoorWindowEntity> doorsWindows, PropertyEntity? sheetProperties)
+        => GoogleRequestHelpers.ChangeSheetData(doorsWindows, sheetProperties, (entities, props) =>
+            GoogleRequestHelpers.CreateUpdateCellRequests(entities, props, GenericSheetMapper<DoorWindowEntity>.MapToRowData));
 
     // PAINTS
     public static List<Request> ChangePaintSheetData(List<PaintEntity> paints, PropertyEntity? sheetProperties)
