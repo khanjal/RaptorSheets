@@ -6,6 +6,7 @@ using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Data.Attributes;
 using RaptorSheets.Gig.Tests.Integration.Base;
+using RaptorSheets.Test.Common.Fixtures;
 using RaptorSheets.Test.Common.Helpers;
 using System.ComponentModel;
 using RaptorSheets.Core.Constants;
@@ -14,18 +15,23 @@ namespace RaptorSheets.Gig.Tests.Integration;
 
 /// <summary>
 /// Integration tests for Google Sheets operations.
-/// 
+///
 /// Test Organization:
 /// - Single orchestrated flow to minimize API calls
 /// - Each test validates a specific aspect during the flow
 /// - Shared test data across related validations
-/// - Collection fixture ensures sheets exist before tests run
+/// - Collection fixture (<see cref="GigCleanSlateFixture"/>) deletes/recreates every sheet before
+///   tests run
 /// </summary>
-[Collection("GoogleSheetsIntegration")]
+[Collection("GigSheetsIntegration")]
 [Category("Integration")]
 [Trait("TestType", "Comprehensive")]
 public class GoogleSheetsIntegrationTests : IntegrationTestBase
 {
+    public GoogleSheetsIntegrationTests(GigCleanSlateFixture fixture) : base(fixture)
+    {
+    }
+
     #region 1. Environment Setup & Validation
 
     [FactCheckUserSecrets]
@@ -860,120 +866,23 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 }
 
 /// <summary>
-/// Collection definition for Google Sheets integration tests.
+/// Collection definition for Gig Google Sheets integration tests.
 /// </summary>
-[CollectionDefinition("GoogleSheetsIntegration")]
-public class GoogleSheetsIntegrationCollection : ICollectionFixture<GoogleSheetsIntegrationFixture>
+[CollectionDefinition("GigSheetsIntegration")]
+public class GigSheetsIntegrationCollection : ICollectionFixture<GigCleanSlateFixture>
 {
 }
 
 /// <summary>
-/// Fixture for Google Sheets integration tests.
-/// Handles one-time environment setup for all tests in the collection.
-/// Deletes and recreates all sheets to validate the creation process.
+/// Gig's clean-slate integration fixture (see <see cref="CleanSlateSheetFixture{TEntity,TManager}"/>).
+/// Deletes and recreates every canonical sheet once, before the collection's tests run. Safe because
+/// spreadsheets:gig is configured to point at a dedicated blank test spreadsheet, not real data.
 /// </summary>
-public class GoogleSheetsIntegrationFixture : IAsyncLifetime
+public class GigCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
 {
-    private GoogleSheetManager? _manager;
-    
-    public async Task InitializeAsync()
+    public GigCleanSlateFixture() : base(
+        TestConfigurationHelpers.GetGigSpreadsheet(),
+        (credential, spreadsheetId) => new GoogleSheetManager(credential, spreadsheetId))
     {
-        System.Diagnostics.Debug.WriteLine("🚀 Initializing Google Sheets integration test environment (Clean Slate)");
-        
-        // Get credentials for setup
-        var spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
-        var credential = TestConfigurationHelpers.GetJsonCredential();
-
-        if (!GoogleCredentialHelpers.IsCredentialFilled(credential))
-        {
-            System.Diagnostics.Debug.WriteLine("⚠️  No credentials - skipping environment setup");
-            return;
-        }
-        
-        _manager = new GoogleSheetManager(credential, spreadsheetId);
-        
-        try
-        {
-            System.Diagnostics.Debug.WriteLine("  🗑️  Deleting all existing sheets to ensure clean slate...");
-            
-            // Delete all sheets to start fresh
-            var deleteResult = await _manager.DeleteAllSheets();
-            var deleteErrors = deleteResult.Messages.Where(m => 
-                m.Level == MessageLevel.ERROR.GetDescription()).ToList();
-            
-            if (deleteErrors.Count > 0)
-            {
-                System.Diagnostics.Debug.WriteLine($"  ⚠️  Sheet deletion had errors: {string.Join(", ", deleteErrors.Select(e => e.Message))}");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("  ✓ All sheets deleted successfully");
-            }
-            
-            await Task.Delay(3000); // Allow deletion to complete
-            
-            // Create all sheets fresh
-            System.Diagnostics.Debug.WriteLine("  📌 Creating all sheets fresh to validate creation process...");
-            var createResult = await _manager.CreateAllSheets();
-            var createErrors = createResult.Messages.Where(m => 
-                m.Level == MessageLevel.ERROR.GetDescription()).ToList();
-            
-            if (createErrors.Count > 0)
-            {
-                System.Diagnostics.Debug.WriteLine($"  ⚠️  Sheet creation had errors: {string.Join(", ", createErrors.Select(e => e.Message))}");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("  ✓ All sheets created successfully");
-            }
-            
-            await Task.Delay(3000); // Allow creation to complete
-            
-            // Verify all sheets were created correctly
-            System.Diagnostics.Debug.WriteLine("  🔍 Verifying sheet creation...");
-            var allProperties = await _manager.GetAllSheetProperties();
-            
-            System.Diagnostics.Debug.WriteLine($"  📊 Found {allProperties.Count} sheet tabs");
-            System.Diagnostics.Debug.WriteLine($"  📋 Tabs: {string.Join(", ", allProperties.Select(p => p.Name))}");
-            
-            // Validate headers for each sheet
-            var spreadsheetInfo = await _manager.GetSpreadsheetInfo(
-                allProperties.Select(p => $"{p.Name}!1:1").ToList());
-            
-            if (spreadsheetInfo != null)
-            {
-                var headerValidation = GoogleSheetManager.CheckSheetHeaders(spreadsheetInfo);
-                var headerErrors = headerValidation.Where(m => 
-                    m.Level == MessageLevel.ERROR.GetDescription() ||
-                    m.Level == MessageLevel.WARNING.GetDescription()).ToList();
-                
-                if (headerErrors.Count > 0)
-                {
-                    System.Diagnostics.Debug.WriteLine($"  ⚠️  Header validation warnings/errors:");
-                    foreach (var error in headerErrors)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"     {error.Level}: {error.Message}");
-                    }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("  ✓ All sheet headers validated successfully");
-                }
-            }
-            
-            System.Diagnostics.Debug.WriteLine("✅ Integration test environment ready (Clean Slate Validated)");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"⚠️  Setup failed: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"     Stack: {ex.StackTrace}");
-            // Don't fail the fixture - let individual tests handle issues
-        }
-    }
-
-    public async Task DisposeAsync()
-    {
-        System.Diagnostics.Debug.WriteLine("✅ Google Sheets integration tests completed");
-        await Task.CompletedTask;
     }
 }

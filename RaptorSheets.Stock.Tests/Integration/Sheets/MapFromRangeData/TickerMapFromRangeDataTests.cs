@@ -11,11 +11,11 @@ namespace RaptorSheets.Stock.Tests.Integration.Sheets.MapFromRangeData;
 [Collection("StockSheetsIntegration")]
 public class TickerMapFromRangeDataTests
 {
-    readonly StockSheetsIntegrationFixture fixture;
+    readonly StockCleanSlateFixture fixture;
     private static IList<IList<object>>? _values;
     private static List<TickerEntity>? _entities;
 
-    public TickerMapFromRangeDataTests(StockSheetsIntegrationFixture fixture)
+    public TickerMapFromRangeDataTests(StockCleanSlateFixture fixture)
     {
         this.fixture = fixture;
         _values = this.fixture.ValueRanges?.First(x => x.DataFilters[0].A1Range == SheetName.TICKERS.GetDescription()).ValueRange.Values;

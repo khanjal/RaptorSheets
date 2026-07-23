@@ -61,6 +61,7 @@ public static class AccountSheet
         Name = Enums.SheetName.ACCOUNTS.GetDescription(),
         CellColor = SheetColor.LIGHT_GREEN,
         TabColor = SheetColor.GREEN,
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,

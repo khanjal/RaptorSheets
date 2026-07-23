@@ -1,24 +1,32 @@
 using System.ComponentModel;
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Entities;
+using RaptorSheets.Job.Managers;
 using RaptorSheets.Job.Tests.Data.Attributes;
 using RaptorSheets.Job.Tests.Integration.Base;
+using RaptorSheets.Test.Common.Fixtures;
+using RaptorSheets.Test.Common.Helpers;
 
 namespace RaptorSheets.Job.Tests.Integration;
 
 /// <summary>
 /// Integration tests that write to (and read back from) a live Job Google Sheet.
 /// Skipped automatically unless credentials and a Job spreadsheet ID are configured in user secrets
-/// (add "spreadsheets:job" alongside "spreadsheets:gig"/"spreadsheets:home").
+/// (add "spreadsheets:job" alongside "spreadsheets:gig"/"spreadsheets:home"). Collection fixture
+/// (<see cref="JobCleanSlateFixture"/>) deletes/recreates every sheet before tests run.
 /// </summary>
+[Collection("JobSheetsIntegration")]
 [Category("Integration")]
 public class JobSheetsIntegrationTests : IntegrationTestBase
 {
+    public JobSheetsIntegrationTests(JobCleanSlateFixture fixture) : base(fixture)
+    {
+    }
+
     [FactCheckUserSecrets]
     public async Task WriteThenRead_Applications_And_Interviews_RoundTrips()
     {
         SkipIfNoCredentials();
-        Assert.True(await EnsureSheetsExist(TestSheets), "Failed to ensure Job sheets exist");
 
         var data = new SheetEntity();
         data.Sheets.Applications.Add(new ApplicationEntity
@@ -81,5 +89,27 @@ public class JobSheetsIntegrationTests : IntegrationTestBase
 
         var readBack = await GoogleSheetManager!.GetSheets([SheetsConfig.SheetNames.Applications]);
         Assert.NotEmpty(readBack.Sheets.Applications);
+    }
+}
+
+/// <summary>
+/// Collection definition for Job Google Sheets integration tests.
+/// </summary>
+[CollectionDefinition("JobSheetsIntegration")]
+public class JobSheetsIntegrationCollection : ICollectionFixture<JobCleanSlateFixture>
+{
+}
+
+/// <summary>
+/// Job's clean-slate integration fixture (see <see cref="CleanSlateSheetFixture{TEntity,TManager}"/>).
+/// Deletes and recreates every canonical sheet once, before the collection's tests run. Safe because
+/// spreadsheets:job is configured to point at a dedicated blank test spreadsheet, not real data.
+/// </summary>
+public class JobCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
+{
+    public JobCleanSlateFixture() : base(
+        TestConfigurationHelpers.GetJobSpreadsheet(),
+        (credential, spreadsheetId) => new GoogleSheetManager(credential, spreadsheetId))
+    {
     }
 }

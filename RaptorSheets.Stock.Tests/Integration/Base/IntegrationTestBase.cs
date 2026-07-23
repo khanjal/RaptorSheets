@@ -3,22 +3,24 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Managers;
-using RaptorSheets.Test.Common.Helpers;
+using RaptorSheets.Stock.Tests.Integration;
 using Xunit;
 using SheetName = RaptorSheets.Stock.Enums.SheetName;
 
 namespace RaptorSheets.Stock.Tests.Integration.Base;
 
 /// <summary>
-/// Base class for Stock integration tests. Provides a configured manager (or null when credentials
-/// are absent) plus small reusable operations for reading data back.
+/// Base class for Stock integration tests. Gets its manager from the shared
+/// <see cref="StockCleanSlateFixture"/> (null when credentials are absent), which has already
+/// deleted/recreated every sheet before this collection's tests run, plus small reusable
+/// operations for reading data back.
 /// </summary>
 public abstract class IntegrationTestBase
 {
     protected readonly GoogleSheetManager? GoogleSheetManager;
     protected readonly List<string> TestSheets;
 
-    protected IntegrationTestBase()
+    protected IntegrationTestBase(StockCleanSlateFixture fixture)
     {
         TestSheets =
         [
@@ -27,11 +29,7 @@ public abstract class IntegrationTestBase
             SheetName.TICKERS.GetDescription()
         ];
 
-        var spreadsheetId = TestConfigurationHelpers.GetStockSpreadsheet();
-        var credential = TestConfigurationHelpers.GetJsonCredential();
-
-        if (GoogleCredentialHelpers.IsCredentialFilled(credential))
-            GoogleSheetManager = new GoogleSheetManager(credential, spreadsheetId);
+        GoogleSheetManager = fixture.Manager;
     }
 
     protected void SkipIfNoCredentials()
