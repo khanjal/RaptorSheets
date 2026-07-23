@@ -82,13 +82,15 @@ public static class GigFormulas
     #region Shift-Specific Business Logic
 
     /// <summary>
-    /// Shift key generation: IFS(ROW({keyRange})=1,"{header}",ISBLANK({serviceRange}), "",true,IF(ISBLANK({numberRange}), {dateRange} & "-0-" & {serviceRange}, {dateRange} & "-" & {numberRange} & "-" & {serviceRange}))
+    /// Shift key generation:
+    /// <![CDATA[ IFS(ROW({keyRange})=1,"{header}",ISBLANK({serviceRange}), "",true,IF(ISBLANK({numberRange}), {dateRange} & "-0-" & {serviceRange}, {dateRange} & "-" & {numberRange} & "-" & {serviceRange})) ]]>
     /// Placeholders: {keyRange}, {header}, {serviceRange}, {numberRange}, {dateRange}
     /// </summary>
     public const string ShiftKeyGeneration = "IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({serviceRange}), \"\",true,IF(ISBLANK({numberRange}), {dateRange} & \"-0-\" & {serviceRange}, {dateRange} & \"-\" & {numberRange} & \"-\" & {serviceRange}))";
 
     /// <summary>
-    /// Trip key generation with exclude: IF({excludeRange},{dateRange} & "-X-" & {serviceRange},IF(ISBLANK({numberRange}), {dateRange} & "-0-" & {serviceRange}, {dateRange} & "-" & {numberRange} & "-" & {serviceRange}))
+    /// Trip key generation with exclude:
+    /// <![CDATA[ IF({excludeRange},{dateRange} & "-X-" & {serviceRange},IF(ISBLANK({numberRange}), {dateRange} & "-0-" & {serviceRange}, {dateRange} & "-" & {numberRange} & "-" & {serviceRange})) ]]>
     /// Placeholders: {excludeRange}, {dateRange}, {serviceRange}, {numberRange}
     /// </summary>
     public const string TripKeyGeneration = "IF({excludeRange},{dateRange} & \"-X-\" & {serviceRange},IF(ISBLANK({numberRange}), {dateRange} & \"-0-\" & {serviceRange}, {dateRange} & \"-\" & {numberRange} & \"-\" & {serviceRange}))";

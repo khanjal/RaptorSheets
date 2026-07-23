@@ -1,4 +1,45 @@
 <Project>
+  <PropertyGroup>
+    <!--
+      Ship the XML documentation file with the packages. The codebase already carries substantial
+      doc comments (GoogleSheetManagerBase, SheetEntityBase, SchemaValidationResult, and others);
+      without this they never reach consumers' IntelliSense.
+
+      The suppressed warnings below are all "documentation is incomplete" findings - a missing
+      comment, an unresolved cref, an undocumented parameter. They degrade the docs but still ship
+      them. CS1591 alone accounts for ~800 in Core. These are deferred to their own cleanup pass
+      rather than blocking this.
+
+      CS1570 (badly formed XML) is deliberately NOT suppressed. That one is different in kind: the
+      compiler drops the entire member from the generated .xml, so the affected type ships with no
+      documentation at all. Leaving it as a live warning means a malformed comment gets caught at
+      build time instead of silently disappearing from consumers' IntelliSense.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591;CS1573;CS1572;CS1574;CS1711;CS0419;CS1587</NoWarn>
+
+    <!-- Same inputs produce the same outputs, so package contents are byte-for-byte reproducible. -->
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <!--
+      CI-only source linking: embeds the repository URL and commit in the package so debuggers can
+      fetch the exact source a binary was built from and step into it. Restricted to CI because
+      ContinuousIntegrationBuild normalizes local paths, which is wrong for local debug builds.
+      .NET 8's SDK includes SourceLink, so no package reference is needed here.
+    -->
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Publish symbols alongside the package so stack traces from consumers are resolvable. -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
   <!--
     Runs the same C# analyzer engine that powers SonarCloud's CI checks (csharpsquid) locally,
     at build time and in the IDE, so findings like naming conventions and Cognitive Complexity

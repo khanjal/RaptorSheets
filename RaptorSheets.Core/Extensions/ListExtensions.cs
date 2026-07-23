@@ -46,7 +46,6 @@ public static class ListExtensions
     }
 
     /// <summary>
-    /// <summary>
     /// Keep the first <paramref name="leadingCount"/> existing headers and pad with
     /// empty placeholders so the final header count equals the original count
     /// observed before modification. Useful when you want to preserve the
