@@ -1,7 +1,8 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
-using RaptorSheets.Core.Constants;
+using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models;
 using System.Diagnostics.CodeAnalysis;
 using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
 
@@ -25,18 +26,21 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
 {
     private SheetsService _sheetsService = new();
     private readonly string _spreadsheetId;
+    private readonly GoogleRetryOptions _retryOptions;
 
-    public SheetServiceWrapper(string accessToken, string spreadsheetId)
+    public SheetServiceWrapper(string accessToken, string spreadsheetId, GoogleRetryOptions? retryOptions = null)
     {
         _spreadsheetId = spreadsheetId;
+        _retryOptions = retryOptions ?? GoogleRetryOptions.Default;
         var credential = GoogleCredential.FromAccessToken(accessToken.Trim());
 
         InitializeService(credential);
     }
 
-    public SheetServiceWrapper(Dictionary<string, string> parameters, string spreadsheetId)
+    public SheetServiceWrapper(Dictionary<string, string> parameters, string spreadsheetId, GoogleRetryOptions? retryOptions = null)
     {
         _spreadsheetId = spreadsheetId;
+        _retryOptions = retryOptions ?? GoogleRetryOptions.Default;
         // Resolve credential parameters with tolerant key lookup to accept either
         // camelCase (privateKey, privateKeyId, clientEmail, clientId) or
         // snake_case (private_key, private_key_id, client_email, client_id) names.
@@ -113,11 +117,10 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
 
     private void InitializeService(Google.Apis.Http.IConfigurableHttpClientInitializer httpInitializer)
     {
-        _sheetsService = new SheetsService(new Initializer()
-        {
-            HttpClientInitializer = httpInitializer,
-            ApplicationName = GoogleConfig.AppName
-        });
+        _sheetsService = new SheetsService(
+            GoogleServiceInitializerHelper.CreateInitializer(httpInitializer, _retryOptions));
+
+        GoogleServiceInitializerHelper.ApplyRateLimitBackOff(_sheetsService, _retryOptions);
     }
 
     public async Task<AppendValuesResponse> AppendValues(string range, IList<IList<object>> values)

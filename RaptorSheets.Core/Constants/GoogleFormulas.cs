@@ -34,7 +34,8 @@ public static class GoogleFormulas
     public const string ArrayLiteralUniqueCombined = "={\"{header}\";SORT(UNIQUE({{range1};{range2}}))}";
 
     /// <summary>
-    /// Simple array literal for unique values with combined ranges (filtered): ="{header}";SORT(UNIQUE(IFERROR(FILTER({range1};{range2}},{range1};{range2}<>""))))
+    /// Simple array literal for unique values with combined ranges (filtered):
+    /// <![CDATA[ ="{header}";SORT(UNIQUE(IFERROR(FILTER({range1};{range2}},{range1};{range2}<>"")))) ]]>
     /// Placeholders: {header}, {range1}, {range2}
     /// Used when combining multiple source ranges for unique values, excluding empty values
     /// This is the recommended version for most use cases to avoid blank entries
@@ -43,7 +44,8 @@ public static class GoogleFormulas
     public const string ArrayLiteralUniqueCombinedFiltered = "={\"{header}\";SORT(UNIQUE(IFERROR(FILTER({{range1};{range2}},{{range1};{range2}}<>\"\"))))}";
 
     /// <summary>
-    /// Simple array literal for unique filtered values: ="{header}";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>""))))
+    /// Simple array literal for unique filtered values:
+    /// <![CDATA[ ="{header}";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>"")))) ]]>
     /// Placeholders: {header}, {sourceRange}
     /// More efficient than ArrayFormulaBase for filtered unique values
     /// Sorted alphabetically/numerically
@@ -51,7 +53,8 @@ public static class GoogleFormulas
     public const string ArrayLiteralUniqueFilteredSorted = "={\"{header}\";SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\"))))}";
 
     /// <summary>
-    /// Simple array literal for unique filtered values: ="{header}";UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>"")))
+    /// Simple array literal for unique filtered values:
+    /// <![CDATA[ ="{header}";UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>""))) ]]>
     /// Placeholders: {header}, {sourceRange}
     /// Preserves source order - useful for chronological data like weeks, months
     /// This is the default - use ArrayLiteralUniqueFilteredSorted for alphabetical sorting
@@ -65,7 +68,8 @@ public static class GoogleFormulas
     public const string ArrayFormulaUnique = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true, SORT(UNIQUE({sourceRange}))))";
 
     /// <summary>
-    /// ARRAYFORMULA for unique filtered values: =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true, SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>"")), 1)))
+    /// ARRAYFORMULA for unique filtered values:
+    /// <![CDATA[ =ARRAYFORMULA(IFS(ROW({keyRange})=1,"{header}",ISBLANK({keyRange}), "", true, SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>"")), 1))) ]]>
     /// Placeholders: {keyRange}, {header}, {sourceRange}
     /// </summary>
     public const string ArrayFormulaUniqueFiltered = "=ARRAYFORMULA(IFS(ROW({keyRange})=1,\"{header}\",ISBLANK({keyRange}), \"\", true, SORT(UNIQUE(IFERROR(FILTER({sourceRange}, {sourceRange}<>\"\")), 1))))";
@@ -139,13 +143,15 @@ public static class GoogleFormulas
     public const string SplitStringByIndex = "IFERROR(INDEX(SPLIT({sourceRange}, \"{delimiter}\"), 0, {index}), 0)";
 
     /// <summary>
-    /// Week number with year: WEEKNUM({dateRange},2)&"-"&YEAR({dateRange})
+    /// Week number with year:
+    /// <![CDATA[ WEEKNUM({dateRange},2)&"-"&YEAR({dateRange}) ]]>
     /// Placeholders: {dateRange}
     /// </summary>
     public const string WeekNumberWithYear = "WEEKNUM({dateRange},2)&\"-\"&YEAR({dateRange})";
 
     /// <summary>
-    /// Month number with year: MONTH({dateRange})&"-"&YEAR({dateRange})
+    /// Month number with year:
+    /// <![CDATA[ MONTH({dateRange})&"-"&YEAR({dateRange}) ]]>
     /// Placeholders: {dateRange}
     /// </summary>
     public const string MonthNumberWithYear = "MONTH({dateRange})&\"-\"&YEAR({dateRange})";
@@ -164,7 +170,8 @@ public static class GoogleFormulas
 
     /// <summary>
     /// Complex rolling average for time series analysis using DAVERAGE with transpose matrix.
-    /// Formula: DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)})
+    /// Formula:
+    /// <![CDATA[ DAVERAGE(transpose({{totalRange},TRANSPOSE(if(ROW({totalRange}) <= TRANSPOSE(ROW({totalRange})),{totalRange},))}),sequence(rows({totalRange}),1),{if(,,);if(,,)}) ]]>
     /// Creates a cumulative average by building a growing dataset for each row; the DAVERAGE
     /// function with empty criteria averages all rows up to the current position.
     /// Placeholders: {totalRange}

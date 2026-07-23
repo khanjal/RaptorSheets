@@ -12,6 +12,7 @@ public static class PropertyEntityMapper
     /// Additional file metadata can be placed into the returned entity's <see cref="PropertyEntity.Attributes"/> dictionary.
     /// Example usage:
     /// <code>
+    /// <![CDATA[
     /// var entity = new PropertyEntity
     /// {
     ///     Id = file.Id,
@@ -22,6 +23,7 @@ public static class PropertyEntityMapper
     ///         { "CreatedTime", file.CreatedTimeRaw }
     ///     }
     /// };
+    /// ]]>
     /// </code>
     /// </remarks>
     public static PropertyEntity MapFromDriveFile(File? file)

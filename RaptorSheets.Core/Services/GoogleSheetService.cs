@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Wrappers;
 using System.Diagnostics.CodeAnalysis;
 
@@ -28,15 +29,15 @@ public class GoogleSheetService : IGoogleSheetService
     private readonly string _range = GoogleConfig.Range;
     private readonly ILogger _logger;
 
-    public GoogleSheetService(string accessToken, string spreadsheetId, ILogger? logger = null)
+    public GoogleSheetService(string accessToken, string spreadsheetId, ILogger? logger = null, GoogleRetryOptions? retryOptions = null)
     {
-        _sheetService = new SheetServiceWrapper(accessToken, spreadsheetId);
+        _sheetService = new SheetServiceWrapper(accessToken, spreadsheetId, retryOptions);
         _logger = logger ?? NullLogger.Instance;
     }
 
-    public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
+    public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null, GoogleRetryOptions? retryOptions = null)
     {
-        _sheetService = new SheetServiceWrapper(parameters, spreadsheetId);
+        _sheetService = new SheetServiceWrapper(parameters, spreadsheetId, retryOptions);
         _logger = logger ?? NullLogger.Instance;
     }
 

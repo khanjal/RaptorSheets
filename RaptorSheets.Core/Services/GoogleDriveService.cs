@@ -1,5 +1,6 @@
 ﻿using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Wrappers;
 using System.Diagnostics.CodeAnalysis;
 
@@ -16,9 +17,9 @@ public class GoogleDriveService : IGoogleDriveService
 {
     private readonly DriveServiceWrapper _driveService;
 
-    public GoogleDriveService(string accessToken)
+    public GoogleDriveService(string accessToken, GoogleRetryOptions? retryOptions = null)
     {
-        _driveService = new DriveServiceWrapper(accessToken);
+        _driveService = new DriveServiceWrapper(accessToken, retryOptions);
     }
 
     public async Task<PropertyEntity> CreateSpreadsheet(string name)
