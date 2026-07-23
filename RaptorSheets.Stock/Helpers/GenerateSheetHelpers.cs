@@ -5,7 +5,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Managers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Stock.Enums;
-using RaptorSheets.Stock.Mappers;
+using RaptorSheets.Stock.Sheets;
 
 namespace RaptorSheets.Stock.Helpers;
 
@@ -80,9 +80,9 @@ public static class GenerateSheetHelpers
     {
         return sheetEnum switch
         {
-            Enums.SheetName.ACCOUNTS => AccountMapper.GetSheet(),
-            Enums.SheetName.STOCKS => StockMapper.GetSheet(),
-            Enums.SheetName.TICKERS => TickerMapper.GetSheet(),
+            Enums.SheetName.ACCOUNTS => AccountSheet.GetSheet(),
+            Enums.SheetName.STOCKS => StockSheet.GetSheet(),
+            Enums.SheetName.TICKERS => TickerSheet.GetSheet(),
             _ => throw new NotImplementedException(),
         };
     }

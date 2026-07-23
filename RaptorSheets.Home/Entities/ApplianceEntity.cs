@@ -45,7 +45,7 @@ public class ApplianceEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.ReplacementMonths, isInput: true, note: ColumnNotes.ReplacementMonths, formatType: Format.NUMBER)]
     public int? ReplacementMonths { get; set; }
 
-    // Calculated: Filter Date + Rpl. Mth (configured in ApplianceMapper)
+    // Calculated: Filter Date + Rpl. Mth (configured in ApplianceSheet)
     [Column(SheetsConfig.HeaderNames.NextFilter, Format.DATE, ColumnNotes.NextFilter)]
     public string NextFilter { get; set; } = "";
 

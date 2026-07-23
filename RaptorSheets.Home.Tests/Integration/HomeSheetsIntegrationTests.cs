@@ -1,8 +1,11 @@
 using System.ComponentModel;
 using RaptorSheets.Home.Constants;
 using RaptorSheets.Home.Entities;
+using RaptorSheets.Home.Managers;
 using RaptorSheets.Home.Tests.Data.Attributes;
 using RaptorSheets.Home.Tests.Integration.Base;
+using RaptorSheets.Test.Common.Fixtures;
+using RaptorSheets.Test.Common.Helpers;
 
 namespace RaptorSheets.Home.Tests.Integration;
 
@@ -10,16 +13,22 @@ namespace RaptorSheets.Home.Tests.Integration;
 /// Integration tests that actually write to (and read back from) a live Home Google Sheet.
 /// Skipped automatically unless credentials and a Home spreadsheet ID are configured in user secrets
 /// (add "spreadsheets:home" alongside the existing "spreadsheets:gig"/"spreadsheets:stock").
+/// Collection fixture (<see cref="HomeCleanSlateFixture"/>) deletes/recreates every sheet before
+/// tests run.
 /// </summary>
+[Collection("HomeSheetsIntegration")]
 [Category("Integration")]
 public class HomeSheetsIntegrationTests : IntegrationTestBase
 {
+    public HomeSheetsIntegrationTests(HomeCleanSlateFixture fixture) : base(fixture)
+    {
+    }
+
     [FactCheckUserSecrets]
     public async Task WriteThenRead_Rooms_Contacts_Appliances_RoundTrips()
     {
-        // Arrange - make sure the sheets we're writing to exist
+        // Arrange
         SkipIfNoCredentials();
-        Assert.True(await EnsureSheetsExist(TestSheets), "Failed to ensure Home sheets exist");
 
         var data = BuildTestData();
 
@@ -78,5 +87,27 @@ public class HomeSheetsIntegrationTests : IntegrationTestBase
         });
 
         return data;
+    }
+}
+
+/// <summary>
+/// Collection definition for Home Google Sheets integration tests.
+/// </summary>
+[CollectionDefinition("HomeSheetsIntegration")]
+public class HomeSheetsIntegrationCollection : ICollectionFixture<HomeCleanSlateFixture>
+{
+}
+
+/// <summary>
+/// Home's clean-slate integration fixture (see <see cref="CleanSlateSheetFixture{TEntity,TManager}"/>).
+/// Deletes and recreates every canonical sheet once, before the collection's tests run. Safe because
+/// spreadsheets:home is configured to point at a dedicated blank test spreadsheet, not real data.
+/// </summary>
+public class HomeCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
+{
+    public HomeCleanSlateFixture() : base(
+        TestConfigurationHelpers.GetHomeSpreadsheet(),
+        (credential, spreadsheetId) => new GoogleSheetManager(credential, spreadsheetId))
+    {
     }
 }

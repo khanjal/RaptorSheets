@@ -1,6 +1,6 @@
 using RaptorSheets.Home.Constants;
 using RaptorSheets.Home.Helpers;
-using RaptorSheets.Home.Mappers;
+using RaptorSheets.Home.Sheets;
 
 namespace RaptorSheets.Home.Tests.Unit;
 
@@ -19,7 +19,7 @@ public class SheetLayoutTests
     [Fact]
     public void RoomSheet_SquareFeet_IsCalculatedFromLengthAndWidth()
     {
-        var sheet = RoomMapper.GetSheet();
+        var sheet = RoomSheet.GetSheet();
         var squareFeet = sheet.Headers.Single(h => h.Name == SheetsConfig.HeaderNames.SquareFeet);
 
         Assert.False(string.IsNullOrEmpty(squareFeet.Formula));
@@ -30,7 +30,7 @@ public class SheetLayoutTests
     [Fact]
     public void ApplianceSheet_NextFilter_IsCalculatedFromFilterDateAndMonths()
     {
-        var sheet = ApplianceMapper.GetSheet();
+        var sheet = ApplianceSheet.GetSheet();
         var nextFilter = sheet.Headers.Single(h => h.Name == SheetsConfig.HeaderNames.NextFilter);
 
         Assert.False(string.IsNullOrEmpty(nextFilter.Formula));
@@ -40,7 +40,7 @@ public class SheetLayoutTests
     [Fact]
     public void ApplianceSheet_Location_HasRoomDropdownValidation()
     {
-        var sheet = ApplianceMapper.GetSheet();
+        var sheet = ApplianceSheet.GetSheet();
         var location = sheet.Headers.Single(h => h.Name == SheetsConfig.HeaderNames.Location);
 
         Assert.Equal(SheetsConfig.ValidationNames.RangeRoom, location.Validation);

@@ -1,13 +1,12 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Registries;
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Entities;
-using RaptorSheets.Job.Mappers;
+using RaptorSheets.Job.Sheets;
 
 namespace RaptorSheets.Job.Helpers;
 
@@ -37,18 +36,18 @@ public static class JobSheetHelpers
     {
         var registry = new SheetRegistry<SheetEntity>();
 
-        registry.RegisterGeneric<SheetEntity, ApplicationEntity>(SheetsConfig.SheetNames.Applications, ApplicationMapper.GetSheet, (se, rows) => se.Sheets.Applications = rows);
-        registry.RegisterGeneric<SheetEntity, InterviewEntity>(SheetsConfig.SheetNames.Interviews, InterviewMapper.GetSheet, (se, rows) => se.Sheets.Interviews = rows);
-        registry.RegisterGeneric<SheetEntity, CompanyDetailEntity>(SheetsConfig.SheetNames.CompanyDetails, () => GenericSheetMapper<CompanyDetailEntity>.GetSheet(SheetsConfig.CompanyDetailSheet), (se, rows) => se.Sheets.CompanyDetails = rows);
-        registry.RegisterGeneric<SheetEntity, PositionDetailEntity>(SheetsConfig.SheetNames.PositionDetails, () => GenericSheetMapper<PositionDetailEntity>.GetSheet(SheetsConfig.PositionDetailSheet), (se, rows) => se.Sheets.PositionDetails = rows);
-        registry.RegisterGeneric<SheetEntity, CompanyEntity>(SheetsConfig.SheetNames.Companies, CompanyMapper.GetSheet, (se, rows) => se.Sheets.Companies = rows);
-        registry.RegisterGeneric<SheetEntity, PositionEntity>(SheetsConfig.SheetNames.Positions, PositionMapper.GetSheet, (se, rows) => se.Sheets.Positions = rows);
-        registry.RegisterGeneric<SheetEntity, SiteEntity>(SheetsConfig.SheetNames.Sites, ValidationMapper.GetSiteSheet, (se, rows) => se.Sheets.Sites = rows);
-        registry.RegisterGeneric<SheetEntity, DecisionEntity>(SheetsConfig.SheetNames.Decisions, ValidationMapper.GetDecisionSheet, (se, rows) => se.Sheets.Decisions = rows);
-        registry.RegisterGeneric<SheetEntity, InterviewTypeEntity>(SheetsConfig.SheetNames.InterviewTypes, ValidationMapper.GetInterviewTypeSheet, (se, rows) => se.Sheets.InterviewTypes = rows);
-        registry.RegisterGeneric<SheetEntity, InterviewOutcomeEntity>(SheetsConfig.SheetNames.InterviewOutcomes, ValidationMapper.GetInterviewOutcomeSheet, (se, rows) => se.Sheets.InterviewOutcomes = rows);
-        registry.RegisterGeneric<SheetEntity, ScheduleEntity>(SheetsConfig.SheetNames.Schedules, ValidationMapper.GetScheduleSheet, (se, rows) => se.Sheets.Schedules = rows);
-        registry.RegisterGeneric<SheetEntity, SetupEntity>(SheetsConfig.SheetNames.Setup, ValidationMapper.GetSetupSheet, (se, rows) => se.Sheets.Setup = rows);
+        registry.RegisterGeneric<SheetEntity, ApplicationEntity>(SheetsConfig.SheetNames.Applications, ApplicationSheet.GetSheet, (se, rows) => se.Sheets.Applications = rows);
+        registry.RegisterGeneric<SheetEntity, InterviewEntity>(SheetsConfig.SheetNames.Interviews, InterviewSheet.GetSheet, (se, rows) => se.Sheets.Interviews = rows);
+        registry.RegisterGeneric<SheetEntity, CompanyDetailEntity>(SheetsConfig.SheetNames.CompanyDetails, CompanyDetailSheet.GetSheet, (se, rows) => se.Sheets.CompanyDetails = rows);
+        registry.RegisterGeneric<SheetEntity, PositionDetailEntity>(SheetsConfig.SheetNames.PositionDetails, PositionDetailSheet.GetSheet, (se, rows) => se.Sheets.PositionDetails = rows);
+        registry.RegisterGeneric<SheetEntity, CompanyEntity>(SheetsConfig.SheetNames.Companies, CompanySheet.GetSheet, (se, rows) => se.Sheets.Companies = rows);
+        registry.RegisterGeneric<SheetEntity, PositionEntity>(SheetsConfig.SheetNames.Positions, PositionSheet.GetSheet, (se, rows) => se.Sheets.Positions = rows);
+        registry.RegisterGeneric<SheetEntity, SiteEntity>(SheetsConfig.SheetNames.Sites, SiteSheet.GetSheet, (se, rows) => se.Sheets.Sites = rows);
+        registry.RegisterGeneric<SheetEntity, DecisionEntity>(SheetsConfig.SheetNames.Decisions, DecisionSheet.GetSheet, (se, rows) => se.Sheets.Decisions = rows);
+        registry.RegisterGeneric<SheetEntity, InterviewTypeEntity>(SheetsConfig.SheetNames.InterviewTypes, InterviewTypeSheet.GetSheet, (se, rows) => se.Sheets.InterviewTypes = rows);
+        registry.RegisterGeneric<SheetEntity, InterviewOutcomeEntity>(SheetsConfig.SheetNames.InterviewOutcomes, InterviewOutcomeSheet.GetSheet, (se, rows) => se.Sheets.InterviewOutcomes = rows);
+        registry.RegisterGeneric<SheetEntity, ScheduleEntity>(SheetsConfig.SheetNames.Schedules, ScheduleSheet.GetSheet, (se, rows) => se.Sheets.Schedules = rows);
+        registry.RegisterGeneric<SheetEntity, SetupEntity>(SheetsConfig.SheetNames.Setup, SetupSheet.GetSheet, (se, rows) => se.Sheets.Setup = rows);
 
         return registry;
     }

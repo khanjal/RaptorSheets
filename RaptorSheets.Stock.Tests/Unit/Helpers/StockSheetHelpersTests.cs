@@ -66,7 +66,7 @@ namespace RaptorSheets.Stock.Tests.Unit.Helpers
             // SheetRegistry.GetDependents derives dependencies dynamically by scanning each mapper's
             // built formulas for other sheets' quoted range pattern ('Name'!) - no manual
             // declaration. This confirms it actually finds Stock's real graph:
-            // StockMapper.GetSheet() reads tickerSheet.GetRange(...), and AccountMapper.GetSheet()
+            // StockSheet.GetSheet() reads tickerSheet.GetRange(...), and AccountSheet.GetSheet()
             // separately reads stockSheet.GetRange(...) - so Accounts transitively depends on
             // Tickers too, through Stocks.
             var tickersDependents = StockSheetHelpers.Registry.GetDependents(["Tickers"]);

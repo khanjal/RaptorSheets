@@ -1,14 +1,13 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Registries;
 using RaptorSheets.Home.Constants;
 using RaptorSheets.Home.Entities;
 using RaptorSheets.Home.Enums;
-using RaptorSheets.Home.Mappers;
+using RaptorSheets.Home.Sheets;
 
 namespace RaptorSheets.Home.Helpers;
 
@@ -17,8 +16,8 @@ namespace RaptorSheets.Home.Helpers;
 ///
 /// Per-sheet dispatch (headers, row mapping, missing-column detection) is delegated to a shared
 /// RaptorSheets.Core.Registries.SheetRegistry&lt;SheetEntity&gt;. Sheets that need no formulas map
-/// directly through GenericSheetMapper&lt;T&gt;; Rooms and Appliances use their own mappers for their
-/// one calculated column each.
+/// directly through GenericSheetMapper&lt;T&gt;; Rooms and Appliances use their own sheet definitions
+/// for their one calculated column each.
 /// </summary>
 public static class HomeSheetHelpers
 {
@@ -38,15 +37,15 @@ public static class HomeSheetHelpers
     {
         var registry = new SheetRegistry<SheetEntity>();
 
-        registry.RegisterGeneric<SheetEntity, ApplianceEntity>(SheetsConfig.SheetNames.Appliances, ApplianceMapper.GetSheet, (se, rows) => se.Sheets.Appliances = rows);
-        registry.RegisterGeneric<SheetEntity, ProjectEntity>(SheetsConfig.SheetNames.Projects, () => GenericSheetMapper<ProjectEntity>.GetSheet(SheetsConfig.ProjectSheet), (se, rows) => se.Sheets.Projects = rows);
-        registry.RegisterGeneric<SheetEntity, MaintenanceEntity>(SheetsConfig.SheetNames.Maintenance, () => GenericSheetMapper<MaintenanceEntity>.GetSheet(SheetsConfig.MaintenanceSheet), (se, rows) => se.Sheets.Maintenance = rows);
-        registry.RegisterGeneric<SheetEntity, DoorEntity>(SheetsConfig.SheetNames.Doors, () => GenericSheetMapper<DoorEntity>.GetSheet(SheetsConfig.DoorSheet), (se, rows) => se.Sheets.Doors = rows);
-        registry.RegisterGeneric<SheetEntity, PaintEntity>(SheetsConfig.SheetNames.Paints, () => GenericSheetMapper<PaintEntity>.GetSheet(SheetsConfig.PaintSheet), (se, rows) => se.Sheets.Paints = rows);
-        registry.RegisterGeneric<SheetEntity, PowerEntity>(SheetsConfig.SheetNames.Power, () => GenericSheetMapper<PowerEntity>.GetSheet(SheetsConfig.PowerSheet), (se, rows) => se.Sheets.Power = rows);
-        registry.RegisterGeneric<SheetEntity, RoomEntity>(SheetsConfig.SheetNames.Rooms, RoomMapper.GetSheet, (se, rows) => se.Sheets.Rooms = rows);
-        registry.RegisterGeneric<SheetEntity, ContactEntity>(SheetsConfig.SheetNames.Contacts, () => GenericSheetMapper<ContactEntity>.GetSheet(SheetsConfig.ContactSheet), (se, rows) => se.Sheets.Contacts = rows);
-        registry.RegisterGeneric<SheetEntity, StatEntity>(SheetsConfig.SheetNames.Stats, () => GenericSheetMapper<StatEntity>.GetSheet(SheetsConfig.StatSheet), (se, rows) => se.Sheets.Stats = rows);
+        registry.RegisterGeneric<SheetEntity, ApplianceEntity>(SheetsConfig.SheetNames.Appliances, ApplianceSheet.GetSheet, (se, rows) => se.Sheets.Appliances = rows);
+        registry.RegisterGeneric<SheetEntity, ProjectEntity>(SheetsConfig.SheetNames.Projects, ProjectSheet.GetSheet, (se, rows) => se.Sheets.Projects = rows);
+        registry.RegisterGeneric<SheetEntity, MaintenanceEntity>(SheetsConfig.SheetNames.Maintenance, MaintenanceSheet.GetSheet, (se, rows) => se.Sheets.Maintenance = rows);
+        registry.RegisterGeneric<SheetEntity, DoorEntity>(SheetsConfig.SheetNames.Doors, DoorSheet.GetSheet, (se, rows) => se.Sheets.Doors = rows);
+        registry.RegisterGeneric<SheetEntity, PaintEntity>(SheetsConfig.SheetNames.Paints, PaintSheet.GetSheet, (se, rows) => se.Sheets.Paints = rows);
+        registry.RegisterGeneric<SheetEntity, PowerEntity>(SheetsConfig.SheetNames.Power, PowerSheet.GetSheet, (se, rows) => se.Sheets.Power = rows);
+        registry.RegisterGeneric<SheetEntity, RoomEntity>(SheetsConfig.SheetNames.Rooms, RoomSheet.GetSheet, (se, rows) => se.Sheets.Rooms = rows);
+        registry.RegisterGeneric<SheetEntity, ContactEntity>(SheetsConfig.SheetNames.Contacts, ContactSheet.GetSheet, (se, rows) => se.Sheets.Contacts = rows);
+        registry.RegisterGeneric<SheetEntity, StatEntity>(SheetsConfig.SheetNames.Stats, StatSheet.GetSheet, (se, rows) => se.Sheets.Stats = rows);
 
         return registry;
     }

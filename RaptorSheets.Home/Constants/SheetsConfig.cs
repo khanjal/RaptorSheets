@@ -1,15 +1,12 @@
-using RaptorSheets.Core.Enums;
-using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Home.Entities;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace RaptorSheets.Home.Constants;
 
 /// <summary>
-/// Configuration constants and models for Google Sheets in the Home domain
-/// (home maintenance and inventory tracking).
+/// Sheet name/header/validation vocabulary shared across the Home domain's sheets - each sheet's own
+/// SheetModel definition (colors/freeze/protect/headers) lives alongside its formulas/row-mapping in
+/// RaptorSheets.Home.Sheets (e.g. ApplianceSheet, RoomSheet).
 /// </summary>
 [ExcludeFromCodeCoverage]
 public static class SheetsConfig
@@ -199,99 +196,4 @@ public static class SheetsConfig
             return errors;
         }
     }
-
-    public static SheetModel ApplianceSheet => new()
-    {
-        Name = SheetNames.Appliances,
-        TabColor = SheetColor.BLUE,
-        CellColor = SheetColor.LIGHT_GRAY,
-        FontColor = SheetColor.WHITE, // BLUE is a dark TabColor - see SheetColor for the dark/light list
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ApplianceEntity>()
-    };
-
-    public static SheetModel ProjectSheet => new()
-    {
-        Name = SheetNames.Projects,
-        TabColor = SheetColor.GREEN,
-        CellColor = SheetColor.LIGHT_GREEN,
-        FontColor = SheetColor.WHITE, // GREEN is a dark TabColor - see SheetColor for the dark/light list
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ProjectEntity>()
-    };
-
-    public static SheetModel MaintenanceSheet => new()
-    {
-        Name = SheetNames.Maintenance,
-        TabColor = SheetColor.ORANGE,
-        CellColor = SheetColor.LIGHT_RED,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<MaintenanceEntity>()
-    };
-
-    public static SheetModel DoorSheet => new()
-    {
-        Name = SheetNames.Doors,
-        TabColor = SheetColor.DARK_YELLOW,
-        CellColor = SheetColor.LIGHT_YELLOW,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<DoorEntity>()
-    };
-
-    public static SheetModel PaintSheet => new()
-    {
-        Name = SheetNames.Paints,
-        TabColor = SheetColor.MAGENTA,
-        CellColor = SheetColor.PINK,
-        FontColor = SheetColor.WHITE, // MAGENTA is a dark TabColor - see SheetColor for the dark/light list
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PaintEntity>()
-    };
-
-    public static SheetModel PowerSheet => new()
-    {
-        Name = SheetNames.Power,
-        TabColor = SheetColor.RED,
-        CellColor = SheetColor.LIGHT_RED,
-        FontColor = SheetColor.WHITE,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PowerEntity>()
-    };
-
-    public static SheetModel RoomSheet => new()
-    {
-        Name = SheetNames.Rooms,
-        TabColor = SheetColor.CYAN,
-        CellColor = SheetColor.LIGHT_CYAN,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<RoomEntity>()
-    };
-
-    public static SheetModel ContactSheet => new()
-    {
-        Name = SheetNames.Contacts,
-        TabColor = SheetColor.CYAN,
-        CellColor = SheetColor.LIGHT_CYAN,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ContactEntity>()
-    };
-
-    public static SheetModel StatSheet => new()
-    {
-        Name = SheetNames.Stats,
-        TabColor = SheetColor.PURPLE,
-        CellColor = SheetColor.LIGHT_PURPLE,
-        FontColor = SheetColor.WHITE,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<StatEntity>()
-    };
 }

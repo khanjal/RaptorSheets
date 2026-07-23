@@ -3,12 +3,10 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Managers;
-using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Constants;
-using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
-using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Sheets;
 
 namespace RaptorSheets.Gig.Helpers;
 
@@ -64,23 +62,23 @@ public static class GenerateSheetsHelpers
     {
         return sheet switch
         {
-            var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase) => AddressMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase) => DailyMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<ExpenseEntity>.GetSheet(SheetsConfig.ExpenseSheet),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) => MonthlyMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) => NameMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) => PlaceMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Deliveries, StringComparison.OrdinalIgnoreCase) => DeliveryMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Locations, StringComparison.OrdinalIgnoreCase) => LocationMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) => RegionMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) => ServiceMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<SetupEntity>.GetSheet(SheetsConfig.SetupSheet),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) => ShiftMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) => TripMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase) => TypeMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase) => WeekdayMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase) => WeeklyMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase) => YearlyMapper.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase) => AddressSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase) => DailySheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) => ExpenseSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) => MonthlySheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) => NameSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) => PlaceSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Deliveries, StringComparison.OrdinalIgnoreCase) => DeliverySheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Locations, StringComparison.OrdinalIgnoreCase) => LocationSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) => RegionSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) => ServiceSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => SetupSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) => ShiftSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) => TripSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase) => TypeSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase) => WeekdaySheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase) => WeeklySheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase) => YearlySheet.GetSheet(),
             // DeleteSheets' temp-sheet safety mechanism (GoogleSheetManagerBase<TEntity>.DeleteSheets)
             // asks for a bare AddSheet request for this specific ad-hoc, non-domain name - anything
             // else unrecognized is a genuine caller error and should still throw.

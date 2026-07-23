@@ -2,21 +2,23 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Managers;
-using RaptorSheets.Test.Common.Helpers;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Helpers;
+using RaptorSheets.Gig.Tests.Integration;
 
 namespace RaptorSheets.Gig.Tests.Integration.Base;
 
 /// <summary>
-/// Base class for integration tests with modular, reusable operations
+/// Base class for integration tests with modular, reusable operations. Gets its manager from the
+/// shared <see cref="GigCleanSlateFixture"/> (null when credentials are absent), which has already
+/// deleted/recreated every sheet before this collection's tests run.
 /// </summary>
 public abstract class IntegrationTestBase
 {
     protected readonly GoogleSheetManager? GoogleSheetManager;
     protected readonly List<string> TestSheets;
-    
-    protected IntegrationTestBase()
+
+    protected IntegrationTestBase(GigCleanSlateFixture fixture)
     {
         TestSheets = [
             SheetsConfig.SheetNames.Shifts,
@@ -24,15 +26,11 @@ public abstract class IntegrationTestBase
             SheetsConfig.SheetNames.Expenses
         ];
 
-        var spreadsheetId = TestConfigurationHelpers.GetGigSpreadsheet();
-        var credential = TestConfigurationHelpers.GetJsonCredential();
-
-        if (GoogleCredentialHelpers.IsCredentialFilled(credential))
-            GoogleSheetManager = new GoogleSheetManager(credential, spreadsheetId);
+        GoogleSheetManager = fixture.Manager;
     }
 
     #region Skip Helpers
-    
+
     protected void SkipIfNoCredentials()
     {
         if (GoogleSheetManager == null)
@@ -40,7 +38,7 @@ public abstract class IntegrationTestBase
             Assert.Fail("Google Sheets credentials not available. Configure user secrets to run integration tests.");
         }
     }
-    
+
     #endregion
 
     #region Test Data Generation
@@ -81,28 +79,7 @@ public abstract class IntegrationTestBase
     #endregion
 
     #region Operations
-    
-    protected async Task<bool> EnsureSheetsExist(List<string> sheets)
-    {
-        var properties = await GoogleSheetManager!.GetSheetProperties(sheets);
-        var missingSheets = sheets.Where(sheet => 
-            !properties.Any(prop => prop.Name.Equals(sheet, StringComparison.OrdinalIgnoreCase) && 
-                                   !string.IsNullOrEmpty(prop.Id))
-        ).ToList();
 
-        if (missingSheets.Count == 0) return true;
-
-        var result = await GoogleSheetManager.CreateSheets(missingSheets);
-        var hasErrors = result.Messages.Any(m => m.Level == MessageLevel.ERROR.GetDescription());
-        
-        if (!hasErrors)
-        {
-            await Task.Delay(2000);
-        }
-        
-        return !hasErrors;
-    }
-    
     protected async Task<SheetEntity> InsertTestData(SheetEntity testData)
     {
         // Fixture ensures sheets exist before tests run, so no need to check here

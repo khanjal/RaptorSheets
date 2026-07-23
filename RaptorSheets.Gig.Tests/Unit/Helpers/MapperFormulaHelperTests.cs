@@ -3,7 +3,7 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Gig.Enums;
 using RaptorSheets.Gig.Helpers;
-using RaptorSheets.Gig.Mappers;
+using RaptorSheets.Gig.Sheets;
 
 namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
@@ -190,8 +190,8 @@ public class MapperFormulaHelperTests
     public void MapperFormulaHelper_WithRealMapper_ShouldGenerateValidFormulas()
     {
         // Act
-        var placeSheet = PlaceMapper.GetSheet();
-        var dailySheet = DailyMapper.GetSheet();
+        var placeSheet = PlaceSheet.GetSheet();
+        var dailySheet = DailySheet.GetSheet();
 
         // Assert - Verify formulas are generated and valid
         var placeFormulas = placeSheet.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();

@@ -33,4 +33,8 @@
     <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" PrivateAssets="All" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="RaptorSheets.Job.Tests" />
+  </ItemGroup>
+
 </Project>

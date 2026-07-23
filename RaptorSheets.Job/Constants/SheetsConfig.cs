@@ -1,15 +1,12 @@
-using RaptorSheets.Core.Enums;
-using RaptorSheets.Core.Helpers;
-using RaptorSheets.Core.Models.Google;
-using RaptorSheets.Job.Entities;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace RaptorSheets.Job.Constants;
 
 /// <summary>
-/// Configuration constants and models for Google Sheets in the Job domain
-/// (job application and interview tracking).
+/// Sheet name/header/validation vocabulary shared across the Job domain's sheets - each sheet's own
+/// SheetModel definition (colors/freeze/protect/headers) lives alongside its formulas/row-mapping in
+/// RaptorSheets.Job.Sheets (e.g. ApplicationSheet, InterviewSheet).
 /// </summary>
 [ExcludeFromCodeCoverage]
 public static class SheetsConfig
@@ -206,143 +203,4 @@ public static class SheetsConfig
             return errors;
         }
     }
-
-    // Sheet Configurations - Entity-Driven Approach
-
-    public static SheetModel ApplicationSheet => new()
-    {
-        Name = SheetNames.Applications,
-        CellColor = SheetColor.LIGHT_CYAN,
-        TabColor = SheetColor.BLUE,
-        FontColor = SheetColor.WHITE,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        ProtectSheet = false,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ApplicationEntity>()
-    };
-
-    public static SheetModel InterviewSheet => new()
-    {
-        Name = SheetNames.Interviews,
-        CellColor = SheetColor.LIGHT_GRAY,
-        TabColor = SheetColor.GREEN,
-        FontColor = SheetColor.WHITE,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        ProtectSheet = false,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<InterviewEntity>()
-    };
-
-    public static SheetModel CompanySheet => new()
-    {
-        Name = SheetNames.Companies,
-        CellColor = SheetColor.LIGHT_CYAN,
-        TabColor = SheetColor.CYAN,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        ProtectSheet = true,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<CompanyEntity>()
-    };
-
-    public static SheetModel PositionSheet => new()
-    {
-        Name = SheetNames.Positions,
-        CellColor = SheetColor.LIGHT_CYAN,
-        TabColor = SheetColor.CYAN,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        ProtectSheet = true,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PositionEntity>()
-    };
-
-    public static SheetModel CompanyDetailSheet => new()
-    {
-        Name = SheetNames.CompanyDetails,
-        CellColor = SheetColor.LIGHT_PURPLE,
-        TabColor = SheetColor.PURPLE,
-        FontColor = SheetColor.WHITE,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        ProtectSheet = false,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<CompanyDetailEntity>()
-    };
-
-    public static SheetModel PositionDetailSheet => new()
-    {
-        Name = SheetNames.PositionDetails,
-        CellColor = SheetColor.LIGHT_PURPLE,
-        TabColor = SheetColor.PURPLE,
-        FontColor = SheetColor.WHITE,
-        FreezeColumnCount = 1,
-        FreezeRowCount = 1,
-        ProtectSheet = false,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<PositionDetailEntity>()
-    };
-
-    public static SheetModel SiteSheet => new()
-    {
-        Name = SheetNames.Sites,
-        CellColor = SheetColor.LIGHT_GRAY,
-        TabColor = SheetColor.LIGHT_GRAY,
-        FreezeColumnCount = 0,
-        FreezeRowCount = 1,
-        ProtectSheet = true,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<SiteEntity>()
-    };
-
-    public static SheetModel DecisionSheet => new()
-    {
-        Name = SheetNames.Decisions,
-        CellColor = SheetColor.LIGHT_GRAY,
-        TabColor = SheetColor.LIGHT_GRAY,
-        FreezeColumnCount = 0,
-        FreezeRowCount = 1,
-        ProtectSheet = true,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<DecisionEntity>()
-    };
-
-    public static SheetModel InterviewTypeSheet => new()
-    {
-        Name = SheetNames.InterviewTypes,
-        CellColor = SheetColor.LIGHT_GRAY,
-        TabColor = SheetColor.LIGHT_GRAY,
-        FreezeColumnCount = 0,
-        FreezeRowCount = 1,
-        ProtectSheet = true,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<InterviewTypeEntity>()
-    };
-
-    public static SheetModel InterviewOutcomeSheet => new()
-    {
-        Name = SheetNames.InterviewOutcomes,
-        CellColor = SheetColor.LIGHT_GRAY,
-        TabColor = SheetColor.LIGHT_GRAY,
-        FreezeColumnCount = 0,
-        FreezeRowCount = 1,
-        ProtectSheet = true,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<InterviewOutcomeEntity>()
-    };
-
-    public static SheetModel ScheduleSheet => new()
-    {
-        Name = SheetNames.Schedules,
-        CellColor = SheetColor.LIGHT_GRAY,
-        TabColor = SheetColor.LIGHT_GRAY,
-        FreezeColumnCount = 0,
-        FreezeRowCount = 1,
-        ProtectSheet = true,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ScheduleEntity>()
-    };
-
-    public static SheetModel SetupSheet => new()
-    {
-        Name = SheetNames.Setup,
-        TabColor = SheetColor.ORANGE,
-        CellColor = SheetColor.LIGHT_YELLOW,
-        FontColor = SheetColor.WHITE,
-        FreezeColumnCount = 0,
-        FreezeRowCount = 1,
-        ProtectSheet = false,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<SetupEntity>()
-    };
 }

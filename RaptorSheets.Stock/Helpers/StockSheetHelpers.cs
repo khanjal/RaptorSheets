@@ -6,7 +6,7 @@ using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Registries;
 using RaptorSheets.Stock.Enums;
-using RaptorSheets.Stock.Mappers;
+using RaptorSheets.Stock.Sheets;
 using RaptorSheets.Stock.Entities;
 
 namespace RaptorSheets.Stock.Helpers;
@@ -17,9 +17,9 @@ public static class StockSheetHelpers
     {
         var sheets = new List<SheetModel>
         {
-            AccountMapper.GetSheet(),
-            StockMapper.GetSheet(),
-            TickerMapper.GetSheet()
+            AccountSheet.GetSheet(),
+            StockSheet.GetSheet(),
+            TickerSheet.GetSheet()
         };
 
         return sheets;
@@ -38,29 +38,29 @@ public static class StockSheetHelpers
     {
         var registry = new SheetRegistry<SheetEntity>();
 
-        // Register with each mapper's GetSheet() (not the bare SheetsConfig.XSheet) so the registry's
+        // Register with each sheet's GetSheet() (not a bare header-only model) so the registry's
         // factory returns the real, formula-laden SheetModel - GetSheetLayout/RefreshHeaderFormulasAsync
         // and SheetRegistry.GetDependents' cross-sheet formula scan both rely on that, matching the
-        // convention Gig/Job already follow (e.g. TripMapper.GetSheet passed directly to RegisterGeneric).
-        registry.Register(SheetName.ACCOUNTS.GetDescription(), AccountMapper.GetSheet, (se, values) =>
+        // convention Gig/Job already follow (e.g. TripSheet.GetSheet passed directly to RegisterGeneric).
+        registry.Register(SheetName.ACCOUNTS.GetDescription(), AccountSheet.GetSheet, (se, values) =>
         {
             var headers = values[0];
-            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, AccountMapper.GetSheet()));
-            se.Sheets.Accounts = AccountMapper.MapFromRangeData(values);
+            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, AccountSheet.GetSheet()));
+            se.Sheets.Accounts = AccountSheet.MapFromRangeData(values);
         });
 
-        registry.Register(SheetName.STOCKS.GetDescription(), StockMapper.GetSheet, (se, values) =>
+        registry.Register(SheetName.STOCKS.GetDescription(), StockSheet.GetSheet, (se, values) =>
         {
             var headers = values[0];
-            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, StockMapper.GetSheet()));
-            se.Sheets.Stocks = StockMapper.MapFromRangeData(values);
+            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, StockSheet.GetSheet()));
+            se.Sheets.Stocks = StockSheet.MapFromRangeData(values);
         });
 
-        registry.Register(SheetName.TICKERS.GetDescription(), TickerMapper.GetSheet, (se, values) =>
+        registry.Register(SheetName.TICKERS.GetDescription(), TickerSheet.GetSheet, (se, values) =>
         {
             var headers = values[0];
-            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TickerMapper.GetSheet()));
-            se.Sheets.Tickers = TickerMapper.MapFromRangeData(values);
+            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TickerSheet.GetSheet()));
+            se.Sheets.Tickers = TickerSheet.MapFromRangeData(values);
         });
 
         return registry;

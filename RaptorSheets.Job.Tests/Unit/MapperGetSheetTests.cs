@@ -1,11 +1,11 @@
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Helpers;
-using RaptorSheets.Job.Mappers;
+using RaptorSheets.Job.Sheets;
 
 namespace RaptorSheets.Job.Tests.Unit;
 
 /// <summary>
-/// Verifies every mapper can build its sheet without errors (no circular dependencies), the
+/// Verifies every sheet can build without errors (no circular dependencies), the
 /// registry knows every configured sheet, and the key calculated formulas/validations are wired.
 /// </summary>
 public class MapperGetSheetTests
@@ -13,16 +13,16 @@ public class MapperGetSheetTests
     [Fact]
     public void AllMappers_GetSheet_ShouldSucceed()
     {
-        Assert.Null(Record.Exception(() => ApplicationMapper.GetSheet()));
-        Assert.Null(Record.Exception(() => InterviewMapper.GetSheet()));
-        Assert.Null(Record.Exception(() => CompanyMapper.GetSheet()));
-        Assert.Null(Record.Exception(() => PositionMapper.GetSheet()));
-        Assert.Null(Record.Exception(() => ValidationMapper.GetSiteSheet()));
-        Assert.Null(Record.Exception(() => ValidationMapper.GetDecisionSheet()));
-        Assert.Null(Record.Exception(() => ValidationMapper.GetInterviewTypeSheet()));
-        Assert.Null(Record.Exception(() => ValidationMapper.GetInterviewOutcomeSheet()));
-        Assert.Null(Record.Exception(() => ValidationMapper.GetScheduleSheet()));
-        Assert.Null(Record.Exception(() => ValidationMapper.GetSetupSheet()));
+        Assert.Null(Record.Exception(() => ApplicationSheet.GetSheet()));
+        Assert.Null(Record.Exception(() => InterviewSheet.GetSheet()));
+        Assert.Null(Record.Exception(() => CompanySheet.GetSheet()));
+        Assert.Null(Record.Exception(() => PositionSheet.GetSheet()));
+        Assert.Null(Record.Exception(() => SiteSheet.GetSheet()));
+        Assert.Null(Record.Exception(() => DecisionSheet.GetSheet()));
+        Assert.Null(Record.Exception(() => InterviewTypeSheet.GetSheet()));
+        Assert.Null(Record.Exception(() => InterviewOutcomeSheet.GetSheet()));
+        Assert.Null(Record.Exception(() => ScheduleSheet.GetSheet()));
+        Assert.Null(Record.Exception(() => SetupSheet.GetSheet()));
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class MapperGetSheetTests
     [Fact]
     public void ApplicationSheet_HasKeyFormula_AndCompanyDropdown()
     {
-        var sheet = ApplicationMapper.GetSheet();
+        var sheet = ApplicationSheet.GetSheet();
 
         var key = sheet.Headers.Single(h => h.Name == SheetsConfig.HeaderNames.Key);
         Assert.Contains("ARRAYFORMULA", key.Formula);
@@ -50,7 +50,7 @@ public class MapperGetSheetTests
     [Fact]
     public void ReferenceSheet_ValueColumn_IsUniqueFormula()
     {
-        var sheet = ValidationMapper.GetInterviewTypeSheet();
+        var sheet = InterviewTypeSheet.GetSheet();
         var value = sheet.Headers.Single(h => h.Name == SheetsConfig.HeaderNames.InterviewType);
 
         Assert.False(string.IsNullOrEmpty(value.Formula));
@@ -60,8 +60,8 @@ public class MapperGetSheetTests
     [Fact]
     public void MultipleMapperCalls_AreIdempotent()
     {
-        var sheet1 = ApplicationMapper.GetSheet();
-        var sheet2 = ApplicationMapper.GetSheet();
+        var sheet1 = ApplicationSheet.GetSheet();
+        var sheet2 = ApplicationSheet.GetSheet();
 
         Assert.Equal(sheet1.Name, sheet2.Name);
         Assert.Equal(sheet1.Headers.Count, sheet2.Headers.Count);
