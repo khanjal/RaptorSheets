@@ -29,7 +29,7 @@ public static class GenerateSheetsHelpers
             var s when string.Equals(s, SheetsConfig.SheetNames.Appliances, StringComparison.OrdinalIgnoreCase) => ApplianceSheet.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Projects, StringComparison.OrdinalIgnoreCase) => ProjectSheet.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Maintenance, StringComparison.OrdinalIgnoreCase) => MaintenanceSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Doors, StringComparison.OrdinalIgnoreCase) => DoorSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.DoorsWindows, StringComparison.OrdinalIgnoreCase) => DoorWindowSheet.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Paints, StringComparison.OrdinalIgnoreCase) => PaintSheet.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Power, StringComparison.OrdinalIgnoreCase) => PowerSheet.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Rooms, StringComparison.OrdinalIgnoreCase) => RoomSheet.GetSheet(),

@@ -8,22 +8,22 @@ using RaptorSheets.Home.Entities;
 namespace RaptorSheets.Home.Sheets;
 
 /// <summary>
-/// Door sheet definition. Entirely entity-driven, no custom formulas.
+/// Doors &amp; Windows sheet definition. Entirely entity-driven, no custom formulas.
 /// </summary>
-public static class DoorSheet
+public static class DoorWindowSheet
 {
     internal static SheetModel BaseSheet => new()
     {
-        Name = SheetsConfig.SheetNames.Doors,
+        Name = SheetsConfig.SheetNames.DoorsWindows,
         TabColor = SheetColor.DARK_YELLOW,
         CellColor = SheetColor.LIGHT_YELLOW,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
-        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<DoorEntity>()
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<DoorWindowEntity>()
     };
 
     public static SheetModel GetSheet()
     {
-        return GenericSheetMapper<DoorEntity>.GetSheet(BaseSheet);
+        return GenericSheetMapper<DoorWindowEntity>.GetSheet(BaseSheet);
     }
 }

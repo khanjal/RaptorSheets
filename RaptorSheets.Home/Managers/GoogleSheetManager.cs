@@ -139,10 +139,10 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
                 entity => entity.Sheets.Maintenance.Count,
                 entity => entity.Sheets.Maintenance,
                 (data, properties) => HomeRequestHelpers.ChangeMaintenanceSheetData(data as List<MaintenanceEntity> ?? [], properties)),
-            [SheetsConfig.SheetNames.Doors] = new(
-                entity => entity.Sheets.Doors.Count,
-                entity => entity.Sheets.Doors,
-                (data, properties) => HomeRequestHelpers.ChangeDoorSheetData(data as List<DoorEntity> ?? [], properties)),
+            [SheetsConfig.SheetNames.DoorsWindows] = new(
+                entity => entity.Sheets.DoorsWindows.Count,
+                entity => entity.Sheets.DoorsWindows,
+                (data, properties) => HomeRequestHelpers.ChangeDoorWindowSheetData(data as List<DoorWindowEntity> ?? [], properties)),
             [SheetsConfig.SheetNames.Paints] = new(
                 entity => entity.Sheets.Paints.Count,
                 entity => entity.Sheets.Paints,

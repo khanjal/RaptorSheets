@@ -21,7 +21,7 @@ public static class SheetsConfig
         public const string Appliances = "Appliances & Electronics";
         public const string Projects = "Projects";
         public const string Maintenance = "Maintenance Log";
-        public const string Doors = "Doors";
+        public const string DoorsWindows = "Doors & Windows";
         public const string Paints = "Paints";
         public const string Power = "Power";
 
@@ -90,7 +90,7 @@ public static class SheetsConfig
         public const string SquareFeet = "Sq. Ft";
         public const string Level = "Level";
 
-        // Doors
+        // Doors & Windows
         public const string Width = "Width";
         public const string Height = "Height";
         public const string Depth = "Depth";
@@ -137,7 +137,7 @@ public static class SheetsConfig
             SheetNames.Appliances,
             SheetNames.Projects,
             SheetNames.Maintenance,
-            SheetNames.Doors,
+            SheetNames.DoorsWindows,
             SheetNames.Paints,
             SheetNames.Power,
 
