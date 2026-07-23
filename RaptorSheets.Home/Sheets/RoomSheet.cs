@@ -3,18 +3,29 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Home.Constants;
+using RaptorSheets.Home.Entities;
 
-namespace RaptorSheets.Home.Mappers;
+namespace RaptorSheets.Home.Sheets;
 
 /// <summary>
-/// Room mapper for Room sheet configuration. Configures the calculated Sq. Ft column (L x W).
+/// Room sheet definition. Configures the calculated Sq. Ft column (L x W).
 /// For data mapping operations, use GenericSheetMapper&lt;RoomEntity&gt; directly.
 /// </summary>
-public static class RoomMapper
+public static class RoomSheet
 {
+    internal static SheetModel BaseSheet => new()
+    {
+        Name = SheetsConfig.SheetNames.Rooms,
+        TabColor = SheetColor.CYAN,
+        CellColor = SheetColor.LIGHT_CYAN,
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<RoomEntity>()
+    };
+
     public static SheetModel GetSheet()
     {
-        var sheet = SheetsConfig.RoomSheet;
+        var sheet = BaseSheet;
         sheet.Headers.UpdateColumns();
 
         var lengthRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.RoomLength);

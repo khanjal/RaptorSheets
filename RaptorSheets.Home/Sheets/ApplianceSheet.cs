@@ -3,19 +3,31 @@ using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Home.Constants;
+using RaptorSheets.Home.Entities;
 
-namespace RaptorSheets.Home.Mappers;
+namespace RaptorSheets.Home.Sheets;
 
 /// <summary>
-/// Appliance mapper for the Appliances &amp; Electronics sheet configuration. Configures the
+/// Appliance sheet definition for the Appliances &amp; Electronics sheet. Configures the
 /// calculated Next Filter column (Filter Date + Rpl. Mth). For data mapping operations, use
 /// GenericSheetMapper&lt;ApplianceEntity&gt; directly.
 /// </summary>
-public static class ApplianceMapper
+public static class ApplianceSheet
 {
+    internal static SheetModel BaseSheet => new()
+    {
+        Name = SheetsConfig.SheetNames.Appliances,
+        TabColor = SheetColor.BLUE,
+        CellColor = SheetColor.LIGHT_GRAY,
+        FontColor = SheetColor.WHITE, // BLUE is a dark TabColor - see SheetColor for the dark/light list
+        FreezeColumnCount = 1,
+        FreezeRowCount = 1,
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ApplianceEntity>()
+    };
+
     public static SheetModel GetSheet()
     {
-        var sheet = SheetsConfig.ApplianceSheet;
+        var sheet = BaseSheet;
         sheet.Headers.UpdateColumns();
 
         var filterDateRange = sheet.GetLocalRange(SheetsConfig.HeaderNames.FilterDate);

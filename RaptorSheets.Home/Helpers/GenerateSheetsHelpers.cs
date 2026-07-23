@@ -3,12 +3,10 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Managers;
-using RaptorSheets.Core.Mappers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Home.Constants;
-using RaptorSheets.Home.Entities;
 using RaptorSheets.Home.Enums;
-using RaptorSheets.Home.Mappers;
+using RaptorSheets.Home.Sheets;
 
 namespace RaptorSheets.Home.Helpers;
 
@@ -28,15 +26,15 @@ public static class GenerateSheetsHelpers
     {
         return sheet switch
         {
-            var s when string.Equals(s, SheetsConfig.SheetNames.Appliances, StringComparison.OrdinalIgnoreCase) => ApplianceMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Projects, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<ProjectEntity>.GetSheet(SheetsConfig.ProjectSheet),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Maintenance, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<MaintenanceEntity>.GetSheet(SheetsConfig.MaintenanceSheet),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Doors, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<DoorEntity>.GetSheet(SheetsConfig.DoorSheet),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Paints, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<PaintEntity>.GetSheet(SheetsConfig.PaintSheet),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Power, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<PowerEntity>.GetSheet(SheetsConfig.PowerSheet),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Rooms, StringComparison.OrdinalIgnoreCase) => RoomMapper.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Contacts, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<ContactEntity>.GetSheet(SheetsConfig.ContactSheet),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Stats, StringComparison.OrdinalIgnoreCase) => GenericSheetMapper<StatEntity>.GetSheet(SheetsConfig.StatSheet),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Appliances, StringComparison.OrdinalIgnoreCase) => ApplianceSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Projects, StringComparison.OrdinalIgnoreCase) => ProjectSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Maintenance, StringComparison.OrdinalIgnoreCase) => MaintenanceSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Doors, StringComparison.OrdinalIgnoreCase) => DoorSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Paints, StringComparison.OrdinalIgnoreCase) => PaintSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Power, StringComparison.OrdinalIgnoreCase) => PowerSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Rooms, StringComparison.OrdinalIgnoreCase) => RoomSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Contacts, StringComparison.OrdinalIgnoreCase) => ContactSheet.GetSheet(),
+            var s when string.Equals(s, SheetsConfig.SheetNames.Stats, StringComparison.OrdinalIgnoreCase) => StatSheet.GetSheet(),
             // DeleteSheets' temp-sheet safety mechanism asks for a bare AddSheet request for this
             // specific ad-hoc name - anything else unrecognized is a genuine caller error.
             var s when string.Equals(s, GoogleSheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase) => new SheetModel { Name = s },

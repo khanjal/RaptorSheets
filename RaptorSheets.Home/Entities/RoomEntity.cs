@@ -18,7 +18,7 @@ public class RoomEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.RoomWidth, isInput: true, formatType: Format.NUMBER)]
     public decimal? Width { get; set; }
 
-    // Calculated: L x W (configured in RoomMapper)
+    // Calculated: L x W (configured in RoomSheet)
     [Column(SheetsConfig.HeaderNames.SquareFeet, Format.NUMBER, ColumnNotes.SquareFeet)]
     public decimal? SquareFeet { get; set; }
 
