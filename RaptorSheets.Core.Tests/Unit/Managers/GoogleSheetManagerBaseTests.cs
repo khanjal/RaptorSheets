@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RaptorSheets.Core.Managers;
 using RaptorSheets.Core.Services;
+using RaptorSheets.Test.Common.Helpers;
 using Xunit;
 
 namespace RaptorSheets.Core.Tests.Unit.Managers;
@@ -71,19 +72,21 @@ public class GoogleSheetManagerBaseTests
     [Fact]
     public void Constructor_WithParametersDictionaryAndSpreadsheetId_ShouldInitializeWithoutThrowing()
     {
-        // Minimal fake service-account parameters; we only verify construction, not a live call
-        var parameters = new Dictionary<string, string>
-        {
-            { "type", "service_account" },
-            { "privateKeyId", "fake-key-id" },
-            { "privateKey", "-----BEGIN PRIVATE KEY-----\\nMIIB...fake...\\n-----END PRIVATE KEY-----\\n" },
-            { "clientEmail", "test@example.com" },
-            { "clientId", "123" }
-        };
+        // Throwaway service-account parameters; we only verify construction, not a live call
+        var parameters = GoogleCredentialHelpers.CreateServiceAccountParameters();
 
         var manager = new TestGoogleSheetManager(parameters, "test-spreadsheet-id");
 
         Assert.NotNull(manager.ServiceForTest);
         Assert.NotNull(manager.LoggerForTest);
+    }
+
+    [Fact]
+    public void Constructor_WithMalformedPrivateKey_ShouldThrowRatherThanDeferToFirstApiCall()
+    {
+        var parameters = GoogleCredentialHelpers.CreateMalformedServiceAccountParameters();
+
+        Assert.Throws<ArgumentException>(
+            () => new TestGoogleSheetManager(parameters, "test-spreadsheet-id"));
     }
 }

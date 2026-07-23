@@ -14,25 +14,25 @@ public interface IDriveServiceWrapper
 }
 
 [ExcludeFromCodeCoverage]
-public class DriveServiceWrapper : DriveService, IDriveServiceWrapper
+public class DriveServiceWrapper : IDriveServiceWrapper
 {
-    private DriveService _driveService = new();
-    private readonly GoogleRetryOptions _retryOptions;
+    private readonly DriveService _driveService;
 
     public DriveServiceWrapper(string accessToken, GoogleRetryOptions? retryOptions = null)
     {
-        _retryOptions = retryOptions ?? GoogleRetryOptions.Default;
         var credential = GoogleCredential.FromAccessToken(accessToken.Trim());
 
-        InitializeService(credential);
+        _driveService = CreateService(credential, retryOptions);
     }
 
-    private void InitializeService(GoogleCredential credential)
+    private static DriveService CreateService(GoogleCredential credential, GoogleRetryOptions? retryOptions)
     {
-        _driveService = new DriveService(
-            GoogleServiceInitializerHelper.CreateInitializer(credential, _retryOptions));
+        var service = new DriveService(
+            GoogleServiceInitializerHelper.CreateInitializer(credential, retryOptions));
 
-        GoogleServiceInitializerHelper.ApplyRateLimitBackOff(_driveService, _retryOptions);
+        GoogleServiceInitializerHelper.ApplyRateLimitBackOff(service, retryOptions);
+
+        return service;
     }
 
     public async Task<File> CreateSpreadsheet(string name)

@@ -2,6 +2,7 @@ using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Managers;
+using RaptorSheets.Test.Common.Helpers;
 using Xunit;
 using SheetName = RaptorSheets.Stock.Enums.SheetName;
 
@@ -19,22 +20,24 @@ public class GoogleSheetManagerTests
     [Fact]
     public void Constructor_WithParameters_ShouldInitialize()
     {
-        // Arrange - provide all required parameters for service account authentication
-        var parameters = new Dictionary<string, string>
-        {
-            ["type"] = "service_account",
-            ["privateKeyId"] = "test-key-id",
-            ["privateKey"] = "invalid-key",
-            ["clientEmail"] = "test@example.com",
-            ["clientId"] = "123456"
-        };
+        // Arrange - all required parameters for service account authentication
+        var parameters = GoogleCredentialHelpers.CreateServiceAccountParameters();
 
-        // Act & Assert - With the new fallback behavior for invalid private keys,
-        // construction should not throw and the manager should initialize.
+        // Act & Assert
         var caughtException = Record.Exception(() => new GoogleSheetManager(parameters, "test-spreadsheet"));
         Assert.Null(caughtException);
         var manager = new GoogleSheetManager(parameters, "test-spreadsheet");
         Assert.NotNull(manager);
+    }
+
+    [Fact]
+    public void Constructor_WithMalformedPrivateKey_ShouldThrow()
+    {
+        // Unusable key material used to be swallowed and replaced with a placeholder credential,
+        // which deferred the failure to an opaque 401 on the first API call.
+        var parameters = GoogleCredentialHelpers.CreateMalformedServiceAccountParameters();
+
+        Assert.Throws<ArgumentException>(() => new GoogleSheetManager(parameters, "test-spreadsheet"));
     }
 
     [Fact]
