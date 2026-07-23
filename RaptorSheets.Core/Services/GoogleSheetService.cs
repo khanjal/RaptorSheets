@@ -25,7 +25,7 @@ public interface IGoogleSheetService
 [ExcludeFromCodeCoverage]
 public class GoogleSheetService : IGoogleSheetService
 {
-    private readonly SheetServiceWrapper _sheetService;
+    private readonly ISheetServiceWrapper _sheetService;
     private readonly string _range = GoogleConfig.Range;
     private readonly ILogger _logger;
 

@@ -22,25 +22,22 @@ public interface ISheetServiceWrapper
 }
 
 [ExcludeFromCodeCoverage]
-public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
+public class SheetServiceWrapper : ISheetServiceWrapper
 {
-    private SheetsService _sheetsService = new();
+    private readonly SheetsService _sheetsService;
     private readonly string _spreadsheetId;
-    private readonly GoogleRetryOptions _retryOptions;
 
     public SheetServiceWrapper(string accessToken, string spreadsheetId, GoogleRetryOptions? retryOptions = null)
     {
         _spreadsheetId = spreadsheetId;
-        _retryOptions = retryOptions ?? GoogleRetryOptions.Default;
         var credential = GoogleCredential.FromAccessToken(accessToken.Trim());
 
-        InitializeService(credential);
+        _sheetsService = CreateService(credential, retryOptions);
     }
 
     public SheetServiceWrapper(Dictionary<string, string> parameters, string spreadsheetId, GoogleRetryOptions? retryOptions = null)
     {
         _spreadsheetId = spreadsheetId;
-        _retryOptions = retryOptions ?? GoogleRetryOptions.Default;
         // Resolve credential parameters with tolerant key lookup to accept either
         // camelCase (privateKey, privateKeyId, clientEmail, clientId) or
         // snake_case (private_key, private_key_id, client_email, client_id) names.
@@ -63,26 +60,24 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
         // The private key in parameters typically contains escaped newlines; ensure proper formatting
         var privateKey = jsonCredential.PrivateKey?.Replace("\\n", "\n");
 
-        Google.Apis.Auth.OAuth2.GoogleCredential credential;
+        GoogleCredential credential;
         try
         {
             var serviceAccountCredential = new ServiceAccountCredential(initializer.FromPrivateKey(privateKey));
             // Convert to GoogleCredential for compatibility with APIs that expect it (and to be used as HttpClientInitializer)
             credential = serviceAccountCredential.ToGoogleCredential();
         }
-        catch (FormatException)
+        catch (Exception ex) when (ex is FormatException or ArgumentException)
         {
-            // Tests may supply a non-real private key (placeholder). Fall back to a harmless access-token based credential
-            // so unit tests can construct the wrapper without requiring a valid RSA private key.
-            credential = GoogleCredential.FromAccessToken("test-token");
-        }
-        catch (ArgumentException)
-        {
-            // Specific argument exceptions during FromPrivateKey indicate malformed key material.
-            credential = GoogleCredential.FromAccessToken("test-token");
+            // Fail here rather than later. Unusable key material means every subsequent API call will
+            // fail authentication, and diagnosing that from a 401 on the first request is far harder
+            // than being told at construction which credential parameter was bad.
+            throw new ArgumentException(
+                "The private key credential parameter is not a valid PEM-encoded RSA private key.",
+                nameof(parameters), ex);
         }
 
-        InitializeService(credential);
+        _sheetsService = CreateService(credential, retryOptions);
     }
 
     private static string ResolveParameter(Dictionary<string, string> parameters, params string[] candidates)
@@ -115,12 +110,16 @@ public class SheetServiceWrapper : SheetsService, ISheetServiceWrapper
         throw new ArgumentException($"Missing required parameter. Expected one of: {string.Join(", ", candidates)}", nameof(parameters));
     }
 
-    private void InitializeService(Google.Apis.Http.IConfigurableHttpClientInitializer httpInitializer)
+    private static SheetsService CreateService(
+        Google.Apis.Http.IConfigurableHttpClientInitializer httpInitializer,
+        GoogleRetryOptions? retryOptions)
     {
-        _sheetsService = new SheetsService(
-            GoogleServiceInitializerHelper.CreateInitializer(httpInitializer, _retryOptions));
+        var service = new SheetsService(
+            GoogleServiceInitializerHelper.CreateInitializer(httpInitializer, retryOptions));
 
-        GoogleServiceInitializerHelper.ApplyRateLimitBackOff(_sheetsService, _retryOptions);
+        GoogleServiceInitializerHelper.ApplyRateLimitBackOff(service, retryOptions);
+
+        return service;
     }
 
     public async Task<AppendValuesResponse> AppendValues(string range, IList<IList<object>> values)

@@ -15,7 +15,7 @@ public interface IGoogleDriveService
 [ExcludeFromCodeCoverage]
 public class GoogleDriveService : IGoogleDriveService
 {
-    private readonly DriveServiceWrapper _driveService;
+    private readonly IDriveServiceWrapper _driveService;
 
     public GoogleDriveService(string accessToken, GoogleRetryOptions? retryOptions = null)
     {

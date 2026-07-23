@@ -1,3 +1,4 @@
+using RaptorSheets.Test.Common.Helpers;
 using RaptorSheets.Core.Wrappers;
 using Xunit;
 
@@ -22,16 +23,8 @@ public class SheetServiceWrapperTests
     [Fact]
     public void Wrapper_CanBeConstructed_WithServiceAccountParameters()
     {
-        // Arrange - minimal fake parameters; we only verify construction, not a live call
-        var parameters = new Dictionary<string, string>
-        {
-            { "type", "service_account" },
-            { "privateKeyId", "fake-key-id" },
-            { "privateKey", "-----BEGIN PRIVATE KEY-----\\nMIIB...fake...\\n-----END PRIVATE KEY-----\\n" },
-            { "clientEmail", "test@example.com" },
-            { "clientId", "123" }
-        };
-
+        // Arrange - a real (throwaway) key, since the credential layer actually parses it
+        var parameters = GoogleCredentialHelpers.CreateServiceAccountParameters();
         var spreadsheetId = "spreadsheet-id";
 
         // Act
@@ -39,5 +32,29 @@ public class SheetServiceWrapperTests
 
         // Assert
         Assert.NotNull(wrapper);
+    }
+
+    [Fact]
+    public void Wrapper_ShouldThrow_WhenPrivateKeyIsMalformed()
+    {
+        // Unusable key material fails every subsequent API call, so construction is where the caller
+        // should hear about it - not a confusing 401 on the first request.
+        var parameters = GoogleCredentialHelpers.CreateMalformedServiceAccountParameters();
+
+        var exception = Assert.Throws<ArgumentException>(
+            () => new SheetServiceWrapper(parameters, "spreadsheet-id"));
+
+        Assert.Contains("private key", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("privateKey")]
+    [InlineData("clientEmail")]
+    public void Wrapper_ShouldThrow_WhenRequiredParameterIsMissing(string missingKey)
+    {
+        var parameters = GoogleCredentialHelpers.CreateServiceAccountParameters();
+        parameters.Remove(missingKey);
+
+        Assert.Throws<ArgumentException>(() => new SheetServiceWrapper(parameters, "spreadsheet-id"));
     }
 }
