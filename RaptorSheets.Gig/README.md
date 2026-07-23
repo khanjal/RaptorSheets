@@ -38,6 +38,30 @@ await manager.CreateAllSheets();
 var data = await manager.GetAllSheets();
 ```
 
+### Dependency Injection
+```csharp
+using RaptorSheets.Gig.Extensions;
+
+// One spreadsheet, bound from configuration
+builder.Services.AddRaptorSheetsGig(options =>
+{
+    options.SpreadsheetId = builder.Configuration["Sheets:SpreadsheetId"];
+    options.AccessToken = builder.Configuration["Sheets:AccessToken"];
+});
+```
+
+`IGoogleSheetManager` is then injectable directly. When each signed-in user has their own
+spreadsheet, register without options and create managers per request instead:
+
+```csharp
+builder.Services.AddRaptorSheetsGig();
+
+// ... wherever you handle the request:
+var manager = factory.Create(userToken, userSpreadsheetId);
+```
+
+See [Getting Started](https://github.com/khanjal/RaptorSheets/blob/main/docs/GETTING-STARTED.md#dependency-injection) for details.
+
 ## Demo Setup
 
 Generate realistic sample data to explore RaptorSheets.Gig capabilities or set up test environments.

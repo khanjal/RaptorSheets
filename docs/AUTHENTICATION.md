@@ -265,6 +265,8 @@ public bool ValidateServiceAccountCredentials(Dictionary<string, string> credent
 }
 ```
 
+> **Unusable credentials fail at construction.** Creating a manager with a private key that isn't valid PEM-encoded RSA key material throws an `ArgumentException` naming the offending parameter, rather than constructing successfully and failing with an opaque 401 on the first API call. The check above is still useful for reporting *which* field is missing before you get that far.
+
 ## Configuration Examples
 
 ### ASP.NET Core Configuration
@@ -281,25 +283,40 @@ public bool ValidateServiceAccountCredentials(Dictionary<string, string> credent
   "SpreadsheetId": "your-spreadsheet-id"
 }
 
-// Startup.cs or Program.cs
-services.Configure<GoogleCredentials>(configuration.GetSection("GoogleCredentials"));
-services.AddScoped<IGoogleSheetManager>(provider =>
+// Program.cs
+using RaptorSheets.Gig.Extensions;
+
+builder.Services.AddRaptorSheetsGig(options =>
 {
-    var credentials = provider.GetService<IOptions<GoogleCredentials>>().Value;
-    var spreadsheetId = configuration["SpreadsheetId"];
-    
-    var credentialDict = new Dictionary<string, string>
-    {
-        ["type"] = credentials.Type,
-        ["private_key_id"] = credentials.PrivateKeyId,
-        ["private_key"] = credentials.PrivateKey,
-        ["client_email"] = credentials.ClientEmail,
-        ["client_id"] = credentials.ClientId
-    };
-    
-    return new GoogleSheetManager(credentialDict, spreadsheetId);
+    options.SpreadsheetId = builder.Configuration["SpreadsheetId"];
+    options.ServiceAccountCredentials = builder.Configuration
+        .GetSection("GoogleCredentials")
+        .Get<Dictionary<string, string>>();
 });
 ```
+
+`IGoogleSheetManager` is then injectable directly. Credential keys may be camelCase or snake_case.
+
+If the spreadsheet is not fixed at startup — the usual case when each signed-in user has their own — register without options and create managers per request instead:
+
+```csharp
+builder.Services.AddRaptorSheetsGig();
+
+// then, wherever you handle the request:
+public class TripsController(ISheetManagerFactory<IGoogleSheetManager> factory)
+{
+    public async Task<IActionResult> Get(string userToken, string userSpreadsheetId)
+    {
+        var manager = factory.Create(userToken, userSpreadsheetId);
+        var sheet = await manager.GetSheet("Trips");
+        return Ok(sheet);
+    }
+}
+```
+
+Substitute `AddRaptorSheetsStock`, `AddRaptorSheetsJob`, or `AddRaptorSheetsHome` for other domains. Several domains can be registered side by side against different spreadsheets.
+
+> **Configuration is validated when the manager is resolved.** A missing `SpreadsheetId`, no credential, or *both* an access token and service-account credentials throws at startup with a message naming the domain, rather than failing at the first API call.
 
 ### Console Application with User Secrets
 ```bash
