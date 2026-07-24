@@ -43,6 +43,10 @@
         {
             <p class="status error">@_pasteError</p>
         }
+        @if (_pasteSucceeded)
+        {
+            <p class="status ok">Parsed - filled in all 5 fields below.</p>
+        }
 
         <label>
             <span>Type</span>
@@ -124,6 +128,7 @@
     private bool _revealSecret;
     private string _pasteJson = string.Empty;
     private string? _pasteError;
+    private bool _pasteSucceeded;
     private string _credType = string.Empty;
     private string _credPrivateKeyId = string.Empty;
     private string _credPrivateKey = string.Empty;
@@ -159,6 +164,7 @@
     {
         _pasteJson = string.Empty;
         _pasteError = null;
+        _pasteSucceeded = false;
         _credType = string.Empty;
         _credPrivateKeyId = string.Empty;
         _credPrivateKey = string.Empty;
@@ -175,6 +181,7 @@
     {
         _pasteJson = e.Value?.ToString() ?? string.Empty;
         _pasteError = null;
+        _pasteSucceeded = false;
 
         if (string.IsNullOrWhiteSpace(_pasteJson))
         {
@@ -183,18 +190,66 @@
 
         try
         {
-            using var parsed = JsonDocument.Parse(_pasteJson);
+            using var parsed = JsonDocument.Parse(NormalizePrivateKeyLineBreaks(_pasteJson));
             var root = parsed.RootElement;
-            _credType = GetString(root, "type") ?? _credType;
-            _credPrivateKeyId = GetString(root, "private_key_id") ?? _credPrivateKeyId;
-            _credPrivateKey = GetString(root, "private_key") ?? _credPrivateKey;
-            _credClientEmail = GetString(root, "client_email") ?? _credClientEmail;
-            _credClientId = GetString(root, "client_id") ?? _credClientId;
+            var type = GetString(root, "type");
+            var privateKeyId = GetString(root, "private_key_id");
+            var privateKey = GetString(root, "private_key");
+            var clientEmail = GetString(root, "client_email");
+            var clientId = GetString(root, "client_id");
+
+            if (type is null && privateKeyId is null && privateKey is null && clientEmail is null && clientId is null)
+            {
+                _pasteError = "That parsed as JSON, but none of the expected fields (type, private_key_id, " +
+                              "private_key, client_email, client_id) were found - is this the whole key file?";
+                return;
+            }
+
+            _credType = type ?? _credType;
+            _credPrivateKeyId = privateKeyId ?? _credPrivateKeyId;
+            _credPrivateKey = privateKey ?? _credPrivateKey;
+            _credClientEmail = clientEmail ?? _credClientEmail;
+            _credClientId = clientId ?? _credClientId;
+            _pasteSucceeded = true;
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            _pasteError = "Not valid JSON yet - keep pasting, or just fill in the fields below directly.";
+            _pasteError = $"Not valid JSON yet - keep pasting, or fill in the fields below directly. ({ex.Message})";
         }
+    }
+
+    // Some editors/viewers "pretty-print" a downloaded key file, turning the private_key's escaped
+    // \n sequences into literal line breaks - which makes the surrounding JSON invalid (a raw
+    // newline inside a JSON string isn't legal per RFC 8259, so JsonDocument.Parse rejects the
+    // *entire* document, not just that field). Re-escape line breaks found between the PEM markers
+    // before parsing, since that's specifically where this shows up.
+    private static string NormalizePrivateKeyLineBreaks(string input)
+    {
+        const string beginMarker = "-----BEGIN PRIVATE KEY-----";
+        const string endMarker = "-----END PRIVATE KEY-----";
+
+        var beginIndex = input.IndexOf(beginMarker, StringComparison.Ordinal);
+        var endIndex = input.IndexOf(endMarker, StringComparison.Ordinal);
+
+        if (beginIndex < 0 || endIndex < 0 || endIndex < beginIndex)
+        {
+            return input;
+        }
+
+        // Extend to the actual closing quote of the JSON string, not just the end marker text -
+        // real keys have a trailing line break *between* "-----END PRIVATE KEY-----" and the quote
+        // that closes the value, which would otherwise be left outside the captured span and stay
+        // an unescaped literal newline.
+        var closingQuoteIndex = input.IndexOf('"', endIndex + endMarker.Length);
+        if (closingQuoteIndex < 0)
+        {
+            return input;
+        }
+
+        var pemBlock = input[beginIndex..closingQuoteIndex];
+        var normalizedPemBlock = pemBlock.Replace("\r\n", "\n").Replace("\n", "\\n");
+
+        return string.Concat(input.AsSpan(0, beginIndex), normalizedPemBlock, input.AsSpan(closingQuoteIndex));
     }
 
     private static string? GetString(JsonElement root, string property) =>
