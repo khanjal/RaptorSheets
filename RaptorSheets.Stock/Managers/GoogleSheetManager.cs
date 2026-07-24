@@ -16,27 +16,14 @@ using SheetName = RaptorSheets.Stock.Enums.SheetName;
 namespace RaptorSheets.Stock.Managers;
 
 /// <summary>
-/// Main interface for Google Sheet operations in the Stock domain. Shape matches Gig's
-/// IGoogleSheetManager (string-based sheet names throughout) to keep the two domains' surfaces
-/// comparable while more of RaptorSheets.Job/Home gets built on the same generic base.
+/// Extends the shared <see cref="IGoogleSheetManager{TEntity}"/> CRUD/metadata/layout surface with
+/// Stock's own demo-data generation (seed only). Stock's concrete manager already implements the
+/// metadata members (GetAllSheetProperties, GetSpreadsheetInfo, etc.) via
+/// <see cref="GoogleSheetManagerBase{TEntity}"/>, same as every other domain - this interface
+/// previously just didn't declare them.
 /// </summary>
-public interface IGoogleSheetManager
+public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
 {
-    // CRUD Operations
-    Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity, CancellationToken cancellationToken = default);
-    Task<SheetEntity> CreateAllSheets(CancellationToken cancellationToken = default);
-    Task<SheetEntity> CreateSheets(List<string> sheets, CancellationToken cancellationToken = default);
-    Task<SheetEntity> DeleteAllSheets(CancellationToken cancellationToken = default);
-    Task<SheetEntity> DeleteSheets(List<string> sheets, CancellationToken cancellationToken = default);
-    Task<SheetEntity> GetSheet(string sheet, CancellationToken cancellationToken = default);
-    Task<SheetEntity> GetAllSheets(CancellationToken cancellationToken = default);
-    Task<SheetEntity> GetSheets(List<string> sheets, CancellationToken cancellationToken = default);
-
-    // Header Management
-    SheetModel? GetSheetLayout(string sheet);
-    List<SheetModel> GetSheetLayouts(List<string> sheets);
-    Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns, CancellationToken cancellationToken = default);
-
     // Demo Data Generation
     Task<SheetEntity> SetupDemo(int? seed = null, CancellationToken cancellationToken = default);
     Task<SheetEntity> PopulateDemoData(int? seed = null, CancellationToken cancellationToken = default);

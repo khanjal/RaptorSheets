@@ -16,30 +16,12 @@ namespace RaptorSheets.Job.Managers;
 /// <summary>
 /// Main interface for Google Sheet operations in the Job domain.
 /// </summary>
-public interface IGoogleSheetManager
+/// <summary>
+/// Extends the shared <see cref="IGoogleSheetManager{TEntity}"/> CRUD/metadata/layout surface with
+/// Job's own demo-data generation (date range plus seed).
+/// </summary>
+public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
 {
-    // CRUD Operations
-    Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity, CancellationToken cancellationToken = default);
-    Task<SheetEntity> CreateAllSheets(CancellationToken cancellationToken = default);
-    Task<SheetEntity> CreateSheets(List<string> sheets, CancellationToken cancellationToken = default);
-    Task<SheetEntity> DeleteAllSheets(CancellationToken cancellationToken = default);
-    Task<SheetEntity> DeleteSheets(List<string> sheets, CancellationToken cancellationToken = default);
-    Task<SheetEntity> GetSheet(string sheet, CancellationToken cancellationToken = default);
-    Task<SheetEntity> GetAllSheets(CancellationToken cancellationToken = default);
-    Task<SheetEntity> GetSheets(List<string> sheets, CancellationToken cancellationToken = default);
-
-    // Metadata & Properties
-    Task<List<PropertyEntity>> GetAllSheetProperties(CancellationToken cancellationToken = default);
-    Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets, CancellationToken cancellationToken = default);
-    Task<List<string>> GetAllSheetTabNames(CancellationToken cancellationToken = default);
-    Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null, CancellationToken cancellationToken = default);
-    Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, CancellationToken cancellationToken = default);
-    SheetModel? GetSheetLayout(string sheet);
-    List<SheetModel> GetSheetLayouts(List<string> sheets);
-
-    // Header Management
-    Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns, CancellationToken cancellationToken = default);
-
     // Demo Data Generation
     Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null, int? seed = null, CancellationToken cancellationToken = default);
     Task<SheetEntity> PopulateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null, CancellationToken cancellationToken = default);
