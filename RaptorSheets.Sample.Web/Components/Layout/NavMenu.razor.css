@@ -1,38 +1,50 @@
 nav {
-    width: 14rem;
+    width: 15rem;
     flex-shrink: 0;
-    background: #f6f8fa;
-    border-right: 1px solid #d0d7de;
-    padding: 1rem;
+    background: var(--color-surface-muted);
+    border-right: 1px solid var(--color-border-muted);
+    padding: 1.25rem 1rem;
     box-sizing: border-box;
 }
 
 .brand {
-    font-weight: 600;
-    margin-bottom: 1rem;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
 }
 
 .domain-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .domain-label {
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
-    color: #57606a;
-    margin-bottom: 0.25rem;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    margin-bottom: 0.4rem;
+    padding: 0 0.5rem;
 }
 
 .domain-group.disabled .domain-label {
-    color: #8b949e;
+    color: var(--color-text-subtle);
 }
 
 .badge {
-    font-size: 0.65rem;
-    font-weight: 400;
+    font-size: 0.62rem;
+    font-weight: 500;
     text-transform: none;
-    margin-left: 0.25rem;
+    letter-spacing: normal;
+    margin-left: 0.35rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-muted);
+    color: var(--color-text-subtle);
 }
 
 ul {
@@ -42,23 +54,33 @@ ul {
 }
 
 li {
-    margin: 0.15rem 0;
+    margin: 0.1rem 0;
 }
 
-a {
+/* NavLink is a child component, not a plain element written in this file's own markup - Blazor CSS
+   isolation doesn't reach into a child component's rendered output without ::deep. */
+::deep a {
     display: block;
-    padding: 0.15rem 0.4rem;
-    border-radius: 4px;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-sm);
     text-decoration: none;
-    color: #24292f;
+    color: var(--color-text);
+    font-size: 0.88rem;
+    transition: background-color 120ms ease;
 }
 
-a:hover {
-    background: #eaeef2;
+::deep a:hover {
+    background: var(--color-surface);
+}
+
+::deep a.active {
+    background: var(--color-accent-muted);
+    color: var(--color-accent);
+    font-weight: 600;
 }
 
 .nav-footer {
-    margin-top: 1.5rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid #d0d7de;
+    margin-top: 1.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border-muted);
 }

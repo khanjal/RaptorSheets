@@ -1,7 +1,8 @@
 .demo-prompt {
     margin-top: 1rem;
-    padding: 0.75rem 1rem;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    background: #fbfcfd;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--color-border-muted);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-sunken);
+    max-width: 40rem;
 }

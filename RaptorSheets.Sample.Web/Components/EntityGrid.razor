@@ -18,7 +18,7 @@
         @if (!ReadOnly)
         {
             <button @onclick="OpenAddForm">+ Add item</button>
-            <button @onclick="SaveAsync" disabled="@(!HasPendingChanges || _isSaving)">@(_isSaving ? "Saving..." : "Save changes")</button>
+            <button class="btn-primary" @onclick="SaveAsync" disabled="@(!HasPendingChanges || _isSaving)">@(_isSaving ? "Saving..." : "Save changes")</button>
             <button @onclick="DiscardChanges" disabled="@(!HasPendingChanges || _isSaving)">Discard changes</button>
             @if (HasPendingChanges)
             {
@@ -46,7 +46,7 @@
                     }
                 </div>
                 <div class="add-form-actions">
-                    <button @onclick="ConfirmAddForm">Add</button>
+                    <button class="btn-primary" @onclick="ConfirmAddForm">Add</button>
                     <button @onclick="CancelAddForm">Cancel</button>
                 </div>
             </div>

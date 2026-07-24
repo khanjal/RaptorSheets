@@ -125,7 +125,7 @@
     <p class="status @(_messageIsError ? "error" : "ok")">@_message</p>
 }
 
-<button @onclick="SaveAsync" disabled="@_isBusy">@(_isBusy ? "Saving..." : "Save")</button>
+<button class="btn-primary" @onclick="SaveAsync" disabled="@_isBusy">@(_isBusy ? "Saving..." : "Save")</button>
 
 @code {
     private string? _currentClientEmail;

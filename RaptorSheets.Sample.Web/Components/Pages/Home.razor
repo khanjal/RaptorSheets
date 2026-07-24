@@ -20,7 +20,7 @@
     {
         <div class="demo-prompt">
             <p>This spreadsheet doesn't have any Gig sheets on it yet.</p>
-            <button @onclick="CreateDemoDataAsync" disabled="@_isBusy">
+            <button class="btn-primary" @onclick="CreateDemoDataAsync" disabled="@_isBusy">
                 @(_isBusy ? "Setting up..." : "Create sheets + fill with demo data")
             </button>
             @if (_demoDataMessage is not null)

@@ -1,13 +1,19 @@
 .settings-section {
     max-width: 40rem;
     margin-top: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid #eaeef2;
+    padding: 1.25rem 1.5rem 1.5rem;
+    border: 1px solid var(--color-border-muted);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
 }
 
+    .settings-section + .settings-section {
+        margin-top: 1.25rem;
+    }
+
 .settings-section h2 {
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.05rem;
+    margin: 0 0 0.5rem;
 }
 
 .spreadsheet-grid {

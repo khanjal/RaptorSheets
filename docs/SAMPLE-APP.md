@@ -10,6 +10,13 @@ It's plain ASP.NET Core - `dotnet run` is the whole setup story, no Node/npm too
 Currently wired up for the **Gig** domain; Stock, Job, and Home are on the nav as "coming soon" and
 will be added the same way, one at a time.
 
+Styling is a small set of CSS custom properties defined once in `wwwroot/app.css` (`--color-*`,
+`--radius-*`, `--shadow-*`) with a `prefers-color-scheme: dark` override alongside the light
+defaults - every component stylesheet references the tokens rather than hardcoding colors, so
+light/dark and any future palette tweak is a one-file change. `.btn-primary` marks the primary
+action in each toolbar/form (Save changes, Add, Create demo data, Save); everything else is the
+plain default button style.
+
 ## Running it
 
 ```bash
