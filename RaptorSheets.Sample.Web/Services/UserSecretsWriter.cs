@@ -37,53 +37,54 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
         configurationRoot["spreadsheets:home"]);
 
     /// <summary>
-    /// Every parameter is independently optional - a blank/null value leaves whatever's already
-    /// saved untouched, so this works equally well for "just change the Job spreadsheet ID" and
-    /// "replace the whole service account". <paramref name="serviceAccountJson"/> replaces
-    /// credentials wholesale when provided (never partially merged - a service account key is one
-    /// atomic unit) rather than being re-displayed and edited field-by-field.
+    /// Every field is independently optional - a blank/null value leaves whatever's already saved
+    /// untouched, so this works equally well for "just change the Job spreadsheet ID" and "replace
+    /// the whole service account". The 5 credential fields are all-or-nothing when any one of them
+    /// is set (a service account key is one atomic unit, never partially merged).
     /// </summary>
-    public WriteResult WriteSettings(
-        string? serviceAccountJson,
-        string? gigSpreadsheetId,
-        string? stockSpreadsheetId,
-        string? jobSpreadsheetId,
-        string? homeSpreadsheetId)
+    public sealed record SettingsUpdate(
+        string? CredentialType,
+        string? PrivateKeyId,
+        string? PrivateKey,
+        string? ClientEmail,
+        string? ClientId,
+        string? GigSpreadsheetId,
+        string? StockSpreadsheetId,
+        string? JobSpreadsheetId,
+        string? HomeSpreadsheetId);
+
+    /// <summary>
+    /// This method only ever writes the discrete field values already on <paramref name="update"/> -
+    /// it never parses JSON itself, since "paste the whole key to autofill the fields" is a UI
+    /// convenience, not something the write path needs to know about.
+    /// </summary>
+    public WriteResult WriteSettings(SettingsUpdate update)
     {
         Dictionary<string, string?>? credentialFields = null;
-
-        if (!string.IsNullOrWhiteSpace(serviceAccountJson))
+        var suppliedCredentialFields = new Dictionary<string, string?>
         {
-            try
-            {
-                using var parsed = JsonDocument.Parse(serviceAccountJson);
-                var root = parsed.RootElement;
-                credentialFields = new Dictionary<string, string?>
-                {
-                    ["type"] = GetString(root, "type"),
-                    ["private_key_id"] = GetString(root, "private_key_id"),
-                    ["private_key"] = GetString(root, "private_key"),
-                    ["client_email"] = GetString(root, "client_email"),
-                    ["client_id"] = GetString(root, "client_id"),
-                };
-            }
-            catch (JsonException)
-            {
-                return new WriteResult(false,
-                    "That doesn't look like valid JSON - paste the whole service-account key file Google Cloud downloaded.");
-            }
+            ["type"] = update.CredentialType,
+            ["private_key_id"] = update.PrivateKeyId,
+            ["private_key"] = update.PrivateKey,
+            ["client_email"] = update.ClientEmail,
+            ["client_id"] = update.ClientId,
+        };
 
-            var missing = credentialFields.Where(kv => string.IsNullOrWhiteSpace(kv.Value)).Select(kv => kv.Key).ToList();
+        if (suppliedCredentialFields.Values.Any(v => !string.IsNullOrWhiteSpace(v)))
+        {
+            var missing = suppliedCredentialFields.Where(kv => string.IsNullOrWhiteSpace(kv.Value)).Select(kv => kv.Key).ToList();
             if (missing.Count > 0)
             {
-                return new WriteResult(false, $"Missing field(s) in the pasted JSON: {string.Join(", ", missing)}.");
+                return new WriteResult(false, $"Missing credential field(s): {string.Join(", ", missing)}.");
             }
+
+            credentialFields = suppliedCredentialFields;
         }
 
-        var hasAnySpreadsheetId = !string.IsNullOrWhiteSpace(gigSpreadsheetId)
-            || !string.IsNullOrWhiteSpace(stockSpreadsheetId)
-            || !string.IsNullOrWhiteSpace(jobSpreadsheetId)
-            || !string.IsNullOrWhiteSpace(homeSpreadsheetId);
+        var hasAnySpreadsheetId = !string.IsNullOrWhiteSpace(update.GigSpreadsheetId)
+            || !string.IsNullOrWhiteSpace(update.StockSpreadsheetId)
+            || !string.IsNullOrWhiteSpace(update.JobSpreadsheetId)
+            || !string.IsNullOrWhiteSpace(update.HomeSpreadsheetId);
 
         if (credentialFields is null && !hasAnySpreadsheetId)
         {
@@ -108,10 +109,10 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
         }
 
         var spreadsheets = secrets["spreadsheets"] as JsonObject ?? new JsonObject();
-        SetIfProvided(spreadsheets, "gig", gigSpreadsheetId);
-        SetIfProvided(spreadsheets, "stock", stockSpreadsheetId);
-        SetIfProvided(spreadsheets, "job", jobSpreadsheetId);
-        SetIfProvided(spreadsheets, "home", homeSpreadsheetId);
+        SetIfProvided(spreadsheets, "gig", update.GigSpreadsheetId);
+        SetIfProvided(spreadsheets, "stock", update.StockSpreadsheetId);
+        SetIfProvided(spreadsheets, "job", update.JobSpreadsheetId);
+        SetIfProvided(spreadsheets, "home", update.HomeSpreadsheetId);
         secrets["spreadsheets"] = spreadsheets;
 
         File.WriteAllText(path, secrets.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
@@ -130,11 +131,6 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
             target[key] = value.Trim();
         }
     }
-
-    private static string? GetString(JsonElement root, string property) =>
-        root.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String
-            ? value.GetString()
-            : null;
 
     private static string GetSecretsPath()
     {

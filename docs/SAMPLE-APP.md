@@ -18,15 +18,20 @@ dotnet run --project RaptorSheets.Sample.Web
 
 If no spreadsheet is configured yet, the Home page points you at **Settings** (also reachable from
 the nav at any time, not just when disconnected) - a walkthrough for creating a Google Cloud service
-account and sharing a spreadsheet with it, then a form to paste the service account's JSON key and
-assign a spreadsheet ID per domain (Gig/Stock/Job/Home). The JSON textarea is masked by default (a
-"Show" toggle reveals it - CSS-only, degrades to plaintext on Firefox, an acceptable tradeoff for a
-localhost-only dev tool). Every field is independently optional on save - change just one domain's
-spreadsheet ID without touching credentials, or vice versa. Submitting writes straight to the local
-`secrets.json` and reconnects immediately, no restart needed. Credentials are replace-only: Settings
-shows which service account is currently active (`client_email` - safe to display) but never
-re-displays the private key itself, the same "write, don't show" pattern every password/API-key
-settings screen uses.
+account and sharing a spreadsheet with it, then individual fields for each credential (type, client
+email, client ID, private key ID, private key) plus a spreadsheet ID per domain (Gig/Stock/Job/Home).
+Only the private key is actually secret - the others are identifiers, safe to see in plain text - so
+only the private key gets a Show/Hide toggle, and hiding it swaps the `<textarea>` out for a
+character-count placeholder entirely rather than trying to mask live text in place: the value is
+genuinely absent from the rendered DOM while hidden, not just visually obscured. There's also an
+optional "paste the whole JSON key" box above the fields that parses on input and autofills them,
+since copying five values out of the downloaded key file by hand is tedious - the individual fields
+are what actually gets saved, the paste box is just a shortcut into them. Every field is
+independently optional on save - change just one domain's spreadsheet ID without touching
+credentials, or vice versa. Submitting writes straight to the local `secrets.json` and reconnects
+immediately, no restart needed. Credentials are replace-only: Settings shows which service account
+is currently active (`client_email` - safe to display) but never re-displays the private key itself,
+the same "write, don't show" pattern every password/API-key settings screen uses.
 
 `RaptorSheets.Sample.Web` and `RaptorSheets.Test` (the integration test suite's shared infra)
 deliberately declare the **same `<UserSecretsId>`**, so they read one `secrets.json`

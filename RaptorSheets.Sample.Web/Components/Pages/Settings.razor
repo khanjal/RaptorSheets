@@ -1,4 +1,5 @@
 @page "/settings"
+@using System.Text.Json
 @using RaptorSheets.Sample.Web.Services
 @inject GigConnectionProvider ConnectionProvider
 @inject UserSecretsWriter SecretsWriter
@@ -27,23 +28,58 @@
 
     @if (!_showCredentialsForm)
     {
-        <button @onclick="() => _showCredentialsForm = true">
+        <button @onclick="OpenCredentialsForm">
             @(_currentClientEmail is null ? "Add credentials" : "Replace credentials")
         </button>
     }
     else
     {
         <label>
+            <span>Paste full JSON key to autofill (optional)</span>
+            <textarea rows="4" value="@_pasteJson" @oninput="OnPasteJsonInput"
+                      placeholder='{ "type": "service_account", "private_key": "...", "client_email": "...", ... } - or just fill in the fields below directly'></textarea>
+        </label>
+        @if (_pasteError is not null)
+        {
+            <p class="status error">@_pasteError</p>
+        }
+
+        <label>
+            <span>Type</span>
+            <input value="@_credType" @oninput="e => _credType = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
+            <span>Client email</span>
+            <input value="@_credClientEmail" @oninput="e => _credClientEmail = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
+            <span>Client ID</span>
+            <input value="@_credClientId" @oninput="e => _credClientId = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
+            <span>Private key ID</span>
+            <input value="@_credPrivateKeyId" @oninput="e => _credPrivateKeyId = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
             <span class="field-label-row">
-                Service account JSON key
+                Private key
                 <button type="button" class="link-button" @onclick="() => _revealSecret = !_revealSecret">
                     @(_revealSecret ? "Hide" : "Show")
                 </button>
             </span>
-            <textarea rows="8" class="@(_revealSecret ? "" : "masked")" value="@_serviceAccountJson"
-                      @oninput="e => _serviceAccountJson = e.Value?.ToString() ?? string.Empty"
-                      placeholder='{ "type": "service_account", "private_key": "...", "client_email": "...", ... }'></textarea>
+            @if (_revealSecret)
+            {
+                <textarea rows="8" value="@_credPrivateKey" @oninput="e => _credPrivateKey = e.Value?.ToString() ?? string.Empty"
+                          placeholder="-----BEGIN PRIVATE KEY-----..."></textarea>
+            }
+            else
+            {
+                <div class="masked-placeholder">
+                    @(string.IsNullOrEmpty(_credPrivateKey) ? "Not entered yet" : $"{_credPrivateKey.Length} characters entered - click Show to view or edit")
+                </div>
+            }
         </label>
+
         <button type="button" class="link-button" @onclick="CancelCredentialsEdit">Cancel</button>
     }
 </section>
@@ -86,7 +122,13 @@
     private string? _currentClientEmail;
     private bool _showCredentialsForm;
     private bool _revealSecret;
-    private string _serviceAccountJson = string.Empty;
+    private string _pasteJson = string.Empty;
+    private string? _pasteError;
+    private string _credType = string.Empty;
+    private string _credPrivateKeyId = string.Empty;
+    private string _credPrivateKey = string.Empty;
+    private string _credClientEmail = string.Empty;
+    private string _credClientId = string.Empty;
     private string _gigSpreadsheetId = string.Empty;
     private string _stockSpreadsheetId = string.Empty;
     private string _jobSpreadsheetId = string.Empty;
@@ -107,12 +149,58 @@
         _homeSpreadsheetId = snapshot.HomeSpreadsheetId ?? string.Empty;
     }
 
+    private void OpenCredentialsForm()
+    {
+        _credType = "service_account";
+        _showCredentialsForm = true;
+    }
+
     private void CancelCredentialsEdit()
     {
-        _serviceAccountJson = string.Empty;
+        _pasteJson = string.Empty;
+        _pasteError = null;
+        _credType = string.Empty;
+        _credPrivateKeyId = string.Empty;
+        _credPrivateKey = string.Empty;
+        _credClientEmail = string.Empty;
+        _credClientId = string.Empty;
         _showCredentialsForm = false;
         _revealSecret = false;
     }
+
+    // Pure UI convenience - parses the pasted key into the individual fields below so a user doesn't
+    // have to copy 5 values out of the downloaded JSON by hand. The fields (not this textarea) are
+    // what actually gets saved.
+    private void OnPasteJsonInput(ChangeEventArgs e)
+    {
+        _pasteJson = e.Value?.ToString() ?? string.Empty;
+        _pasteError = null;
+
+        if (string.IsNullOrWhiteSpace(_pasteJson))
+        {
+            return;
+        }
+
+        try
+        {
+            using var parsed = JsonDocument.Parse(_pasteJson);
+            var root = parsed.RootElement;
+            _credType = GetString(root, "type") ?? _credType;
+            _credPrivateKeyId = GetString(root, "private_key_id") ?? _credPrivateKeyId;
+            _credPrivateKey = GetString(root, "private_key") ?? _credPrivateKey;
+            _credClientEmail = GetString(root, "client_email") ?? _credClientEmail;
+            _credClientId = GetString(root, "client_id") ?? _credClientId;
+        }
+        catch (JsonException)
+        {
+            _pasteError = "Not valid JSON yet - keep pasting, or just fill in the fields below directly.";
+        }
+    }
+
+    private static string? GetString(JsonElement root, string property) =>
+        root.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
 
     private async Task SaveAsync()
     {
@@ -120,8 +208,18 @@
         _message = null;
         try
         {
-            var jsonToSubmit = _showCredentialsForm ? _serviceAccountJson : null;
-            var result = SecretsWriter.WriteSettings(jsonToSubmit, _gigSpreadsheetId, _stockSpreadsheetId, _jobSpreadsheetId, _homeSpreadsheetId);
+            var update = new UserSecretsWriter.SettingsUpdate(
+                _showCredentialsForm ? _credType : null,
+                _showCredentialsForm ? _credPrivateKeyId : null,
+                _showCredentialsForm ? _credPrivateKey : null,
+                _showCredentialsForm ? _credClientEmail : null,
+                _showCredentialsForm ? _credClientId : null,
+                _gigSpreadsheetId,
+                _stockSpreadsheetId,
+                _jobSpreadsheetId,
+                _homeSpreadsheetId);
+
+            var result = SecretsWriter.WriteSettings(update);
 
             if (!result.Success)
             {

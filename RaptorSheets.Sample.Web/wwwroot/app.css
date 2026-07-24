@@ -105,13 +105,21 @@ textarea {
     box-sizing: border-box;
 }
 
-textarea.masked {
-    /* Chromium/WebKit only - no standard equivalent for <textarea>. Degrades to plaintext on
-       Firefox, which is an acceptable fallback for a localhost-only dev tool. */
-    -webkit-text-security: disc;
-}
-
 input[type="text"]:not(.filter), input:not([type]) {
     padding: 0.4rem;
     box-sizing: border-box;
+}
+
+/* "Hidden" secret fields swap to this instead of relying on a CSS masking trick - the real value
+   is genuinely absent from the rendered DOM while hidden, not just visually obscured, and it works
+   identically in every browser (-webkit-text-security has no effect on <textarea> in some browsers
+   and isn't a standard property at all). */
+.masked-placeholder {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    border: 1px dashed #d0d7de;
+    border-radius: 4px;
+    background: #f6f8fa;
+    color: #57606a;
 }
