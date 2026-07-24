@@ -12,16 +12,27 @@ will be added the same way, one at a time.
 
 ## Running it
 
+```bash
+dotnet run --project RaptorSheets.Sample.Web
+```
+
+If no spreadsheet is configured yet, the Home page itself is a setup wizard rather than just an
+error message: it walks through creating a Google Cloud service account and sharing a spreadsheet
+with it, then a form to paste the service account's JSON key and the spreadsheet ID. The JSON
+textarea is masked by default (a "Show" toggle reveals it - CSS-only, degrades to plaintext on
+Firefox, an acceptable tradeoff for a localhost-only dev tool). Submitting writes straight to the
+local `secrets.json` and reconnects immediately, no restart needed.
+
 `RaptorSheets.Sample.Web` and `RaptorSheets.Test` (the integration test suite's shared infra)
 deliberately declare the **same `<UserSecretsId>`**, so they read one `secrets.json`
 (`%APPDATA%\Microsoft\UserSecrets\d3dcd413-.../secrets.json` on Windows,
 `~/.microsoft/usersecrets/d3dcd413-.../secrets.json` on Linux/macOS) instead of each needing its
-own copy kept in sync by hand. If you've already set up user secrets for the integration tests,
-the sample app is already configured - just `dotnet run`. Nothing is read from `appsettings.json`,
-so there's nothing to accidentally commit either way.
+own copy kept in sync by hand - **the setup wizard configures both projects**, and has an optional
+"also set up Stock / Job / Home spreadsheets" section for exactly that, even though the sample app
+itself only uses Gig for now. Nothing is read from `appsettings.json`, so there's nothing to
+accidentally commit either way.
 
-Setting it up from scratch (the `<UserSecretsId>` is already in the csproj, so `init` isn't needed -
-either project's directory writes to the same store):
+Prefer the CLI? Same keys, same store, either project's directory works:
 
 ```bash
 cd RaptorSheets.Sample.Web
@@ -32,12 +43,15 @@ dotnet user-secrets set "google_credentials:private_key" "your-private-key"
 dotnet user-secrets set "google_credentials:client_email" "service@project.iam.gserviceaccount.com"
 dotnet user-secrets set "google_credentials:client_id" "your-client-id"
 dotnet user-secrets set "spreadsheets:gig" "your-gig-spreadsheet-id"
-
-dotnet run
 ```
 
-If a secret is missing, the app shows a setup message in the browser instead of crashing - it only
-connects on first use, not at startup.
+**If the spreadsheet you connect is blank** (no Gig sheets on it yet - checked via
+`GetAllSheetTabNames()` against the known Gig sheet names, not just "zero tabs", since a fresh
+Google Sheet always starts with one default "Sheet1" tab), the Home page offers a one-click
+"Create sheets + fill with demo data" button: `CreateAllSheets()` then `GenerateDemoData()` then
+`ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData)`, the exact sequence documented in
+[RaptorSheets.Gig's README](../RaptorSheets.Gig/README.md#demo-setup). The other 14 sheets fill in
+on their own from the sheet formulas once Shifts/Trips/Expenses have real rows.
 
 ## How the grid works
 
@@ -89,3 +103,7 @@ box, so this trades automatic-on-scroll for something that needs no JS at all.
   the spreadsheet. Use the sheet's nav link again (or a page refresh) to pull the latest data.
 - A reference sheet with a lot of rows (e.g. Names) produces a long native `<select>` - there's no
   search/filter inside the dropdown itself yet.
+- The "connect a blank spreadsheet" demo-data flow follows the documented Gig README sequence
+  exactly and the credential-write/parse/reconnect mechanics are verified against real (and
+  deliberately malformed, to check error handling) input, but the create-sheets-then-fill-with-
+  demo-data button itself hasn't been exercised against a genuinely empty spreadsheet.

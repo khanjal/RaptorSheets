@@ -1,6 +1,8 @@
 @page "/"
+@using RaptorSheets.Gig.Entities
 @using RaptorSheets.Sample.Web.Services
 @inject GigConnectionProvider ConnectionProvider
+@inject UserSecretsWriter SecretsWriter
 
 <PageTitle>RaptorSheets Sample</PageTitle>
 
@@ -8,26 +10,207 @@
 
 <p>
     A runnable UI over the RaptorSheets domain libraries - point it at a real spreadsheet
-    (configured via <code>dotnet user-secrets</code>) and browse, add, edit, and delete rows
-    through the sheets it manages.
+    and browse, add, edit, and delete rows through the sheets it manages.
 </p>
 
 @if (_connected)
 {
-    <p class="status ok">Connected to the Gig test spreadsheet. Pick a sheet from the left to get started.</p>
+    <p class="status ok">Connected to the Gig spreadsheet. Pick a sheet from the left to get started.</p>
+
+    @if (_isBlankSpreadsheet)
+    {
+        <div class="demo-prompt">
+            <p>This spreadsheet doesn't have any Gig sheets on it yet.</p>
+            <button @onclick="CreateDemoDataAsync" disabled="@_isBusy">
+                @(_isBusy ? "Setting up..." : "Create sheets + fill with demo data")
+            </button>
+            @if (_demoDataMessage is not null)
+            {
+                <p class="status error">@_demoDataMessage</p>
+            }
+        </div>
+    }
 }
 else
 {
-    <p class="status error">@_error</p>
-    <p>See <code>docs/SAMPLE-APP.md</code> for setup steps.</p>
+    <div class="setup">
+        <h2>Connect a spreadsheet</h2>
+
+        @if (_connectionError is not null)
+        {
+            <p class="status error">@_connectionError</p>
+        }
+
+        <ol class="setup-steps">
+            <li>
+                In <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>,
+                create or reuse a project, enable the <strong>Google Sheets API</strong>, and create a <strong>Service Account</strong>.
+                Download its JSON key.
+            </li>
+            <li>
+                Create a blank Google Sheet (or use an existing one) and <strong>share it</strong> with the
+                service account's email (the <code>client_email</code> field in the JSON) as Editor.
+            </li>
+            <li>Paste the JSON key and the spreadsheet ID (the long id in its URL) below.</li>
+        </ol>
+
+        <div class="setup-form">
+            <label>
+                <span class="field-label-row">
+                    Service account JSON key
+                    <button type="button" class="link-button" @onclick="() => _revealSecret = !_revealSecret">
+                        @(_revealSecret ? "Hide" : "Show")
+                    </button>
+                </span>
+                <textarea rows="8" class="@(_revealSecret ? "" : "masked")" value="@_serviceAccountJson"
+                          @oninput="e => _serviceAccountJson = e.Value?.ToString() ?? string.Empty"
+                          placeholder='{ "type": "service_account", "private_key": "...", "client_email": "...", ... }'></textarea>
+            </label>
+            <label>
+                <span>Gig spreadsheet ID</span>
+                <input value="@_gigSpreadsheetId" @oninput="e => _gigSpreadsheetId = e.Value?.ToString() ?? string.Empty" placeholder="from the sheet's URL" />
+            </label>
+
+            <details class="other-domains">
+                <summary>Also set up Stock / Job / Home spreadsheets (optional)</summary>
+                <p class="setup-hint">
+                    Only needed for running those domains' integration tests - the sample app itself
+                    only uses Gig for now. Same service account either way.
+                </p>
+                <label>
+                    <span>Stock spreadsheet ID</span>
+                    <input value="@_stockSpreadsheetId" @oninput="e => _stockSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
+                </label>
+                <label>
+                    <span>Job spreadsheet ID</span>
+                    <input value="@_jobSpreadsheetId" @oninput="e => _jobSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
+                </label>
+                <label>
+                    <span>Home spreadsheet ID</span>
+                    <input value="@_homeSpreadsheetId" @oninput="e => _homeSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
+                </label>
+            </details>
+
+            @if (_formError is not null)
+            {
+                <p class="status error">@_formError</p>
+            }
+
+            <button @onclick="SubmitSetupAsync" disabled="@_isBusy">@(_isBusy ? "Connecting..." : "Save & connect")</button>
+        </div>
+
+        <p class="setup-hint">
+            This writes straight to the same local user secrets <code>dotnet user-secrets</code> would.
+            RaptorSheets.Sample.Web and RaptorSheets.Test (the integration test suite) share one secrets
+            store, so this configures both - nothing is sent anywhere except directly to Google, and
+            nothing is committed to the repo.
+        </p>
+    </div>
 }
 
 @code {
     private bool _connected;
-    private string? _error;
+    private string? _connectionError;
+    private bool _isBlankSpreadsheet;
+    private bool _isBusy;
+    private bool _revealSecret;
+    private string? _formError;
+    private string? _demoDataMessage;
+    private string _serviceAccountJson = string.Empty;
+    private string _gigSpreadsheetId = string.Empty;
+    private string _stockSpreadsheetId = string.Empty;
+    private string _jobSpreadsheetId = string.Empty;
+    private string _homeSpreadsheetId = string.Empty;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _connected = ConnectionProvider.TryGetManager(out _, out _error);
+        await RefreshConnectionStateAsync();
+    }
+
+    private async Task RefreshConnectionStateAsync()
+    {
+        _connected = ConnectionProvider.TryGetManager(out var manager, out _connectionError);
+        _isBlankSpreadsheet = false;
+
+        if (_connected && manager is not null)
+        {
+            var tabNames = await manager.GetAllSheetTabNames();
+            var knownSheetNames = SheetMetadata.GetSheetDescriptors(typeof(GigSheets))
+                .Select(d => d.Name)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            _isBlankSpreadsheet = !tabNames.Any(knownSheetNames.Contains);
+        }
+    }
+
+    private async Task SubmitSetupAsync()
+    {
+        _isBusy = true;
+        _formError = null;
+        try
+        {
+            var result = SecretsWriter.WriteSetup(
+                _serviceAccountJson,
+                _gigSpreadsheetId,
+                _stockSpreadsheetId,
+                _jobSpreadsheetId,
+                _homeSpreadsheetId);
+
+            if (!result.Success)
+            {
+                _formError = result.Error;
+                return;
+            }
+
+            // Don't leave the pasted private key sitting in the form once it's written.
+            _serviceAccountJson = string.Empty;
+            _gigSpreadsheetId = string.Empty;
+            _stockSpreadsheetId = string.Empty;
+            _jobSpreadsheetId = string.Empty;
+            _homeSpreadsheetId = string.Empty;
+            _revealSecret = false;
+
+            ConnectionProvider.Reset();
+            await RefreshConnectionStateAsync();
+
+            if (!_connected)
+            {
+                _formError = _connectionError;
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task CreateDemoDataAsync()
+    {
+        if (!ConnectionProvider.TryGetManager(out var manager, out _))
+        {
+            return;
+        }
+
+        _isBusy = true;
+        _demoDataMessage = null;
+        try
+        {
+            await manager!.CreateAllSheets();
+            var demoData = manager.GenerateDemoData();
+            var result = await manager.ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData);
+
+            var errors = result.Messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (errors.Count > 0)
+            {
+                _demoDataMessage = string.Join(" ", errors.Select(m => m.Message));
+                return;
+            }
+
+            _isBlankSpreadsheet = false;
+        }
+        finally
+        {
+            _isBusy = false;
+        }
     }
 }

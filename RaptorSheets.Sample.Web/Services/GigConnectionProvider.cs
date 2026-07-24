@@ -26,6 +26,15 @@ public class GigConnectionProvider(ISheetManagerFactory<IGoogleSheetManager> fac
         return _manager is not null;
     }
 
+    /// <summary>Forgets the cached attempt so the next TryGetManager call reconnects - for after the
+    /// setup form writes new secrets, since configuration.Reload() alone doesn't invalidate this.</summary>
+    public void Reset()
+    {
+        _attempted = false;
+        _manager = null;
+        _error = null;
+    }
+
     private void Connect()
     {
         // Same keys RaptorSheets.Test.Common reads (see TestConfigurationHelpers) - the two
@@ -44,8 +53,15 @@ public class GigConnectionProvider(ISheetManagerFactory<IGoogleSheetManager> fac
         {
             _manager = factory.Create(credentials, spreadsheetId);
         }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        catch (Exception ex)
         {
+            // Genuinely user-input-shaped credentials (missing/empty fields) throw ArgumentException,
+            // but malformed PEM/PKCS8 *content* - e.g. a private key truncated by a bad copy-paste -
+            // throws whatever Google.Apis.Auth's own ASN.1 decoder happens to throw
+            // (NotSupportedException, FormatException, CryptographicException, ...), not something
+            // this constructor's own validation controls. This is the boundary where arbitrary
+            // user-supplied credential text meets the system, so catching broadly here and showing a
+            // message is correct - the alternative is an uncaught exception tearing down the circuit.
             _error = $"Couldn't connect to the Gig spreadsheet: {ex.Message}";
         }
     }

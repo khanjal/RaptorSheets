@@ -15,6 +15,12 @@ builder.Services.AddRaptorSheetsGig();
 builder.Services.AddScoped<GigConnectionProvider>();
 builder.Services.AddSingleton<ReferenceSheetCache>();
 
+// ConfigurationManager (builder.Configuration) already *is* the IConfigurationRoot the app runs
+// on - registering it lets UserSecretsWriter call .Reload() after writing new secrets, so a setup
+// submission takes effect immediately instead of needing an app restart.
+builder.Services.AddSingleton<IConfigurationRoot>(builder.Configuration);
+builder.Services.AddSingleton<UserSecretsWriter>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

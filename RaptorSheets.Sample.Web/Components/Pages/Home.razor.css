@@ -1,0 +1,94 @@
+.setup {
+    max-width: 40rem;
+    margin-top: 1rem;
+}
+
+.setup-steps {
+    padding-left: 1.25rem;
+    line-height: 1.6;
+}
+
+.setup-steps li {
+    margin-bottom: 0.5rem;
+}
+
+.setup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.setup-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: #57606a;
+}
+
+.setup-form textarea {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    resize: vertical;
+}
+
+.setup-form textarea.masked {
+    /* Chromium/WebKit only - no standard equivalent for <textarea>. Degrades to plaintext on
+       Firefox, which is an acceptable fallback for a localhost-only dev tool. */
+    -webkit-text-security: disc;
+}
+
+.setup-form input {
+    padding: 0.4rem;
+}
+
+.setup-form button {
+    align-self: flex-start;
+}
+
+.field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #0969da;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.other-domains {
+    border: 1px solid #eaeef2;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+}
+
+.other-domains summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #57606a;
+}
+
+.other-domains label {
+    margin-top: 0.5rem;
+}
+
+.setup-hint {
+    font-size: 0.8rem;
+    color: #8b949e;
+    margin-top: 0.75rem;
+}
+
+.demo-prompt {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    background: #fbfcfd;
+}
