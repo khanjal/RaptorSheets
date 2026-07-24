@@ -16,21 +16,25 @@ will be added the same way, one at a time.
 dotnet run --project RaptorSheets.Sample.Web
 ```
 
-If no spreadsheet is configured yet, the Home page itself is a setup wizard rather than just an
-error message: it walks through creating a Google Cloud service account and sharing a spreadsheet
-with it, then a form to paste the service account's JSON key and the spreadsheet ID. The JSON
-textarea is masked by default (a "Show" toggle reveals it - CSS-only, degrades to plaintext on
-Firefox, an acceptable tradeoff for a localhost-only dev tool). Submitting writes straight to the
-local `secrets.json` and reconnects immediately, no restart needed.
+If no spreadsheet is configured yet, the Home page points you at **Settings** (also reachable from
+the nav at any time, not just when disconnected) - a walkthrough for creating a Google Cloud service
+account and sharing a spreadsheet with it, then a form to paste the service account's JSON key and
+assign a spreadsheet ID per domain (Gig/Stock/Job/Home). The JSON textarea is masked by default (a
+"Show" toggle reveals it - CSS-only, degrades to plaintext on Firefox, an acceptable tradeoff for a
+localhost-only dev tool). Every field is independently optional on save - change just one domain's
+spreadsheet ID without touching credentials, or vice versa. Submitting writes straight to the local
+`secrets.json` and reconnects immediately, no restart needed. Credentials are replace-only: Settings
+shows which service account is currently active (`client_email` - safe to display) but never
+re-displays the private key itself, the same "write, don't show" pattern every password/API-key
+settings screen uses.
 
 `RaptorSheets.Sample.Web` and `RaptorSheets.Test` (the integration test suite's shared infra)
 deliberately declare the **same `<UserSecretsId>`**, so they read one `secrets.json`
 (`%APPDATA%\Microsoft\UserSecrets\d3dcd413-.../secrets.json` on Windows,
-`~/.microsoft/usersecrets/d3dcd413-.../secrets.json` on Linux/macOS) instead of each needing its
-own copy kept in sync by hand - **the setup wizard configures both projects**, and has an optional
-"also set up Stock / Job / Home spreadsheets" section for exactly that, even though the sample app
-itself only uses Gig for now. Nothing is read from `appsettings.json`, so there's nothing to
-accidentally commit either way.
+`~/.microsoft/usersecrets/d3dcd413-.../secrets.json` on Linux/macOS) instead of each needing its own
+copy kept in sync by hand - **Settings configures both projects at once**. Stock/Job/Home spreadsheet
+IDs live there for exactly that reason, even though the sample app's nav only browses Gig for now.
+Nothing is read from `appsettings.json`, so there's nothing to accidentally commit either way.
 
 Prefer the CLI? Same keys, same store, either project's directory works:
 

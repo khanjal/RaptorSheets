@@ -1,0 +1,17 @@
+.settings-section {
+    max-width: 40rem;
+    margin-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #eaeef2;
+}
+
+.settings-section h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.spreadsheet-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 1rem;
+}

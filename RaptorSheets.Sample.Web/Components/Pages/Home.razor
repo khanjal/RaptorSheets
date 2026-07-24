@@ -2,7 +2,6 @@
 @using RaptorSheets.Gig.Entities
 @using RaptorSheets.Sample.Web.Services
 @inject GigConnectionProvider ConnectionProvider
-@inject UserSecretsWriter SecretsWriter
 
 <PageTitle>RaptorSheets Sample</PageTitle>
 
@@ -33,79 +32,11 @@
 }
 else
 {
-    <div class="setup">
-        <h2>Connect a spreadsheet</h2>
-
-        @if (_connectionError is not null)
-        {
-            <p class="status error">@_connectionError</p>
-        }
-
-        <ol class="setup-steps">
-            <li>
-                In <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>,
-                create or reuse a project, enable the <strong>Google Sheets API</strong>, and create a <strong>Service Account</strong>.
-                Download its JSON key.
-            </li>
-            <li>
-                Create a blank Google Sheet (or use an existing one) and <strong>share it</strong> with the
-                service account's email (the <code>client_email</code> field in the JSON) as Editor.
-            </li>
-            <li>Paste the JSON key and the spreadsheet ID (the long id in its URL) below.</li>
-        </ol>
-
-        <div class="setup-form">
-            <label>
-                <span class="field-label-row">
-                    Service account JSON key
-                    <button type="button" class="link-button" @onclick="() => _revealSecret = !_revealSecret">
-                        @(_revealSecret ? "Hide" : "Show")
-                    </button>
-                </span>
-                <textarea rows="8" class="@(_revealSecret ? "" : "masked")" value="@_serviceAccountJson"
-                          @oninput="e => _serviceAccountJson = e.Value?.ToString() ?? string.Empty"
-                          placeholder='{ "type": "service_account", "private_key": "...", "client_email": "...", ... }'></textarea>
-            </label>
-            <label>
-                <span>Gig spreadsheet ID</span>
-                <input value="@_gigSpreadsheetId" @oninput="e => _gigSpreadsheetId = e.Value?.ToString() ?? string.Empty" placeholder="from the sheet's URL" />
-            </label>
-
-            <details class="other-domains">
-                <summary>Also set up Stock / Job / Home spreadsheets (optional)</summary>
-                <p class="setup-hint">
-                    Only needed for running those domains' integration tests - the sample app itself
-                    only uses Gig for now. Same service account either way.
-                </p>
-                <label>
-                    <span>Stock spreadsheet ID</span>
-                    <input value="@_stockSpreadsheetId" @oninput="e => _stockSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
-                </label>
-                <label>
-                    <span>Job spreadsheet ID</span>
-                    <input value="@_jobSpreadsheetId" @oninput="e => _jobSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
-                </label>
-                <label>
-                    <span>Home spreadsheet ID</span>
-                    <input value="@_homeSpreadsheetId" @oninput="e => _homeSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
-                </label>
-            </details>
-
-            @if (_formError is not null)
-            {
-                <p class="status error">@_formError</p>
-            }
-
-            <button @onclick="SubmitSetupAsync" disabled="@_isBusy">@(_isBusy ? "Connecting..." : "Save & connect")</button>
-        </div>
-
-        <p class="setup-hint">
-            This writes straight to the same local user secrets <code>dotnet user-secrets</code> would.
-            RaptorSheets.Sample.Web and RaptorSheets.Test (the integration test suite) share one secrets
-            store, so this configures both - nothing is sent anywhere except directly to Google, and
-            nothing is committed to the repo.
-        </p>
-    </div>
+    <p class="status error">@_connectionError</p>
+    <p>
+        Head to <a href="settings">Settings</a> to connect a spreadsheet - it walks through creating
+        a Google Cloud service account and pasting its key in, no CLI needed.
+    </p>
 }
 
 @code {
@@ -113,14 +44,7 @@ else
     private string? _connectionError;
     private bool _isBlankSpreadsheet;
     private bool _isBusy;
-    private bool _revealSecret;
-    private string? _formError;
     private string? _demoDataMessage;
-    private string _serviceAccountJson = string.Empty;
-    private string _gigSpreadsheetId = string.Empty;
-    private string _stockSpreadsheetId = string.Empty;
-    private string _jobSpreadsheetId = string.Empty;
-    private string _homeSpreadsheetId = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -140,47 +64,6 @@ else
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             _isBlankSpreadsheet = !tabNames.Any(knownSheetNames.Contains);
-        }
-    }
-
-    private async Task SubmitSetupAsync()
-    {
-        _isBusy = true;
-        _formError = null;
-        try
-        {
-            var result = SecretsWriter.WriteSetup(
-                _serviceAccountJson,
-                _gigSpreadsheetId,
-                _stockSpreadsheetId,
-                _jobSpreadsheetId,
-                _homeSpreadsheetId);
-
-            if (!result.Success)
-            {
-                _formError = result.Error;
-                return;
-            }
-
-            // Don't leave the pasted private key sitting in the form once it's written.
-            _serviceAccountJson = string.Empty;
-            _gigSpreadsheetId = string.Empty;
-            _stockSpreadsheetId = string.Empty;
-            _jobSpreadsheetId = string.Empty;
-            _homeSpreadsheetId = string.Empty;
-            _revealSecret = false;
-
-            ConnectionProvider.Reset();
-            await RefreshConnectionStateAsync();
-
-            if (!_connected)
-            {
-                _formError = _connectionError;
-            }
-        }
-        finally
-        {
-            _isBusy = false;
         }
     }
 

@@ -1,0 +1,146 @@
+@page "/settings"
+@using RaptorSheets.Sample.Web.Services
+@inject GigConnectionProvider ConnectionProvider
+@inject UserSecretsWriter SecretsWriter
+
+<PageTitle>Settings - RaptorSheets Sample</PageTitle>
+
+<h1>Settings</h1>
+
+<p>
+    Credentials and spreadsheet IDs for every domain, all in one place. This is the same secrets
+    store <a href="/">the sample app</a> connects with and RaptorSheets.Test's integration suite
+    reads - update it here instead of the CLI.
+</p>
+
+<section class="settings-section">
+    <h2>Credentials</h2>
+
+    @if (_currentClientEmail is not null)
+    {
+        <p class="status ok">Connected as <code>@_currentClientEmail</code>.</p>
+    }
+    else
+    {
+        <p class="status error">No service account configured yet.</p>
+    }
+
+    @if (!_showCredentialsForm)
+    {
+        <button @onclick="() => _showCredentialsForm = true">
+            @(_currentClientEmail is null ? "Add credentials" : "Replace credentials")
+        </button>
+    }
+    else
+    {
+        <label>
+            <span class="field-label-row">
+                Service account JSON key
+                <button type="button" class="link-button" @onclick="() => _revealSecret = !_revealSecret">
+                    @(_revealSecret ? "Hide" : "Show")
+                </button>
+            </span>
+            <textarea rows="8" class="@(_revealSecret ? "" : "masked")" value="@_serviceAccountJson"
+                      @oninput="e => _serviceAccountJson = e.Value?.ToString() ?? string.Empty"
+                      placeholder='{ "type": "service_account", "private_key": "...", "client_email": "...", ... }'></textarea>
+        </label>
+        <button type="button" class="link-button" @onclick="CancelCredentialsEdit">Cancel</button>
+    }
+</section>
+
+<section class="settings-section">
+    <h2>Spreadsheet IDs</h2>
+    <p class="setup-hint">
+        Only Gig is wired up in this sample app's nav today - Stock/Job/Home are here so the
+        integration test suite has what it needs too, from the same one place.
+    </p>
+
+    <div class="spreadsheet-grid">
+        <label>
+            <span>Gig</span>
+            <input value="@_gigSpreadsheetId" @oninput="e => _gigSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
+            <span>Stock</span>
+            <input value="@_stockSpreadsheetId" @oninput="e => _stockSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
+            <span>Job</span>
+            <input value="@_jobSpreadsheetId" @oninput="e => _jobSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
+            <span>Home</span>
+            <input value="@_homeSpreadsheetId" @oninput="e => _homeSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
+        </label>
+    </div>
+</section>
+
+@if (_message is not null)
+{
+    <p class="status @(_messageIsError ? "error" : "ok")">@_message</p>
+}
+
+<button @onclick="SaveAsync" disabled="@_isBusy">@(_isBusy ? "Saving..." : "Save")</button>
+
+@code {
+    private string? _currentClientEmail;
+    private bool _showCredentialsForm;
+    private bool _revealSecret;
+    private string _serviceAccountJson = string.Empty;
+    private string _gigSpreadsheetId = string.Empty;
+    private string _stockSpreadsheetId = string.Empty;
+    private string _jobSpreadsheetId = string.Empty;
+    private string _homeSpreadsheetId = string.Empty;
+    private bool _isBusy;
+    private string? _message;
+    private bool _messageIsError;
+
+    protected override void OnInitialized() => LoadCurrent();
+
+    private void LoadCurrent()
+    {
+        var snapshot = SecretsWriter.GetCurrentConfig();
+        _currentClientEmail = snapshot.ClientEmail;
+        _gigSpreadsheetId = snapshot.GigSpreadsheetId ?? string.Empty;
+        _stockSpreadsheetId = snapshot.StockSpreadsheetId ?? string.Empty;
+        _jobSpreadsheetId = snapshot.JobSpreadsheetId ?? string.Empty;
+        _homeSpreadsheetId = snapshot.HomeSpreadsheetId ?? string.Empty;
+    }
+
+    private void CancelCredentialsEdit()
+    {
+        _serviceAccountJson = string.Empty;
+        _showCredentialsForm = false;
+        _revealSecret = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        _isBusy = true;
+        _message = null;
+        try
+        {
+            var jsonToSubmit = _showCredentialsForm ? _serviceAccountJson : null;
+            var result = SecretsWriter.WriteSettings(jsonToSubmit, _gigSpreadsheetId, _stockSpreadsheetId, _jobSpreadsheetId, _homeSpreadsheetId);
+
+            if (!result.Success)
+            {
+                _message = result.Error;
+                _messageIsError = true;
+                return;
+            }
+
+            CancelCredentialsEdit();
+            ConnectionProvider.Reset();
+            LoadCurrent();
+
+            var connected = ConnectionProvider.TryGetManager(out _, out var connectionError);
+            _message = connected ? "Saved and connected." : $"Saved, but couldn't connect: {connectionError}";
+            _messageIsError = !connected;
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+}
