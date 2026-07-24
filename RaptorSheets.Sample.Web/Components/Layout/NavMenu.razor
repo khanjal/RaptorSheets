@@ -1,30 +1,23 @@
-@using RaptorSheets.Gig.Entities
 @using RaptorSheets.Sample.Web.Services
+@inject DomainRegistry Domains
 
 <nav>
     <div class="brand">RaptorSheets Sample</div>
 
-    <div class="domain-group">
-        <div class="domain-label">Gig</div>
-        <ul>
-            @foreach (var sheetName in _gigSheets.Select(s => s.Name))
-            {
-                <li>
-                    <NavLink href="@($"sheet/gig/{sheetName}")">@sheetName</NavLink>
-                </li>
-            }
-        </ul>
-    </div>
-
-    <div class="domain-group disabled">
-        <div class="domain-label">Stock <span class="badge">coming soon</span></div>
-    </div>
-    <div class="domain-group disabled">
-        <div class="domain-label">Job <span class="badge">coming soon</span></div>
-    </div>
-    <div class="domain-group disabled">
-        <div class="domain-label">Home <span class="badge">coming soon</span></div>
-    </div>
+    @foreach (var domain in Domains.Domains)
+    {
+        <div class="domain-group">
+            <div class="domain-label">@domain.DomainLabel</div>
+            <ul>
+                @foreach (var sheetName in GetSheetNames(domain))
+                {
+                    <li>
+                        <NavLink href="@BuildHref(domain.DomainName, sheetName)">@sheetName</NavLink>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
 
     <div class="nav-footer">
         <NavLink href="settings">Settings</NavLink>
@@ -32,5 +25,13 @@
 </nav>
 
 @code {
-    private readonly IReadOnlyList<SheetDescriptor> _gigSheets = SheetMetadata.GetSheetDescriptors(typeof(GigSheets));
+    private static IEnumerable<string> GetSheetNames(ISheetOperations domain) =>
+        SheetMetadata.GetSheetDescriptors(domain.SheetsType, domain.SheetNamesType)
+            .Select(d => d.Name)
+            .Where(name => !domain.ExcludedSheetNames.Contains(name));
+
+    // Sheet names aren't always URL-safe as-is - Job/Home have names with spaces and "&"
+    // (e.g. "Interview Types", "Doors & Windows").
+    private static string BuildHref(string domainName, string sheetName) =>
+        $"sheet/{domainName}/{Uri.EscapeDataString(sheetName)}";
 }

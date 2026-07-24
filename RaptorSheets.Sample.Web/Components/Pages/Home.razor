@@ -1,7 +1,7 @@
 @page "/"
 @using RaptorSheets.Gig.Entities
 @using RaptorSheets.Sample.Web.Services
-@inject GigConnectionProvider ConnectionProvider
+@inject GigSheetOperations ConnectionProvider
 
 <PageTitle>RaptorSheets Sample</PageTitle>
 
@@ -53,13 +53,13 @@ else
 
     private async Task RefreshConnectionStateAsync()
     {
-        _connected = ConnectionProvider.TryGetManager(out var manager, out _connectionError);
+        _connected = ConnectionProvider.TryGetTypedManager(out var manager, out _connectionError);
         _isBlankSpreadsheet = false;
 
         if (_connected && manager is not null)
         {
             var tabNames = await manager.GetAllSheetTabNames();
-            var knownSheetNames = SheetMetadata.GetSheetDescriptors(typeof(GigSheets))
+            var knownSheetNames = SheetMetadata.GetSheetDescriptors(typeof(GigSheets), typeof(RaptorSheets.Gig.Constants.SheetsConfig.SheetNames))
                 .Select(d => d.Name)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -69,7 +69,7 @@ else
 
     private async Task CreateDemoDataAsync()
     {
-        if (!ConnectionProvider.TryGetManager(out var manager, out _))
+        if (!ConnectionProvider.TryGetTypedManager(out var manager, out _))
         {
             return;
         }

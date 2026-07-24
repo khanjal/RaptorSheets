@@ -1,13 +1,9 @@
-@page "/sheet/gig/{SheetName}"
+@page "/sheet/{Domain}/{SheetName}"
 @using System.Collections
 @using RaptorSheets.Core.Entities
 @using RaptorSheets.Core.Utilities
-@using RaptorSheets.Gig.Constants
-@using RaptorSheets.Gig.Entities
-@using RaptorSheets.Gig.Managers
 @using RaptorSheets.Sample.Web.Services
-@inject GigConnectionProvider ConnectionProvider
-@inject ReferenceSheetCache ReferenceCache
+@inject DomainRegistry Domains
 
 <PageTitle>@SheetName - RaptorSheets Sample</PageTitle>
 
@@ -43,9 +39,12 @@ else
 
 @code {
     [Parameter]
+    public string Domain { get; set; } = string.Empty;
+
+    [Parameter]
     public string SheetName { get; set; } = string.Empty;
 
-    private IGoogleSheetManager? _manager;
+    private ISheetOperations? _ops;
     private SheetDescriptor? _descriptor;
     private Type? _gridType;
     private Dictionary<string, object>? _gridParameters;
@@ -63,37 +62,30 @@ else
         _gridParameters = null;
         _messages = [];
 
-        if (!ConnectionProvider.TryGetManager(out var manager, out var connectionError))
+        _ops = Domains.TryGet(Domain);
+        if (_ops is null)
+        {
+            _error = $"\"{Domain}\" isn't a known domain.";
+            return;
+        }
+
+        if (!_ops.TryGetManager(out _, out var connectionError))
         {
             _error = connectionError;
             return;
         }
 
-        _manager = manager;
-        _descriptor = SheetMetadata.GetSheetDescriptors(typeof(GigSheets))
+        _descriptor = SheetMetadata.GetSheetDescriptors(_ops.SheetsType, _ops.SheetNamesType)
             .FirstOrDefault(d => string.Equals(d.Name, SheetName, StringComparison.OrdinalIgnoreCase));
 
         if (_descriptor is null)
         {
-            _error = $"\"{SheetName}\" isn't a known Gig sheet.";
+            _error = $"\"{SheetName}\" isn't a known {_ops.DomainLabel} sheet.";
             return;
         }
 
         await LoadAsync();
     }
-
-    // Which reference sheet backs the dropdown for a given [Column]'s ValidationPattern - mirrors
-    // Gig's own (internal) GigSheetHelpers.GetSheetForRange, built from the same public constants
-    // since that mapping isn't itself public.
-    private static readonly Dictionary<string, string> ValidationSheetMap = new()
-    {
-        [SheetsConfig.ValidationNames.RangeAddress] = SheetsConfig.SheetNames.Addresses,
-        [SheetsConfig.ValidationNames.RangeName] = SheetsConfig.SheetNames.Names,
-        [SheetsConfig.ValidationNames.RangePlace] = SheetsConfig.SheetNames.Places,
-        [SheetsConfig.ValidationNames.RangeRegion] = SheetsConfig.SheetNames.Regions,
-        [SheetsConfig.ValidationNames.RangeService] = SheetsConfig.SheetNames.Services,
-        [SheetsConfig.ValidationNames.RangeType] = SheetsConfig.SheetNames.Types,
-    };
 
     private async Task LoadAsync()
     {
@@ -101,22 +93,22 @@ else
         _isBusy = true;
         try
         {
-            var tabNames = await _manager!.GetAllSheetTabNames();
+            var tabNames = await _ops!.GetAllSheetTabNamesAsync();
             if (!tabNames.Contains(_descriptor!.Name, StringComparer.OrdinalIgnoreCase))
             {
                 _notFoundOnSheet = true;
                 return;
             }
 
-            var isReadOnly = _manager.GetSheetLayout(_descriptor.Name)?.ProtectSheet ?? false;
+            var isReadOnly = _ops.GetSheetLayout(_descriptor.Name)?.ProtectSheet ?? false;
 
             // Fast path: just the sheet being viewed, same single read as before dropdowns existed.
             // Reference-sheet data for dropdowns loads separately, in the background, so a big sheet
-            // like Trips (thousands of rows) isn't held up by also pulling in six lookup sheets.
-            var result = await _manager.GetSheet(_descriptor.Name);
-            _messages = result.Messages;
+            // like Trips (thousands of rows) isn't held up waiting on six lookup sheets.
+            var (sheetsContainer, messages) = await _ops.GetSheetAsync(_descriptor.Name);
+            _messages = messages;
 
-            var rows = _descriptor.GetRows(result.Sheets);
+            var rows = _descriptor.GetRows(sheetsContainer);
 
             _gridType = typeof(EntityGrid<>).MakeGenericType(_descriptor.RowType);
             _gridParameters = new Dictionary<string, object>
@@ -140,9 +132,10 @@ else
 
     private async Task LoadDropdownOptionsAsync(int generation)
     {
+        var validationMap = _ops!.ValidationSheetMap;
         var validatedColumns = TypedFieldUtils.GetColumnProperties(_descriptor!.RowType)
             .Where(c => c.Column.IsInput && c.Column.EnableValidation && c.Column.ValidationPattern is not null)
-            .Where(c => ValidationSheetMap.ContainsKey(c.Column.ValidationPattern!))
+            .Where(c => validationMap.ContainsKey(c.Column.ValidationPattern!))
             .ToList();
 
         if (validatedColumns.Count == 0)
@@ -150,9 +143,9 @@ else
             return;
         }
 
-        var allDescriptors = SheetMetadata.GetSheetDescriptors(typeof(GigSheets));
+        var allDescriptors = SheetMetadata.GetSheetDescriptors(_ops.SheetsType, _ops.SheetNamesType);
         var referenceDescriptors = validatedColumns
-            .Select(c => ValidationSheetMap[c.Column.ValidationPattern!])
+            .Select(c => validationMap[c.Column.ValidationPattern!])
             .Distinct()
             .Select(name => allDescriptors.FirstOrDefault(d => d.Name == name))
             .Where(d => d is not null)
@@ -162,7 +155,7 @@ else
         // Cached per reference-sheet-name across the whole app, not per page visit - these sheets
         // are read-only and rarely change, so repeat navigations reuse the same values for a while
         // instead of re-fetching.
-        var valuesBySheet = await ReferenceCache.GetIdentityValuesAsync(_manager!, referenceDescriptors);
+        var valuesBySheet = await _ops.GetReferenceValuesAsync(referenceDescriptors);
 
         if (generation != _loadGeneration)
         {
@@ -173,7 +166,7 @@ else
 
         foreach (var column in validatedColumns.Select(c => c.Column))
         {
-            var refSheetName = ValidationSheetMap[column.ValidationPattern!];
+            var refSheetName = validationMap[column.ValidationPattern!];
             if (valuesBySheet.TryGetValue(refSheetName, out var values))
             {
                 dropdownOptions[column.HeaderName] = values;
@@ -196,8 +189,7 @@ else
         _isBusy = true;
         try
         {
-            var result = await _manager!.CreateSheets([_descriptor!.Name]);
-            _messages = result.Messages;
+            _messages = await _ops!.CreateSheetAsync(_descriptor!.Name);
             await LoadAsync();
         }
         finally
@@ -208,12 +200,7 @@ else
 
     private async Task SaveAsync(IList dirtyRows)
     {
-        var entity = new SheetEntity();
-        _descriptor!.ListProperty.SetValue(entity.Sheets, dirtyRows);
-
-        var result = await _manager!.ChangeSheetData([_descriptor.Name], entity);
-        _messages = result.Messages;
-
+        _messages = await _ops!.ChangeSheetDataAsync(_descriptor!.Name, _descriptor.ListProperty, dirtyRows);
         await LoadAsync();
     }
 }

@@ -7,8 +7,14 @@ result land in the actual Google Sheet.
 
 It's plain ASP.NET Core - `dotnet run` is the whole setup story, no Node/npm toolchain required.
 
-Currently wired up for the **Gig** domain; Stock, Job, and Home are on the nav as "coming soon" and
-will be added the same way, one at a time.
+Wired up for **Gig, Job, and Home** - pick any of them from the nav and browse/edit its sheets the
+same way. **Stock isn't in the nav yet**: its entities have no `[Column]` attributes at all (unlike
+the other three domains), which this app's generic rendering depends on entirely for headers,
+editability, and validation - every Stock sheet would render with no columns. That's a gap in the
+Stock library itself (it predates the `[Column]`/`GenericSheetMapper<T>` convention and still uses
+its own hand-rolled header/mapping code), tracked as a follow-up rather than worked around here.
+`RaptorSheets.Sample.Web/Services/StockSheetOperations.cs` is already written and ready - once
+Stock's entities get `[Column]` attributes, it's a one-line uncomment in `Program.cs` to wire it in.
 
 Styling is a small set of CSS custom properties defined once in `wwwroot/app.css` (`--color-*`,
 `--radius-*`, `--shadow-*`) with a `prefers-color-scheme: dark` override alongside the light
@@ -44,8 +50,8 @@ the same "write, don't show" pattern every password/API-key settings screen uses
 deliberately declare the **same `<UserSecretsId>`**, so they read one `secrets.json`
 (`%APPDATA%\Microsoft\UserSecrets\d3dcd413-.../secrets.json` on Windows,
 `~/.microsoft/usersecrets/d3dcd413-.../secrets.json` on Linux/macOS) instead of each needing its own
-copy kept in sync by hand - **Settings configures both projects at once**. Stock/Job/Home spreadsheet
-IDs live there for exactly that reason, even though the sample app's nav only browses Gig for now.
+copy kept in sync by hand - **Settings configures both projects at once**. Stock's spreadsheet ID
+lives there too even though the sample app's nav doesn't browse it yet, for exactly that reason.
 Nothing is read from `appsettings.json`, so there's nothing to accidentally commit either way.
 
 Prefer the CLI? Same keys, same store, either project's directory works:
@@ -61,23 +67,49 @@ dotnet user-secrets set "google_credentials:client_id" "your-client-id"
 dotnet user-secrets set "spreadsheets:gig" "your-gig-spreadsheet-id"
 ```
 
-**If the spreadsheet you connect is blank** (no Gig sheets on it yet - checked via
+**If the Gig spreadsheet you connect is blank** (no Gig sheets on it yet - checked via
 `GetAllSheetTabNames()` against the known Gig sheet names, not just "zero tabs", since a fresh
 Google Sheet always starts with one default "Sheet1" tab), the Home page offers a one-click
 "Create sheets + fill with demo data" button: `CreateAllSheets()` then `GenerateDemoData()` then
 `ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData)`, the exact sequence documented in
 [RaptorSheets.Gig's README](../RaptorSheets.Gig/README.md#demo-setup). The other 14 sheets fill in
-on their own from the sheet formulas once Shifts/Trips/Expenses have real rows.
+on their own from the sheet formulas once Shifts/Trips/Expenses have real rows. This wizard is
+Gig-only for now - Job and Home each have their own demo-data method with a different signature
+(Job takes a date range and a seed, Home just a seed), so a shared "create demo data" button across
+domains isn't a single generic call; for Job/Home, create the sheet(s) you need from the per-sheet
+"Create sheet" prompt instead and fill them in by hand, or run each domain's own test project.
 
-## How the grid works
+## Multiple domains, one generic layer
 
-Every domain entity already declares its own schema via `[Column(...)]` attributes - header name,
-whether it's user-editable or a read-only formula/output column, validation rules, display format.
-Rather than hand-building a page per entity (Gig alone has 17 sheet types), the sample reflects over
-that metadata once, using the same reflection Core's own mapper relies on
+Gig/Job/Home each get their own `ISheetOperations` implementation
+(`GigSheetOperations`/`JobSheetOperations`/`HomeSheetOperations` in `Services/`) - a small,
+fully-typed adapter over that domain's own strongly-typed `IGoogleSheetManager`/`SheetEntity`, since
+there's no single non-generic manager type shared across domains to inject instead (each domain
+declares its own `IGoogleSheetManager : IGoogleSheetManager<TEntity>`, and `TEntity` differs). A
+`DomainRegistry` collects whichever ones are registered in `Program.cs` and looks them up by route
+segment ("gig", "job", "home"), so `NavMenu.razor` and `Sheet.razor` (route `/sheet/{Domain}/{SheetName}`)
+never need to know which domain they're actually driving - the small amount of per-domain
+duplication across the four adapter classes is deliberate, not an oversight: each is maybe 50 lines,
+almost entirely boilerplate, and boring/explicit beats a reflection-heavy generic dispatcher for
+something this size (there are 4 domains, not 40).
+
+Every domain entity declares its own schema via `[Column(...)]` attributes - header name, whether
+it's user-editable or a read-only formula/output column, validation rules, display format. Rather
+than hand-building a page per entity (Gig alone has 17 sheet types), the sample reflects over that
+metadata once, using the same reflection Core's own mapper relies on
 (`RaptorSheets.Core.Utilities.TypedFieldUtils.GetColumnProperties`), and renders one generic
 `EntityGrid<TRow>` component for whichever sheet you pick. Adding a new column to a domain entity
 means it just shows up - no sample-app code changes.
+
+A Sheets-container property's own name isn't always its real spreadsheet tab name - C# identifiers
+can't hold spaces or "&", so Job's `InterviewTypes` property is really the "Interview Types" tab, and
+Home's `DoorsWindows` property is really "Doors & Windows". `SheetMetadata.GetSheetDescriptors`
+resolves this via each domain's own `Constants.SheetsConfig.SheetNames` class, whose field names
+match the Sheets-container property names 1:1 by convention - its value is the real tab name (Gig's
+own sheet names are all single words identical to their constants either way, so this was invisible
+until Job/Home were wired up). Job's Sheets container also has three DTO placeholder properties
+(`Weekly`/`Monthly`/`Summary`) with no backing sheet or formula yet - `ISheetOperations
+.ExcludedSheetNames` filters these out of the nav and sheet discovery entirely.
 
 New rows go through an "Add item" form rather than an inline blank row - fill in the fields, confirm,
 and it's staged alongside any inline edits. Nothing is sent to Google until you click "Save changes",
@@ -94,30 +126,39 @@ template - Blazor's CSS isolation only scopes elements the compiler sees directl
 section, so a rule in `EntityGrid.razor.css` can never reach them. Their sizing (`.field-compact` /
 `.field-wide`) lives in the global `wwwroot/app.css` instead for exactly that reason.
 
-**Reference sheets are read-only.** Sheets Gig marks `ProtectSheet = true` (Addresses, Deliveries,
-Locations, Names, Places, Regions, Services, Types, and the Daily/Weekly/Monthly/Yearly/Weekday/Setup
-rollups) are auto-generated from Trips/Shifts/Expenses data - the grid detects this via
-`IGoogleSheetManager.GetSheetLayout(sheet)?.ProtectSheet` and drops the add/edit/delete affordances
-entirely, leaving just a browsable, filterable table.
+**Reference sheets are read-only - per sheet, not per domain.** A sheet Gig/Job marks
+`ProtectSheet = true` (Gig's Addresses/Names/Places/Regions/Services/Types and its Daily/Weekly/
+Monthly/Yearly/Weekday/Setup rollups; Job's Companies/Positions/Sites/Decisions/Interview Types/
+Interview Outcomes/Schedules) is auto-generated from primary-sheet data - the grid detects this via
+`ISheetOperations.GetSheetLayout(sheet)?.ProtectSheet` and drops the add/edit/delete affordances
+entirely, leaving just a browsable, filterable table. This is genuinely per-sheet, not an assumption
+baked in per domain: Home has zero `ProtectSheet = true` sheets at all - even Rooms/Contacts (the
+sheets its own dropdowns validate against) are plain user-editable input sheets, and they render
+editable here exactly because their own `GetSheetLayout` says so.
 
-**Validated columns render as type-to-filter fields**, not free text or a plain dropdown. `Service`,
-`Type`, `Place`, `Name`, `StartAddress`/`EndAddress`, and `Region` on a trip are each validated
-against a specific reference sheet (e.g. `Service` against the Services sheet) - the same
-relationship Gig uses to build the sheet's own Google Sheets data-validation dropdown. Each of these
-renders as a native `<input list="...">` bound to a `<datalist>` of that column's reference values -
-one `<datalist>` per column, rendered once and shared by every row, not duplicated per cell. That
-gives built-in browser search-as-you-type with zero JavaScript, which matters for a column like
-`Name` that can carry hundreds of reference values - a plain `<select>` would be an unusably long
-scroll. It also naturally allows free text, matching how validation actually works here: the sheet's
-own Google Sheets data validation is the real enforcement point, not this UI. The primary sheet loads
-first so a big sheet like Trips (thousands of rows) isn't held up waiting on six lookup sheets;
-options for those columns arrive a moment later from a background batched read of just the reference
-sheets, and the grid re-renders once they're in.
+**Validated columns render as type-to-filter fields**, not free text or a plain dropdown - e.g. a
+trip's `Service`/`Type`/`Place`/`Name`/`StartAddress`/`EndAddress`/`Region`, a job application's
+`Company`/`JobTitle`/`Site`/`Decision`/`Schedule`, or a home appliance's `Location`. Each is validated
+against a specific reference sheet (e.g. `Service` against Gig's Services sheet) - the same
+relationship each domain uses to build the sheet's own Google Sheets data-validation dropdown, via
+that domain's own `ISheetOperations.ValidationSheetMap` (column `ValidationPattern` -> reference
+sheet name; empty for Stock, which has no validated columns). Each renders as a native
+`<input list="...">` bound to a `<datalist>` of that column's reference values - one `<datalist>` per
+column, rendered once and shared by every row, not duplicated per cell. That gives built-in browser
+search-as-you-type with zero JavaScript, which matters for a column like Gig's `Name` that can carry
+hundreds of reference values - a plain `<select>` would be an unusably long scroll. It also naturally
+allows free text, matching how validation actually works here: the sheet's own Google Sheets data
+validation is the real enforcement point, not this UI. The primary sheet loads first so a big sheet
+like Trips (thousands of rows) isn't held up waiting on its lookup sheets; options for those columns
+arrive a moment later from a background batched read of just the reference sheets, and the grid
+re-renders once they're in.
 
 Those reference-sheet reads are cached for 60 seconds in `ReferenceSheetCache` (a singleton, shared
-across every page and every visitor, not per-session) - since these sheets can't be edited from the
-app, a short-lived read cache is safe and cuts out redundant API calls every time you switch sheets.
-Writes are never cached and always go straight to the live spreadsheet.
+across every page, every visitor, and every domain, not per-session) - since these sheets can't be
+edited from the app, a short-lived read cache is safe and cuts out redundant API calls every time you
+switch sheets. Cache keys are namespaced by domain name so two domains can't collide even if they
+happened to reuse the same reference sheet name. Writes are never cached and always go straight to
+the live spreadsheet.
 
 **Table isn't the only view.** A "Cards" toggle next to the filter box switches to a read-only card
 layout of the same rows - a demonstration that the data isn't inherently tabular, it's just what
