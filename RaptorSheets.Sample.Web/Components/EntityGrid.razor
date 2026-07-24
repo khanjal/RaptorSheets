@@ -55,6 +55,7 @@
 
     @if (_viewMode == ViewMode.Table)
     {
+        var tableRows = GetTableRows();
         <div class="grid-scroll">
             <table>
                 <thead>
@@ -76,15 +77,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var original in Rows)
+                    @foreach (var (original, working, deleted) in tableRows.Take(_renderCount))
                     {
-                        var working = _workingCopies[original];
-                        if (!MatchesFilter(working))
-                        {
-                            continue;
-                        }
-
-                        var deleted = _deletedOriginals.Contains(original);
                         <tr class="@RowCssClass(deleted, _editedOriginals.Contains(original))">
                             @foreach (var col in _columns)
                             {
@@ -121,13 +115,19 @@
                 </tbody>
             </table>
         </div>
+        @if (_renderCount < tableRows.Count)
+        {
+            <div class="load-more">
+                <button @onclick="LoadMore">Load more (@(tableRows.Count - _renderCount) remaining)</button>
+            </div>
+        }
     }
     else
     {
         var cardRows = GetCardRows();
         <div class="card-scroll">
             <div class="card-list">
-                @foreach (var row in cardRows.Take(_cardRenderCount))
+                @foreach (var row in cardRows.Take(_renderCount))
                 {
                     <div class="data-card">
                         @foreach (var col in _cardColumns)
@@ -140,13 +140,13 @@
                     </div>
                 }
             </div>
-            @if (_cardRenderCount < cardRows.Count)
-            {
-                <div class="card-load-more">
-                    <button @onclick="LoadMoreCards">Load more (@(cardRows.Count - _cardRenderCount) remaining)</button>
-                </div>
-            }
         </div>
+        @if (_renderCount < cardRows.Count)
+        {
+            <div class="load-more">
+                <button @onclick="LoadMore">Load more (@(cardRows.Count - _renderCount) remaining)</button>
+            </div>
+        }
     }
 
     @* One <datalist> per validated column, shared by every row's <input list="..."> below - options
@@ -222,7 +222,7 @@
     private void OnFilterInput(ChangeEventArgs e)
     {
         _filterText = e.Value?.ToString() ?? string.Empty;
-        InvalidateCardRows();
+        InvalidatePaging();
     }
 
     private void ResetWorkingState()
@@ -234,7 +234,7 @@
         _addedRows = [];
         _showAddForm = false;
         _newRow = new TRow();
-        InvalidateCardRows();
+        InvalidatePaging();
 
         foreach (var row in Rows)
         {
@@ -270,7 +270,7 @@
         nextRowId = Math.Max(nextRowId, _addedRows.Count == 0 ? 0 : _addedRows.Max(r => r.RowId)) + 1;
         _newRow.RowId = nextRowId;
         _addedRows.Add(_newRow);
-        InvalidateCardRows();
+        InvalidatePaging();
 
         _newRow = new TRow();
         _showAddForm = false;
@@ -279,7 +279,7 @@
     private void RemoveAddedRow(TRow row)
     {
         _addedRows.Remove(row);
-        InvalidateCardRows();
+        InvalidatePaging();
     }
 
     private void ToggleDelete(TRow original)
@@ -289,7 +289,7 @@
             _deletedOriginals.Add(original);
         }
 
-        InvalidateCardRows();
+        InvalidatePaging();
     }
 
     private async Task SaveAsync()
@@ -340,20 +340,28 @@
         return dirty;
     }
 
-    private const int CardPageSize = 30;
+    // Rendering every row of a big sheet (Trips can run into the thousands) unpaginated used to hang
+    // the whole Blazor Server circuit - one huge synchronous render blocks the same single-threaded
+    // connection every other UI event (nav clicks, even scroll-triggered reflows) waits on. Both views
+    // page through matching rows the same way, PageSize at a time, via a shared "Load more" button.
+    private const int PageSize = 30;
 
     private List<TRow>? _cardRowsCache;
-    private int _cardRenderCount = CardPageSize;
+    private List<(TRow Original, TRow Working, bool Deleted)>? _tableRowsCache;
+    private int _renderCount = PageSize;
 
     private List<TRow> GetCardRows() => _cardRowsCache ??= BuildCardRows();
 
-    private void InvalidateCardRows()
+    private List<(TRow Original, TRow Working, bool Deleted)> GetTableRows() => _tableRowsCache ??= BuildTableRows();
+
+    private void InvalidatePaging()
     {
         _cardRowsCache = null;
-        _cardRenderCount = CardPageSize;
+        _tableRowsCache = null;
+        _renderCount = PageSize;
     }
 
-    private void LoadMoreCards() => _cardRenderCount += CardPageSize;
+    private void LoadMore() => _renderCount += PageSize;
 
     private List<TRow> BuildCardRows()
     {
@@ -379,6 +387,22 @@
         }
 
         return cardRows;
+    }
+
+    private List<(TRow Original, TRow Working, bool Deleted)> BuildTableRows()
+    {
+        var tableRows = new List<(TRow, TRow, bool)>();
+
+        foreach (var original in Rows)
+        {
+            var working = _workingCopies[original];
+            if (MatchesFilter(working))
+            {
+                tableRows.Add((original, working, _deletedOriginals.Contains(original)));
+            }
+        }
+
+        return tableRows;
     }
 
     private bool MatchesFilter(TRow row)

@@ -108,9 +108,12 @@ layout of the same rows - a demonstration that the data isn't inherently tabular
 column (its identity value - `TripEntity.Date`, `ServiceEntity.Service`, whichever it is) plus any
 other read-only column that's an actual computed metric rather than a derived text label (`Total`
 and `AmountPerDistance` show; `Key`/`Day`/`Month`/`Year`, which just restate the `Date` input, don't).
-Cards load 30 at a time with a "Load more" button rather than all at once - genuine scroll-triggered
-loading would need a JS interop call to read scroll position that Blazor doesn't provide out of the
-box, so this trades automatic-on-scroll for something that needs no JS at all.
+Both Table and Cards load 30 rows at a time with a "Load more" button rather than all at once -
+rendering every row of a big sheet in one Blazor Server diff (Trips can run into the thousands) used
+to hang the whole page, since a single-threaded circuit can't handle a nav click or even a scroll
+reflow until that render finishes. Genuine scroll-triggered loading would need a JS interop call to
+read scroll position that Blazor doesn't provide out of the box, so this trades automatic-on-scroll
+for something that needs no JS at all.
 
 ## Known limitations (first pass)
 
