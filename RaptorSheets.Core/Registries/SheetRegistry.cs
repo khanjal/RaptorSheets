@@ -370,7 +370,11 @@ public static class SheetRegistryExtensions
         {
             var headers = values[0];
             entity.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, sheetModelFactory()));
-            assign(entity, Mappers.GenericSheetMapper<TRow>.MapFromRangeData(values));
+
+            var rows = Mappers.GenericSheetMapper<TRow>.MapFromRangeData(values, sheetName, out var mappingIssues);
+            entity.Messages.AddRange(mappingIssues.Select(MessageHelpers.CreateMappingIssueMessage));
+
+            assign(entity, rows);
         });
     }
 }

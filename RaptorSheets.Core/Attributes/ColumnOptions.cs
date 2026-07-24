@@ -49,6 +49,15 @@ public class ColumnOptions
     public Format FormatType { get; set; } = Format.DEFAULT;
 
     /// <summary>
+    /// Gets or sets whether unparseable cell values for this column are suppressed from
+    /// <see cref="RaptorSheets.Core.Models.MappingIssue"/> reporting (default: false). Reads never
+    /// fail because of a bad cell either way - this only silences the diagnostic, for columns where
+    /// non-conforming values are expected rather than exceptional (e.g. a formula/output column that
+    /// can legitimately read back as "#N/A").
+    /// </summary>
+    public bool IgnoreMappingErrors { get; set; } = false;
+
+    /// <summary>
     /// Creates a new ColumnOptions instance with default values.
     /// </summary>
     public ColumnOptions()
@@ -138,6 +147,16 @@ public class ColumnOptionsBuilder
     public ColumnOptionsBuilder WithFormatType(Format formatType)
     {
         _options.FormatType = formatType;
+        return this;
+    }
+
+    /// <summary>
+    /// Suppresses mapping-error diagnostics for this column - use for columns where unparseable
+    /// values are expected (e.g. a formula/output column that can read back as "#N/A").
+    /// </summary>
+    public ColumnOptionsBuilder IgnoreMappingErrors()
+    {
+        _options.IgnoreMappingErrors = true;
         return this;
     }
 

@@ -166,6 +166,33 @@ var errorMsg = MessageHelpers.CreateErrorMessage("Operation failed", MessageType
 var infoMsg = MessageHelpers.CreateInfoMessage("Operation succeeded", MessageTypeEnum.SAVE_DATA);
 ```
 
+### Mapping diagnostics
+
+Reading a sheet never fails because a cell doesn't match its column's type - the sheet stays freely
+editable, so a stray "N/A" in a numeric column produces a default value, not a failed read. The
+`MappingIssue` overload of `GenericSheetMapper<T>.MapFromRangeData` reports *why* a value came back
+as its default, without ever gating whether the row comes back at all:
+
+```csharp
+using RaptorSheets.Core.Mappers;
+
+var rows = GenericSheetMapper<TripEntity>.MapFromRangeData(values, sheetName: "Trips", out var issues);
+// rows always has every row; issues explains any cell that couldn't be parsed
+foreach (var issue in issues)
+{
+    Console.WriteLine($"{issue.SheetName} row {issue.RowId}, column [{issue.Header}]: could not parse [{issue.PropertyName}]");
+}
+```
+
+Sheets registered through `SheetRegistryExtensions.RegisterGeneric` (the path every domain manager
+uses) surface these automatically as `WARNING`-level messages on the entity's `Messages`, so most
+consumers never call this overload directly.
+
+Raw cell text is omitted by default, since sheet contents are often personal or financial data; opt
+in explicitly with `includeRawCellValues: true` if you need it. A column that's expected to contain
+non-conforming values (a formula/output column that can read back as `#N/A`) can suppress its own
+diagnostics with `[Column("Name", isInput: true, ignoreMappingErrors: true)]`.
+
 ## Models
 
 ### Core Models
