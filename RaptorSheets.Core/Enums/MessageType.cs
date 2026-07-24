@@ -15,5 +15,6 @@ public enum MessageType
     AUTHENTICATION,
     API_ERROR,
     BULK_OPERATION,
-    MISSING_SHEETS
+    MISSING_SHEETS,
+    MAPPING
 }

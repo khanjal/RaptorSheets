@@ -3,6 +3,7 @@ using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
+using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Utilities;
 using System.Reflection;
@@ -59,18 +60,48 @@ public static class GenericSheetMapper<T> where T : class, new()
     /// <returns>List of typed entities</returns>
     public static List<T> MapFromRangeData(IList<IList<object>> values)
     {
+        return MapFromRangeData(values, sheetName: null, out _);
+    }
+
+    /// <summary>
+    /// Maps Google Sheets range data to a list of entities, additionally reporting cells that could
+    /// not be parsed into their target type.
+    /// <para>
+    /// This never fails or skips a row - a cell that can't be parsed leaves its property at the
+    /// type's default and mapping continues. The sheet stays freely editable, so a user typing text
+    /// into a numeric column is expected, not exceptional; <paramref name="issues"/> exists purely so
+    /// a caller can find out afterward why a value came back as a default, not to gate whether the
+    /// row comes back at all. See <see cref="MappingIssue"/>.
+    /// </para>
+    /// </summary>
+    /// <param name="values">Raw data from Google Sheets</param>
+    /// <param name="sheetName">Sheet name to attach to any reported issues (purely informational).</param>
+    /// <param name="issues">Cells that had non-blank text but could not be parsed, at most one per row.</param>
+    /// <param name="includeRawCellValues">
+    /// Include the raw cell text on each issue. Off by default - sheet contents are frequently
+    /// personal or financial data and should not flow into logs or messages unless explicitly opted
+    /// into.
+    /// </param>
+    /// <returns>List of typed entities</returns>
+    public static List<T> MapFromRangeData(
+        IList<IList<object>> values,
+        string? sheetName,
+        out List<MappingIssue> issues,
+        bool includeRawCellValues = false)
+    {
         var entities = new List<T>();
+        var reportedIssues = new List<MappingIssue>();
         var headers = new Dictionary<int, string>();
-        
+
         // Filter out empty rows
         values = values?.Where(x => x.Count > 0 && !string.IsNullOrEmpty(x[0]?.ToString())).ToList() ?? new List<IList<object>>();
-        
+
         var rowId = 0;
 
         foreach (var row in values)
         {
             rowId++;
-            
+
             // First row is headers
             if (rowId == 1)
             {
@@ -86,6 +117,9 @@ public static class GenericSheetMapper<T> where T : class, new()
                 _rowIdProperty.SetValue(entity, rowId);
             }
 
+            // First mapping issue in the row wins - one bad row shouldn't produce a message per column.
+            var rowHasIssue = false;
+
             // Map each property based on Column attribute
             foreach (var (property, columnAttr) in _columnProperties)
             {
@@ -95,6 +129,11 @@ public static class GenericSheetMapper<T> where T : class, new()
                 if (cellValue != null && property.CanWrite)
                 {
                     property.SetValue(entity, cellValue);
+                }
+                else if (cellValue == null && !rowHasIssue)
+                {
+                    var context = new MappingIssueContext(sheetName, rowId, includeRawCellValues);
+                    rowHasIssue = TryRecordMappingIssue(row, headers, headerName, property, columnAttr, context, reportedIssues);
                 }
             }
 
@@ -107,6 +146,7 @@ public static class GenericSheetMapper<T> where T : class, new()
             entities.Add(entity);
         }
 
+        issues = reportedIssues;
         return entities;
     }
 
@@ -262,6 +302,57 @@ public static class GenericSheetMapper<T> where T : class, new()
     }
 
     #region Private Helper Methods
+
+    /// <summary>Per-call context for <see cref="TryRecordMappingIssue"/>, grouped to keep its parameter count sane.</summary>
+    private readonly record struct MappingIssueContext(string? SheetName, int RowId, bool IncludeRawCellValues);
+
+    /// <summary>
+    /// Records a <see cref="MappingIssue"/> when a cell had non-blank text that could not be parsed
+    /// into its property's type. Returns whether an issue was recorded, so the caller can stop
+    /// checking further columns in the row (first issue per row wins).
+    /// </summary>
+    private static bool TryRecordMappingIssue(
+        IList<object> row,
+        Dictionary<int, string> headers,
+        string headerName,
+        PropertyInfo property,
+        ColumnAttribute columnAttr,
+        MappingIssueContext context,
+        List<MappingIssue> issues)
+    {
+        if (columnAttr.IgnoreMappingErrors || !IsParseFailureCandidate(columnAttr.FieldType))
+        {
+            return false;
+        }
+
+        // Blank cells are not a mapping issue - only flag when there was text that failed to parse.
+        var rawText = HeaderHelpers.GetStringValue(headerName, row, headers);
+        if (string.IsNullOrWhiteSpace(rawText))
+        {
+            return false;
+        }
+
+        issues.Add(new MappingIssue
+        {
+            SheetName = context.SheetName ?? string.Empty,
+            RowId = context.RowId,
+            Header = headerName,
+            PropertyName = property.Name,
+            Reason = MappingIssueReason.CouldNotParseValue,
+            RawValue = context.IncludeRawCellValues ? rawText : null
+        });
+
+        return true;
+    }
+
+    // FieldType values whose sheet-reading path (HeaderHelpers.Get*ValueOrNull) can return null for
+    // non-blank text that simply didn't parse, as opposed to types like String/Boolean/DateTime
+    // whose reader always returns *something* for non-blank text (see GetValueFromSheet below).
+    private static bool IsParseFailureCandidate(FieldType fieldType) => fieldType switch
+    {
+        FieldType.Integer or FieldType.Number or FieldType.Currency or FieldType.Accounting or FieldType.Percentage => true,
+        _ => false
+    };
 
     /// <summary>
     /// Extracts a value from sheet data and converts it to the appropriate type.

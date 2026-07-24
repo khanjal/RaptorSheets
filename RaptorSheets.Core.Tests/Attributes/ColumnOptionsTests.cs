@@ -21,6 +21,7 @@ public class ColumnOptionsTests
         Assert.Null(options.ValidationPattern);
         Assert.Null(options.Note);
         Assert.Equal(Format.DEFAULT, options.FormatType);
+        Assert.False(options.IgnoreMappingErrors);
     }
 
     [Fact]
@@ -35,6 +36,7 @@ public class ColumnOptionsTests
             .WithValidation("RangeService")
             .WithNote("Test note")
             .WithFormatType(Format.CURRENCY)
+            .IgnoreMappingErrors()
             .Build();
 
         // Assert
@@ -46,6 +48,20 @@ public class ColumnOptionsTests
         Assert.Equal("RangeService", options.ValidationPattern);
         Assert.Equal("Test note", options.Note);
         Assert.Equal(Format.CURRENCY, options.FormatType);
+        Assert.True(options.IgnoreMappingErrors);
+    }
+
+    [Fact]
+    public void ColumnAttribute_FromColumnOptions_ShouldCarryIgnoreMappingErrors()
+    {
+        // The ColumnOptions-based ColumnAttribute constructor can only be called programmatically -
+        // attribute arguments must be compile-time constants, so it's never reachable via
+        // [Column(...)] syntax. Still worth covering directly since it's public API.
+        var options = new ColumnOptions { IsInput = true, IgnoreMappingErrors = true };
+
+        var attribute = new ColumnAttribute("Note", options);
+
+        Assert.True(attribute.IgnoreMappingErrors);
     }
 
     [Fact]
@@ -79,7 +95,7 @@ public class ColumnOptionsTests
         // Arrange
         var options = new ColumnOptions
         {
-            FormatPattern = "\"£\"#,##0.00",
+            FormatPattern = "\"ï¿½\"#,##0.00",
             JsonPropertyName = "payAmount",
             Order = 3,
             IsInput = true,
@@ -95,7 +111,7 @@ public class ColumnOptionsTests
         // Assert
         Assert.Equal("Pay", attribute.HeaderName);
         Assert.Equal(Format.ACCOUNTING, attribute.FormatType);
-        Assert.Equal("\"£\"#,##0.00", attribute.NumberFormatPattern);
+        Assert.Equal("\"ï¿½\"#,##0.00", attribute.NumberFormatPattern);
         Assert.Equal(3, attribute.Order);
         Assert.True(attribute.IsInput);
         Assert.True(attribute.EnableValidation);

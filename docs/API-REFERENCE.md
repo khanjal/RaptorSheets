@@ -239,6 +239,23 @@ public class MessageEntity
 }
 ```
 
+### MappingIssue
+Diagnostic-only report of a cell that could not be parsed into its target type during
+`GenericSheetMapper<T>.MapFromRangeData`. Never affects the read - the row is always returned, with
+the property left at its type default. See [Mapping diagnostics](CORE.md#mapping-diagnostics).
+
+```csharp
+public class MappingIssue
+{
+    public string SheetName { get; init; }
+    public int RowId { get; init; }
+    public string Header { get; init; }
+    public string PropertyName { get; init; }
+    public MappingIssueReason Reason { get; init; }
+    public string? RawValue { get; init; }  // null unless includeRawCellValues: true
+}
+```
+
 ### PropertyEntity
 Sheet metadata and configuration.
 

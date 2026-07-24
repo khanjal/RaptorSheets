@@ -70,6 +70,15 @@ public class ColumnAttribute : Attribute
     public string? Note { get; }
 
     /// <summary>
+    /// Gets whether unparseable cell values for this column are suppressed from
+    /// <see cref="RaptorSheets.Core.Models.MappingIssue"/> reporting. Reads never fail because of a
+    /// bad cell either way - this only silences the diagnostic, for columns where non-conforming
+    /// values are expected rather than exceptional (e.g. a formula/output column that can
+    /// legitimately read back as "#N/A").
+    /// </summary>
+    public bool IgnoreMappingErrors { get; private set; }
+
+    /// <summary>
     /// Initializes a column configuration for an OUTPUT column (formula/calculated).
     /// FieldType is automatically inferred from the property type.
     /// This is the most common case - use this constructor for columns with formulas.
@@ -177,6 +186,7 @@ public class ColumnAttribute : Attribute
         EnableValidation = options.EnableValidation;
         ValidationPattern = options.ValidationPattern;
         Note = options.Note;
+        IgnoreMappingErrors = options.IgnoreMappingErrors;
     }
 
     /// <summary>
@@ -192,9 +202,14 @@ public class ColumnAttribute : Attribute
     /// <param name="validationPattern">Custom validation pattern (null = use default for field type)</param>
     /// <param name="order">Column order priority (-1 = use declaration order)</param>
     /// <param name="formatType">Format type for Google Sheets display (DEFAULT = use default from fieldType)</param>
-    // 8 params is intentional: this is the convenience overload for named-argument call sites
+    /// <param name="ignoreMappingErrors">Suppress mapping-error diagnostics for this column (see <see cref="IgnoreMappingErrors"/>)</param>
+    // 9 params is intentional: this is the convenience overload for named-argument call sites
     // (used pervasively across every domain's entities); the ColumnOptions-based overload above
-    // is the designed escape hatch when more configuration is needed.
+    // is the designed escape hatch when more configuration is needed. Note that the ColumnOptions
+    // overload can only ever be called programmatically, not as a declarative [Column(...)]
+    // attribute - attribute arguments must be compile-time constants, and ColumnOptions is a mutable
+    // object initializer. This constructor is therefore the only one that can expose a new option
+    // (like ignoreMappingErrors) to code actually using [Column(...)] syntax.
 #pragma warning disable S107
     public ColumnAttribute(
         string headerName,
@@ -204,7 +219,8 @@ public class ColumnAttribute : Attribute
         bool enableValidation = false,
         string? validationPattern = null,
         int order = -1,
-        Format formatType = Format.DEFAULT)
+        Format formatType = Format.DEFAULT,
+        bool ignoreMappingErrors = false)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
@@ -216,6 +232,7 @@ public class ColumnAttribute : Attribute
         EnableValidation = enableValidation;
         ValidationPattern = validationPattern;
         Note = note;
+        IgnoreMappingErrors = ignoreMappingErrors;
     }
 #pragma warning restore S107
 
