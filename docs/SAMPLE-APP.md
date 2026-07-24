@@ -83,13 +83,19 @@ rollups) are auto-generated from Trips/Shifts/Expenses data - the grid detects t
 `IGoogleSheetManager.GetSheetLayout(sheet)?.ProtectSheet` and drops the add/edit/delete affordances
 entirely, leaving just a browsable, filterable table.
 
-**Validated columns render as dropdowns**, not free text. `Service`, `Type`, `Place`, `Name`,
-`StartAddress`/`EndAddress`, and `Region` on a trip are each validated against a specific reference
-sheet (e.g. `Service` against the Services sheet) - the same relationship Gig uses to build the
-sheet's own Google Sheets data-validation dropdown. The primary sheet loads first so a big sheet like
-Trips (thousands of rows) isn't held up waiting on six lookup sheets; dropdown options for those
-columns arrive a moment later from a background batched read of just the reference sheets, and the
-grid re-renders once they're in.
+**Validated columns render as type-to-filter fields**, not free text or a plain dropdown. `Service`,
+`Type`, `Place`, `Name`, `StartAddress`/`EndAddress`, and `Region` on a trip are each validated
+against a specific reference sheet (e.g. `Service` against the Services sheet) - the same
+relationship Gig uses to build the sheet's own Google Sheets data-validation dropdown. Each of these
+renders as a native `<input list="...">` bound to a `<datalist>` of that column's reference values -
+one `<datalist>` per column, rendered once and shared by every row, not duplicated per cell. That
+gives built-in browser search-as-you-type with zero JavaScript, which matters for a column like
+`Name` that can carry hundreds of reference values - a plain `<select>` would be an unusably long
+scroll. It also naturally allows free text, matching how validation actually works here: the sheet's
+own Google Sheets data validation is the real enforcement point, not this UI. The primary sheet loads
+first so a big sheet like Trips (thousands of rows) isn't held up waiting on six lookup sheets;
+options for those columns arrive a moment later from a background batched read of just the reference
+sheets, and the grid re-renders once they're in.
 
 Those reference-sheet reads are cached for 60 seconds in `ReferenceSheetCache` (a singleton, shared
 across every page and every visitor, not per-session) - since these sheets can't be edited from the
@@ -110,8 +116,6 @@ box, so this trades automatic-on-scroll for something that needs no JS at all.
 
 - "Discard changes" resets in-memory edits back to what was last loaded; it doesn't re-fetch from
   the spreadsheet. Use the sheet's nav link again (or a page refresh) to pull the latest data.
-- A reference sheet with a lot of rows (e.g. Names) produces a long native `<select>` - there's no
-  search/filter inside the dropdown itself yet.
 - The "connect a blank spreadsheet" demo-data flow follows the documented Gig README sequence
   exactly and the credential-write/parse/reconnect mechanics are verified against real (and
   deliberately malformed, to check error handling) input, but the create-sheets-then-fill-with-

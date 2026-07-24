@@ -148,6 +148,21 @@
             }
         </div>
     }
+
+    @* One <datalist> per validated column, shared by every row's <input list="..."> below - options
+       are identical across rows for a given column, so there's no reason to repeat them per cell. *@
+    @if (DropdownOptions is not null)
+    {
+        @foreach (var headerName in _columns.Select(c => c.Column).Where(c => c.EnableValidation && DropdownOptions.ContainsKey(c.HeaderName)).Select(c => c.HeaderName))
+        {
+            <datalist id="@DatalistId(headerName)">
+                @foreach (var option in DropdownOptions[headerName])
+                {
+                    <option value="@option" />
+                }
+            </datalist>
+        }
+    }
 </div>
 
 @code {
@@ -391,9 +406,9 @@
 
         if (col.Column.EnableValidation
             && DropdownOptions is not null
-            && DropdownOptions.TryGetValue(col.Column.HeaderName, out var options))
+            && DropdownOptions.ContainsKey(col.Column.HeaderName))
         {
-            RenderDropdown(builder, row, col, value, options);
+            RenderTypeahead(builder, row, col, value);
             return;
         }
 
@@ -426,30 +441,29 @@
         builder.CloseElement();
     };
 
-    private void RenderDropdown(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder, TRow row,
-        (PropertyInfo Property, ColumnAttribute Column) col, object? value, IReadOnlyList<string> options)
+    // A native <input list="..."> + <datalist> gives free type-to-filter search with zero JS interop -
+    // important for a column like Trips' Name, which can have hundreds of reference values and would
+    // otherwise be an unusably long <select>. It also naturally allows free text, matching how
+    // validation actually works here: the sheet's own Google Sheets data validation is the real
+    // enforcement point, not this UI.
+    private void RenderTypeahead(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder, TRow row,
+        (PropertyInfo Property, ColumnAttribute Column) col, object? value)
     {
-        builder.OpenElement(0, "select");
-        builder.AddAttribute(1, "value", value?.ToString() ?? string.Empty);
-        builder.AddAttribute(2, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+        builder.OpenElement(0, "input");
+        builder.AddAttribute(1, "type", "text");
+        builder.AddAttribute(2, "list", DatalistId(col.Column.HeaderName));
+        builder.AddAttribute(3, "value", value?.ToString());
+        builder.AddAttribute(4, "autocomplete", "off");
+        builder.AddAttribute(5, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
             e => SetValue(row, col, e.Value?.ToString() ?? string.Empty)));
-
-        builder.OpenElement(3, "option");
-        builder.AddAttribute(4, "value", string.Empty);
-        builder.AddContent(5, "-- select --");
-        builder.CloseElement();
-
-        var seq = 6;
-        foreach (var option in options)
-        {
-            builder.OpenElement(seq++, "option");
-            builder.AddAttribute(seq++, "value", option);
-            builder.AddContent(seq++, option);
-            builder.CloseElement();
-        }
-
         builder.CloseElement();
     }
+
+    private static string DatalistId(string headerName) =>
+        $"dl-{typeof(TRow).Name}-{SanitizeForId(headerName)}";
+
+    private static string SanitizeForId(string headerName) =>
+        new([.. headerName.Select(c => char.IsLetterOrDigit(c) ? c : '-')]);
 
     private void SetValue(TRow row, (PropertyInfo Property, ColumnAttribute Column) col, object rawValue)
     {
