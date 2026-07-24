@@ -102,6 +102,18 @@ public class GoogleSheetManagerTests
     }
 
     [Fact]
+    public async Task SetupDemo_AgainstFakeCredentials_DoesNotThrow()
+    {
+        // Runs the real CreateAllSheets -> delay -> PopulateDemoData chain against fake
+        // credentials, which fail gracefully rather than throwing (same pattern as
+        // ChangeSheetData_WithData_AttemptsToProcessRequest above). Includes the real ~1.5s delay
+        // between creation and population that lets freshly-created sheets become writable.
+        var result = await _manager.SetupDemo();
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
     public void GetSheetLayout_ForEveryConfiguredSheet_ReturnsNonNull()
     {
         foreach (var name in SheetsConfig.SheetUtilities.GetAllSheetNames())
