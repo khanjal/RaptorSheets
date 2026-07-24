@@ -22,10 +22,10 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// <param name="startDate">Start date (inclusive)</param>
     /// <param name="endDate">End date (inclusive)</param>
     /// <returns>List of trips in the date range</returns>
-    public async Task<List<TripEntity>> GetTripsByDateRangeAsync(DateTime startDate, DateTime endDate)
+    public async Task<List<TripEntity>> GetTripsByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         ValidateDateRange(startDate, endDate);
-        var allTrips = await GetAllAsync();
+        var allTrips = await GetAllAsync(cancellationToken);
         return allTrips
             .Where(t => !string.IsNullOrEmpty(t.Date) && 
                        DateTime.TryParse(t.Date, CultureInfo.InvariantCulture, out var tripDate) &&
@@ -40,10 +40,10 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// </summary>
     /// <param name="service">The service name</param>
     /// <returns>List of trips for the service</returns>
-    public async Task<List<TripEntity>> GetTripsByServiceAsync(string service)
+    public async Task<List<TripEntity>> GetTripsByServiceAsync(string service, CancellationToken cancellationToken = default)
     {
         ValidateService(service);
-        var allTrips = await GetAllAsync();
+        var allTrips = await GetAllAsync(cancellationToken);
         return allTrips
             .Where(t => string.Equals(t.Service, service, StringComparison.OrdinalIgnoreCase))
             .OrderBy(t => DateTime.TryParse(t.Date, CultureInfo.InvariantCulture, out var d) ? d : DateTime.MinValue)
@@ -56,9 +56,9 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// <param name="startDate">Start date (inclusive)</param>
     /// <param name="endDate">End date (inclusive)</param>
     /// <returns>Total earnings (pay + tips + bonus)</returns>
-    public async Task<decimal> GetTotalEarningsAsync(DateTime startDate, DateTime endDate)
+    public async Task<decimal> GetTotalEarningsAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
-        var trips = await GetTripsByDateRangeAsync(startDate, endDate);
+        var trips = await GetTripsByDateRangeAsync(startDate, endDate, cancellationToken);
         return trips.Sum(t => (t.Pay ?? 0) + (t.Tip ?? 0) + (t.Bonus ?? 0));
     }
 
@@ -67,7 +67,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// </summary>
     /// <param name="trip">The trip to add</param>
     /// <returns>True if successful</returns>
-    public async Task<bool> AddTripAsync(TripEntity trip)
+    public async Task<bool> AddTripAsync(TripEntity trip, CancellationToken cancellationToken = default)
     {
         if (trip == null)
         {
@@ -94,7 +94,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
             trip.Year = parsedDate.Year.ToString();
         }
 
-        return await AddAsync(trip);
+        return await AddAsync(trip, cancellationToken);
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
     /// <param name="trip">The trip to update</param>
     /// <param name="rowIndex">The row index to update</param>
     /// <returns>True if successful</returns>
-    public async Task<bool> UpdateTripAsync(TripEntity trip, int rowIndex)
+    public async Task<bool> UpdateTripAsync(TripEntity trip, int rowIndex, CancellationToken cancellationToken = default)
     {
         if (trip == null)
         {
@@ -121,7 +121,7 @@ public class TripRepository : BaseEntityRepository<TripEntity>
             trip.Year = parsedDate.Year.ToString();
         }
 
-        return await UpdateAsync(trip, rowIndex);
+        return await UpdateAsync(trip, rowIndex, cancellationToken);
     }
 
     /// <summary>

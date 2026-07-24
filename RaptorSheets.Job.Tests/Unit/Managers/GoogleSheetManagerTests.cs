@@ -91,6 +91,29 @@ public class GoogleSheetManagerTests
     }
 
     [Fact]
+    public async Task GetSheet_ForKnownSheetName_DoesNotShortCircuitToTheErrorPath()
+    {
+        // Exercises the branch GetSheet_ForUnknownSheetName_ReturnsErrorMessage can't reach: a
+        // recognized name falls through to GetSheets([sheet]) rather than the early-return.
+        var result = await _manager.GetSheet(SheetsConfig.SheetNames.Applications);
+
+        Assert.NotNull(result);
+        Assert.DoesNotContain(result.Messages, m => m.Message.Contains("does not exist"));
+    }
+
+    [Fact]
+    public async Task SetupDemo_AgainstFakeCredentials_DoesNotThrow()
+    {
+        // Runs the real CreateAllSheets -> delay -> PopulateDemoData chain against fake
+        // credentials, which fail gracefully rather than throwing (same pattern as
+        // ChangeSheetData_WithData_AttemptsToProcessRequest above). Includes the real ~1.5s delay
+        // between creation and population that lets freshly-created sheets become writable.
+        var result = await _manager.SetupDemo();
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
     public void GetSheetLayout_ForEveryConfiguredSheet_ReturnsNonNull()
     {
         foreach (var name in SheetsConfig.SheetUtilities.GetAllSheetNames())

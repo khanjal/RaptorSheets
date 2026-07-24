@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Entities;
@@ -89,7 +89,7 @@ public class GoogleSheetManagerTests
     public async Task GivenChangeSheetData_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
-        googleSheetManager.Setup(x => x.ChangeSheetData(It.IsAny<List<string>>(), It.IsAny<SheetEntity>())).ReturnsAsync(new SheetEntity());
+        googleSheetManager.Setup(x => x.ChangeSheetData(It.IsAny<List<string>>(), It.IsAny<SheetEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(new SheetEntity());
         var result = await googleSheetManager.Object.ChangeSheetData(new List<string>(), new SheetEntity());
         Assert.NotNull(result);
     }
@@ -98,7 +98,7 @@ public class GoogleSheetManagerTests
     public async Task GivenCreateSheet_WithValidSheetId_ThenReturnEmpty()
     {
         var googleSheetManager = new Mock<IGoogleSheetManager>();
-        googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<string>>())).ReturnsAsync(new SheetEntity());
+        googleSheetManager.Setup(x => x.CreateSheets(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new SheetEntity());
         var result = await googleSheetManager.Object.CreateSheets(new List<string>());
         Assert.NotNull(result);
     }

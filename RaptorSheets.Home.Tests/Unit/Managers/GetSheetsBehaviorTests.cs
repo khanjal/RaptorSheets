@@ -40,20 +40,20 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildBatchResponse(
                 SheetsConfig.SheetNames.Rooms,
                 new List<object> { "Room", "L", "W", "Sq. Ft", "Level" },
                 new List<object> { "Living Room", "15", "12", "180", "Main" }));
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse(
                 SheetsConfig.SheetNames.Rooms,
                 new List<object> { "Room", "L", "W", "Sq. Ft", "Level" },
                 new List<object> { "Living Room", "15", "12", "180", "Main" })));
 
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Properties = new SpreadsheetProperties { Title = "MyHomeSheet" },
@@ -82,14 +82,14 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildBatchResponse(SheetsConfig.SheetNames.Rooms, new List<object> { "Room", "L", "W", "Sq. Ft", "Level" }));
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse(SheetsConfig.SheetNames.Rooms, new List<object> { "Room", "L", "W", "Sq. Ft", "Level" })));
 
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Properties = new SpreadsheetProperties { Title = "MyHomeSheet" },
@@ -113,17 +113,17 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
 
         // Populate every canonical Home sheet so GetSheets' self-heal finds nothing missing and
         // falls through to the "unable to retrieve" error this test is actually targeting - self-heal
         // always checks the full canonical list, not just the sheets this call requested.
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Sheets = SheetsConfig.SheetUtilities.GetAllSheetNames()

@@ -39,9 +39,9 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// Gets all entities from the sheet
     /// </summary>
     /// <returns>List of typed entities</returns>
-    public virtual async Task<List<T>> GetAllAsync()
+    public virtual async Task<List<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var data = await _sheetService.GetSheetData(_sheetName);
+        var data = await _sheetService.GetSheetData(_sheetName, cancellationToken);
         if (data?.Values == null || data.Values.Count == 0) 
         {
             return new List<T>();
@@ -64,15 +64,15 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// </summary>
     /// <param name="entity">The entity to add</param>
     /// <returns>True if successful, false otherwise</returns>
-    public virtual async Task<bool> AddAsync(T entity)
+    public virtual async Task<bool> AddAsync(T entity, CancellationToken cancellationToken = default)
     {
         if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-        var headers = await GetHeadersAsync();
+        var headers = await GetHeadersAsync(cancellationToken);
         var rowData = TypedEntityMapper<T>.MapToRangeData(new List<T> { entity }, headers);
 
         var valueRange = new ValueRange { Values = rowData };
-        var result = await _sheetService.AppendData(valueRange, $"{_sheetName}!A:Z");
+        var result = await _sheetService.AppendData(valueRange, $"{_sheetName}!A:Z", cancellationToken);
 
         return result != null;
     }
@@ -82,18 +82,18 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// </summary>
     /// <param name="entities">The entities to add</param>
     /// <returns>True if successful, false otherwise</returns>
-    public virtual async Task<bool> AddRangeAsync(IEnumerable<T> entities)
+    public virtual async Task<bool> AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
     {
         if (entities == null) throw new ArgumentNullException(nameof(entities));
 
         var entitiesList = entities.ToList();
         if (entitiesList.Count == 0) return true;
 
-        var headers = await GetHeadersAsync();
+        var headers = await GetHeadersAsync(cancellationToken);
         var rowData = TypedEntityMapper<T>.MapToRangeData(entitiesList, headers);
 
         var valueRange = new ValueRange { Values = rowData };
-        var result = await _sheetService.AppendData(valueRange, $"{_sheetName}!A:Z");
+        var result = await _sheetService.AppendData(valueRange, $"{_sheetName}!A:Z", cancellationToken);
 
         return result != null;
     }
@@ -104,12 +104,12 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// <param name="entity">The entity to update</param>
     /// <param name="rowIndex">The 1-based row index (excluding headers)</param>
     /// <returns>True if successful, false otherwise</returns>
-    public virtual async Task<bool> UpdateAsync(T entity, int rowIndex)
+    public virtual async Task<bool> UpdateAsync(T entity, int rowIndex, CancellationToken cancellationToken = default)
     {
         if (entity == null) throw new ArgumentNullException(nameof(entity));
         if (rowIndex < 1) throw new ArgumentOutOfRangeException(nameof(rowIndex), "Row index must be 1 or greater");
 
-        var headers = await GetHeadersAsync();
+        var headers = await GetHeadersAsync(cancellationToken);
         var rowData = TypedEntityMapper<T>.MapToRangeData(new List<T> { entity }, headers);
 
         if (rowData.Count == 0) return false;
@@ -120,7 +120,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
         var range = $"{_sheetName}!A{actualRowNumber}:{lastColumn}{actualRowNumber}";
 
         var valueRange = new ValueRange { Values = rowData };
-        var result = await _sheetService.UpdateData(valueRange, range);
+        var result = await _sheetService.UpdateData(valueRange, range, cancellationToken);
 
         return result != null;
     }
@@ -131,13 +131,13 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// </summary>
     /// <param name="rowIndex">The 1-based row index (excluding headers)</param>
     /// <returns>True if successful, false otherwise</returns>
-    public virtual async Task<bool> DeleteAsync(int rowIndex)
+    public virtual async Task<bool> DeleteAsync(int rowIndex, CancellationToken cancellationToken = default)
     {
         // This would require implementing row deletion in GoogleSheetService
         // For now, we can clear the row content
         if (rowIndex < 1) throw new ArgumentOutOfRangeException(nameof(rowIndex), "Row index must be 1 or greater");
 
-        var headers = await GetHeadersAsync();
+        var headers = await GetHeadersAsync(cancellationToken);
         var actualRowNumber = _hasHeaderRow ? rowIndex + 1 : rowIndex;
         var lastColumn = GetLastColumn(headers.Count);
         var range = $"{_sheetName}!A{actualRowNumber}:{lastColumn}{actualRowNumber}";
@@ -150,7 +150,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
         }
 
         var valueRange = new ValueRange { Values = new List<IList<object?>> { emptyRow } };
-        var result = await _sheetService.UpdateData(valueRange, range);
+        var result = await _sheetService.UpdateData(valueRange, range, cancellationToken);
 
         return result != null;
     }
@@ -159,7 +159,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// Validates the sheet schema against the entity definition
     /// </summary>
     /// <returns>Schema validation result</returns>
-    public virtual async Task<SchemaValidationResult> ValidateSchemaAsync()
+    public virtual async Task<SchemaValidationResult> ValidateSchemaAsync(CancellationToken cancellationToken = default)
     {
         if (!_hasHeaderRow)
         {
@@ -170,7 +170,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
             };
         }
 
-        var data = await _sheetService.GetSheetData(_sheetName);
+        var data = await _sheetService.GetSheetData(_sheetName, cancellationToken);
         if (data?.Values == null || data.Values.Count == 0)
         {
             return new SchemaValidationResult
@@ -187,9 +187,9 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// Gets the count of data rows in the sheet
     /// </summary>
     /// <returns>Number of data rows</returns>
-    public virtual async Task<int> GetCountAsync()
+    public virtual async Task<int> GetCountAsync(CancellationToken cancellationToken = default)
     {
-        var data = await _sheetService.GetSheetData(_sheetName);
+        var data = await _sheetService.GetSheetData(_sheetName, cancellationToken);
         if (data?.Values == null || data.Values.Count == 0)
         {
             return 0;
@@ -202,11 +202,11 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// Creates the sheet headers if they don't exist
     /// </summary>
     /// <returns>True if successful, false otherwise</returns>
-    public virtual async Task<bool> InitializeSheetAsync()
+    public virtual async Task<bool> InitializeSheetAsync(CancellationToken cancellationToken = default)
     {
         if (!_hasHeaderRow) return true;
 
-        var data = await _sheetService.GetSheetData(_sheetName);
+        var data = await _sheetService.GetSheetData(_sheetName, cancellationToken);
         if (data?.Values != null && data.Values.Count > 0)
         {
             // Sheet already has data
@@ -218,7 +218,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
         var headerRow = headers.Cast<object>().ToList();
         var valueRange = new ValueRange { Values = new List<IList<object>> { headerRow } };
 
-        var result = await _sheetService.UpdateData(valueRange, $"{_sheetName}!A1:Z1");
+        var result = await _sheetService.UpdateData(valueRange, $"{_sheetName}!A1:Z1", cancellationToken);
         return result != null;
     }
 
@@ -236,7 +236,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// <summary>
     /// Gets the headers for the sheet, either from the actual sheet or from entity definition
     /// </summary>
-    protected virtual async Task<List<string>> GetHeadersAsync()
+    protected virtual async Task<List<string>> GetHeadersAsync(CancellationToken cancellationToken = default)
     {
         if (_cachedHeaders != null)
         {
@@ -245,7 +245,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
 
         if (_hasHeaderRow)
         {
-            var data = await _sheetService.GetSheetData(_sheetName);
+            var data = await _sheetService.GetSheetData(_sheetName, cancellationToken);
             if (data?.Values?.Count > 0)
             {
                 var headers = HeaderHelpers.ParserHeader(data.Values[0]);

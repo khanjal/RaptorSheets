@@ -10,15 +10,15 @@ namespace RaptorSheets.Core.Wrappers;
 
 public interface ISheetServiceWrapper
 {
-    Task<AppendValuesResponse> AppendValues(string range, IList<IList<object>> values);
-    Task<AppendValuesResponse> AppendValues(string range, ValueRange valueRange);
-    Task<BatchUpdateValuesResponse> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest);
-    Task<BatchUpdateSpreadsheetResponse> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest);
-    Task<BatchGetValuesByDataFilterResponse> BatchGetByDataFilter(BatchGetValuesByDataFilterRequest batchGetValuesByDataFilterRequest);
-    Task<Spreadsheet> GetSpreadsheet(List<string>? ranges);
-    Task<ValueRange> GetValues(string range);
-    Task<UpdateValuesResponse> UpdateValues(string range, IList<IList<object>> values);
-    Task<UpdateValuesResponse> UpdateValues(string range, ValueRange valueRange);
+    Task<AppendValuesResponse> AppendValues(string range, IList<IList<object>> values, CancellationToken cancellationToken = default);
+    Task<AppendValuesResponse> AppendValues(string range, ValueRange valueRange, CancellationToken cancellationToken = default);
+    Task<BatchUpdateValuesResponse> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest, CancellationToken cancellationToken = default);
+    Task<BatchUpdateSpreadsheetResponse> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, CancellationToken cancellationToken = default);
+    Task<BatchGetValuesByDataFilterResponse> BatchGetByDataFilter(BatchGetValuesByDataFilterRequest batchGetValuesByDataFilterRequest, CancellationToken cancellationToken = default);
+    Task<Spreadsheet> GetSpreadsheet(List<string>? ranges, CancellationToken cancellationToken = default);
+    Task<ValueRange> GetValues(string range, CancellationToken cancellationToken = default);
+    Task<UpdateValuesResponse> UpdateValues(string range, IList<IList<object>> values, CancellationToken cancellationToken = default);
+    Task<UpdateValuesResponse> UpdateValues(string range, ValueRange valueRange, CancellationToken cancellationToken = default);
 }
 
 [ExcludeFromCodeCoverage]
@@ -122,45 +122,45 @@ public class SheetServiceWrapper : ISheetServiceWrapper
         return service;
     }
 
-    public async Task<AppendValuesResponse> AppendValues(string range, IList<IList<object>> values)
+    public async Task<AppendValuesResponse> AppendValues(string range, IList<IList<object>> values, CancellationToken cancellationToken = default)
     {
         var valueRange = new ValueRange { Values = values };
-        return await AppendValues(range, valueRange);
+        return await AppendValues(range, valueRange, cancellationToken);
     }
 
-    public async Task<AppendValuesResponse> AppendValues(string range, ValueRange valueRange)
+    public async Task<AppendValuesResponse> AppendValues(string range, ValueRange valueRange, CancellationToken cancellationToken = default)
     {
         var request = _sheetsService.Spreadsheets.Values.Append(valueRange, _spreadsheetId, range);
         request.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
-        return await request.ExecuteAsync();
+        return await request.ExecuteAsync(cancellationToken);
     }
 
-    public async Task<BatchGetValuesByDataFilterResponse> BatchGetByDataFilter(BatchGetValuesByDataFilterRequest batchGetValuesByDataFilterRequest)
+    public async Task<BatchGetValuesByDataFilterResponse> BatchGetByDataFilter(BatchGetValuesByDataFilterRequest batchGetValuesByDataFilterRequest, CancellationToken cancellationToken = default)
     {
         var request = _sheetsService.Spreadsheets.Values.BatchGetByDataFilter(batchGetValuesByDataFilterRequest, _spreadsheetId);
-        return await request.ExecuteAsync();
+        return await request.ExecuteAsync(cancellationToken);
     }
-    
-    public async Task<BatchUpdateValuesResponse> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest)
+
+    public async Task<BatchUpdateValuesResponse> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest, CancellationToken cancellationToken = default)
     {
         var request = _sheetsService.Spreadsheets.Values.BatchUpdate(batchUpdateValuesRequest, _spreadsheetId);
-        return await request.ExecuteAsync();
+        return await request.ExecuteAsync(cancellationToken);
     }
 
-    public async Task<BatchUpdateSpreadsheetResponse> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
+    public async Task<BatchUpdateSpreadsheetResponse> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, CancellationToken cancellationToken = default)
     {
         var request = _sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, _spreadsheetId);
-        return await request.ExecuteAsync();
+        return await request.ExecuteAsync(cancellationToken);
     }
 
-    public async Task<ValueRange> GetValues(string range)
+    public async Task<ValueRange> GetValues(string range, CancellationToken cancellationToken = default)
     {
         var request = _sheetsService.Spreadsheets.Values.Get(_spreadsheetId, range);
-        var response = await request.ExecuteAsync();
+        var response = await request.ExecuteAsync(cancellationToken);
         return response;
     }
 
-    public async Task<Spreadsheet> GetSpreadsheet(List<string>? ranges)
+    public async Task<Spreadsheet> GetSpreadsheet(List<string>? ranges, CancellationToken cancellationToken = default)
     {
         var request = _sheetsService.Spreadsheets.Get(_spreadsheetId);
         if (ranges?.Count > 0)
@@ -168,19 +168,19 @@ public class SheetServiceWrapper : ISheetServiceWrapper
             request.IncludeGridData = true;
             request.Ranges = ranges;
         }
-        return await request.ExecuteAsync();
+        return await request.ExecuteAsync(cancellationToken);
     }
 
-    public async Task<UpdateValuesResponse> UpdateValues(string range, IList<IList<object>> values)
+    public async Task<UpdateValuesResponse> UpdateValues(string range, IList<IList<object>> values, CancellationToken cancellationToken = default)
     {
         var valueRange = new ValueRange { Values = values };
-        return await UpdateValues(range, valueRange);
+        return await UpdateValues(range, valueRange, cancellationToken);
     }
 
-    public async Task<UpdateValuesResponse> UpdateValues(string range, ValueRange valueRange)
+    public async Task<UpdateValuesResponse> UpdateValues(string range, ValueRange valueRange, CancellationToken cancellationToken = default)
     {
         var request = _sheetsService.Spreadsheets.Values.Update(valueRange, _spreadsheetId, range);
         request.ValueInputOption = UpdateRequest.ValueInputOptionEnum.USERENTERED;
-        return await request.ExecuteAsync();
+        return await request.ExecuteAsync(cancellationToken);
     }
 }

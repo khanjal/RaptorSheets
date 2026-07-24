@@ -21,7 +21,7 @@ namespace RaptorSheets.Core.Tests.Repositories
         public async Task GetAllAsync_ShouldReturnEmptyList_WhenSheetDataIsNull()
         {
             // Arrange
-            _mockSheetService.Setup(s => s.GetSheetData("TestSheet")).ReturnsAsync((ValueRange?)default);
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync((ValueRange?)default);
 
             // Act
             var result = await _repository.GetAllAsync();
@@ -35,7 +35,7 @@ namespace RaptorSheets.Core.Tests.Repositories
         {
             // Arrange
             var entity = new TestEntity { Id = 1, Name = "Test" };
-            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), "TestSheet!A:Z"))
+            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), "TestSheet!A:Z", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new AppendValuesResponse());
 
             // Act
@@ -54,7 +54,7 @@ namespace RaptorSheets.Core.Tests.Repositories
                 new TestEntity { Id = 1, Name = "Test1" },
                 new TestEntity { Id = 2, Name = "Test2" }
             };
-            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), "TestSheet!A:Z"))
+            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), "TestSheet!A:Z", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new AppendValuesResponse());
 
             // Act
@@ -69,7 +69,7 @@ namespace RaptorSheets.Core.Tests.Repositories
         {
             // Arrange
             var entity = new TestEntity { Id = 1, Name = "Updated" };
-            _mockSheetService.Setup(s => s.UpdateData(It.IsAny<ValueRange>(), It.IsAny<string>()))
+            _mockSheetService.Setup(s => s.UpdateData(It.IsAny<ValueRange>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new UpdateValuesResponse());
 
             // Act
@@ -83,7 +83,7 @@ namespace RaptorSheets.Core.Tests.Repositories
         public async Task DeleteAsync_ShouldReturnTrue_WhenUpdateDataIsSuccessful()
         {
             // Arrange
-            _mockSheetService.Setup(s => s.UpdateData(It.IsAny<ValueRange>(), It.IsAny<string>()))
+            _mockSheetService.Setup(s => s.UpdateData(It.IsAny<ValueRange>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new UpdateValuesResponse());
 
             // Act
@@ -98,7 +98,7 @@ namespace RaptorSheets.Core.Tests.Repositories
         {
             // Arrange
             var valueRange = new ValueRange { Values = new List<IList<object>> { new List<object> { "Header1", "Header2" } } };
-            _mockSheetService.Setup(s => s.GetSheetData("TestSheet")).ReturnsAsync(valueRange);
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync(valueRange);
 
             // Act
             var result = await _repository.GetAllAsync();
@@ -113,7 +113,7 @@ namespace RaptorSheets.Core.Tests.Repositories
             // Arrange
             var repositoryWithoutHeader = new TestEntityRepository(_mockSheetService.Object, "TestSheet", false);
             var valueRange = new ValueRange { Values = new List<IList<object>> { new List<object> { 1, "Test" } } };
-            _mockSheetService.Setup(s => s.GetSheetData("TestSheet")).ReturnsAsync(valueRange);
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync(valueRange);
 
             // Act
             var result = await repositoryWithoutHeader.GetAllAsync();
@@ -174,7 +174,7 @@ namespace RaptorSheets.Core.Tests.Repositories
         public async Task ValidateSchemaAsync_ShouldReturnInvalidResult_WhenSheetDataIsEmpty()
         {
             // Arrange
-            _mockSheetService.Setup(s => s.GetSheetData("TestSheet")).ReturnsAsync(new ValueRange());
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync(new ValueRange());
 
             // Act
             var result = await _repository.ValidateSchemaAsync();
@@ -189,13 +189,66 @@ namespace RaptorSheets.Core.Tests.Repositories
         {
             // Arrange
             var valueRange = new ValueRange { Values = new List<IList<object>> { new List<object> { "Header1", "Header2" } } };
-            _mockSheetService.Setup(s => s.GetSheetData("TestSheet")).ReturnsAsync(valueRange);
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync(valueRange);
 
             // Act
             var result = await _repository.InitializeSheetAsync();
 
             // Assert
             Assert.True(result);
+        }
+
+        [Fact]
+        public async Task InitializeSheetAsync_ShouldWriteHeaderRow_WhenSheetIsEmpty()
+        {
+            // Arrange - empty sheet, so the "already has data" early return can't fire and the
+            // method has to reach the header-row UpdateData call.
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync((ValueRange?)null);
+            _mockSheetService
+                .Setup(s => s.UpdateData(It.IsAny<ValueRange>(), "TestSheet!A1:Z1", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new UpdateValuesResponse());
+
+            // Act
+            var result = await _repository.InitializeSheetAsync();
+
+            // Assert
+            Assert.True(result);
+            _mockSheetService.Verify(s => s.UpdateData(It.IsAny<ValueRange>(), "TestSheet!A1:Z1", It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetCountAsync_ShouldReturnDataRowCount_ExcludingTheHeaderRow()
+        {
+            // Arrange
+            var valueRange = new ValueRange
+            {
+                Values = new List<IList<object>>
+                {
+                    new List<object> { "Header1", "Header2" },
+                    new List<object> { "Row1Col1", "Row1Col2" },
+                    new List<object> { "Row2Col1", "Row2Col2" }
+                }
+            };
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync(valueRange);
+
+            // Act
+            var result = await _repository.GetCountAsync();
+
+            // Assert
+            Assert.Equal(2, result);
+        }
+
+        [Fact]
+        public async Task GetCountAsync_ShouldReturnZero_WhenSheetHasNoData()
+        {
+            // Arrange
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync((ValueRange?)null);
+
+            // Act
+            var result = await _repository.GetCountAsync();
+
+            // Assert
+            Assert.Equal(0, result);
         }
 
         private class TestEntityRepository : BaseEntityRepository<TestEntity>

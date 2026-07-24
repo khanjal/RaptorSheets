@@ -40,14 +40,14 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" }));
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" })));
 
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Properties = new SpreadsheetProperties { Title = "MySpreadsheet" },
@@ -64,8 +64,8 @@ public class GetSheetsBehaviorTests
 
         // Assert
         Assert.NotNull(result);
-        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>()), Times.Never);
-        mockService.Verify(s => s.GetSheetInfo(), Times.Once);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -75,14 +75,14 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" }));
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" })));
 
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Properties = new SpreadsheetProperties { Title = "MySpreadsheet" },
@@ -101,7 +101,7 @@ public class GetSheetsBehaviorTests
         // Assert - unknown tab detection still works even though it now comes from the cheap,
         // no-grid-data GetSheetInfo() call rather than the removed IncludeGridData=true one.
         Assert.Contains(result.Messages, m => m.Message.Contains("SomeRandomTab"));
-        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>()), Times.Never);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -111,14 +111,14 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" }));
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" })));
 
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Properties = new SpreadsheetProperties { Title = "MySpreadsheet" },

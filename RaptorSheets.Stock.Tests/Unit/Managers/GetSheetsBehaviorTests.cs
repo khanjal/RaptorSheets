@@ -42,14 +42,14 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildBatchResponse("Accounts", new List<object> { "Account", "Description" }));
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse("Accounts", new List<object> { "Account", "Description" })));
 
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Properties = new SpreadsheetProperties { Title = "MyStockSheet" },
@@ -72,14 +72,14 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildBatchResponse("Accounts", new List<object> { "Account", "Description" }));
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse("Accounts", new List<object> { "Account", "Description" })));
 
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Properties = new SpreadsheetProperties { Title = "MyStockSheet" },
@@ -107,14 +107,14 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
 
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Properties = new SpreadsheetProperties { Title = "MyStockSheet" },
@@ -126,7 +126,7 @@ public class GetSheetsBehaviorTests
             });
 
         mockService
-            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse
             {
                 Replies = new List<Response>
@@ -147,6 +147,6 @@ public class GetSheetsBehaviorTests
 
         // Assert
         Assert.Contains(result.Messages, m => m.Message.Contains("Created missing sheets") && m.Message.Contains("Accounts"));
-        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()), Times.Once);
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

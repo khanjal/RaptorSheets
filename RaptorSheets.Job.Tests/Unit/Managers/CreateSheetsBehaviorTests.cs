@@ -20,11 +20,11 @@ public class CreateSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         BatchUpdateSpreadsheetRequest? capturedRequest = null;
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
-            .Callback<BatchUpdateSpreadsheetRequest>(r => capturedRequest = r)
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => capturedRequest = r)
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
 
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
 
         var manager = new GoogleSheetManager(mockService.Object);
 
@@ -48,9 +48,9 @@ public class CreateSheetsBehaviorTests
     {
         var mockService = new Mock<IGoogleSheetService>();
 
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BatchUpdateSpreadsheetResponse?)null);
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
 
         var manager = new GoogleSheetManager(mockService.Object);
 

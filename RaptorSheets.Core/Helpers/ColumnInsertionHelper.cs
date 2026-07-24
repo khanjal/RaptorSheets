@@ -63,7 +63,8 @@ public static class ColumnInsertionHelper
     public static async Task<TEntity> InsertMissingColumnsAsync<TEntity>(
         IGoogleSheetService googleSheetService,
         Dictionary<string, List<ColumnInsertionInfo>> missingColumns,
-        IEnumerable<Request>? additionalRequests = null)
+        IEnumerable<Request>? additionalRequests = null,
+        CancellationToken cancellationToken = default)
         where TEntity : class, ISheetEntity, new()
     {
         var entity = new TEntity();
@@ -92,7 +93,7 @@ public static class ColumnInsertionHelper
         }
 
         var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-        var result = await googleSheetService.BatchUpdateSpreadsheet(batchRequest);
+        var result = await googleSheetService.BatchUpdateSpreadsheet(batchRequest, cancellationToken);
 
         if (result != null)
         {

@@ -100,7 +100,7 @@ public class GoogleFileManagerTests
         var expectedEntity = new PropertyEntity { Id = "123", Name = fileName };
         
         _mockGoogleDriveService
-            .Setup(x => x.CreateSpreadsheet(fileName))
+            .Setup(x => x.CreateSpreadsheet(fileName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedEntity);
 
         // Act
@@ -110,7 +110,7 @@ public class GoogleFileManagerTests
         Assert.Equal(expectedEntity, result);
         Assert.Equal(expectedEntity.Id, result.Id);
         Assert.Equal(expectedEntity.Name, result.Name);
-        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(fileName), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(fileName, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Theory]
@@ -125,7 +125,7 @@ public class GoogleFileManagerTests
         var expectedEntity = new PropertyEntity { Id = "123", Name = fileName };
         
         _mockGoogleDriveService
-            .Setup(x => x.CreateSpreadsheet(fileName))
+            .Setup(x => x.CreateSpreadsheet(fileName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedEntity);
 
         // Act
@@ -134,7 +134,7 @@ public class GoogleFileManagerTests
         // Assert
         Assert.Equal(expectedEntity, result);
         Assert.Equal(fileName, result.Name);
-        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(fileName), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(fileName, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class GoogleFileManagerTests
         var expectedEntity = new PropertyEntity { Id = "123", Name = "" };
         
         _mockGoogleDriveService
-            .Setup(x => x.CreateSpreadsheet(null!))
+            .Setup(x => x.CreateSpreadsheet(null!, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedEntity);
 
         // Act
@@ -152,7 +152,7 @@ public class GoogleFileManagerTests
 
         // Assert
         Assert.Equal(expectedEntity, result);
-        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(null!), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(null!, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -163,7 +163,7 @@ public class GoogleFileManagerTests
         var expectedException = new InvalidOperationException("Service error");
         
         _mockGoogleDriveService
-            .Setup(x => x.CreateSpreadsheet(fileName))
+            .Setup(x => x.CreateSpreadsheet(fileName, It.IsAny<CancellationToken>()))
             .ThrowsAsync(expectedException);
 
         // Act & Assert
@@ -171,7 +171,7 @@ public class GoogleFileManagerTests
             () => _manager.CreateFile(fileName));
         
         Assert.Equal(expectedException.Message, exception.Message);
-        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(fileName), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(fileName, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -187,7 +187,7 @@ public class GoogleFileManagerTests
 #pragma warning restore S3928
         
         _mockGoogleDriveService
-            .Setup(x => x.CreateSpreadsheet(fileName))
+            .Setup(x => x.CreateSpreadsheet(fileName, It.IsAny<CancellationToken>()))
             .ThrowsAsync(expectedException);
 
         // Act & Assert
@@ -195,7 +195,7 @@ public class GoogleFileManagerTests
             () => _manager.CreateFile(fileName));
         
         Assert.Equal(expectedException.Message, exception.Message);
-        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(fileName), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(fileName, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -206,7 +206,7 @@ public class GoogleFileManagerTests
         var expectedEntity = new PropertyEntity { Id = "123", Name = fileName };
         
         _mockGoogleDriveService
-            .Setup(x => x.CreateSpreadsheet(fileName))
+            .Setup(x => x.CreateSpreadsheet(fileName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedEntity);
 
         // Act
@@ -214,7 +214,7 @@ public class GoogleFileManagerTests
 
         // Assert
         Assert.Equal(expectedEntity, result);
-        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(fileName), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.CreateSpreadsheet(fileName, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -232,7 +232,7 @@ public class GoogleFileManagerTests
         };
         
         _mockGoogleDriveService
-            .Setup(x => x.GetSpreadsheets())
+            .Setup(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()))
             .ReturnsAsync(serviceResult);
 
         // Act
@@ -245,7 +245,7 @@ public class GoogleFileManagerTests
         Assert.Equal(serviceResult[0].Name, result[0].Name);
         Assert.Equal(serviceResult[1].Id, result[1].Id);
         Assert.Equal(serviceResult[1].Name, result[1].Name);
-        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -255,7 +255,7 @@ public class GoogleFileManagerTests
         var serviceResult = new List<PropertyEntity>();
         
         _mockGoogleDriveService
-            .Setup(x => x.GetSpreadsheets())
+            .Setup(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()))
             .ReturnsAsync(serviceResult);
 
         // Act
@@ -264,7 +264,7 @@ public class GoogleFileManagerTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result);
-        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -277,7 +277,7 @@ public class GoogleFileManagerTests
         };
         
         _mockGoogleDriveService
-            .Setup(x => x.GetSpreadsheets())
+            .Setup(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()))
             .ReturnsAsync(serviceResult);
 
         // Act
@@ -288,7 +288,7 @@ public class GoogleFileManagerTests
         Assert.Single(result);
         Assert.Equal("1", result[0].Id);
         Assert.Equal("Only File", result[0].Name);
-        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -298,7 +298,7 @@ public class GoogleFileManagerTests
         var expectedException = new InvalidOperationException("Service error");
         
         _mockGoogleDriveService
-            .Setup(x => x.GetSpreadsheets())
+            .Setup(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()))
             .ThrowsAsync(expectedException);
 
         // Act & Assert
@@ -306,7 +306,7 @@ public class GoogleFileManagerTests
             () => _manager.GetFiles());
         
         Assert.Equal(expectedException.Message, exception.Message);
-        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -314,7 +314,7 @@ public class GoogleFileManagerTests
     {
         // Arrange
         _mockGoogleDriveService
-            .Setup(x => x.GetSpreadsheets())
+            .Setup(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()))
             .ReturnsAsync((IList<PropertyEntity>)null!);
 
         // Act
@@ -323,7 +323,7 @@ public class GoogleFileManagerTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result);
-        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -337,7 +337,7 @@ public class GoogleFileManagerTests
         }
         
         _mockGoogleDriveService
-            .Setup(x => x.GetSpreadsheets())
+            .Setup(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()))
             .ReturnsAsync(serviceResult);
 
         // Act
@@ -350,7 +350,7 @@ public class GoogleFileManagerTests
         Assert.Equal("File 0", result[0].Name);
         Assert.Equal("999", result[999].Id);
         Assert.Equal("File 999", result[999].Name);
-        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Theory]
@@ -369,7 +369,7 @@ public class GoogleFileManagerTests
         }
         
         _mockGoogleDriveService
-            .Setup(x => x.GetSpreadsheets())
+            .Setup(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()))
             .ReturnsAsync(serviceResult);
 
         // Act
@@ -385,7 +385,7 @@ public class GoogleFileManagerTests
             Assert.Equal($"{fileCount - 1}", result[fileCount - 1].Id);
         }
         
-        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -400,7 +400,7 @@ public class GoogleFileManagerTests
         };
         
         _mockGoogleDriveService
-            .Setup(x => x.GetSpreadsheets())
+            .Setup(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()))
             .ReturnsAsync(serviceResult);
 
         // Act
@@ -412,7 +412,7 @@ public class GoogleFileManagerTests
         Assert.Equal("File with �mojis ??", result[0].Name);
         Assert.Equal("File with \"quotes\" and 'apostrophes'", result[1].Name);
         Assert.Equal("File with\nnewlines\tand\ttabs", result[2].Name);
-        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -427,7 +427,7 @@ public class GoogleFileManagerTests
         };
         
         _mockGoogleDriveService
-            .Setup(x => x.GetSpreadsheets())
+            .Setup(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()))
             .ReturnsAsync(serviceResult);
 
         // Act
@@ -441,7 +441,7 @@ public class GoogleFileManagerTests
         Assert.Equal("z", result[0].Id);
         Assert.Equal("a", result[1].Id);
         Assert.Equal("m", result[2].Id);
-        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(), Times.Once);
+        _mockGoogleDriveService.Verify(x => x.GetSpreadsheets(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion

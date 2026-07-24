@@ -15,33 +15,12 @@ using RaptorSheets.Gig.Helpers;
 namespace RaptorSheets.Gig.Managers;
 
 /// <summary>
-/// Main interface for Google Sheet operations in the Gig domain.
-/// Provides CRUD operations, metadata access, and demo data functionality.
+/// Extends the shared <see cref="IGoogleSheetManager{TEntity}"/> CRUD/metadata/layout surface with
+/// Gig's own demo-data generation, which takes a date range rather than the seed-only or
+/// seed-plus-date-range shapes other domains use.
 /// </summary>
-public interface IGoogleSheetManager
+public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
 {
-    // CRUD Operations
-    Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
-    Task<SheetEntity> CreateAllSheets();
-    Task<SheetEntity> CreateSheets(List<string> sheets);
-    Task<SheetEntity> DeleteAllSheets();
-    Task<SheetEntity> DeleteSheets(List<string> sheets);
-    Task<SheetEntity> GetSheet(string sheet);
-    Task<SheetEntity> GetAllSheets();
-    Task<SheetEntity> GetSheets(List<string> sheets);
-
-    // Metadata & Properties
-    Task<List<PropertyEntity>> GetAllSheetProperties();
-    Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
-    Task<List<string>> GetAllSheetTabNames();
-    Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null);
-    Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
-    SheetModel? GetSheetLayout(string sheet);
-    List<SheetModel> GetSheetLayouts(List<string> sheets);
-
-    // Header Management
-    Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
-
     // Demo Data Generation
     SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null);
 }
@@ -76,15 +55,6 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     }
 
     /// <summary>
-    /// Restores sheets found missing entirely during <see cref="GoogleSheetManagerBase{TEntity}.GetSheets"/>
-    /// self-heal, using Gig's own ordered/indexed creation so the desired positions are preserved.
-    /// </summary>
-    protected override Task<SheetEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap)
-    {
-        return CreateSheets(missingIndexMap);
-    }
-
-    /// <summary>
     /// Backs <see cref="GoogleSheetManagerBase{TEntity}.CreateSheets"/> and
     /// <see cref="GoogleSheetManagerBase{TEntity}.DeleteSheets"/> (for temp-sheet creation) with
     /// Gig's fully-configured AddSheet requests (headers, formatting, validation, colors).
@@ -96,37 +66,9 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
     #endregion
 
-    #region Create Operations
-
-    // This 1-arg overload exists because C# requires exact arity to implicitly satisfy
-    // IGoogleSheetManager's single-parameter CreateSheets(List<string>) - an inherited method's
-    // optional parameter doesn't count for interface matching the way it does for ordinary callers.
-    public async Task<SheetEntity> CreateSheets(List<string> sheets)
-    {
-        return await CreateSheets(sheets, null);
-    }
-
-    /// <summary>
-    /// Creates sheets using a title->desiredIndex map. The map's keys are the sheet titles to create.
-    /// </summary>
-    public async Task<SheetEntity> CreateSheets(Dictionary<string,int> sheetsWithIndices)
-    {
-        if (sheetsWithIndices == null || sheetsWithIndices.Count == 0)
-        {
-            return await CreateSheets(new List<string>());
-        }
-
-        // Order titles deterministically using a helper (stable, testable).
-        var sheets = SheetOrderingHelper.OrderSheetTitlesByIndex(sheetsWithIndices);
-
-        return await CreateSheets(sheets, sheetsWithIndices);
-    }
-
-    #endregion
-
     #region Read Operations
 
-    public async Task<SheetEntity> GetSheet(string sheet)
+    public async Task<SheetEntity> GetSheet(string sheet, CancellationToken cancellationToken = default)
     {
         var sheetExists = GenerateSheetsHelpers.GetSheetNames()
             .Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
@@ -136,7 +78,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
         }
 
-        return await GetSheets([sheet]);
+        return await GetSheets([sheet], cancellationToken);
     }
 
     #endregion
@@ -168,7 +110,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
                 (data, properties) => GigRequestHelpers.ChangeTripSheetData(data as List<TripEntity> ?? [], properties))
         };
 
-    public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity)
+    public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity, CancellationToken cancellationToken = default)
     {
         var (sheetsWithData, resolveMessages) = GoogleRequestHelpers.ResolveSheetsWithData(sheets, sheetEntity, _sheetAccessors);
         sheetEntity.Messages.AddRange(resolveMessages);
@@ -179,19 +121,19 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             return sheetEntity;
         }
 
-        var sheetInfo = await GetSheetProperties(sheets);
+        var sheetInfo = await GetSheetProperties(sheets, cancellationToken);
         var (requests, buildMessages) = GoogleRequestHelpers.BuildChangeRequests(sheetsWithData, sheetEntity, _sheetAccessors, sheetInfo);
         sheetEntity.Messages.AddRange(buildMessages);
 
         var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
+        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken);
 
         if (batchUpdateSpreadsheetResponse == null)
         {
-            var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+            var spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
             if (spreadsheetInfo != null)
             {
-                sheetEntity.Messages.AddRange(await HandleMissingSheets(spreadsheetInfo));
+                sheetEntity.Messages.AddRange(await HandleMissingSheets(spreadsheetInfo, cancellationToken));
             }
             sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageType.SAVE_DATA));
         }
@@ -255,7 +197,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
     #region Private Helpers
 
-    private async Task<List<MessageEntity>> HandleMissingSheets(Spreadsheet? spreadsheet)
+    private async Task<List<MessageEntity>> HandleMissingSheets(Spreadsheet? spreadsheet, CancellationToken cancellationToken = default)
     {
         var messages = new List<MessageEntity>();
         if (spreadsheet != null)
@@ -272,7 +214,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
                 var allSheets = GenerateSheetsHelpers.GetSheetNames();
                 var missingIndexMap = SheetInitializationHelper.GetMissingSheets(spreadsheet, allSheets);
 
-                messages.AddRange((await CreateSheets(missingIndexMap)).Messages);
+                messages.AddRange((await CreateSheets(missingIndexMap, cancellationToken)).Messages);
             }
         }
         else
