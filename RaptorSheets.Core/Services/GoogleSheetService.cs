@@ -1,4 +1,4 @@
-﻿using Google.Apis.Sheets.v4.Data;
+using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using RaptorSheets.Core.Constants;
@@ -20,6 +20,17 @@ public interface IGoogleSheetService
     public Task<Spreadsheet?> GetSheetInfo();
     public Task<Spreadsheet?> GetSheetInfo(List<string>? ranges);
     public Task<UpdateValuesResponse?> UpdateData(ValueRange valueRange, string range);
+
+    /// <summary>
+    /// Same call as <see cref="GetBatchData(List{string}, string?)"/>, but the failure reason
+    /// survives instead of collapsing to <c>null</c>. Use this where the caller needs to tell a
+    /// transient quota failure apart from a genuinely empty result - see
+    /// <see cref="GoogleApiFailureReason.QuotaExceeded"/>.
+    /// </summary>
+    public Task<GoogleApiResult<BatchGetValuesByDataFilterResponse>> GetBatchDataResult(List<string> sheets, string? range = null);
+
+    /// <summary>Same call as <see cref="GetSheetInfo(List{string})"/>, with the failure reason preserved.</summary>
+    public Task<GoogleApiResult<Spreadsheet>> GetSheetInfoResult(List<string>? ranges = null);
 }
 
 [ExcludeFromCodeCoverage]
@@ -41,48 +52,50 @@ public class GoogleSheetService : IGoogleSheetService
         _logger = logger ?? NullLogger.Instance;
     }
 
-    public async Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range)
+    /// <summary>
+    /// Runs a call against the underlying wrapper, converting any exception into a classified
+    /// <see cref="GoogleApiFailure"/> instead of letting it propagate. Every public method below is a
+    /// thin wrapper around this, so the try/catch/log shape only exists once.
+    /// </summary>
+    private async Task<GoogleApiResult<T>> ExecuteAsync<T>(Func<Task<T>> call, string logMessage, params object?[] logArgs)
     {
         try
         {
-            var response = await _sheetService.AppendValues(range, valueRange);
-
-            return response;
+            var response = await call();
+            return GoogleApiResult<T>.Ok(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error appending data to range '{Range}'", range);
-            return null;
+            _logger.LogError(ex, logMessage, logArgs);
+            return GoogleApiResult<T>.Failed(GoogleApiFailure.FromException(ex));
         }
+    }
+
+    public async Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range)
+    {
+        var result = await ExecuteAsync(
+            () => _sheetService.AppendValues(range, valueRange),
+            "Error appending data to range '{Range}'", range);
+
+        return result.Value;
     }
 
     public async Task<BatchUpdateValuesResponse?> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest)
     {
-        try
-        {
-            var response = await _sheetService.BatchUpdateData(batchUpdateValuesRequest);
+        var result = await ExecuteAsync(
+            () => _sheetService.BatchUpdateData(batchUpdateValuesRequest),
+            "Error batch updating values");
 
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error batch updating values");
-            return null;
-        }
+        return result.Value;
     }
 
     public async Task<BatchUpdateSpreadsheetResponse?> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest)
     {
-        try
-        {
-            var response = await _sheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error batch updating spreadsheet");
-            return null;
-        }
+        var result = await ExecuteAsync(
+            () => _sheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest),
+            "Error batch updating spreadsheet");
+
+        return result.Value;
     }
 
     public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets)
@@ -92,41 +105,38 @@ public class GoogleSheetService : IGoogleSheetService
 
     public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, string? range)
     {
+        var result = await GetBatchDataResult(sheets, range);
+        return result.Value;
+    }
+
+    public async Task<GoogleApiResult<BatchGetValuesByDataFilterResponse>> GetBatchDataResult(List<string> sheets, string? range = null)
+    {
         if (sheets == null || sheets.Count < 1)
         {
-            return null;
+            return GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure
+            {
+                Reason = GoogleApiFailureReason.Unknown,
+                Message = "No sheets were requested."
+            });
         }
 
         var request = GoogleRequestHelpers.GenerateBatchGetValuesByDataFilterRequest(sheets, range);
 
-        try
-        {
-            var response = await _sheetService.BatchGetByDataFilter(request);
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error batch getting data for sheets '{Sheets}'", string.Join(", ", sheets));
-            return null;
-        }
+        return await ExecuteAsync(
+            () => _sheetService.BatchGetByDataFilter(request),
+            "Error batch getting data for sheets '{Sheets}'", string.Join(", ", sheets));
     }
 
     public async Task<ValueRange?> GetSheetData(string sheet)
     {
         if (string.IsNullOrWhiteSpace(sheet)) return null;
 
-        try
-        {
-            var response = await _sheetService.GetValues($"{sheet}!{_range}");
-
-            return response;
-        }
-        catch (Exception ex)
-        {
+        var result = await ExecuteAsync(
             // NotFound (invalid spreadsheetId/range) or BadRequest (invalid sheet name)
-            _logger.LogError(ex, "Error getting values for sheet '{Sheet}'", sheet);
-            return null;
-        }
+            () => _sheetService.GetValues($"{sheet}!{_range}"),
+            "Error getting values for sheet '{Sheet}'", sheet);
+
+        return result.Value;
     }
 
     public async Task<Spreadsheet?> GetSheetInfo()
@@ -136,30 +146,23 @@ public class GoogleSheetService : IGoogleSheetService
 
     public async Task<Spreadsheet?> GetSheetInfo(List<string>? ranges)
     {
-        try
-        {
-            var response = await _sheetService.GetSpreadsheet(ranges);
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting sheet info for ranges '{Ranges}'", ranges == null ? "(none)" : string.Join(", ", ranges));
-            return null;
-        }
+        var result = await GetSheetInfoResult(ranges);
+        return result.Value;
+    }
+
+    public async Task<GoogleApiResult<Spreadsheet>> GetSheetInfoResult(List<string>? ranges = null)
+    {
+        return await ExecuteAsync(
+            () => _sheetService.GetSpreadsheet(ranges),
+            "Error getting sheet info for ranges '{Ranges}'", ranges == null ? "(none)" : string.Join(", ", ranges));
     }
 
     public async Task<UpdateValuesResponse?> UpdateData(ValueRange valueRange, string range)
     {
-        try
-        {
-            var response = await _sheetService.UpdateValues(range, valueRange);
+        var result = await ExecuteAsync(
+            () => _sheetService.UpdateValues(range, valueRange),
+            "Error updating data for range '{Range}'", range);
 
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating data for range '{Range}'", range);
-            return null;
-        }
+        return result.Value;
     }
 }

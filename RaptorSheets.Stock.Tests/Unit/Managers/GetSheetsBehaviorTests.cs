@@ -7,6 +7,7 @@ using RaptorSheets.Core.Services;
 using RaptorSheets.Stock.Managers;
 using Xunit;
 using SheetName = RaptorSheets.Stock.Enums.SheetName;
+using RaptorSheets.Core.Models;
 
 namespace RaptorSheets.Stock.Tests.Unit.Managers;
 
@@ -43,6 +44,9 @@ public class GetSheetsBehaviorTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync(BuildBatchResponse("Accounts", new List<object> { "Account", "Description" }));
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse("Accounts", new List<object> { "Account", "Description" })));
 
         mockService
             .Setup(s => s.GetSheetInfo())
@@ -70,6 +74,9 @@ public class GetSheetsBehaviorTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync(BuildBatchResponse("Accounts", new List<object> { "Account", "Description" }));
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse("Accounts", new List<object> { "Account", "Description" })));
 
         mockService
             .Setup(s => s.GetSheetInfo())
@@ -102,6 +109,9 @@ public class GetSheetsBehaviorTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
 
         mockService
             .Setup(s => s.GetSheetInfo())

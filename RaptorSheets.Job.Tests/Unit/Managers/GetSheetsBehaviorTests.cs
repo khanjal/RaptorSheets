@@ -3,6 +3,7 @@ using Moq;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Job.Constants;
 using RaptorSheets.Job.Managers;
+using RaptorSheets.Core.Models;
 
 namespace RaptorSheets.Job.Tests.Unit.Managers;
 
@@ -44,6 +45,12 @@ public class GetSheetsBehaviorTests
                 SheetsConfig.SheetNames.Applications,
                 new List<object> { "Date", "Company", "Job Title", "Posting", "Site", "Interviews", "Decision", "Decision Date", "Days Active", "Notes", "Pay Low", "Pay High", "Pay Avg", "Location", "Schedule", "#", "Key" },
                 new List<object> { "2026-06-01", "TechCorp", "Software Engineer", "https://example.com/job/1", "LinkedIn", "0", "Pending", "", "5", "", "100000", "150000", "125000", "Remote", "Full-time", "0", "TechCorp-Software Engineer-0" }));
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse(
+                SheetsConfig.SheetNames.Applications,
+                new List<object> { "Date", "Company", "Job Title", "Posting", "Site", "Interviews", "Decision", "Decision Date", "Days Active", "Notes", "Pay Low", "Pay High", "Pay Avg", "Location", "Schedule", "#", "Key" },
+                new List<object> { "2026-06-01", "TechCorp", "Software Engineer", "https://example.com/job/1", "LinkedIn", "0", "Pending", "", "5", "", "100000", "150000", "125000", "Remote", "Full-time", "0", "TechCorp-Software Engineer-0" })));
 
         mockService
             .Setup(s => s.GetSheetInfo())
@@ -76,6 +83,9 @@ public class GetSheetsBehaviorTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync(BuildBatchResponse(SheetsConfig.SheetNames.Applications, new List<object> { "Date", "Company", "Job Title" }));
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse(SheetsConfig.SheetNames.Applications, new List<object> { "Date", "Company", "Job Title" })));
 
         mockService
             .Setup(s => s.GetSheetInfo())
@@ -104,6 +114,9 @@ public class GetSheetsBehaviorTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
 
         // Populate every canonical Job sheet so GetSheets' self-heal finds nothing missing and
         // falls through to the "unable to retrieve" error this test is actually targeting.

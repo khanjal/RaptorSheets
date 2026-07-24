@@ -483,10 +483,21 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheetNames);
 
-        var response = await _googleSheetService.GetBatchData(sheetNames, null);
+        var result = await _googleSheetService.GetBatchDataResult(sheetNames);
+        var response = result.Value;
         Spreadsheet? spreadsheetInfo = null;
 
-        if (response == null)
+        // Only worth attempting self-heal when the failure is consistent with "a sheet might
+        // genuinely be missing". A quota/auth/permission failure tells us nothing about whether the
+        // sheets exist - attempting it anyway just spends another call restating the same failure,
+        // and risks the same misdiagnosis this method exists to avoid: treating "we couldn't check"
+        // as "it's missing".
+        var failureSuggestsMissingSheet = result.Failure is null or
+        {
+            Reason: GoogleApiFailureReason.NotFound or GoogleApiFailureReason.Unknown
+        };
+
+        if (response == null && failureSuggestsMissingSheet)
         {
             var (restoreResult, fetchedInfo) = await TryRestoreMissingSheetsAsync(messages);
             spreadsheetInfo = fetchedInfo;
@@ -499,7 +510,8 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
         if (response == null)
         {
-            messages.Add(MessageHelpers.CreateErrorMessage($"Unable to retrieve sheet(s): {stringSheetList}", MessageType.GET_SHEETS));
+            messages.Add(MessageHelpers.CreateErrorMessage(
+                BuildUnavailableMessage(stringSheetList, result.Failure), MessageType.GET_SHEETS));
             data.Messages.AddRange(messages);
             return data;
         }
@@ -528,6 +540,33 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         data.Messages.AddRange(messages);
 
         return data;
+    }
+
+    /// <summary>
+    /// Turns a classified failure into a message that tells the caller what to actually do, instead
+    /// of the same "unable to retrieve" sentence for every cause. The distinction that matters most:
+    /// <see cref="GoogleApiFailureReason.QuotaExceeded"/> must read as transient, never as "the data
+    /// isn't there" - conflating the two is what lets a rate limit look like an empty spreadsheet.
+    /// </summary>
+    private static string BuildUnavailableMessage(string stringSheetList, GoogleApiFailure? failure)
+    {
+        if (failure == null)
+        {
+            return $"Unable to retrieve sheet(s): {stringSheetList}";
+        }
+
+        return failure.Reason switch
+        {
+            GoogleApiFailureReason.QuotaExceeded =>
+                $"Unable to retrieve sheet(s): {stringSheetList}. The API quota was exceeded; this is temporary - please retry shortly.",
+            GoogleApiFailureReason.Unauthorized =>
+                $"Unable to retrieve sheet(s): {stringSheetList}. The credentials are missing, expired, or were revoked.",
+            GoogleApiFailureReason.Forbidden =>
+                $"Unable to retrieve sheet(s): {stringSheetList}. Access to this spreadsheet was denied - check that it's shared with the account being used.",
+            GoogleApiFailureReason.NotFound =>
+                $"Unable to retrieve sheet(s): {stringSheetList}. The spreadsheet could not be found - check the spreadsheet id.",
+            _ => $"Unable to retrieve sheet(s): {stringSheetList}. {failure.Message}"
+        };
     }
 
     /// <summary>

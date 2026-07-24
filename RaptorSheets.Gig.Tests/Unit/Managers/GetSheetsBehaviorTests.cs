@@ -5,6 +5,7 @@ using Moq;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Gig.Managers;
 using Xunit;
+using RaptorSheets.Core.Models;
 
 namespace RaptorSheets.Gig.Tests.Unit.Managers;
 
@@ -41,6 +42,9 @@ public class GetSheetsBehaviorTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" }));
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" })));
 
         mockService
             .Setup(s => s.GetSheetInfo())
@@ -73,6 +77,9 @@ public class GetSheetsBehaviorTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" }));
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" })));
 
         mockService
             .Setup(s => s.GetSheetInfo())
@@ -106,6 +113,9 @@ public class GetSheetsBehaviorTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" }));
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse("Shifts", new List<object> { "Date", "Number", "Service" })));
 
         mockService
             .Setup(s => s.GetSheetInfo())
