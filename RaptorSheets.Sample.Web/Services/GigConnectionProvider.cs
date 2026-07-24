@@ -28,13 +28,15 @@ public class GigConnectionProvider(ISheetManagerFactory<IGoogleSheetManager> fac
 
     private void Connect()
     {
-        var spreadsheetId = configuration["Spreadsheets:Gig"];
-        var credentials = configuration.GetSection("GoogleCredentials").Get<Dictionary<string, string>>();
+        // Same keys RaptorSheets.Test.Common reads (see TestConfigurationHelpers) - the two
+        // projects share one UserSecretsId, so they need to agree on the shape too.
+        var spreadsheetId = configuration["spreadsheets:gig"];
+        var credentials = configuration.GetSection("google_credentials").Get<Dictionary<string, string>>();
 
         if (string.IsNullOrWhiteSpace(spreadsheetId) || credentials is not { Count: > 0 })
         {
-            _error = "No Gig spreadsheet configured. Set \"Spreadsheets:Gig\" and \"GoogleCredentials\" " +
-                      "with dotnet user-secrets - see docs/AUTHENTICATION.md.";
+            _error = "No Gig spreadsheet configured. Set \"spreadsheets:gig\" and \"google_credentials\" " +
+                      "with dotnet user-secrets - see docs/SAMPLE-APP.md.";
             return;
         }
 

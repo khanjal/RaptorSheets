@@ -12,20 +12,26 @@ will be added the same way, one at a time.
 
 ## Running it
 
-The sample reads credentials from [user secrets](AUTHENTICATION.md#console-application-with-user-secrets)
-the same way the integration test suite does - nothing is read from `appsettings.json`, so there's
-nothing to accidentally commit.
+`RaptorSheets.Sample.Web` and `RaptorSheets.Test` (the integration test suite's shared infra)
+deliberately declare the **same `<UserSecretsId>`**, so they read one `secrets.json`
+(`%APPDATA%\Microsoft\UserSecrets\d3dcd413-.../secrets.json` on Windows,
+`~/.microsoft/usersecrets/d3dcd413-.../secrets.json` on Linux/macOS) instead of each needing its
+own copy kept in sync by hand. If you've already set up user secrets for the integration tests,
+the sample app is already configured - just `dotnet run`. Nothing is read from `appsettings.json`,
+so there's nothing to accidentally commit either way.
+
+Setting it up from scratch (the `<UserSecretsId>` is already in the csproj, so `init` isn't needed -
+either project's directory writes to the same store):
 
 ```bash
 cd RaptorSheets.Sample.Web
-dotnet user-secrets init
 
-dotnet user-secrets set "GoogleCredentials:type" "service_account"
-dotnet user-secrets set "GoogleCredentials:private_key_id" "your-key-id"
-dotnet user-secrets set "GoogleCredentials:private_key" "your-private-key"
-dotnet user-secrets set "GoogleCredentials:client_email" "service@project.iam.gserviceaccount.com"
-dotnet user-secrets set "GoogleCredentials:client_id" "your-client-id"
-dotnet user-secrets set "Spreadsheets:Gig" "your-gig-spreadsheet-id"
+dotnet user-secrets set "google_credentials:type" "service_account"
+dotnet user-secrets set "google_credentials:private_key_id" "your-key-id"
+dotnet user-secrets set "google_credentials:private_key" "your-private-key"
+dotnet user-secrets set "google_credentials:client_email" "service@project.iam.gserviceaccount.com"
+dotnet user-secrets set "google_credentials:client_id" "your-client-id"
+dotnet user-secrets set "spreadsheets:gig" "your-gig-spreadsheet-id"
 
 dotnet run
 ```
