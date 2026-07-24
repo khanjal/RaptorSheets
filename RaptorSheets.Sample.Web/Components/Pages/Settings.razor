@@ -128,12 +128,14 @@
     }
 </section>
 
-@if (_message is not null)
-{
-    <p class="status @(_messageIsError ? "error" : "ok")">@_message</p>
-}
+<div class="settings-actions">
+    @if (_message is not null)
+    {
+        <p class="status @(_messageIsError ? "error" : "ok")">@_message</p>
+    }
 
-<button class="btn-primary" @onclick="SaveAsync" disabled="@_isBusy">@(_isBusy ? "Saving..." : "Save")</button>
+    <button class="btn-primary" @onclick="SaveAsync" disabled="@_isBusy">@(_isBusy ? "Saving..." : "Save")</button>
+</div>
 
 @code {
     private string? _currentClientEmail;

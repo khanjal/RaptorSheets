@@ -254,13 +254,30 @@ input[type="text"]:not(.filter):not(.field-compact):not(.field-wide), input:not(
    never reach them. These live here globally instead, sized by the underlying data type rather
    than left to the browser's very different default intrinsic widths for text vs number inputs
    (a bare <input type="number"> renders far wider than <input type="text"> by default, regardless
-   of what it actually holds - that's what made every amount column look oversized). */
+   of what it actually holds - that's what made every amount column look oversized). A fixed width
+   (not width:100%) is what makes a table's auto column-layout size each column correctly - a
+   percentage width can't be resolved during that intrinsic-sizing pass, so column widths would go
+   back to being driven by the browser's own per-input-type defaults instead of these. */
 .field-compact {
     width: 4.5rem;
 }
 
 .field-wide {
     width: 10rem;
+}
+
+/* The add-item form is a different story: it's a fixed-width CSS grid, and when there isn't room
+   for every column at its full desired width, the grid compresses the columns - but a fixed-width
+   input doesn't shrink along with its now-narrower column, so it overflows into the next field.
+   Only inside that form, size these to fill (and clamp to) their column instead. */
+.add-form-fields .field-compact {
+    width: 100%;
+    max-width: 4.5rem;
+}
+
+.add-form-fields .field-wide {
+    width: 100%;
+    max-width: 10rem;
 }
 
 .field-compact, .field-wide {

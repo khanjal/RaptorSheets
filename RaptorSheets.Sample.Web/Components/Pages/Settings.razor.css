@@ -46,3 +46,12 @@
     .demo-data-row .status {
         font-size: 0.8rem;
     }
+
+.settings-actions {
+    margin-top: 1.5rem;
+}
+
+    .settings-actions .status {
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+    }
