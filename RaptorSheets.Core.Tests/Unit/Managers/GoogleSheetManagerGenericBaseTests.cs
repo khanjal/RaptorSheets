@@ -34,7 +34,7 @@ public class GoogleSheetManagerGenericBaseTests
 
         public int CreateMissingCalls { get; private set; }
 
-        protected override Task<TestEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap)
+        protected override Task<TestEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap, CancellationToken cancellationToken = default)
         {
             CreateMissingCalls++;
             var entity = new TestEntity();
@@ -69,7 +69,7 @@ public class GoogleSheetManagerGenericBaseTests
         public TestManagerWithGeneration(IGoogleSheetService service, SheetRegistry<TestEntity> registry, List<string> canonical, ILogger? logger = null)
             : base(service, registry, canonical, logger) { }
 
-        protected override Task<TestEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap)
+        protected override Task<TestEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestEntity());
 
         protected override BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
@@ -134,7 +134,7 @@ public class GoogleSheetManagerGenericBaseTests
     public async Task GetAllSheetTabNames_ReturnsTitlesFromService()
     {
         var mockService = new Mock<IGoogleSheetService>();
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet
         {
             Sheets = new List<Sheet>
             {
@@ -155,7 +155,7 @@ public class GoogleSheetManagerGenericBaseTests
     {
         var mockService = new Mock<IGoogleSheetService>();
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BatchGetValuesByDataFilterResponse
             {
                 ValueRanges = new List<MatchedValueRange>
@@ -168,7 +168,7 @@ public class GoogleSheetManagerGenericBaseTests
                 }
             });
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(new BatchGetValuesByDataFilterResponse
             {
                 ValueRanges = new List<MatchedValueRange>
@@ -180,7 +180,7 @@ public class GoogleSheetManagerGenericBaseTests
                     }
                 }
             }));
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet
         {
             Properties = new SpreadsheetProperties { Title = "MyTestBook" },
             Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = SheetName } } }
@@ -201,13 +201,13 @@ public class GoogleSheetManagerGenericBaseTests
     {
         var mockService = new Mock<IGoogleSheetService>();
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
         // Spreadsheet exists but is missing the registered sheet entirely -> self-heal path.
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet
         {
             Properties = new SpreadsheetProperties { Title = "MyTestBook" },
             Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = "SomethingElse" } } }
@@ -229,7 +229,7 @@ public class GoogleSheetManagerGenericBaseTests
         // misdiagnosis this behavior exists to avoid - treating "we couldn't check" as "it's missing".
         var mockService = new Mock<IGoogleSheetService>();
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(
                 new GoogleApiFailure { Reason = GoogleApiFailureReason.QuotaExceeded, Message = "rate limited" }));
 
@@ -238,8 +238,8 @@ public class GoogleSheetManagerGenericBaseTests
         await manager.GetSheets([SheetName]);
 
         Assert.Equal(0, manager.CreateMissingCalls);
-        mockService.Verify(s => s.GetSheetInfo(), Times.Never);
-        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>()), Times.Never);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<CancellationToken>()), Times.Never);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -247,7 +247,7 @@ public class GoogleSheetManagerGenericBaseTests
     {
         var mockService = new Mock<IGoogleSheetService>();
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(
                 new GoogleApiFailure { Reason = GoogleApiFailureReason.QuotaExceeded, Message = "rate limited" }));
 
@@ -269,12 +269,12 @@ public class GoogleSheetManagerGenericBaseTests
     {
         var mockService = new Mock<IGoogleSheetService>();
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(
                 new GoogleApiFailure { Reason = reason, Message = "failure" }));
         // NotFound is one of the reasons that still attempts self-heal; give it metadata to heal
         // against so the test exercises the final message either way.
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet
         {
             Properties = new SpreadsheetProperties { Title = "MyTestBook" },
             Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = SheetName } } }
@@ -294,10 +294,10 @@ public class GoogleSheetManagerGenericBaseTests
         // missing", so the existing self-heal behavior must be preserved for it.
         var mockService = new Mock<IGoogleSheetService>();
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(
                 new GoogleApiFailure { Reason = GoogleApiFailureReason.NotFound, Message = "not found" }));
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet
         {
             Properties = new SpreadsheetProperties { Title = "MyTestBook" },
             Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = "SomethingElse" } } }
@@ -324,9 +324,9 @@ public class GoogleSheetManagerGenericBaseTests
     public async Task CreateAllSheets_HappyPath_ReturnsCreatedMessages()
     {
         var mockService = new Mock<IGoogleSheetService>();
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>()))
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() }); // no default "Sheet1" present
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse
             {
                 Replies = new List<Response> { new() { AddSheet = new AddSheetResponse { Properties = new SheetProperties { Title = SheetName } } } }
@@ -343,8 +343,8 @@ public class GoogleSheetManagerGenericBaseTests
     public async Task CreateSheets_WithNullBatchResponse_ReturnsNotCreatedMessages()
     {
         var mockService = new Mock<IGoogleSheetService>();
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync((Spreadsheet?)null);
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Spreadsheet?)null);
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BatchUpdateSpreadsheetResponse?)null);
 
         var manager = BuildGeneratingManager(mockService.Object);
@@ -362,11 +362,11 @@ public class GoogleSheetManagerGenericBaseTests
         {
             Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = "Sheet1", SheetId = 0 } } }
         };
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheetWithDefaultSheet);
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheetWithDefaultSheet);
         BatchUpdateSpreadsheetRequest? captured = null;
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
-            .Callback<BatchUpdateSpreadsheetRequest>(r => captured = r)
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
 
         var manager = BuildGeneratingManager(mockService.Object);
@@ -381,10 +381,10 @@ public class GoogleSheetManagerGenericBaseTests
     public async Task CreateSheets_WithExistingIndexMap_AppliesProvidedIndices()
     {
         var mockService = new Mock<IGoogleSheetService>();
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
         BatchUpdateSpreadsheetRequest? captured = null;
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
-            .Callback<BatchUpdateSpreadsheetRequest>(r => captured = r)
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
 
         var manager = BuildGeneratingManager(mockService.Object);
@@ -399,7 +399,7 @@ public class GoogleSheetManagerGenericBaseTests
     public async Task DeleteAllSheets_WithNoExistingSheets_ReturnsInfoMessage()
     {
         var mockService = new Mock<IGoogleSheetService>();
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
 
         var manager = BuildGeneratingManager(mockService.Object);
 
@@ -416,9 +416,9 @@ public class GoogleSheetManagerGenericBaseTests
         {
             Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = SheetName, SheetId = 111 } } }
         };
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
 
         var manager = BuildGeneratingManager(mockService.Object);
@@ -441,9 +441,9 @@ public class GoogleSheetManagerGenericBaseTests
                 new() { Properties = new SheetProperties { Title = "OtherSheet", SheetId = 222 } }
             }
         };
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
 
         var manager = BuildGeneratingManager(mockService.Object);
@@ -466,9 +466,9 @@ public class GoogleSheetManagerGenericBaseTests
                 new() { Properties = new SheetProperties { Title = "OtherSheet", SheetId = 222 } }
             }
         };
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BatchUpdateSpreadsheetResponse?)null);
 
         var manager = BuildGeneratingManager(mockService.Object);
@@ -482,8 +482,8 @@ public class GoogleSheetManagerGenericBaseTests
     public async Task DeleteSheets_WhenServiceThrows_ReturnsErrorMessage()
     {
         var mockService = new Mock<IGoogleSheetService>();
-        mockService.Setup(s => s.GetSheetInfo()).ThrowsAsync(new InvalidOperationException("boom"));
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ThrowsAsync(new InvalidOperationException("boom"));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("boom"));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("boom"));
 
         var manager = BuildGeneratingManager(mockService.Object);
 
@@ -528,12 +528,12 @@ public class GoogleSheetManagerGenericBaseTests
     {
         var mockService = new Mock<IGoogleSheetService>();
         var spreadsheet = SpreadsheetWith((BaseSheetName, 10), (DependentSheetName, 42));
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
 
         var captured = new List<BatchUpdateSpreadsheetRequest>();
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
-            .Callback<BatchUpdateSpreadsheetRequest>(r => captured.Add(r))
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured.Add(r))
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
 
         var manager = new TestManager(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
@@ -551,12 +551,12 @@ public class GoogleSheetManagerGenericBaseTests
         var mockService = new Mock<IGoogleSheetService>();
         // Only "Base" exists live; "Dependent" hasn't been created yet, "Unknown" isn't registered at all.
         var spreadsheet = SpreadsheetWith((BaseSheetName, 10));
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
 
         var captured = new List<BatchUpdateSpreadsheetRequest>();
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
-            .Callback<BatchUpdateSpreadsheetRequest>(r => captured.Add(r))
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured.Add(r))
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
 
         var manager = new TestManager(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
@@ -576,8 +576,8 @@ public class GoogleSheetManagerGenericBaseTests
 
         await manager.RefreshDependentSheetsAsync([SheetName]);
 
-        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()), Times.Never);
-        mockService.Verify(s => s.GetSheetInfo(), Times.Never);
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -586,21 +586,21 @@ public class GoogleSheetManagerGenericBaseTests
         var mockService = new Mock<IGoogleSheetService>();
 
         // batchGet fails (Base is missing entirely) -> triggers the self-heal path.
-        mockService.Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+        mockService.Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
 
         // Dependent already exists live; Base doesn't yet - matches the real "Tickers deleted,
         // Stocks still references it" scenario.
         var spreadsheet = SpreadsheetWith((DependentSheetName, 42));
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
 
         var captured = new List<BatchUpdateSpreadsheetRequest>();
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
-            .Callback<BatchUpdateSpreadsheetRequest>(r => captured.Add(r))
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured.Add(r))
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
 
         var manager = new TestManager(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
@@ -633,18 +633,18 @@ public class GoogleSheetManagerGenericBaseTests
                 }
             ]
         };
-        mockService.Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>())).ReturnsAsync(response);
+        mockService.Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(response);
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(response));
 
         var spreadsheet = SpreadsheetWith((BaseSheetName, 10), (DependentSheetName, 42));
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
 
         var captured = new List<BatchUpdateSpreadsheetRequest>();
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
-            .Callback<BatchUpdateSpreadsheetRequest>(r => captured.Add(r))
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured.Add(r))
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
 
         var baseHeaders = new List<SheetCellModel> { new() { Name = "Name" }, new() { Name = "Price" } };
@@ -666,12 +666,12 @@ public class GoogleSheetManagerGenericBaseTests
 
         // Dependent already exists live (sheetId 42); Base is about to be created by this call.
         var spreadsheet = SpreadsheetWith((DependentSheetName, 42));
-        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
-        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
 
         var captured = new List<BatchUpdateSpreadsheetRequest>();
-        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
-            .Callback<BatchUpdateSpreadsheetRequest>(r => captured.Add(r))
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured.Add(r))
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse
             {
                 Replies = [new Response { AddSheet = new AddSheetResponse { Properties = new SheetProperties { Title = BaseSheetName } } }]

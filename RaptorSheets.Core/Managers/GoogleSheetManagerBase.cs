@@ -98,7 +98,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// entity (used to detect creation errors and to build the "created, please retry" message).
     /// Gig supplies its ordered/indexed CreateSheets; Stock supplies its enum-based CreateSheets.
     /// </summary>
-    protected abstract Task<TEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap);
+    protected abstract Task<TEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Builds the AddSheet batch-update request(s) for the given sheet names, using the domain's own
@@ -124,9 +124,9 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// <summary>
     /// Creates every canonical sheet for this domain.
     /// </summary>
-    public async Task<TEntity> CreateAllSheets()
+    public async Task<TEntity> CreateAllSheets(CancellationToken cancellationToken = default)
     {
-        return await CreateSheets(new List<string>(_canonicalSheetNames));
+        return await CreateSheets(new List<string>(_canonicalSheetNames), cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -136,25 +136,25 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// relocates Google's default "Sheet1" (if present and otherwise untouched) to the end of the
     /// spreadsheet in the same batch, to minimize API calls.
     /// </summary>
-    public async Task<TEntity> CreateSheets(List<string> sheets, Dictionary<string, int>? existingIndexMap = null)
+    public async Task<TEntity> CreateSheets(List<string> sheets, Dictionary<string, int>? existingIndexMap = null, CancellationToken cancellationToken = default)
     {
         var entity = new TEntity();
         var batchUpdateSpreadsheetRequest = GenerateSheetsRequest(sheets);
 
         // Fetch spreadsheet info once and reuse below to avoid duplicate API calls
-        var spreadsheetInfo = await TryMoveDefaultSheetToEndAsync(batchUpdateSpreadsheetRequest, sheets, entity);
+        var spreadsheetInfo = await TryMoveDefaultSheetToEndAsync(batchUpdateSpreadsheetRequest, sheets, entity, cancellationToken);
 
-        await TryApplyInsertionOrderingAsync(batchUpdateSpreadsheetRequest, sheets, existingIndexMap, spreadsheetInfo);
+        await TryApplyInsertionOrderingAsync(batchUpdateSpreadsheetRequest, sheets, existingIndexMap, spreadsheetInfo, cancellationToken);
 
         // Fold header-formula refresh requests for any already-existing sheet that cross-references
         // one being created here into this SAME batch, so creation and dependent-formula refresh
         // happen atomically in one API call instead of two. Dependents are always pre-existing
         // sheets (never one created in this call), so the pre-batch spreadsheetInfo is exactly what's
         // needed to resolve their sheet IDs.
-        var dependentRefreshRequests = await BuildDependentRefreshRequestsAsync(sheets, spreadsheetInfo);
+        var dependentRefreshRequests = await BuildDependentRefreshRequestsAsync(sheets, spreadsheetInfo, cancellationToken);
         batchUpdateSpreadsheetRequest.Requests.AddRange(dependentRefreshRequests);
 
-        var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
+        var response = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken);
 
         // No sheets created if null.
         if (response == null)
@@ -182,13 +182,13 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// the same batch to minimize API calls. Returns the fetched Spreadsheet either way (even on
     /// failure after the fetch succeeded) so the caller can reuse it instead of fetching twice.
     /// </summary>
-    private async Task<Spreadsheet?> TryMoveDefaultSheetToEndAsync(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, List<string> sheets, TEntity entity)
+    private async Task<Spreadsheet?> TryMoveDefaultSheetToEndAsync(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, List<string> sheets, TEntity entity, CancellationToken cancellationToken = default)
     {
         Spreadsheet? spreadsheetInfo = null;
 
         try
         {
-            spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+            spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
             var defaultSheet = spreadsheetInfo?.Sheets?.FirstOrDefault(s =>
                 string.Equals(s.Properties.Title, DefaultSheetName, StringComparison.OrdinalIgnoreCase));
 
@@ -217,12 +217,12 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// to <paramref name="batchUpdateSpreadsheetRequest"/> so created sheets are placed in the
     /// expected order. Non-fatal: any failure is logged and creation proceeds without ordering.
     /// </summary>
-    private async Task TryApplyInsertionOrderingAsync(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, List<string> sheets, Dictionary<string, int>? existingIndexMap, Spreadsheet? spreadsheetInfo)
+    private async Task TryApplyInsertionOrderingAsync(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, List<string> sheets, Dictionary<string, int>? existingIndexMap, Spreadsheet? spreadsheetInfo, CancellationToken cancellationToken = default)
     {
         try
         {
             // Reuse `spreadsheetInfo` fetched earlier when possible to avoid an extra API call.
-            var currentInfo = spreadsheetInfo ?? await TryGetSheetInfoSilentlyAsync();
+            var currentInfo = spreadsheetInfo ?? await TryGetSheetInfoSilentlyAsync(cancellationToken);
 
             var targetIndexMap = ComputeTargetIndexMap(sheets, existingIndexMap, currentInfo);
 
@@ -235,11 +235,11 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         }
     }
 
-    private async Task<Spreadsheet?> TryGetSheetInfoSilentlyAsync()
+    private async Task<Spreadsheet?> TryGetSheetInfoSilentlyAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            return await _googleSheetService.GetSheetInfo();
+            return await _googleSheetService.GetSheetInfo(cancellationToken);
         }
         catch
         {
@@ -357,9 +357,9 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// <summary>
     /// Deletes every canonical sheet for this domain.
     /// </summary>
-    public async Task<TEntity> DeleteAllSheets()
+    public async Task<TEntity> DeleteAllSheets(CancellationToken cancellationToken = default)
     {
-        return await DeleteSheets(new List<string>(_canonicalSheetNames));
+        return await DeleteSheets(new List<string>(_canonicalSheetNames), cancellationToken);
     }
 
     /// <summary>
@@ -367,15 +367,15 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// spreadsheet, so if deleting every existing sheet, a temporary safety sheet is created first
     /// (via <see cref="GenerateSheetsRequest"/>) and left in place afterward.
     /// </summary>
-    public async Task<TEntity> DeleteSheets(List<string> sheets)
+    public async Task<TEntity> DeleteSheets(List<string> sheets, CancellationToken cancellationToken = default)
     {
         var entity = new TEntity();
         try
         {
-            var existingSheetsToDelete = await GetExistingSheetsToDelete(sheets, entity);
+            var existingSheetsToDelete = await GetExistingSheetsToDelete(sheets, entity, cancellationToken);
             if (existingSheetsToDelete.Count == 0) return entity;
 
-            var allTabNames = await GetAllSheetTabNames();
+            var allTabNames = await GetAllSheetTabNames(cancellationToken);
             var needsTempSheet = NeedsTempSheet(existingSheetsToDelete, allTabNames);
             var tempSheetName = needsTempSheet ? TempSheetName : null;
 
@@ -393,7 +393,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
                 MessageType.DELETE_SHEET));
 
             var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-            var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest);
+            var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest, cancellationToken);
 
             if (result != null)
             {
@@ -418,9 +418,9 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         return entity;
     }
 
-    private async Task<List<PropertyEntity>> GetExistingSheetsToDelete(List<string> sheets, TEntity entity)
+    private async Task<List<PropertyEntity>> GetExistingSheetsToDelete(List<string> sheets, TEntity entity, CancellationToken cancellationToken = default)
     {
-        var allSheetProperties = await GetAllSheetProperties();
+        var allSheetProperties = await GetAllSheetProperties(cancellationToken);
         var existingSheets = allSheetProperties
             .Where(p => !string.IsNullOrEmpty(p.Id) &&
                        int.TryParse(p.Id, out _) &&
@@ -477,13 +477,13 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// boundary and how missing sheets get (re)created differ per domain.
     /// </summary>
     /// <param name="sheetNames">Sheet names to fetch (provider/tab names, not domain enum values).</param>
-    public async Task<TEntity> GetSheets(List<string> sheetNames)
+    public async Task<TEntity> GetSheets(List<string> sheetNames, CancellationToken cancellationToken = default)
     {
         var data = new TEntity();
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheetNames);
 
-        var result = await _googleSheetService.GetBatchDataResult(sheetNames);
+        var result = await _googleSheetService.GetBatchDataResult(sheetNames, cancellationToken: cancellationToken);
         var response = result.Value;
         Spreadsheet? spreadsheetInfo = null;
 
@@ -499,7 +499,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
         if (response == null && failureSuggestsMissingSheet)
         {
-            var (restoreResult, fetchedInfo) = await TryRestoreMissingSheetsAsync(messages);
+            var (restoreResult, fetchedInfo) = await TryRestoreMissingSheetsAsync(messages, cancellationToken);
             spreadsheetInfo = fetchedInfo;
 
             if (restoreResult != null)
@@ -521,7 +521,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         // Cheap metadata-only call (no ranges / no grid data) - used for unknown-tab detection and
         // the spreadsheet title. Known-sheet header validation already happens below via
         // registry.MapData using the header row already present in the batchGet response.
-        spreadsheetInfo ??= await _googleSheetService.GetSheetInfo();
+        spreadsheetInfo ??= await _googleSheetService.GetSheetInfo(cancellationToken);
 
         if (spreadsheetInfo != null)
         {
@@ -530,7 +530,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
         data = _registry.MapData(response) ?? new TEntity();
 
-        await AutoHealMissingColumnsAsync(response, spreadsheetInfo, messages);
+        await AutoHealMissingColumnsAsync(response, spreadsheetInfo, messages, cancellationToken);
 
         if (spreadsheetInfo != null)
         {
@@ -576,11 +576,11 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// moment before they're readable); returns the fetched Spreadsheet either way so the caller
     /// can reuse it instead of fetching metadata twice.
     /// </summary>
-    private async Task<(TEntity? Result, Spreadsheet? SpreadsheetInfo)> TryRestoreMissingSheetsAsync(List<MessageEntity> messages)
+    private async Task<(TEntity? Result, Spreadsheet? SpreadsheetInfo)> TryRestoreMissingSheetsAsync(List<MessageEntity> messages, CancellationToken cancellationToken = default)
     {
         try
         {
-            var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+            var spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
 
             if (spreadsheetInfo == null)
             {
@@ -595,7 +595,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
                 return (null, spreadsheetInfo);
             }
 
-            var createResult = await CreateMissingSheetsAsync(missingIndexMap);
+            var createResult = await CreateMissingSheetsAsync(missingIndexMap, cancellationToken);
 
             if (createResult.Messages.Any(m => m.Level == MessageLevel.ERROR.GetDescription()))
             {
@@ -617,7 +617,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
             // guarantees a future override does the same. Keeping this as its own call is the robust
             // fallback; for domains that *do* delegate to CreateSheets, this ends up idempotently
             // re-sending the same header formulas as an extra, low-cost API call.
-            await RefreshDependentSheetsAsync(missingIndexMap.Keys, spreadsheetInfo);
+            await RefreshDependentSheetsAsync(missingIndexMap.Keys, spreadsheetInfo, cancellationToken);
 
             var createdNames = string.Join(", ", missingIndexMap.Keys);
             var info = MessageHelpers.CreateInfoMessage(
@@ -638,36 +638,36 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// <summary>
     /// Fetches every canonical sheet for this domain.
     /// </summary>
-    public async Task<TEntity> GetAllSheets()
+    public async Task<TEntity> GetAllSheets(CancellationToken cancellationToken = default)
     {
-        return await GetSheets(new List<string>(_canonicalSheetNames));
+        return await GetSheets(new List<string>(_canonicalSheetNames), cancellationToken);
     }
 
-    public async Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null)
+    public async Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null, CancellationToken cancellationToken = default)
     {
-        return await _googleSheetService.GetSheetInfo(ranges);
+        return await _googleSheetService.GetSheetInfo(ranges, cancellationToken);
     }
 
-    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets)
+    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, CancellationToken cancellationToken = default)
     {
-        return await _googleSheetService.GetBatchData(sheets);
+        return await _googleSheetService.GetBatchData(sheets, cancellationToken);
     }
 
     #endregion
 
     #region Sheet Properties
 
-    public async Task<List<PropertyEntity>> GetAllSheetProperties()
+    public async Task<List<PropertyEntity>> GetAllSheetProperties(CancellationToken cancellationToken = default)
     {
-        return await GetSheetProperties(new List<string>(_canonicalSheetNames));
+        return await GetSheetProperties(new List<string>(_canonicalSheetNames), cancellationToken);
     }
 
-    public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets)
+    public async Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets, CancellationToken cancellationToken = default)
     {
         var properties = new List<PropertyEntity>();
 
         // STEP 1: Get all existing sheet tab names first (no ranges parameter)
-        var existingTabNames = await GetAllSheetTabNames();
+        var existingTabNames = await GetAllSheetTabNames(cancellationToken);
 
         // STEP 2: Filter requested sheets to only those that exist
         var existingSheets = sheets.Where(requestedSheet =>
@@ -707,7 +707,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         if (existingSheets.Count > 0)
         {
             var combinedRanges = SheetPropertyHelper.BuildCombinedRanges(existingSheets);
-            var sheetInfo = await _googleSheetService.GetSheetInfo(combinedRanges);
+            var sheetInfo = await _googleSheetService.GetSheetInfo(combinedRanges, cancellationToken);
 
             // STEP 5: Process data for existing sheets only
             for (int i = 0; i < properties.Count; i++)
@@ -731,9 +731,9 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// Gets all sheet tab names directly from Google Sheets API.
     /// Uses spreadsheets.get method to retrieve sheet metadata efficiently.
     /// </summary>
-    public async Task<List<string>> GetAllSheetTabNames()
+    public async Task<List<string>> GetAllSheetTabNames(CancellationToken cancellationToken = default)
     {
-        var spreadsheetInfo = await _googleSheetService.GetSheetInfo();
+        var spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
 
         if (spreadsheetInfo?.Sheets == null)
         {
@@ -755,9 +755,9 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// out-overload or via <see cref="SheetRegistry{TEntity}.DetectMissingColumns"/>) at their
     /// expected position, and writes the header text into each newly-inserted column.
     /// </summary>
-    public async Task<TEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    public async Task<TEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns, CancellationToken cancellationToken = default)
     {
-        return await ColumnInsertionHelper.InsertMissingColumnsAsync<TEntity>(_googleSheetService, missingColumns);
+        return await ColumnInsertionHelper.InsertMissingColumnsAsync<TEntity>(_googleSheetService, missingColumns, cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -770,7 +770,8 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     protected async Task AutoHealMissingColumnsAsync(
         BatchGetValuesByDataFilterResponse response,
         Spreadsheet? spreadsheetInfo,
-        List<MessageEntity> messages)
+        List<MessageEntity> messages,
+        CancellationToken cancellationToken = default)
     {
         var missingColumns = _registry.DetectMissingColumns(response);
 
@@ -794,8 +795,8 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         // Fold header-formula refresh requests for any sheet that cross-references one of the
         // sheets just healed into the SAME column-insertion batch, so both land in one atomic API
         // call. Reuses the spreadsheetInfo already passed in rather than fetching it again.
-        var dependentRefreshRequests = await BuildDependentRefreshRequestsAsync(missingColumns.Keys, spreadsheetInfo);
-        var insertResult = await ColumnInsertionHelper.InsertMissingColumnsAsync<TEntity>(_googleSheetService, missingColumns, dependentRefreshRequests);
+        var dependentRefreshRequests = await BuildDependentRefreshRequestsAsync(missingColumns.Keys, spreadsheetInfo, cancellationToken);
+        var insertResult = await ColumnInsertionHelper.InsertMissingColumnsAsync<TEntity>(_googleSheetService, missingColumns, dependentRefreshRequests, cancellationToken);
         messages.AddRange(insertResult.Messages);
     }
 
@@ -815,16 +816,16 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// self-heal) to resolve sheet IDs instead of issuing another GetSheetInfo() call. Omit to
     /// have this method fetch it itself (via <see cref="GetSheetProperties"/>).
     /// </param>
-    public async Task RefreshHeaderFormulasAsync(IEnumerable<string> sheetNames, Spreadsheet? spreadsheetInfo = null)
+    public async Task RefreshHeaderFormulasAsync(IEnumerable<string> sheetNames, Spreadsheet? spreadsheetInfo = null, CancellationToken cancellationToken = default)
     {
-        var requests = await BuildHeaderFormulaRequestsAsync(sheetNames, spreadsheetInfo);
+        var requests = await BuildHeaderFormulaRequestsAsync(sheetNames, spreadsheetInfo, cancellationToken);
 
         if (requests.Count == 0)
         {
             return;
         }
 
-        await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = requests });
+        await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = requests }, cancellationToken);
     }
 
     /// <summary>
@@ -834,7 +835,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// <see cref="AutoHealMissingColumnsAsync"/>) can fold the refresh into that same atomic batch
     /// instead of issuing a second, separate API call.
     /// </summary>
-    private async Task<List<Request>> BuildHeaderFormulaRequestsAsync(IEnumerable<string> sheetNames, Spreadsheet? spreadsheetInfo)
+    private async Task<List<Request>> BuildHeaderFormulaRequestsAsync(IEnumerable<string> sheetNames, Spreadsheet? spreadsheetInfo, CancellationToken cancellationToken = default)
     {
         var names = sheetNames.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
@@ -845,7 +846,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
         var sheetIdsByName = spreadsheetInfo != null
             ? ResolveSheetIdsFromSpreadsheet(names, spreadsheetInfo)
-            : await ResolveSheetIdsViaPropertiesAsync(names);
+            : await ResolveSheetIdsViaPropertiesAsync(names, cancellationToken);
 
         var requests = new List<Request>();
 
@@ -887,9 +888,9 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         return sheetIdsByName;
     }
 
-    private async Task<Dictionary<string, int>> ResolveSheetIdsViaPropertiesAsync(List<string> names)
+    private async Task<Dictionary<string, int>> ResolveSheetIdsViaPropertiesAsync(List<string> names, CancellationToken cancellationToken = default)
     {
-        var properties = await GetSheetProperties(names);
+        var properties = await GetSheetProperties(names, cancellationToken);
         var sheetIdsByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var property in properties)
@@ -914,16 +915,16 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// dependents. See <see cref="RefreshHeaderFormulasAsync"/> for the optional
     /// <paramref name="spreadsheetInfo"/> reuse parameter.
     /// </summary>
-    public async Task RefreshDependentSheetsAsync(IEnumerable<string> changedSheetNames, Spreadsheet? spreadsheetInfo = null)
+    public async Task RefreshDependentSheetsAsync(IEnumerable<string> changedSheetNames, Spreadsheet? spreadsheetInfo = null, CancellationToken cancellationToken = default)
     {
-        var requests = await BuildDependentRefreshRequestsAsync(changedSheetNames, spreadsheetInfo);
+        var requests = await BuildDependentRefreshRequestsAsync(changedSheetNames, spreadsheetInfo, cancellationToken);
 
         if (requests.Count == 0)
         {
             return;
         }
 
-        await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = requests });
+        await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = requests }, cancellationToken);
     }
 
     /// <summary>
@@ -931,11 +932,11 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// <see cref="BuildHeaderFormulaRequestsAsync"/> for why this exists (folding the refresh into
     /// an already-in-flight batch instead of a second API call).
     /// </summary>
-    private async Task<List<Request>> BuildDependentRefreshRequestsAsync(IEnumerable<string> changedSheetNames, Spreadsheet? spreadsheetInfo)
+    private async Task<List<Request>> BuildDependentRefreshRequestsAsync(IEnumerable<string> changedSheetNames, Spreadsheet? spreadsheetInfo, CancellationToken cancellationToken = default)
     {
         var dependents = _registry.GetDependents(changedSheetNames);
 
-        return dependents.Count == 0 ? [] : await BuildHeaderFormulaRequestsAsync(dependents, spreadsheetInfo);
+        return dependents.Count == 0 ? [] : await BuildHeaderFormulaRequestsAsync(dependents, spreadsheetInfo, cancellationToken);
     }
 
     #endregion

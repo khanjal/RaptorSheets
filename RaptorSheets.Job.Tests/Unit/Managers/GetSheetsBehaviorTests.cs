@@ -40,20 +40,20 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildBatchResponse(
                 SheetsConfig.SheetNames.Applications,
                 new List<object> { "Date", "Company", "Job Title", "Posting", "Site", "Interviews", "Decision", "Decision Date", "Days Active", "Notes", "Pay Low", "Pay High", "Pay Avg", "Location", "Schedule", "#", "Key" },
                 new List<object> { "2026-06-01", "TechCorp", "Software Engineer", "https://example.com/job/1", "LinkedIn", "0", "Pending", "", "5", "", "100000", "150000", "125000", "Remote", "Full-time", "0", "TechCorp-Software Engineer-0" }));
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse(
                 SheetsConfig.SheetNames.Applications,
                 new List<object> { "Date", "Company", "Job Title", "Posting", "Site", "Interviews", "Decision", "Decision Date", "Days Active", "Notes", "Pay Low", "Pay High", "Pay Avg", "Location", "Schedule", "#", "Key" },
                 new List<object> { "2026-06-01", "TechCorp", "Software Engineer", "https://example.com/job/1", "LinkedIn", "0", "Pending", "", "5", "", "100000", "150000", "125000", "Remote", "Full-time", "0", "TechCorp-Software Engineer-0" })));
 
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Properties = new SpreadsheetProperties { Title = "MyJobSheet" },
@@ -81,14 +81,14 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildBatchResponse(SheetsConfig.SheetNames.Applications, new List<object> { "Date", "Company", "Job Title" }));
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse(SheetsConfig.SheetNames.Applications, new List<object> { "Date", "Company", "Job Title" })));
 
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Properties = new SpreadsheetProperties { Title = "MyJobSheet" },
@@ -112,16 +112,16 @@ public class GetSheetsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
 
         mockService
-            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
         mockService
-            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
 
         // Populate every canonical Job sheet so GetSheets' self-heal finds nothing missing and
         // falls through to the "unable to retrieve" error this test is actually targeting.
         mockService
-            .Setup(s => s.GetSheetInfo())
+            .Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Spreadsheet
             {
                 Sheets = SheetsConfig.SheetUtilities.GetAllSheetNames()

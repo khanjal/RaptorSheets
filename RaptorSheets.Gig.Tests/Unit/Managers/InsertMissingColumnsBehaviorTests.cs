@@ -62,7 +62,7 @@ public class InsertMissingColumnsBehaviorTests
 
         // Assert
         Assert.Contains(result.Messages, m => m.Message.Contains("No missing columns to insert"));
-        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()), Times.Never);
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -72,8 +72,8 @@ public class InsertMissingColumnsBehaviorTests
         var mockService = new Mock<IGoogleSheetService>();
         BatchUpdateSpreadsheetRequest? capturedRequest = null;
         mockService
-            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
-            .Callback<BatchUpdateSpreadsheetRequest>(r => capturedRequest = r)
+            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => capturedRequest = r)
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
 
         var manager = new GoogleSheetManager(mockService.Object);

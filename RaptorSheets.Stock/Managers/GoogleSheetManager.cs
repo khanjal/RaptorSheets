@@ -23,23 +23,23 @@ namespace RaptorSheets.Stock.Managers;
 public interface IGoogleSheetManager
 {
     // CRUD Operations
-    Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
-    Task<SheetEntity> CreateAllSheets();
-    Task<SheetEntity> CreateSheets(List<string> sheets);
-    Task<SheetEntity> DeleteAllSheets();
-    Task<SheetEntity> DeleteSheets(List<string> sheets);
-    Task<SheetEntity> GetSheet(string sheet);
-    Task<SheetEntity> GetAllSheets();
-    Task<SheetEntity> GetSheets(List<string> sheets);
+    Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity, CancellationToken cancellationToken = default);
+    Task<SheetEntity> CreateAllSheets(CancellationToken cancellationToken = default);
+    Task<SheetEntity> CreateSheets(List<string> sheets, CancellationToken cancellationToken = default);
+    Task<SheetEntity> DeleteAllSheets(CancellationToken cancellationToken = default);
+    Task<SheetEntity> DeleteSheets(List<string> sheets, CancellationToken cancellationToken = default);
+    Task<SheetEntity> GetSheet(string sheet, CancellationToken cancellationToken = default);
+    Task<SheetEntity> GetAllSheets(CancellationToken cancellationToken = default);
+    Task<SheetEntity> GetSheets(List<string> sheets, CancellationToken cancellationToken = default);
 
     // Header Management
     SheetModel? GetSheetLayout(string sheet);
     List<SheetModel> GetSheetLayouts(List<string> sheets);
-    Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
+    Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns, CancellationToken cancellationToken = default);
 
     // Demo Data Generation
-    Task<SheetEntity> SetupDemo(int? seed = null);
-    Task<SheetEntity> PopulateDemoData(int? seed = null);
+    Task<SheetEntity> SetupDemo(int? seed = null, CancellationToken cancellationToken = default);
+    Task<SheetEntity> PopulateDemoData(int? seed = null, CancellationToken cancellationToken = default);
     SheetEntity GenerateDemoData(int? seed = null);
 }
 
@@ -67,9 +67,9 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     /// Restores sheets found missing entirely during <see cref="GoogleSheetManagerBase{TEntity}.GetSheets"/>
     /// self-heal, delegating straight to the base's string-keyed, index-ordered creation.
     /// </summary>
-    protected override async Task<SheetEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap)
+    protected override async Task<SheetEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap, CancellationToken cancellationToken = default)
     {
-        return await CreateSheets(missingIndexMap.Keys.ToList(), missingIndexMap);
+        return await CreateSheets(missingIndexMap.Keys.ToList(), missingIndexMap, cancellationToken);
     }
 
     /// <summary>
@@ -85,9 +85,9 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     // This 1-arg overload exists because C# requires exact arity to implicitly satisfy
     // IGoogleSheetManager's single-parameter CreateSheets(List<string>) - an inherited method's
     // optional parameter doesn't count for interface matching the way it does for ordinary callers.
-    public async Task<SheetEntity> CreateSheets(List<string> sheets)
+    public async Task<SheetEntity> CreateSheets(List<string> sheets, CancellationToken cancellationToken = default)
     {
-        return await CreateSheets(sheets, null);
+        return await CreateSheets(sheets, null, cancellationToken);
     }
 
     /// <summary>
@@ -115,7 +115,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         return StockSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
     }
 
-    public async Task<SheetEntity> GetSheet(string sheet)
+    public async Task<SheetEntity> GetSheet(string sheet, CancellationToken cancellationToken = default)
     {
         var sheetExists = CanonicalSheetNames().Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
 
@@ -124,7 +124,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
         }
 
-        return await GetSheets([sheet]);
+        return await GetSheets([sheet], cancellationToken);
     }
 
     // Only the Stocks sheet is genuinely user-writable today (Ticker/Account/Shares - see
@@ -140,7 +140,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
                 (data, properties) => StockRequestHelpers.ChangeStockSheetData(data as List<StockEntity> ?? [], properties))
         };
 
-    public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity)
+    public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity, CancellationToken cancellationToken = default)
     {
         var (sheetsWithData, resolveMessages) = GoogleRequestHelpers.ResolveSheetsWithData(sheets, sheetEntity, _sheetAccessors);
         sheetEntity.Messages.AddRange(resolveMessages);
@@ -151,12 +151,12 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             return sheetEntity;
         }
 
-        var sheetInfo = await GetSheetProperties(sheets);
+        var sheetInfo = await GetSheetProperties(sheets, cancellationToken);
         var (requests, buildMessages) = GoogleRequestHelpers.BuildChangeRequests(sheetsWithData, sheetEntity, _sheetAccessors, sheetInfo);
         sheetEntity.Messages.AddRange(buildMessages);
 
         var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
+        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken);
 
         if (batchUpdateSpreadsheetResponse == null)
         {
@@ -171,11 +171,11 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     /// <summary>
     /// Creates all sheets and then fills the Stocks sheet with realistic demo holdings.
     /// </summary>
-    public async Task<SheetEntity> SetupDemo(int? seed = null)
+    public async Task<SheetEntity> SetupDemo(int? seed = null, CancellationToken cancellationToken = default)
     {
-        await CreateAllSheets();
-        await Task.Delay(1500); // let freshly-created sheets become writable
-        return await PopulateDemoData(seed);
+        await CreateAllSheets(cancellationToken);
+        await Task.Delay(1500, cancellationToken); // let freshly-created sheets become writable
+        return await PopulateDemoData(seed, cancellationToken);
     }
 
     /// <summary>
@@ -183,10 +183,10 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     /// every financial column (Name, AverageCost, CostTotal, CurrentPrice, ...) are auto-populated
     /// by their own formulas, so only the Stocks sheet needs to be written.
     /// </summary>
-    public async Task<SheetEntity> PopulateDemoData(int? seed = null)
+    public async Task<SheetEntity> PopulateDemoData(int? seed = null, CancellationToken cancellationToken = default)
     {
         var demoData = GenerateDemoData(seed);
-        await ChangeSheetData([SheetName.STOCKS.GetDescription()], demoData);
+        await ChangeSheetData([SheetName.STOCKS.GetDescription()], demoData, cancellationToken);
 
         // Inserting new tickers triggers Tickers' GOOGLEFINANCE-driven columns to recompute at the
         // same moment Stocks' own formulas (which read from Tickers) re-evaluate. GOOGLEFINANCE
@@ -198,11 +198,11 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         // against settled data.
         var sheetNames = new[] { SheetName.TICKERS.GetDescription(), SheetName.STOCKS.GetDescription() };
 
-        await Task.Delay(5000);
-        await RefreshHeaderFormulasAsync(sheetNames);
+        await Task.Delay(5000, cancellationToken);
+        await RefreshHeaderFormulasAsync(sheetNames, cancellationToken: cancellationToken);
 
-        await Task.Delay(15000);
-        await RefreshHeaderFormulasAsync(sheetNames);
+        await Task.Delay(15000, cancellationToken);
+        await RefreshHeaderFormulasAsync(sheetNames, cancellationToken: cancellationToken);
 
         return demoData;
     }
