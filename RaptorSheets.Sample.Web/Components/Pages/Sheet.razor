@@ -7,6 +7,7 @@
 @using RaptorSheets.Gig.Managers
 @using RaptorSheets.Sample.Web.Services
 @inject GigConnectionProvider ConnectionProvider
+@inject ReferenceSheetCache ReferenceCache
 
 <PageTitle>@SheetName - RaptorSheets Sample</PageTitle>
 
@@ -144,49 +145,39 @@ else
             .Where(c => ValidationSheetMap.ContainsKey(c.Column.ValidationPattern!))
             .ToList();
 
-        var referenceSheetNames = validatedColumns
-            .Select(c => ValidationSheetMap[c.Column.ValidationPattern!])
-            .Distinct()
-            .ToList();
-
-        if (referenceSheetNames.Count == 0)
+        if (validatedColumns.Count == 0)
         {
             return;
         }
 
-        var result = await _manager!.GetSheets(referenceSheetNames);
+        var allDescriptors = SheetMetadata.GetSheetDescriptors(typeof(GigSheets));
+        var referenceDescriptors = validatedColumns
+            .Select(c => ValidationSheetMap[c.Column.ValidationPattern!])
+            .Distinct()
+            .Select(name => allDescriptors.FirstOrDefault(d => d.Name == name))
+            .Where(d => d is not null)
+            .Select(d => d!)
+            .ToList();
+
+        // Cached per reference-sheet-name across the whole app, not per page visit - these sheets
+        // are read-only and rarely change, so repeat navigations reuse the same values for a while
+        // instead of re-fetching.
+        var valuesBySheet = await ReferenceCache.GetIdentityValuesAsync(_manager!, referenceDescriptors);
 
         if (generation != _loadGeneration)
         {
             return; // navigated away / reloaded since this started
         }
 
-        var allDescriptors = SheetMetadata.GetSheetDescriptors(typeof(GigSheets));
         var dropdownOptions = new Dictionary<string, IReadOnlyList<string>>();
 
         foreach (var column in validatedColumns.Select(c => c.Column))
         {
             var refSheetName = ValidationSheetMap[column.ValidationPattern!];
-            var refDescriptor = allDescriptors.FirstOrDefault(d => d.Name == refSheetName);
-            var refColumns = refDescriptor is null ? [] : TypedFieldUtils.GetColumnProperties(refDescriptor.RowType);
-            if (refDescriptor is null || refColumns.Count == 0)
+            if (valuesBySheet.TryGetValue(refSheetName, out var values))
             {
-                continue;
+                dropdownOptions[column.HeaderName] = values;
             }
-
-            // Every reference entity declares its identity value as its first column
-            // (e.g. ServiceEntity.Service, AddressEntity.Address) - see the entities themselves.
-            var identityProperty = refColumns[0].Property;
-            var options = refDescriptor.GetRows(result.Sheets)
-                .Cast<object>()
-                .Select(r => identityProperty.GetValue(r)?.ToString())
-                .Where(v => !string.IsNullOrWhiteSpace(v))
-                .Distinct()
-                .OrderBy(v => v, StringComparer.OrdinalIgnoreCase)
-                .Cast<string>()
-                .ToList();
-
-            dropdownOptions[column.HeaderName] = options;
         }
 
         if (_gridParameters is not null)

@@ -13,6 +13,7 @@ builder.Services.AddRazorComponents()
 // GigConnectionProvider instead of failing at DI-resolution time.
 builder.Services.AddRaptorSheetsGig();
 builder.Services.AddScoped<GigConnectionProvider>();
+builder.Services.AddSingleton<ReferenceSheetCache>();
 
 var app = builder.Build();
 

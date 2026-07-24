@@ -62,6 +62,11 @@ Trips (thousands of rows) isn't held up waiting on six lookup sheets; dropdown o
 columns arrive a moment later from a background batched read of just the reference sheets, and the
 grid re-renders once they're in.
 
+Those reference-sheet reads are cached for 60 seconds in `ReferenceSheetCache` (a singleton, shared
+across every page and every visitor, not per-session) - since these sheets can't be edited from the
+app, a short-lived read cache is safe and cuts out redundant API calls every time you switch sheets.
+Writes are never cached and always go straight to the live spreadsheet.
+
 ## Known limitations (first pass)
 
 - "Discard changes" resets in-memory edits back to what was last loaded; it doesn't re-fetch from
