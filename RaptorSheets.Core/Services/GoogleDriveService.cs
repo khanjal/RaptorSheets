@@ -8,8 +8,8 @@ namespace RaptorSheets.Core.Services;
 
 public interface IGoogleDriveService
 {
-    public Task<PropertyEntity> CreateSpreadsheet(string name);
-    public Task<IList<PropertyEntity>> GetSpreadsheets();
+    public Task<PropertyEntity> CreateSpreadsheet(string name, CancellationToken cancellationToken = default);
+    public Task<IList<PropertyEntity>> GetSpreadsheets(CancellationToken cancellationToken = default);
 }
 
 [ExcludeFromCodeCoverage]
@@ -22,15 +22,15 @@ public class GoogleDriveService : IGoogleDriveService
         _driveService = new DriveServiceWrapper(accessToken, retryOptions);
     }
 
-    public async Task<PropertyEntity> CreateSpreadsheet(string name)
+    public async Task<PropertyEntity> CreateSpreadsheet(string name, CancellationToken cancellationToken = default)
     {
-        var sheet = await _driveService.CreateSpreadsheet(name);
+        var sheet = await _driveService.CreateSpreadsheet(name, cancellationToken);
         return PropertyEntityMapper.MapFromDriveFile(sheet);
     }
 
-    public async Task<IList<PropertyEntity>> GetSpreadsheets()
+    public async Task<IList<PropertyEntity>> GetSpreadsheets(CancellationToken cancellationToken = default)
     {
-        var sheets = await _driveService.ListSpreadsheets();
+        var sheets = await _driveService.ListSpreadsheets(cancellationToken);
         return PropertyEntityMapper.MapFromDriveFiles(sheets);
     }
 }

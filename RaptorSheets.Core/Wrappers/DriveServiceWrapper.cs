@@ -9,8 +9,8 @@ namespace RaptorSheets.Core.Wrappers;
 
 public interface IDriveServiceWrapper
 {
-    Task<File> CreateSpreadsheet(string name);
-    Task<IList<File>> ListSpreadsheets();
+    Task<File> CreateSpreadsheet(string name, CancellationToken cancellationToken = default);
+    Task<IList<File>> ListSpreadsheets(CancellationToken cancellationToken = default);
 }
 
 [ExcludeFromCodeCoverage]
@@ -35,7 +35,7 @@ public class DriveServiceWrapper : IDriveServiceWrapper
         return service;
     }
 
-    public async Task<File> CreateSpreadsheet(string name)
+    public async Task<File> CreateSpreadsheet(string name, CancellationToken cancellationToken = default)
     {
         var fileMetadata = new File
         {
@@ -45,10 +45,10 @@ public class DriveServiceWrapper : IDriveServiceWrapper
 
         var request = _driveService.Files.Create(fileMetadata);
         request.Fields = "id, name, mimeType";
-        return await request.ExecuteAsync();
+        return await request.ExecuteAsync(cancellationToken);
     }
 
-    public async Task<IList<File>> ListSpreadsheets()
+    public async Task<IList<File>> ListSpreadsheets(CancellationToken cancellationToken = default)
     {
         var listRequest = _driveService.Files.List();
         // This query is safe to use with restricted scopes like `drive.file`, but the
@@ -62,7 +62,7 @@ public class DriveServiceWrapper : IDriveServiceWrapper
         listRequest.SupportsAllDrives = true;
         listRequest.IncludeItemsFromAllDrives = true;
         listRequest.Fields = "files(id, name, mimeType)";
-        var result = await listRequest.ExecuteAsync();
+        var result = await listRequest.ExecuteAsync(cancellationToken);
         return result.Files;
     }
 }

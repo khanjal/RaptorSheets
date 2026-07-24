@@ -82,7 +82,7 @@ public class ColumnInsertionHelperTests
         var result = await ColumnInsertionHelper.InsertMissingColumnsAsync<TestSheetEntity>(mockService.Object, []);
 
         Assert.Contains(result.Messages, m => m.Message.Contains("No missing columns to insert"));
-        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()), Times.Never);
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class ColumnInsertionHelperTests
     {
         var mockService = new Mock<IGoogleSheetService>();
         mockService
-            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
 
         var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
@@ -102,7 +102,7 @@ public class ColumnInsertionHelperTests
 
         Assert.Contains(result.Messages, m => m.Message.Contains("Inserting column 'Price'"));
         Assert.Contains(result.Messages, m => m.Message.Contains("Successfully inserted 1 missing column(s)"));
-        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()), Times.Once);
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public class ColumnInsertionHelperTests
     {
         var mockService = new Mock<IGoogleSheetService>();
         mockService
-            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>()))
+            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BatchUpdateSpreadsheetResponse?)null);
 
         var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>

@@ -14,35 +14,14 @@ using RaptorSheets.Job.Helpers;
 namespace RaptorSheets.Job.Managers;
 
 /// <summary>
-/// Main interface for Google Sheet operations in the Job domain.
+/// Extends the shared <see cref="IGoogleSheetManager{TEntity}"/> CRUD/metadata/layout surface with
+/// Job's own demo-data generation (date range plus seed).
 /// </summary>
-public interface IGoogleSheetManager
+public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
 {
-    // CRUD Operations
-    Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
-    Task<SheetEntity> CreateAllSheets();
-    Task<SheetEntity> CreateSheets(List<string> sheets);
-    Task<SheetEntity> DeleteAllSheets();
-    Task<SheetEntity> DeleteSheets(List<string> sheets);
-    Task<SheetEntity> GetSheet(string sheet);
-    Task<SheetEntity> GetAllSheets();
-    Task<SheetEntity> GetSheets(List<string> sheets);
-
-    // Metadata & Properties
-    Task<List<PropertyEntity>> GetAllSheetProperties();
-    Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
-    Task<List<string>> GetAllSheetTabNames();
-    Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null);
-    Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
-    SheetModel? GetSheetLayout(string sheet);
-    List<SheetModel> GetSheetLayouts(List<string> sheets);
-
-    // Header Management
-    Task<SheetEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns);
-
     // Demo Data Generation
-    Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null, int? seed = null);
-    Task<SheetEntity> PopulateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null);
+    Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null, int? seed = null, CancellationToken cancellationToken = default);
+    Task<SheetEntity> PopulateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null, CancellationToken cancellationToken = default);
     SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null);
 }
 
@@ -73,11 +52,6 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     {
     }
 
-    protected override Task<SheetEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap)
-    {
-        return CreateSheets(missingIndexMap);
-    }
-
     protected override BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
     {
         return GenerateSheetsHelpers.Generate(sheetNames);
@@ -85,30 +59,9 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
     #endregion
 
-    #region Create Operations
-
-    public async Task<SheetEntity> CreateSheets(List<string> sheets)
-    {
-        return await CreateSheets(sheets, null);
-    }
-
-    public async Task<SheetEntity> CreateSheets(Dictionary<string, int> sheetsWithIndices)
-    {
-        if (sheetsWithIndices == null || sheetsWithIndices.Count == 0)
-        {
-            return await CreateSheets(new List<string>());
-        }
-
-        var sheets = SheetOrderingHelper.OrderSheetTitlesByIndex(sheetsWithIndices);
-
-        return await CreateSheets(sheets, sheetsWithIndices);
-    }
-
-    #endregion
-
     #region Read Operations
 
-    public async Task<SheetEntity> GetSheet(string sheet)
+    public async Task<SheetEntity> GetSheet(string sheet, CancellationToken cancellationToken = default)
     {
         var sheetExists = GenerateSheetsHelpers.GetSheetNames()
             .Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
@@ -118,7 +71,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
         }
 
-        return await GetSheets([sheet]);
+        return await GetSheets([sheet], cancellationToken);
     }
 
     #endregion
@@ -150,7 +103,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
                 (data, properties) => JobRequestHelpers.ChangeSetupSheetData(data as List<SetupEntity> ?? [], properties))
         };
 
-    public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity)
+    public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity, CancellationToken cancellationToken = default)
     {
         var (sheetsWithData, resolveMessages) = GoogleRequestHelpers.ResolveSheetsWithData(sheets, sheetEntity, _sheetAccessors);
         sheetEntity.Messages.AddRange(resolveMessages);
@@ -161,12 +114,12 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             return sheetEntity;
         }
 
-        var sheetInfo = await GetSheetProperties(sheets);
+        var sheetInfo = await GetSheetProperties(sheets, cancellationToken);
         var (requests, buildMessages) = GoogleRequestHelpers.BuildChangeRequests(sheetsWithData, sheetEntity, _sheetAccessors, sheetInfo);
         sheetEntity.Messages.AddRange(buildMessages);
 
         var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest);
+        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken);
 
         if (batchUpdateSpreadsheetResponse == null)
         {
@@ -202,18 +155,18 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     /// <summary>
     /// Creates all sheets and then fills Applications/Interviews with realistic demo data.
     /// </summary>
-    public async Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null, int? seed = null)
+    public async Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null, int? seed = null, CancellationToken cancellationToken = default)
     {
-        await CreateAllSheets();
-        await Task.Delay(1500); // let freshly-created sheets become writable
-        return await PopulateDemoData(startDate, endDate, seed);
+        await CreateAllSheets(cancellationToken);
+        await Task.Delay(1500, cancellationToken); // let freshly-created sheets become writable
+        return await PopulateDemoData(startDate, endDate, seed, cancellationToken);
     }
 
     /// <summary>
     /// Writes generated demo data (Applications and any Interviews) into the spreadsheet.
     /// Reference sheets are auto-populated by their formulas, so only the input sheets are written.
     /// </summary>
-    public async Task<SheetEntity> PopulateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null)
+    public async Task<SheetEntity> PopulateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null, CancellationToken cancellationToken = default)
     {
         var demoData = GenerateDemoData(startDate, endDate, seed);
 
@@ -223,7 +176,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
             sheetsToWrite.Add(SheetsConfig.SheetNames.Interviews);
         }
 
-        await ChangeSheetData(sheetsToWrite, demoData);
+        await ChangeSheetData(sheetsToWrite, demoData, cancellationToken);
         return demoData;
     }
 

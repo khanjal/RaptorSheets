@@ -5,8 +5,8 @@ namespace RaptorSheets.Core.Managers;
 
 public interface IGoogleFileManager
 {
-    public Task<PropertyEntity> CreateFile(string name);
-    public Task<List<PropertyEntity>> GetFiles();
+    public Task<PropertyEntity> CreateFile(string name, CancellationToken cancellationToken = default);
+    public Task<List<PropertyEntity>> GetFiles(CancellationToken cancellationToken = default);
 }
 
 public class GoogleFileManager : IGoogleFileManager
@@ -26,16 +26,16 @@ public class GoogleFileManager : IGoogleFileManager
         _googleDriveService = new GoogleDriveService(accessToken);
     }
 
-    public async Task<PropertyEntity> CreateFile(string name)
+    public async Task<PropertyEntity> CreateFile(string name, CancellationToken cancellationToken = default)
     {
-        var file = await _googleDriveService.CreateSpreadsheet(name);
+        var file = await _googleDriveService.CreateSpreadsheet(name, cancellationToken);
 
         return file;
     }
 
-    public async Task<List<PropertyEntity>> GetFiles()
+    public async Task<List<PropertyEntity>> GetFiles(CancellationToken cancellationToken = default)
     {
-        var files = await _googleDriveService.GetSpreadsheets();
+        var files = await _googleDriveService.GetSpreadsheets(cancellationToken);
         return files?.ToList() ?? new List<PropertyEntity>();
     }
 }

@@ -18,7 +18,7 @@ public class GoogleSheetManagerHelpersTests
         var manager = new GoogleSheetManager("test-token", "test-spreadsheet-id");
 
         var method = typeof(GoogleSheetManager).GetMethod("HandleMissingSheets", BindingFlags.NonPublic | BindingFlags.Instance);
-        var task = (Task<List<MessageEntity>>)method!.Invoke(manager, new object?[] { null })!;
+        var task = (Task<List<MessageEntity>>)method!.Invoke(manager, new object?[] { null, CancellationToken.None })!;
         var messages = await task;
 
         Assert.NotNull(messages);
@@ -40,7 +40,7 @@ public class GoogleSheetManagerHelpersTests
         };
 
         var method = typeof(GoogleSheetManager).GetMethod("HandleMissingSheets", BindingFlags.NonPublic | BindingFlags.Instance);
-        var task = (Task<List<MessageEntity>>)method!.Invoke(manager, new object?[] { spreadsheet })!;
+        var task = (Task<List<MessageEntity>>)method!.Invoke(manager, new object?[] { spreadsheet, CancellationToken.None })!;
         var messages = await task;
 
         Assert.NotNull(messages);

@@ -37,7 +37,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
             var allRows = new List<IList<object>> { headerRow };
             allRows.AddRange(dataRows);
             
-            _mockSheetService.Setup(s => s.GetSheetData("Trips"))
+            _mockSheetService.Setup(s => s.GetSheetData("Trips", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ValueRange { Values = allRows });
 
             // Act
@@ -73,7 +73,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
             var allRows = new List<IList<object>> { headerRow };
             allRows.AddRange(dataRows);
             
-            _mockSheetService.Setup(s => s.GetSheetData("Trips"))
+            _mockSheetService.Setup(s => s.GetSheetData("Trips", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ValueRange { Values = allRows });
 
             // Act
@@ -104,7 +104,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
             var allRows = new List<IList<object>> { headerRow };
             allRows.AddRange(dataRows);
             
-            _mockSheetService.Setup(s => s.GetSheetData("Trips"))
+            _mockSheetService.Setup(s => s.GetSheetData("Trips", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ValueRange { Values = allRows });
 
             // Act
@@ -157,7 +157,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
             var allRows = new List<IList<object>> { headerRow };
             allRows.AddRange(dataRows);
             
-            _mockSheetService.Setup(s => s.GetSheetData("Trips"))
+            _mockSheetService.Setup(s => s.GetSheetData("Trips", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ValueRange { Values = allRows });
 
             // Act
@@ -191,7 +191,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
                 Pay = 100
             };
 
-            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>()))
+            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new AppendValuesResponse());
 
             // Act
@@ -214,7 +214,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
                 Bonus = 10
             };
 
-            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>()))
+            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new AppendValuesResponse());
 
             // Act
@@ -236,7 +236,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
                 Pay = 100
             };
 
-            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>()))
+            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new AppendValuesResponse());
 
             // Act
@@ -263,7 +263,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
                 Pay = 100
             };
 
-            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>()))
+            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new AppendValuesResponse());
 
             // Act
@@ -287,7 +287,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
                 Total = 999 // Pre-existing total that shouldn't be changed
             };
 
-            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>()))
+            _mockSheetService.Setup(s => s.AppendData(It.IsAny<ValueRange>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new AppendValuesResponse());
 
             // Act
@@ -323,7 +323,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
                 Total = 999 // Should be recalculated
             };
 
-            _mockSheetService.Setup(s => s.UpdateData(It.IsAny<ValueRange>(), It.IsAny<string>()))
+            _mockSheetService.Setup(s => s.UpdateData(It.IsAny<ValueRange>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new UpdateValuesResponse());
 
             // Act
@@ -344,7 +344,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
                 Pay = 100
             };
 
-            _mockSheetService.Setup(s => s.UpdateData(It.IsAny<ValueRange>(), It.IsAny<string>()))
+            _mockSheetService.Setup(s => s.UpdateData(It.IsAny<ValueRange>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new UpdateValuesResponse());
 
             // Act
@@ -367,7 +367,7 @@ namespace RaptorSheets.Gig.Tests.Unit.Repositories
                 Pay = 100
             };
 
-            _mockSheetService.Setup(s => s.UpdateData(It.IsAny<ValueRange>(), It.IsAny<string>()))
+            _mockSheetService.Setup(s => s.UpdateData(It.IsAny<ValueRange>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new UpdateValuesResponse());
 
             // Act

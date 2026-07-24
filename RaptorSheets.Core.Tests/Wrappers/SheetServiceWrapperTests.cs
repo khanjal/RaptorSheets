@@ -57,4 +57,18 @@ public class SheetServiceWrapperTests
 
         Assert.Throws<ArgumentException>(() => new SheetServiceWrapper(parameters, "spreadsheet-id"));
     }
+
+    [Fact]
+    public async Task GetValues_WithAlreadyCancelledToken_ShouldThrowRatherThanIssueTheRequest()
+    {
+        // Proves the token actually reaches the underlying Google client's ExecuteAsync rather than
+        // being an unused decoration on the signature - an already-cancelled token must short-circuit
+        // before any network call, so this needs no live credentials or network access to verify.
+        var wrapper = new SheetServiceWrapper("ya29.mocked.token", "spreadsheet-id");
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => wrapper.GetValues("Sheet1!A1:A1", cts.Token));
+    }
 }
