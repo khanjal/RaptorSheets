@@ -79,7 +79,12 @@
             else
             {
                 <div class="masked-placeholder">
-                    @(string.IsNullOrEmpty(_credPrivateKey) ? "Not entered yet" : $"{_credPrivateKey.Length} characters entered - click Show to view or edit")
+                    @(_credPrivateKey.Length switch
+                    {
+                        0 when _currentClientEmail is not null => "Left blank - saving keeps the existing private key",
+                        0 => "Not entered yet",
+                        var n => $"{n} characters entered - click Show to view or edit"
+                    })
                 </div>
             }
         </label>
@@ -154,9 +159,16 @@
         _homeSpreadsheetId = snapshot.HomeSpreadsheetId ?? string.Empty;
     }
 
+    // Prefills everything except the private key, which never comes back down to the browser once
+    // saved - leaving it blank here means "keep the existing one" on save (see WriteSettings).
     private void OpenCredentialsForm()
     {
-        _credType = "service_account";
+        var snapshot = SecretsWriter.GetCurrentConfig();
+        _credType = snapshot.CredentialType ?? "service_account";
+        _credPrivateKeyId = snapshot.PrivateKeyId ?? string.Empty;
+        _credClientEmail = snapshot.ClientEmail ?? string.Empty;
+        _credClientId = snapshot.ClientId ?? string.Empty;
+        _credPrivateKey = string.Empty;
         _showCredentialsForm = true;
     }
 

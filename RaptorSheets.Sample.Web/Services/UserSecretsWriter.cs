@@ -19,18 +19,24 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
 {
     public sealed record WriteResult(bool Success, string? Error);
 
-    /// <summary>Everything the Settings page needs to show as "currently configured" - deliberately
-    /// never includes the private key itself, only the client_email (safe to display, confirms
-    /// which service account is active without exposing the secret).</summary>
+    /// <summary>Everything the Settings page needs to prefill - deliberately never includes the
+    /// private key itself (the other 4 credential fields aren't secret, so they're safe to show
+    /// and re-edit; the private key stays replace-only).</summary>
     public sealed record SecretsSnapshot(
+        string? CredentialType,
+        string? PrivateKeyId,
         string? ClientEmail,
+        string? ClientId,
         string? GigSpreadsheetId,
         string? StockSpreadsheetId,
         string? JobSpreadsheetId,
         string? HomeSpreadsheetId);
 
     public SecretsSnapshot GetCurrentConfig() => new(
+        configurationRoot["google_credentials:type"],
+        configurationRoot["google_credentials:private_key_id"],
         configurationRoot["google_credentials:client_email"],
+        configurationRoot["google_credentials:client_id"],
         configurationRoot["spreadsheets:gig"],
         configurationRoot["spreadsheets:stock"],
         configurationRoot["spreadsheets:job"],
@@ -38,9 +44,10 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
 
     /// <summary>
     /// Every field is independently optional - a blank/null value leaves whatever's already saved
-    /// untouched, so this works equally well for "just change the Job spreadsheet ID" and "replace
-    /// the whole service account". The 5 credential fields are all-or-nothing when any one of them
-    /// is set (a service account key is one atomic unit, never partially merged).
+    /// untouched. This applies to the 5 credential fields too, same as spreadsheet IDs: since the
+    /// Settings page prefills type/client_email/client_id/private_key_id from what's already saved
+    /// but never the private key, saving without having typed a new key must not wipe the existing
+    /// one - each credential field is merged individually rather than replaced as an atomic unit.
     /// </summary>
     public sealed record SettingsUpdate(
         string? CredentialType,
@@ -60,33 +67,18 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
     /// </summary>
     public WriteResult WriteSettings(SettingsUpdate update)
     {
-        Dictionary<string, string?>? credentialFields = null;
-        var suppliedCredentialFields = new Dictionary<string, string?>
-        {
-            ["type"] = update.CredentialType,
-            ["private_key_id"] = update.PrivateKeyId,
-            ["private_key"] = update.PrivateKey,
-            ["client_email"] = update.ClientEmail,
-            ["client_id"] = update.ClientId,
-        };
-
-        if (suppliedCredentialFields.Values.Any(v => !string.IsNullOrWhiteSpace(v)))
-        {
-            var missing = suppliedCredentialFields.Where(kv => string.IsNullOrWhiteSpace(kv.Value)).Select(kv => kv.Key).ToList();
-            if (missing.Count > 0)
-            {
-                return new WriteResult(false, $"Missing credential field(s): {string.Join(", ", missing)}.");
-            }
-
-            credentialFields = suppliedCredentialFields;
-        }
+        var hasAnyCredentialField = !string.IsNullOrWhiteSpace(update.CredentialType)
+            || !string.IsNullOrWhiteSpace(update.PrivateKeyId)
+            || !string.IsNullOrWhiteSpace(update.PrivateKey)
+            || !string.IsNullOrWhiteSpace(update.ClientEmail)
+            || !string.IsNullOrWhiteSpace(update.ClientId);
 
         var hasAnySpreadsheetId = !string.IsNullOrWhiteSpace(update.GigSpreadsheetId)
             || !string.IsNullOrWhiteSpace(update.StockSpreadsheetId)
             || !string.IsNullOrWhiteSpace(update.JobSpreadsheetId)
             || !string.IsNullOrWhiteSpace(update.HomeSpreadsheetId);
 
-        if (credentialFields is null && !hasAnySpreadsheetId)
+        if (!hasAnyCredentialField && !hasAnySpreadsheetId)
         {
             return new WriteResult(false, "Nothing to save - paste a credentials key and/or fill in a spreadsheet ID.");
         }
@@ -98,13 +90,14 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
             ? JsonNode.Parse(File.ReadAllText(path)) as JsonObject ?? new JsonObject()
             : new JsonObject();
 
-        if (credentialFields is not null)
+        if (hasAnyCredentialField)
         {
-            var googleCredentials = new JsonObject();
-            foreach (var (key, value) in credentialFields)
-            {
-                googleCredentials[key] = value;
-            }
+            var googleCredentials = secrets["google_credentials"] as JsonObject ?? new JsonObject();
+            SetIfProvided(googleCredentials, "type", update.CredentialType);
+            SetIfProvided(googleCredentials, "private_key_id", update.PrivateKeyId);
+            SetIfProvided(googleCredentials, "private_key", update.PrivateKey);
+            SetIfProvided(googleCredentials, "client_email", update.ClientEmail);
+            SetIfProvided(googleCredentials, "client_id", update.ClientId);
             secrets["google_credentials"] = googleCredentials;
         }
 
