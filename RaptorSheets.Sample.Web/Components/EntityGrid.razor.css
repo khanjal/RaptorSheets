@@ -134,16 +134,12 @@
 
 .add-form-fields {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(8rem, max-content));
+    gap: 0.75rem 1.25rem;
 }
 
 .add-form-fields label {
     margin-top: 0;
-}
-
-.add-form-fields input, .add-form-fields select {
-    font-size: 0.85rem;
 }
 
 .add-form-actions {
@@ -210,11 +206,4 @@ tr.row-deleted {
     background: var(--color-danger-bg);
     text-decoration: line-through;
     opacity: 0.7;
-}
-
-input[type="text"], input[type="number"] {
-    width: 100%;
-    min-width: 6rem;
-    font-size: 0.85rem;
-    padding: 0.3rem 0.45rem;
 }

@@ -84,6 +84,16 @@ and it's staged alongside any inline edits. Nothing is sent to Google until you 
 which batches every pending add/edit/delete for the sheet into one `ChangeSheetData` call - never a
 write per keystroke.
 
+Editable inputs are sized by the underlying CLR type rather than left to the browser's defaults -
+numeric columns (`decimal?`/`int?`/`double?`, e.g. Pay, Tips, Distance) render compact, text and
+typeahead columns render wide. This matters because a bare `<input type="number">` renders far wider
+than `<input type="text">` by default in most browsers regardless of what it holds, which is backwards
+for this data (short numbers, longer text). One subtlety: these inputs are built via
+`RenderTreeBuilder` in `EntityGrid.razor`'s `@code` block, not literal markup in the `.razor` file's
+template - Blazor's CSS isolation only scopes elements the compiler sees directly in that markup
+section, so a rule in `EntityGrid.razor.css` can never reach them. Their sizing (`.field-compact` /
+`.field-wide`) lives in the global `wwwroot/app.css` instead for exactly that reason.
+
 **Reference sheets are read-only.** Sheets Gig marks `ProtectSheet = true` (Addresses, Deliveries,
 Locations, Names, Places, Regions, Services, Types, and the Daily/Weekly/Monthly/Yearly/Weekday/Setup
 rollups) are auto-generated from Trips/Shifts/Expenses data - the grid detects this via

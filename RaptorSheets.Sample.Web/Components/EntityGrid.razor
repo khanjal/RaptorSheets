@@ -449,18 +449,18 @@
             return;
         }
 
-        var inputType = underlyingType == typeof(decimal) || underlyingType == typeof(int) || underlyingType == typeof(double)
-            ? "number"
-            : "text";
+        var isNumeric = underlyingType == typeof(decimal) || underlyingType == typeof(int) || underlyingType == typeof(double);
+        var inputType = isNumeric ? "number" : "text";
 
         builder.OpenElement(0, "input");
         builder.AddAttribute(1, "type", inputType);
-        if (inputType == "number")
+        builder.AddAttribute(2, "class", isNumeric ? "field-compact" : "field-wide");
+        if (isNumeric)
         {
-            builder.AddAttribute(2, "step", "any");
+            builder.AddAttribute(3, "step", "any");
         }
-        builder.AddAttribute(3, "value", value?.ToString());
-        builder.AddAttribute(4, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+        builder.AddAttribute(4, "value", value?.ToString());
+        builder.AddAttribute(5, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
             e => SetValue(row, col, e.Value?.ToString() ?? string.Empty)));
         builder.CloseElement();
     };
@@ -475,10 +475,11 @@
     {
         builder.OpenElement(0, "input");
         builder.AddAttribute(1, "type", "text");
-        builder.AddAttribute(2, "list", DatalistId(col.Column.HeaderName));
-        builder.AddAttribute(3, "value", value?.ToString());
-        builder.AddAttribute(4, "autocomplete", "off");
-        builder.AddAttribute(5, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+        builder.AddAttribute(2, "class", "field-wide");
+        builder.AddAttribute(3, "list", DatalistId(col.Column.HeaderName));
+        builder.AddAttribute(4, "value", value?.ToString());
+        builder.AddAttribute(5, "autocomplete", "off");
+        builder.AddAttribute(6, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
             e => SetValue(row, col, e.Value?.ToString() ?? string.Empty)));
         builder.CloseElement();
     }

@@ -225,6 +225,12 @@ input, textarea, select {
     transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
+/* label's flex column stretches children to its full width by default - fine for text inputs, but
+   it inflates a checkbox (which has no width of its own to resist with) into a giant rectangle. */
+input[type="checkbox"] {
+    align-self: flex-start;
+}
+
     input:focus, textarea:focus, select:focus {
         outline: none;
         border-color: var(--color-accent);
@@ -238,9 +244,42 @@ textarea {
     width: 100%;
 }
 
-input[type="text"]:not(.filter), input:not([type]) {
+input[type="text"]:not(.filter):not(.field-compact):not(.field-wide), input:not([type]) {
     width: 100%;
 }
+
+/* EntityGrid's table/card/add-form inputs are built via RenderTreeBuilder in a @code block, not
+   literal markup in EntityGrid.razor - Blazor's CSS isolation only scopes elements the compiler
+   sees directly in a .razor file's markup section, so a scoped rule in EntityGrid.razor.css can
+   never reach them. These live here globally instead, sized by the underlying data type rather
+   than left to the browser's very different default intrinsic widths for text vs number inputs
+   (a bare <input type="number"> renders far wider than <input type="text"> by default, regardless
+   of what it actually holds - that's what made every amount column look oversized). */
+.field-compact {
+    width: 4.5rem;
+}
+
+.field-wide {
+    width: 10rem;
+}
+
+.field-compact, .field-wide {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.45rem;
+}
+
+/* Decimal amounts don't benefit from spin buttons, and their reserved width was part of why
+   number inputs rendered so much wider than text inputs by default. */
+input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
 
 /* Shared by any page with a credential/config form (Home's setup wizard, Settings). */
 
