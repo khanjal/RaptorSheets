@@ -198,6 +198,59 @@ namespace RaptorSheets.Core.Tests.Repositories
             Assert.True(result);
         }
 
+        [Fact]
+        public async Task InitializeSheetAsync_ShouldWriteHeaderRow_WhenSheetIsEmpty()
+        {
+            // Arrange - empty sheet, so the "already has data" early return can't fire and the
+            // method has to reach the header-row UpdateData call.
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync((ValueRange?)null);
+            _mockSheetService
+                .Setup(s => s.UpdateData(It.IsAny<ValueRange>(), "TestSheet!A1:Z1", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new UpdateValuesResponse());
+
+            // Act
+            var result = await _repository.InitializeSheetAsync();
+
+            // Assert
+            Assert.True(result);
+            _mockSheetService.Verify(s => s.UpdateData(It.IsAny<ValueRange>(), "TestSheet!A1:Z1", It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetCountAsync_ShouldReturnDataRowCount_ExcludingTheHeaderRow()
+        {
+            // Arrange
+            var valueRange = new ValueRange
+            {
+                Values = new List<IList<object>>
+                {
+                    new List<object> { "Header1", "Header2" },
+                    new List<object> { "Row1Col1", "Row1Col2" },
+                    new List<object> { "Row2Col1", "Row2Col2" }
+                }
+            };
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync(valueRange);
+
+            // Act
+            var result = await _repository.GetCountAsync();
+
+            // Assert
+            Assert.Equal(2, result);
+        }
+
+        [Fact]
+        public async Task GetCountAsync_ShouldReturnZero_WhenSheetHasNoData()
+        {
+            // Arrange
+            _mockSheetService.Setup(s => s.GetSheetData("TestSheet", It.IsAny<CancellationToken>())).ReturnsAsync((ValueRange?)null);
+
+            // Act
+            var result = await _repository.GetCountAsync();
+
+            // Assert
+            Assert.Equal(0, result);
+        }
+
         private class TestEntityRepository : BaseEntityRepository<TestEntity>
         {
             public TestEntityRepository(IGoogleSheetService sheetService, string sheetName, bool hasHeaderRow = true)

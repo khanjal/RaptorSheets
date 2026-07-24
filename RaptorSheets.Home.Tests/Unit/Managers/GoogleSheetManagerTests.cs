@@ -91,6 +91,17 @@ public class GoogleSheetManagerTests
     }
 
     [Fact]
+    public async Task GetSheet_ForKnownSheetName_DoesNotShortCircuitToTheErrorPath()
+    {
+        // Exercises the branch GetSheet_ForUnknownSheetName_ReturnsErrorMessage can't reach: a
+        // recognized name falls through to GetSheets([sheet]) rather than the early-return.
+        var result = await _manager.GetSheet(SheetsConfig.SheetNames.Rooms);
+
+        Assert.NotNull(result);
+        Assert.DoesNotContain(result.Messages, m => m.Message.Contains("does not exist"));
+    }
+
+    [Fact]
     public void GetSheetLayout_ForEveryConfiguredSheet_ReturnsNonNull()
     {
         foreach (var name in SheetsConfig.SheetUtilities.GetAllSheetNames())

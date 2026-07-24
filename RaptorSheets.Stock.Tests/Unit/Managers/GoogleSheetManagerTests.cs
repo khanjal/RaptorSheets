@@ -186,6 +186,17 @@ public class GoogleSheetManagerTests
     }
 
     [Fact]
+    public async Task GetSheet_WithValidSheet_DoesNotShortCircuitToTheErrorPath()
+    {
+        // Exercises the branch GetSheet_WithInvalidSheet_ReturnsError can't reach: a recognized
+        // name falls through to GetSheets([sheet]) rather than the early-return.
+        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var result = await manager.GetSheet("Stocks");
+        Assert.NotNull(result);
+        Assert.DoesNotContain(result.Messages, m => m.Message.Contains("does not exist"));
+    }
+
+    [Fact]
     public async Task ChangeSheetData_WithEmptyEntity_ReturnsWarningMessage()
     {
         // Tickers has no accessor entry at all (fully formula-driven, nothing to change); Stocks
