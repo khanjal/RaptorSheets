@@ -3,6 +3,7 @@ using Moq;
 using RaptorSheets.Core.Services;
 using RaptorSheets.Home.Constants;
 using RaptorSheets.Home.Managers;
+using RaptorSheets.Core.Models;
 
 namespace RaptorSheets.Home.Tests.Unit.Managers;
 
@@ -44,6 +45,12 @@ public class GetSheetsBehaviorTests
                 SheetsConfig.SheetNames.Rooms,
                 new List<object> { "Room", "L", "W", "Sq. Ft", "Level" },
                 new List<object> { "Living Room", "15", "12", "180", "Main" }));
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse(
+                SheetsConfig.SheetNames.Rooms,
+                new List<object> { "Room", "L", "W", "Sq. Ft", "Level" },
+                new List<object> { "Living Room", "15", "12", "180", "Main" })));
 
         mockService
             .Setup(s => s.GetSheetInfo())
@@ -77,6 +84,9 @@ public class GetSheetsBehaviorTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync(BuildBatchResponse(SheetsConfig.SheetNames.Rooms, new List<object> { "Room", "L", "W", "Sq. Ft", "Level" }));
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(BuildBatchResponse(SheetsConfig.SheetNames.Rooms, new List<object> { "Room", "L", "W", "Sq. Ft", "Level" })));
 
         mockService
             .Setup(s => s.GetSheetInfo())
@@ -105,6 +115,9 @@ public class GetSheetsBehaviorTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
 
         // Populate every canonical Home sheet so GetSheets' self-heal finds nothing missing and
         // falls through to the "unable to retrieve" error this test is actually targeting - self-heal

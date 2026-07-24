@@ -2,11 +2,14 @@ using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Managers;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Registries;
 using RaptorSheets.Core.Services;
 using Xunit;
+using RaptorSheets.Core.Models;
 
 namespace RaptorSheets.Core.Tests.Unit.Managers;
 
@@ -164,6 +167,19 @@ public class GoogleSheetManagerGenericBaseTests
                     }
                 }
             });
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(new BatchGetValuesByDataFilterResponse
+            {
+                ValueRanges = new List<MatchedValueRange>
+                {
+                    new()
+                    {
+                        DataFilters = new List<DataFilter> { new() { A1Range = SheetName } },
+                        ValueRange = new ValueRange { Values = new List<IList<object>> { new List<object> { "Header" } } }
+                    }
+                }
+            }));
         mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet
         {
             Properties = new SpreadsheetProperties { Title = "MyTestBook" },
@@ -187,6 +203,9 @@ public class GoogleSheetManagerGenericBaseTests
         mockService
             .Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
         // Spreadsheet exists but is missing the registered sheet entirely -> self-heal path.
         mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet
         {
@@ -200,6 +219,95 @@ public class GoogleSheetManagerGenericBaseTests
 
         Assert.Equal(1, manager.CreateMissingCalls);
         Assert.Contains(result.Messages, m => m.Message.Contains("Created missing sheets") && m.Message.Contains(SheetName));
+    }
+
+    [Fact]
+    public async Task GetSheets_OnQuotaExceeded_ShouldNotAttemptSelfHeal()
+    {
+        // A rate limit failure tells us nothing about whether the sheets exist. Attempting self-heal
+        // anyway would spend another call restating the same failure and risks the exact
+        // misdiagnosis this behavior exists to avoid - treating "we couldn't check" as "it's missing".
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(
+                new GoogleApiFailure { Reason = GoogleApiFailureReason.QuotaExceeded, Message = "rate limited" }));
+
+        var manager = BuildManager(mockService.Object);
+
+        await manager.GetSheets([SheetName]);
+
+        Assert.Equal(0, manager.CreateMissingCalls);
+        mockService.Verify(s => s.GetSheetInfo(), Times.Never);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetSheets_OnQuotaExceeded_MessageMustReadAsTemporaryNotMissing()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(
+                new GoogleApiFailure { Reason = GoogleApiFailureReason.QuotaExceeded, Message = "rate limited" }));
+
+        var manager = BuildManager(mockService.Object);
+
+        var result = await manager.GetSheets([SheetName]);
+
+        var message = Assert.Single(result.Messages);
+        Assert.Equal(MessageLevel.ERROR.GetDescription(), message.Level);
+        Assert.Contains("temporary", message.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("missing", message.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(GoogleApiFailureReason.Unauthorized, "credentials")]
+    [InlineData(GoogleApiFailureReason.Forbidden, "denied")]
+    [InlineData(GoogleApiFailureReason.NotFound, "spreadsheet id")]
+    public async Task GetSheets_OnFailure_MessageShouldNameTheReason(GoogleApiFailureReason reason, string expectedFragment)
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(
+                new GoogleApiFailure { Reason = reason, Message = "failure" }));
+        // NotFound is one of the reasons that still attempts self-heal; give it metadata to heal
+        // against so the test exercises the final message either way.
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet
+        {
+            Properties = new SpreadsheetProperties { Title = "MyTestBook" },
+            Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = SheetName } } }
+        });
+
+        var manager = BuildManager(mockService.Object);
+
+        var result = await manager.GetSheets([SheetName]);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains(expectedFragment, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task GetSheets_OnNotFound_ShouldStillAttemptSelfHeal()
+    {
+        // Unlike quota/auth failures, NotFound is consistent with "this sheet might genuinely be
+        // missing", so the existing self-heal behavior must be preserved for it.
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(
+                new GoogleApiFailure { Reason = GoogleApiFailureReason.NotFound, Message = "not found" }));
+        mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(new Spreadsheet
+        {
+            Properties = new SpreadsheetProperties { Title = "MyTestBook" },
+            Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = "SomethingElse" } } }
+        });
+
+        var manager = BuildManager(mockService.Object);
+
+        await manager.GetSheets([SheetName]);
+
+        Assert.Equal(1, manager.CreateMissingCalls);
     }
 
     [Fact]
@@ -480,6 +588,9 @@ public class GoogleSheetManagerGenericBaseTests
         // batchGet fails (Base is missing entirely) -> triggers the self-heal path.
         mockService.Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>()))
             .ReturnsAsync((BatchGetValuesByDataFilterResponse?)null);
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
 
         // Dependent already exists live; Base doesn't yet - matches the real "Tickers deleted,
         // Stocks still references it" scenario.
@@ -523,6 +634,9 @@ public class GoogleSheetManagerGenericBaseTests
             ]
         };
         mockService.Setup(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>())).ReturnsAsync(response);
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(response));
 
         var spreadsheet = SpreadsheetWith((BaseSheetName, 10), (DependentSheetName, 42));
         mockService.Setup(s => s.GetSheetInfo()).ReturnsAsync(spreadsheet);
