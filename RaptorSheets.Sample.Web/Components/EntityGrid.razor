@@ -1,0 +1,281 @@
+@typeparam TRow where TRow : SheetRowEntityBase, new()
+@using System.Collections
+@using System.Collections.Generic
+@using System.Reflection
+@using RaptorSheets.Core.Attributes
+@using RaptorSheets.Core.Entities
+@using RaptorSheets.Core.Enums
+@using RaptorSheets.Core.Extensions
+@using RaptorSheets.Core.Utilities
+
+<div class="entity-grid">
+    <div class="toolbar">
+        <input class="filter" placeholder="Filter..." value="@_filterText" @oninput="e => _filterText = e.Value?.ToString() ?? string.Empty" />
+        <button @onclick="AddRow">+ Add row</button>
+        <button @onclick="SaveAsync" disabled="@(!HasPendingChanges || _isSaving)">@(_isSaving ? "Saving..." : "Save changes")</button>
+        <button @onclick="DiscardChanges" disabled="@(!HasPendingChanges || _isSaving)">Discard changes</button>
+        @if (HasPendingChanges)
+        {
+            <span class="pending-count">@PendingChangeCount pending</span>
+        }
+    </div>
+
+    <div class="grid-scroll">
+        <table>
+            <thead>
+                <tr>
+                    @foreach (var column in _columns.Select(c => c.Column))
+                    {
+                        <th title="@(column.IsInput ? "editable" : "read-only")">
+                            @column.HeaderName
+                            @if (!column.IsInput)
+                            {
+                                <span class="readonly-badge">RO</span>
+                            }
+                        </th>
+                    }
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var original in Rows)
+                {
+                    var working = _workingCopies[original];
+                    if (!MatchesFilter(working))
+                    {
+                        continue;
+                    }
+
+                    var deleted = _deletedOriginals.Contains(original);
+                    <tr class="@RowCssClass(deleted, _editedOriginals.Contains(original))">
+                        @foreach (var col in _columns)
+                        {
+                            <td>@RenderCell(working, col, readOnly: deleted)</td>
+                        }
+                        <td>
+                            <button @onclick="() => ToggleDelete(original)">@(deleted ? "Restore" : "Delete")</button>
+                        </td>
+                    </tr>
+                }
+                @foreach (var added in _addedRows)
+                {
+                    if (!MatchesFilter(added))
+                    {
+                        continue;
+                    }
+
+                    <tr class="row-new">
+                        @foreach (var col in _columns)
+                        {
+                            <td>@RenderCell(added, col, readOnly: false)</td>
+                        }
+                        <td>
+                            <button @onclick="() => RemoveAddedRow(added)">Remove</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<TRow> Rows { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public EventCallback<IList> OnSaveRequested { get; set; }
+
+    private List<TRow>? _trackedRows;
+    private List<(PropertyInfo Property, ColumnAttribute Column)> _columns = [];
+    private readonly Dictionary<TRow, TRow> _workingCopies = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<TRow, TRow> _cloneToOriginal = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<TRow> _editedOriginals = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<TRow> _deletedOriginals = new(ReferenceEqualityComparer.Instance);
+    private List<TRow> _addedRows = [];
+    private string _filterText = string.Empty;
+    private bool _isSaving;
+
+    private bool HasPendingChanges => _addedRows.Count > 0 || _editedOriginals.Count > 0 || _deletedOriginals.Count > 0;
+    private int PendingChangeCount => _addedRows.Count + _editedOriginals.Count + _deletedOriginals.Count;
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_trackedRows, Rows))
+        {
+            return;
+        }
+
+        _trackedRows = Rows;
+        _columns = TypedFieldUtils.GetColumnProperties(typeof(TRow));
+        ResetWorkingState();
+    }
+
+    private void ResetWorkingState()
+    {
+        _workingCopies.Clear();
+        _cloneToOriginal.Clear();
+        _editedOriginals.Clear();
+        _deletedOriginals.Clear();
+        _addedRows = [];
+
+        foreach (var row in Rows)
+        {
+            var clone = Clone(row);
+            _workingCopies[row] = clone;
+            _cloneToOriginal[clone] = row;
+        }
+    }
+
+    private void DiscardChanges() => ResetWorkingState();
+
+    private static string RowCssClass(bool deleted, bool edited)
+    {
+        if (deleted)
+        {
+            return "row-deleted";
+        }
+
+        return edited ? "row-edited" : string.Empty;
+    }
+
+    private void AddRow()
+    {
+        var nextRowId = Rows.Count == 0 ? 1 : Rows.Max(r => r.RowId);
+        nextRowId = Math.Max(nextRowId, _addedRows.Count == 0 ? 0 : _addedRows.Max(r => r.RowId)) + 1;
+        _addedRows.Add(new TRow { RowId = nextRowId });
+    }
+
+    private void RemoveAddedRow(TRow row) => _addedRows.Remove(row);
+
+    private void ToggleDelete(TRow original)
+    {
+        if (!_deletedOriginals.Remove(original))
+        {
+            _deletedOriginals.Add(original);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        var dirty = BuildDirtyRows();
+        if (dirty.Count == 0)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            await OnSaveRequested.InvokeAsync(dirty);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private List<TRow> BuildDirtyRows()
+    {
+        var dirty = new List<TRow>();
+
+        foreach (var original in Rows)
+        {
+            if (_deletedOriginals.Contains(original))
+            {
+                var deletedRow = Clone(original);
+                deletedRow.Action = ActionType.DELETE.GetDescription();
+                dirty.Add(deletedRow);
+            }
+            else if (_editedOriginals.Contains(original))
+            {
+                var editedRow = _workingCopies[original];
+                editedRow.Action = ActionType.UPDATE.GetDescription();
+                dirty.Add(editedRow);
+            }
+        }
+
+        foreach (var added in _addedRows)
+        {
+            added.Action = ActionType.INSERT.GetDescription();
+            dirty.Add(added);
+        }
+
+        return dirty;
+    }
+
+    private bool MatchesFilter(TRow row)
+    {
+        if (string.IsNullOrWhiteSpace(_filterText))
+        {
+            return true;
+        }
+
+        return _columns.Any(col =>
+            (col.Property.GetValue(row)?.ToString() ?? string.Empty)
+                .Contains(_filterText, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private RenderFragment RenderCell(TRow row, (PropertyInfo Property, ColumnAttribute Column) col, bool readOnly) => builder =>
+    {
+        var value = col.Property.GetValue(row);
+
+        if (readOnly || !col.Column.IsInput)
+        {
+            builder.AddContent(0, value?.ToString());
+            return;
+        }
+
+        var underlyingType = Nullable.GetUnderlyingType(col.Property.PropertyType) ?? col.Property.PropertyType;
+
+        if (underlyingType == typeof(bool))
+        {
+            builder.OpenElement(0, "input");
+            builder.AddAttribute(1, "type", "checkbox");
+            builder.AddAttribute(2, "checked", value is true);
+            builder.AddAttribute(3, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+                e => SetValue(row, col, e.Value is bool b && b)));
+            builder.CloseElement();
+            return;
+        }
+
+        var inputType = underlyingType == typeof(decimal) || underlyingType == typeof(int) || underlyingType == typeof(double)
+            ? "number"
+            : "text";
+
+        builder.OpenElement(0, "input");
+        builder.AddAttribute(1, "type", inputType);
+        if (inputType == "number")
+        {
+            builder.AddAttribute(2, "step", "any");
+        }
+        builder.AddAttribute(3, "value", value?.ToString());
+        builder.AddAttribute(4, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+            e => SetValue(row, col, e.Value?.ToString() ?? string.Empty)));
+        builder.CloseElement();
+    };
+
+    private void SetValue(TRow row, (PropertyInfo Property, ColumnAttribute Column) col, object rawValue)
+    {
+        var converted = col.Property.PropertyType == typeof(bool)
+            ? rawValue
+            : TypedFieldUtils.ConvertFromSheetValue(rawValue, col.Property.PropertyType, col.Column);
+
+        col.Property.SetValue(row, converted);
+
+        if (_cloneToOriginal.TryGetValue(row, out var original))
+        {
+            _editedOriginals.Add(original);
+        }
+    }
+
+    private static TRow Clone(TRow source)
+    {
+        var clone = new TRow();
+        foreach (var prop in typeof(TRow).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanRead && p.CanWrite))
+        {
+            prop.SetValue(clone, prop.GetValue(source));
+        }
+        return clone;
+    }
+}

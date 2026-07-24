@@ -1,0 +1,32 @@
+@using RaptorSheets.Gig.Entities
+@using RaptorSheets.Sample.Web.Services
+
+<nav>
+    <div class="brand">RaptorSheets Sample</div>
+
+    <div class="domain-group">
+        <div class="domain-label">Gig</div>
+        <ul>
+            @foreach (var sheetName in _gigSheets.Select(s => s.Name))
+            {
+                <li>
+                    <NavLink href="@($"sheet/gig/{sheetName}")">@sheetName</NavLink>
+                </li>
+            }
+        </ul>
+    </div>
+
+    <div class="domain-group disabled">
+        <div class="domain-label">Stock <span class="badge">coming soon</span></div>
+    </div>
+    <div class="domain-group disabled">
+        <div class="domain-label">Job <span class="badge">coming soon</span></div>
+    </div>
+    <div class="domain-group disabled">
+        <div class="domain-label">Home <span class="badge">coming soon</span></div>
+    </div>
+</nav>
+
+@code {
+    private readonly IReadOnlyList<SheetDescriptor> _gigSheets = SheetMetadata.GetSheetDescriptors(typeof(GigSheets));
+}

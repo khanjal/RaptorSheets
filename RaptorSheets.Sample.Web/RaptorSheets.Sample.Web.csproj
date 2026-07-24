@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <UserSecretsId>5e94b3ce-454f-402a-9305-682ce56c52a3</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RaptorSheets.Core\RaptorSheets.Core.csproj" />
+    <ProjectReference Include="..\RaptorSheets.Gig\RaptorSheets.Gig.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,58 @@
+nav {
+    width: 14rem;
+    flex-shrink: 0;
+    background: #f6f8fa;
+    border-right: 1px solid #d0d7de;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+.brand {
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.domain-group {
+    margin-bottom: 1rem;
+}
+
+.domain-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #57606a;
+    margin-bottom: 0.25rem;
+}
+
+.domain-group.disabled .domain-label {
+    color: #8b949e;
+}
+
+.badge {
+    font-size: 0.65rem;
+    font-weight: 400;
+    text-transform: none;
+    margin-left: 0.25rem;
+}
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+li {
+    margin: 0.15rem 0;
+}
+
+a {
+    display: block;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #24292f;
+}
+
+a:hover {
+    background: #eaeef2;
+}

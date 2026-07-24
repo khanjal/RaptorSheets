@@ -213,6 +213,9 @@ Built on RaptorSheets.Core, these packages provide domain-specific functionality
 Every domain package is a thin layer over the shared `GoogleSheetManagerBase<TEntity>` in Core, so
 they all get the same read/heal/metadata/layout behavior for free — see [🏗️ Architecture](#️-architecture).
 
+Want to see it work against a real spreadsheet without writing any code? Run the
+**[Sample App](docs/SAMPLE-APP.md)** — a Blazor UI to browse, add, edit, and delete rows.
+
 > **Looking for gig work tracking?** Check out **[RaptorSheets.Gig](RaptorSheets.Gig/README.md)** - a complete solution for freelancers and gig workers with pre-built sheets for trips, shifts, earnings, and comprehensive analytics.
 
 ## 💼 Use Cases

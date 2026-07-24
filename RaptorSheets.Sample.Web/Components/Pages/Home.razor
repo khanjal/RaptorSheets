@@ -1,0 +1,33 @@
+@page "/"
+@using RaptorSheets.Sample.Web.Services
+@inject GigConnectionProvider ConnectionProvider
+
+<PageTitle>RaptorSheets Sample</PageTitle>
+
+<h1>RaptorSheets Sample</h1>
+
+<p>
+    A runnable UI over the RaptorSheets domain libraries - point it at a real spreadsheet
+    (configured via <code>dotnet user-secrets</code>) and browse, add, edit, and delete rows
+    through the sheets it manages.
+</p>
+
+@if (_connected)
+{
+    <p class="status ok">Connected to the Gig test spreadsheet. Pick a sheet from the left to get started.</p>
+}
+else
+{
+    <p class="status error">@_error</p>
+    <p>See <code>docs/SAMPLE-APP.md</code> for setup steps.</p>
+}
+
+@code {
+    private bool _connected;
+    private string? _error;
+
+    protected override void OnInitialized()
+    {
+        _connected = ConnectionProvider.TryGetManager(out _, out _error);
+    }
+}

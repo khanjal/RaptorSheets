@@ -1,0 +1,135 @@
+@page "/sheet/gig/{SheetName}"
+@using System.Collections
+@using RaptorSheets.Core.Entities
+@using RaptorSheets.Gig.Entities
+@using RaptorSheets.Gig.Managers
+@using RaptorSheets.Sample.Web.Services
+@inject GigConnectionProvider ConnectionProvider
+
+<PageTitle>@SheetName - RaptorSheets Sample</PageTitle>
+
+<h1>@SheetName</h1>
+
+@if (_error is not null)
+{
+    <p class="setup-message">@_error</p>
+}
+else if (_notFoundOnSheet)
+{
+    <p>The "@SheetName" sheet doesn't exist yet on this spreadsheet.</p>
+    <button @onclick="CreateSheetAsync" disabled="@_isBusy">Create "@SheetName" sheet</button>
+}
+else if (_gridType is not null && _gridParameters is not null)
+{
+    <DynamicComponent Type="_gridType" Parameters="_gridParameters" />
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@if (_messages.Count > 0)
+{
+    <ul class="messages">
+        @foreach (var message in _messages)
+        {
+            <li class="@message.Level.ToLowerInvariant()">@message.Message</li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter]
+    public string SheetName { get; set; } = string.Empty;
+
+    private IGoogleSheetManager? _manager;
+    private SheetDescriptor? _descriptor;
+    private Type? _gridType;
+    private Dictionary<string, object>? _gridParameters;
+    private List<MessageEntity> _messages = [];
+    private string? _error;
+    private bool _notFoundOnSheet;
+    private bool _isBusy;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _error = null;
+        _notFoundOnSheet = false;
+        _gridType = null;
+        _gridParameters = null;
+        _messages = [];
+
+        if (!ConnectionProvider.TryGetManager(out var manager, out var connectionError))
+        {
+            _error = connectionError;
+            return;
+        }
+
+        _manager = manager;
+        _descriptor = SheetMetadata.GetSheetDescriptors(typeof(GigSheets))
+            .FirstOrDefault(d => string.Equals(d.Name, SheetName, StringComparison.OrdinalIgnoreCase));
+
+        if (_descriptor is null)
+        {
+            _error = $"\"{SheetName}\" isn't a known Gig sheet.";
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _isBusy = true;
+        try
+        {
+            var tabNames = await _manager!.GetAllSheetTabNames();
+            if (!tabNames.Contains(_descriptor!.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                _notFoundOnSheet = true;
+                return;
+            }
+
+            var result = await _manager.GetSheet(_descriptor.Name);
+            _messages = result.Messages;
+
+            var rows = _descriptor.GetRows(result.Sheets);
+            _gridType = typeof(EntityGrid<>).MakeGenericType(_descriptor.RowType);
+            _gridParameters = new Dictionary<string, object>
+            {
+                ["Rows"] = rows,
+                ["OnSaveRequested"] = EventCallback.Factory.Create<IList>(this, SaveAsync)
+            };
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task CreateSheetAsync()
+    {
+        _isBusy = true;
+        try
+        {
+            var result = await _manager!.CreateSheets([_descriptor!.Name]);
+            _messages = result.Messages;
+            await LoadAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task SaveAsync(IList dirtyRows)
+    {
+        var entity = new SheetEntity();
+        _descriptor!.ListProperty.SetValue(entity.Sheets, dirtyRows);
+
+        var result = await _manager!.ChangeSheetData([_descriptor.Name], entity);
+        _messages = result.Messages;
+
+        await LoadAsync();
+    }
+}
