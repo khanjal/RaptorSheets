@@ -69,14 +69,6 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
         return GenerateSheetHelpers.Generate(sheetNames);
     }
 
-    // This 1-arg overload exists because C# requires exact arity to implicitly satisfy
-    // IGoogleSheetManager's single-parameter CreateSheets(List<string>) - an inherited method's
-    // optional parameter doesn't count for interface matching the way it does for ordinary callers.
-    public async Task<SheetEntity> CreateSheets(List<string> sheets, CancellationToken cancellationToken = default)
-    {
-        return await CreateSheets(sheets, null, cancellationToken);
-    }
-
     /// <summary>
     /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Stock sheet.
     /// Only needs sheet tab metadata (no grid/cell data). Static so callers can use it off the type

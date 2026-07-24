@@ -15,10 +15,6 @@ using RaptorSheets.Gig.Helpers;
 namespace RaptorSheets.Gig.Managers;
 
 /// <summary>
-/// Main interface for Google Sheet operations in the Gig domain.
-/// Provides CRUD operations, metadata access, and demo data functionality.
-/// </summary>
-/// <summary>
 /// Extends the shared <see cref="IGoogleSheetManager{TEntity}"/> CRUD/metadata/layout surface with
 /// Gig's own demo-data generation, which takes a date range rather than the seed-only or
 /// seed-plus-date-range shapes other domains use.
@@ -59,15 +55,6 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     }
 
     /// <summary>
-    /// Restores sheets found missing entirely during <see cref="GoogleSheetManagerBase{TEntity}.GetSheets"/>
-    /// self-heal, using Gig's own ordered/indexed creation so the desired positions are preserved.
-    /// </summary>
-    protected override Task<SheetEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap, CancellationToken cancellationToken = default)
-    {
-        return CreateSheets(missingIndexMap, cancellationToken);
-    }
-
-    /// <summary>
     /// Backs <see cref="GoogleSheetManagerBase{TEntity}.CreateSheets"/> and
     /// <see cref="GoogleSheetManagerBase{TEntity}.DeleteSheets"/> (for temp-sheet creation) with
     /// Gig's fully-configured AddSheet requests (headers, formatting, validation, colors).
@@ -75,34 +62,6 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     protected override BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
     {
         return GenerateSheetsHelpers.Generate(sheetNames);
-    }
-
-    #endregion
-
-    #region Create Operations
-
-    // This 1-arg overload exists because C# requires exact arity to implicitly satisfy
-    // IGoogleSheetManager's single-parameter CreateSheets(List<string>) - an inherited method's
-    // optional parameter doesn't count for interface matching the way it does for ordinary callers.
-    public async Task<SheetEntity> CreateSheets(List<string> sheets, CancellationToken cancellationToken = default)
-    {
-        return await CreateSheets(sheets, null, cancellationToken);
-    }
-
-    /// <summary>
-    /// Creates sheets using a title->desiredIndex map. The map's keys are the sheet titles to create.
-    /// </summary>
-    public async Task<SheetEntity> CreateSheets(Dictionary<string,int> sheetsWithIndices, CancellationToken cancellationToken = default)
-    {
-        if (sheetsWithIndices == null || sheetsWithIndices.Count == 0)
-        {
-            return await CreateSheets(new List<string>(), cancellationToken);
-        }
-
-        // Order titles deterministically using a helper (stable, testable).
-        var sheets = SheetOrderingHelper.OrderSheetTitlesByIndex(sheetsWithIndices);
-
-        return await CreateSheets(sheets, sheetsWithIndices, cancellationToken);
     }
 
     #endregion

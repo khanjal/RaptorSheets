@@ -96,9 +96,15 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// Domain-specific creation of sheets found missing entirely during <see cref="GetSheets"/>'s
     /// self-heal path. Given a title-&gt;desiredIndex map, creates them and returns the resulting
     /// entity (used to detect creation errors and to build the "created, please retry" message).
-    /// Gig supplies its ordered/indexed CreateSheets; Stock supplies its enum-based CreateSheets.
+    /// The default delegates to <see cref="CreateSheets(Dictionary{string, int}, CancellationToken)"/>
+    /// (ordered/indexed creation by title), which is correct for every domain whose sheet creation is
+    /// keyed off arbitrary names - i.e. every domain except Stock, which is keyed off a closed enum
+    /// and overrides this with its own.
     /// </summary>
-    protected abstract Task<TEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap, CancellationToken cancellationToken = default);
+    protected virtual Task<TEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap, CancellationToken cancellationToken = default)
+    {
+        return CreateSheets(missingIndexMap, cancellationToken);
+    }
 
     /// <summary>
     /// Builds the AddSheet batch-update request(s) for the given sheet names, using the domain's own
@@ -127,6 +133,34 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     public async Task<TEntity> CreateAllSheets(CancellationToken cancellationToken = default)
     {
         return await CreateSheets(new List<string>(_canonicalSheetNames), cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Arity-matching bridge for <c>IGoogleSheetManager&lt;TEntity&gt;.CreateSheets(List&lt;string&gt;,
+    /// CancellationToken)</c> - C# requires exact parameter-count match for a method to implicitly
+    /// satisfy an interface member, so a 2-parameter interface signature can't be satisfied by the
+    /// 3-parameter overload below even though its extra parameter is optional. This just forwards.
+    /// </summary>
+    public async Task<TEntity> CreateSheets(List<string> sheets, CancellationToken cancellationToken)
+    {
+        return await CreateSheets(sheets, null, cancellationToken);
+    }
+
+    /// <summary>
+    /// Creates sheets using a title-&gt;desiredIndex map. The map's keys are the sheet titles to
+    /// create, ordered deterministically (stable, testable) before delegating to the ordered/indexed
+    /// overload below.
+    /// </summary>
+    public async Task<TEntity> CreateSheets(Dictionary<string, int> sheetsWithIndices, CancellationToken cancellationToken = default)
+    {
+        if (sheetsWithIndices == null || sheetsWithIndices.Count == 0)
+        {
+            return await CreateSheets(new List<string>(), cancellationToken: cancellationToken);
+        }
+
+        var sheets = SheetOrderingHelper.OrderSheetTitlesByIndex(sheetsWithIndices);
+
+        return await CreateSheets(sheets, sheetsWithIndices, cancellationToken);
     }
 
     /// <summary>
