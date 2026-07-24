@@ -133,4 +133,14 @@ public class GigSheetOperations(
             async (names, ct) => (await _manager!.GetSheets(names, ct)).Sheets,
             referenceDescriptors,
             cancellationToken);
+
+    // Gig has no SetupDemo/PopulateDemoData convenience method (unlike Stock/Job/Home) - this
+    // replicates the sequence documented in RaptorSheets.Gig's README by hand.
+    public async Task<List<MessageEntity>> CreateDemoDataAsync()
+    {
+        await _manager!.CreateAllSheets();
+        var demoData = _manager.GenerateDemoData();
+        var result = await _manager.ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData);
+        return result.Messages;
+    }
 }

@@ -39,12 +39,29 @@ character-count placeholder entirely rather than trying to mask live text in pla
 genuinely absent from the rendered DOM while hidden, not just visually obscured. There's also an
 optional "paste the whole JSON key" box above the fields that parses on input and autofills them,
 since copying five values out of the downloaded key file by hand is tedious - the individual fields
-are what actually gets saved, the paste box is just a shortcut into them. Every field is
-independently optional on save - change just one domain's spreadsheet ID without touching
-credentials, or vice versa. Submitting writes straight to the local `secrets.json` and reconnects
-immediately, no restart needed. Credentials are replace-only: Settings shows which service account
-is currently active (`client_email` - safe to display) but never re-displays the private key itself,
-the same "write, don't show" pattern every password/API-key settings screen uses.
+are what actually gets saved, the paste box is just a shortcut into them. The 5 credential fields are
+independently optional on save - a blank one just means "leave the existing value alone" (the private
+key is never sent back down to the browser once saved, so leaving it blank must not wipe it).
+Submitting writes straight to the local `secrets.json` and reconnects immediately, no restart needed.
+Credentials are replace-only: Settings shows which service account is currently active (`client_email`
+- safe to display) but never re-displays the private key itself, the same "write, don't show" pattern
+every password/API-key settings screen uses.
+
+Each spreadsheet ID field accepts either a bare ID or the full Google Sheets URL - paste the URL
+straight from the browser's address bar and it's trimmed down to just the ID as you type, no manual
+extraction needed. A **Clear** button next to each field blanks it in one click; unlike the credential
+fields, a blank spreadsheet ID field is not "leave unchanged" - it's always visibly prefilled with the
+current value, so a blank one is a deliberate signal, and saving removes that domain's ID entirely
+(disconnecting it) rather than leaving the old value in place.
+
+Gig/Job/Home each get a **"Create sheets + fill with demo data"** button next to their ID field
+(Stock doesn't, since it isn't wired into the nav - see below). This calls `ISheetOperations
+.CreateDemoDataAsync()`, which every parameter defaulted: for Stock/Job/Home that's their own
+`SetupDemo()` (create any missing sheets, wait for them to become writable, then generate and write
+demo data, all in one manager call); Gig has no such convenience method, so it replicates the
+documented `CreateAllSheets` -> `GenerateDemoData` -> `ChangeSheetData` sequence by hand. This is a
+"just give me something to look at" action with no options, distinct from the Home page's blank-
+spreadsheet wizard (which is Gig-specific and reuses the same underlying call).
 
 `RaptorSheets.Sample.Web` and `RaptorSheets.Test` (the integration test suite's shared infra)
 deliberately declare the **same `<UserSecretsId>`**, so they read one `secrets.json`
@@ -73,11 +90,10 @@ Google Sheet always starts with one default "Sheet1" tab), the Home page offers 
 "Create sheets + fill with demo data" button: `CreateAllSheets()` then `GenerateDemoData()` then
 `ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData)`, the exact sequence documented in
 [RaptorSheets.Gig's README](../RaptorSheets.Gig/README.md#demo-setup). The other 14 sheets fill in
-on their own from the sheet formulas once Shifts/Trips/Expenses have real rows. This wizard is
-Gig-only for now - Job and Home each have their own demo-data method with a different signature
-(Job takes a date range and a seed, Home just a seed), so a shared "create demo data" button across
-domains isn't a single generic call; for Job/Home, create the sheet(s) you need from the per-sheet
-"Create sheet" prompt instead and fill them in by hand, or run each domain's own test project.
+on their own from the sheet formulas once Shifts/Trips/Expenses have real rows. This particular
+blank-spreadsheet wizard is Gig-only, since it's tied to the Home page's Gig connection status - the
+equivalent for Job/Home (and Stock, once it's wired up) is the "Create sheets + fill with demo data"
+button on each domain's spreadsheet ID field in **Settings**, described above.
 
 ## Multiple domains, one generic layer
 
@@ -92,6 +108,13 @@ never need to know which domain they're actually driving - the small amount of p
 duplication across the four adapter classes is deliberate, not an oversight: each is maybe 50 lines,
 almost entirely boilerplate, and boring/explicit beats a reflection-heavy generic dispatcher for
 something this size (there are 4 domains, not 40).
+
+The nav is a one-level accordion, not a flat list of every sheet in every domain at once (Gig alone
+has 17) - each domain label is a toggle; clicking it expands/collapses just that domain's sheet
+list, and only one domain is expanded at a time. Landing directly on a sheet page (a fresh load, a
+refresh, browser back/forward) auto-expands whichever domain that sheet belongs to, via
+`NavigationManager.LocationChanged`, so you're never looking at a collapsed group with no visible
+indication of where you are.
 
 Every domain entity declares its own schema via `[Column(...)]` attributes - header name, whether
 it's user-editable or a read-only formula/output column, validation rules, display format. Rather

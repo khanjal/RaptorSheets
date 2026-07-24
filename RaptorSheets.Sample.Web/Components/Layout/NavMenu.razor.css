@@ -17,17 +17,47 @@ nav {
 }
 
 .domain-group {
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.25rem;
 }
+
+.domain-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0.4rem 0.5rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+    .domain-toggle:hover {
+        background: var(--color-surface);
+    }
+
+.chevron {
+    display: inline-flex;
+    font-size: 0.65rem;
+    color: var(--color-text-subtle);
+    transition: transform 120ms ease;
+}
+
+    .chevron.expanded {
+        transform: rotate(90deg);
+    }
 
 .domain-label {
     font-weight: 600;
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--color-text-muted);
-    margin-bottom: 0.4rem;
-    padding: 0 0.5rem;
+}
+
+.domain-group ul {
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
 }
 
 ul {

@@ -43,11 +43,15 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
         configurationRoot["spreadsheets:home"]);
 
     /// <summary>
-    /// Every field is independently optional - a blank/null value leaves whatever's already saved
-    /// untouched. This applies to the 5 credential fields too, same as spreadsheet IDs: since the
-    /// Settings page prefills type/client_email/client_id/private_key_id from what's already saved
-    /// but never the private key, saving without having typed a new key must not wipe the existing
-    /// one - each credential field is merged individually rather than replaced as an atomic unit.
+    /// The 5 credential fields are independently optional - a blank/null value leaves whatever's
+    /// already saved untouched. That's because the Settings page prefills type/client_email/
+    /// client_id/private_key_id from what's already saved but never the private key, so saving
+    /// without having typed a new key must not wipe the existing one - each credential field is
+    /// merged individually rather than replaced as an atomic unit.
+    ///
+    /// The 4 spreadsheet IDs behave differently: unlike the private key, they're always visibly
+    /// prefilled with the current value (nothing about them is secret), so a blank field here is a
+    /// deliberate "clear it" rather than "I didn't touch this" - see WriteSettings.
     /// </summary>
     public sealed record SettingsUpdate(
         string? CredentialType,
@@ -73,16 +77,6 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
             || !string.IsNullOrWhiteSpace(update.ClientEmail)
             || !string.IsNullOrWhiteSpace(update.ClientId);
 
-        var hasAnySpreadsheetId = !string.IsNullOrWhiteSpace(update.GigSpreadsheetId)
-            || !string.IsNullOrWhiteSpace(update.StockSpreadsheetId)
-            || !string.IsNullOrWhiteSpace(update.JobSpreadsheetId)
-            || !string.IsNullOrWhiteSpace(update.HomeSpreadsheetId);
-
-        if (!hasAnyCredentialField && !hasAnySpreadsheetId)
-        {
-            return new WriteResult(false, "Nothing to save - paste a credentials key and/or fill in a spreadsheet ID.");
-        }
-
         var path = GetSecretsPath();
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
@@ -101,11 +95,14 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
             secrets["google_credentials"] = googleCredentials;
         }
 
+        // Unlike credential fields, blank here means "remove this domain's spreadsheet ID" - the
+        // Settings page always submits all 4 (every field is visibly prefilled, so there's no
+        // "field genuinely absent" case the way there is for the never-redisplayed private key).
         var spreadsheets = secrets["spreadsheets"] as JsonObject ?? new JsonObject();
-        SetIfProvided(spreadsheets, "gig", update.GigSpreadsheetId);
-        SetIfProvided(spreadsheets, "stock", update.StockSpreadsheetId);
-        SetIfProvided(spreadsheets, "job", update.JobSpreadsheetId);
-        SetIfProvided(spreadsheets, "home", update.HomeSpreadsheetId);
+        SetOrRemove(spreadsheets, "gig", update.GigSpreadsheetId);
+        SetOrRemove(spreadsheets, "stock", update.StockSpreadsheetId);
+        SetOrRemove(spreadsheets, "job", update.JobSpreadsheetId);
+        SetOrRemove(spreadsheets, "home", update.HomeSpreadsheetId);
         secrets["spreadsheets"] = spreadsheets;
 
         File.WriteAllText(path, secrets.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
@@ -120,6 +117,18 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
     private static void SetIfProvided(JsonObject target, string key, string? value)
     {
         if (!string.IsNullOrWhiteSpace(value))
+        {
+            target[key] = value.Trim();
+        }
+    }
+
+    private static void SetOrRemove(JsonObject target, string key, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            target.Remove(key);
+        }
+        else
         {
             target[key] = value.Trim();
         }

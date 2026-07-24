@@ -113,4 +113,10 @@ public class JobSheetOperations(
             async (names, ct) => (await _manager!.GetSheets(names, ct)).Sheets,
             referenceDescriptors,
             cancellationToken);
+
+    public async Task<List<MessageEntity>> CreateDemoDataAsync()
+    {
+        var result = await _manager!.SetupDemo();
+        return result.Messages;
+    }
 }

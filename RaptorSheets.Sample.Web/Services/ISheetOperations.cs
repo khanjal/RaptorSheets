@@ -14,10 +14,13 @@ namespace RaptorSheets.Sample.Web.Services;
 /// it without the TEntity type parameter, since TEntity differs per domain and a Blazor page can't
 /// be generic per route segment.
 ///
-/// Demo-data generation isn't part of this surface: its signature genuinely differs per domain
-/// (Gig takes a date range, Stock/Home take a seed, Job takes both), so there's no shared method to
-/// call generically - it stays domain-specific (see GigSheetOperations.TryGetTypedManager, used only
-/// by Home.razor's Gig-only setup wizard).
+/// Demo-data *generation* itself isn't part of this surface: each domain's own GenerateDemoData has
+/// a different signature (Gig takes a date range, Stock/Home take a seed, Job takes both), so there's
+/// no shared method to call it generically with custom parameters - that stays domain-specific (see
+/// GigSheetOperations.TryGetTypedManager, used only by Home.razor's Gig-only setup wizard, which
+/// wants Gig's actual date-range demo data). CreateDemoDataAsync below covers the simpler "just fill
+/// it with something to look at" case with every parameter defaulted, which every domain can expose
+/// identically regardless of what its own generator's signature looks like.
 /// </summary>
 public interface ISheetOperations
 {
@@ -56,4 +59,8 @@ public interface ISheetOperations
 
     Task<Dictionary<string, IReadOnlyList<string>>> GetReferenceValuesAsync(
         IReadOnlyList<SheetDescriptor> referenceDescriptors, CancellationToken cancellationToken = default);
+
+    /// <summary>Creates any missing sheets and fills them with demo data, every parameter defaulted -
+    /// for a from-Settings "just give me something to look at" action, not a precise dataset.</summary>
+    Task<List<MessageEntity>> CreateDemoDataAsync();
 }

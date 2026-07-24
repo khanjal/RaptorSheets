@@ -1,5 +1,6 @@
 @page "/settings"
 @using System.Text.Json
+@using System.Text.RegularExpressions
 @using RaptorSheets.Sample.Web.Services
 @inject DomainRegistry Domains
 @inject UserSecretsWriter SecretsWriter
@@ -96,28 +97,35 @@
 <section class="settings-section">
     <h2>Spreadsheet IDs</h2>
     <p class="setup-hint">
-        Every domain's spreadsheet ID lives here - this is also the same secrets store
-        RaptorSheets.Test's integration suite reads, so setting it here configures both at once.
+        Paste a spreadsheet's full URL or just its ID - either works, a URL is trimmed down to the ID
+        as you type. Clear a field and save to disconnect that domain. This is also the same secrets
+        store RaptorSheets.Test's integration suite reads, so setting it here configures both at once.
     </p>
 
-    <div class="spreadsheet-grid">
-        <label>
-            <span>Gig</span>
-            <input value="@_gigSpreadsheetId" @oninput="e => _gigSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
-        </label>
-        <label>
-            <span>Stock</span>
-            <input value="@_stockSpreadsheetId" @oninput="e => _stockSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
-        </label>
-        <label>
-            <span>Job</span>
-            <input value="@_jobSpreadsheetId" @oninput="e => _jobSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
-        </label>
-        <label>
-            <span>Home</span>
-            <input value="@_homeSpreadsheetId" @oninput="e => _homeSpreadsheetId = e.Value?.ToString() ?? string.Empty" />
-        </label>
-    </div>
+    @foreach (var slot in _spreadsheetSlots)
+    {
+        <div class="spreadsheet-slot">
+            <label>
+                <span>@slot.Label</span>
+                <div class="field-with-action">
+                    <input value="@slot.Value" @oninput="e => OnSpreadsheetIdInput(slot, e)" placeholder="Spreadsheet ID or URL" />
+                    <button type="button" class="link-button" @onclick="() => ClearSpreadsheetId(slot)" disabled="@string.IsNullOrEmpty(slot.Value)">Clear</button>
+                </div>
+            </label>
+            @if (slot.SupportsDemoData)
+            {
+                <div class="demo-data-row">
+                    <button type="button" @onclick="() => CreateDemoDataAsync(slot)" disabled="@slot.IsBusy">
+                        @(slot.IsBusy ? "Setting up..." : "Create sheets + fill with demo data")
+                    </button>
+                    @if (slot.DemoMessage is not null)
+                    {
+                        <span class="status @(slot.DemoIsError ? "error" : "ok")">@slot.DemoMessage</span>
+                    }
+                </div>
+            }
+        </div>
+    }
 </section>
 
 @if (_message is not null)
@@ -139,24 +147,95 @@
     private string _credPrivateKey = string.Empty;
     private string _credClientEmail = string.Empty;
     private string _credClientId = string.Empty;
-    private string _gigSpreadsheetId = string.Empty;
-    private string _stockSpreadsheetId = string.Empty;
-    private string _jobSpreadsheetId = string.Empty;
-    private string _homeSpreadsheetId = string.Empty;
     private bool _isBusy;
     private string? _message;
     private bool _messageIsError;
 
-    protected override void OnInitialized() => LoadCurrent();
+    private sealed class SpreadsheetSlot
+    {
+        public required string Name { get; init; }
+        public required string Label { get; init; }
+        public string Value { get; set; } = string.Empty;
+        public bool SupportsDemoData { get; init; }
+        public bool IsBusy { get; set; }
+        public string? DemoMessage { get; set; }
+        public bool DemoIsError { get; set; }
+    }
+
+    private List<SpreadsheetSlot> _spreadsheetSlots = [];
+
+    protected override void OnInitialized()
+    {
+        // SupportsDemoData only for domains actually registered in DomainRegistry - Stock isn't
+        // wired up yet (see docs/SAMPLE-APP.md), so it gets a plain ID field with no demo-data button.
+        _spreadsheetSlots =
+        [
+            new SpreadsheetSlot { Name = "gig", Label = "Gig", SupportsDemoData = Domains.TryGet("gig") is not null },
+            new SpreadsheetSlot { Name = "stock", Label = "Stock", SupportsDemoData = Domains.TryGet("stock") is not null },
+            new SpreadsheetSlot { Name = "job", Label = "Job", SupportsDemoData = Domains.TryGet("job") is not null },
+            new SpreadsheetSlot { Name = "home", Label = "Home", SupportsDemoData = Domains.TryGet("home") is not null },
+        ];
+
+        LoadCurrent();
+    }
 
     private void LoadCurrent()
     {
         var snapshot = SecretsWriter.GetCurrentConfig();
         _currentClientEmail = snapshot.ClientEmail;
-        _gigSpreadsheetId = snapshot.GigSpreadsheetId ?? string.Empty;
-        _stockSpreadsheetId = snapshot.StockSpreadsheetId ?? string.Empty;
-        _jobSpreadsheetId = snapshot.JobSpreadsheetId ?? string.Empty;
-        _homeSpreadsheetId = snapshot.HomeSpreadsheetId ?? string.Empty;
+        GetSlot("gig").Value = snapshot.GigSpreadsheetId ?? string.Empty;
+        GetSlot("stock").Value = snapshot.StockSpreadsheetId ?? string.Empty;
+        GetSlot("job").Value = snapshot.JobSpreadsheetId ?? string.Empty;
+        GetSlot("home").Value = snapshot.HomeSpreadsheetId ?? string.Empty;
+    }
+
+    private SpreadsheetSlot GetSlot(string name) => _spreadsheetSlots.First(s => s.Name == name);
+
+    private static void OnSpreadsheetIdInput(SpreadsheetSlot slot, ChangeEventArgs e) =>
+        slot.Value = ExtractSpreadsheetId(e.Value?.ToString() ?? string.Empty);
+
+    private static void ClearSpreadsheetId(SpreadsheetSlot slot) => slot.Value = string.Empty;
+
+    private static readonly Regex SpreadsheetUrlPattern = new(
+        @"/spreadsheets/d/([a-zA-Z0-9_-]+)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(200));
+
+    // Accepts either a bare spreadsheet ID or a full Google Sheets URL
+    // (https://docs.google.com/spreadsheets/d/{ID}/edit#gid=0) - pasting the URL straight from the
+    // browser's address bar is much more natural than hunting the ID out of the middle of it by hand.
+    private static string ExtractSpreadsheetId(string input)
+    {
+        var trimmed = input.Trim();
+        var match = SpreadsheetUrlPattern.Match(trimmed);
+        return match.Success ? match.Groups[1].Value : trimmed;
+    }
+
+    private async Task CreateDemoDataAsync(SpreadsheetSlot slot)
+    {
+        var ops = Domains.TryGet(slot.Name);
+        string? connectionError = null;
+        if (ops is null || !ops.TryGetManager(out _, out connectionError))
+        {
+            slot.DemoMessage = connectionError ?? $"Not connected to the {slot.Label} spreadsheet yet - save a valid ID first.";
+            slot.DemoIsError = true;
+            return;
+        }
+
+        slot.IsBusy = true;
+        slot.DemoMessage = null;
+        try
+        {
+            var messages = await ops.CreateDemoDataAsync();
+            var errors = messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            slot.DemoIsError = errors.Count > 0;
+            slot.DemoMessage = errors.Count > 0
+                ? string.Join(" ", errors.Select(m => m.Message))
+                : "Done - sheets created and filled with demo data.";
+        }
+        finally
+        {
+            slot.IsBusy = false;
+        }
     }
 
     // Prefills everything except the private key, which never comes back down to the browser once
@@ -281,10 +360,10 @@
                 _showCredentialsForm ? _credPrivateKey : null,
                 _showCredentialsForm ? _credClientEmail : null,
                 _showCredentialsForm ? _credClientId : null,
-                _gigSpreadsheetId,
-                _stockSpreadsheetId,
-                _jobSpreadsheetId,
-                _homeSpreadsheetId);
+                GetSlot("gig").Value,
+                GetSlot("stock").Value,
+                GetSlot("job").Value,
+                GetSlot("home").Value);
 
             var result = SecretsWriter.WriteSettings(update);
 

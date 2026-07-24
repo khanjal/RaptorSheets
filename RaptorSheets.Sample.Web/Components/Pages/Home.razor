@@ -69,7 +69,7 @@ else
 
     private async Task CreateDemoDataAsync()
     {
-        if (!ConnectionProvider.TryGetTypedManager(out var manager, out _))
+        if (!ConnectionProvider.TryGetTypedManager(out _, out _))
         {
             return;
         }
@@ -78,11 +78,9 @@ else
         _demoDataMessage = null;
         try
         {
-            await manager!.CreateAllSheets();
-            var demoData = manager.GenerateDemoData();
-            var result = await manager.ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData);
+            var messages = await ConnectionProvider.CreateDemoDataAsync();
 
-            var errors = result.Messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
+            var errors = messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
             if (errors.Count > 0)
             {
                 _demoDataMessage = string.Join(" ", errors.Select(m => m.Message));

@@ -16,8 +16,33 @@
     margin: 0 0 0.5rem;
 }
 
-.spreadsheet-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem 1rem;
+.spreadsheet-slot {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--color-border-muted);
 }
+
+    .spreadsheet-slot:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+.field-with-action {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+    .field-with-action input {
+        flex: 1;
+    }
+
+.demo-data-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.6rem;
+}
+
+    .demo-data-row .status {
+        font-size: 0.8rem;
+    }
