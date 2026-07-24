@@ -10,7 +10,11 @@
 
 <div class="entity-grid">
     <div class="toolbar">
-        <input class="filter" placeholder="Filter..." value="@_filterText" @oninput="e => _filterText = e.Value?.ToString() ?? string.Empty" />
+        <div class="view-toggle">
+            <button class="@(_viewMode == ViewMode.Table ? "active" : "")" @onclick='() => _viewMode = ViewMode.Table'>Table</button>
+            <button class="@(_viewMode == ViewMode.Cards ? "active" : "")" @onclick='() => _viewMode = ViewMode.Cards'>Cards</button>
+        </div>
+        <input class="filter" placeholder="Filter..." value="@_filterText" @oninput="OnFilterInput" />
         @if (!ReadOnly)
         {
             <button @onclick="OpenAddForm">+ Add item</button>
@@ -49,72 +53,101 @@
         </div>
     }
 
-    <div class="grid-scroll">
-        <table>
-            <thead>
-                <tr>
-                    @foreach (var column in _columns.Select(c => c.Column))
-                    {
-                        <th title="@(column.IsInput ? "editable" : "read-only")">
-                            @column.HeaderName
-                            @if (!column.IsInput)
-                            {
-                                <span class="readonly-badge">RO</span>
-                            }
-                        </th>
-                    }
-                    @if (!ReadOnly)
-                    {
-                        <th></th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var original in Rows)
-                {
-                    var working = _workingCopies[original];
-                    if (!MatchesFilter(working))
-                    {
-                        continue;
-                    }
-
-                    var deleted = _deletedOriginals.Contains(original);
-                    <tr class="@RowCssClass(deleted, _editedOriginals.Contains(original))">
-                        @foreach (var col in _columns)
+    @if (_viewMode == ViewMode.Table)
+    {
+        <div class="grid-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        @foreach (var column in _columns.Select(c => c.Column))
                         {
-                            <td>@RenderCell(working, col, readOnly: deleted)</td>
+                            <th title="@(column.IsInput ? "editable" : "read-only")">
+                                @column.HeaderName
+                                @if (!column.IsInput)
+                                {
+                                    <span class="readonly-badge">RO</span>
+                                }
+                            </th>
                         }
                         @if (!ReadOnly)
                         {
-                            <td>
-                                <button @onclick="() => ToggleDelete(original)">@(deleted ? "Restore" : "Delete")</button>
-                            </td>
+                            <th></th>
                         }
                     </tr>
-                }
-                @if (!ReadOnly)
-                {
-                    @foreach (var added in _addedRows)
+                </thead>
+                <tbody>
+                    @foreach (var original in Rows)
                     {
-                        if (!MatchesFilter(added))
+                        var working = _workingCopies[original];
+                        if (!MatchesFilter(working))
                         {
                             continue;
                         }
 
-                        <tr class="row-new">
+                        var deleted = _deletedOriginals.Contains(original);
+                        <tr class="@RowCssClass(deleted, _editedOriginals.Contains(original))">
                             @foreach (var col in _columns)
                             {
-                                <td>@RenderCell(added, col, readOnly: false)</td>
+                                <td>@RenderCell(working, col, readOnly: deleted)</td>
                             }
-                            <td>
-                                <button @onclick="() => RemoveAddedRow(added)">Remove</button>
-                            </td>
+                            @if (!ReadOnly)
+                            {
+                                <td>
+                                    <button @onclick="() => ToggleDelete(original)">@(deleted ? "Restore" : "Delete")</button>
+                                </td>
+                            }
                         </tr>
                     }
+                    @if (!ReadOnly)
+                    {
+                        @foreach (var added in _addedRows)
+                        {
+                            if (!MatchesFilter(added))
+                            {
+                                continue;
+                            }
+
+                            <tr class="row-new">
+                                @foreach (var col in _columns)
+                                {
+                                    <td>@RenderCell(added, col, readOnly: false)</td>
+                                }
+                                <td>
+                                    <button @onclick="() => RemoveAddedRow(added)">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        var cardRows = GetCardRows();
+        <div class="card-scroll">
+            <div class="card-list">
+                @foreach (var row in cardRows.Take(_cardRenderCount))
+                {
+                    <div class="data-card">
+                        @foreach (var col in _cardColumns)
+                        {
+                            <div class="card-field">
+                                <span class="card-label">@col.Column.HeaderName</span>
+                                <span class="card-value">@(col.Property.GetValue(row)?.ToString())</span>
+                            </div>
+                        }
+                    </div>
                 }
-            </tbody>
-        </table>
-    </div>
+            </div>
+            @if (_cardRenderCount < cardRows.Count)
+            {
+                <div class="card-load-more">
+                    <button @onclick="LoadMoreCards">Load more (@(cardRows.Count - _cardRenderCount) remaining)</button>
+                </div>
+            }
+        </div>
+    }
 </div>
 
 @code {
@@ -130,8 +163,12 @@
     [Parameter]
     public IReadOnlyDictionary<string, IReadOnlyList<string>>? DropdownOptions { get; set; }
 
+    private enum ViewMode { Table, Cards }
+
     private List<TRow>? _trackedRows;
     private List<(PropertyInfo Property, ColumnAttribute Column)> _columns = [];
+    private List<(PropertyInfo Property, ColumnAttribute Column)> _cardColumns = [];
+    private ViewMode _viewMode = ViewMode.Table;
     private readonly Dictionary<TRow, TRow> _workingCopies = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<TRow, TRow> _cloneToOriginal = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<TRow> _editedOriginals = new(ReferenceEqualityComparer.Instance);
@@ -154,7 +191,23 @@
 
         _trackedRows = Rows;
         _columns = TypedFieldUtils.GetColumnProperties(typeof(TRow));
+
+        // A card always shows the first column - every entity's identity value (TripEntity.Date,
+        // ServiceEntity.Service, ...), the same convention reference-sheet dropdown sourcing relies
+        // on - plus every other input column, plus any read-only column that's an actual computed
+        // metric (Total, AmountPerDistance) rather than a derived text label (Key, Day, Month, Year
+        // - all just restating the Date input already on the card).
+        _cardColumns = _columns
+            .Where((c, i) => i == 0 || c.Column.IsInput || (Nullable.GetUnderlyingType(c.Property.PropertyType) ?? c.Property.PropertyType) != typeof(string))
+            .ToList();
+
         ResetWorkingState();
+    }
+
+    private void OnFilterInput(ChangeEventArgs e)
+    {
+        _filterText = e.Value?.ToString() ?? string.Empty;
+        InvalidateCardRows();
     }
 
     private void ResetWorkingState()
@@ -166,6 +219,7 @@
         _addedRows = [];
         _showAddForm = false;
         _newRow = new TRow();
+        InvalidateCardRows();
 
         foreach (var row in Rows)
         {
@@ -201,12 +255,17 @@
         nextRowId = Math.Max(nextRowId, _addedRows.Count == 0 ? 0 : _addedRows.Max(r => r.RowId)) + 1;
         _newRow.RowId = nextRowId;
         _addedRows.Add(_newRow);
+        InvalidateCardRows();
 
         _newRow = new TRow();
         _showAddForm = false;
     }
 
-    private void RemoveAddedRow(TRow row) => _addedRows.Remove(row);
+    private void RemoveAddedRow(TRow row)
+    {
+        _addedRows.Remove(row);
+        InvalidateCardRows();
+    }
 
     private void ToggleDelete(TRow original)
     {
@@ -214,6 +273,8 @@
         {
             _deletedOriginals.Add(original);
         }
+
+        InvalidateCardRows();
     }
 
     private async Task SaveAsync()
@@ -262,6 +323,47 @@
         }
 
         return dirty;
+    }
+
+    private const int CardPageSize = 30;
+
+    private List<TRow>? _cardRowsCache;
+    private int _cardRenderCount = CardPageSize;
+
+    private List<TRow> GetCardRows() => _cardRowsCache ??= BuildCardRows();
+
+    private void InvalidateCardRows()
+    {
+        _cardRowsCache = null;
+        _cardRenderCount = CardPageSize;
+    }
+
+    private void LoadMoreCards() => _cardRenderCount += CardPageSize;
+
+    private List<TRow> BuildCardRows()
+    {
+        var cardRows = new List<TRow>();
+
+        foreach (var original in Rows)
+        {
+            if (_deletedOriginals.Contains(original))
+            {
+                continue;
+            }
+
+            var working = _workingCopies[original];
+            if (MatchesFilter(working))
+            {
+                cardRows.Add(working);
+            }
+        }
+
+        if (!ReadOnly)
+        {
+            cardRows.AddRange(_addedRows.Where(MatchesFilter));
+        }
+
+        return cardRows;
     }
 
     private bool MatchesFilter(TRow row)

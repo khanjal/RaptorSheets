@@ -73,6 +73,16 @@ across every page and every visitor, not per-session) - since these sheets can't
 app, a short-lived read cache is safe and cuts out redundant API calls every time you switch sheets.
 Writes are never cached and always go straight to the live spreadsheet.
 
+**Table isn't the only view.** A "Cards" toggle next to the filter box switches to a read-only card
+layout of the same rows - a demonstration that the data isn't inherently tabular, it's just what
+`EntityGrid` happens to render by default. A card shows every input column plus the entity's first
+column (its identity value - `TripEntity.Date`, `ServiceEntity.Service`, whichever it is) plus any
+other read-only column that's an actual computed metric rather than a derived text label (`Total`
+and `AmountPerDistance` show; `Key`/`Day`/`Month`/`Year`, which just restate the `Date` input, don't).
+Cards load 30 at a time with a "Load more" button rather than all at once - genuine scroll-triggered
+loading would need a JS interop call to read scroll position that Blazor doesn't provide out of the
+box, so this trades automatic-on-scroll for something that needs no JS at all.
+
 ## Known limitations (first pass)
 
 - "Discard changes" resets in-memory edits back to what was last loaded; it doesn't re-fetch from

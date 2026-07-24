@@ -25,6 +25,75 @@
     font-style: italic;
 }
 
+.view-toggle {
+    display: flex;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.view-toggle button {
+    border: none;
+    border-radius: 0;
+    background: white;
+    padding: 0.3rem 0.75rem;
+}
+
+.view-toggle button.active {
+    background: #eaeef2;
+    font-weight: 600;
+}
+
+.card-scroll {
+    max-height: 70vh;
+    overflow-y: auto;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    padding: 0.75rem;
+}
+
+.card-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-load-more {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0 0.25rem;
+}
+
+.data-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 0.4rem 1rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #eaeef2;
+    border-radius: 6px;
+    background: #fbfcfd;
+}
+
+.card-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.card-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #8b949e;
+}
+
+.card-value {
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .add-form-backdrop {
     position: fixed;
     inset: 0;
