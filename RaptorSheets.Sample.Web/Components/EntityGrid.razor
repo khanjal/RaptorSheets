@@ -11,14 +11,43 @@
 <div class="entity-grid">
     <div class="toolbar">
         <input class="filter" placeholder="Filter..." value="@_filterText" @oninput="e => _filterText = e.Value?.ToString() ?? string.Empty" />
-        <button @onclick="AddRow">+ Add row</button>
-        <button @onclick="SaveAsync" disabled="@(!HasPendingChanges || _isSaving)">@(_isSaving ? "Saving..." : "Save changes")</button>
-        <button @onclick="DiscardChanges" disabled="@(!HasPendingChanges || _isSaving)">Discard changes</button>
-        @if (HasPendingChanges)
+        @if (!ReadOnly)
         {
-            <span class="pending-count">@PendingChangeCount pending</span>
+            <button @onclick="OpenAddForm">+ Add item</button>
+            <button @onclick="SaveAsync" disabled="@(!HasPendingChanges || _isSaving)">@(_isSaving ? "Saving..." : "Save changes")</button>
+            <button @onclick="DiscardChanges" disabled="@(!HasPendingChanges || _isSaving)">Discard changes</button>
+            @if (HasPendingChanges)
+            {
+                <span class="pending-count">@PendingChangeCount pending</span>
+            }
+        }
+        else
+        {
+            <span class="readonly-notice">Reference sheet - read only</span>
         }
     </div>
+
+    @if (_showAddForm)
+    {
+        <div class="add-form-backdrop">
+            <div class="add-form">
+                <h3>Add item</h3>
+                <div class="add-form-fields">
+                    @foreach (var col in _columns.Where(c => c.Column.IsInput))
+                    {
+                        <label>
+                            <span>@col.Column.HeaderName</span>
+                            @RenderCell(_newRow, col, readOnly: false)
+                        </label>
+                    }
+                </div>
+                <div class="add-form-actions">
+                    <button @onclick="ConfirmAddForm">Add</button>
+                    <button @onclick="CancelAddForm">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
 
     <div class="grid-scroll">
         <table>
@@ -34,7 +63,10 @@
                             }
                         </th>
                     }
-                    <th></th>
+                    @if (!ReadOnly)
+                    {
+                        <th></th>
+                    }
                 </tr>
             </thead>
             <tbody>
@@ -52,27 +84,33 @@
                         {
                             <td>@RenderCell(working, col, readOnly: deleted)</td>
                         }
-                        <td>
-                            <button @onclick="() => ToggleDelete(original)">@(deleted ? "Restore" : "Delete")</button>
-                        </td>
+                        @if (!ReadOnly)
+                        {
+                            <td>
+                                <button @onclick="() => ToggleDelete(original)">@(deleted ? "Restore" : "Delete")</button>
+                            </td>
+                        }
                     </tr>
                 }
-                @foreach (var added in _addedRows)
+                @if (!ReadOnly)
                 {
-                    if (!MatchesFilter(added))
+                    @foreach (var added in _addedRows)
                     {
-                        continue;
-                    }
-
-                    <tr class="row-new">
-                        @foreach (var col in _columns)
+                        if (!MatchesFilter(added))
                         {
-                            <td>@RenderCell(added, col, readOnly: false)</td>
+                            continue;
                         }
-                        <td>
-                            <button @onclick="() => RemoveAddedRow(added)">Remove</button>
-                        </td>
-                    </tr>
+
+                        <tr class="row-new">
+                            @foreach (var col in _columns)
+                            {
+                                <td>@RenderCell(added, col, readOnly: false)</td>
+                            }
+                            <td>
+                                <button @onclick="() => RemoveAddedRow(added)">Remove</button>
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -86,6 +124,12 @@
     [Parameter, EditorRequired]
     public EventCallback<IList> OnSaveRequested { get; set; }
 
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    [Parameter]
+    public IReadOnlyDictionary<string, IReadOnlyList<string>>? DropdownOptions { get; set; }
+
     private List<TRow>? _trackedRows;
     private List<(PropertyInfo Property, ColumnAttribute Column)> _columns = [];
     private readonly Dictionary<TRow, TRow> _workingCopies = new(ReferenceEqualityComparer.Instance);
@@ -95,6 +139,8 @@
     private List<TRow> _addedRows = [];
     private string _filterText = string.Empty;
     private bool _isSaving;
+    private bool _showAddForm;
+    private TRow _newRow = new();
 
     private bool HasPendingChanges => _addedRows.Count > 0 || _editedOriginals.Count > 0 || _deletedOriginals.Count > 0;
     private int PendingChangeCount => _addedRows.Count + _editedOriginals.Count + _deletedOriginals.Count;
@@ -118,6 +164,8 @@
         _editedOriginals.Clear();
         _deletedOriginals.Clear();
         _addedRows = [];
+        _showAddForm = false;
+        _newRow = new TRow();
 
         foreach (var row in Rows)
         {
@@ -139,11 +187,23 @@
         return edited ? "row-edited" : string.Empty;
     }
 
-    private void AddRow()
+    private void OpenAddForm()
+    {
+        _newRow = new TRow();
+        _showAddForm = true;
+    }
+
+    private void CancelAddForm() => _showAddForm = false;
+
+    private void ConfirmAddForm()
     {
         var nextRowId = Rows.Count == 0 ? 1 : Rows.Max(r => r.RowId);
         nextRowId = Math.Max(nextRowId, _addedRows.Count == 0 ? 0 : _addedRows.Max(r => r.RowId)) + 1;
-        _addedRows.Add(new TRow { RowId = nextRowId });
+        _newRow.RowId = nextRowId;
+        _addedRows.Add(_newRow);
+
+        _newRow = new TRow();
+        _showAddForm = false;
     }
 
     private void RemoveAddedRow(TRow row) => _addedRows.Remove(row);
@@ -219,10 +279,19 @@
     private RenderFragment RenderCell(TRow row, (PropertyInfo Property, ColumnAttribute Column) col, bool readOnly) => builder =>
     {
         var value = col.Property.GetValue(row);
+        var isReadOnly = readOnly || ReadOnly || !col.Column.IsInput;
 
-        if (readOnly || !col.Column.IsInput)
+        if (isReadOnly)
         {
             builder.AddContent(0, value?.ToString());
+            return;
+        }
+
+        if (col.Column.EnableValidation
+            && DropdownOptions is not null
+            && DropdownOptions.TryGetValue(col.Column.HeaderName, out var options))
+        {
+            RenderDropdown(builder, row, col, value, options);
             return;
         }
 
@@ -254,6 +323,31 @@
             e => SetValue(row, col, e.Value?.ToString() ?? string.Empty)));
         builder.CloseElement();
     };
+
+    private void RenderDropdown(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder, TRow row,
+        (PropertyInfo Property, ColumnAttribute Column) col, object? value, IReadOnlyList<string> options)
+    {
+        builder.OpenElement(0, "select");
+        builder.AddAttribute(1, "value", value?.ToString() ?? string.Empty);
+        builder.AddAttribute(2, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+            e => SetValue(row, col, e.Value?.ToString() ?? string.Empty)));
+
+        builder.OpenElement(3, "option");
+        builder.AddAttribute(4, "value", string.Empty);
+        builder.AddContent(5, "-- select --");
+        builder.CloseElement();
+
+        var seq = 6;
+        foreach (var option in options)
+        {
+            builder.OpenElement(seq++, "option");
+            builder.AddAttribute(seq++, "value", option);
+            builder.AddContent(seq++, option);
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+    }
 
     private void SetValue(TRow row, (PropertyInfo Property, ColumnAttribute Column) col, object rawValue)
     {

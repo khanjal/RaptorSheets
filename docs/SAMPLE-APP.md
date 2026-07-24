@@ -43,14 +43,28 @@ that metadata once, using the same reflection Core's own mapper relies on
 `EntityGrid<TRow>` component for whichever sheet you pick. Adding a new column to a domain entity
 means it just shows up - no sample-app code changes.
 
-Edits are tracked locally (add / edit / delete) and only sent on "Save changes", as one batched
-`ChangeSheetData` call per sheet - never one write per keystroke.
+New rows go through an "Add item" form rather than an inline blank row - fill in the fields, confirm,
+and it's staged alongside any inline edits. Nothing is sent to Google until you click "Save changes",
+which batches every pending add/edit/delete for the sheet into one `ChangeSheetData` call - never a
+write per keystroke.
+
+**Reference sheets are read-only.** Sheets Gig marks `ProtectSheet = true` (Addresses, Deliveries,
+Locations, Names, Places, Regions, Services, Types, and the Daily/Weekly/Monthly/Yearly/Weekday/Setup
+rollups) are auto-generated from Trips/Shifts/Expenses data - the grid detects this via
+`IGoogleSheetManager.GetSheetLayout(sheet)?.ProtectSheet` and drops the add/edit/delete affordances
+entirely, leaving just a browsable, filterable table.
+
+**Validated columns render as dropdowns**, not free text. `Service`, `Type`, `Place`, `Name`,
+`StartAddress`/`EndAddress`, and `Region` on a trip are each validated against a specific reference
+sheet (e.g. `Service` against the Services sheet) - the same relationship Gig uses to build the
+sheet's own Google Sheets data-validation dropdown. The primary sheet loads first so a big sheet like
+Trips (thousands of rows) isn't held up waiting on six lookup sheets; dropdown options for those
+columns arrive a moment later from a background batched read of just the reference sheets, and the
+grid re-renders once they're in.
 
 ## Known limitations (first pass)
 
-- Columns with `EnableValidation` (e.g. `Service` on a trip, which is validated against a named
-  range in the sheet) render as a plain text input, not a dropdown sourced from that range. Typing
-  an invalid value saves fine but the sheet's own validation will flag it - the same as typing it
-  directly into Google Sheets.
 - "Discard changes" resets in-memory edits back to what was last loaded; it doesn't re-fetch from
   the spreadsheet. Use the sheet's nav link again (or a page refresh) to pull the latest data.
+- A reference sheet with a lot of rows (e.g. Names) produces a long native `<select>` - there's no
+  search/filter inside the dropdown itself yet.

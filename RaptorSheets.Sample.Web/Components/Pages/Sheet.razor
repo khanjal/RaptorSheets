@@ -1,6 +1,8 @@
 @page "/sheet/gig/{SheetName}"
 @using System.Collections
 @using RaptorSheets.Core.Entities
+@using RaptorSheets.Core.Utilities
+@using RaptorSheets.Gig.Constants
 @using RaptorSheets.Gig.Entities
 @using RaptorSheets.Gig.Managers
 @using RaptorSheets.Sample.Web.Services
@@ -50,6 +52,7 @@ else
     private string? _error;
     private bool _notFoundOnSheet;
     private bool _isBusy;
+    private int _loadGeneration;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -78,8 +81,22 @@ else
         await LoadAsync();
     }
 
+    // Which reference sheet backs the dropdown for a given [Column]'s ValidationPattern - mirrors
+    // Gig's own (internal) GigSheetHelpers.GetSheetForRange, built from the same public constants
+    // since that mapping isn't itself public.
+    private static readonly Dictionary<string, string> ValidationSheetMap = new()
+    {
+        [SheetsConfig.ValidationNames.RangeAddress] = SheetsConfig.SheetNames.Addresses,
+        [SheetsConfig.ValidationNames.RangeName] = SheetsConfig.SheetNames.Names,
+        [SheetsConfig.ValidationNames.RangePlace] = SheetsConfig.SheetNames.Places,
+        [SheetsConfig.ValidationNames.RangeRegion] = SheetsConfig.SheetNames.Regions,
+        [SheetsConfig.ValidationNames.RangeService] = SheetsConfig.SheetNames.Services,
+        [SheetsConfig.ValidationNames.RangeType] = SheetsConfig.SheetNames.Types,
+    };
+
     private async Task LoadAsync()
     {
+        var generation = ++_loadGeneration;
         _isBusy = true;
         try
         {
@@ -90,21 +107,97 @@ else
                 return;
             }
 
+            var isReadOnly = _manager.GetSheetLayout(_descriptor.Name)?.ProtectSheet ?? false;
+
+            // Fast path: just the sheet being viewed, same single read as before dropdowns existed.
+            // Reference-sheet data for dropdowns loads separately, in the background, so a big sheet
+            // like Trips (thousands of rows) isn't held up by also pulling in six lookup sheets.
             var result = await _manager.GetSheet(_descriptor.Name);
             _messages = result.Messages;
 
             var rows = _descriptor.GetRows(result.Sheets);
+
             _gridType = typeof(EntityGrid<>).MakeGenericType(_descriptor.RowType);
             _gridParameters = new Dictionary<string, object>
             {
                 ["Rows"] = rows,
-                ["OnSaveRequested"] = EventCallback.Factory.Create<IList>(this, SaveAsync)
+                ["OnSaveRequested"] = EventCallback.Factory.Create<IList>(this, SaveAsync),
+                ["ReadOnly"] = isReadOnly,
+                ["DropdownOptions"] = new Dictionary<string, IReadOnlyList<string>>()
             };
         }
         finally
         {
             _isBusy = false;
         }
+
+        if (!_notFoundOnSheet && _error is null)
+        {
+            _ = LoadDropdownOptionsAsync(generation);
+        }
+    }
+
+    private async Task LoadDropdownOptionsAsync(int generation)
+    {
+        var validatedColumns = TypedFieldUtils.GetColumnProperties(_descriptor!.RowType)
+            .Where(c => c.Column.IsInput && c.Column.EnableValidation && c.Column.ValidationPattern is not null)
+            .Where(c => ValidationSheetMap.ContainsKey(c.Column.ValidationPattern!))
+            .ToList();
+
+        var referenceSheetNames = validatedColumns
+            .Select(c => ValidationSheetMap[c.Column.ValidationPattern!])
+            .Distinct()
+            .ToList();
+
+        if (referenceSheetNames.Count == 0)
+        {
+            return;
+        }
+
+        var result = await _manager!.GetSheets(referenceSheetNames);
+
+        if (generation != _loadGeneration)
+        {
+            return; // navigated away / reloaded since this started
+        }
+
+        var allDescriptors = SheetMetadata.GetSheetDescriptors(typeof(GigSheets));
+        var dropdownOptions = new Dictionary<string, IReadOnlyList<string>>();
+
+        foreach (var column in validatedColumns.Select(c => c.Column))
+        {
+            var refSheetName = ValidationSheetMap[column.ValidationPattern!];
+            var refDescriptor = allDescriptors.FirstOrDefault(d => d.Name == refSheetName);
+            var refColumns = refDescriptor is null ? [] : TypedFieldUtils.GetColumnProperties(refDescriptor.RowType);
+            if (refDescriptor is null || refColumns.Count == 0)
+            {
+                continue;
+            }
+
+            // Every reference entity declares its identity value as its first column
+            // (e.g. ServiceEntity.Service, AddressEntity.Address) - see the entities themselves.
+            var identityProperty = refColumns[0].Property;
+            var options = refDescriptor.GetRows(result.Sheets)
+                .Cast<object>()
+                .Select(r => identityProperty.GetValue(r)?.ToString())
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Distinct()
+                .OrderBy(v => v, StringComparer.OrdinalIgnoreCase)
+                .Cast<string>()
+                .ToList();
+
+            dropdownOptions[column.HeaderName] = options;
+        }
+
+        if (_gridParameters is not null)
+        {
+            _gridParameters = new Dictionary<string, object>(_gridParameters)
+            {
+                ["DropdownOptions"] = dropdownOptions
+            };
+        }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task CreateSheetAsync()

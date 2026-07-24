@@ -19,6 +19,62 @@
     font-size: 0.85rem;
 }
 
+.readonly-notice {
+    color: #57606a;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.add-form-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(27, 31, 36, 0.4);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 4rem;
+    z-index: 100;
+}
+
+.add-form {
+    background: white;
+    border-radius: 6px;
+    padding: 1.25rem;
+    width: min(32rem, 90vw);
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(140, 149, 159, 0.3);
+}
+
+.add-form h3 {
+    margin-top: 0;
+}
+
+.add-form-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1rem;
+}
+
+.add-form-fields label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+    color: #57606a;
+    gap: 0.2rem;
+}
+
+.add-form-fields input, .add-form-fields select {
+    font-size: 0.9rem;
+    padding: 0.25rem;
+}
+
+.add-form-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
 .grid-scroll {
     overflow-x: auto;
     border: 1px solid #d0d7de;
