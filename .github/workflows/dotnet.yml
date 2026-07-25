@@ -139,7 +139,8 @@ jobs:
           /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" \
           /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" \
           /d:sonar.cpd.exclusions=RaptorSheets.Gig/Entities/**/*.cs \
-          /d:sonar.exclusions=RaptorSheets.Core/Entities/Generated/**,RaptorSheets.Gig/Entities/Generated/**,RaptorSheets.Stock/Entities/Generated/**,**/coverage*.xml,**/TestResults/**,**/coverage/**,**/*.coverage
+          /d:sonar.exclusions=RaptorSheets.Core/Entities/Generated/**,RaptorSheets.Gig/Entities/Generated/**,RaptorSheets.Stock/Entities/Generated/**,**/coverage*.xml,**/TestResults/**,**/coverage/**,**/*.coverage \
+          /d:sonar.coverage.exclusions=RaptorSheets.Sample.Web/**
 
     - name: Build for SonarCloud
       run: dotnet build --configuration Release
