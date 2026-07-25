@@ -24,7 +24,7 @@ public class GigSheetOperations(
     private bool _attempted;
 
     public string DomainName => "gig";
-    public string DomainLabel => "Gig";
+    public string DomainLabel => "Gig Work";
     public Type SheetsType => typeof(GigSheets);
     public Type SheetNamesType => typeof(RaptorSheets.Gig.Constants.SheetsConfig.SheetNames);
     public IReadOnlySet<string> ExcludedSheetNames { get; } = new HashSet<string>();
@@ -80,7 +80,7 @@ public class GigSheetOperations(
 
         if (string.IsNullOrWhiteSpace(spreadsheetId) || credentials is not { Count: > 0 })
         {
-            _error = "No Gig spreadsheet configured. Set \"spreadsheets:gig\" and \"google_credentials\" " +
+            _error = $"No {DomainLabel} spreadsheet configured. Set \"spreadsheets:gig\" and \"google_credentials\" " +
                       "with dotnet user-secrets - see docs/SAMPLE-APP.md.";
             return;
         }
@@ -98,7 +98,7 @@ public class GigSheetOperations(
             // this constructor's own validation controls. This is the boundary where arbitrary
             // user-supplied credential text meets the system, so catching broadly here and showing a
             // message is correct - the alternative is an uncaught exception tearing down the circuit.
-            _error = $"Couldn't connect to the Gig spreadsheet: {ex.Message}";
+            _error = $"Couldn't connect to the {DomainLabel} spreadsheet: {ex.Message}";
         }
     }
 
@@ -142,5 +142,11 @@ public class GigSheetOperations(
         var demoData = _manager.GenerateDemoData();
         var result = await _manager.ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData);
         return result.Messages;
+    }
+
+    public async Task<string?> GetSpreadsheetTitleAsync()
+    {
+        var info = await _manager!.GetSpreadsheetInfo();
+        return info?.Properties?.Title;
     }
 }

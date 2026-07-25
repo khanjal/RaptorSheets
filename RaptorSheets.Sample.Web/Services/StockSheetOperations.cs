@@ -19,7 +19,7 @@ public class StockSheetOperations(
     private bool _attempted;
 
     public string DomainName => "stock";
-    public string DomainLabel => "Stock";
+    public string DomainLabel => "Stock Tracking";
     public Type SheetsType => typeof(StockSheets);
     // Stock names sheets via RaptorSheets.Stock.Enums.SheetName + [Description], not a
     // Constants.SheetsConfig.SheetNames class - its Sheets-container property names (Accounts,
@@ -55,7 +55,7 @@ public class StockSheetOperations(
 
         if (string.IsNullOrWhiteSpace(spreadsheetId) || credentials is not { Count: > 0 })
         {
-            _error = "No Stock spreadsheet configured. Set \"spreadsheets:stock\" and \"google_credentials\" " +
+            _error = $"No {DomainLabel} spreadsheet configured. Set \"spreadsheets:stock\" and \"google_credentials\" " +
                       "with dotnet user-secrets - see docs/SAMPLE-APP.md.";
             return;
         }
@@ -66,7 +66,7 @@ public class StockSheetOperations(
         }
         catch (Exception ex)
         {
-            _error = $"Couldn't connect to the Stock spreadsheet: {ex.Message}";
+            _error = $"Couldn't connect to the {DomainLabel} spreadsheet: {ex.Message}";
         }
     }
 
@@ -106,5 +106,11 @@ public class StockSheetOperations(
     {
         var result = await _manager!.SetupDemo();
         return result.Messages;
+    }
+
+    public async Task<string?> GetSpreadsheetTitleAsync()
+    {
+        var info = await _manager!.GetSpreadsheetInfo();
+        return info?.Properties?.Title;
     }
 }

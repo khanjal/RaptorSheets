@@ -14,12 +14,12 @@
 
 @if (_connected)
 {
-    <p class="status ok">Connected to the Gig spreadsheet. Pick a sheet from the left to get started.</p>
+    <p class="status ok">Connected to the @ConnectionProvider.DomainLabel spreadsheet. Pick a sheet from the left to get started.</p>
 
     @if (_isBlankSpreadsheet)
     {
         <div class="demo-prompt">
-            <p>This spreadsheet doesn't have any Gig sheets on it yet.</p>
+            <p>This spreadsheet doesn't have any @ConnectionProvider.DomainLabel sheets on it yet.</p>
             <button class="btn-primary" @onclick="CreateDemoDataAsync" disabled="@_isBusy">
                 @(_isBusy ? "Setting up..." : "Create sheets + fill with demo data")
             </button>

@@ -112,6 +112,14 @@
                     <button type="button" class="link-button" @onclick="() => ClearSpreadsheetId(slot)" disabled="@string.IsNullOrEmpty(slot.Value)">Clear</button>
                 </div>
             </label>
+            @if (slot.TitleLoading)
+            {
+                <p class="setup-hint">Checking connection...</p>
+            }
+            else if (slot.Title is not null)
+            {
+                <p class="status ok">Connected to "@slot.Title".</p>
+            }
             @if (slot.SupportsDemoData)
             {
                 <div class="demo-data-row">
@@ -162,6 +170,8 @@
         public bool IsBusy { get; set; }
         public string? DemoMessage { get; set; }
         public bool DemoIsError { get; set; }
+        public string? Title { get; set; }
+        public bool TitleLoading { get; set; }
     }
 
     private List<SpreadsheetSlot> _spreadsheetSlots = [];
@@ -170,15 +180,47 @@
     {
         // SupportsDemoData only for domains actually registered in DomainRegistry - Stock isn't
         // wired up yet (see docs/SAMPLE-APP.md), so it gets a plain ID field with no demo-data button.
+        // Labels come from each domain's own ISheetOperations.DomainLabel where one's registered
+        // (Stock isn't, so its label is hardcoded here) - alphabetical, not registration order.
         _spreadsheetSlots =
         [
-            new SpreadsheetSlot { Name = "gig", Label = "Gig", SupportsDemoData = Domains.TryGet("gig") is not null },
-            new SpreadsheetSlot { Name = "stock", Label = "Stock", SupportsDemoData = Domains.TryGet("stock") is not null },
-            new SpreadsheetSlot { Name = "job", Label = "Job", SupportsDemoData = Domains.TryGet("job") is not null },
-            new SpreadsheetSlot { Name = "home", Label = "Home", SupportsDemoData = Domains.TryGet("home") is not null },
+            new SpreadsheetSlot { Name = "gig", Label = Domains.TryGet("gig")?.DomainLabel ?? "Gig Work", SupportsDemoData = Domains.TryGet("gig") is not null },
+            new SpreadsheetSlot { Name = "home", Label = Domains.TryGet("home")?.DomainLabel ?? "Home Maintenance", SupportsDemoData = Domains.TryGet("home") is not null },
+            new SpreadsheetSlot { Name = "job", Label = Domains.TryGet("job")?.DomainLabel ?? "Job Applications", SupportsDemoData = Domains.TryGet("job") is not null },
+            new SpreadsheetSlot { Name = "stock", Label = Domains.TryGet("stock")?.DomainLabel ?? "Stock Tracking", SupportsDemoData = Domains.TryGet("stock") is not null },
         ];
 
         LoadCurrent();
+        _ = LoadTitlesAsync();
+    }
+
+    // Confirms "yes, this is the spreadsheet you meant to connect" by showing its own title (from
+    // Google Sheets, not this app) - fires in the background so the page doesn't wait on 4 API
+    // calls before it's usable, refreshing each slot as its own answer comes back.
+    private async Task LoadTitlesAsync()
+    {
+        foreach (var slot in _spreadsheetSlots)
+        {
+            slot.Title = null;
+
+            if (string.IsNullOrWhiteSpace(slot.Value))
+            {
+                continue;
+            }
+
+            var ops = Domains.TryGet(slot.Name);
+            if (ops is null || !ops.TryGetManager(out _, out _))
+            {
+                continue;
+            }
+
+            slot.TitleLoading = true;
+            await InvokeAsync(StateHasChanged);
+
+            slot.Title = await ops.GetSpreadsheetTitleAsync();
+            slot.TitleLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private void LoadCurrent()
@@ -387,6 +429,7 @@
             }
 
             LoadCurrent();
+            _ = LoadTitlesAsync();
 
             var gig = Domains.TryGet("gig");
             string? connectionError = null;

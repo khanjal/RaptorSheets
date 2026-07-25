@@ -22,7 +22,7 @@ public class HomeSheetOperations(
     private bool _attempted;
 
     public string DomainName => "home";
-    public string DomainLabel => "Home";
+    public string DomainLabel => "Home Maintenance";
     public Type SheetsType => typeof(HomeSheets);
     public Type SheetNamesType => typeof(RaptorSheets.Home.Constants.SheetsConfig.SheetNames);
     public IReadOnlySet<string> ExcludedSheetNames { get; } = new HashSet<string>();
@@ -60,7 +60,7 @@ public class HomeSheetOperations(
 
         if (string.IsNullOrWhiteSpace(spreadsheetId) || credentials is not { Count: > 0 })
         {
-            _error = "No Home spreadsheet configured. Set \"spreadsheets:home\" and \"google_credentials\" " +
+            _error = $"No {DomainLabel} spreadsheet configured. Set \"spreadsheets:home\" and \"google_credentials\" " +
                       "with dotnet user-secrets - see docs/SAMPLE-APP.md.";
             return;
         }
@@ -71,7 +71,7 @@ public class HomeSheetOperations(
         }
         catch (Exception ex)
         {
-            _error = $"Couldn't connect to the Home spreadsheet: {ex.Message}";
+            _error = $"Couldn't connect to the {DomainLabel} spreadsheet: {ex.Message}";
         }
     }
 
@@ -111,5 +111,11 @@ public class HomeSheetOperations(
     {
         var result = await _manager!.SetupDemo();
         return result.Messages;
+    }
+
+    public async Task<string?> GetSpreadsheetTitleAsync()
+    {
+        var info = await _manager!.GetSpreadsheetInfo();
+        return info?.Properties?.Title;
     }
 }

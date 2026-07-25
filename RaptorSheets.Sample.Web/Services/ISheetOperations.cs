@@ -27,7 +27,8 @@ public interface ISheetOperations
     /// <summary>Route segment, e.g. "gig".</summary>
     string DomainName { get; }
 
-    /// <summary>Display label, e.g. "Gig".</summary>
+    /// <summary>Display label, e.g. "Gig Work" - deliberately more than the bare domain name, since
+    /// "Home" alone reads as this app's own Home page rather than the home-maintenance domain.</summary>
     string DomainLabel { get; }
 
     /// <summary>The domain's Sheets container (e.g. GigSheets) - reflected by SheetMetadata.</summary>
@@ -63,4 +64,8 @@ public interface ISheetOperations
     /// <summary>Creates any missing sheets and fills them with demo data, every parameter defaulted -
     /// for a from-Settings "just give me something to look at" action, not a precise dataset.</summary>
     Task<List<MessageEntity>> CreateDemoDataAsync();
+
+    /// <summary>The connected spreadsheet's own title (from Google Sheets, not this app), or null if
+    /// not connected - lets Settings confirm "yes, this is the spreadsheet you meant to connect."</summary>
+    Task<string?> GetSpreadsheetTitleAsync();
 }

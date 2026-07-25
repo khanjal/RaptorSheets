@@ -7,8 +7,10 @@ result land in the actual Google Sheet.
 
 It's plain ASP.NET Core - `dotnet run` is the whole setup story, no Node/npm toolchain required.
 
-Wired up for **Gig, Job, and Home** - pick any of them from the nav and browse/edit its sheets the
-same way. **Stock isn't in the nav yet**: its entities have no `[Column]` attributes at all (unlike
+Wired up for **Gig Work, Job Applications, and Home Maintenance** - pick any of them from the nav and
+browse/edit its sheets the same way. Domain labels are deliberately more than the bare domain name
+("Home" alone reads as this app's own Home page, not a domain) - see `ISheetOperations.DomainLabel`.
+**Stock Tracking isn't in the nav yet**: its entities have no `[Column]` attributes at all (unlike
 the other three domains), which this app's generic rendering depends on entirely for headers,
 editability, and validation - every Stock sheet would render with no columns. That's a gap in the
 Stock library itself (it predates the `[Column]`/`GenericSheetMapper<T>` convention and still uses
@@ -52,7 +54,11 @@ straight from the browser's address bar and it's trimmed down to just the ID as 
 extraction needed. A **Clear** button next to each field blanks it in one click; unlike the credential
 fields, a blank spreadsheet ID field is not "leave unchanged" - it's always visibly prefilled with the
 current value, so a blank one is a deliberate signal, and saving removes that domain's ID entirely
-(disconnecting it) rather than leaving the old value in place.
+(disconnecting it) rather than leaving the old value in place. Once connected, a field shows
+**"Connected to '{title}'"** using the spreadsheet's own title from Google Sheets (via
+`GetSpreadsheetInfo()`), not anything typed into this app - confirms you actually pasted the ID you
+meant to, especially useful right after pasting a URL. This check runs in the background per field
+(so the page doesn't wait on 4 API calls before it's usable) and re-runs after every save.
 
 Gig/Job/Home each get a **"Create sheets + fill with demo data"** button next to their ID field
 (Stock doesn't, since it isn't wired into the nav - see below). This calls `ISheetOperations
@@ -114,7 +120,9 @@ has 17) - each domain label is a toggle; clicking it expands/collapses just that
 list, and only one domain is expanded at a time. Landing directly on a sheet page (a fresh load, a
 refresh, browser back/forward) auto-expands whichever domain that sheet belongs to, via
 `NavigationManager.LocationChanged`, so you're never looking at a collapsed group with no visible
-indication of where you are.
+indication of where you are. `DomainRegistry` sorts domains alphabetically by `DomainLabel`, not by
+whatever order `Program.cs` happens to register them in, so the nav (and Settings' spreadsheet ID
+list) stay predictable regardless of registration order.
 
 Every domain entity declares its own schema via `[Column(...)]` attributes - header name, whether
 it's user-editable or a read-only formula/output column, validation rules, display format. Rather

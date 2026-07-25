@@ -4,7 +4,10 @@ namespace RaptorSheets.Sample.Web.Services;
 /// "sheet/{domain}/{sheetName}", Sheet.razor resolves {domain} back through here.</summary>
 public sealed class DomainRegistry(IEnumerable<ISheetOperations> operations)
 {
-    public IReadOnlyList<ISheetOperations> Domains { get; } = operations.ToList();
+    // Alphabetical by display label, not DI registration order - so the nav lists domains
+    // predictably regardless of the order Program.cs happens to register them in.
+    public IReadOnlyList<ISheetOperations> Domains { get; } =
+        operations.OrderBy(o => o.DomainLabel, StringComparer.OrdinalIgnoreCase).ToList();
 
     public ISheetOperations? TryGet(string domainName) =>
         Domains.FirstOrDefault(d => string.Equals(d.DomainName, domainName, StringComparison.OrdinalIgnoreCase));

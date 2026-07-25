@@ -19,7 +19,7 @@ public class JobSheetOperations(
     private bool _attempted;
 
     public string DomainName => "job";
-    public string DomainLabel => "Job";
+    public string DomainLabel => "Job Applications";
     public Type SheetsType => typeof(JobSheets);
     public Type SheetNamesType => typeof(RaptorSheets.Job.Constants.SheetsConfig.SheetNames);
 
@@ -67,7 +67,7 @@ public class JobSheetOperations(
 
         if (string.IsNullOrWhiteSpace(spreadsheetId) || credentials is not { Count: > 0 })
         {
-            _error = "No Job spreadsheet configured. Set \"spreadsheets:job\" and \"google_credentials\" " +
+            _error = $"No {DomainLabel} spreadsheet configured. Set \"spreadsheets:job\" and \"google_credentials\" " +
                       "with dotnet user-secrets - see docs/SAMPLE-APP.md.";
             return;
         }
@@ -78,7 +78,7 @@ public class JobSheetOperations(
         }
         catch (Exception ex)
         {
-            _error = $"Couldn't connect to the Job spreadsheet: {ex.Message}";
+            _error = $"Couldn't connect to the {DomainLabel} spreadsheet: {ex.Message}";
         }
     }
 
@@ -118,5 +118,11 @@ public class JobSheetOperations(
     {
         var result = await _manager!.SetupDemo();
         return result.Messages;
+    }
+
+    public async Task<string?> GetSpreadsheetTitleAsync()
+    {
+        var info = await _manager!.GetSpreadsheetInfo();
+        return info?.Properties?.Title;
     }
 }
