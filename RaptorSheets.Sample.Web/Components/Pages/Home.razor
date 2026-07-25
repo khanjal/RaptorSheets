@@ -78,8 +78,19 @@ else
         _demoDataMessage = null;
         try
         {
-            var messages = await ConnectionProvider.CreateDemoDataAsync();
+            // Safe specifically because this button only ever shows when _isBlankSpreadsheet is
+            // true - no Gig sheets exist yet, so there's no real data these fresh sheets could
+            // possibly overwrite (see ISheetOperations.InsertDemoDataAsync for why that's not true
+            // in general).
+            var createMessages = await ConnectionProvider.CreateAllSheetsAsync();
+            var createErrors = createMessages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (createErrors.Count > 0)
+            {
+                _demoDataMessage = string.Join(" ", createErrors.Select(m => m.Message));
+                return;
+            }
 
+            var messages = await ConnectionProvider.InsertDemoDataAsync();
             var errors = messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
             if (errors.Count > 0)
             {

@@ -102,9 +102,17 @@ public class StockSheetOperations(
             referenceDescriptors,
             cancellationToken);
 
-    public async Task<List<MessageEntity>> CreateDemoDataAsync()
+    public async Task<List<MessageEntity>> CreateAllSheetsAsync()
     {
-        var result = await _manager!.SetupDemo();
+        var result = await _manager!.CreateAllSheets();
+        return result.Messages;
+    }
+
+    // PopulateDemoData directly, not SetupDemo - sheet creation is now CreateAllSheetsAsync's job
+    // (see ISheetOperations.InsertDemoDataAsync).
+    public async Task<List<MessageEntity>> InsertDemoDataAsync()
+    {
+        var result = await _manager!.PopulateDemoData();
         return result.Messages;
     }
 

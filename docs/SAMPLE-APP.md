@@ -60,13 +60,25 @@ current value, so a blank one is a deliberate signal, and saving removes that do
 meant to, especially useful right after pasting a URL. This check runs in the background per field
 (so the page doesn't wait on 4 API calls before it's usable) and re-runs after every save.
 
-Gig/Job/Home each get a **"Create sheets + fill with demo data"** button next to their ID field
-(Stock doesn't, since it isn't wired into the nav - see below). This calls `ISheetOperations
-.CreateDemoDataAsync()`, which every parameter defaulted: for Stock/Job/Home that's their own
-`SetupDemo()` (create any missing sheets, wait for them to become writable, then generate and write
-demo data, all in one manager call); Gig has no such convenience method, so it replicates the
-documented `CreateAllSheets` -> `GenerateDemoData` -> `ChangeSheetData` sequence by hand. This is a
-"just give me something to look at" action with no options, distinct from the Home page's blank-
+Gig/Job/Home each get **"Create missing sheets"** and **"Insert demo data"** buttons next to their ID
+field (Stock doesn't, since it isn't wired into the nav - see below) - deliberately two buttons, not
+one. Every domain's `GenerateDemoData()` always assigns `RowId` starting fresh at 2, and the
+underlying write path decides overwrite-vs-append purely by comparing `RowId` against the sheet's
+total *grid* row count (usually 1000+), not its populated-row count - so `RowId 2` almost always lands
+in the "overwrite this literal spreadsheet row" branch. **Calling insert-demo-data against a
+spreadsheet that already has real rows would silently overwrite the first several of them, not just
+add demo rows alongside them.** (Tracked as a library-level fix, since this affects any caller of
+`GenerateDemoData`/`ChangeSheetData`, not just this UI - see the codebase's task backlog.)
+
+Settings guards against this: alongside the "Connected to" title check, it fetches each domain's
+writable/primary sheets (skipping read-only reference/rollup sheets, which are formula-derived and
+show rows the moment primary data exists either way) and counts their rows. The summary shows
+**"X of Y sheets found"** plus any header-check warnings from the read, and **"Insert demo data" stays
+disabled the moment any existing row is found** - re-checked again immediately before the write
+itself, not just at page load, since something could have changed in between. **"Create missing
+sheets"** has no such risk (`CreateAllSheets()`/`CreateSheets()` never touches a sheet that already
+exists as a tab) and stays available whenever fewer sheets exist than expected. This is a "just give
+me something to look at" action with no options, distinct from the Home page's blank-
 spreadsheet wizard (which is Gig-specific and reuses the same underlying call).
 
 `RaptorSheets.Sample.Web` and `RaptorSheets.Test` (the integration test suite's shared infra)

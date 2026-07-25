@@ -119,18 +119,56 @@
             else if (slot.Title is not null)
             {
                 <p class="status ok">Connected to "@slot.Title".</p>
-            }
-            @if (slot.SupportsDemoData)
-            {
-                <div class="demo-data-row">
-                    <button type="button" @onclick="() => CreateDemoDataAsync(slot)" disabled="@slot.IsBusy">
-                        @(slot.IsBusy ? "Setting up..." : "Create sheets + fill with demo data")
-                    </button>
-                    @if (slot.DemoMessage is not null)
+
+                @if (slot.SupportsDemoData)
+                {
+                    @if (slot.SheetsChecking)
                     {
-                        <span class="status @(slot.DemoIsError ? "error" : "ok")">@slot.DemoMessage</span>
+                        <p class="setup-hint">Checking sheets...</p>
                     }
-                </div>
+                    else
+                    {
+                        <p class="setup-hint">
+                            @slot.FoundSheets of @slot.ExpectedSheets sheets found.
+                            @if (slot.ExistingDataRows > 0)
+                            {
+                                @($" {slot.ExistingDataRows} existing row(s) of data.")
+                            }
+                        </p>
+                        @if (slot.SheetIssues.Count > 0)
+                        {
+                            <ul class="messages">
+                                @foreach (var issue in slot.SheetIssues)
+                                {
+                                    <li class="warning">@issue</li>
+                                }
+                            </ul>
+                        }
+                    }
+
+                    <div class="demo-data-row">
+                        <button type="button" @onclick="() => CreateMissingSheetsAsync(slot)"
+                                disabled="@(slot.ActionBusy || slot.SheetsChecking || slot.FoundSheets >= slot.ExpectedSheets)">
+                            @(slot.ActionBusy ? "Working..." : "Create missing sheets")
+                        </button>
+                        <button type="button" @onclick="() => InsertDemoDataAsync(slot)"
+                                disabled="@(slot.ActionBusy || slot.SheetsChecking || slot.FoundSheets < slot.ExpectedSheets || slot.ExistingDataRows > 0)">
+                            @(slot.ActionBusy ? "Working..." : "Insert demo data")
+                        </button>
+                    </div>
+                    @if (!slot.SheetsChecking && slot.ExistingDataRows > 0)
+                    {
+                        <p class="setup-hint">
+                            Demo data is disabled because this spreadsheet already has data - inserting demo
+                            data would overwrite existing rows, not just add to them. Connect a blank
+                            spreadsheet instead if you want a demo dataset.
+                        </p>
+                    }
+                    @if (slot.ActionMessage is not null)
+                    {
+                        <p class="status @(slot.ActionIsError ? "error" : "ok")">@slot.ActionMessage</p>
+                    }
+                }
             }
         </div>
     }
@@ -167,11 +205,20 @@
         public required string Label { get; init; }
         public string Value { get; set; } = string.Empty;
         public bool SupportsDemoData { get; init; }
-        public bool IsBusy { get; set; }
-        public string? DemoMessage { get; set; }
-        public bool DemoIsError { get; set; }
         public string? Title { get; set; }
         public bool TitleLoading { get; set; }
+
+        // Populated by CheckSheetsAsync - ExistingDataRows > 0 is what actually gates the
+        // "Insert demo data" button (see ISheetOperations.InsertDemoDataAsync for why).
+        public bool SheetsChecking { get; set; }
+        public int ExpectedSheets { get; set; }
+        public int FoundSheets { get; set; }
+        public int ExistingDataRows { get; set; }
+        public List<string> SheetIssues { get; set; } = [];
+
+        public bool ActionBusy { get; set; }
+        public string? ActionMessage { get; set; }
+        public bool ActionIsError { get; set; }
     }
 
     private List<SpreadsheetSlot> _spreadsheetSlots = [];
@@ -191,13 +238,15 @@
         ];
 
         LoadCurrent();
-        _ = LoadTitlesAsync();
+        _ = LoadConnectionInfoAsync();
     }
 
     // Confirms "yes, this is the spreadsheet you meant to connect" by showing its own title (from
-    // Google Sheets, not this app) - fires in the background so the page doesn't wait on 4 API
-    // calls before it's usable, refreshing each slot as its own answer comes back.
-    private async Task LoadTitlesAsync()
+    // Google Sheets, not this app), then - for domains with a demo-data button - how many of its
+    // sheets already exist and whether any already hold real data. Fires in the background so the
+    // page doesn't wait on a string of API calls before it's usable, refreshing each slot as its
+    // own answers come back.
+    private async Task LoadConnectionInfoAsync()
     {
         foreach (var slot in _spreadsheetSlots)
         {
@@ -220,7 +269,52 @@
             slot.Title = await ops.GetSpreadsheetTitleAsync();
             slot.TitleLoading = false;
             await InvokeAsync(StateHasChanged);
+
+            if (slot.SupportsDemoData)
+            {
+                slot.SheetsChecking = true;
+                await InvokeAsync(StateHasChanged);
+
+                await CheckSheetsAsync(ops, slot);
+                slot.SheetsChecking = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
+    }
+
+    // How many of this domain's sheets exist, and whether any of the writable/primary ones (not
+    // read-only reference/rollup sheets, which are formula-derived and will show rows the moment
+    // primary data exists either way) already hold real data - the one thing that must be zero
+    // before InsertDemoDataAsync is safe to call, since it always writes starting at RowId 2
+    // regardless of what's already there (see ISheetOperations.InsertDemoDataAsync).
+    private static async Task CheckSheetsAsync(ISheetOperations ops, SpreadsheetSlot slot)
+    {
+        var allDescriptors = SheetMetadata.GetSheetDescriptors(ops.SheetsType, ops.SheetNamesType)
+            .Where(d => !ops.ExcludedSheetNames.Contains(d.Name))
+            .ToList();
+
+        var tabNames = await ops.GetAllSheetTabNamesAsync();
+        var foundDescriptors = allDescriptors
+            .Where(d => tabNames.Contains(d.Name, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
+        var writableFound = foundDescriptors.Where(d => ops.GetSheetLayout(d.Name)?.ProtectSheet != true).ToList();
+
+        var issues = new List<string>();
+        var existingRows = 0;
+        foreach (var descriptor in writableFound)
+        {
+            var (sheetsContainer, messages) = await ops.GetSheetAsync(descriptor.Name);
+            existingRows += descriptor.GetRows(sheetsContainer).Count;
+            issues.AddRange(messages
+                .Where(m => !string.Equals(m.Level, "INFO", StringComparison.OrdinalIgnoreCase))
+                .Select(m => $"{descriptor.Name}: {m.Message}"));
+        }
+
+        slot.ExpectedSheets = allDescriptors.Count;
+        slot.FoundSheets = foundDescriptors.Count;
+        slot.ExistingDataRows = existingRows;
+        slot.SheetIssues = issues;
     }
 
     private void LoadCurrent()
@@ -253,32 +347,78 @@
         return match.Success ? match.Groups[1].Value : trimmed;
     }
 
-    private async Task CreateDemoDataAsync(SpreadsheetSlot slot)
+    private async Task CreateMissingSheetsAsync(SpreadsheetSlot slot)
     {
         var ops = Domains.TryGet(slot.Name);
         string? connectionError = null;
         if (ops is null || !ops.TryGetManager(out _, out connectionError))
         {
-            slot.DemoMessage = connectionError ?? $"Not connected to the {slot.Label} spreadsheet yet - save a valid ID first.";
-            slot.DemoIsError = true;
+            slot.ActionMessage = connectionError ?? $"Not connected to the {slot.Label} spreadsheet yet - save a valid ID first.";
+            slot.ActionIsError = true;
             return;
         }
 
-        slot.IsBusy = true;
-        slot.DemoMessage = null;
+        slot.ActionBusy = true;
+        slot.ActionMessage = null;
         try
         {
-            var messages = await ops.CreateDemoDataAsync();
+            var messages = await ops.CreateAllSheetsAsync();
             var errors = messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
 
-            slot.DemoIsError = errors.Count > 0;
-            slot.DemoMessage = errors.Count > 0
+            slot.ActionIsError = errors.Count > 0;
+            slot.ActionMessage = errors.Count > 0
                 ? string.Join(" ", errors.Select(m => m.Message))
-                : "Done - sheets created and filled with demo data.";
+                : "Sheets created.";
+
+            await CheckSheetsAsync(ops, slot);
         }
         finally
         {
-            slot.IsBusy = false;
+            slot.ActionBusy = false;
+        }
+    }
+
+    private async Task InsertDemoDataAsync(SpreadsheetSlot slot)
+    {
+        var ops = Domains.TryGet(slot.Name);
+        string? connectionError = null;
+        if (ops is null || !ops.TryGetManager(out _, out connectionError))
+        {
+            slot.ActionMessage = connectionError ?? $"Not connected to the {slot.Label} spreadsheet yet - save a valid ID first.";
+            slot.ActionIsError = true;
+            return;
+        }
+
+        // Re-check right before writing, not just whatever the page last saw - someone could have
+        // added real rows (from this app, the actual spreadsheet, or elsewhere) since this page
+        // loaded, and this is the one action here that can silently overwrite existing data instead
+        // of just failing loudly.
+        await CheckSheetsAsync(ops, slot);
+        if (slot.ExistingDataRows > 0)
+        {
+            slot.ActionMessage = $"Found {slot.ExistingDataRows} existing row(s) of data since this page loaded - " +
+                                   "refusing to insert demo data to avoid overwriting it.";
+            slot.ActionIsError = true;
+            return;
+        }
+
+        slot.ActionBusy = true;
+        slot.ActionMessage = null;
+        try
+        {
+            var messages = await ops.InsertDemoDataAsync();
+            var errors = messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            slot.ActionIsError = errors.Count > 0;
+            slot.ActionMessage = errors.Count > 0
+                ? string.Join(" ", errors.Select(m => m.Message))
+                : "Done - filled with demo data.";
+
+            await CheckSheetsAsync(ops, slot);
+        }
+        finally
+        {
+            slot.ActionBusy = false;
         }
     }
 
@@ -429,7 +569,7 @@
             }
 
             LoadCurrent();
-            _ = LoadTitlesAsync();
+            _ = LoadConnectionInfoAsync();
 
             var gig = Domains.TryGet("gig");
             string? connectionError = null;

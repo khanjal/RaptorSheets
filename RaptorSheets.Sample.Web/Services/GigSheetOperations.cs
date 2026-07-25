@@ -134,12 +134,18 @@ public class GigSheetOperations(
             referenceDescriptors,
             cancellationToken);
 
-    // Gig has no SetupDemo/PopulateDemoData convenience method (unlike Stock/Job/Home) - this
-    // replicates the sequence documented in RaptorSheets.Gig's README by hand.
-    public async Task<List<MessageEntity>> CreateDemoDataAsync()
+    public async Task<List<MessageEntity>> CreateAllSheetsAsync()
     {
-        await _manager!.CreateAllSheets();
-        var demoData = _manager.GenerateDemoData();
+        var result = await _manager!.CreateAllSheets();
+        return result.Messages;
+    }
+
+    // Gig has no PopulateDemoData convenience method (unlike Stock/Job/Home) - this replicates the
+    // write half of the sequence documented in RaptorSheets.Gig's README by hand (sheet creation is
+    // now CreateAllSheetsAsync's job, not this one - see ISheetOperations.InsertDemoDataAsync).
+    public async Task<List<MessageEntity>> InsertDemoDataAsync()
+    {
+        var demoData = _manager!.GenerateDemoData();
         var result = await _manager.ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData);
         return result.Messages;
     }
