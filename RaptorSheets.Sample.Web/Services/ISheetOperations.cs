@@ -52,6 +52,14 @@ public interface ISheetOperations
     bool TryGetManager(out object? manager, out string? error);
     void Reset();
 
+    /// <summary>True when the connection returned by TryGetManager is the shared
+    /// spreadsheets:test:{domain} spreadsheet, not the user's own spreadsheets:live:{domain} - i.e.
+    /// no live spreadsheet is configured yet, so this is falling back to the same spreadsheet
+    /// RaptorSheets.Test's integration suite deletes and regenerates on every run. Meaningless (always
+    /// false) until TryGetManager has actually succeeded once. Pages use this to warn that whatever's
+    /// shown/edited here isn't permanent.</summary>
+    bool UsingTestFallback { get; }
+
     Task<List<string>> GetAllSheetTabNamesAsync();
     SheetModel? GetSheetLayout(string sheetName);
     Task<(object SheetsContainer, List<MessageEntity> Messages)> GetSheetAsync(string sheetName);
@@ -83,4 +91,12 @@ public interface ISheetOperations
     /// <summary>The connected spreadsheet's own title (from Google Sheets, not this app), or null if
     /// not connected - lets Settings confirm "yes, this is the spreadsheet you meant to connect."</summary>
     Task<string?> GetSpreadsheetTitleAsync();
+
+    /// <summary>Same idea as GetSpreadsheetTitleAsync, but for an arbitrary spreadsheet ID rather than
+    /// whatever this domain is currently connected to - null if credentials aren't configured or the
+    /// ID doesn't resolve. Exists specifically for Settings' test-spreadsheet section: TryGetManager/
+    /// GetSpreadsheetTitleAsync always resolve through spreadsheets:live:{domain}-preferring Connect(),
+    /// which would show the wrong title (or none) when what's actually being verified is
+    /// spreadsheets:test:{domain}.</summary>
+    Task<string?> GetSpreadsheetTitleForIdAsync(string spreadsheetId);
 }

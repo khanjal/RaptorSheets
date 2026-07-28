@@ -45,8 +45,8 @@ jobs:
     - name: Run Tests
       shell: bash
       env:
-        spreadsheets__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
         google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
         google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
         google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
@@ -148,8 +148,8 @@ jobs:
     - name: Test with Coverage for SonarCloud
       shell: bash
       env:
-        spreadsheets__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
         google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
         google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
         google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}

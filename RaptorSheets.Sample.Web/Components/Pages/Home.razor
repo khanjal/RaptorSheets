@@ -16,6 +16,15 @@
 {
     <p class="status ok">Connected to the @ConnectionProvider.DomainLabel spreadsheet. Pick a sheet from the left to get started.</p>
 
+    @if (ConnectionProvider.UsingTestFallback)
+    {
+        <p class="status warning">
+            No spreadsheet configured yet, so this is showing the shared test dataset RaptorSheets'
+            integration tests delete and regenerate on every run - anything added here won't be
+            permanent. <a href="/settings">Set your own spreadsheet in Settings</a> to keep what you add.
+        </p>
+    }
+
     @if (_isBlankSpreadsheet)
     {
         <div class="demo-prompt">

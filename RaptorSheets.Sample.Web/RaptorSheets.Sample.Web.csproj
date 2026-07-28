@@ -9,8 +9,13 @@
       Deliberately the same UserSecretsId as RaptorSheets.Test.Common (nothing in the tooling
       requires these to be unique per project - it's just a folder name under
       %APPDATA%/Microsoft/UserSecrets). Both projects want the identical service-account
-      credentials and test spreadsheet IDs, so they share one secrets.json instead of each
-      needing its own copy kept in sync by hand.
+      credentials, so they share one secrets.json instead of each needing its own copy kept in sync
+      by hand. Spreadsheet IDs are NOT shared despite living in the same file: this app's Settings
+      page only ever reads/writes spreadsheets:live:{domain} (the user's real data), while
+      RaptorSheets.Test.Common's TestConfigurationHelpers only ever reads spreadsheets:test:{domain}
+      (a dedicated spreadsheet the integration suite deletes and regenerates every run) - see
+      SheetOperationsBase.Connect for the fallback that shows the test data when no live spreadsheet
+      is configured yet.
     -->
     <UserSecretsId>d3dcd413-34b9-40ef-9a99-a2615263e431</UserSecretsId>
   </PropertyGroup>

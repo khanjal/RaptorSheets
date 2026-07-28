@@ -12,7 +12,8 @@ namespace RaptorSheets.Home.Tests.Integration;
 /// <summary>
 /// Integration tests that actually write to (and read back from) a live Home Google Sheet.
 /// Skipped automatically unless credentials and a Home spreadsheet ID are configured in user secrets
-/// (add "spreadsheets:home" alongside the existing "spreadsheets:gig"/"spreadsheets:stock").
+/// (add "spreadsheets:test:home" alongside the existing "spreadsheets:test:gig"/"spreadsheets:test:stock" -
+/// the dedicated test spreadsheet, not spreadsheets:live:home).
 /// Collection fixture (<see cref="HomeCleanSlateFixture"/>) deletes/recreates every sheet before
 /// tests run.
 /// </summary>
@@ -119,7 +120,7 @@ public class HomeSheetsIntegrationCollection : ICollectionFixture<HomeCleanSlate
 /// <summary>
 /// Home's clean-slate integration fixture (see <see cref="CleanSlateSheetFixture{TEntity,TManager}"/>).
 /// Deletes and recreates every canonical sheet once, before the collection's tests run. Safe because
-/// spreadsheets:home is configured to point at a dedicated blank test spreadsheet, not real data.
+/// spreadsheets:test:home is configured to point at a dedicated blank test spreadsheet, not real data.
 /// </summary>
 public class HomeCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
 {

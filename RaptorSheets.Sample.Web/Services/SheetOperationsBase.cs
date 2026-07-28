@@ -37,6 +37,10 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
 
     private string? _error;
     private bool _attempted;
+    private bool _usingTestFallback;
+
+    /// <inheritdoc/>
+    public bool UsingTestFallback => _usingTestFallback;
 
     public abstract string DomainName { get; }
     public abstract string DomainLabel { get; }
@@ -65,21 +69,31 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
         _attempted = false;
         Manager = null;
         _error = null;
+        _usingTestFallback = false;
     }
 
     private void Connect()
     {
-        // Same keys RaptorSheets.Test.Common reads (see TestConfigurationHelpers) - Sample.Web and
-        // Test.Common share one UserSecretsId, so they need to agree on the shape too.
-        var spreadsheetId = configuration[$"spreadsheets:{DomainName}"];
+        // spreadsheets:live:{domain} is the user's own data, written by the Settings page - this is
+        // what Connect prefers whenever it's set. spreadsheets:test:{domain} is the dedicated
+        // spreadsheet RaptorSheets.Test.Common reads exclusively (see TestConfigurationHelpers) and
+        // that suite deletes and regenerates on every run - falling back to it here is only ever a
+        // "nothing configured yet, here's something to look at" convenience, flagged via
+        // UsingTestFallback so the UI can warn it isn't permanent storage.
+        var liveSpreadsheetId = configuration[$"spreadsheets:live:{DomainName}"];
+        var testSpreadsheetId = configuration[$"spreadsheets:test:{DomainName}"];
         var credentials = configuration.GetSection("google_credentials").Get<Dictionary<string, string>>();
+
+        var spreadsheetId = string.IsNullOrWhiteSpace(liveSpreadsheetId) ? testSpreadsheetId : liveSpreadsheetId;
 
         if (string.IsNullOrWhiteSpace(spreadsheetId) || credentials is not { Count: > 0 })
         {
-            _error = $"No {DomainLabel} spreadsheet configured. Set \"spreadsheets:{DomainName}\" and " +
+            _error = $"No {DomainLabel} spreadsheet configured. Set \"spreadsheets:live:{DomainName}\" and " +
                       "\"google_credentials\" with dotnet user-secrets - see docs/SAMPLE-APP.md.";
             return;
         }
+
+        _usingTestFallback = string.IsNullOrWhiteSpace(liveSpreadsheetId);
 
         try
         {
@@ -95,6 +109,7 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
             // user-supplied credential text meets the system, so catching broadly here and showing a
             // message is correct - the alternative is an uncaught exception tearing down the circuit.
             _error = $"Couldn't connect to the {DomainLabel} spreadsheet: {ex.Message}";
+            _usingTestFallback = false;
         }
     }
 
@@ -140,6 +155,32 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
     {
         var info = await Manager!.GetSpreadsheetInfo();
         return info?.Properties?.Title;
+    }
+
+    public async Task<string?> GetSpreadsheetTitleForIdAsync(string spreadsheetId)
+    {
+        var credentials = configuration.GetSection("google_credentials").Get<Dictionary<string, string>>();
+        if (string.IsNullOrWhiteSpace(spreadsheetId) || credentials is not { Count: > 0 })
+        {
+            return null;
+        }
+
+        try
+        {
+            // Deliberately a throwaway manager, not assigned to Manager - this must not disturb the
+            // cached TryGetManager/Connect state (which resolves spreadsheets:live:{domain}, falling
+            // back to spreadsheets:test:{domain}), since this checks a specific, caller-supplied ID
+            // instead.
+            var probeManager = factory.Create(credentials, spreadsheetId);
+            var info = await probeManager.GetSpreadsheetInfo();
+            return info?.Properties?.Title;
+        }
+        catch (Exception)
+        {
+            // Same reasoning as Connect()'s catch: arbitrary user-pasted text meeting the system here,
+            // not a bug - a bad ID or malformed credentials just means "can't verify," not a crash.
+            return null;
+        }
     }
 
     /// <inheritdoc cref="ISheetOperations.InsertDemoDataAsync"/>

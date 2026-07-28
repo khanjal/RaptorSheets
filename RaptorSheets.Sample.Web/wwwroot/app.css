@@ -107,6 +107,14 @@ code {
     color: var(--color-warning);
 }
 
+.status.warning {
+    display: inline-block;
+    color: var(--color-warning);
+    background: var(--color-warning-bg);
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--radius-md);
+}
+
 .messages {
     list-style: none;
     padding: 0;

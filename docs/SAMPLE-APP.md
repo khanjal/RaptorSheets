@@ -85,11 +85,27 @@ spreadsheet wizard (which is Gig-specific and reuses the same underlying call).
 deliberately declare the **same `<UserSecretsId>`**, so they read one `secrets.json`
 (`%APPDATA%\Microsoft\UserSecrets\d3dcd413-.../secrets.json` on Windows,
 `~/.microsoft/usersecrets/d3dcd413-.../secrets.json` on Linux/macOS) instead of each needing its own
-copy kept in sync by hand - **Settings configures both projects at once**. Stock's spreadsheet ID
-lives there too even though the sample app's nav doesn't browse it yet, for exactly that reason.
-Nothing is read from `appsettings.json`, so there's nothing to accidentally commit either way.
+copy kept in sync by hand. The service account credentials really are shared - one Google Cloud
+service account works for both. **The spreadsheet IDs are not shared, though**: they live under two
+separate keys per domain, `spreadsheets:live:{domain}` and `spreadsheets:test:{domain}`.
 
-Prefer the CLI? Same keys, same store, either project's directory works:
+- **`spreadsheets:live:{domain}`** is what the Settings page reads and writes - your own spreadsheet,
+  for real data. This is the ID a Clear button blanks and a save can disconnect.
+- **`spreadsheets:test:{domain}`** is never touched by Settings. It's the dedicated, disposable
+  spreadsheet `RaptorSheets.Test`'s integration suite points at, which it deletes and regenerates on
+  every run (see the test suite's own `CleanSlateSheetFixture`). Set it via the CLI or CI secrets, not
+  this UI.
+
+This split exists specifically so recording real data through this app can never land on the
+spreadsheet the tests wipe. As a convenience, whenever a domain has no `spreadsheets:live:{domain}`
+configured, `Sheet.razor`/`Home.razor` fall back to showing `spreadsheets:test:{domain}` instead (with
+a banner making clear that's what's happening) - so there's something to look at before you've
+connected your own spreadsheet, rather than just an empty/error state. Stock's spreadsheet ID lives
+here too even though the sample app's nav doesn't browse it yet. Nothing is read from
+`appsettings.json`, so there's nothing to accidentally commit either way.
+
+Prefer the CLI? Same store, either project's directory works - just be sure to use `live`, not `test`,
+for your own data:
 
 ```bash
 cd RaptorSheets.Sample.Web
@@ -99,7 +115,7 @@ dotnet user-secrets set "google_credentials:private_key_id" "your-key-id"
 dotnet user-secrets set "google_credentials:private_key" "your-private-key"
 dotnet user-secrets set "google_credentials:client_email" "service@project.iam.gserviceaccount.com"
 dotnet user-secrets set "google_credentials:client_id" "your-client-id"
-dotnet user-secrets set "spreadsheets:gig" "your-gig-spreadsheet-id"
+dotnet user-secrets set "spreadsheets:live:gig" "your-gig-spreadsheet-id"
 ```
 
 **If the Gig spreadsheet you connect is blank** (no Gig sheets on it yet - checked via

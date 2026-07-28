@@ -9,6 +9,16 @@
 
 <h1>@SheetName</h1>
 
+@if (_ops is not null && _ops.UsingTestFallback)
+{
+    <p class="status warning">
+        Showing the shared test dataset - no spreadsheet is configured for @_ops.DomainLabel yet, so
+        this falls back to the same spreadsheet RaptorSheets' integration tests delete and regenerate
+        on every run. Anything added here won't be permanent.
+        <a href="/settings">Set your own spreadsheet in Settings</a> to keep what you add.
+    </p>
+}
+
 @if (_error is not null)
 {
     <p class="setup-message">@_error</p>
