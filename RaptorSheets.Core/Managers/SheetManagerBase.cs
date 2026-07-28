@@ -677,8 +677,9 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         return await GetSheets(new List<string>(_canonicalSheetNames), cancellationToken);
     }
 
-    // Google.Apis.Sheets.v4 types are Core's own implementation detail (issue #70) - internal rather
-    // than on ISheetManager<TEntity>, so a consumer never needs a direct dependency on that package.
+    // Google.Apis.Sheets.v4 types are Core's own implementation detail, not part of the public
+    // contract - internal rather than on ISheetManager<TEntity>, so a consumer never needs a
+    // direct dependency on that package.
     // GetSpreadsheetTitle below is the public, RaptorSheets-typed replacement for the one thing
     // callers outside Core actually needed off of this (Spreadsheet.Properties.Title).
     internal async Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null, CancellationToken cancellationToken = default)

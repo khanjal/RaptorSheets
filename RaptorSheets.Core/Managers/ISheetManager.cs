@@ -33,9 +33,8 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
 
     /// <summary>The connected spreadsheet's own title (from Google Sheets, not anything typed into
     /// this library) - a RaptorSheets-native replacement for reading Spreadsheet.Properties.Title off
-    /// the raw Google response, which this interface deliberately does not expose (see issue #70:
-    /// Google.Apis.Sheets.v4 types are an internal implementation detail of Core, not part of the
-    /// public contract).</summary>
+    /// the raw Google response, which this interface deliberately does not expose: Google.Apis.Sheets.v4
+    /// types are an internal implementation detail of Core, not part of the public contract.</summary>
     Task<string?> GetSpreadsheetTitle(CancellationToken cancellationToken = default);
 
     // Header Management

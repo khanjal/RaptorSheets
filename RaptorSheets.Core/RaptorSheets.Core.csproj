@@ -22,10 +22,10 @@
     <!--
       Each domain's own SheetHelpers class calls SheetRegistry<TEntity>'s Google-typed members
       (MapData/CheckUnknownSheets/CheckSheetHeaders/GetMissingSheets/DetectMissingColumns) through
-      its own private registry field - those became internal as part of issue #70 (Google.Apis.Sheets.v4
-      types are Core's implementation detail, not part of the public contract), so the four domain
-      assemblies need explicit access to keep compiling. This is narrower than it looks: it grants
-      access to everything internal in Core, but nothing outside these five projects can reach it.
+      its own private registry field. Those members are internal - Google.Apis.Sheets.v4 types are
+      Core's implementation detail, not part of the public contract - so the four domain assemblies
+      need explicit access to keep compiling. This is narrower than it looks: it grants access to
+      everything internal in Core, but nothing outside these five projects can reach it.
     -->
     <InternalsVisibleTo Include="RaptorSheets.Gig" />
     <InternalsVisibleTo Include="RaptorSheets.Stock" />
