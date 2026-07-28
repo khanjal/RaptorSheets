@@ -753,7 +753,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var hasCreationNotice = creationNotice != null;
 
         // If a creation notice exists, ensure it references the Deliveries sheet
-        if (hasCreationNotice)
+        if (creationNotice != null)
         {
             Assert.True(creationNotice.Message.IndexOf("Deliveries", StringComparison.OrdinalIgnoreCase) >= 0,
                 $"Creation notice should include Deliveries. Notice: {creationNotice.Message}");
