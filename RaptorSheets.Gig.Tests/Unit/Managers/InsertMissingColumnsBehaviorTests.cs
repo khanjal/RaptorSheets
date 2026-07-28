@@ -41,7 +41,7 @@ public class InsertMissingColumnsBehaviorTests
         };
 
         // Act
-        var messages = GoogleSheetManager.CheckSheetHeaders(spreadsheet, out var missingColumns);
+        var messages = SheetManager.CheckSheetHeaders(spreadsheet, out var missingColumns);
 
         // Assert
         Assert.NotEmpty(messages);
@@ -55,7 +55,7 @@ public class InsertMissingColumnsBehaviorTests
     {
         // Arrange
         var mockService = new Mock<IGoogleSheetService>();
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         // Act
         var result = await manager.InsertMissingColumns([]);
@@ -76,7 +76,7 @@ public class InsertMissingColumnsBehaviorTests
             .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => capturedRequest = r)
             .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
         var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
         {
             ["Trips"] = [new ColumnInsertionInfo { SheetName = "Trips", SheetId = 7, ColumnIndex = 3, ColumnName = "Note" }]

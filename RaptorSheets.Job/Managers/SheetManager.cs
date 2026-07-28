@@ -14,10 +14,10 @@ using RaptorSheets.Job.Helpers;
 namespace RaptorSheets.Job.Managers;
 
 /// <summary>
-/// Extends the shared <see cref="IGoogleSheetManager{TEntity}"/> CRUD/metadata/layout surface with
+/// Extends the shared <see cref="ISheetManager{TEntity}"/> CRUD/metadata/layout surface with
 /// Job's own demo-data generation (date range plus seed).
 /// </summary>
-public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
+public interface ISheetManager : ISheetManager<SheetEntity>
 {
     // Demo Data Generation
     Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null, int? seed = null, CancellationToken cancellationToken = default);
@@ -29,25 +29,25 @@ public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
 /// Main Google Sheet Manager for the Job domain.
 ///
 /// Domain-agnostic read/metadata/layout/heal orchestration is inherited from
-/// <see cref="GoogleSheetManagerBase{TEntity}"/>. This class adds only the Job-specific pieces:
+/// <see cref="SheetManagerBase{TEntity}"/>. This class adds only the Job-specific pieces:
 /// constructors, the CreateMissingSheetsAsync self-heal hook, the GenerateSheetsRequest override,
 /// the domain write operations, and demo-data generation.
 /// </summary>
-public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSheetManager
+public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 {
     #region Construction
 
-    public GoogleSheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
+    public SheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
         : base(googleSheetService, JobSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
-    public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
+    public SheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
         : base(accessToken, spreadsheetId, JobSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
-    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
+    public SheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
         : base(parameters, spreadsheetId, JobSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
@@ -133,17 +133,20 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
     #region Header Validation
 
-    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
+    // Internal (issue #70: Google.Apis.Sheets.v4 types are Core's implementation detail, not part
+    // of the public contract) - thin shims over JobSheetHelpers, kept static so internal/test
+    // callers can use them off the type without a manager instance.
+    internal static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
     {
         return JobSheetHelpers.CheckUnknownSheets(sheetInfoResponse);
     }
 
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
+    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
         return JobSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
     }
 
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
     {
         return JobSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
     }

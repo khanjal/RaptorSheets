@@ -11,7 +11,7 @@ namespace RaptorSheets.Core.Helpers;
 /// <summary>
 /// Helper class for parsing Google Sheets property data.
 /// Handles the complex logic of extracting headers, row counts, and other metadata from Google Sheets API responses.
-/// Domain-agnostic: used by <see cref="RaptorSheets.Core.Managers.GoogleSheetManagerBase{TEntity}"/> so every
+/// Domain-agnostic: used by <see cref="RaptorSheets.Core.Managers.SheetManagerBase{TEntity}"/> so every
 /// domain package (Gig, Stock, and future domains) shares one property-parsing implementation.
 /// </summary>
 public static class SheetPropertyHelper

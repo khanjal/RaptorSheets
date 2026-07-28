@@ -19,7 +19,7 @@ tracking **job applications and interviews** in Google Sheets.
 ```csharp
 using RaptorSheets.Job.Managers;
 
-var manager = new GoogleSheetManager(accessToken, spreadsheetId);
+var manager = new SheetManager(accessToken, spreadsheetId);
 
 // Create every Job sheet
 await manager.CreateAllSheets();

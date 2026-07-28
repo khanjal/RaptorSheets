@@ -1,4 +1,4 @@
-﻿using Google.Apis.Sheets.v4.Data;
+using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
@@ -12,7 +12,7 @@ namespace RaptorSheets.Gig.Helpers;
 
 public static class GenerateSheetsHelpers
 {
-    public static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
+    internal static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
         if (sheets.Count == 0)
         {
@@ -79,10 +79,10 @@ public static class GenerateSheetsHelpers
             var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase) => WeekdaySheet.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase) => WeeklySheet.GetSheet(),
             var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase) => YearlySheet.GetSheet(),
-            // DeleteSheets' temp-sheet safety mechanism (GoogleSheetManagerBase<TEntity>.DeleteSheets)
+            // DeleteSheets' temp-sheet safety mechanism (SheetManagerBase<TEntity>.DeleteSheets)
             // asks for a bare AddSheet request for this specific ad-hoc, non-domain name - anything
             // else unrecognized is a genuine caller error and should still throw.
-            var s when string.Equals(s, GoogleSheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase) => new SheetModel { Name = s },
+            var s when string.Equals(s, SheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase) => new SheetModel { Name = s },
             _ => throw new NotImplementedException($"Sheet model not found for: {sheet}"),
         };
     }

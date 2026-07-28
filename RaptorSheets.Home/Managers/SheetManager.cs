@@ -13,10 +13,10 @@ using RaptorSheets.Home.Helpers;
 namespace RaptorSheets.Home.Managers;
 
 /// <summary>
-/// Extends the shared <see cref="IGoogleSheetManager{TEntity}"/> CRUD/metadata/layout surface with
+/// Extends the shared <see cref="ISheetManager{TEntity}"/> CRUD/metadata/layout surface with
 /// Home's own demo-data generation (seed only).
 /// </summary>
-public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
+public interface ISheetManager : ISheetManager<SheetEntity>
 {
     // Demo Data Generation
     Task<SheetEntity> SetupDemo(int? seed = null, CancellationToken cancellationToken = default);
@@ -28,26 +28,26 @@ public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
 /// Main Google Sheet Manager for the Home domain.
 ///
 /// Domain-agnostic read/metadata/layout/heal orchestration is inherited from
-/// <see cref="GoogleSheetManagerBase{TEntity}"/>. This class adds only the Home-specific pieces:
+/// <see cref="SheetManagerBase{TEntity}"/>. This class adds only the Home-specific pieces:
 /// constructors, the CreateMissingSheetsAsync self-heal hook, the GenerateSheetsRequest override,
 /// and the domain write operations (ordered CreateSheets, ChangeSheetData) plus static
 /// header-check helpers.
 /// </summary>
-public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSheetManager
+public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 {
     #region Construction
 
-    public GoogleSheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
+    public SheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
         : base(googleSheetService, HomeSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
-    public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
+    public SheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
         : base(accessToken, spreadsheetId, HomeSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
-    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
+    public SheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
         : base(parameters, spreadsheetId, HomeSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
@@ -149,17 +149,20 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
     #region Header Validation
 
-    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
+    // Internal (issue #70: Google.Apis.Sheets.v4 types are Core's implementation detail, not part
+    // of the public contract) - thin shims over HomeSheetHelpers, kept static so internal/test
+    // callers can use them off the type without a manager instance.
+    internal static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
     {
         return HomeSheetHelpers.CheckUnknownSheets(sheetInfoResponse);
     }
 
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
+    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
         return HomeSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
     }
 
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
     {
         return HomeSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
     }

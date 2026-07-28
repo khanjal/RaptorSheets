@@ -12,7 +12,7 @@ investments and portfolios in Google Sheets. It provides pre-configured sheet ty
 strongly-typed entities for accounts, stocks, and tickers.
 
 Like every RaptorSheets domain package, it is a thin layer over the shared
-`GoogleSheetManagerBase<TEntity>` in Core — see the [Architecture](../README.md#️-architecture)
+`SheetManagerBase<TEntity>` in Core — see the [Architecture](../README.md#️-architecture)
 section of the Core README. The Stock package only supplies its entities/mappers, its
 `SheetRegistry<SheetEntity>` (`StockSheetHelpers.Registry`), and its write operations; all read,
 metadata, layout, and self-heal orchestration is inherited from Core.
@@ -39,7 +39,7 @@ using RaptorSheets.Stock.Managers;
 using RaptorSheets.Stock.Enums;
 
 // Initialize (access token or service-account credentials, same as other packages)
-var manager = new GoogleSheetManager("your-access-token", "spreadsheet-id");
+var manager = new SheetManager("your-access-token", "spreadsheet-id");
 
 // Create the stock sheets
 await manager.CreateAllSheets();
@@ -111,19 +111,21 @@ var result = await manager.ChangeSheetData(new List<string> { "Stocks" }, sheetE
 
 ## Inherited from Core
 
-Because `GoogleSheetManager` inherits `GoogleSheetManagerBase<SheetEntity>`, these come from Core with
+Because `SheetManager` inherits `SheetManagerBase<SheetEntity>`, these come from Core with
 no Stock-specific code:
 
 - `GetSheets` / `GetAllSheets` — orchestration incl. missing-sheet self-heal and missing-column auto-heal
 - `GetSheetProperties` / `GetAllSheetProperties`, `GetAllSheetTabNames`
 - `GetSheetLayout` / `GetSheetLayouts`
-- `InsertMissingColumns`, `GetSpreadsheetInfo`, `GetBatchData`
+- `InsertMissingColumns`, `GetSpreadsheetTitle`
 - `CreateSheets` / `CreateAllSheets`, `DeleteSheets` / `DeleteAllSheets` — ordered creation and
   temp-sheet-safe deletion, same as Gig; Stock supplies its own `GenerateSheetsRequest` override
   with its fully-configured `AddSheet` requests
 
-Stock-specific: `ChangeSheetData` (Shares only, see above) and the static `CheckSheetHeaders` /
-`CheckUnknownSheets` helpers.
+Stock-specific: `ChangeSheetData` (Shares only, see above). `CheckSheetHeaders`/`CheckUnknownSheets`
+are internal (see [RaptorSheets.Core](../README.md) - Google.Apis.Sheets.v4 types aren't part of the
+public contract), used by `GetSheets`/`GetAllSheets`' own validation, not something a consumer calls
+directly.
 
 ## Related
 

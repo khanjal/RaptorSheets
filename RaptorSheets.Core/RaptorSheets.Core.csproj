@@ -19,6 +19,30 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="RaptorSheets.Core.Tests" />
+    <!--
+      Each domain's own SheetHelpers class calls SheetRegistry<TEntity>'s Google-typed members
+      (MapData/CheckUnknownSheets/CheckSheetHeaders/GetMissingSheets/DetectMissingColumns) through
+      its own private registry field - those became internal as part of issue #70 (Google.Apis.Sheets.v4
+      types are Core's implementation detail, not part of the public contract), so the four domain
+      assemblies need explicit access to keep compiling. This is narrower than it looks: it grants
+      access to everything internal in Core, but nothing outside these five projects can reach it.
+    -->
+    <InternalsVisibleTo Include="RaptorSheets.Gig" />
+    <InternalsVisibleTo Include="RaptorSheets.Stock" />
+    <InternalsVisibleTo Include="RaptorSheets.Job" />
+    <InternalsVisibleTo Include="RaptorSheets.Home" />
+    <!--
+      Each domain's own test suite exercises Core-declared-but-internal manager members
+      (GetSpreadsheetInfo/GetBatchData, inherited from SheetManagerBase<TEntity>) directly on that
+      domain's concrete manager. InternalsVisibleTo isn't transitive - granting Gig access above
+      doesn't extend to Gig.Tests, since the member's accessibility is checked against Core (where
+      it's declared), not Gig (where it's inherited) - same reasoning Core.Tests already relies on
+      for Core's own internals above.
+    -->
+    <InternalsVisibleTo Include="RaptorSheets.Gig.Tests" />
+    <InternalsVisibleTo Include="RaptorSheets.Stock.Tests" />
+    <InternalsVisibleTo Include="RaptorSheets.Job.Tests" />
+    <InternalsVisibleTo Include="RaptorSheets.Home.Tests" />
   </ItemGroup>
 
   <ItemGroup>

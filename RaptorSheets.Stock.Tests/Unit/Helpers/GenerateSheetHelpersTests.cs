@@ -27,11 +27,11 @@ public class GenerateSheetHelpersTests
     [Fact]
     public void Generate_WithTempSheetName_ReturnsBareAddSheetRequest()
     {
-        // DeleteSheets' safety mechanism (GoogleSheetManagerBase<TEntity>.DeleteSheets) needs a bare
+        // DeleteSheets' safety mechanism (SheetManagerBase<TEntity>.DeleteSheets) needs a bare
         // AddSheet request for this specific ad-hoc name, not a NotImplementedException.
-        var result = GenerateSheetHelpers.Generate([GoogleSheetManagerBase.TempSheetName]);
+        var result = GenerateSheetHelpers.Generate([SheetManagerBase.TempSheetName]);
         Assert.NotEmpty(result.Requests);
-        Assert.Contains(result.Requests, r => r.AddSheet?.Properties?.Title == GoogleSheetManagerBase.TempSheetName);
+        Assert.Contains(result.Requests, r => r.AddSheet?.Properties?.Title == SheetManagerBase.TempSheetName);
     }
 
     [Fact]

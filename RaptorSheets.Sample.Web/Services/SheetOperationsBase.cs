@@ -10,7 +10,7 @@ namespace RaptorSheets.Sample.Web.Services;
 /// <summary>
 /// The CRUD/connect surface every domain's ISheetOperations shares byte-for-byte, since it all
 /// routes through the one generic contract every domain's own manager interface already implements
-/// (RaptorSheets.Core.Managers.IGoogleSheetManager&lt;TEntity&gt;) and every domain's SheetEntity
+/// (RaptorSheets.Core.Managers.ISheetManager&lt;TEntity&gt;) and every domain's SheetEntity
 /// already extends (RaptorSheets.Core.Entities.SheetEntityBase&lt;TSheets&gt;). A concrete subclass
 /// (GigSheetOperations, StockSheetOperations, ...) only needs to supply the handful of things that
 /// genuinely differ per domain: the identifying properties (DomainName/DomainLabel/SheetsType/...)
@@ -27,7 +27,7 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
     ISheetManagerFactory<TManager> factory,
     IConfiguration configuration,
     ReferenceSheetCache cache) : ISheetOperations
-    where TManager : class, IGoogleSheetManager<TEntity>
+    where TManager : class, ISheetManager<TEntity>
     where TEntity : SheetEntityBase<TSheets>, new()
     where TSheets : new()
 {
@@ -151,11 +151,7 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
             referenceDescriptors,
             cancellationToken);
 
-    public async Task<string?> GetSpreadsheetTitleAsync()
-    {
-        var info = await Manager!.GetSpreadsheetInfo();
-        return info?.Properties?.Title;
-    }
+    public async Task<string?> GetSpreadsheetTitleAsync() => await Manager!.GetSpreadsheetTitle();
 
     public async Task<string?> GetSpreadsheetTitleForIdAsync(string spreadsheetId)
     {
@@ -172,8 +168,7 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
             // back to spreadsheets:test:{domain}), since this checks a specific, caller-supplied ID
             // instead.
             var probeManager = factory.Create(credentials, spreadsheetId);
-            var info = await probeManager.GetSpreadsheetInfo();
-            return info?.Properties?.Title;
+            return await probeManager.GetSpreadsheetTitle();
         }
         catch (Exception)
         {

@@ -22,7 +22,7 @@ tracking **home maintenance and inventory** in Google Sheets.
 ```csharp
 using RaptorSheets.Home.Managers;
 
-var manager = new GoogleSheetManager(accessToken, spreadsheetId);
+var manager = new SheetManager(accessToken, spreadsheetId);
 
 // Create every Home sheet
 await manager.CreateAllSheets();

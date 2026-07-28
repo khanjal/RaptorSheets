@@ -15,7 +15,7 @@ namespace RaptorSheets.Gig.Tests.Integration.Base;
 /// </summary>
 public abstract class IntegrationTestBase
 {
-    protected readonly GoogleSheetManager? GoogleSheetManager;
+    protected readonly SheetManager? SheetManager;
     protected readonly List<string> TestSheets;
 
     protected IntegrationTestBase(GigCleanSlateFixture fixture)
@@ -26,14 +26,14 @@ public abstract class IntegrationTestBase
             SheetsConfig.SheetNames.Expenses
         ];
 
-        GoogleSheetManager = fixture.Manager;
+        SheetManager = fixture.Manager;
     }
 
     #region Skip Helpers
 
     protected void SkipIfNoCredentials()
     {
-        if (GoogleSheetManager == null)
+        if (SheetManager == null)
         {
             Assert.Fail("Google Sheets credentials not available. Configure user secrets to run integration tests.");
         }
@@ -99,7 +99,7 @@ public abstract class IntegrationTestBase
             throw new InvalidOperationException("No data provided for insertion");
         }
         
-        var result = await GoogleSheetManager!.ChangeSheetData(sheetsWithData, testData);
+        var result = await SheetManager!.ChangeSheetData(sheetsWithData, testData);
         
         // Enhanced error checking - differentiate between critical errors and warnings
         var criticalErrors = result.Messages.Where(m => 
@@ -142,7 +142,7 @@ public abstract class IntegrationTestBase
     /// </summary>
     protected async Task<SheetEntity> GetTestSheetData()
     {
-        var result = await GoogleSheetManager!.GetSheets(TestSheets);
+        var result = await SheetManager!.GetSheets(TestSheets);
         return result;
     }
 
@@ -159,7 +159,7 @@ public abstract class IntegrationTestBase
             .Where(n => !string.IsNullOrEmpty(n))
             .ToList();
 
-        var result = await GoogleSheetManager!.GetSheets(allSheetNames);
+        var result = await SheetManager!.GetSheets(allSheetNames);
         return result;
     }
     
@@ -176,7 +176,7 @@ public abstract class IntegrationTestBase
         
         // Only pass the Shifts sheet to avoid "not supported" errors for empty Trips/Expenses
         var shiftsSheetOnly = new List<string> { SheetsConfig.SheetNames.Shifts };
-        var result = await GoogleSheetManager!.ChangeSheetData(shiftsSheetOnly, updateData);
+        var result = await SheetManager!.ChangeSheetData(shiftsSheetOnly, updateData);
         
         var criticalErrors = result.Messages.Where(m => 
             m.Level == MessageLevel.ERROR.GetDescription() && 
@@ -205,7 +205,7 @@ public abstract class IntegrationTestBase
         
         // Only pass the Trips sheet to avoid "not supported" errors for empty Shifts/Expenses
         var tripsSheetOnly = new List<string> { SheetsConfig.SheetNames.Trips };
-        var result = await GoogleSheetManager!.ChangeSheetData(tripsSheetOnly, updateData);
+        var result = await SheetManager!.ChangeSheetData(tripsSheetOnly, updateData);
         
         var criticalErrors = result.Messages.Where(m => 
             m.Level == MessageLevel.ERROR.GetDescription() && 
@@ -234,7 +234,7 @@ public abstract class IntegrationTestBase
         
         // Only pass the Expenses sheet to avoid "not supported" errors for empty Shifts/Trips
         var expensesSheetOnly = new List<string> { SheetsConfig.SheetNames.Expenses };
-        var result = await GoogleSheetManager!.ChangeSheetData(expensesSheetOnly, updateData);
+        var result = await SheetManager!.ChangeSheetData(expensesSheetOnly, updateData);
         
         var criticalErrors = result.Messages.Where(m => 
             m.Level == MessageLevel.ERROR.GetDescription() && 

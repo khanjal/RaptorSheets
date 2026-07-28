@@ -12,7 +12,7 @@ namespace RaptorSheets.Home.Helpers;
 
 public static class GenerateSheetsHelpers
 {
-    public static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
+    internal static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
         return SheetGenerationHelper.Generate(sheets, GetSheetModel, GetDataValidation);
     }
@@ -37,7 +37,7 @@ public static class GenerateSheetsHelpers
             var s when string.Equals(s, SheetsConfig.SheetNames.Stats, StringComparison.OrdinalIgnoreCase) => StatSheet.GetSheet(),
             // DeleteSheets' temp-sheet safety mechanism asks for a bare AddSheet request for this
             // specific ad-hoc name - anything else unrecognized is a genuine caller error.
-            var s when string.Equals(s, GoogleSheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase) => new SheetModel { Name = s },
+            var s when string.Equals(s, SheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase) => new SheetModel { Name = s },
             _ => throw new NotImplementedException($"Sheet model not found for: {sheet}"),
         };
     }

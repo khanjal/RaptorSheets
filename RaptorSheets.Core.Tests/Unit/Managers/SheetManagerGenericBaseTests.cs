@@ -14,11 +14,11 @@ using RaptorSheets.Core.Models;
 namespace RaptorSheets.Core.Tests.Unit.Managers;
 
 /// <summary>
-/// Domain-agnostic coverage for GoogleSheetManagerBase&lt;TEntity&gt; - the registry-backed base that
+/// Domain-agnostic coverage for SheetManagerBase&lt;TEntity&gt; - the registry-backed base that
 /// Gig/Stock (and future Job/Home) inherit. Uses a minimal in-file entity + registry so the shared
 /// read/metadata/layout surface is verified in Core without depending on any domain package.
 /// </summary>
-public class GoogleSheetManagerGenericBaseTests
+public class SheetManagerGenericBaseTests
 {
     private sealed class TestEntity : ISheetEntity
     {
@@ -27,7 +27,7 @@ public class GoogleSheetManagerGenericBaseTests
         public List<IList<object>> Rows { get; set; } = [];
     }
 
-    private sealed class TestManager : GoogleSheetManagerBase<TestEntity>
+    private sealed class TestManager : SheetManagerBase<TestEntity>
     {
         public TestManager(IGoogleSheetService service, SheetRegistry<TestEntity> registry, List<string> canonical, ILogger? logger = null)
             : base(service, registry, canonical, logger) { }
@@ -64,7 +64,7 @@ public class GoogleSheetManagerGenericBaseTests
     // A second concrete subclass that DOES override GenerateSheetsRequest, mirroring Gig/Stock -
     // exercises CreateSheets/DeleteSheets, which TestManager above can't (it deliberately leaves the
     // default unimplemented to cover that guard).
-    private sealed class TestManagerWithGeneration : GoogleSheetManagerBase<TestEntity>
+    private sealed class TestManagerWithGeneration : SheetManagerBase<TestEntity>
     {
         public TestManagerWithGeneration(IGoogleSheetService service, SheetRegistry<TestEntity> registry, List<string> canonical, ILogger? logger = null)
             : base(service, registry, canonical, logger) { }

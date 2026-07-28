@@ -50,27 +50,27 @@ public static class HomeSheetHelpers
         return registry;
     }
 
-    public static List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet)
+    internal static List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet)
     {
         return s_registry.GetMissingSheets(spreadsheet, GetSheetNames());
     }
 
-    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
+    internal static List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
     {
         return s_registry.CheckUnknownSheets(spreadsheet);
     }
 
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
+    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
     {
         return s_registry.CheckSheetHeaders(spreadsheet);
     }
 
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
     {
         return s_registry.CheckSheetHeaders(spreadsheet, out missingColumns);
     }
 
-    public static Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(BatchGetValuesByDataFilterResponse response)
+    internal static Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(BatchGetValuesByDataFilterResponse response)
     {
         return s_registry.DetectMissingColumns(response);
     }
@@ -107,12 +107,12 @@ public static class HomeSheetHelpers
         };
     }
 
-    public static SheetEntity? MapData(Spreadsheet spreadsheet)
+    internal static SheetEntity? MapData(Spreadsheet spreadsheet)
     {
         return s_registry.MapData(spreadsheet);
     }
 
-    public static SheetEntity? MapData(BatchGetValuesByDataFilterResponse response)
+    internal static SheetEntity? MapData(BatchGetValuesByDataFilterResponse response)
     {
         return s_registry.MapData(response);
     }

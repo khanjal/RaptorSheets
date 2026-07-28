@@ -57,7 +57,7 @@ public static class ColumnInsertionHelper
     /// </summary>
     /// <param name="additionalRequests">
     /// Extra requests folded into the same batch (e.g. dependent-sheet header-formula refreshes
-    /// from <see cref="Managers.GoogleSheetManagerBase{TEntity}.AutoHealMissingColumnsAsync"/>), so
+    /// from <see cref="Managers.SheetManagerBase{TEntity}.AutoHealMissingColumnsAsync"/>), so
     /// they land in one atomic API call instead of a separate follow-up one.
     /// </param>
     public static async Task<TEntity> InsertMissingColumnsAsync<TEntity>(

@@ -15,11 +15,11 @@ using RaptorSheets.Gig.Helpers;
 namespace RaptorSheets.Gig.Managers;
 
 /// <summary>
-/// Extends the shared <see cref="IGoogleSheetManager{TEntity}"/> CRUD/metadata/layout surface with
+/// Extends the shared <see cref="ISheetManager{TEntity}"/> CRUD/metadata/layout surface with
 /// Gig's own demo-data generation, which takes a date range rather than the seed-only or
 /// seed-plus-date-range shapes other domains use.
 /// </summary>
-public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
+public interface ISheetManager : ISheetManager<SheetEntity>
 {
     // Demo Data Generation
     SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null);
@@ -30,33 +30,33 @@ public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
 ///
 /// Domain-agnostic read/metadata/layout/heal orchestration (GetSheets, GetAllSheets, sheet
 /// properties, tab names, layouts, InsertMissingColumns, GetSpreadsheetInfo, GetBatchData) is
-/// inherited from <see cref="GoogleSheetManagerBase{TEntity}"/>. This class adds only the Gig-specific
+/// inherited from <see cref="SheetManagerBase{TEntity}"/>. This class adds only the Gig-specific
 /// pieces: constructors, the CreateMissingSheetsAsync self-heal hook, and the domain write operations
 /// (ordered CreateSheets, ChangeSheetData, DeleteSheets) plus demo-data generation and the static
 /// header-check helpers.
 /// </summary>
-public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSheetManager
+public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 {
     #region Construction
 
-    public GoogleSheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
+    public SheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
         : base(googleSheetService, GigSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
-    public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
+    public SheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
         : base(accessToken, spreadsheetId, GigSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
-    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
+    public SheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
         : base(parameters, spreadsheetId, GigSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
     /// <summary>
-    /// Backs <see cref="GoogleSheetManagerBase{TEntity}.CreateSheets"/> and
-    /// <see cref="GoogleSheetManagerBase{TEntity}.DeleteSheets"/> (for temp-sheet creation) with
+    /// Backs <see cref="SheetManagerBase{TEntity}.CreateSheets"/> and
+    /// <see cref="SheetManagerBase{TEntity}.DeleteSheets"/> (for temp-sheet creation) with
     /// Gig's fully-configured AddSheet requests (headers, formatting, validation, colors).
     /// </summary>
     protected override BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
@@ -150,15 +150,16 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     /// Only needs sheet tab metadata (no grid/cell data), so it's safe to call with a cheap
     /// <c>GetSheetInfo()</c> (no ranges) result. Known-sheet header validation (missing/renamed/
     /// reordered columns) is handled separately, per-sheet, using data already fetched via batchGet.
-    /// Static so callers can use it off the type without a manager instance; thin shim over
-    /// <see cref="GigSheetHelpers"/>.
+    /// Internal (issue #70: Google.Apis.Sheets.v4 types are Core's implementation detail, not part
+    /// of the public contract) - thin shim over <see cref="GigSheetHelpers"/>, kept static so
+    /// internal/test callers can use it off the type without a manager instance.
     /// </summary>
-    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
+    internal static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
     {
         return GigSheetHelpers.CheckUnknownSheets(sheetInfoResponse);
     }
 
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
+    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
     {
         return GigSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
     }
@@ -167,7 +168,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
     /// missing entirely and where they should be inserted, for use with <see cref="InsertMissingColumns"/>.
     /// </summary>
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
     {
         return GigSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
     }

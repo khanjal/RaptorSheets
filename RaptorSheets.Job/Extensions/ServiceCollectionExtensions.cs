@@ -13,12 +13,12 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Registers the Job domain's services.
     /// <para>
-    /// Always registers <c>ISheetManagerFactory&lt;IGoogleSheetManager&gt;</c>, for hosts where the
+    /// Always registers <c>ISheetManagerFactory&lt;ISheetManager&gt;</c>, for hosts where the
     /// spreadsheet and credentials vary per request or per signed-in user.
     /// </para>
     /// <para>
     /// When <paramref name="configureOptions"/> is supplied, also registers a singleton
-    /// <c>IGoogleSheetManager</c> bound to that one spreadsheet - the shape a worker or CLI wants,
+    /// <c>ISheetManager</c> bound to that one spreadsheet - the shape a worker or CLI wants,
     /// with credentials bound from configuration once.
     /// </para>
     /// </summary>
@@ -41,9 +41,9 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         Action<RaptorSheetsOptions>? configureOptions = null)
     {
-        return services.AddSheetManager<IGoogleSheetManager>(
+        return services.AddSheetManager<ISheetManager>(
             "Job",
-            (sheetService, logger) => new GoogleSheetManager(sheetService, logger),
+            (sheetService, logger) => new SheetManager(sheetService, logger),
             configureOptions);
     }
 }

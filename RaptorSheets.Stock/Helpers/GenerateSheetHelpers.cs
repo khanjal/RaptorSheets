@@ -13,7 +13,7 @@ public static class GenerateSheetHelpers
 {
     private static readonly Random _random = new();
 
-    public static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
+    internal static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
         var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = [] };
 
@@ -54,7 +54,7 @@ public static class GenerateSheetHelpers
     /// <summary>
     /// Resolves a sheet name to its configured model. Anything matching a real
     /// <see cref="Enums.SheetName"/> description gets its fully-configured domain sheet; the one
-    /// recognized ad-hoc exception is <see cref="GoogleSheetManagerBase.TempSheetName"/>, which
+    /// recognized ad-hoc exception is <see cref="SheetManagerBase.TempSheetName"/>, which
     /// DeleteSheets' safety mechanism needs a bare AddSheet request for. Anything else is a genuine
     /// caller error.
     /// </summary>
@@ -68,7 +68,7 @@ public static class GenerateSheetHelpers
             return GetSheetModel(sheetEnum);
         }
 
-        if (string.Equals(sheet, GoogleSheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(sheet, SheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase))
         {
             return new SheetModel { Name = sheet };
         }

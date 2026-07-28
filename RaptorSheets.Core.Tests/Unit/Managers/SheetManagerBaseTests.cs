@@ -8,15 +8,15 @@ using Xunit;
 
 namespace RaptorSheets.Core.Tests.Unit.Managers;
 
-public class GoogleSheetManagerBaseTests
+public class SheetManagerBaseTests
 {
     // Minimal concrete subclass to exercise the abstract base's constructors/fields, mirroring
-    // how RaptorSheets.Gig/Stock's GoogleSheetManager classes now inherit from it.
-    private class TestGoogleSheetManager : GoogleSheetManagerBase
+    // how RaptorSheets.Gig/Stock's SheetManager classes now inherit from it.
+    private class TestSheetManager : SheetManagerBase
     {
-        public TestGoogleSheetManager(IGoogleSheetService service, ILogger? logger = null) : base(service, logger) { }
-        public TestGoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null) : base(accessToken, spreadsheetId, logger) { }
-        public TestGoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null) : base(parameters, spreadsheetId, logger) { }
+        public TestSheetManager(IGoogleSheetService service, ILogger? logger = null) : base(service, logger) { }
+        public TestSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null) : base(accessToken, spreadsheetId, logger) { }
+        public TestSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null) : base(parameters, spreadsheetId, logger) { }
 
         public IGoogleSheetService ServiceForTest => _googleSheetService;
         public ILogger LoggerForTest => _logger;
@@ -27,7 +27,7 @@ public class GoogleSheetManagerBaseTests
     {
         var mockService = new Mock<IGoogleSheetService>();
 
-        var manager = new TestGoogleSheetManager(mockService.Object);
+        var manager = new TestSheetManager(mockService.Object);
 
         Assert.Same(mockService.Object, manager.ServiceForTest);
     }
@@ -35,7 +35,7 @@ public class GoogleSheetManagerBaseTests
     [Fact]
     public void Constructor_WithNullService_ShouldThrowArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new TestGoogleSheetManager((IGoogleSheetService)null!));
+        Assert.Throws<ArgumentNullException>(() => new TestSheetManager((IGoogleSheetService)null!));
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class GoogleSheetManagerBaseTests
     {
         var mockService = new Mock<IGoogleSheetService>();
 
-        var manager = new TestGoogleSheetManager(mockService.Object);
+        var manager = new TestSheetManager(mockService.Object);
 
         Assert.NotNull(manager.LoggerForTest);
         Assert.IsType<NullLogger>(manager.LoggerForTest);
@@ -55,7 +55,7 @@ public class GoogleSheetManagerBaseTests
         var mockService = new Mock<IGoogleSheetService>();
         var mockLogger = new Mock<ILogger>();
 
-        var manager = new TestGoogleSheetManager(mockService.Object, mockLogger.Object);
+        var manager = new TestSheetManager(mockService.Object, mockLogger.Object);
 
         Assert.Same(mockLogger.Object, manager.LoggerForTest);
     }
@@ -63,7 +63,7 @@ public class GoogleSheetManagerBaseTests
     [Fact]
     public void Constructor_WithAccessTokenAndSpreadsheetId_ShouldInitializeWithoutThrowing()
     {
-        var manager = new TestGoogleSheetManager("test-token", "test-spreadsheet-id");
+        var manager = new TestSheetManager("test-token", "test-spreadsheet-id");
 
         Assert.NotNull(manager.ServiceForTest);
         Assert.NotNull(manager.LoggerForTest);
@@ -75,7 +75,7 @@ public class GoogleSheetManagerBaseTests
         // Throwaway service-account parameters; we only verify construction, not a live call
         var parameters = GoogleCredentialHelpers.CreateServiceAccountParameters();
 
-        var manager = new TestGoogleSheetManager(parameters, "test-spreadsheet-id");
+        var manager = new TestSheetManager(parameters, "test-spreadsheet-id");
 
         Assert.NotNull(manager.ServiceForTest);
         Assert.NotNull(manager.LoggerForTest);
@@ -87,6 +87,6 @@ public class GoogleSheetManagerBaseTests
         var parameters = GoogleCredentialHelpers.CreateMalformedServiceAccountParameters();
 
         Assert.Throws<ArgumentException>(
-            () => new TestGoogleSheetManager(parameters, "test-spreadsheet-id"));
+            () => new TestSheetManager(parameters, "test-spreadsheet-id"));
     }
 }

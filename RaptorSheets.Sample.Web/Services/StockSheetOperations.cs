@@ -7,10 +7,10 @@ namespace RaptorSheets.Sample.Web.Services;
 /// <summary>Connects to the Stock spreadsheet on first use - see GigSheetOperations for the shared
 /// reasoning. Stock has no validated/dropdown columns today, so its ValidationSheetMap is empty.</summary>
 public class StockSheetOperations(
-    ISheetManagerFactory<RaptorSheets.Stock.Managers.IGoogleSheetManager> factory,
+    ISheetManagerFactory<RaptorSheets.Stock.Managers.ISheetManager> factory,
     IConfiguration configuration,
     ReferenceSheetCache cache)
-    : SheetOperationsBase<RaptorSheets.Stock.Managers.IGoogleSheetManager, SheetEntity, StockSheets>(factory, configuration, cache)
+    : SheetOperationsBase<RaptorSheets.Stock.Managers.ISheetManager, SheetEntity, StockSheets>(factory, configuration, cache)
 {
     public override string DomainName => "stock";
     public override string DomainLabel => "Stock Tracking";

@@ -12,11 +12,11 @@ using RaptorSheets.Core.Models;
 namespace RaptorSheets.Stock.Tests.Unit.Managers;
 
 /// <summary>
-/// Covers GetSheets' orchestration now that it shares GoogleSheetManagerBase.GetSheetsCoreAsync with
+/// Covers GetSheets' orchestration now that it shares SheetManagerBase.GetSheetsCoreAsync with
 /// Gig: unknown-tab detection and spreadsheet-name population happen on every call (not just
 /// full-sheet-list requests, as before), and a batchGet failure triggers the same missing-sheet
 /// self-heal-and-recreate behavior Gig already had (Stock previously had none - the placeholder
-/// comment in GoogleSheetManager.GetSheets() asking for this has since been removed).
+/// comment in SheetManager.GetSheets() asking for this has since been removed).
 /// </summary>
 public class GetSheetsBehaviorTests
 {
@@ -56,7 +56,7 @@ public class GetSheetsBehaviorTests
                 Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = "Accounts" } } }
             });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         // Act
         var result = await manager.GetSheets(new List<string> { SheetName.ACCOUNTS.GetDescription() });
@@ -90,7 +90,7 @@ public class GetSheetsBehaviorTests
                 }
             });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         // Act
         var result = await manager.GetSheets(new List<string> { SheetName.ACCOUNTS.GetDescription() });
@@ -135,7 +135,7 @@ public class GetSheetsBehaviorTests
                 }
             });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         // Act - Accounts is missing from the spreadsheet (only Stocks/Tickers exist above).
         var result = await manager.GetSheets(new List<string>

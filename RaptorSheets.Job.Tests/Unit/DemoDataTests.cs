@@ -10,7 +10,7 @@ public class DemoDataTests
     [Fact]
     public void GenerateDemoData_ProducesApplicationsAndInterviews()
     {
-        var manager = new GoogleSheetManager("fake-token", "fake-id");
+        var manager = new SheetManager("fake-token", "fake-id");
 
         var demo = manager.GenerateDemoData(DateTime.Today.AddDays(-30), DateTime.Today, seed: 42);
 
@@ -26,7 +26,7 @@ public class DemoDataTests
     [Fact]
     public void GenerateDemoData_IsDeterministicForSameSeed()
     {
-        var manager = new GoogleSheetManager("fake-token", "fake-id");
+        var manager = new SheetManager("fake-token", "fake-id");
 
         var a = manager.GenerateDemoData(DateTime.Today.AddDays(-30), DateTime.Today, seed: 7);
         var b = manager.GenerateDemoData(DateTime.Today.AddDays(-30), DateTime.Today, seed: 7);

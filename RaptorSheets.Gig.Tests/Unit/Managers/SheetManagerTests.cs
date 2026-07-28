@@ -10,13 +10,13 @@ using System.ComponentModel;
 namespace RaptorSheets.Gig.Tests.Unit.Managers;
 
 [Category("Unit Tests")]
-public class GoogleSheetManagerTests
+public class SheetManagerTests
 {
-    private readonly GoogleSheetManager _manager;
+    private readonly SheetManager _manager;
 
-    public GoogleSheetManagerTests()
+    public SheetManagerTests()
     {
-        _manager = new GoogleSheetManager("test-token", "test-spreadsheet-id");
+        _manager = new SheetManager("test-token", "test-spreadsheet-id");
     }
 
     #region Constructor Tests
@@ -25,7 +25,7 @@ public class GoogleSheetManagerTests
     public void Constructor_WithAccessToken_ShouldInitialize()
     {
         // Act & Assert - If no exception is thrown, the constructor works
-        var manager = new GoogleSheetManager("test-token", "test-spreadsheet-id");
+        var manager = new SheetManager("test-token", "test-spreadsheet-id");
         Assert.NotNull(manager);
     }
 
@@ -38,7 +38,7 @@ public class GoogleSheetManagerTests
     {
         // Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type
-        var result = GoogleSheetManager.CheckSheetHeaders(null);
+        var result = SheetManager.CheckSheetHeaders(null);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type
 
         // Assert
@@ -82,7 +82,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = SheetManager.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -124,7 +124,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = SheetManager.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -182,7 +182,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = SheetManager.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -202,7 +202,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = SheetManager.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -227,7 +227,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = SheetManager.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -251,7 +251,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act - Should handle gracefully and return messages rather than throwing
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = SheetManager.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -283,7 +283,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = SheetManager.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -313,7 +313,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act - Should handle gracefully and return messages rather than throwing
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = SheetManager.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -351,7 +351,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = SheetManager.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -371,7 +371,7 @@ public class GoogleSheetManagerTests
     {
         // Act
 #pragma warning disable CS8625
-        var result = GoogleSheetManager.CheckUnknownSheets(null);
+        var result = SheetManager.CheckUnknownSheets(null);
 #pragma warning restore CS8625
 
         // Assert
@@ -394,7 +394,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act
-        var result = GoogleSheetManager.CheckUnknownSheets(spreadsheet);
+        var result = SheetManager.CheckUnknownSheets(spreadsheet);
 
         // Assert
         Assert.Empty(result);
@@ -414,7 +414,7 @@ public class GoogleSheetManagerTests
         };
 
         // Act
-        var result = GoogleSheetManager.CheckUnknownSheets(spreadsheet);
+        var result = SheetManager.CheckUnknownSheets(spreadsheet);
 
         // Assert
         Assert.Contains(result, m => m.Message.Contains("SomeRandomTab") && m.Message.Contains("does not match any known sheet name"));
@@ -427,7 +427,7 @@ public class GoogleSheetManagerTests
         var spreadsheet = new Spreadsheet { Sheets = new List<Sheet>() };
 
         // Act
-        var result = GoogleSheetManager.CheckUnknownSheets(spreadsheet);
+        var result = SheetManager.CheckUnknownSheets(spreadsheet);
 
         // Assert
         Assert.Empty(result);

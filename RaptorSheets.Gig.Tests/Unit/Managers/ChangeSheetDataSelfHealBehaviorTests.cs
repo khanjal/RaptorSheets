@@ -30,7 +30,7 @@ public class ChangeSheetDataSelfHealBehaviorTests
         mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BatchUpdateSpreadsheetResponse?)null);
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
         var sheets = new List<string> { "Expenses" };
         var sheetEntity = new SheetEntity
         {
