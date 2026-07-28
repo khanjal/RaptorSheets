@@ -440,15 +440,27 @@
 
         if (underlyingType == typeof(bool))
         {
-            builder.OpenElement(0, "input");
-            builder.AddAttribute(1, "type", "checkbox");
-            builder.AddAttribute(2, "checked", value is true);
-            builder.AddAttribute(3, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
-                e => SetValue(row, col, e.Value is bool b && b)));
-            builder.CloseElement();
+            RenderCheckbox(builder, row, col, value);
             return;
         }
 
+        RenderTextOrNumberInput(builder, row, col, value, underlyingType);
+    };
+
+    private void RenderCheckbox(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder, TRow row,
+        (PropertyInfo Property, ColumnAttribute Column) col, object? value)
+    {
+        builder.OpenElement(0, "input");
+        builder.AddAttribute(1, "type", "checkbox");
+        builder.AddAttribute(2, "checked", value is true);
+        builder.AddAttribute(3, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+            e => SetValue(row, col, e.Value is bool b && b)));
+        builder.CloseElement();
+    }
+
+    private void RenderTextOrNumberInput(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder, TRow row,
+        (PropertyInfo Property, ColumnAttribute Column) col, object? value, Type underlyingType)
+    {
         var isNumeric = underlyingType == typeof(decimal) || underlyingType == typeof(int) || underlyingType == typeof(double);
         var inputType = isNumeric ? "number" : "text";
 
@@ -463,7 +475,7 @@
         builder.AddAttribute(5, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
             e => SetValue(row, col, e.Value?.ToString() ?? string.Empty)));
         builder.CloseElement();
-    };
+    }
 
     // A native <input list="..."> + <datalist> gives free type-to-filter search with zero JS interop -
     // important for a column like Trips' Name, which can have hundreds of reference values and would
