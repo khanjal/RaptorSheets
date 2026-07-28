@@ -19,26 +19,36 @@ public static class GenerateSheetsHelpers
         return SheetsConfig.SheetUtilities.GetAllSheetNames();
     }
 
+    // Case-insensitive name -> factory lookup, same convention as SheetRegistry<TEntity>'s own
+    // _factories dictionary - O(1) instead of a sequential switch, and reads as a flat table instead
+    // of N near-identical "var s when string.Equals(...)" arms.
+    private static readonly Dictionary<string, Func<SheetModel>> _sheetModelFactories = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [SheetsConfig.SheetNames.Applications] = ApplicationSheet.GetSheet,
+        [SheetsConfig.SheetNames.Interviews] = InterviewSheet.GetSheet,
+        [SheetsConfig.SheetNames.Companies] = CompanySheet.GetSheet,
+        [SheetsConfig.SheetNames.Positions] = PositionSheet.GetSheet,
+        [SheetsConfig.SheetNames.Sites] = SiteSheet.GetSheet,
+        [SheetsConfig.SheetNames.Decisions] = DecisionSheet.GetSheet,
+        [SheetsConfig.SheetNames.InterviewTypes] = InterviewTypeSheet.GetSheet,
+        [SheetsConfig.SheetNames.InterviewOutcomes] = InterviewOutcomeSheet.GetSheet,
+        [SheetsConfig.SheetNames.Schedules] = ScheduleSheet.GetSheet,
+        [SheetsConfig.SheetNames.CompanyDetails] = CompanyDetailSheet.GetSheet,
+        [SheetsConfig.SheetNames.PositionDetails] = PositionDetailSheet.GetSheet,
+        [SheetsConfig.SheetNames.Setup] = SetupSheet.GetSheet,
+        // DeleteSheets' temp-sheet safety mechanism asks for a bare AddSheet request for this
+        // specific ad-hoc name.
+        [SheetManagerBase.TempSheetName] = () => new SheetModel { Name = SheetManagerBase.TempSheetName },
+    };
+
     private static SheetModel GetSheetModel(string sheet)
     {
-        return sheet switch
+        if (_sheetModelFactories.TryGetValue(sheet, out var factory))
         {
-            var s when string.Equals(s, SheetsConfig.SheetNames.Applications, StringComparison.OrdinalIgnoreCase) => ApplicationSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Interviews, StringComparison.OrdinalIgnoreCase) => InterviewSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Companies, StringComparison.OrdinalIgnoreCase) => CompanySheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Positions, StringComparison.OrdinalIgnoreCase) => PositionSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Sites, StringComparison.OrdinalIgnoreCase) => SiteSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Decisions, StringComparison.OrdinalIgnoreCase) => DecisionSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.InterviewTypes, StringComparison.OrdinalIgnoreCase) => InterviewTypeSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.InterviewOutcomes, StringComparison.OrdinalIgnoreCase) => InterviewOutcomeSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Schedules, StringComparison.OrdinalIgnoreCase) => ScheduleSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.CompanyDetails, StringComparison.OrdinalIgnoreCase) => CompanyDetailSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.PositionDetails, StringComparison.OrdinalIgnoreCase) => PositionDetailSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => SetupSheet.GetSheet(),
-            // DeleteSheets' temp-sheet safety mechanism asks for a bare AddSheet request for this
-            // specific ad-hoc name - anything else unrecognized is a genuine caller error.
-            var s when string.Equals(s, SheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase) => new SheetModel { Name = s },
-            _ => throw new NotImplementedException($"Sheet model not found for: {sheet}"),
-        };
+            return factory();
+        }
+
+        // Anything unrecognized is a genuine caller error and should still throw.
+        throw new NotImplementedException($"Sheet model not found for: {sheet}");
     }
 }
