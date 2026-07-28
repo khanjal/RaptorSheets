@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sample-web",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "RaptorSheets.Sample.Web", "--launch-profile", "http"],
+      "port": 5026
+    }
+  ]
+}
