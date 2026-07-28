@@ -1,0 +1,216 @@
+@page "/sheet/{Domain}/{SheetName}"
+@using System.Collections
+@using RaptorSheets.Core.Entities
+@using RaptorSheets.Core.Utilities
+@using RaptorSheets.Sample.Web.Services
+@inject DomainRegistry Domains
+
+<PageTitle>@SheetName - RaptorSheets Sample</PageTitle>
+
+<h1>@SheetName</h1>
+
+@if (_ops is not null && _ops.UsingTestFallback)
+{
+    <p class="status warning">
+        Showing the shared test dataset - no spreadsheet is configured for @_ops.DomainLabel yet, so
+        this falls back to the same spreadsheet RaptorSheets' integration tests delete and regenerate
+        on every run. Anything added here won't be permanent.
+        <a href="/settings">Set your own spreadsheet in Settings</a> to keep what you add.
+    </p>
+}
+
+@if (_error is not null)
+{
+    <p class="setup-message">@_error</p>
+}
+else if (_notFoundOnSheet)
+{
+    <p>The "@SheetName" sheet doesn't exist yet on this spreadsheet.</p>
+    <button @onclick="CreateSheetAsync" disabled="@_isBusy">Create "@SheetName" sheet</button>
+}
+else if (_gridType is not null && _gridParameters is not null)
+{
+    <DynamicComponent Type="_gridType" Parameters="_gridParameters" />
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@if (_messages.Count > 0)
+{
+    <ul class="messages">
+        @foreach (var message in _messages)
+        {
+            <li class="@message.Level.ToLowerInvariant()">@message.Message</li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter]
+    public string Domain { get; set; } = string.Empty;
+
+    [Parameter]
+    public string SheetName { get; set; } = string.Empty;
+
+    private ISheetOperations? _ops;
+    private SheetDescriptor? _descriptor;
+    private Type? _gridType;
+    private Dictionary<string, object>? _gridParameters;
+    private List<MessageEntity> _messages = [];
+    private string? _error;
+    private bool _notFoundOnSheet;
+    private bool _isBusy;
+    private int _loadGeneration;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _error = null;
+        _notFoundOnSheet = false;
+        _gridType = null;
+        _gridParameters = null;
+        _messages = [];
+
+        _ops = Domains.TryGet(Domain);
+        if (_ops is null)
+        {
+            _error = $"\"{Domain}\" isn't a known domain.";
+            return;
+        }
+
+        if (!_ops.TryGetManager(out _, out var connectionError))
+        {
+            _error = connectionError;
+            return;
+        }
+
+        _descriptor = SheetMetadata.GetSheetDescriptors(_ops.SheetsType, _ops.SheetNamesType)
+            .FirstOrDefault(d => string.Equals(d.Name, SheetName, StringComparison.OrdinalIgnoreCase));
+
+        if (_descriptor is null)
+        {
+            _error = $"\"{SheetName}\" isn't a known {_ops.DomainLabel} sheet.";
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var generation = ++_loadGeneration;
+        _isBusy = true;
+        try
+        {
+            var tabNames = await _ops!.GetAllSheetTabNamesAsync();
+            if (!tabNames.Contains(_descriptor!.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                _notFoundOnSheet = true;
+                return;
+            }
+
+            var isReadOnly = _ops.GetSheetLayout(_descriptor.Name)?.ProtectSheet ?? false;
+
+            // Fast path: just the sheet being viewed, same single read as before dropdowns existed.
+            // Reference-sheet data for dropdowns loads separately, in the background, so a big sheet
+            // like Trips (thousands of rows) isn't held up waiting on six lookup sheets.
+            var (sheetsContainer, messages) = await _ops.GetSheetAsync(_descriptor.Name);
+            _messages = messages;
+
+            var rows = _descriptor.GetRows(sheetsContainer);
+
+            _gridType = typeof(EntityGrid<>).MakeGenericType(_descriptor.RowType);
+            _gridParameters = new Dictionary<string, object>
+            {
+                ["Rows"] = rows,
+                ["OnSaveRequested"] = EventCallback.Factory.Create<IList>(this, SaveAsync),
+                ["ReadOnly"] = isReadOnly,
+                ["DropdownOptions"] = new Dictionary<string, IReadOnlyList<string>>()
+            };
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+
+        if (!_notFoundOnSheet && _error is null)
+        {
+            _ = LoadDropdownOptionsAsync(generation);
+        }
+    }
+
+    private async Task LoadDropdownOptionsAsync(int generation)
+    {
+        var validationMap = _ops!.ValidationSheetMap;
+        var validatedColumns = TypedFieldUtils.GetColumnProperties(_descriptor!.RowType)
+            .Where(c => c.Column.IsInput && c.Column.EnableValidation && c.Column.ValidationPattern is not null)
+            .Where(c => validationMap.ContainsKey(c.Column.ValidationPattern!))
+            .ToList();
+
+        if (validatedColumns.Count == 0)
+        {
+            return;
+        }
+
+        var allDescriptors = SheetMetadata.GetSheetDescriptors(_ops.SheetsType, _ops.SheetNamesType);
+        var referenceDescriptors = validatedColumns
+            .Select(c => validationMap[c.Column.ValidationPattern!])
+            .Distinct()
+            .Select(name => allDescriptors.FirstOrDefault(d => d.Name == name))
+            .Where(d => d is not null)
+            .Select(d => d!)
+            .ToList();
+
+        // Cached per reference-sheet-name across the whole app, not per page visit - these sheets
+        // are read-only and rarely change, so repeat navigations reuse the same values for a while
+        // instead of re-fetching.
+        var valuesBySheet = await _ops.GetReferenceValuesAsync(referenceDescriptors);
+
+        if (generation != _loadGeneration)
+        {
+            return; // navigated away / reloaded since this started
+        }
+
+        var dropdownOptions = new Dictionary<string, IReadOnlyList<string>>();
+
+        foreach (var column in validatedColumns.Select(c => c.Column))
+        {
+            var refSheetName = validationMap[column.ValidationPattern!];
+            if (valuesBySheet.TryGetValue(refSheetName, out var values))
+            {
+                dropdownOptions[column.HeaderName] = values;
+            }
+        }
+
+        if (_gridParameters is not null)
+        {
+            _gridParameters = new Dictionary<string, object>(_gridParameters)
+            {
+                ["DropdownOptions"] = dropdownOptions
+            };
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CreateSheetAsync()
+    {
+        _isBusy = true;
+        try
+        {
+            _messages = await _ops!.CreateSheetAsync(_descriptor!.Name);
+            await LoadAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task SaveAsync(IList dirtyRows)
+    {
+        _messages = await _ops!.ChangeSheetDataAsync(_descriptor!.Name, _descriptor.ListProperty, dirtyRows);
+        await LoadAsync();
+    }
+}

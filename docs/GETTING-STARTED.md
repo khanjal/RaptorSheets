@@ -8,7 +8,8 @@ This guide will help you get up and running with RaptorSheets quickly, whether y
 3. [Authentication Setup](#authentication-setup)
 4. [Quick Start Examples](#quick-start-examples)
 5. [Dependency Injection](#dependency-injection)
-6. [Next Steps](#next-steps)
+6. [Sample App](SAMPLE-APP.md)
+7. [Next Steps](#next-steps)
 
 ## Choose Your Package
 

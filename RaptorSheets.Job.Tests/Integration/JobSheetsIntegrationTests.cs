@@ -12,7 +12,8 @@ namespace RaptorSheets.Job.Tests.Integration;
 /// <summary>
 /// Integration tests that write to (and read back from) a live Job Google Sheet.
 /// Skipped automatically unless credentials and a Job spreadsheet ID are configured in user secrets
-/// (add "spreadsheets:job" alongside "spreadsheets:gig"/"spreadsheets:home"). Collection fixture
+/// (add "spreadsheets:test:job" alongside "spreadsheets:test:gig"/"spreadsheets:test:home" - the
+/// dedicated test spreadsheet, not spreadsheets:live:job). Collection fixture
 /// (<see cref="JobCleanSlateFixture"/>) deletes/recreates every sheet before tests run.
 /// </summary>
 [Collection("JobSheetsIntegration")]
@@ -103,7 +104,7 @@ public class JobSheetsIntegrationCollection : ICollectionFixture<JobCleanSlateFi
 /// <summary>
 /// Job's clean-slate integration fixture (see <see cref="CleanSlateSheetFixture{TEntity,TManager}"/>).
 /// Deletes and recreates every canonical sheet once, before the collection's tests run. Safe because
-/// spreadsheets:job is configured to point at a dedicated blank test spreadsheet, not real data.
+/// spreadsheets:test:job is configured to point at a dedicated blank test spreadsheet, not real data.
 /// </summary>
 public class JobCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
 {

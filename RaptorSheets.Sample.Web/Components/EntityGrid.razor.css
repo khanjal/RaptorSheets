@@ -1,0 +1,209 @@
+.entity-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.toolbar .filter {
+    flex: 0 0 16rem;
+}
+
+.pending-count {
+    color: var(--color-warning);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.readonly-notice {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.view-toggle {
+    display: flex;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.view-toggle button {
+    border: none;
+    border-radius: 0;
+    background: var(--color-surface);
+}
+
+    .view-toggle button + button {
+        border-left: 1px solid var(--color-border);
+    }
+
+.view-toggle button.active {
+    background: var(--color-accent-muted);
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+.card-scroll {
+    max-height: 70vh;
+    overflow-y: auto;
+    border: 1px solid var(--color-border-muted);
+    border-radius: var(--radius-md);
+    padding: 0.85rem;
+    background: var(--color-surface);
+}
+
+.card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.load-more {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0 0.25rem;
+}
+
+.data-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 0.4rem 1rem;
+    padding: 0.85rem;
+    border: 1px solid var(--color-border-muted);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-sunken);
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+    .data-card:hover {
+        border-color: var(--color-border);
+        box-shadow: var(--shadow-sm);
+    }
+
+.card-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.card-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-subtle);
+}
+
+.card-value {
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.add-form-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 18, 22, 0.5);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 4rem;
+    z-index: 100;
+}
+
+.add-form {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-muted);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    width: min(32rem, 90vw);
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+}
+
+.add-form h3 {
+    margin-top: 0;
+}
+
+.add-form-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8rem, max-content));
+    gap: 0.75rem 1.25rem;
+}
+
+.add-form-fields label {
+    margin-top: 0;
+}
+
+.add-form-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+}
+
+.grid-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--color-border-muted);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.88rem;
+}
+
+th, td {
+    border-bottom: 1px solid var(--color-border-muted);
+    padding: 0.5rem 0.65rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+th {
+    background: var(--color-surface-muted);
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    position: sticky;
+    top: 0;
+}
+
+tr:hover {
+    background: var(--color-surface-muted);
+}
+
+.readonly-badge {
+    margin-left: 0.3rem;
+    font-size: 0.62rem;
+    color: var(--color-text-subtle);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    padding: 0 0.3rem;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+tr.row-new {
+    background: var(--color-success-bg);
+}
+
+tr.row-edited {
+    background: var(--color-warning-bg);
+}
+
+tr.row-deleted {
+    background: var(--color-danger-bg);
+    text-decoration: line-through;
+    opacity: 0.7;
+}

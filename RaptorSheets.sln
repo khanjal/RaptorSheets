@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaptorSheets.Stock.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaptorSheets.Test.Common", "RaptorSheets.Test\RaptorSheets.Test.Common.csproj", "{1EC60D38-096B-475D-86C3-E751EF8B7786}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{5046B35E-DDDA-42E2-99DB-6D878443FBB6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tooling", "Tooling", "{5046B35E-DDDA-42E2-99DB-6D878443FBB6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Home", "Home", "{EBEFDB8B-24C9-1DAF-DE22-BED4049D1AC8}"
 EndProject
@@ -34,6 +34,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaptorSheets.Job", "RaptorSheets.Job\RaptorSheets.Job.csproj", "{8A85A687-058F-468B-8FAA-2B59B939AABE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaptorSheets.Job.Tests", "RaptorSheets.Job.Tests\RaptorSheets.Job.Tests.csproj", "{37EA9E7D-560F-44BA-BFCC-FFA806663441}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaptorSheets.Sample.Web", "RaptorSheets.Sample.Web\RaptorSheets.Sample.Web.csproj", "{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -177,6 +179,18 @@ Global
 		{37EA9E7D-560F-44BA-BFCC-FFA806663441}.Release|x64.Build.0 = Release|Any CPU
 		{37EA9E7D-560F-44BA-BFCC-FFA806663441}.Release|x86.ActiveCfg = Release|Any CPU
 		{37EA9E7D-560F-44BA-BFCC-FFA806663441}.Release|x86.Build.0 = Release|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Debug|x64.Build.0 = Debug|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Debug|x86.Build.0 = Debug|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Release|x64.ActiveCfg = Release|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Release|x64.Build.0 = Release|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Release|x86.ActiveCfg = Release|Any CPU
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -191,6 +205,7 @@ Global
 		{A52B5353-3BE9-4DE9-A9A5-DAA7E7E81C85} = {EBEFDB8B-24C9-1DAF-DE22-BED4049D1AC8}
 		{8A85A687-058F-468B-8FAA-2B59B939AABE} = {81CD0C4D-F8AF-6D84-31B9-2BA0C7B5DE3B}
 		{37EA9E7D-560F-44BA-BFCC-FFA806663441} = {81CD0C4D-F8AF-6D84-31B9-2BA0C7B5DE3B}
+		{EABB4629-71B6-4CA7-8BEC-816AC9A259C3} = {5046B35E-DDDA-42E2-99DB-6D878443FBB6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD2DC591-46C2-4EFD-9540-F30EC806703F}

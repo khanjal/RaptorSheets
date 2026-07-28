@@ -1,0 +1,79 @@
+@using RaptorSheets.Sample.Web.Services
+@implements IDisposable
+@inject DomainRegistry Domains
+@inject NavigationManager NavManager
+
+<nav>
+    <div class="brand">RaptorSheets Sample</div>
+
+    @foreach (var domain in Domains.Domains)
+    {
+        var expanded = IsExpanded(domain.DomainName);
+        <div class="domain-group">
+            <button type="button" class="domain-toggle" @onclick="() => ToggleDomain(domain.DomainName)">
+                <span class="chevron @(expanded ? "expanded" : "")">&#9656;</span>
+                <span class="domain-label">@domain.DomainLabel</span>
+            </button>
+            @if (expanded)
+            {
+                <ul>
+                    @foreach (var sheetName in GetSheetNames(domain))
+                    {
+                        <li>
+                            <NavLink href="@BuildHref(domain.DomainName, sheetName)">@sheetName</NavLink>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+
+    <div class="nav-footer">
+        <NavLink href="settings">Settings</NavLink>
+    </div>
+</nav>
+
+@code {
+    private string? _expandedDomain;
+
+    protected override void OnInitialized()
+    {
+        NavManager.LocationChanged += OnLocationChanged;
+        SyncExpandedDomainToRoute();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        SyncExpandedDomainToRoute();
+        InvokeAsync(StateHasChanged);
+    }
+
+    // Whichever domain the current sheet page belongs to starts expanded, so landing on (or
+    // refreshing) a sheet page doesn't hide the very entry you're on.
+    private void SyncExpandedDomainToRoute()
+    {
+        var segments = NavManager.ToBaseRelativePath(NavManager.Uri).Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length >= 2 && string.Equals(segments[0], "sheet", StringComparison.OrdinalIgnoreCase))
+        {
+            _expandedDomain = segments[1];
+        }
+    }
+
+    private bool IsExpanded(string domainName) =>
+        string.Equals(_expandedDomain, domainName, StringComparison.OrdinalIgnoreCase);
+
+    private void ToggleDomain(string domainName) =>
+        _expandedDomain = IsExpanded(domainName) ? null : domainName;
+
+    private static IEnumerable<string> GetSheetNames(ISheetOperations domain) =>
+        SheetMetadata.GetSheetDescriptors(domain.SheetsType, domain.SheetNamesType)
+            .Select(d => d.Name)
+            .Where(name => !domain.ExcludedSheetNames.Contains(name));
+
+    // Sheet names aren't always URL-safe as-is - Job/Home have names with spaces and "&"
+    // (e.g. "Interview Types", "Doors & Windows").
+    private static string BuildHref(string domainName, string sheetName) =>
+        $"sheet/{domainName}/{Uri.EscapeDataString(sheetName)}";
+
+    public void Dispose() => NavManager.LocationChanged -= OnLocationChanged;
+}

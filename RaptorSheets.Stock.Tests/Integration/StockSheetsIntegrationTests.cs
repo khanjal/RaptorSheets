@@ -74,8 +74,8 @@ public class StockSheetsIntegrationCollection : ICollectionFixture<StockCleanSla
 /// Stock's clean-slate integration fixture (see <see cref="CleanSlateSheetFixture{TEntity,TManager}"/>).
 /// Deletes and recreates every canonical sheet, seeds realistic demo holdings, then captures a
 /// batch-data snapshot for the MapFromRangeData mapper tests to map against directly without each
-/// doing their own live fetch. Safe because spreadsheets:stock is configured to point at a dedicated
-/// blank test spreadsheet, not a real portfolio.
+/// doing their own live fetch. Safe because spreadsheets:test:stock is configured to point at a
+/// dedicated blank test spreadsheet, not a real portfolio.
 /// </summary>
 public class StockCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
 {

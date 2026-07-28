@@ -1,0 +1,31 @@
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+    background: var(--color-canvas);
+}
+
+main {
+    flex: 1;
+    padding: 2rem 2.5rem;
+    overflow-x: auto;
+}
+
+#blazor-error-ui {
+    background: var(--color-warning-bg);
+    color: var(--color-text);
+    bottom: 0;
+    box-shadow: var(--shadow-md);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }

@@ -1,0 +1,528 @@
+@typeparam TRow where TRow : SheetRowEntityBase, new()
+@using System.Collections
+@using System.Collections.Generic
+@using System.Reflection
+@using RaptorSheets.Core.Attributes
+@using RaptorSheets.Core.Entities
+@using RaptorSheets.Core.Enums
+@using RaptorSheets.Core.Extensions
+@using RaptorSheets.Core.Utilities
+
+<div class="entity-grid">
+    <div class="toolbar">
+        <div class="view-toggle">
+            <button class="@(_viewMode == ViewMode.Table ? "active" : "")" @onclick='() => _viewMode = ViewMode.Table'>Table</button>
+            <button class="@(_viewMode == ViewMode.Cards ? "active" : "")" @onclick='() => _viewMode = ViewMode.Cards'>Cards</button>
+        </div>
+        <input class="filter" placeholder="Filter..." value="@_filterText" @oninput="OnFilterInput" />
+        @if (!ReadOnly)
+        {
+            <button @onclick="OpenAddForm">+ Add item</button>
+            <button class="btn-primary" @onclick="SaveAsync" disabled="@(!HasPendingChanges || _isSaving)">@(_isSaving ? "Saving..." : "Save changes")</button>
+            <button @onclick="DiscardChanges" disabled="@(!HasPendingChanges || _isSaving)">Discard changes</button>
+            @if (HasPendingChanges)
+            {
+                <span class="pending-count">@PendingChangeCount pending</span>
+            }
+        }
+        else
+        {
+            <span class="readonly-notice">Reference sheet - read only</span>
+        }
+    </div>
+
+    @if (_showAddForm)
+    {
+        <div class="add-form-backdrop">
+            <div class="add-form">
+                <h3>Add item</h3>
+                <div class="add-form-fields">
+                    @foreach (var col in _columns.Where(c => c.Column.IsInput))
+                    {
+                        <label>
+                            <span>@col.Column.HeaderName</span>
+                            @RenderCell(_newRow, col, readOnly: false)
+                        </label>
+                    }
+                </div>
+                <div class="add-form-actions">
+                    <button class="btn-primary" @onclick="ConfirmAddForm">Add</button>
+                    <button @onclick="CancelAddForm">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (_viewMode == ViewMode.Table)
+    {
+        var tableRows = GetTableRows();
+        <div class="grid-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        @foreach (var column in _columns.Select(c => c.Column))
+                        {
+                            <th title="@(column.IsInput ? "editable" : "read-only")">
+                                @column.HeaderName
+                                @if (!column.IsInput)
+                                {
+                                    <span class="readonly-badge">RO</span>
+                                }
+                            </th>
+                        }
+                        @if (!ReadOnly)
+                        {
+                            <th></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (original, working, deleted) in tableRows.Take(_renderCount))
+                    {
+                        <tr class="@RowCssClass(deleted, _editedOriginals.Contains(original))">
+                            @foreach (var col in _columns)
+                            {
+                                <td>@RenderCell(working, col, readOnly: deleted)</td>
+                            }
+                            @if (!ReadOnly)
+                            {
+                                <td>
+                                    <button @onclick="() => ToggleDelete(original)">@(deleted ? "Restore" : "Delete")</button>
+                                </td>
+                            }
+                        </tr>
+                    }
+                    @if (!ReadOnly)
+                    {
+                        @foreach (var added in _addedRows)
+                        {
+                            if (!MatchesFilter(added))
+                            {
+                                continue;
+                            }
+
+                            <tr class="row-new">
+                                @foreach (var col in _columns)
+                                {
+                                    <td>@RenderCell(added, col, readOnly: false)</td>
+                                }
+                                <td>
+                                    <button @onclick="() => RemoveAddedRow(added)">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (_renderCount < tableRows.Count)
+        {
+            <div class="load-more">
+                <button @onclick="LoadMore">Load more (@(tableRows.Count - _renderCount) remaining)</button>
+            </div>
+        }
+    }
+    else
+    {
+        var cardRows = GetCardRows();
+        <div class="card-scroll">
+            <div class="card-list">
+                @foreach (var row in cardRows.Take(_renderCount))
+                {
+                    <div class="data-card">
+                        @foreach (var col in _cardColumns)
+                        {
+                            <div class="card-field">
+                                <span class="card-label">@col.Column.HeaderName</span>
+                                <span class="card-value">@(col.Property.GetValue(row)?.ToString())</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        @if (_renderCount < cardRows.Count)
+        {
+            <div class="load-more">
+                <button @onclick="LoadMore">Load more (@(cardRows.Count - _renderCount) remaining)</button>
+            </div>
+        }
+    }
+
+    @* One <datalist> per validated column, shared by every row's <input list="..."> below - options
+       are identical across rows for a given column, so there's no reason to repeat them per cell. *@
+    @if (DropdownOptions is not null)
+    {
+        @foreach (var headerName in _columns.Select(c => c.Column).Where(c => c.EnableValidation && DropdownOptions.ContainsKey(c.HeaderName)).Select(c => c.HeaderName))
+        {
+            <datalist id="@DatalistId(headerName)">
+                @foreach (var option in DropdownOptions[headerName])
+                {
+                    <option value="@option" />
+                }
+            </datalist>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<TRow> Rows { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public EventCallback<IList> OnSaveRequested { get; set; }
+
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    [Parameter]
+    public IReadOnlyDictionary<string, IReadOnlyList<string>>? DropdownOptions { get; set; }
+
+    private enum ViewMode { Table, Cards }
+
+    private List<TRow>? _trackedRows;
+    private List<(PropertyInfo Property, ColumnAttribute Column)> _columns = [];
+    private List<(PropertyInfo Property, ColumnAttribute Column)> _cardColumns = [];
+    private ViewMode _viewMode = ViewMode.Table;
+    private readonly Dictionary<TRow, TRow> _workingCopies = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<TRow, TRow> _cloneToOriginal = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<TRow> _editedOriginals = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<TRow> _deletedOriginals = new(ReferenceEqualityComparer.Instance);
+    private List<TRow> _addedRows = [];
+    private string _filterText = string.Empty;
+    private bool _isSaving;
+    private bool _showAddForm;
+    private TRow _newRow = new();
+
+    private bool HasPendingChanges => _addedRows.Count > 0 || _editedOriginals.Count > 0 || _deletedOriginals.Count > 0;
+    private int PendingChangeCount => _addedRows.Count + _editedOriginals.Count + _deletedOriginals.Count;
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_trackedRows, Rows))
+        {
+            return;
+        }
+
+        _trackedRows = Rows;
+        _columns = TypedFieldUtils.GetColumnProperties(typeof(TRow));
+
+        // A card always shows the first column - every entity's identity value (TripEntity.Date,
+        // ServiceEntity.Service, ...), the same convention reference-sheet dropdown sourcing relies
+        // on - plus every other input column, plus any read-only column that's an actual computed
+        // metric (Total, AmountPerDistance) rather than a derived text label (Key, Day, Month, Year
+        // - all just restating the Date input already on the card).
+        _cardColumns = _columns
+            .Where((c, i) => i == 0 || c.Column.IsInput || (Nullable.GetUnderlyingType(c.Property.PropertyType) ?? c.Property.PropertyType) != typeof(string))
+            .ToList();
+
+        ResetWorkingState();
+    }
+
+    private void OnFilterInput(ChangeEventArgs e)
+    {
+        _filterText = e.Value?.ToString() ?? string.Empty;
+        InvalidatePaging();
+    }
+
+    private void ResetWorkingState()
+    {
+        _workingCopies.Clear();
+        _cloneToOriginal.Clear();
+        _editedOriginals.Clear();
+        _deletedOriginals.Clear();
+        _addedRows = [];
+        _showAddForm = false;
+        _newRow = new TRow();
+        InvalidatePaging();
+
+        foreach (var row in Rows)
+        {
+            var clone = Clone(row);
+            _workingCopies[row] = clone;
+            _cloneToOriginal[clone] = row;
+        }
+    }
+
+    private void DiscardChanges() => ResetWorkingState();
+
+    private static string RowCssClass(bool deleted, bool edited)
+    {
+        if (deleted)
+        {
+            return "row-deleted";
+        }
+
+        return edited ? "row-edited" : string.Empty;
+    }
+
+    private void OpenAddForm()
+    {
+        _newRow = new TRow();
+        _showAddForm = true;
+    }
+
+    private void CancelAddForm() => _showAddForm = false;
+
+    private void ConfirmAddForm()
+    {
+        var nextRowId = Rows.Count == 0 ? 1 : Rows.Max(r => r.RowId);
+        nextRowId = Math.Max(nextRowId, _addedRows.Count == 0 ? 0 : _addedRows.Max(r => r.RowId)) + 1;
+        _newRow.RowId = nextRowId;
+        _addedRows.Add(_newRow);
+        InvalidatePaging();
+
+        _newRow = new TRow();
+        _showAddForm = false;
+    }
+
+    private void RemoveAddedRow(TRow row)
+    {
+        _addedRows.Remove(row);
+        InvalidatePaging();
+    }
+
+    private void ToggleDelete(TRow original)
+    {
+        if (!_deletedOriginals.Remove(original))
+        {
+            _deletedOriginals.Add(original);
+        }
+
+        InvalidatePaging();
+    }
+
+    private async Task SaveAsync()
+    {
+        var dirty = BuildDirtyRows();
+        if (dirty.Count == 0)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            await OnSaveRequested.InvokeAsync(dirty);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private List<TRow> BuildDirtyRows()
+    {
+        var dirty = new List<TRow>();
+
+        foreach (var original in Rows)
+        {
+            if (_deletedOriginals.Contains(original))
+            {
+                var deletedRow = Clone(original);
+                deletedRow.Action = ActionType.DELETE.GetDescription();
+                dirty.Add(deletedRow);
+            }
+            else if (_editedOriginals.Contains(original))
+            {
+                var editedRow = _workingCopies[original];
+                editedRow.Action = ActionType.UPDATE.GetDescription();
+                dirty.Add(editedRow);
+            }
+        }
+
+        foreach (var added in _addedRows)
+        {
+            added.Action = ActionType.INSERT.GetDescription();
+            dirty.Add(added);
+        }
+
+        return dirty;
+    }
+
+    // Rendering every row of a big sheet (Trips can run into the thousands) unpaginated used to hang
+    // the whole Blazor Server circuit - one huge synchronous render blocks the same single-threaded
+    // connection every other UI event (nav clicks, even scroll-triggered reflows) waits on. Both views
+    // page through matching rows the same way, PageSize at a time, via a shared "Load more" button.
+    private const int PageSize = 30;
+
+    private List<TRow>? _cardRowsCache;
+    private List<(TRow Original, TRow Working, bool Deleted)>? _tableRowsCache;
+    private int _renderCount = PageSize;
+
+    private List<TRow> GetCardRows() => _cardRowsCache ??= BuildCardRows();
+
+    private List<(TRow Original, TRow Working, bool Deleted)> GetTableRows() => _tableRowsCache ??= BuildTableRows();
+
+    private void InvalidatePaging()
+    {
+        _cardRowsCache = null;
+        _tableRowsCache = null;
+        _renderCount = PageSize;
+    }
+
+    private void LoadMore() => _renderCount += PageSize;
+
+    private List<TRow> BuildCardRows()
+    {
+        var cardRows = new List<TRow>();
+
+        foreach (var original in Rows)
+        {
+            if (_deletedOriginals.Contains(original))
+            {
+                continue;
+            }
+
+            var working = _workingCopies[original];
+            if (MatchesFilter(working))
+            {
+                cardRows.Add(working);
+            }
+        }
+
+        if (!ReadOnly)
+        {
+            cardRows.AddRange(_addedRows.Where(MatchesFilter));
+        }
+
+        return cardRows;
+    }
+
+    private List<(TRow Original, TRow Working, bool Deleted)> BuildTableRows()
+    {
+        var tableRows = new List<(TRow, TRow, bool)>();
+
+        foreach (var original in Rows)
+        {
+            var working = _workingCopies[original];
+            if (MatchesFilter(working))
+            {
+                tableRows.Add((original, working, _deletedOriginals.Contains(original)));
+            }
+        }
+
+        return tableRows;
+    }
+
+    private bool MatchesFilter(TRow row)
+    {
+        if (string.IsNullOrWhiteSpace(_filterText))
+        {
+            return true;
+        }
+
+        return _columns.Any(col =>
+            (col.Property.GetValue(row)?.ToString() ?? string.Empty)
+                .Contains(_filterText, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private RenderFragment RenderCell(TRow row, (PropertyInfo Property, ColumnAttribute Column) col, bool readOnly) => builder =>
+    {
+        var value = col.Property.GetValue(row);
+        var isReadOnly = readOnly || ReadOnly || !col.Column.IsInput;
+
+        if (isReadOnly)
+        {
+            builder.AddContent(0, value?.ToString());
+            return;
+        }
+
+        if (col.Column.EnableValidation
+            && DropdownOptions is not null
+            && DropdownOptions.ContainsKey(col.Column.HeaderName))
+        {
+            RenderTypeahead(builder, row, col, value);
+            return;
+        }
+
+        var underlyingType = Nullable.GetUnderlyingType(col.Property.PropertyType) ?? col.Property.PropertyType;
+
+        if (underlyingType == typeof(bool))
+        {
+            RenderCheckbox(builder, row, col, value);
+            return;
+        }
+
+        RenderTextOrNumberInput(builder, row, col, value, underlyingType);
+    };
+
+    private void RenderCheckbox(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder, TRow row,
+        (PropertyInfo Property, ColumnAttribute Column) col, object? value)
+    {
+        builder.OpenElement(0, "input");
+        builder.AddAttribute(1, "type", "checkbox");
+        builder.AddAttribute(2, "checked", value is true);
+        builder.AddAttribute(3, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+            e => SetValue(row, col, e.Value is bool b && b)));
+        builder.CloseElement();
+    }
+
+    private void RenderTextOrNumberInput(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder, TRow row,
+        (PropertyInfo Property, ColumnAttribute Column) col, object? value, Type underlyingType)
+    {
+        var isNumeric = underlyingType == typeof(decimal) || underlyingType == typeof(int) || underlyingType == typeof(double);
+        var inputType = isNumeric ? "number" : "text";
+
+        builder.OpenElement(0, "input");
+        builder.AddAttribute(1, "type", inputType);
+        builder.AddAttribute(2, "class", isNumeric ? "field-compact" : "field-wide");
+        if (isNumeric)
+        {
+            builder.AddAttribute(3, "step", "any");
+        }
+        builder.AddAttribute(4, "value", value?.ToString());
+        builder.AddAttribute(5, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+            e => SetValue(row, col, e.Value?.ToString() ?? string.Empty)));
+        builder.CloseElement();
+    }
+
+    // A native <input list="..."> + <datalist> gives free type-to-filter search with zero JS interop -
+    // important for a column like Trips' Name, which can have hundreds of reference values and would
+    // otherwise be an unusably long <select>. It also naturally allows free text, matching how
+    // validation actually works here: the sheet's own Google Sheets data validation is the real
+    // enforcement point, not this UI.
+    private void RenderTypeahead(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder, TRow row,
+        (PropertyInfo Property, ColumnAttribute Column) col, object? value)
+    {
+        builder.OpenElement(0, "input");
+        builder.AddAttribute(1, "type", "text");
+        builder.AddAttribute(2, "class", "field-wide");
+        builder.AddAttribute(3, "list", DatalistId(col.Column.HeaderName));
+        builder.AddAttribute(4, "value", value?.ToString());
+        builder.AddAttribute(5, "autocomplete", "off");
+        builder.AddAttribute(6, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+            e => SetValue(row, col, e.Value?.ToString() ?? string.Empty)));
+        builder.CloseElement();
+    }
+
+    private static string DatalistId(string headerName) =>
+        $"dl-{typeof(TRow).Name}-{SanitizeForId(headerName)}";
+
+    private static string SanitizeForId(string headerName) =>
+        new([.. headerName.Select(c => char.IsLetterOrDigit(c) ? c : '-')]);
+
+    private void SetValue(TRow row, (PropertyInfo Property, ColumnAttribute Column) col, object rawValue)
+    {
+        var converted = col.Property.PropertyType == typeof(bool)
+            ? rawValue
+            : TypedFieldUtils.ConvertFromSheetValue(rawValue, col.Property.PropertyType, col.Column);
+
+        col.Property.SetValue(row, converted);
+
+        if (_cloneToOriginal.TryGetValue(row, out var original))
+        {
+            _editedOriginals.Add(original);
+        }
+    }
+
+    private static TRow Clone(TRow source)
+    {
+        var clone = new TRow();
+        foreach (var prop in typeof(TRow).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanRead && p.CanWrite))
+        {
+            prop.SetValue(clone, prop.GetValue(source));
+        }
+        return clone;
+    }
+}

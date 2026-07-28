@@ -152,12 +152,12 @@ public static class HeaderHelpers
 
         var value = values[columnId]?.ToString()?.Trim();
 
-        value = NonDecimalRegex.Replace(value ?? string.Empty, ""); // Remove all special currency symbols except for .'s and -'s with timeout
-
-        if (value == "-" || value == "")
+        if (IsBlankNumericDisplay(value))
         {
             return null;  // Make account -'s into nulls.
         }
+
+        value = NonDecimalRegex.Replace(value ?? string.Empty, ""); // Remove all special currency symbols except for .'s and -'s with timeout
 
         if (decimal.TryParse(value, out decimal result))
         {
@@ -165,6 +165,28 @@ public static class HeaderHelpers
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// True when <paramref name="rawText"/> is a currency/accounting-style "blank" - e.g. "$ -" or
+    /// bare "-" with no actual digits. Accounting format renders a zero balance this way, and
+    /// <see cref="GetDecimalValueOrNull"/> deliberately reads it back as null rather than 0 or a
+    /// parse failure - this is exposed so callers (e.g. mapping-issue diagnostics) can recognize the
+    /// same convention instead of mistaking it for unparseable text.
+    /// </summary>
+    public static bool IsBlankNumericDisplay(string? rawText)
+    {
+        var trimmed = rawText?.Trim() ?? string.Empty;
+
+        // Letters mean this is genuine unparseable text (e.g. "not-a-number"), not a currency
+        // symbol/dash display - only the latter should strip down to a bare "-".
+        if (trimmed.Any(char.IsLetter))
+        {
+            return false;
+        }
+
+        var stripped = NonDecimalRegex.Replace(trimmed, "");
+        return stripped == "-" || stripped == "";
     }
 
     private static int GetHeaderKey(Dictionary<int, string> header, string value)

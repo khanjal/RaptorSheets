@@ -96,6 +96,25 @@ public class GenericSheetMapperMappingIssueTests
         Assert.Empty(issues);
     }
 
+    [Theory]
+    [InlineData("$ -")]
+    [InlineData("-")]
+    [InlineData("$-")]
+    public void AccountingZeroDash_ShouldNotBeReportedAsAMappingIssue(string accountingZeroText)
+    {
+        // Accounting-formatted cells render a real underlying 0 as a bare dash (e.g. "$ -"), which
+        // HeaderHelpers.GetDecimalValueOrNull already reads back as null by design - that's an
+        // expected display convention, not a mapping failure worth surfacing.
+        var values = Rows(
+            ["Name", "Amount", "Count", "Active", "Note"],
+            ["John", accountingZeroText, "5", "TRUE", ""]);
+
+        var result = GenericSheetMapper<TestEntity>.MapFromRangeData(values, "Sheet1", out var issues);
+
+        Assert.Null(result[0].Amount);
+        Assert.Empty(issues);
+    }
+
     [Fact]
     public void FirstIssuePerRow_ShouldWin_RatherThanOneMessagePerBadColumn()
     {

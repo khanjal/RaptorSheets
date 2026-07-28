@@ -876,7 +876,7 @@ public class GigSheetsIntegrationCollection : ICollectionFixture<GigCleanSlateFi
 /// <summary>
 /// Gig's clean-slate integration fixture (see <see cref="CleanSlateSheetFixture{TEntity,TManager}"/>).
 /// Deletes and recreates every canonical sheet once, before the collection's tests run. Safe because
-/// spreadsheets:gig is configured to point at a dedicated blank test spreadsheet, not real data.
+/// spreadsheets:test:gig is configured to point at a dedicated blank test spreadsheet, not real data.
 /// </summary>
 public class GigCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
 {

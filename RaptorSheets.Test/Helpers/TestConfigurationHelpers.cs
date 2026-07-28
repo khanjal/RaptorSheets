@@ -31,31 +31,35 @@ public static class TestConfigurationHelpers
         return parameters;
     }
 
+    // These read the dedicated test spreadsheet under spreadsheets:test:* - never the
+    // spreadsheets:live:* slot RaptorSheets.Sample.Web's Settings page writes to, since this suite
+    // deletes and regenerates every sheet it touches (see CleanSlateSheetFixture) and must never run
+    // against anyone's real data.
     public static string GetGigSpreadsheet()
     {
         GetConfiguration();
 
-        return _configuration!["spreadsheets:gig"] ?? string.Empty;
+        return _configuration!["spreadsheets:test:gig"] ?? string.Empty;
     }
 
     public static string GetStockSpreadsheet()
     {
         GetConfiguration();
 
-        return _configuration!["spreadsheets:stock"] ?? string.Empty;
+        return _configuration!["spreadsheets:test:stock"] ?? string.Empty;
     }
 
     public static string GetHomeSpreadsheet()
     {
         GetConfiguration();
 
-        return _configuration!["spreadsheets:home"] ?? string.Empty;
+        return _configuration!["spreadsheets:test:home"] ?? string.Empty;
     }
 
     public static string GetJobSpreadsheet()
     {
         GetConfiguration();
 
-        return _configuration!["spreadsheets:job"] ?? string.Empty;
+        return _configuration!["spreadsheets:test:job"] ?? string.Empty;
     }
 }

@@ -332,6 +332,14 @@ public static class GenericSheetMapper<T> where T : class, new()
             return false;
         }
 
+        // Accounting/currency-formatted zero balances render as a bare dash (e.g. "$ -"), which
+        // HeaderHelpers.GetDecimalValueOrNull already reads back as null by design, not a parse
+        // failure - don't report those as mapping issues either.
+        if (HeaderHelpers.IsBlankNumericDisplay(rawText))
+        {
+            return false;
+        }
+
         issues.Add(new MappingIssue
         {
             SheetName = context.SheetName ?? string.Empty,

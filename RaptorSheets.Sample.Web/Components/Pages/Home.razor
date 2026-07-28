@@ -1,0 +1,117 @@
+@page "/"
+@using RaptorSheets.Gig.Entities
+@using RaptorSheets.Sample.Web.Services
+@inject GigSheetOperations ConnectionProvider
+
+<PageTitle>RaptorSheets Sample</PageTitle>
+
+<h1>RaptorSheets Sample</h1>
+
+<p>
+    A runnable UI over the RaptorSheets domain libraries - point it at a real spreadsheet
+    and browse, add, edit, and delete rows through the sheets it manages.
+</p>
+
+@if (_connected)
+{
+    <p class="status ok">Connected to the @ConnectionProvider.DomainLabel spreadsheet. Pick a sheet from the left to get started.</p>
+
+    @if (ConnectionProvider.UsingTestFallback)
+    {
+        <p class="status warning">
+            No spreadsheet configured yet, so this is showing the shared test dataset RaptorSheets'
+            integration tests delete and regenerate on every run - anything added here won't be
+            permanent. <a href="/settings">Set your own spreadsheet in Settings</a> to keep what you add.
+        </p>
+    }
+
+    @if (_isBlankSpreadsheet)
+    {
+        <div class="demo-prompt">
+            <p>This spreadsheet doesn't have any @ConnectionProvider.DomainLabel sheets on it yet.</p>
+            <button class="btn-primary" @onclick="CreateDemoDataAsync" disabled="@_isBusy">
+                @(_isBusy ? "Setting up..." : "Create sheets + fill with demo data")
+            </button>
+            @if (_demoDataMessage is not null)
+            {
+                <p class="status error">@_demoDataMessage</p>
+            }
+        </div>
+    }
+}
+else
+{
+    <p class="status error">@_connectionError</p>
+    <p>
+        Head to <a href="settings">Settings</a> to connect a spreadsheet - it walks through creating
+        a Google Cloud service account and pasting its key in, no CLI needed.
+    </p>
+}
+
+@code {
+    private bool _connected;
+    private string? _connectionError;
+    private bool _isBlankSpreadsheet;
+    private bool _isBusy;
+    private string? _demoDataMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshConnectionStateAsync();
+    }
+
+    private async Task RefreshConnectionStateAsync()
+    {
+        _connected = ConnectionProvider.TryGetTypedManager(out var manager, out _connectionError);
+        _isBlankSpreadsheet = false;
+
+        if (_connected && manager is not null)
+        {
+            var tabNames = await manager.GetAllSheetTabNames();
+            var knownSheetNames = SheetMetadata.GetSheetDescriptors(typeof(GigSheets), typeof(RaptorSheets.Gig.Constants.SheetsConfig.SheetNames))
+                .Select(d => d.Name)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            _isBlankSpreadsheet = !tabNames.Any(knownSheetNames.Contains);
+        }
+    }
+
+    private async Task CreateDemoDataAsync()
+    {
+        if (!ConnectionProvider.TryGetTypedManager(out _, out _))
+        {
+            return;
+        }
+
+        _isBusy = true;
+        _demoDataMessage = null;
+        try
+        {
+            // Safe specifically because this button only ever shows when _isBlankSpreadsheet is
+            // true - no Gig sheets exist yet, so there's no real data these fresh sheets could
+            // possibly overwrite (see ISheetOperations.InsertDemoDataAsync for why that's not true
+            // in general).
+            var createMessages = await ConnectionProvider.CreateAllSheetsAsync();
+            var createErrors = createMessages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (createErrors.Count > 0)
+            {
+                _demoDataMessage = string.Join(" ", createErrors.Select(m => m.Message));
+                return;
+            }
+
+            var messages = await ConnectionProvider.InsertDemoDataAsync();
+            var errors = messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (errors.Count > 0)
+            {
+                _demoDataMessage = string.Join(" ", errors.Select(m => m.Message));
+                return;
+            }
+
+            _isBlankSpreadsheet = false;
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+}

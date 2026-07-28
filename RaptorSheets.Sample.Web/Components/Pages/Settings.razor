@@ -1,0 +1,681 @@
+@page "/settings"
+@using System.Text.Json
+@using System.Text.RegularExpressions
+@using RaptorSheets.Sample.Web.Services
+@inject DomainRegistry Domains
+@inject UserSecretsWriter SecretsWriter
+
+<PageTitle>Settings - RaptorSheets Sample</PageTitle>
+
+<h1>Settings</h1>
+
+<p>
+    Credentials and spreadsheet IDs for every domain, all in one place. This writes to the same
+    secrets store <a href="/">the sample app</a> connects with - update it here instead of the CLI.
+</p>
+
+<section class="settings-section">
+    <h2>Credentials</h2>
+
+    @if (_currentClientEmail is not null)
+    {
+        <p class="status ok">Connected as <code>@_currentClientEmail</code>.</p>
+    }
+    else
+    {
+        <p class="status error">No service account configured yet.</p>
+    }
+
+    @if (!_showCredentialsForm)
+    {
+        <button @onclick="OpenCredentialsForm">
+            @(_currentClientEmail is null ? "Add credentials" : "Replace credentials")
+        </button>
+    }
+    else
+    {
+        <label>
+            <span>Paste full JSON key to autofill (optional)</span>
+            <textarea rows="4" value="@_pasteJson" @oninput="OnPasteJsonInput"
+                      placeholder='{ "type": "service_account", "private_key": "...", "client_email": "...", ... } - or just fill in the fields below directly'></textarea>
+        </label>
+        @if (_pasteError is not null)
+        {
+            <p class="status error">@_pasteError</p>
+        }
+        @if (_pasteSucceeded)
+        {
+            <p class="status ok">Parsed - filled in all 5 fields below.</p>
+        }
+
+        <label>
+            <span>Type</span>
+            <input value="@_credType" @oninput="e => _credType = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
+            <span>Client email</span>
+            <input value="@_credClientEmail" @oninput="e => _credClientEmail = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
+            <span>Client ID</span>
+            <input value="@_credClientId" @oninput="e => _credClientId = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
+            <span>Private key ID</span>
+            <input value="@_credPrivateKeyId" @oninput="e => _credPrivateKeyId = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <label>
+            <span class="field-label-row">
+                Private key
+                <button type="button" class="link-button" @onclick="() => _revealSecret = !_revealSecret">
+                    @(_revealSecret ? "Hide" : "Show")
+                </button>
+            </span>
+            @if (_revealSecret)
+            {
+                <textarea rows="8" value="@_credPrivateKey" @oninput="e => _credPrivateKey = e.Value?.ToString() ?? string.Empty"
+                          placeholder="-----BEGIN PRIVATE KEY-----..."></textarea>
+            }
+            else
+            {
+                <div class="masked-placeholder">
+                    @(_credPrivateKey.Length switch
+                    {
+                        0 when _currentClientEmail is not null => "Left blank - saving keeps the existing private key",
+                        0 => "Not entered yet",
+                        var n => $"{n} characters entered - click Show to view or edit"
+                    })
+                </div>
+            }
+        </label>
+
+        <button type="button" class="link-button" @onclick="CancelCredentialsEdit">Cancel</button>
+    }
+</section>
+
+<section class="settings-section">
+    <h2>Spreadsheet IDs</h2>
+    <p class="setup-hint">
+        Paste a spreadsheet's full URL or just its ID - either works, a URL is trimmed down to the ID
+        as you type. Clear a field and save to disconnect that domain. These are your own data and are
+        kept separate from RaptorSheets' integration test suite, which reads a different, dedicated
+        spreadsheet that it regularly deletes and regenerates. Until you set one here, sheet pages fall
+        back to showing that shared test dataset so there's something to look at.
+    </p>
+
+    @foreach (var slot in _spreadsheetSlots)
+    {
+        <div class="spreadsheet-slot">
+            <label>
+                <span>@slot.Label</span>
+                <div class="field-with-action">
+                    <input value="@slot.Value" @oninput="e => OnSpreadsheetIdInput(slot, e)" placeholder="Spreadsheet ID or URL" />
+                    <button type="button" class="link-button" @onclick="() => ClearSpreadsheetId(slot)" disabled="@string.IsNullOrEmpty(slot.Value)">Clear</button>
+                </div>
+            </label>
+            @if (slot.TitleLoading)
+            {
+                <p class="setup-hint">Checking connection...</p>
+            }
+            else if (slot.Title is not null)
+            {
+                <p class="status ok">Connected to "@slot.Title".</p>
+
+                @if (slot.SupportsDemoData)
+                {
+                    @if (slot.SheetsChecking)
+                    {
+                        <p class="setup-hint">Checking sheets...</p>
+                    }
+                    else
+                    {
+                        <p class="setup-hint">
+                            @slot.FoundSheets of @slot.ExpectedSheets sheets found.
+                            @if (slot.ExistingDataRows > 0)
+                            {
+                                @($" {slot.ExistingDataRows} existing row(s) of data.")
+                            }
+                        </p>
+                        @if (slot.SheetIssues.Count > 0)
+                        {
+                            <ul class="messages">
+                                @foreach (var issue in slot.SheetIssues)
+                                {
+                                    <li class="warning">@issue</li>
+                                }
+                            </ul>
+                        }
+                    }
+
+                    <div class="demo-data-row">
+                        <button type="button" @onclick="() => CreateMissingSheetsAsync(slot)"
+                                disabled="@(slot.ActionBusy || slot.SheetsChecking || slot.FoundSheets >= slot.ExpectedSheets)">
+                            @(slot.ActionBusy ? "Working..." : "Create missing sheets")
+                        </button>
+                        <button type="button" @onclick="() => InsertDemoDataAsync(slot)"
+                                disabled="@(slot.ActionBusy || slot.SheetsChecking || slot.FoundSheets < slot.ExpectedSheets || slot.ExistingDataRows > 0)">
+                            @(slot.ActionBusy ? "Working..." : "Insert demo data")
+                        </button>
+                    </div>
+                    @if (!slot.SheetsChecking && slot.ExistingDataRows > 0)
+                    {
+                        <p class="setup-hint">
+                            Demo data is disabled because this spreadsheet already has data - inserting demo
+                            data would overwrite existing rows, not just add to them. Connect a blank
+                            spreadsheet instead if you want a demo dataset.
+                        </p>
+                    }
+                    @if (slot.ActionMessage is not null)
+                    {
+                        <p class="status @(slot.ActionIsError ? "error" : "ok")">@slot.ActionMessage</p>
+                    }
+                }
+            }
+        </div>
+    }
+</section>
+
+<details class="settings-section" open="@HasAnyTestSpreadsheetConfigured">
+    <summary>Test spreadsheet IDs</summary>
+    <p class="setup-hint">
+        Only needed if you're also running RaptorSheets' own integration test suite locally against
+        your own spreadsheets - most Sample.Web users can ignore this section entirely. Each of these
+        gets deleted and regenerated by that test suite on every run (see <code>CleanSlateSheetFixture</code>),
+        so don't point one at anything you want to keep. Separate from - and never affects - the
+        "Spreadsheet IDs" section above.
+    </p>
+
+    @foreach (var slot in _testSpreadsheetSlots)
+    {
+        <div class="spreadsheet-slot">
+            <label>
+                <span>@slot.Label</span>
+                <div class="field-with-action">
+                    <input value="@slot.Value" @oninput="e => OnSpreadsheetIdInput(slot, e)" placeholder="Spreadsheet ID or URL" />
+                    <button type="button" class="link-button" @onclick="() => ClearSpreadsheetId(slot)" disabled="@string.IsNullOrEmpty(slot.Value)">Clear</button>
+                </div>
+            </label>
+            @if (slot.TitleLoading)
+            {
+                <p class="setup-hint">Checking connection...</p>
+            }
+            else if (slot.Title is not null)
+            {
+                <p class="status ok">Connected to "@slot.Title".</p>
+            }
+        </div>
+    }
+</details>
+
+<div class="settings-actions">
+    @if (_message is not null)
+    {
+        <p class="status @(_messageIsError ? "error" : "ok")">@_message</p>
+    }
+
+    <button class="btn-primary" @onclick="SaveAsync" disabled="@_isBusy">@(_isBusy ? "Saving..." : "Save")</button>
+</div>
+
+@code {
+    private string? _currentClientEmail;
+    private bool _showCredentialsForm;
+    private bool _revealSecret;
+    private string _pasteJson = string.Empty;
+    private string? _pasteError;
+    private bool _pasteSucceeded;
+    private string _credType = string.Empty;
+    private string _credPrivateKeyId = string.Empty;
+    private string _credPrivateKey = string.Empty;
+    private string _credClientEmail = string.Empty;
+    private string _credClientId = string.Empty;
+    private bool _isBusy;
+    private string? _message;
+    private bool _messageIsError;
+
+    private sealed class SpreadsheetSlot
+    {
+        public required string Name { get; init; }
+        public required string Label { get; init; }
+        public string Value { get; set; } = string.Empty;
+        public bool SupportsDemoData { get; init; }
+        public string? Title { get; set; }
+        public bool TitleLoading { get; set; }
+
+        // Populated by CheckSheetsAsync - ExistingDataRows > 0 is what actually gates the
+        // "Insert demo data" button (see ISheetOperations.InsertDemoDataAsync for why).
+        public bool SheetsChecking { get; set; }
+        public int ExpectedSheets { get; set; }
+        public int FoundSheets { get; set; }
+        public int ExistingDataRows { get; set; }
+        public List<string> SheetIssues { get; set; } = [];
+
+        public bool ActionBusy { get; set; }
+        public string? ActionMessage { get; set; }
+        public bool ActionIsError { get; set; }
+    }
+
+    private List<SpreadsheetSlot> _spreadsheetSlots = [];
+    private List<SpreadsheetSlot> _testSpreadsheetSlots = [];
+
+    // Whether the <details> test section should start expanded - only when someone already has a
+    // test spreadsheet configured (migrated from the CLI, most likely), so there's something worth
+    // seeing without an extra click; otherwise it stays out of the way for the typical user who'll
+    // never touch it.
+    private bool HasAnyTestSpreadsheetConfigured => _testSpreadsheetSlots.Any(s => !string.IsNullOrWhiteSpace(s.Value));
+
+    protected override void OnInitialized()
+    {
+        // SupportsDemoData only for domains actually registered in DomainRegistry - Stock isn't
+        // wired up yet (see docs/SAMPLE-APP.md), so it gets a plain ID field with no demo-data button.
+        // Labels come from each domain's own ISheetOperations.DomainLabel where one's registered
+        // (Stock isn't, so its label is hardcoded here) - alphabetical, not registration order.
+        _spreadsheetSlots =
+        [
+            new SpreadsheetSlot { Name = "gig", Label = Domains.TryGet("gig")?.DomainLabel ?? "Gig Work", SupportsDemoData = Domains.TryGet("gig") is not null },
+            new SpreadsheetSlot { Name = "home", Label = Domains.TryGet("home")?.DomainLabel ?? "Home Maintenance", SupportsDemoData = Domains.TryGet("home") is not null },
+            new SpreadsheetSlot { Name = "job", Label = Domains.TryGet("job")?.DomainLabel ?? "Job Applications", SupportsDemoData = Domains.TryGet("job") is not null },
+            new SpreadsheetSlot { Name = "stock", Label = Domains.TryGet("stock")?.DomainLabel ?? "Stock Tracking", SupportsDemoData = Domains.TryGet("stock") is not null },
+        ];
+
+        // No SupportsDemoData here at all - the test spreadsheet is managed by RaptorSheets.Test's
+        // own CleanSlateSheetFixture (delete/recreate on every run), so "create sheets"/"insert demo
+        // data" don't apply the way they do for a user's own live spreadsheet.
+        _testSpreadsheetSlots =
+        [
+            new SpreadsheetSlot { Name = "gig", Label = Domains.TryGet("gig")?.DomainLabel ?? "Gig Work" },
+            new SpreadsheetSlot { Name = "home", Label = Domains.TryGet("home")?.DomainLabel ?? "Home Maintenance" },
+            new SpreadsheetSlot { Name = "job", Label = Domains.TryGet("job")?.DomainLabel ?? "Job Applications" },
+            new SpreadsheetSlot { Name = "stock", Label = Domains.TryGet("stock")?.DomainLabel ?? "Stock Tracking" },
+        ];
+
+        LoadCurrent();
+        _ = LoadConnectionInfoAsync();
+        _ = LoadTestConnectionInfoAsync();
+    }
+
+    // Confirms "yes, this is the spreadsheet you meant to connect" by showing its own title (from
+    // Google Sheets, not this app), then - for domains with a demo-data button - how many of its
+    // sheets already exist and whether any already hold real data. Fires in the background so the
+    // page doesn't wait on a string of API calls before it's usable, refreshing each slot as its
+    // own answers come back.
+    private async Task LoadConnectionInfoAsync()
+    {
+        foreach (var slot in _spreadsheetSlots)
+        {
+            slot.Title = null;
+
+            if (string.IsNullOrWhiteSpace(slot.Value))
+            {
+                continue;
+            }
+
+            var ops = Domains.TryGet(slot.Name);
+            if (ops is null || !ops.TryGetManager(out _, out _))
+            {
+                continue;
+            }
+
+            slot.TitleLoading = true;
+            await InvokeAsync(StateHasChanged);
+
+            slot.Title = await ops.GetSpreadsheetTitleAsync();
+            slot.TitleLoading = false;
+            await InvokeAsync(StateHasChanged);
+
+            if (slot.SupportsDemoData)
+            {
+                slot.SheetsChecking = true;
+                await InvokeAsync(StateHasChanged);
+
+                await CheckSheetsAsync(ops, slot);
+                slot.SheetsChecking = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    // Same "confirm you pasted the right ID" idea as LoadConnectionInfoAsync, but deliberately
+    // simpler: no sheets/demo-data check (the test spreadsheet is owned by CleanSlateSheetFixture,
+    // not this page), and critically, it can't reuse ops.TryGetManager()/GetSpreadsheetTitleAsync()
+    // the way the live section does - those resolve through Connect()'s spreadsheets:live:{domain}
+    // -preferring logic, which would show the *live* spreadsheet's title here (or nothing, if only
+    // live is set) instead of verifying the test ID this slot actually holds. GetSpreadsheetTitleForIdAsync
+    // checks the given ID directly, bypassing that resolution entirely.
+    private async Task LoadTestConnectionInfoAsync()
+    {
+        foreach (var slot in _testSpreadsheetSlots)
+        {
+            slot.Title = null;
+
+            if (string.IsNullOrWhiteSpace(slot.Value))
+            {
+                continue;
+            }
+
+            var ops = Domains.TryGet(slot.Name);
+            if (ops is null)
+            {
+                continue;
+            }
+
+            slot.TitleLoading = true;
+            await InvokeAsync(StateHasChanged);
+
+            slot.Title = await ops.GetSpreadsheetTitleForIdAsync(slot.Value);
+            slot.TitleLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // How many of this domain's sheets exist, and whether any of the writable/primary ones (not
+    // read-only reference/rollup sheets, which are formula-derived and will show rows the moment
+    // primary data exists either way) already hold real data - the one thing that must be zero
+    // before InsertDemoDataAsync is safe to call, since it always writes starting at RowId 2
+    // regardless of what's already there (see ISheetOperations.InsertDemoDataAsync).
+    private static async Task CheckSheetsAsync(ISheetOperations ops, SpreadsheetSlot slot)
+    {
+        var allDescriptors = SheetMetadata.GetSheetDescriptors(ops.SheetsType, ops.SheetNamesType)
+            .Where(d => !ops.ExcludedSheetNames.Contains(d.Name))
+            .ToList();
+
+        var tabNames = await ops.GetAllSheetTabNamesAsync();
+        var foundDescriptors = allDescriptors
+            .Where(d => tabNames.Contains(d.Name, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
+        var writableFound = foundDescriptors.Where(d => ops.GetSheetLayout(d.Name)?.ProtectSheet != true).ToList();
+
+        var issues = new List<string>();
+        var existingRows = 0;
+        foreach (var descriptor in writableFound)
+        {
+            var (sheetsContainer, messages) = await ops.GetSheetAsync(descriptor.Name);
+            existingRows += descriptor.GetRows(sheetsContainer).Count;
+            issues.AddRange(messages
+                .Where(m => !string.Equals(m.Level, "INFO", StringComparison.OrdinalIgnoreCase))
+                .Select(m => $"{descriptor.Name}: {m.Message}"));
+        }
+
+        slot.ExpectedSheets = allDescriptors.Count;
+        slot.FoundSheets = foundDescriptors.Count;
+        slot.ExistingDataRows = existingRows;
+        slot.SheetIssues = issues;
+    }
+
+    private void LoadCurrent()
+    {
+        var snapshot = SecretsWriter.GetCurrentConfig();
+        _currentClientEmail = snapshot.ClientEmail;
+        GetSlot("gig").Value = snapshot.GigLiveSpreadsheetId ?? string.Empty;
+        GetSlot("stock").Value = snapshot.StockLiveSpreadsheetId ?? string.Empty;
+        GetSlot("job").Value = snapshot.JobLiveSpreadsheetId ?? string.Empty;
+        GetSlot("home").Value = snapshot.HomeLiveSpreadsheetId ?? string.Empty;
+        GetTestSlot("gig").Value = snapshot.GigTestSpreadsheetId ?? string.Empty;
+        GetTestSlot("stock").Value = snapshot.StockTestSpreadsheetId ?? string.Empty;
+        GetTestSlot("job").Value = snapshot.JobTestSpreadsheetId ?? string.Empty;
+        GetTestSlot("home").Value = snapshot.HomeTestSpreadsheetId ?? string.Empty;
+    }
+
+    private SpreadsheetSlot GetSlot(string name) => _spreadsheetSlots.First(s => s.Name == name);
+    private SpreadsheetSlot GetTestSlot(string name) => _testSpreadsheetSlots.First(s => s.Name == name);
+
+    private static void OnSpreadsheetIdInput(SpreadsheetSlot slot, ChangeEventArgs e) =>
+        slot.Value = ExtractSpreadsheetId(e.Value?.ToString() ?? string.Empty);
+
+    private static void ClearSpreadsheetId(SpreadsheetSlot slot) => slot.Value = string.Empty;
+
+    private static readonly Regex SpreadsheetUrlPattern = new(
+        @"/spreadsheets/d/([a-zA-Z0-9_-]+)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(200));
+
+    // Accepts either a bare spreadsheet ID or a full Google Sheets URL
+    // (https://docs.google.com/spreadsheets/d/{ID}/edit#gid=0) - pasting the URL straight from the
+    // browser's address bar is much more natural than hunting the ID out of the middle of it by hand.
+    private static string ExtractSpreadsheetId(string input)
+    {
+        var trimmed = input.Trim();
+        var match = SpreadsheetUrlPattern.Match(trimmed);
+        return match.Success ? match.Groups[1].Value : trimmed;
+    }
+
+    private async Task CreateMissingSheetsAsync(SpreadsheetSlot slot)
+    {
+        var ops = Domains.TryGet(slot.Name);
+        string? connectionError = null;
+        if (ops is null || !ops.TryGetManager(out _, out connectionError))
+        {
+            slot.ActionMessage = connectionError ?? $"Not connected to the {slot.Label} spreadsheet yet - save a valid ID first.";
+            slot.ActionIsError = true;
+            return;
+        }
+
+        slot.ActionBusy = true;
+        slot.ActionMessage = null;
+        try
+        {
+            var messages = await ops.CreateAllSheetsAsync();
+            var errors = messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            slot.ActionIsError = errors.Count > 0;
+            slot.ActionMessage = errors.Count > 0
+                ? string.Join(" ", errors.Select(m => m.Message))
+                : "Sheets created.";
+
+            await CheckSheetsAsync(ops, slot);
+        }
+        finally
+        {
+            slot.ActionBusy = false;
+        }
+    }
+
+    private async Task InsertDemoDataAsync(SpreadsheetSlot slot)
+    {
+        var ops = Domains.TryGet(slot.Name);
+        string? connectionError = null;
+        if (ops is null || !ops.TryGetManager(out _, out connectionError))
+        {
+            slot.ActionMessage = connectionError ?? $"Not connected to the {slot.Label} spreadsheet yet - save a valid ID first.";
+            slot.ActionIsError = true;
+            return;
+        }
+
+        // Re-check right before writing, not just whatever the page last saw - someone could have
+        // added real rows (from this app, the actual spreadsheet, or elsewhere) since this page
+        // loaded, and this is the one action here that can silently overwrite existing data instead
+        // of just failing loudly.
+        await CheckSheetsAsync(ops, slot);
+        if (slot.ExistingDataRows > 0)
+        {
+            slot.ActionMessage = $"Found {slot.ExistingDataRows} existing row(s) of data since this page loaded - " +
+                                   "refusing to insert demo data to avoid overwriting it.";
+            slot.ActionIsError = true;
+            return;
+        }
+
+        slot.ActionBusy = true;
+        slot.ActionMessage = null;
+        try
+        {
+            var messages = await ops.InsertDemoDataAsync();
+            var errors = messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            slot.ActionIsError = errors.Count > 0;
+            slot.ActionMessage = errors.Count > 0
+                ? string.Join(" ", errors.Select(m => m.Message))
+                : "Done - filled with demo data.";
+
+            await CheckSheetsAsync(ops, slot);
+        }
+        finally
+        {
+            slot.ActionBusy = false;
+        }
+    }
+
+    // Prefills everything except the private key, which never comes back down to the browser once
+    // saved - leaving it blank here means "keep the existing one" on save (see WriteSettings).
+    private void OpenCredentialsForm()
+    {
+        var snapshot = SecretsWriter.GetCurrentConfig();
+        _credType = snapshot.CredentialType ?? "service_account";
+        _credPrivateKeyId = snapshot.PrivateKeyId ?? string.Empty;
+        _credClientEmail = snapshot.ClientEmail ?? string.Empty;
+        _credClientId = snapshot.ClientId ?? string.Empty;
+        _credPrivateKey = string.Empty;
+        _showCredentialsForm = true;
+    }
+
+    private void CancelCredentialsEdit()
+    {
+        _pasteJson = string.Empty;
+        _pasteError = null;
+        _pasteSucceeded = false;
+        _credType = string.Empty;
+        _credPrivateKeyId = string.Empty;
+        _credPrivateKey = string.Empty;
+        _credClientEmail = string.Empty;
+        _credClientId = string.Empty;
+        _showCredentialsForm = false;
+        _revealSecret = false;
+    }
+
+    // Pure UI convenience - parses the pasted key into the individual fields below so a user doesn't
+    // have to copy 5 values out of the downloaded JSON by hand. The fields (not this textarea) are
+    // what actually gets saved.
+    private void OnPasteJsonInput(ChangeEventArgs e)
+    {
+        _pasteJson = e.Value?.ToString() ?? string.Empty;
+        _pasteError = null;
+        _pasteSucceeded = false;
+
+        if (string.IsNullOrWhiteSpace(_pasteJson))
+        {
+            return;
+        }
+
+        try
+        {
+            using var parsed = JsonDocument.Parse(NormalizePrivateKeyLineBreaks(_pasteJson));
+            var root = parsed.RootElement;
+            var type = GetString(root, "type");
+            var privateKeyId = GetString(root, "private_key_id");
+            var privateKey = GetString(root, "private_key");
+            var clientEmail = GetString(root, "client_email");
+            var clientId = GetString(root, "client_id");
+
+            if (type is null && privateKeyId is null && privateKey is null && clientEmail is null && clientId is null)
+            {
+                _pasteError = "That parsed as JSON, but none of the expected fields (type, private_key_id, " +
+                              "private_key, client_email, client_id) were found - is this the whole key file?";
+                return;
+            }
+
+            _credType = type ?? _credType;
+            _credPrivateKeyId = privateKeyId ?? _credPrivateKeyId;
+            _credPrivateKey = privateKey ?? _credPrivateKey;
+            _credClientEmail = clientEmail ?? _credClientEmail;
+            _credClientId = clientId ?? _credClientId;
+            _pasteSucceeded = true;
+        }
+        catch (JsonException ex)
+        {
+            _pasteError = $"Not valid JSON yet - keep pasting, or fill in the fields below directly. ({ex.Message})";
+        }
+    }
+
+    // Some editors/viewers "pretty-print" a downloaded key file, turning the private_key's escaped
+    // \n sequences into literal line breaks - which makes the surrounding JSON invalid (a raw
+    // newline inside a JSON string isn't legal per RFC 8259, so JsonDocument.Parse rejects the
+    // *entire* document, not just that field). Re-escape line breaks found between the PEM markers
+    // before parsing, since that's specifically where this shows up.
+    private static string NormalizePrivateKeyLineBreaks(string input)
+    {
+        const string beginMarker = "-----BEGIN PRIVATE KEY-----";
+        const string endMarker = "-----END PRIVATE KEY-----";
+
+        var beginIndex = input.IndexOf(beginMarker, StringComparison.Ordinal);
+        var endIndex = input.IndexOf(endMarker, StringComparison.Ordinal);
+
+        if (beginIndex < 0 || endIndex < 0 || endIndex < beginIndex)
+        {
+            return input;
+        }
+
+        // Extend to the actual closing quote of the JSON string, not just the end marker text -
+        // real keys have a trailing line break *between* "-----END PRIVATE KEY-----" and the quote
+        // that closes the value, which would otherwise be left outside the captured span and stay
+        // an unescaped literal newline.
+        var closingQuoteIndex = input.IndexOf('"', endIndex + endMarker.Length);
+        if (closingQuoteIndex < 0)
+        {
+            return input;
+        }
+
+        var pemBlock = input[beginIndex..closingQuoteIndex];
+        var normalizedPemBlock = pemBlock.Replace("\r\n", "\n").Replace("\n", "\\n");
+
+        return string.Concat(input.AsSpan(0, beginIndex), normalizedPemBlock, input.AsSpan(closingQuoteIndex));
+    }
+
+    private static string? GetString(JsonElement root, string property) =>
+        root.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
+
+    private async Task SaveAsync()
+    {
+        _isBusy = true;
+        _message = null;
+        try
+        {
+            var update = new UserSecretsWriter.SettingsUpdate(
+                _showCredentialsForm ? _credType : null,
+                _showCredentialsForm ? _credPrivateKeyId : null,
+                _showCredentialsForm ? _credPrivateKey : null,
+                _showCredentialsForm ? _credClientEmail : null,
+                _showCredentialsForm ? _credClientId : null,
+                GetSlot("gig").Value,
+                GetSlot("stock").Value,
+                GetSlot("job").Value,
+                GetSlot("home").Value,
+                GetTestSlot("gig").Value,
+                GetTestSlot("stock").Value,
+                GetTestSlot("job").Value,
+                GetTestSlot("home").Value);
+
+            var result = SecretsWriter.WriteSettings(update);
+
+            if (!result.Success)
+            {
+                _message = result.Error;
+                _messageIsError = true;
+                return;
+            }
+
+            CancelCredentialsEdit();
+
+            // Every domain shares this one secrets.json, and any of the 8 spreadsheet IDs (4 live,
+            // 4 test) or the credentials could have just changed - reset all of them so the next
+            // visit to any domain's sheets reconnects with what was just saved, not a stale prior
+            // attempt.
+            foreach (var domainOps in Domains.Domains)
+            {
+                domainOps.Reset();
+            }
+
+            LoadCurrent();
+            _ = LoadConnectionInfoAsync();
+            _ = LoadTestConnectionInfoAsync();
+
+            var gig = Domains.TryGet("gig");
+            string? connectionError = null;
+            var connected = gig is not null && gig.TryGetManager(out _, out connectionError);
+            _message = connected ? "Saved and connected." : $"Saved, but couldn't connect: {connectionError}";
+            _messageIsError = !connected;
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+}

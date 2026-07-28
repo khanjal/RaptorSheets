@@ -45,8 +45,8 @@ jobs:
     - name: Run Tests
       shell: bash
       env:
-        spreadsheets__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
         google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
         google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
         google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
@@ -139,7 +139,8 @@ jobs:
           /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" \
           /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" \
           /d:sonar.cpd.exclusions=RaptorSheets.Gig/Entities/**/*.cs \
-          /d:sonar.exclusions=RaptorSheets.Core/Entities/Generated/**,RaptorSheets.Gig/Entities/Generated/**,RaptorSheets.Stock/Entities/Generated/**,**/coverage*.xml,**/TestResults/**,**/coverage/**,**/*.coverage
+          /d:sonar.exclusions=RaptorSheets.Core/Entities/Generated/**,RaptorSheets.Gig/Entities/Generated/**,RaptorSheets.Stock/Entities/Generated/**,**/coverage*.xml,**/TestResults/**,**/coverage/**,**/*.coverage \
+          /d:sonar.coverage.exclusions=RaptorSheets.Sample.Web/**
 
     - name: Build for SonarCloud
       run: dotnet build --configuration Release
@@ -147,8 +148,8 @@ jobs:
     - name: Test with Coverage for SonarCloud
       shell: bash
       env:
-        spreadsheets__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
         google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
         google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
         google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
