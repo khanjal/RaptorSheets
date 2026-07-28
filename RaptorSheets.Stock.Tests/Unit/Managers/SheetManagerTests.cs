@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Entities;
+using RaptorSheets.Stock.Helpers;
 using RaptorSheets.Stock.Managers;
 using RaptorSheets.Test.Common.Helpers;
 using Xunit;
@@ -43,7 +44,7 @@ public class SheetManagerTests
     [Fact]
     public void CheckSheetHeaders_WithNullSpreadsheet_ReturnsError()
     {
-        var result = SheetManager.CheckSheetHeaders(default!);
+        var result = StockSheetHelpers.CheckSheetHeaders(default!);
         Assert.Single(result);
         Assert.Contains("Unable to retrieve sheet(s)", result[0].Message);
     }
@@ -52,7 +53,7 @@ public class SheetManagerTests
     public void CheckSheetHeaders_WithEmptySheets_ReturnsInfo()
     {
         var spreadsheet = new Spreadsheet { Sheets = [] };
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = StockSheetHelpers.CheckSheetHeaders(spreadsheet);
         Assert.Single(result);
         Assert.Contains("No sheet header issues found", result[0].Message);
     }
@@ -80,7 +81,7 @@ public class SheetManagerTests
                 }
             ]
         };
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = StockSheetHelpers.CheckSheetHeaders(spreadsheet);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
     }
@@ -111,7 +112,7 @@ public class SheetManagerTests
             ]
         };
 
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = StockSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         Assert.Contains(result, m => m.Message.Contains("Found sheet header issue(s)"));
     }
@@ -128,7 +129,7 @@ public class SheetManagerTests
             ]
         };
 
-        var result = SheetManager.CheckUnknownSheets(spreadsheet);
+        var result = StockSheetHelpers.CheckUnknownSheets(spreadsheet);
 
         Assert.Contains(result, m => m.Message.Contains("SomeRandomTab") && m.Message.Contains("does not match any known sheet name"));
     }
@@ -146,7 +147,7 @@ public class SheetManagerTests
             ]
         };
 
-        var result = SheetManager.CheckUnknownSheets(spreadsheet);
+        var result = StockSheetHelpers.CheckUnknownSheets(spreadsheet);
 
         Assert.Empty(result);
     }

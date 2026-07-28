@@ -4,6 +4,7 @@ using Google.Apis.Sheets.v4.Data;
 using Moq;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Services;
+using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Gig.Managers;
 using Xunit;
 
@@ -41,7 +42,7 @@ public class InsertMissingColumnsBehaviorTests
         };
 
         // Act
-        var messages = SheetManager.CheckSheetHeaders(spreadsheet, out var missingColumns);
+        var messages = GigSheetHelpers.CheckSheetHeaders(spreadsheet, out var missingColumns);
 
         // Assert
         Assert.NotEmpty(messages);

@@ -143,38 +143,6 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 
     #endregion
 
-    #region Header Validation
-
-    /// <summary>
-    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Gig sheet.
-    /// Only needs sheet tab metadata (no grid/cell data), so it's safe to call with a cheap
-    /// <c>GetSheetInfo()</c> (no ranges) result. Known-sheet header validation (missing/renamed/
-    /// reordered columns) is handled separately, per-sheet, using data already fetched via batchGet.
-    /// Internal (issue #70: Google.Apis.Sheets.v4 types are Core's implementation detail, not part
-    /// of the public contract) - thin shim over <see cref="GigSheetHelpers"/>, kept static so
-    /// internal/test callers can use it off the type without a manager instance.
-    /// </summary>
-    internal static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
-    {
-        return GigSheetHelpers.CheckUnknownSheets(sheetInfoResponse);
-    }
-
-    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
-    {
-        return GigSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
-    }
-
-    /// <summary>
-    /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
-    /// missing entirely and where they should be inserted, for use with <see cref="InsertMissingColumns"/>.
-    /// </summary>
-    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
-    {
-        return GigSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
-    }
-
-    #endregion
-
     #region Demo Data Generation
 
     /// <summary>

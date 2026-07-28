@@ -4,6 +4,7 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Enums;
+using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Gig.Managers;
 using System.ComponentModel;
 
@@ -38,7 +39,7 @@ public class SheetManagerTests
     {
         // Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type
-        var result = SheetManager.CheckSheetHeaders(null);
+        var result = GigSheetHelpers.CheckSheetHeaders(null);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type
 
         // Assert
@@ -82,7 +83,7 @@ public class SheetManagerTests
         };
 
         // Act
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = GigSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -124,7 +125,7 @@ public class SheetManagerTests
         };
 
         // Act
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = GigSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -182,7 +183,7 @@ public class SheetManagerTests
         };
 
         // Act
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = GigSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -202,7 +203,7 @@ public class SheetManagerTests
         };
 
         // Act
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = GigSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -227,7 +228,7 @@ public class SheetManagerTests
         };
 
         // Act
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = GigSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -251,7 +252,7 @@ public class SheetManagerTests
         };
 
         // Act - Should handle gracefully and return messages rather than throwing
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = GigSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -283,7 +284,7 @@ public class SheetManagerTests
         };
 
         // Act
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = GigSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -313,7 +314,7 @@ public class SheetManagerTests
         };
 
         // Act - Should handle gracefully and return messages rather than throwing
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = GigSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -351,7 +352,7 @@ public class SheetManagerTests
         };
 
         // Act
-        var result = SheetManager.CheckSheetHeaders(spreadsheet);
+        var result = GigSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         // Assert
         Assert.NotNull(result);
@@ -371,7 +372,7 @@ public class SheetManagerTests
     {
         // Act
 #pragma warning disable CS8625
-        var result = SheetManager.CheckUnknownSheets(null);
+        var result = GigSheetHelpers.CheckUnknownSheets(null);
 #pragma warning restore CS8625
 
         // Assert
@@ -394,7 +395,7 @@ public class SheetManagerTests
         };
 
         // Act
-        var result = SheetManager.CheckUnknownSheets(spreadsheet);
+        var result = GigSheetHelpers.CheckUnknownSheets(spreadsheet);
 
         // Assert
         Assert.Empty(result);
@@ -414,7 +415,7 @@ public class SheetManagerTests
         };
 
         // Act
-        var result = SheetManager.CheckUnknownSheets(spreadsheet);
+        var result = GigSheetHelpers.CheckUnknownSheets(spreadsheet);
 
         // Assert
         Assert.Contains(result, m => m.Message.Contains("SomeRandomTab") && m.Message.Contains("does not match any known sheet name"));
@@ -427,7 +428,7 @@ public class SheetManagerTests
         var spreadsheet = new Spreadsheet { Sheets = new List<Sheet>() };
 
         // Act
-        var result = SheetManager.CheckUnknownSheets(spreadsheet);
+        var result = GigSheetHelpers.CheckUnknownSheets(spreadsheet);
 
         // Assert
         Assert.Empty(result);

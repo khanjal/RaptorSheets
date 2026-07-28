@@ -131,28 +131,6 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 
     #endregion
 
-    #region Header Validation
-
-    // Internal (issue #70: Google.Apis.Sheets.v4 types are Core's implementation detail, not part
-    // of the public contract) - thin shims over JobSheetHelpers, kept static so internal/test
-    // callers can use them off the type without a manager instance.
-    internal static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
-    {
-        return JobSheetHelpers.CheckUnknownSheets(sheetInfoResponse);
-    }
-
-    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
-    {
-        return JobSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
-    }
-
-    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
-    {
-        return JobSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
-    }
-
-    #endregion
-
     #region Demo Data Generation
 
     /// <summary>

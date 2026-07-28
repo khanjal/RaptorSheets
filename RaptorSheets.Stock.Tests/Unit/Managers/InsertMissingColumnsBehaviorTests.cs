@@ -2,6 +2,7 @@ using Google.Apis.Sheets.v4.Data;
 using Moq;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Services;
+using RaptorSheets.Stock.Helpers;
 using RaptorSheets.Stock.Managers;
 using Xunit;
 
@@ -36,7 +37,7 @@ public class InsertMissingColumnsBehaviorTests
         };
 
         // Act
-        var messages = SheetManager.CheckSheetHeaders(spreadsheet, out var missingColumns);
+        var messages = StockSheetHelpers.CheckSheetHeaders(spreadsheet, out var missingColumns);
 
         // Assert
         Assert.NotEmpty(messages);
