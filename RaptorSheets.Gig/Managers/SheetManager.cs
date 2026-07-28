@@ -66,23 +66,6 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 
     #endregion
 
-    #region Read Operations
-
-    public async Task<SheetEntity> GetSheet(string sheet, CancellationToken cancellationToken = default)
-    {
-        var sheetExists = GenerateSheetsHelpers.GetSheetNames()
-            .Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
-
-        if (!sheetExists)
-        {
-            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
-        }
-
-        return await GetSheets([sheet], cancellationToken);
-    }
-
-    #endregion
-
     #region Update Operations
 
     // Single source of truth for the ChangeSheetData dispatch: count/data accessors AND request
@@ -112,33 +95,7 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 
     public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity, CancellationToken cancellationToken = default)
     {
-        var (sheetsWithData, resolveMessages) = GoogleRequestHelpers.ResolveSheetsWithData(sheets, sheetEntity, _sheetAccessors);
-        sheetEntity.Messages.AddRange(resolveMessages);
-
-        if (sheetsWithData.Count == 0)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageType.GENERAL));
-            return sheetEntity;
-        }
-
-        var sheetInfo = await GetSheetProperties(sheets, cancellationToken);
-        var (requests, buildMessages) = GoogleRequestHelpers.BuildChangeRequests(sheetsWithData, sheetEntity, _sheetAccessors, sheetInfo);
-        sheetEntity.Messages.AddRange(buildMessages);
-
-        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken);
-
-        if (batchUpdateSpreadsheetResponse == null)
-        {
-            var spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
-            if (spreadsheetInfo != null)
-            {
-                sheetEntity.Messages.AddRange(await HandleMissingSheets(spreadsheetInfo, cancellationToken));
-            }
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageType.SAVE_DATA));
-        }
-
-        return sheetEntity;
+        return await ChangeSheetDataCoreAsync(sheets, sheetEntity, _sheetAccessors, HandleMissingSheets, cancellationToken);
     }
 
     #endregion

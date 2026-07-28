@@ -69,18 +69,6 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
         return GenerateSheetHelpers.Generate(sheetNames);
     }
 
-    public async Task<SheetEntity> GetSheet(string sheet, CancellationToken cancellationToken = default)
-    {
-        var sheetExists = CanonicalSheetNames().Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
-
-        if (!sheetExists)
-        {
-            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
-        }
-
-        return await GetSheets([sheet], cancellationToken);
-    }
-
     // Only the Stocks sheet is genuinely user-writable today (Ticker/Account/Shares - see
     // StockSheet.MapToRowData) - Accounts and Tickers are fully formula/GOOGLEFINANCE-driven
     // rollups, so they get no accessor entry (same as Gig's read-only summary sheets -
@@ -96,28 +84,7 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 
     public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity, CancellationToken cancellationToken = default)
     {
-        var (sheetsWithData, resolveMessages) = GoogleRequestHelpers.ResolveSheetsWithData(sheets, sheetEntity, _sheetAccessors);
-        sheetEntity.Messages.AddRange(resolveMessages);
-
-        if (sheetsWithData.Count == 0)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageType.GENERAL));
-            return sheetEntity;
-        }
-
-        var sheetInfo = await GetSheetProperties(sheets, cancellationToken);
-        var (requests, buildMessages) = GoogleRequestHelpers.BuildChangeRequests(sheetsWithData, sheetEntity, _sheetAccessors, sheetInfo);
-        sheetEntity.Messages.AddRange(buildMessages);
-
-        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken);
-
-        if (batchUpdateSpreadsheetResponse == null)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageType.SAVE_DATA));
-        }
-
-        return sheetEntity;
+        return await ChangeSheetDataCoreAsync(sheets, sheetEntity, _sheetAccessors, cancellationToken: cancellationToken);
     }
 
     #region Demo Data Generation

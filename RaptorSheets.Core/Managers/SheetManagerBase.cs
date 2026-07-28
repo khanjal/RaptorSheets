@@ -502,6 +502,65 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
 
     #endregion
 
+    #region Sheet Data Change
+
+    /// <summary>
+    /// Shared "change sheet data" orchestration: resolve which sheets actually have data via
+    /// <paramref name="sheetAccessors"/> -&gt; build the batch-update requests -&gt; send -&gt; on failure,
+    /// optionally attempt missing-sheet recovery. Every domain's own <c>ChangeSheetData</c> was
+    /// previously copy-pasted here verbatim except for its own accessor map (and, for Gig, its own
+    /// recovery step) - this is that logic, written once.
+    /// </summary>
+    /// <param name="sheets">Sheet names the caller asked to change.</param>
+    /// <param name="sheetEntity">Entity carrying the rows to write, per sheet.</param>
+    /// <param name="sheetAccessors">Per-sheet count/data accessors and request builder - see <see cref="GoogleRequestHelpers.SheetChangeAccessor{TEntity}"/>.</param>
+    /// <param name="recoverMissingSheetsAsync">
+    /// Optional: if the batch update fails, fetch spreadsheet metadata and attempt this domain's own
+    /// missing-sheet recovery before reporting the failure. Only Gig currently does this; Stock/Job/
+    /// Home report the failure directly, matching their existing behavior.
+    /// </param>
+    protected async Task<TEntity> ChangeSheetDataCoreAsync(
+        List<string> sheets,
+        TEntity sheetEntity,
+        IReadOnlyDictionary<string, GoogleRequestHelpers.SheetChangeAccessor<TEntity>> sheetAccessors,
+        Func<Spreadsheet, CancellationToken, Task<List<MessageEntity>>>? recoverMissingSheetsAsync = null,
+        CancellationToken cancellationToken = default)
+    {
+        var (sheetsWithData, resolveMessages) = GoogleRequestHelpers.ResolveSheetsWithData(sheets, sheetEntity, sheetAccessors);
+        sheetEntity.Messages.AddRange(resolveMessages);
+
+        if (sheetsWithData.Count == 0)
+        {
+            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageType.GENERAL));
+            return sheetEntity;
+        }
+
+        var sheetInfo = await GetSheetProperties(sheets, cancellationToken);
+        var (requests, buildMessages) = GoogleRequestHelpers.BuildChangeRequests(sheetsWithData, sheetEntity, sheetAccessors, sheetInfo);
+        sheetEntity.Messages.AddRange(buildMessages);
+
+        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
+        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken);
+
+        if (batchUpdateSpreadsheetResponse == null)
+        {
+            if (recoverMissingSheetsAsync != null)
+            {
+                var spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
+                if (spreadsheetInfo != null)
+                {
+                    sheetEntity.Messages.AddRange(await recoverMissingSheetsAsync(spreadsheetInfo, cancellationToken));
+                }
+            }
+
+            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageType.SAVE_DATA));
+        }
+
+        return sheetEntity;
+    }
+
+    #endregion
+
     #region Read
 
     /// <summary>
@@ -675,6 +734,22 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     public async Task<TEntity> GetAllSheets(CancellationToken cancellationToken = default)
     {
         return await GetSheets(new List<string>(_canonicalSheetNames), cancellationToken);
+    }
+
+    /// <summary>
+    /// Fetches a single named sheet, or an error entity if the name isn't one of this domain's
+    /// canonical sheets. Every domain manager previously re-implemented this identically.
+    /// </summary>
+    public async Task<TEntity> GetSheet(string sheet, CancellationToken cancellationToken = default)
+    {
+        var sheetExists = _canonicalSheetNames.Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
+
+        if (!sheetExists)
+        {
+            return new TEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
+        }
+
+        return await GetSheets([sheet], cancellationToken);
     }
 
     // Google.Apis.Sheets.v4 types are Core's own implementation detail, not part of the public
