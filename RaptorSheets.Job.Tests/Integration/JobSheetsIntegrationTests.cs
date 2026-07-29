@@ -56,7 +56,7 @@ public class JobSheetsIntegrationTests : IntegrationTestBase
 
         // Act - write
         var writeSheets = new List<string> { SheetsConfig.SheetNames.Applications, SheetsConfig.SheetNames.Interviews };
-        var writeResult = await GoogleSheetManager!.ChangeSheetData(writeSheets, data);
+        var writeResult = await SheetManager!.ChangeSheetData(writeSheets, data);
 
         var writeErrors = CriticalErrors(writeResult);
         Assert.True(writeErrors.Count == 0,
@@ -66,7 +66,7 @@ public class JobSheetsIntegrationTests : IntegrationTestBase
         await Task.Delay(2500);
 
         // Act - read back
-        var readResult = await GoogleSheetManager!.GetSheets(TestSheets);
+        var readResult = await SheetManager!.GetSheets(TestSheets);
 
         var app = readResult.Sheets.Applications.FirstOrDefault(a => a.Company == "TechCorp");
         Assert.NotNull(app);
@@ -82,13 +82,13 @@ public class JobSheetsIntegrationTests : IntegrationTestBase
     {
         SkipIfNoCredentials();
 
-        var result = await GoogleSheetManager!.SetupDemo(seed: 42);
+        var result = await SheetManager!.SetupDemo(seed: 42);
 
         Assert.NotEmpty(result.Sheets.Applications);
 
         await Task.Delay(2500);
 
-        var readBack = await GoogleSheetManager!.GetSheets([SheetsConfig.SheetNames.Applications]);
+        var readBack = await SheetManager!.GetSheets([SheetsConfig.SheetNames.Applications]);
         Assert.NotEmpty(readBack.Sheets.Applications);
     }
 }
@@ -106,11 +106,11 @@ public class JobSheetsIntegrationCollection : ICollectionFixture<JobCleanSlateFi
 /// Deletes and recreates every canonical sheet once, before the collection's tests run. Safe because
 /// spreadsheets:test:job is configured to point at a dedicated blank test spreadsheet, not real data.
 /// </summary>
-public class JobCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
+public class JobCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, SheetManager>
 {
     public JobCleanSlateFixture() : base(
         TestConfigurationHelpers.GetJobSpreadsheet(),
-        (credential, spreadsheetId) => new GoogleSheetManager(credential, spreadsheetId))
+        (credential, spreadsheetId) => new SheetManager(credential, spreadsheetId))
     {
     }
 }

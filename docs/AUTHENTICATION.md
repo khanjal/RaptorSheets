@@ -49,7 +49,7 @@ var credentials = new Dictionary<string, string>
     ["client_id"] = "your-client-id"
 };
 
-var manager = new GoogleSheetManager(credentials, spreadsheetId);
+var manager = new SheetManager(credentials, spreadsheetId);
 ```
  
 > Compatibility note: the library accepts either the standard service-account JSON keys (snake_case, e.g. `private_key`, `private_key_id`, `client_email`, `client_id`) or camelCase dictionary keys (e.g. `privateKey`, `privateKeyId`, `clientEmail`, `clientId`). You can pass a deserialized JSON dictionary directly; the client will resolve either naming style.
@@ -60,7 +60,7 @@ var manager = new GoogleSheetManager(credentials, spreadsheetId);
 var json = await File.ReadAllTextAsync("path/to/service-account.json");
 var credentialDict = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
 
-var manager = new GoogleSheetManager(credentialDict, spreadsheetId);
+var manager = new SheetManager(credentialDict, spreadsheetId);
 ```
 
 #### Method 3: Environment Variables
@@ -133,7 +133,7 @@ var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
 var accessToken = await credential.UnderlyingCredential.GetAccessTokenForRequestAsync();
 
 // Use with RaptorSheets
-var manager = new GoogleSheetManager(accessToken, spreadsheetId);
+var manager = new SheetManager(accessToken, spreadsheetId);
 ```
 
 #### Manual OAuth2 Flow
@@ -161,7 +161,7 @@ var tokenData = await tokenResponse.Content.ReadAsStringAsync();
 var token = JsonSerializer.Deserialize<TokenResponse>(tokenData);
 
 // Use access token
-var manager = new GoogleSheetManager(token.AccessToken, spreadsheetId);
+var manager = new SheetManager(token.AccessToken, spreadsheetId);
 ```
 
 ## Google Cloud Setup
@@ -205,7 +205,7 @@ public async Task<bool> TestServiceAccountAuth(Dictionary<string, string> creden
 {
     try
     {
-        var manager = new GoogleSheetManager(credentials, spreadsheetId);
+        var manager = new SheetManager(credentials, spreadsheetId);
         var properties = await manager.GetSheetProperties();
         
         Console.WriteLine($"? Authentication successful! Found {properties.Count} sheets.");
@@ -225,7 +225,7 @@ public async Task<bool> TestOAuth2Auth(string accessToken, string spreadsheetId)
 {
     try
     {
-        var manager = new GoogleSheetManager(accessToken, spreadsheetId);
+        var manager = new SheetManager(accessToken, spreadsheetId);
         var data = await manager.GetSheets();
         
         Console.WriteLine($"? Authentication successful! Retrieved data with {data.Messages.Count} messages.");
@@ -295,7 +295,7 @@ builder.Services.AddRaptorSheetsGig(options =>
 });
 ```
 
-`IGoogleSheetManager` is then injectable directly. Credential keys may be camelCase or snake_case.
+`ISheetManager` is then injectable directly. Credential keys may be camelCase or snake_case.
 
 If the spreadsheet is not fixed at startup — the usual case when each signed-in user has their own — register without options and create managers per request instead:
 
@@ -303,7 +303,7 @@ If the spreadsheet is not fixed at startup — the usual case when each signed-i
 builder.Services.AddRaptorSheetsGig();
 
 // then, wherever you handle the request:
-public class TripsController(ISheetManagerFactory<IGoogleSheetManager> factory)
+public class TripsController(ISheetManagerFactory<ISheetManager> factory)
 {
     public async Task<IActionResult> Get(string userToken, string userSpreadsheetId)
     {
@@ -348,7 +348,7 @@ var credentials = new Dictionary<string, string>
 };
 
 var spreadsheetId = configuration["SpreadsheetId"];
-var manager = new GoogleSheetManager(credentials, spreadsheetId);
+var manager = new SheetManager(credentials, spreadsheetId);
 ```
 
 ## Troubleshooting
@@ -410,7 +410,7 @@ public async Task DebugAuthentication(Dictionary<string, string> credentials, st
     // 2. Test basic connection
     try
     {
-        var manager = new GoogleSheetManager(credentials, spreadsheetId);
+        var manager = new SheetManager(credentials, spreadsheetId);
         Console.WriteLine("? Manager created successfully");
         
         // 3. Test API access

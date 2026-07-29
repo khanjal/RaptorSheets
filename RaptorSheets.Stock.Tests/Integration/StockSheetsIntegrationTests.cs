@@ -34,7 +34,7 @@ public class StockSheetsIntegrationTests : IntegrationTestBase
     {
         SkipIfNoCredentials();
 
-        var readBack = await GoogleSheetManager!.GetSheets(TestSheets);
+        var readBack = await SheetManager!.GetSheets(TestSheets);
 
         Assert.NotEmpty(readBack.Sheets.Stocks);
         Assert.All(readBack.Sheets.Stocks, s =>
@@ -77,7 +77,7 @@ public class StockSheetsIntegrationCollection : ICollectionFixture<StockCleanSla
 /// doing their own live fetch. Safe because spreadsheets:test:stock is configured to point at a
 /// dedicated blank test spreadsheet, not a real portfolio.
 /// </summary>
-public class StockCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
+public class StockCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, SheetManager>
 {
     /// <summary>
     /// Raw batch-get value ranges captured after seeding, for MapFromRangeData tests to map
@@ -87,7 +87,7 @@ public class StockCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, Google
 
     public StockCleanSlateFixture() : base(
         TestConfigurationHelpers.GetStockSpreadsheet(),
-        (credential, spreadsheetId) => new GoogleSheetManager(credential, spreadsheetId),
+        (credential, spreadsheetId) => new SheetManager(credential, spreadsheetId),
         manager => manager.PopulateDemoData(seed: 42))
     {
     }

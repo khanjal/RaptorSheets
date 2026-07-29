@@ -34,7 +34,7 @@ public class HomeSheetsIntegrationTests : IntegrationTestBase
         var data = BuildTestData();
 
         // Act - write the data
-        var writeResult = await GoogleSheetManager!.ChangeSheetData(TestSheets, data);
+        var writeResult = await SheetManager!.ChangeSheetData(TestSheets, data);
 
         // Assert - the write itself had no critical errors
         var writeErrors = CriticalErrors(writeResult);
@@ -45,7 +45,7 @@ public class HomeSheetsIntegrationTests : IntegrationTestBase
         await Task.Delay(2000);
 
         // Act - read the data back
-        var readResult = await GoogleSheetManager!.GetSheets(TestSheets);
+        var readResult = await SheetManager!.GetSheets(TestSheets);
 
         // Assert - rows round-tripped
         var livingRoom = readResult.Sheets.Rooms.FirstOrDefault(r => r.Room == "Living Room");
@@ -66,7 +66,7 @@ public class HomeSheetsIntegrationTests : IntegrationTestBase
     {
         SkipIfNoCredentials();
 
-        var result = await GoogleSheetManager!.SetupDemo(seed: 42);
+        var result = await SheetManager!.SetupDemo(seed: 42);
 
         Assert.NotEmpty(result.Sheets.Rooms);
         Assert.NotEmpty(result.Sheets.DoorsWindows);
@@ -74,7 +74,7 @@ public class HomeSheetsIntegrationTests : IntegrationTestBase
 
         await Task.Delay(2500);
 
-        var readBack = await GoogleSheetManager!.GetSheets([SheetsConfig.SheetNames.Rooms, SheetsConfig.SheetNames.Stats]);
+        var readBack = await SheetManager!.GetSheets([SheetsConfig.SheetNames.Rooms, SheetsConfig.SheetNames.Stats]);
         Assert.NotEmpty(readBack.Sheets.Rooms);
         Assert.Contains(readBack.Sheets.Stats, s => s.Name == "Roof Type");
     }
@@ -122,11 +122,11 @@ public class HomeSheetsIntegrationCollection : ICollectionFixture<HomeCleanSlate
 /// Deletes and recreates every canonical sheet once, before the collection's tests run. Safe because
 /// spreadsheets:test:home is configured to point at a dedicated blank test spreadsheet, not real data.
 /// </summary>
-public class HomeCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
+public class HomeCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, SheetManager>
 {
     public HomeCleanSlateFixture() : base(
         TestConfigurationHelpers.GetHomeSpreadsheet(),
-        (credential, spreadsheetId) => new GoogleSheetManager(credential, spreadsheetId))
+        (credential, spreadsheetId) => new SheetManager(credential, spreadsheetId))
     {
     }
 }

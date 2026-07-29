@@ -1,4 +1,4 @@
-﻿using Google.Apis.Sheets.v4.Data;
+using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
@@ -12,7 +12,7 @@ namespace RaptorSheets.Gig.Helpers;
 
 public static class GenerateSheetsHelpers
 {
-    public static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
+    internal static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
         if (sheets.Count == 0)
         {
@@ -58,33 +58,42 @@ public static class GenerateSheetsHelpers
         return SheetsConfig.SheetUtilities.GetAllSheetNames();
     }
 
+    // Case-insensitive name -> factory lookup, same convention as SheetRegistry<TEntity>'s own
+    // _factories dictionary - O(1) instead of a sequential switch, and reads as a flat table instead
+    // of N near-identical "var s when string.Equals(...)" arms.
+    private static readonly Dictionary<string, Func<SheetModel>> _sheetModelFactories = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [SheetsConfig.SheetNames.Addresses] = AddressSheet.GetSheet,
+        [SheetsConfig.SheetNames.Daily] = DailySheet.GetSheet,
+        [SheetsConfig.SheetNames.Expenses] = ExpenseSheet.GetSheet,
+        [SheetsConfig.SheetNames.Monthly] = MonthlySheet.GetSheet,
+        [SheetsConfig.SheetNames.Names] = NameSheet.GetSheet,
+        [SheetsConfig.SheetNames.Places] = PlaceSheet.GetSheet,
+        [SheetsConfig.SheetNames.Deliveries] = DeliverySheet.GetSheet,
+        [SheetsConfig.SheetNames.Locations] = LocationSheet.GetSheet,
+        [SheetsConfig.SheetNames.Regions] = RegionSheet.GetSheet,
+        [SheetsConfig.SheetNames.Services] = ServiceSheet.GetSheet,
+        [SheetsConfig.SheetNames.Setup] = SetupSheet.GetSheet,
+        [SheetsConfig.SheetNames.Shifts] = ShiftSheet.GetSheet,
+        [SheetsConfig.SheetNames.Trips] = TripSheet.GetSheet,
+        [SheetsConfig.SheetNames.Types] = TypeSheet.GetSheet,
+        [SheetsConfig.SheetNames.Weekdays] = WeekdaySheet.GetSheet,
+        [SheetsConfig.SheetNames.Weekly] = WeeklySheet.GetSheet,
+        [SheetsConfig.SheetNames.Yearly] = YearlySheet.GetSheet,
+        // DeleteSheets' temp-sheet safety mechanism (SheetManagerBase<TEntity>.DeleteSheets) asks for
+        // a bare AddSheet request for this specific ad-hoc, non-domain name.
+        [SheetManagerBase.TempSheetName] = () => new SheetModel { Name = SheetManagerBase.TempSheetName },
+    };
+
     private static SheetModel GetSheetModel(string sheet)
     {
-        return sheet switch
+        if (_sheetModelFactories.TryGetValue(sheet, out var factory))
         {
-            var s when string.Equals(s, SheetsConfig.SheetNames.Addresses, StringComparison.OrdinalIgnoreCase) => AddressSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Daily, StringComparison.OrdinalIgnoreCase) => DailySheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Expenses, StringComparison.OrdinalIgnoreCase) => ExpenseSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Monthly, StringComparison.OrdinalIgnoreCase) => MonthlySheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Names, StringComparison.OrdinalIgnoreCase) => NameSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Places, StringComparison.OrdinalIgnoreCase) => PlaceSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Deliveries, StringComparison.OrdinalIgnoreCase) => DeliverySheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Locations, StringComparison.OrdinalIgnoreCase) => LocationSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Regions, StringComparison.OrdinalIgnoreCase) => RegionSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Services, StringComparison.OrdinalIgnoreCase) => ServiceSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Setup, StringComparison.OrdinalIgnoreCase) => SetupSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Shifts, StringComparison.OrdinalIgnoreCase) => ShiftSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Trips, StringComparison.OrdinalIgnoreCase) => TripSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Types, StringComparison.OrdinalIgnoreCase) => TypeSheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Weekdays, StringComparison.OrdinalIgnoreCase) => WeekdaySheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Weekly, StringComparison.OrdinalIgnoreCase) => WeeklySheet.GetSheet(),
-            var s when string.Equals(s, SheetsConfig.SheetNames.Yearly, StringComparison.OrdinalIgnoreCase) => YearlySheet.GetSheet(),
-            // DeleteSheets' temp-sheet safety mechanism (GoogleSheetManagerBase<TEntity>.DeleteSheets)
-            // asks for a bare AddSheet request for this specific ad-hoc, non-domain name - anything
-            // else unrecognized is a genuine caller error and should still throw.
-            var s when string.Equals(s, GoogleSheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase) => new SheetModel { Name = s },
-            _ => throw new NotImplementedException($"Sheet model not found for: {sheet}"),
-        };
+            return factory();
+        }
+
+        // Anything unrecognized is a genuine caller error and should still throw.
+        throw new NotImplementedException($"Sheet model not found for: {sheet}");
     }
 
     private static void GenerateHeadersFormatAndProtection(

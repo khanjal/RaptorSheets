@@ -57,7 +57,7 @@ public class GetSheetsBehaviorTests
                 }
             });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         // Act
         var result = await manager.GetSheets(new List<string> { "Shifts" });
@@ -93,7 +93,7 @@ public class GetSheetsBehaviorTests
                 }
             });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         // Act
         var result = await manager.GetSheets(new List<string> { "Shifts" });
@@ -128,7 +128,7 @@ public class GetSheetsBehaviorTests
                 }
             });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         // Act
         var result = await manager.GetSheets(new List<string> { "Shifts" });

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <!--
       Ship the XML documentation file with the packages. The codebase already carries substantial
-      doc comments (GoogleSheetManagerBase, SheetEntityBase, SchemaValidationResult, and others);
+      doc comments (SheetManagerBase, SheetEntityBase, SchemaValidationResult, and others);
       without this they never reach consumers' IntelliSense.
 
       The suppressed warnings below are all "documentation is incomplete" findings - a missing

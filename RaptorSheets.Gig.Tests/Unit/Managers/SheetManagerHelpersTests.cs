@@ -10,14 +10,14 @@ using RaptorSheets.Core.Extensions;
 namespace RaptorSheets.Gig.Tests.Unit.Managers;
 
 [Category("Unit Tests")]
-public class GoogleSheetManagerHelpersTests
+public class SheetManagerHelpersTests
 {
     [Fact]
     public async Task HandleMissingSheets_WithNullSpreadsheet_ReturnsErrorMessage()
     {
-        var manager = new GoogleSheetManager("test-token", "test-spreadsheet-id");
+        var manager = new SheetManager("test-token", "test-spreadsheet-id");
 
-        var method = typeof(GoogleSheetManager).GetMethod("HandleMissingSheets", BindingFlags.NonPublic | BindingFlags.Instance);
+        var method = typeof(SheetManager).GetMethod("HandleMissingSheets", BindingFlags.NonPublic | BindingFlags.Instance);
         var task = (Task<List<MessageEntity>>)method!.Invoke(manager, new object?[] { null, CancellationToken.None })!;
         var messages = await task;
 
@@ -30,7 +30,7 @@ public class GoogleSheetManagerHelpersTests
     [Fact]
     public async Task HandleMissingSheets_WithAllSheetsPresent_ReturnsEmptyList()
     {
-        var manager = new GoogleSheetManager("test-token", "test-spreadsheet-id");
+        var manager = new SheetManager("test-token", "test-spreadsheet-id");
 
         var spreadsheet = new Spreadsheet
         {
@@ -39,7 +39,7 @@ public class GoogleSheetManagerHelpersTests
                 .ToList()
         };
 
-        var method = typeof(GoogleSheetManager).GetMethod("HandleMissingSheets", BindingFlags.NonPublic | BindingFlags.Instance);
+        var method = typeof(SheetManager).GetMethod("HandleMissingSheets", BindingFlags.NonPublic | BindingFlags.Instance);
         var task = (Task<List<MessageEntity>>)method!.Invoke(manager, new object?[] { spreadsheet, CancellationToken.None })!;
         var messages = await task;
 

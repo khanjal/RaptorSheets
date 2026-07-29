@@ -7,10 +7,10 @@ namespace RaptorSheets.Sample.Web.Services;
 /// <summary>Connects to the Job spreadsheet on first use - see GigSheetOperations for the shared
 /// reasoning.</summary>
 public class JobSheetOperations(
-    ISheetManagerFactory<RaptorSheets.Job.Managers.IGoogleSheetManager> factory,
+    ISheetManagerFactory<RaptorSheets.Job.Managers.ISheetManager> factory,
     IConfiguration configuration,
     ReferenceSheetCache cache)
-    : SheetOperationsBase<RaptorSheets.Job.Managers.IGoogleSheetManager, SheetEntity, JobSheets>(factory, configuration, cache)
+    : SheetOperationsBase<RaptorSheets.Job.Managers.ISheetManager, SheetEntity, JobSheets>(factory, configuration, cache)
 {
     public override string DomainName => "job";
     public override string DomainLabel => "Job Applications";

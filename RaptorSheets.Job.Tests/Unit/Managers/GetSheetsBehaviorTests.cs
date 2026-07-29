@@ -63,7 +63,7 @@ public class GetSheetsBehaviorTests
                 }
             });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         var result = await manager.GetSheets([SheetsConfig.SheetNames.Applications]);
 
@@ -99,7 +99,7 @@ public class GetSheetsBehaviorTests
                 }
             });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         var result = await manager.GetSheets([SheetsConfig.SheetNames.Applications]);
 
@@ -129,7 +129,7 @@ public class GetSheetsBehaviorTests
                     .ToList()
             });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         var result = await manager.GetSheets([SheetsConfig.SheetNames.Applications]);
 

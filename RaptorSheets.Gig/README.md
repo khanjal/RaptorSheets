@@ -1,4 +1,4 @@
-﻿# RaptorSheets.Gig
+# RaptorSheets.Gig
 
 [![Nuget](https://img.shields.io/nuget/v/RaptorSheets.Gig)](https://www.nuget.org/packages/RaptorSheets.Gig/) [![Build Status](https://github.com/khanjal/RaptorSheets/actions/workflows/dotnet.yml/badge.svg)](https://github.com/khanjal/RaptorSheets/actions)
 
@@ -29,7 +29,7 @@ using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Enums;
 
 // Initialize manager
-var manager = new GoogleSheetManager(credentials, spreadsheetId);
+var manager = new SheetManager(credentials, spreadsheetId);
 
 // Create all gig-related sheets
 await manager.CreateAllSheets();
@@ -50,7 +50,7 @@ builder.Services.AddRaptorSheetsGig(options =>
 });
 ```
 
-`IGoogleSheetManager` is then injectable directly. When each signed-in user has their own
+`ISheetManager` is then injectable directly. When each signed-in user has their own
 spreadsheet, register without options and create managers per request instead:
 
 ```csharp
@@ -71,7 +71,7 @@ spreadsheet by itself. Create the sheets (if they don't already exist) and write
 `ChangeSheetData`, same as any other write:
 
 ```csharp
-var manager = new GoogleSheetManager(credentials, spreadsheetId);
+var manager = new SheetManager(credentials, spreadsheetId);
 
 // Create the sheets (skip this if they already exist)
 await manager.CreateAllSheets();
@@ -144,7 +144,7 @@ public async Task CreateDemoSpreadsheet()
     var spreadsheetId = spreadsheet.SpreadsheetId;
     
     // 2. Create the sheets and write generated demo data to them
-    var manager = new GoogleSheetManager(credentials, spreadsheetId);
+    var manager = new SheetManager(credentials, spreadsheetId);
     await manager.CreateAllSheets();
     var demoData = manager.GenerateDemoData();
     var result = await manager.ChangeSheetData(["Shifts", "Trips", "Expenses"], demoData);
@@ -375,18 +375,18 @@ public class LocationEntity
 
 ## Manager Usage
 
-> **Architecture note:** `GoogleSheetManager` inherits `GoogleSheetManagerBase<SheetEntity>` from
+> **Architecture note:** `SheetManager` inherits `SheetManagerBase<SheetEntity>` from
 > `RaptorSheets.Core`. The shared base implements all domain-agnostic behavior — `GetSheets`/
 > `GetAllSheets` orchestration (batch read → self-heal missing sheets → unknown-tab detection → map →
 > auto-heal missing columns → spreadsheet name), sheet properties, tab names, layouts,
-> `InsertMissingColumns`, `GetSpreadsheetInfo`, and `GetBatchData`. The Gig package only adds its
+> `InsertMissingColumns`, and `GetSpreadsheetTitle`. The Gig package only adds its
 > strongly-typed entities/mappers, its `SheetRegistry<SheetEntity>` (`GigSheetHelpers.Registry`), and
 > its Gig-specific write operations (ordered `CreateSheets`, `ChangeSheetData`, `DeleteSheets`, demo
 > data). The public API below is unchanged by this — it's just implemented once in Core now.
 
-### GoogleSheetManager Interface
+### SheetManager Interface
 ```csharp
-public interface IGoogleSheetManager
+public interface ISheetManager
 {
     // CRUD Operations
     Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity);
@@ -402,8 +402,7 @@ public interface IGoogleSheetManager
     Task<List<PropertyEntity>> GetAllSheetProperties();
     Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets);
     Task<List<string>> GetAllSheetTabNames();
-    Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null);
-    Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets);
+    Task<string?> GetSpreadsheetTitle(); // the connected spreadsheet's own title
     SheetModel? GetSheetLayout(string sheet);
     List<SheetModel> GetSheetLayouts(List<string> sheets);
 
@@ -419,7 +418,7 @@ public interface IGoogleSheetManager
 
 #### With Access Token
 ```csharp
-var manager = new GoogleSheetManager("your-access-token", "spreadsheet-id");
+var manager = new SheetManager("your-access-token", "spreadsheet-id");
 ```
 
 #### With Service Account Credentials
@@ -433,7 +432,7 @@ var credentials = new Dictionary<string, string>
     ["client_id"] = "client-id"
 };
 
-var manager = new GoogleSheetManager(credentials, "spreadsheet-id");
+var manager = new SheetManager(credentials, "spreadsheet-id");
 ```
 
 ## Data Operations
@@ -601,7 +600,7 @@ using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Entities;
 
 // Initialize manager
-var manager = new GoogleSheetManager(credentials, spreadsheetId);
+var manager = new SheetManager(credentials, spreadsheetId);
 
 // Record a new shift
 var todayShift = new ShiftEntity

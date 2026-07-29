@@ -7,18 +7,18 @@ using RaptorSheets.Home.Managers;
 namespace RaptorSheets.Home.Tests.Unit.Managers;
 
 /// <summary>
-/// Edge-case coverage against a real (but fake-token) GoogleSheetManager - network calls fail
+/// Edge-case coverage against a real (but fake-token) SheetManager - network calls fail
 /// gracefully (caught/logged inside GoogleSheetService), so these exercise the manager's dispatch
 /// logic (accessor map, empty-list handling, message building) without needing a live spreadsheet.
 /// </summary>
-public class GoogleSheetManagerTests
+public class SheetManagerTests
 {
-    private readonly GoogleSheetManager _manager = new("test-token", "test-spreadsheet-id");
+    private readonly SheetManager _manager = new("test-token", "test-spreadsheet-id");
 
     [Fact]
     public void Constructor_WithAccessToken_Initializes()
     {
-        var manager = new GoogleSheetManager("test-token", "test-spreadsheet-id");
+        var manager = new SheetManager("test-token", "test-spreadsheet-id");
         Assert.NotNull(manager);
     }
 

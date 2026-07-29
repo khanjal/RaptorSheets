@@ -23,10 +23,10 @@ public class ServiceCollectionExtensionsTests
             options.AccessToken = "ya29.mocked.token";
         });
 
-        var manager = services.BuildServiceProvider().GetService<IGoogleSheetManager>();
+        var manager = services.BuildServiceProvider().GetService<ISheetManager>();
 
         Assert.NotNull(manager);
-        Assert.IsType<GoogleSheetManager>(manager, exactMatch: false);
+        Assert.IsType<SheetManager>(manager, exactMatch: false);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class ServiceCollectionExtensionsTests
         services.AddRaptorSheetsGig();
 
         var factory = services.BuildServiceProvider()
-            .GetService<ISheetManagerFactory<IGoogleSheetManager>>();
+            .GetService<ISheetManagerFactory<ISheetManager>>();
 
         Assert.NotNull(factory);
 

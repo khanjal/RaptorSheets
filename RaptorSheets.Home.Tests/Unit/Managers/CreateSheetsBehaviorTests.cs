@@ -26,7 +26,7 @@ public class CreateSheetsBehaviorTests
 
         mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         await manager.CreateSheets(sheetsToCreate);
 
@@ -52,7 +52,7 @@ public class CreateSheetsBehaviorTests
             .ReturnsAsync((BatchUpdateSpreadsheetResponse?)null);
         mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         var result = await manager.CreateSheets([SheetsConfig.SheetNames.Rooms]);
 

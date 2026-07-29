@@ -56,7 +56,7 @@ fields, a blank spreadsheet ID field is not "leave unchanged" - it's always visi
 current value, so a blank one is a deliberate signal, and saving removes that domain's ID entirely
 (disconnecting it) rather than leaving the old value in place. Once connected, a field shows
 **"Connected to '{title}'"** using the spreadsheet's own title from Google Sheets (via
-`GetSpreadsheetInfo()`), not anything typed into this app - confirms you actually pasted the ID you
+`GetSpreadsheetTitle()`), not anything typed into this app - confirms you actually pasted the ID you
 meant to, especially useful right after pasting a URL. This check runs in the background per field
 (so the page doesn't wait on 4 API calls before it's usable) and re-runs after every save.
 
@@ -133,9 +133,9 @@ button on each domain's spreadsheet ID field in **Settings**, described above.
 
 Gig/Job/Home each get their own `ISheetOperations` implementation
 (`GigSheetOperations`/`JobSheetOperations`/`HomeSheetOperations` in `Services/`) - a small,
-fully-typed adapter over that domain's own strongly-typed `IGoogleSheetManager`/`SheetEntity`, since
+fully-typed adapter over that domain's own strongly-typed `ISheetManager`/`SheetEntity`, since
 there's no single non-generic manager type shared across domains to inject instead (each domain
-declares its own `IGoogleSheetManager : IGoogleSheetManager<TEntity>`, and `TEntity` differs). A
+declares its own `ISheetManager : ISheetManager<TEntity>`, and `TEntity` differs). A
 `DomainRegistry` collects whichever ones are registered in `Program.cs` and looks them up by route
 segment ("gig", "job", "home"), so `NavMenu.razor` and `Sheet.razor` (route `/sheet/{Domain}/{SheetName}`)
 never need to know which domain they're actually driving - the small amount of per-domain

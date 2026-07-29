@@ -1,4 +1,3 @@
-using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
@@ -7,15 +6,15 @@ namespace RaptorSheets.Core.Managers;
 
 /// <summary>
 /// The CRUD/metadata/layout surface every domain's manager exposes identically - the part of each
-/// domain's own <c>IGoogleSheetManager</c> that was previously redeclared byte-for-byte in Gig,
+/// domain's own <c>ISheetManager</c> that was previously redeclared byte-for-byte in Gig,
 /// Stock, Job, and Home (each already implements every member here via
-/// <see cref="GoogleSheetManagerBase{TEntity}"/>, so extending this costs nothing per domain).
+/// <see cref="SheetManagerBase{TEntity}"/>, so extending this costs nothing per domain).
 /// A domain's own interface should extend this and add only what's genuinely domain-specific -
 /// demo-data generation today, which differs enough per domain (Gig takes a date range, Stock/Home
 /// take a seed, Job takes both) that unifying it isn't worthwhile.
 /// </summary>
 /// <typeparam name="TEntity">The domain's top-level SheetEntity type.</typeparam>
-public interface IGoogleSheetManager<TEntity> where TEntity : class, ISheetEntity, new()
+public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new()
 {
     // CRUD Operations
     Task<TEntity> ChangeSheetData(List<string> sheets, TEntity sheetEntity, CancellationToken cancellationToken = default);
@@ -31,8 +30,12 @@ public interface IGoogleSheetManager<TEntity> where TEntity : class, ISheetEntit
     Task<List<PropertyEntity>> GetAllSheetProperties(CancellationToken cancellationToken = default);
     Task<List<PropertyEntity>> GetSheetProperties(List<string> sheets, CancellationToken cancellationToken = default);
     Task<List<string>> GetAllSheetTabNames(CancellationToken cancellationToken = default);
-    Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null, CancellationToken cancellationToken = default);
-    Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, CancellationToken cancellationToken = default);
+
+    /// <summary>The connected spreadsheet's own title (from Google Sheets, not anything typed into
+    /// this library) - a RaptorSheets-native replacement for reading Spreadsheet.Properties.Title off
+    /// the raw Google response, which this interface deliberately does not expose: Google.Apis.Sheets.v4
+    /// types are an internal implementation detail of Core, not part of the public contract.</summary>
+    Task<string?> GetSpreadsheetTitle(CancellationToken cancellationToken = default);
 
     // Header Management
     SheetModel? GetSheetLayout(string sheet);

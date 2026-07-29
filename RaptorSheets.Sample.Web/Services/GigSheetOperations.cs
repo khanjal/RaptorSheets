@@ -12,10 +12,10 @@ namespace RaptorSheets.Sample.Web.Services;
 /// <see cref="ISheetOperations"/> because their signatures genuinely differ per domain.
 /// </summary>
 public class GigSheetOperations(
-    ISheetManagerFactory<RaptorSheets.Gig.Managers.IGoogleSheetManager> factory,
+    ISheetManagerFactory<RaptorSheets.Gig.Managers.ISheetManager> factory,
     IConfiguration configuration,
     ReferenceSheetCache cache)
-    : SheetOperationsBase<RaptorSheets.Gig.Managers.IGoogleSheetManager, SheetEntity, GigSheets>(factory, configuration, cache)
+    : SheetOperationsBase<RaptorSheets.Gig.Managers.ISheetManager, SheetEntity, GigSheets>(factory, configuration, cache)
 {
     public override string DomainName => "gig";
     public override string DomainLabel => "Gig Work";
@@ -36,10 +36,10 @@ public class GigSheetOperations(
         [RaptorSheets.Gig.Constants.SheetsConfig.ValidationNames.RangeType] = RaptorSheets.Gig.Constants.SheetsConfig.SheetNames.Types,
     };
 
-    public bool TryGetTypedManager(out RaptorSheets.Gig.Managers.IGoogleSheetManager? manager, out string? error)
+    public bool TryGetTypedManager(out RaptorSheets.Gig.Managers.ISheetManager? manager, out string? error)
     {
         var found = TryGetManager(out var untyped, out error);
-        manager = untyped as RaptorSheets.Gig.Managers.IGoogleSheetManager;
+        manager = untyped as RaptorSheets.Gig.Managers.ISheetManager;
         return found;
     }
 

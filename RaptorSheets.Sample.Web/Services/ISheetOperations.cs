@@ -8,9 +8,9 @@ namespace RaptorSheets.Sample.Web.Services;
 /// <summary>
 /// The generic surface Sheet.razor and NavMenu.razor drive every domain through, so neither needs
 /// to know whether it's actually talking to Gig/Stock/Job/Home's own strongly-typed
-/// IGoogleSheetManager/SheetEntity. Each domain's own manager interface
-/// (RaptorSheets.{Domain}.Managers.IGoogleSheetManager) already implements this exact CRUD/layout
-/// surface via RaptorSheets.Core.Managers.IGoogleSheetManager&lt;TEntity&gt; - this just re-exposes
+/// ISheetManager/SheetEntity. Each domain's own manager interface
+/// (RaptorSheets.{Domain}.Managers.ISheetManager) already implements this exact CRUD/layout
+/// surface via RaptorSheets.Core.Managers.ISheetManager&lt;TEntity&gt; - this just re-exposes
 /// it without the TEntity type parameter, since TEntity differs per domain and a Blazor page can't
 /// be generic per route segment.
 ///

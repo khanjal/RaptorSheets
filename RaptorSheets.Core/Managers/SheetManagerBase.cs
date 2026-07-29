@@ -15,14 +15,14 @@ namespace RaptorSheets.Core.Managers;
 /// Shared construction/plumbing for domain-specific Google Sheet managers (Gig, Stock, and future
 /// domains). Holds the service + logger and the three constructors so no domain package hand-rolls
 /// that boilerplate. Domain managers should inherit the generic
-/// <see cref="GoogleSheetManagerBase{TEntity}"/> below, which adds the registry-backed read/metadata/
+/// <see cref="SheetManagerBase{TEntity}"/> below, which adds the registry-backed read/metadata/
 /// heal/layout orchestration; this non-generic base exists only to share the constructor plumbing.
 /// </summary>
-public abstract class GoogleSheetManagerBase
+public abstract class SheetManagerBase
 {
     /// <summary>
-    /// Name of the throwaway safety sheet <see cref="GoogleSheetManagerBase{TEntity}.DeleteSheets"/>
-    /// creates (via a domain's <see cref="GoogleSheetManagerBase{TEntity}.GenerateSheetsRequest"/>)
+    /// Name of the throwaway safety sheet <see cref="SheetManagerBase{TEntity}.DeleteSheets"/>
+    /// creates (via a domain's <see cref="SheetManagerBase{TEntity}.GenerateSheetsRequest"/>)
     /// when deleting every existing sheet, since Google Sheets requires at least one to remain.
     /// Public so a domain's sheet-request generator can recognize this specific ad-hoc name and build
     /// a bare AddSheet request for it instead of treating it as an unknown/invalid sheet.
@@ -32,18 +32,18 @@ public abstract class GoogleSheetManagerBase
     protected readonly IGoogleSheetService _googleSheetService;
     protected readonly ILogger _logger;
 
-    protected GoogleSheetManagerBase(IGoogleSheetService googleSheetService, ILogger? logger = null)
+    protected SheetManagerBase(IGoogleSheetService googleSheetService, ILogger? logger = null)
     {
         _googleSheetService = googleSheetService ?? throw new ArgumentNullException(nameof(googleSheetService));
         _logger = logger ?? NullLogger.Instance;
     }
 
-    protected GoogleSheetManagerBase(string accessToken, string spreadsheetId, ILogger? logger = null)
+    protected SheetManagerBase(string accessToken, string spreadsheetId, ILogger? logger = null)
         : this(new GoogleSheetService(accessToken, spreadsheetId, logger), logger)
     {
     }
 
-    protected GoogleSheetManagerBase(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
+    protected SheetManagerBase(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
         : this(new GoogleSheetService(parameters, spreadsheetId, logger), logger)
     {
     }
@@ -62,13 +62,13 @@ public abstract class GoogleSheetManagerBase
 /// request-builders (CreateSheets ordering, ChangeSheetData, DeleteSheets).
 /// </summary>
 /// <typeparam name="TEntity">The domain's top-level SheetEntity type.</typeparam>
-public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
+public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     where TEntity : class, ISheetEntity, new()
 {
     protected readonly SheetRegistry<TEntity> _registry;
     protected readonly List<string> _canonicalSheetNames;
 
-    protected GoogleSheetManagerBase(IGoogleSheetService googleSheetService, SheetRegistry<TEntity> registry,
+    protected SheetManagerBase(IGoogleSheetService googleSheetService, SheetRegistry<TEntity> registry,
         List<string> canonicalSheetNames, ILogger? logger = null)
         : base(googleSheetService, logger)
     {
@@ -76,7 +76,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         _canonicalSheetNames = canonicalSheetNames ?? throw new ArgumentNullException(nameof(canonicalSheetNames));
     }
 
-    protected GoogleSheetManagerBase(string accessToken, string spreadsheetId, SheetRegistry<TEntity> registry,
+    protected SheetManagerBase(string accessToken, string spreadsheetId, SheetRegistry<TEntity> registry,
         List<string> canonicalSheetNames, ILogger? logger = null)
         : base(accessToken, spreadsheetId, logger)
     {
@@ -84,7 +84,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         _canonicalSheetNames = canonicalSheetNames ?? throw new ArgumentNullException(nameof(canonicalSheetNames));
     }
 
-    protected GoogleSheetManagerBase(Dictionary<string, string> parameters, string spreadsheetId, SheetRegistry<TEntity> registry,
+    protected SheetManagerBase(Dictionary<string, string> parameters, string spreadsheetId, SheetRegistry<TEntity> registry,
         List<string> canonicalSheetNames, ILogger? logger = null)
         : base(parameters, spreadsheetId, logger)
     {
@@ -118,7 +118,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     protected virtual BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
     {
         throw new NotSupportedException(
-            $"{GetType().Name} does not override GenerateSheetsRequest, so GoogleSheetManagerBase.CreateSheets" +
+            $"{GetType().Name} does not override GenerateSheetsRequest, so SheetManagerBase.CreateSheets" +
             "(List<string>, ...) / DeleteSheets(List<string>) are unavailable. Use this domain's own " +
             "sheet-creation API instead.");
     }
@@ -136,7 +136,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     }
 
     /// <summary>
-    /// Arity-matching bridge for <c>IGoogleSheetManager&lt;TEntity&gt;.CreateSheets(List&lt;string&gt;,
+    /// Arity-matching bridge for <c>ISheetManager&lt;TEntity&gt;.CreateSheets(List&lt;string&gt;,
     /// CancellationToken)</c> - C# requires exact parameter-count match for a method to implicitly
     /// satisfy an interface member, so a 2-parameter interface signature can't be satisfied by the
     /// 3-parameter overload below even though its extra parameter is optional. This just forwards.
@@ -502,6 +502,65 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
     #endregion
 
+    #region Sheet Data Change
+
+    /// <summary>
+    /// Shared "change sheet data" orchestration: resolve which sheets actually have data via
+    /// <paramref name="sheetAccessors"/> -&gt; build the batch-update requests -&gt; send -&gt; on failure,
+    /// optionally attempt missing-sheet recovery. Every domain's own <c>ChangeSheetData</c> was
+    /// previously copy-pasted here verbatim except for its own accessor map (and, for Gig, its own
+    /// recovery step) - this is that logic, written once.
+    /// </summary>
+    /// <param name="sheets">Sheet names the caller asked to change.</param>
+    /// <param name="sheetEntity">Entity carrying the rows to write, per sheet.</param>
+    /// <param name="sheetAccessors">Per-sheet count/data accessors and request builder - see <see cref="GoogleRequestHelpers.SheetChangeAccessor{TEntity}"/>.</param>
+    /// <param name="recoverMissingSheetsAsync">
+    /// Optional: if the batch update fails, fetch spreadsheet metadata and attempt this domain's own
+    /// missing-sheet recovery before reporting the failure. Only Gig currently does this; Stock/Job/
+    /// Home report the failure directly, matching their existing behavior.
+    /// </param>
+    protected async Task<TEntity> ChangeSheetDataCoreAsync(
+        List<string> sheets,
+        TEntity sheetEntity,
+        IReadOnlyDictionary<string, GoogleRequestHelpers.SheetChangeAccessor<TEntity>> sheetAccessors,
+        Func<Spreadsheet, CancellationToken, Task<List<MessageEntity>>>? recoverMissingSheetsAsync = null,
+        CancellationToken cancellationToken = default)
+    {
+        var (sheetsWithData, resolveMessages) = GoogleRequestHelpers.ResolveSheetsWithData(sheets, sheetEntity, sheetAccessors);
+        sheetEntity.Messages.AddRange(resolveMessages);
+
+        if (sheetsWithData.Count == 0)
+        {
+            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageType.GENERAL));
+            return sheetEntity;
+        }
+
+        var sheetInfo = await GetSheetProperties(sheets, cancellationToken);
+        var (requests, buildMessages) = GoogleRequestHelpers.BuildChangeRequests(sheetsWithData, sheetEntity, sheetAccessors, sheetInfo);
+        sheetEntity.Messages.AddRange(buildMessages);
+
+        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
+        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken);
+
+        if (batchUpdateSpreadsheetResponse == null)
+        {
+            if (recoverMissingSheetsAsync != null)
+            {
+                var spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
+                if (spreadsheetInfo != null)
+                {
+                    sheetEntity.Messages.AddRange(await recoverMissingSheetsAsync(spreadsheetInfo, cancellationToken));
+                }
+            }
+
+            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageType.SAVE_DATA));
+        }
+
+        return sheetEntity;
+    }
+
+    #endregion
+
     #region Read
 
     /// <summary>
@@ -533,8 +592,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
 
         if (response == null && failureSuggestsMissingSheet)
         {
-            var (restoreResult, fetchedInfo) = await TryRestoreMissingSheetsAsync(messages, cancellationToken);
-            spreadsheetInfo = fetchedInfo;
+            var (restoreResult, _) = await TryRestoreMissingSheetsAsync(messages, cancellationToken);
 
             if (restoreResult != null)
             {
@@ -555,7 +613,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         // Cheap metadata-only call (no ranges / no grid data) - used for unknown-tab detection and
         // the spreadsheet title. Known-sheet header validation already happens below via
         // registry.MapData using the header row already present in the batchGet response.
-        spreadsheetInfo ??= await _googleSheetService.GetSheetInfo(cancellationToken);
+        spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
 
         if (spreadsheetInfo != null)
         {
@@ -607,8 +665,7 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
     /// Attempts to self-heal from a null batchGet response by fetching spreadsheet metadata and
     /// recreating any canonical sheets missing from it. Returns a non-null Result only when the
     /// caller should return immediately (creation failed, or sheets were just created and need a
-    /// moment before they're readable); returns the fetched Spreadsheet either way so the caller
-    /// can reuse it instead of fetching metadata twice.
+    /// moment before they're readable).
     /// </summary>
     private async Task<(TEntity? Result, Spreadsheet? SpreadsheetInfo)> TryRestoreMissingSheetsAsync(List<MessageEntity> messages, CancellationToken cancellationToken = default)
     {
@@ -677,14 +734,41 @@ public abstract class GoogleSheetManagerBase<TEntity> : GoogleSheetManagerBase
         return await GetSheets(new List<string>(_canonicalSheetNames), cancellationToken);
     }
 
-    public async Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Fetches a single named sheet, or an error entity if the name isn't one of this domain's
+    /// canonical sheets. Every domain manager previously re-implemented this identically.
+    /// </summary>
+    public async Task<TEntity> GetSheet(string sheet, CancellationToken cancellationToken = default)
+    {
+        var sheetExists = _canonicalSheetNames.Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
+
+        if (!sheetExists)
+        {
+            return new TEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
+        }
+
+        return await GetSheets([sheet], cancellationToken);
+    }
+
+    // Google.Apis.Sheets.v4 types are Core's own implementation detail, not part of the public
+    // contract - internal rather than on ISheetManager<TEntity>, so a consumer never needs a
+    // direct dependency on that package.
+    // GetSpreadsheetTitle below is the public, RaptorSheets-typed replacement for the one thing
+    // callers outside Core actually needed off of this (Spreadsheet.Properties.Title).
+    internal async Task<Spreadsheet?> GetSpreadsheetInfo(List<string>? ranges = null, CancellationToken cancellationToken = default)
     {
         return await _googleSheetService.GetSheetInfo(ranges, cancellationToken);
     }
 
-    public async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, CancellationToken cancellationToken = default)
+    internal async Task<BatchGetValuesByDataFilterResponse?> GetBatchData(List<string> sheets, CancellationToken cancellationToken = default)
     {
         return await _googleSheetService.GetBatchData(sheets, cancellationToken);
+    }
+
+    public async Task<string?> GetSpreadsheetTitle(CancellationToken cancellationToken = default)
+    {
+        var info = await GetSpreadsheetInfo(cancellationToken: cancellationToken);
+        return info?.Properties?.Title;
     }
 
     #endregion

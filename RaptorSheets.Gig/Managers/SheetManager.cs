@@ -15,11 +15,11 @@ using RaptorSheets.Gig.Helpers;
 namespace RaptorSheets.Gig.Managers;
 
 /// <summary>
-/// Extends the shared <see cref="IGoogleSheetManager{TEntity}"/> CRUD/metadata/layout surface with
+/// Extends the shared <see cref="ISheetManager{TEntity}"/> CRUD/metadata/layout surface with
 /// Gig's own demo-data generation, which takes a date range rather than the seed-only or
 /// seed-plus-date-range shapes other domains use.
 /// </summary>
-public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
+public interface ISheetManager : ISheetManager<SheetEntity>
 {
     // Demo Data Generation
     SheetEntity GenerateDemoData(DateTime? startDate = null, DateTime? endDate = null, int? seed = null);
@@ -30,55 +30,38 @@ public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
 ///
 /// Domain-agnostic read/metadata/layout/heal orchestration (GetSheets, GetAllSheets, sheet
 /// properties, tab names, layouts, InsertMissingColumns, GetSpreadsheetInfo, GetBatchData) is
-/// inherited from <see cref="GoogleSheetManagerBase{TEntity}"/>. This class adds only the Gig-specific
+/// inherited from <see cref="SheetManagerBase{TEntity}"/>. This class adds only the Gig-specific
 /// pieces: constructors, the CreateMissingSheetsAsync self-heal hook, and the domain write operations
 /// (ordered CreateSheets, ChangeSheetData, DeleteSheets) plus demo-data generation and the static
 /// header-check helpers.
 /// </summary>
-public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSheetManager
+public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 {
     #region Construction
 
-    public GoogleSheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
+    public SheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
         : base(googleSheetService, GigSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
-    public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
+    public SheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
         : base(accessToken, spreadsheetId, GigSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
-    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
+    public SheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
         : base(parameters, spreadsheetId, GigSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
     /// <summary>
-    /// Backs <see cref="GoogleSheetManagerBase{TEntity}.CreateSheets"/> and
-    /// <see cref="GoogleSheetManagerBase{TEntity}.DeleteSheets"/> (for temp-sheet creation) with
+    /// Backs <see cref="SheetManagerBase{TEntity}.CreateSheets"/> and
+    /// <see cref="SheetManagerBase{TEntity}.DeleteSheets"/> (for temp-sheet creation) with
     /// Gig's fully-configured AddSheet requests (headers, formatting, validation, colors).
     /// </summary>
     protected override BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
     {
         return GenerateSheetsHelpers.Generate(sheetNames);
-    }
-
-    #endregion
-
-    #region Read Operations
-
-    public async Task<SheetEntity> GetSheet(string sheet, CancellationToken cancellationToken = default)
-    {
-        var sheetExists = GenerateSheetsHelpers.GetSheetNames()
-            .Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
-
-        if (!sheetExists)
-        {
-            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
-        }
-
-        return await GetSheets([sheet], cancellationToken);
     }
 
     #endregion
@@ -112,64 +95,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
     public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity, CancellationToken cancellationToken = default)
     {
-        var (sheetsWithData, resolveMessages) = GoogleRequestHelpers.ResolveSheetsWithData(sheets, sheetEntity, _sheetAccessors);
-        sheetEntity.Messages.AddRange(resolveMessages);
-
-        if (sheetsWithData.Count == 0)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageType.GENERAL));
-            return sheetEntity;
-        }
-
-        var sheetInfo = await GetSheetProperties(sheets, cancellationToken);
-        var (requests, buildMessages) = GoogleRequestHelpers.BuildChangeRequests(sheetsWithData, sheetEntity, _sheetAccessors, sheetInfo);
-        sheetEntity.Messages.AddRange(buildMessages);
-
-        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken);
-
-        if (batchUpdateSpreadsheetResponse == null)
-        {
-            var spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
-            if (spreadsheetInfo != null)
-            {
-                sheetEntity.Messages.AddRange(await HandleMissingSheets(spreadsheetInfo, cancellationToken));
-            }
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageType.SAVE_DATA));
-        }
-
-        return sheetEntity;
-    }
-
-    #endregion
-
-    #region Header Validation
-
-    /// <summary>
-    /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Gig sheet.
-    /// Only needs sheet tab metadata (no grid/cell data), so it's safe to call with a cheap
-    /// <c>GetSheetInfo()</c> (no ranges) result. Known-sheet header validation (missing/renamed/
-    /// reordered columns) is handled separately, per-sheet, using data already fetched via batchGet.
-    /// Static so callers can use it off the type without a manager instance; thin shim over
-    /// <see cref="GigSheetHelpers"/>.
-    /// </summary>
-    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
-    {
-        return GigSheetHelpers.CheckUnknownSheets(sheetInfoResponse);
-    }
-
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
-    {
-        return GigSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
-    }
-
-    /// <summary>
-    /// Same as <see cref="CheckSheetHeaders(Spreadsheet)"/>, but also reports which columns are
-    /// missing entirely and where they should be inserted, for use with <see cref="InsertMissingColumns"/>.
-    /// </summary>
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
-    {
-        return GigSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
+        return await ChangeSheetDataCoreAsync(sheets, sheetEntity, _sheetAccessors, HandleMissingSheets, cancellationToken);
     }
 
     #endregion

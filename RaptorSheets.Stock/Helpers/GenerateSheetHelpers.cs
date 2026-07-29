@@ -13,7 +13,7 @@ public static class GenerateSheetHelpers
 {
     private static readonly Random _random = new();
 
-    public static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
+    internal static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
         var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = [] };
 
@@ -51,40 +51,28 @@ public static class GenerateSheetHelpers
         return batchUpdateSpreadsheetRequest;
     }
 
-    /// <summary>
-    /// Resolves a sheet name to its configured model. Anything matching a real
-    /// <see cref="Enums.SheetName"/> description gets its fully-configured domain sheet; the one
-    /// recognized ad-hoc exception is <see cref="GoogleSheetManagerBase.TempSheetName"/>, which
-    /// DeleteSheets' safety mechanism needs a bare AddSheet request for. Anything else is a genuine
-    /// caller error.
-    /// </summary>
+    // Case-insensitive name -> factory lookup, same convention as SheetRegistry<TEntity>'s own
+    // _factories dictionary (and now Gig/Home/Job's GenerateSheetsHelpers) - O(1) instead of a
+    // string->enum round-trip plus a second switch on the enum.
+    private static readonly Dictionary<string, Func<SheetModel>> _sheetModelFactories = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [SheetName.ACCOUNTS.GetDescription()] = AccountSheet.GetSheet,
+        [SheetName.STOCKS.GetDescription()] = StockSheet.GetSheet,
+        [SheetName.TICKERS.GetDescription()] = TickerSheet.GetSheet,
+        // DeleteSheets' temp-sheet safety mechanism asks for a bare AddSheet request for this
+        // specific ad-hoc name.
+        [SheetManagerBase.TempSheetName] = () => new SheetModel { Name = SheetManagerBase.TempSheetName },
+    };
+
     private static SheetModel GetSheetModel(string sheet)
     {
-        var sheetEnum = sheet.GetValueFromName<Enums.SheetName>();
-        var isKnownSheet = string.Equals(sheetEnum.GetDescription(), sheet, StringComparison.OrdinalIgnoreCase);
-
-        if (isKnownSheet)
+        if (_sheetModelFactories.TryGetValue(sheet, out var factory))
         {
-            return GetSheetModel(sheetEnum);
+            return factory();
         }
 
-        if (string.Equals(sheet, GoogleSheetManagerBase.TempSheetName, StringComparison.OrdinalIgnoreCase))
-        {
-            return new SheetModel { Name = sheet };
-        }
-
+        // Anything unrecognized is a genuine caller error and should still throw.
         throw new NotImplementedException($"Sheet model not found for: {sheet}");
-    }
-
-    private static SheetModel GetSheetModel(Enums.SheetName sheetEnum)
-    {
-        return sheetEnum switch
-        {
-            Enums.SheetName.ACCOUNTS => AccountSheet.GetSheet(),
-            Enums.SheetName.STOCKS => StockSheet.GetSheet(),
-            Enums.SheetName.TICKERS => TickerSheet.GetSheet(),
-            _ => throw new NotImplementedException(),
-        };
     }
 
     private static void GenerateHeadersFormatAndProtection(

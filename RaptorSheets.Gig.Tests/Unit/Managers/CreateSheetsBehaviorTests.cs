@@ -33,7 +33,7 @@ public class CreateSheetsBehaviorTests
         // Return a Spreadsheet when GetSheetInfo is called so manager can compute defaults
         mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
 
-        var manager = new GoogleSheetManager(mockService.Object);
+        var manager = new SheetManager(mockService.Object);
 
         // Act
         await manager.CreateSheets(sheetsToCreate);

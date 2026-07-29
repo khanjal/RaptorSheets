@@ -467,7 +467,7 @@ public class SheetRegistryTests
 
     // GetDependents - backs RefreshDependentSheetsAsync's "sheet B's headers changed, rewrite every
     // sheet whose formulas cross-reference it" behavior (RaptorSheets.Core.Managers.
-    // GoogleSheetManagerBase{TEntity}). There's no manual dependency declaration - the graph is
+    // SheetManagerBase{TEntity}). There's no manual dependency declaration - the graph is
     // derived by building each registered sheet and scanning its headers' Formula text for the
     // changed sheet's cross-sheet range pattern ('{name}'!, per ObjectExtensions.GetRange), so these
     // tests build fixture SheetModels whose Formula literally contains that pattern.

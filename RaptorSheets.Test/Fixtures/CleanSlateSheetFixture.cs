@@ -17,7 +17,7 @@ namespace RaptorSheets.Test.Common.Fixtures;
 /// </summary>
 public class CleanSlateSheetFixture<TEntity, TManager> : IAsyncLifetime
     where TEntity : class, ISheetEntity, new()
-    where TManager : GoogleSheetManagerBase<TEntity>
+    where TManager : SheetManagerBase<TEntity>
 {
     private readonly Func<Dictionary<string, string>, string, TManager> _managerFactory;
     private readonly Func<TManager, Task>? _seedAsync;

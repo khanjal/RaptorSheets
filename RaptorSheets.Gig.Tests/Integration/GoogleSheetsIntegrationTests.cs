@@ -1,4 +1,4 @@
-﻿using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Gig.Constants;
@@ -38,7 +38,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     public async Task Environment_ShouldHaveAllRequiredSheets()
     {
         // Act
-        var properties = await GoogleSheetManager!.GetSheetProperties(TestSheets);
+        var properties = await SheetManager!.GetSheetProperties(TestSheets);
         var existingSheets = properties.Where(p => !string.IsNullOrEmpty(p.Id)).ToList();
         
         // Assert
@@ -59,7 +59,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     public async Task Environment_SheetProperties_ShouldHaveValidStructure()
     {
         // Act
-        var properties = await GoogleSheetManager!.GetSheetProperties(TestSheets);
+        var properties = await SheetManager!.GetSheetProperties(TestSheets);
         
         // Assert
         Assert.NotEmpty(properties);
@@ -85,7 +85,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // It compares actual headers in Google Sheets vs expected headers from GetSheetLayout
         
         // Act - Get actual headers from Google Sheets
-        var spreadsheetInfo = await GoogleSheetManager!.GetSpreadsheetInfo(
+        var spreadsheetInfo = await SheetManager!.GetSpreadsheetInfo(
             TestSheets.Select(name => $"{name}!1:1").ToList());
         
         Assert.NotNull(spreadsheetInfo);
@@ -101,7 +101,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
                 .ToList() ?? [];
             
             // Get expected layout from GetSheetLayout
-            var expectedLayout = GoogleSheetManager.GetSheetLayout(sheetName);
+            var expectedLayout = SheetManager.GetSheetLayout(sheetName);
             
             if (expectedLayout != null)
             {
@@ -129,7 +129,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var sheetsWithFormulas = new[] { "Trips", "Shifts", "Expenses" }; // Sheets that have formula columns
 
         // Act - Get sheet layouts to find formula columns
-        var layouts = GoogleSheetManager!.GetSheetLayouts(sheetsWithFormulas.ToList());
+        var layouts = SheetManager!.GetSheetLayouts(sheetsWithFormulas.ToList());
 
         // Assert
         foreach (var layout in layouts)
@@ -165,7 +165,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // This test validates that sheets have correct colors, protection, etc.
         
         // Act - Get spreadsheet info to check visual properties
-        var spreadsheetInfo = await GoogleSheetManager!.GetSpreadsheetInfo();
+        var spreadsheetInfo = await SheetManager!.GetSpreadsheetInfo();
         
         Assert.NotNull(spreadsheetInfo);
         Assert.NotNull(spreadsheetInfo.Sheets);
@@ -177,7 +177,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             var properties = sheet.Properties;
             
             // Get expected layout
-            var expectedLayout = GoogleSheetManager.GetSheetLayout(sheetName);
+            var expectedLayout = SheetManager.GetSheetLayout(sheetName);
             
             if (expectedLayout != null)
             {
@@ -219,7 +219,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             .ToList();
         
         // Act - Get all sheet properties which includes sheet IDs for ordering
-        var allProperties = await GoogleSheetManager!.GetAllSheetProperties();
+        var allProperties = await SheetManager!.GetAllSheetProperties();
         var existingSheets = allProperties.Where(p => !string.IsNullOrEmpty(p.Id)).ToList();
         
         // Sort by sheet ID (Google Sheets internal ordering) to get actual tab order
@@ -725,7 +725,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // Delete a lightweight summary sheet (Deliveries) and re-run a read to verify
         // missing-sheet / empty-header diagnostics are produced by the manager.
         System.Diagnostics.Debug.WriteLine("➡ Deleting Deliveries to validate missing-sheet detection...");
-        var deleteResult = await GoogleSheetManager!.DeleteSheets(new List<string> { SheetsConfig.SheetNames.Deliveries });
+        var deleteResult = await SheetManager!.DeleteSheets(new List<string> { SheetsConfig.SheetNames.Deliveries });
         var deleteErrors = deleteResult.Messages.Where(m => m.Level == MessageLevel.ERROR.GetDescription()).ToList();
         if (deleteErrors.Count > 0)
         {
@@ -753,7 +753,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         var hasCreationNotice = creationNotice != null;
 
         // If a creation notice exists, ensure it references the Deliveries sheet
-        if (hasCreationNotice)
+        if (creationNotice != null)
         {
             Assert.True(creationNotice.Message.IndexOf("Deliveries", StringComparison.OrdinalIgnoreCase) >= 0,
                 $"Creation notice should include Deliveries. Notice: {creationNotice.Message}");
@@ -780,7 +780,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine($"📝 Generating demo data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd} with seed {seed}");
 
         // Act - Use the public GenerateDemoData method
-        var demoData = GoogleSheetManager!.GenerateDemoData(startDate, endDate, seed);
+        var demoData = SheetManager!.GenerateDemoData(startDate, endDate, seed);
 
         // Assert - Verify the data was generated
         Assert.NotNull(demoData);
@@ -878,11 +878,11 @@ public class GigSheetsIntegrationCollection : ICollectionFixture<GigCleanSlateFi
 /// Deletes and recreates every canonical sheet once, before the collection's tests run. Safe because
 /// spreadsheets:test:gig is configured to point at a dedicated blank test spreadsheet, not real data.
 /// </summary>
-public class GigCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, GoogleSheetManager>
+public class GigCleanSlateFixture : CleanSlateSheetFixture<SheetEntity, SheetManager>
 {
     public GigCleanSlateFixture() : base(
         TestConfigurationHelpers.GetGigSpreadsheet(),
-        (credential, spreadsheetId) => new GoogleSheetManager(credential, spreadsheetId))
+        (credential, spreadsheetId) => new SheetManager(credential, spreadsheetId))
     {
     }
 }

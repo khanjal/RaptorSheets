@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Entities;
+using RaptorSheets.Stock.Helpers;
 using RaptorSheets.Stock.Managers;
 using RaptorSheets.Test.Common.Helpers;
 using Xunit;
@@ -8,12 +9,12 @@ using SheetName = RaptorSheets.Stock.Enums.SheetName;
 
 namespace RaptorSheets.Stock.Tests.Unit.Managers;
 
-public class GoogleSheetManagerTests
+public class SheetManagerTests
 {
     [Fact]
     public void Constructor_WithAccessToken_ShouldInitialize()
     {
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         Assert.NotNull(manager);
     }
 
@@ -24,9 +25,9 @@ public class GoogleSheetManagerTests
         var parameters = GoogleCredentialHelpers.CreateServiceAccountParameters();
 
         // Act & Assert
-        var caughtException = Record.Exception(() => new GoogleSheetManager(parameters, "test-spreadsheet"));
+        var caughtException = Record.Exception(() => new SheetManager(parameters, "test-spreadsheet"));
         Assert.Null(caughtException);
-        var manager = new GoogleSheetManager(parameters, "test-spreadsheet");
+        var manager = new SheetManager(parameters, "test-spreadsheet");
         Assert.NotNull(manager);
     }
 
@@ -37,13 +38,13 @@ public class GoogleSheetManagerTests
         // which deferred the failure to an opaque 401 on the first API call.
         var parameters = GoogleCredentialHelpers.CreateMalformedServiceAccountParameters();
 
-        Assert.Throws<ArgumentException>(() => new GoogleSheetManager(parameters, "test-spreadsheet"));
+        Assert.Throws<ArgumentException>(() => new SheetManager(parameters, "test-spreadsheet"));
     }
 
     [Fact]
     public void CheckSheetHeaders_WithNullSpreadsheet_ReturnsError()
     {
-        var result = GoogleSheetManager.CheckSheetHeaders(default!);
+        var result = StockSheetHelpers.CheckSheetHeaders(default!);
         Assert.Single(result);
         Assert.Contains("Unable to retrieve sheet(s)", result[0].Message);
     }
@@ -52,7 +53,7 @@ public class GoogleSheetManagerTests
     public void CheckSheetHeaders_WithEmptySheets_ReturnsInfo()
     {
         var spreadsheet = new Spreadsheet { Sheets = [] };
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = StockSheetHelpers.CheckSheetHeaders(spreadsheet);
         Assert.Single(result);
         Assert.Contains("No sheet header issues found", result[0].Message);
     }
@@ -80,7 +81,7 @@ public class GoogleSheetManagerTests
                 }
             ]
         };
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = StockSheetHelpers.CheckSheetHeaders(spreadsheet);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
     }
@@ -111,7 +112,7 @@ public class GoogleSheetManagerTests
             ]
         };
 
-        var result = GoogleSheetManager.CheckSheetHeaders(spreadsheet);
+        var result = StockSheetHelpers.CheckSheetHeaders(spreadsheet);
 
         Assert.Contains(result, m => m.Message.Contains("Found sheet header issue(s)"));
     }
@@ -128,7 +129,7 @@ public class GoogleSheetManagerTests
             ]
         };
 
-        var result = GoogleSheetManager.CheckUnknownSheets(spreadsheet);
+        var result = StockSheetHelpers.CheckUnknownSheets(spreadsheet);
 
         Assert.Contains(result, m => m.Message.Contains("SomeRandomTab") && m.Message.Contains("does not match any known sheet name"));
     }
@@ -146,7 +147,7 @@ public class GoogleSheetManagerTests
             ]
         };
 
-        var result = GoogleSheetManager.CheckUnknownSheets(spreadsheet);
+        var result = StockSheetHelpers.CheckUnknownSheets(spreadsheet);
 
         Assert.Empty(result);
     }
@@ -154,7 +155,7 @@ public class GoogleSheetManagerTests
     [Fact]
     public void GetSheetLayout_WithValidSheet_ReturnsModel()
     {
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         var model = manager.GetSheetLayout("Stocks");
         Assert.NotNull(model);
     }
@@ -162,7 +163,7 @@ public class GoogleSheetManagerTests
     [Fact]
     public void GetSheetLayout_WithInvalidSheet_ReturnsNull()
     {
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         var model = manager.GetSheetLayout("InvalidSheet");
         Assert.Null(model);
     }
@@ -170,7 +171,7 @@ public class GoogleSheetManagerTests
     [Fact]
     public void GetSheetLayouts_MixedSheets_ReturnsOnlyValid()
     {
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         var layouts = manager.GetSheetLayouts(["Stocks", "InvalidSheet", "Accounts"]);
         Assert.Contains(layouts, l => l != null);
         Assert.DoesNotContain(layouts, l => l == null);
@@ -179,7 +180,7 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task GetSheet_WithInvalidSheet_ReturnsError()
     {
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         var result = await manager.GetSheet("InvalidSheet");
         Assert.Single(result.Messages);
         Assert.Contains("does not exist", result.Messages[0].Message);
@@ -190,7 +191,7 @@ public class GoogleSheetManagerTests
     {
         // Exercises the branch GetSheet_WithInvalidSheet_ReturnsError can't reach: a recognized
         // name falls through to GetSheets([sheet]) rather than the early-return.
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         var result = await manager.GetSheet("Stocks");
         Assert.NotNull(result);
         Assert.DoesNotContain(result.Messages, m => m.Message.Contains("does not exist"));
@@ -201,7 +202,7 @@ public class GoogleSheetManagerTests
     {
         // Tickers has no accessor entry at all (fully formula-driven, nothing to change); Stocks
         // has an accessor but an empty SheetEntity carries no Stocks rows to change either way.
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         var entity = new SheetEntity();
         var result = await manager.ChangeSheetData([SheetName.TICKERS.GetDescription(), SheetName.STOCKS.GetDescription()], entity);
         Assert.Contains(result.Messages, m => m.Message.Contains("No data to change"));
@@ -210,7 +211,7 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task CreateSheets_WithNullResponse_AddsErrorMessages()
     {
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         // This will likely add error messages since the service is not mocked and will return null
         var result = await manager.CreateSheets([SheetName.STOCKS.GetDescription()]);
         Assert.Contains(result.Messages, m => m.Message.Contains("not created"));
@@ -223,7 +224,7 @@ public class GoogleSheetManagerTests
         // everything else (including Name) is a header-row ARRAYFORMULA. This exercises the
         // accessor -> Core's ChangeSheetData<T>/CreateUpdateCellRequests<T> -> StockSheet.MapToRowData
         // path end to end.
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         var sheetEntity = new SheetEntity
         {
             Sheets = { Stocks = { new StockEntity { RowId = 2, Shares = 10 } } }
@@ -241,7 +242,7 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task DeleteSheets_WithEmptyList_ShouldReturnInfoMessage()
     {
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         var result = await manager.DeleteSheets([]);
         Assert.Single(result.Messages);
         Assert.Contains("No sheets found to delete", result.Messages[0].Message);
@@ -250,7 +251,7 @@ public class GoogleSheetManagerTests
     [Fact]
     public async Task DeleteSheets_WithSheetNames_ShouldAttemptDeletion()
     {
-        var manager = new GoogleSheetManager("token", "spreadsheet");
+        var manager = new SheetManager("token", "spreadsheet");
         var result = await manager.DeleteSheets([SheetName.STOCKS.GetDescription()]);
         Assert.NotNull(result);
         Assert.NotEmpty(result.Messages);

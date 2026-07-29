@@ -51,8 +51,8 @@ wiring in Core.
 
 | Registration | Registers |
 |--------------|-----------|
-| `AddRaptorSheets{Domain}()` | `ISheetManagerFactory<IGoogleSheetManager>` only |
-| `AddRaptorSheets{Domain}(options => ...)` | The factory **and** a singleton `IGoogleSheetManager` bound to those options |
+| `AddRaptorSheets{Domain}()` | `ISheetManagerFactory<ISheetManager>` only |
+| `AddRaptorSheets{Domain}(options => ...)` | The factory **and** a singleton `ISheetManager` bound to those options |
 
 #### RaptorSheetsOptions
 
@@ -105,14 +105,14 @@ Utility methods for sheet operations.
 
 ## RaptorSheets.Gig
 
-### GoogleSheetManager
+### SheetManager
 
 High-level manager for gig work tracking.
 
 #### Constructor
 ```csharp
-GoogleSheetManager(Dictionary<string, string> credentials, string spreadsheetId)
-GoogleSheetManager(string accessToken, string spreadsheetId)
+SheetManager(Dictionary<string, string> credentials, string spreadsheetId)
+SheetManager(string accessToken, string spreadsheetId)
 ```
 
 #### Core Methods
@@ -408,7 +408,7 @@ var credentials = new Dictionary<string, string>
 ### OAuth2 Access Token
 ```csharp
 string accessToken = "ya29.a0AfH6SMC...";
-var manager = new GoogleSheetManager(accessToken, spreadsheetId);
+var manager = new SheetManager(accessToken, spreadsheetId);
 ```
 
 ## Rate Limits and Quotas

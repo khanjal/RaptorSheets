@@ -16,7 +16,7 @@ namespace RaptorSheets.Job.Tests.Integration.Base;
 /// </summary>
 public abstract class IntegrationTestBase
 {
-    protected readonly GoogleSheetManager? GoogleSheetManager;
+    protected readonly SheetManager? SheetManager;
     protected readonly List<string> TestSheets;
 
     protected IntegrationTestBase(JobCleanSlateFixture fixture)
@@ -30,12 +30,12 @@ public abstract class IntegrationTestBase
             SheetsConfig.SheetNames.Sites
         ];
 
-        GoogleSheetManager = fixture.Manager;
+        SheetManager = fixture.Manager;
     }
 
     protected void SkipIfNoCredentials()
     {
-        if (GoogleSheetManager == null)
+        if (SheetManager == null)
         {
             Assert.Fail("Google Sheets credentials not available. Configure user secrets to run integration tests.");
         }

@@ -14,10 +14,10 @@ using RaptorSheets.Job.Helpers;
 namespace RaptorSheets.Job.Managers;
 
 /// <summary>
-/// Extends the shared <see cref="IGoogleSheetManager{TEntity}"/> CRUD/metadata/layout surface with
+/// Extends the shared <see cref="ISheetManager{TEntity}"/> CRUD/metadata/layout surface with
 /// Job's own demo-data generation (date range plus seed).
 /// </summary>
-public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
+public interface ISheetManager : ISheetManager<SheetEntity>
 {
     // Demo Data Generation
     Task<SheetEntity> SetupDemo(DateTime? startDate = null, DateTime? endDate = null, int? seed = null, CancellationToken cancellationToken = default);
@@ -29,25 +29,25 @@ public interface IGoogleSheetManager : IGoogleSheetManager<SheetEntity>
 /// Main Google Sheet Manager for the Job domain.
 ///
 /// Domain-agnostic read/metadata/layout/heal orchestration is inherited from
-/// <see cref="GoogleSheetManagerBase{TEntity}"/>. This class adds only the Job-specific pieces:
+/// <see cref="SheetManagerBase{TEntity}"/>. This class adds only the Job-specific pieces:
 /// constructors, the CreateMissingSheetsAsync self-heal hook, the GenerateSheetsRequest override,
 /// the domain write operations, and demo-data generation.
 /// </summary>
-public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSheetManager
+public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 {
     #region Construction
 
-    public GoogleSheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
+    public SheetManager(RaptorSheets.Core.Services.IGoogleSheetService googleSheetService, ILogger? logger = null)
         : base(googleSheetService, JobSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
-    public GoogleSheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
+    public SheetManager(string accessToken, string spreadsheetId, ILogger? logger = null)
         : base(accessToken, spreadsheetId, JobSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
 
-    public GoogleSheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
+    public SheetManager(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null)
         : base(parameters, spreadsheetId, JobSheetHelpers.Registry, GenerateSheetsHelpers.GetSheetNames(), logger)
     {
     }
@@ -55,23 +55,6 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
     protected override BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
     {
         return GenerateSheetsHelpers.Generate(sheetNames);
-    }
-
-    #endregion
-
-    #region Read Operations
-
-    public async Task<SheetEntity> GetSheet(string sheet, CancellationToken cancellationToken = default)
-    {
-        var sheetExists = GenerateSheetsHelpers.GetSheetNames()
-            .Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
-
-        if (!sheetExists)
-        {
-            return new SheetEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
-        }
-
-        return await GetSheets([sheet], cancellationToken);
     }
 
     #endregion
@@ -105,47 +88,7 @@ public class GoogleSheetManager : GoogleSheetManagerBase<SheetEntity>, IGoogleSh
 
     public async Task<SheetEntity> ChangeSheetData(List<string> sheets, SheetEntity sheetEntity, CancellationToken cancellationToken = default)
     {
-        var (sheetsWithData, resolveMessages) = GoogleRequestHelpers.ResolveSheetsWithData(sheets, sheetEntity, _sheetAccessors);
-        sheetEntity.Messages.AddRange(resolveMessages);
-
-        if (sheetsWithData.Count == 0)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateWarningMessage("No data to change", MessageType.GENERAL));
-            return sheetEntity;
-        }
-
-        var sheetInfo = await GetSheetProperties(sheets, cancellationToken);
-        var (requests, buildMessages) = GoogleRequestHelpers.BuildChangeRequests(sheetsWithData, sheetEntity, _sheetAccessors, sheetInfo);
-        sheetEntity.Messages.AddRange(buildMessages);
-
-        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-        var batchUpdateSpreadsheetResponse = await _googleSheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken);
-
-        if (batchUpdateSpreadsheetResponse == null)
-        {
-            sheetEntity.Messages.Add(MessageHelpers.CreateErrorMessage($"Unable to save data", MessageType.SAVE_DATA));
-        }
-
-        return sheetEntity;
-    }
-
-    #endregion
-
-    #region Header Validation
-
-    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet sheetInfoResponse)
-    {
-        return JobSheetHelpers.CheckUnknownSheets(sheetInfoResponse);
-    }
-
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse)
-    {
-        return JobSheetHelpers.CheckSheetHeaders(sheetInfoResponse);
-    }
-
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet sheetInfoResponse, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
-    {
-        return JobSheetHelpers.CheckSheetHeaders(sheetInfoResponse, out missingColumns);
+        return await ChangeSheetDataCoreAsync(sheets, sheetEntity, _sheetAccessors, cancellationToken: cancellationToken);
     }
 
     #endregion

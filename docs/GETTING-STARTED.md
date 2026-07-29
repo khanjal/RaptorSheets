@@ -136,7 +136,7 @@ using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Entities;
 
 // Initialize manager
-var manager = new GoogleSheetManager(credentials, spreadsheetId);
+var manager = new SheetManager(credentials, spreadsheetId);
 
 // Create all gig tracking sheets with formatting
 await manager.CreateSheets();
@@ -199,7 +199,7 @@ builder.Services.AddRaptorSheetsGig(options =>
 });
 ```
 
-`IGoogleSheetManager` is then injectable directly.
+`ISheetManager` is then injectable directly.
 
 ### A different spreadsheet per request
 
@@ -211,7 +211,7 @@ builder.Services.AddRaptorSheetsGig();
 
 // ...
 
-public class TripsService(ISheetManagerFactory<IGoogleSheetManager> factory)
+public class TripsService(ISheetManagerFactory<ISheetManager> factory)
 {
     public Task<SheetEntity> GetTripsAsync(string userToken, string userSpreadsheetId)
     {
@@ -264,7 +264,7 @@ domains can be registered side by side against different spreadsheets.
 - Tune or disable it with `GoogleRetryOptions`:
 
 ```csharp
-var manager = new GoogleSheetManager(accessToken, spreadsheetId);
+var manager = new SheetManager(accessToken, spreadsheetId);
 
 // or, with explicit retry behavior:
 services.AddRaptorSheetsGig(options =>

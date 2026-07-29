@@ -10,10 +10,10 @@ namespace RaptorSheets.Sample.Web.Services;
 /// out naturally here: EntityGrid's ReadOnly flag already comes from GetSheetLayout(sheet)
 /// .ProtectSheet per sheet, not any Home-specific assumption.</summary>
 public class HomeSheetOperations(
-    ISheetManagerFactory<RaptorSheets.Home.Managers.IGoogleSheetManager> factory,
+    ISheetManagerFactory<RaptorSheets.Home.Managers.ISheetManager> factory,
     IConfiguration configuration,
     ReferenceSheetCache cache)
-    : SheetOperationsBase<RaptorSheets.Home.Managers.IGoogleSheetManager, SheetEntity, HomeSheets>(factory, configuration, cache)
+    : SheetOperationsBase<RaptorSheets.Home.Managers.ISheetManager, SheetEntity, HomeSheets>(factory, configuration, cache)
 {
     public override string DomainName => "home";
     public override string DomainLabel => "Home Maintenance";

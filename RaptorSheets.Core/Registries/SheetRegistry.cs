@@ -44,7 +44,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     /// <summary>
     /// Returns every registered sheet that transitively depends on any of
     /// <paramref name="changedSheetNames"/>, so a caller (see
-    /// <see cref="Managers.GoogleSheetManagerBase{TEntity}.RefreshDependentSheetsAsync"/>) knows
+    /// <see cref="Managers.SheetManagerBase{TEntity}.RefreshDependentSheetsAsync"/>) knows
     /// which dependents' header formulas need rewriting after one of their referenced sheets is
     /// created, healed, or otherwise changes.
     ///
@@ -102,7 +102,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     /// registered processor by sheet name (taken from the range's DataFilter). Returns null if
     /// the response has no ranges to process (mirrors the historical per-domain behavior).
     /// </summary>
-    public TEntity? MapData(BatchGetValuesByDataFilterResponse? response)
+    internal TEntity? MapData(BatchGetValuesByDataFilterResponse? response)
     {
         if (response?.ValueRanges == null)
         {
@@ -124,7 +124,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     /// <summary>
     /// Builds an entity from a full Spreadsheet (grid-data) response.
     /// </summary>
-    public TEntity MapData(Spreadsheet spreadsheet)
+    internal TEntity MapData(Spreadsheet spreadsheet)
     {
         var entity = new TEntity();
         entity.Properties.Name = spreadsheet.Properties.Title;
@@ -147,7 +147,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     /// caller fills it in from spreadsheet metadata it already has (e.g. the cheap, no-ranges
     /// GetSheetInfo() call already used for unknown-sheet detection) before acting on it.
     /// </summary>
-    public Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(BatchGetValuesByDataFilterResponse? response)
+    internal Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(BatchGetValuesByDataFilterResponse? response)
     {
         var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>();
 
@@ -194,7 +194,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     /// Returns SheetModels for every registered sheet in <paramref name="canonicalSheetNames"/> that
     /// isn't already present (by title, case-insensitive) in <paramref name="spreadsheet"/>.
     /// </summary>
-    public List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet, IEnumerable<string> canonicalSheetNames)
+    internal List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet, IEnumerable<string> canonicalSheetNames)
     {
         var existingTitles = spreadsheet.Sheets.Select(x => x.Properties.Title).ToList();
         var missing = new List<SheetModel>();
@@ -220,7 +220,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     /// Unlike <see cref="CheckSheetHeaders"/>, this only needs sheet tab metadata (no grid/cell
     /// data), so it's safe to call with a cheap metadata-only spreadsheet fetch.
     /// </summary>
-    public List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
+    internal List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
     {
         var messages = new List<MessageEntity>();
 
@@ -244,7 +244,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     /// headers (missing/renamed/reordered columns); for every unrecognized tab, adds a warning.
     /// Requires grid data (IncludeGridData=true) on <paramref name="spreadsheet"/>.
     /// </summary>
-    public List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
+    internal List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
     {
         return CheckSheetHeaders(spreadsheet, out _);
     }
@@ -256,7 +256,7 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
     /// </summary>
     /// <param name="spreadsheet">Spreadsheet with grid data (IncludeGridData=true)</param>
     /// <param name="missingColumns">Sheet name -> missing columns for that sheet (empty if none found)</param>
-    public List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    internal List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
     {
         var messages = new List<MessageEntity>();
         missingColumns = [];

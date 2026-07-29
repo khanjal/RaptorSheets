@@ -27,7 +27,7 @@ public static class StockSheetHelpers
 
     /// <summary>
     /// The shared registry backing this domain's header/row-mapping/missing-column orchestration.
-    /// Exposed so <see cref="RaptorSheets.Core.Managers.GoogleSheetManagerBase"/>'s generic
+    /// Exposed so <see cref="RaptorSheets.Core.Managers.SheetManagerBase"/>'s generic
     /// GetSheetsCoreAsync/AutoHealMissingColumnsAsync can operate on it directly.
     /// </summary>
     public static SheetRegistry<SheetEntity> Registry => s_registry;
@@ -66,7 +66,7 @@ public static class StockSheetHelpers
         return registry;
     }
 
-    public static List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet)
+    internal static List<SheetModel> GetMissingSheets(Spreadsheet spreadsheet)
     {
         var canonicalNames = Enum.GetValues<SheetName>().Select(e => e.GetDescription());
         return s_registry.GetMissingSheets(spreadsheet, canonicalNames);
@@ -76,7 +76,7 @@ public static class StockSheetHelpers
     /// Checks a spreadsheet's tab names for sheets that don't correspond to any known Stock sheet.
     /// Only needs sheet tab metadata (no grid/cell data).
     /// </summary>
-    public static List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
+    internal static List<MessageEntity> CheckUnknownSheets(Spreadsheet spreadsheet)
     {
         return s_registry.CheckUnknownSheets(spreadsheet);
     }
@@ -84,7 +84,7 @@ public static class StockSheetHelpers
     /// <summary>
     /// Full header validation against grid-data (IncludeGridData=true) spreadsheet metadata.
     /// </summary>
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
+    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet)
     {
         return s_registry.CheckSheetHeaders(spreadsheet);
     }
@@ -94,7 +94,7 @@ public static class StockSheetHelpers
     /// missing entirely and where they should be inserted, for use with
     /// <see cref="RaptorSheets.Core.Helpers.ColumnInsertionHelper"/>.
     /// </summary>
-    public static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    internal static List<MessageEntity> CheckSheetHeaders(Spreadsheet spreadsheet, out Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
     {
         return s_registry.CheckSheetHeaders(spreadsheet, out missingColumns);
     }
@@ -103,7 +103,7 @@ public static class StockSheetHelpers
     /// Detects columns missing entirely from a batchGet response, reusing the header row already
     /// present in each range - no extra API call. SheetId is left at 0; the caller fills it in.
     /// </summary>
-    public static Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(BatchGetValuesByDataFilterResponse response)
+    internal static Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(BatchGetValuesByDataFilterResponse response)
     {
         return s_registry.DetectMissingColumns(response);
     }
@@ -139,7 +139,7 @@ public static class StockSheetHelpers
         };
     }
 
-    public static SheetEntity? MapData(BatchGetValuesByDataFilterResponse response)
+    internal static SheetEntity? MapData(BatchGetValuesByDataFilterResponse response)
     {
         return s_registry.MapData(response);
     }
