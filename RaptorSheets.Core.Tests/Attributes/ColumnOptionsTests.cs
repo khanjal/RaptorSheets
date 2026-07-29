@@ -188,7 +188,45 @@ public class ColumnOptionsTests
     public void ColumnAttribute_WithOptions_ThrowsIfOptionsNull()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
+        Assert.Throws<ArgumentNullException>(() =>
             new ColumnAttribute("Test", (ColumnOptions)null!));
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    [InlineData(5)]
+    public void ColumnOptions_Validate_ShouldAcceptSentinelAndNonNegativeOrder(int order)
+    {
+        var options = new ColumnOptions { Order = order };
+
+        var ex = Record.Exception(() => options.Validate());
+
+        Assert.Null(ex);
+    }
+
+    [Theory]
+    [InlineData(-2)]
+    [InlineData(-100)]
+    public void ColumnOptions_Validate_ShouldRejectOrderBelowSentinel(int order)
+    {
+        var options = new ColumnOptions { Order = order };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => options.Validate());
+    }
+
+    [Fact]
+    public void ColumnOptionsBuilder_Build_ShouldThrowForInvalidOrder()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            ColumnOptions.Builder().WithOrder(-3).Build());
+    }
+
+    [Fact]
+    public void ColumnAttribute_WithOptions_ThrowsForInvalidOrder()
+    {
+        var options = new ColumnOptions { Order = -4 };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ColumnAttribute("Test", options));
     }
 }

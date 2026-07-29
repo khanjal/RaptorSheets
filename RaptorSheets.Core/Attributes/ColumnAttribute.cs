@@ -175,6 +175,7 @@ public class ColumnAttribute : Attribute
     public ColumnAttribute(string headerName, ColumnOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
+        options.Validate();
 
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
