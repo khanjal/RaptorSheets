@@ -140,7 +140,7 @@ jobs:
           /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" \
           /d:sonar.cpd.exclusions=RaptorSheets.Gig/Entities/**/*.cs \
           /d:sonar.exclusions=RaptorSheets.Core/Entities/Generated/**,RaptorSheets.Gig/Entities/Generated/**,RaptorSheets.Stock/Entities/Generated/**,**/coverage*.xml,**/TestResults/**,**/coverage/**,**/*.coverage \
-          /d:sonar.coverage.exclusions=RaptorSheets.Sample.Web/**
+          /d:sonar.coverage.exclusions=RaptorSheets.Sample.Web/**,assets/**
 
     - name: Build for SonarCloud
       run: dotnet build --configuration Release
