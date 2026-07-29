@@ -17,10 +17,10 @@ namespace RaptorSheets.Core.Factories;
 public interface ISheetManagerFactory<out TManager> where TManager : class
 {
     /// <summary>Creates a manager authenticated with an OAuth access token.</summary>
-    TManager Create(string accessToken, string spreadsheetId, GoogleRetryOptions? retryOptions = null);
+    TManager Create(string accessToken, string spreadsheetId, GoogleRetryOptions? retryOptions = null, GoogleConcurrencyOptions? concurrencyOptions = null);
 
     /// <summary>Creates a manager authenticated with service-account credential fields.</summary>
-    TManager Create(Dictionary<string, string> serviceAccountCredentials, string spreadsheetId, GoogleRetryOptions? retryOptions = null);
+    TManager Create(Dictionary<string, string> serviceAccountCredentials, string spreadsheetId, GoogleRetryOptions? retryOptions = null, GoogleConcurrencyOptions? concurrencyOptions = null);
 }
 
 /// <summary>
@@ -32,33 +32,36 @@ public sealed class SheetManagerFactory<TManager> : ISheetManagerFactory<TManage
     private readonly Func<IGoogleSheetService, ILogger?, TManager> _create;
     private readonly ILogger? _logger;
     private readonly GoogleRetryOptions _defaultRetryOptions;
+    private readonly GoogleConcurrencyOptions _defaultConcurrencyOptions;
 
     public SheetManagerFactory(
         Func<IGoogleSheetService, ILogger?, TManager> create,
         ILogger? logger = null,
-        GoogleRetryOptions? defaultRetryOptions = null)
+        GoogleRetryOptions? defaultRetryOptions = null,
+        GoogleConcurrencyOptions? defaultConcurrencyOptions = null)
     {
         _create = create ?? throw new ArgumentNullException(nameof(create));
         _logger = logger;
         _defaultRetryOptions = defaultRetryOptions ?? GoogleRetryOptions.Default;
+        _defaultConcurrencyOptions = defaultConcurrencyOptions ?? GoogleConcurrencyOptions.Default;
     }
 
-    public TManager Create(string accessToken, string spreadsheetId, GoogleRetryOptions? retryOptions = null)
+    public TManager Create(string accessToken, string spreadsheetId, GoogleRetryOptions? retryOptions = null, GoogleConcurrencyOptions? concurrencyOptions = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accessToken);
         ArgumentException.ThrowIfNullOrWhiteSpace(spreadsheetId);
 
-        var service = new GoogleSheetService(accessToken, spreadsheetId, _logger, retryOptions ?? _defaultRetryOptions);
+        var service = new GoogleSheetService(accessToken, spreadsheetId, _logger, retryOptions ?? _defaultRetryOptions, concurrencyOptions ?? _defaultConcurrencyOptions);
 
         return _create(service, _logger);
     }
 
-    public TManager Create(Dictionary<string, string> serviceAccountCredentials, string spreadsheetId, GoogleRetryOptions? retryOptions = null)
+    public TManager Create(Dictionary<string, string> serviceAccountCredentials, string spreadsheetId, GoogleRetryOptions? retryOptions = null, GoogleConcurrencyOptions? concurrencyOptions = null)
     {
         ArgumentNullException.ThrowIfNull(serviceAccountCredentials);
         ArgumentException.ThrowIfNullOrWhiteSpace(spreadsheetId);
 
-        var service = new GoogleSheetService(serviceAccountCredentials, spreadsheetId, _logger, retryOptions ?? _defaultRetryOptions);
+        var service = new GoogleSheetService(serviceAccountCredentials, spreadsheetId, _logger, retryOptions ?? _defaultRetryOptions, concurrencyOptions ?? _defaultConcurrencyOptions);
 
         return _create(service, _logger);
     }
@@ -72,7 +75,7 @@ public sealed class SheetManagerFactory<TManager> : ISheetManagerFactory<TManage
         options.Validate(domainName);
 
         return options.ServiceAccountCredentials is { Count: > 0 } credentials
-            ? Create(credentials, options.SpreadsheetId!, options.Retry)
-            : Create(options.AccessToken!, options.SpreadsheetId!, options.Retry);
+            ? Create(credentials, options.SpreadsheetId!, options.Retry, options.Concurrency)
+            : Create(options.AccessToken!, options.SpreadsheetId!, options.Retry, options.Concurrency);
     }
 }

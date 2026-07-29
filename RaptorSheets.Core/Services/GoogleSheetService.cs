@@ -39,26 +39,49 @@ public class GoogleSheetService : IGoogleSheetService
     private readonly ISheetServiceWrapper _sheetService;
     private readonly string _range = GoogleConfig.Range;
     private readonly ILogger _logger;
+    private readonly SemaphoreSlim? _concurrencyGate;
 
-    public GoogleSheetService(string accessToken, string spreadsheetId, ILogger? logger = null, GoogleRetryOptions? retryOptions = null)
+    public GoogleSheetService(string accessToken, string spreadsheetId, ILogger? logger = null, GoogleRetryOptions? retryOptions = null, GoogleConcurrencyOptions? concurrencyOptions = null)
     {
         _sheetService = new SheetServiceWrapper(accessToken, spreadsheetId, retryOptions);
         _logger = logger ?? NullLogger.Instance;
+        _concurrencyGate = CreateConcurrencyGate(concurrencyOptions);
     }
 
-    public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null, GoogleRetryOptions? retryOptions = null)
+    public GoogleSheetService(Dictionary<string, string> parameters, string spreadsheetId, ILogger? logger = null, GoogleRetryOptions? retryOptions = null, GoogleConcurrencyOptions? concurrencyOptions = null)
     {
         _sheetService = new SheetServiceWrapper(parameters, spreadsheetId, retryOptions);
         _logger = logger ?? NullLogger.Instance;
+        _concurrencyGate = CreateConcurrencyGate(concurrencyOptions);
+    }
+
+    /// <summary>Test seam: bypasses the real Google client entirely for a fake/mock wrapper.</summary>
+    internal GoogleSheetService(ISheetServiceWrapper sheetService, ILogger? logger = null, GoogleConcurrencyOptions? concurrencyOptions = null)
+    {
+        _sheetService = sheetService ?? throw new ArgumentNullException(nameof(sheetService));
+        _logger = logger ?? NullLogger.Instance;
+        _concurrencyGate = CreateConcurrencyGate(concurrencyOptions);
+    }
+
+    private static SemaphoreSlim? CreateConcurrencyGate(GoogleConcurrencyOptions? concurrencyOptions)
+    {
+        var max = concurrencyOptions?.MaxConcurrentRequests ?? 0;
+        return max > 0 ? new SemaphoreSlim(max, max) : null;
     }
 
     /// <summary>
     /// Runs a call against the underlying wrapper, converting any exception into a classified
     /// <see cref="GoogleApiFailure"/> instead of letting it propagate. Every public method below is a
-    /// thin wrapper around this, so the try/catch/log shape only exists once.
+    /// thin wrapper around this, so the try/catch/log shape only exists once. When a concurrency gate
+    /// is configured, caps how many calls run at once by making the rest wait here first.
     /// </summary>
-    private async Task<GoogleApiResult<T>> ExecuteAsync<T>(Func<Task<T>> call, string logMessage, params object?[] logArgs)
+    private async Task<GoogleApiResult<T>> ExecuteAsync<T>(Func<Task<T>> call, CancellationToken cancellationToken, string logMessage, params object?[] logArgs)
     {
+        if (_concurrencyGate != null)
+        {
+            await _concurrencyGate.WaitAsync(cancellationToken);
+        }
+
         try
         {
             var response = await call();
@@ -69,12 +92,16 @@ public class GoogleSheetService : IGoogleSheetService
             _logger.LogError(ex, logMessage, logArgs);
             return GoogleApiResult<T>.Failed(GoogleApiFailure.FromException(ex));
         }
+        finally
+        {
+            _concurrencyGate?.Release();
+        }
     }
 
     public async Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range, CancellationToken cancellationToken = default)
     {
         var result = await ExecuteAsync(
-            () => _sheetService.AppendValues(range, valueRange, cancellationToken),
+            () => _sheetService.AppendValues(range, valueRange, cancellationToken), cancellationToken,
             "Error appending data to range '{Range}'", range);
 
         return result.Value;
@@ -83,7 +110,7 @@ public class GoogleSheetService : IGoogleSheetService
     public async Task<BatchUpdateValuesResponse?> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest, CancellationToken cancellationToken = default)
     {
         var result = await ExecuteAsync(
-            () => _sheetService.BatchUpdateData(batchUpdateValuesRequest, cancellationToken),
+            () => _sheetService.BatchUpdateData(batchUpdateValuesRequest, cancellationToken), cancellationToken,
             "Error batch updating values");
 
         return result.Value;
@@ -92,7 +119,7 @@ public class GoogleSheetService : IGoogleSheetService
     public async Task<BatchUpdateSpreadsheetResponse?> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, CancellationToken cancellationToken = default)
     {
         var result = await ExecuteAsync(
-            () => _sheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken),
+            () => _sheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken), cancellationToken,
             "Error batch updating spreadsheet");
 
         return result.Value;
@@ -123,7 +150,7 @@ public class GoogleSheetService : IGoogleSheetService
         var request = GoogleRequestHelpers.GenerateBatchGetValuesByDataFilterRequest(sheets, range);
 
         return await ExecuteAsync(
-            () => _sheetService.BatchGetByDataFilter(request, cancellationToken),
+            () => _sheetService.BatchGetByDataFilter(request, cancellationToken), cancellationToken,
             "Error batch getting data for sheets '{Sheets}'", string.Join(", ", sheets));
     }
 
@@ -133,7 +160,7 @@ public class GoogleSheetService : IGoogleSheetService
 
         var result = await ExecuteAsync(
             // NotFound (invalid spreadsheetId/range) or BadRequest (invalid sheet name)
-            () => _sheetService.GetValues($"{sheet}!{_range}", cancellationToken),
+            () => _sheetService.GetValues($"{sheet}!{_range}", cancellationToken), cancellationToken,
             "Error getting values for sheet '{Sheet}'", sheet);
 
         return result.Value;
@@ -153,14 +180,14 @@ public class GoogleSheetService : IGoogleSheetService
     public async Task<GoogleApiResult<Spreadsheet>> GetSheetInfoResult(List<string>? ranges = null, CancellationToken cancellationToken = default)
     {
         return await ExecuteAsync(
-            () => _sheetService.GetSpreadsheet(ranges, cancellationToken),
+            () => _sheetService.GetSpreadsheet(ranges, cancellationToken), cancellationToken,
             "Error getting sheet info for ranges '{Ranges}'", ranges == null ? "(none)" : string.Join(", ", ranges));
     }
 
     public async Task<UpdateValuesResponse?> UpdateData(ValueRange valueRange, string range, CancellationToken cancellationToken = default)
     {
         var result = await ExecuteAsync(
-            () => _sheetService.UpdateValues(range, valueRange, cancellationToken),
+            () => _sheetService.UpdateValues(range, valueRange, cancellationToken), cancellationToken,
             "Error updating data for range '{Range}'", range);
 
         return result.Value;
