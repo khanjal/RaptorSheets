@@ -503,7 +503,7 @@ public class SheetManagerTests
         
         // Assert - Result may be null due to invalid credentials, but method shouldn't throw immediately
         // This is expected behavior for invalid credentials
-        Assert.True(result == null); // This is the expected behavior with invalid credentials
+        Assert.Null(result); // This is the expected behavior with invalid credentials
     }
 
     [Fact]
@@ -516,7 +516,7 @@ public class SheetManagerTests
         var result = await _manager.GetBatchData(sheets);
         
         // Assert - Result may be null due to invalid credentials, but method shouldn't throw immediately
-        Assert.True(result == null); // This is the expected behavior with invalid credentials
+        Assert.Null(result); // This is the expected behavior with invalid credentials
     }
 
     [Fact]
@@ -529,7 +529,7 @@ public class SheetManagerTests
         var result = await _manager.GetSpreadsheetInfo(ranges);
         
         // Assert - Result may be null due to invalid credentials
-        Assert.True(result == null);
+        Assert.Null(result);
     }
 
     #endregion

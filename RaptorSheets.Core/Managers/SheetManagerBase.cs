@@ -592,8 +592,7 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
 
         if (response == null && failureSuggestsMissingSheet)
         {
-            var (restoreResult, fetchedInfo) = await TryRestoreMissingSheetsAsync(messages, cancellationToken);
-            spreadsheetInfo = fetchedInfo;
+            var (restoreResult, _) = await TryRestoreMissingSheetsAsync(messages, cancellationToken);
 
             if (restoreResult != null)
             {
@@ -614,7 +613,7 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         // Cheap metadata-only call (no ranges / no grid data) - used for unknown-tab detection and
         // the spreadsheet title. Known-sheet header validation already happens below via
         // registry.MapData using the header row already present in the batchGet response.
-        spreadsheetInfo ??= await _googleSheetService.GetSheetInfo(cancellationToken);
+        spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
 
         if (spreadsheetInfo != null)
         {
@@ -666,8 +665,7 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     /// Attempts to self-heal from a null batchGet response by fetching spreadsheet metadata and
     /// recreating any canonical sheets missing from it. Returns a non-null Result only when the
     /// caller should return immediately (creation failed, or sheets were just created and need a
-    /// moment before they're readable); returns the fetched Spreadsheet either way so the caller
-    /// can reuse it instead of fetching metadata twice.
+    /// moment before they're readable).
     /// </summary>
     private async Task<(TEntity? Result, Spreadsheet? SpreadsheetInfo)> TryRestoreMissingSheetsAsync(List<MessageEntity> messages, CancellationToken cancellationToken = default)
     {

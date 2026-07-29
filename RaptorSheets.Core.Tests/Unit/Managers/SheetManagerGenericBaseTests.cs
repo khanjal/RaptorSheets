@@ -336,7 +336,7 @@ public class SheetManagerGenericBaseTests
 
         var result = await manager.CreateAllSheets();
 
-        Assert.Contains(result.Messages, m => m.Message.Contains(SheetName.ToUpperInvariant()) && m.Message.Contains("created"));
+        Assert.Contains(result.Messages, m => m.Message.Contains(SheetName.ToUpperInvariant(), StringComparison.Ordinal) && m.Message.Contains("created", StringComparison.Ordinal));
     }
 
     [Fact]
