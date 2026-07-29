@@ -75,7 +75,7 @@ public class GoogleSheetService : IGoogleSheetService
     /// thin wrapper around this, so the try/catch/log shape only exists once. When a concurrency gate
     /// is configured, caps how many calls run at once by making the rest wait here first.
     /// </summary>
-    private async Task<GoogleApiResult<T>> ExecuteAsync<T>(Func<Task<T>> call, CancellationToken cancellationToken, string logMessage, params object?[] logArgs)
+    private async Task<GoogleApiResult<T>> ExecuteAsync<T>(Func<Task<T>> call, string logMessage, CancellationToken cancellationToken, params object?[] logArgs)
     {
         if (_concurrencyGate != null)
         {
@@ -101,8 +101,8 @@ public class GoogleSheetService : IGoogleSheetService
     public async Task<AppendValuesResponse?> AppendData(ValueRange valueRange, string range, CancellationToken cancellationToken = default)
     {
         var result = await ExecuteAsync(
-            () => _sheetService.AppendValues(range, valueRange, cancellationToken), cancellationToken,
-            "Error appending data to range '{Range}'", range);
+            () => _sheetService.AppendValues(range, valueRange, cancellationToken),
+            "Error appending data to range '{Range}'", cancellationToken, range);
 
         return result.Value;
     }
@@ -110,8 +110,8 @@ public class GoogleSheetService : IGoogleSheetService
     public async Task<BatchUpdateValuesResponse?> BatchUpdateData(BatchUpdateValuesRequest batchUpdateValuesRequest, CancellationToken cancellationToken = default)
     {
         var result = await ExecuteAsync(
-            () => _sheetService.BatchUpdateData(batchUpdateValuesRequest, cancellationToken), cancellationToken,
-            "Error batch updating values");
+            () => _sheetService.BatchUpdateData(batchUpdateValuesRequest, cancellationToken),
+            "Error batch updating values", cancellationToken);
 
         return result.Value;
     }
@@ -119,8 +119,8 @@ public class GoogleSheetService : IGoogleSheetService
     public async Task<BatchUpdateSpreadsheetResponse?> BatchUpdateSpreadsheet(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, CancellationToken cancellationToken = default)
     {
         var result = await ExecuteAsync(
-            () => _sheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken), cancellationToken,
-            "Error batch updating spreadsheet");
+            () => _sheetService.BatchUpdateSpreadsheet(batchUpdateSpreadsheetRequest, cancellationToken),
+            "Error batch updating spreadsheet", cancellationToken);
 
         return result.Value;
     }
@@ -150,8 +150,8 @@ public class GoogleSheetService : IGoogleSheetService
         var request = GoogleRequestHelpers.GenerateBatchGetValuesByDataFilterRequest(sheets, range);
 
         return await ExecuteAsync(
-            () => _sheetService.BatchGetByDataFilter(request, cancellationToken), cancellationToken,
-            "Error batch getting data for sheets '{Sheets}'", string.Join(", ", sheets));
+            () => _sheetService.BatchGetByDataFilter(request, cancellationToken),
+            "Error batch getting data for sheets '{Sheets}'", cancellationToken, string.Join(", ", sheets));
     }
 
     public async Task<ValueRange?> GetSheetData(string sheet, CancellationToken cancellationToken = default)
@@ -160,8 +160,8 @@ public class GoogleSheetService : IGoogleSheetService
 
         var result = await ExecuteAsync(
             // NotFound (invalid spreadsheetId/range) or BadRequest (invalid sheet name)
-            () => _sheetService.GetValues($"{sheet}!{_range}", cancellationToken), cancellationToken,
-            "Error getting values for sheet '{Sheet}'", sheet);
+            () => _sheetService.GetValues($"{sheet}!{_range}", cancellationToken),
+            "Error getting values for sheet '{Sheet}'", cancellationToken, sheet);
 
         return result.Value;
     }
@@ -180,15 +180,15 @@ public class GoogleSheetService : IGoogleSheetService
     public async Task<GoogleApiResult<Spreadsheet>> GetSheetInfoResult(List<string>? ranges = null, CancellationToken cancellationToken = default)
     {
         return await ExecuteAsync(
-            () => _sheetService.GetSpreadsheet(ranges, cancellationToken), cancellationToken,
-            "Error getting sheet info for ranges '{Ranges}'", ranges == null ? "(none)" : string.Join(", ", ranges));
+            () => _sheetService.GetSpreadsheet(ranges, cancellationToken),
+            "Error getting sheet info for ranges '{Ranges}'", cancellationToken, ranges == null ? "(none)" : string.Join(", ", ranges));
     }
 
     public async Task<UpdateValuesResponse?> UpdateData(ValueRange valueRange, string range, CancellationToken cancellationToken = default)
     {
         var result = await ExecuteAsync(
-            () => _sheetService.UpdateValues(range, valueRange, cancellationToken), cancellationToken,
-            "Error updating data for range '{Range}'", range);
+            () => _sheetService.UpdateValues(range, valueRange, cancellationToken),
+            "Error updating data for range '{Range}'", cancellationToken, range);
 
         return result.Value;
     }
