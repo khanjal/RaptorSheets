@@ -1,0 +1,316 @@
+@page "/structure-inspector"
+@using RaptorSheets.Core.Helpers
+@using RaptorSheets.Core.Models.Google
+@using RaptorSheets.Sample.Web.Services
+@inject DomainRegistry Domains
+@inject IJSRuntime JS
+
+<PageTitle>Structure Inspector - RaptorSheets Sample</PageTitle>
+
+<h1>Structure Inspector</h1>
+
+<p>
+    Point at any tab on one of your connected spreadsheets and see what RaptorSheets detects from a
+    live read - including a hand-built tab that isn't part of a domain's known schema yet - then
+    generate a starting-point C# class for it.
+</p>
+
+@if (_connectedDomains is null)
+{
+    <p>Loading...</p>
+}
+else if (_connectedDomains.Count == 0)
+{
+    <p class="status error">No spreadsheet connected yet - configure one in <a href="/settings">Settings</a>.</p>
+}
+else
+{
+    <label>
+        <span>Domain</span>
+        <select class="field-wide" @bind="_selectedDomain" @bind:after="OnDomainChangedAsync">
+            @foreach (var ops in _connectedDomains)
+            {
+                <option value="@ops.DomainName">@ops.DomainLabel</option>
+            }
+        </select>
+    </label>
+
+    @if (_tabNamesLoading)
+    {
+        <p class="setup-hint">Loading tabs...</p>
+    }
+    else if (_tabNames is not null)
+    {
+        <label>
+            <span>Tab</span>
+            <input type="text" class="field-wide" list="tab-options" value="@_selectedTab"
+                   @oninput="e => _selectedTab = e.Value?.ToString() ?? string.Empty"
+                   placeholder="Pick or type a tab name" />
+            <datalist id="tab-options">
+                @foreach (var tabName in _tabNames)
+                {
+                    <option value="@tabName" />
+                }
+            </datalist>
+        </label>
+        @if (_tabNames.Count == 0)
+        {
+            <p class="setup-hint">No tabs found yet - type a name to inspect one directly.</p>
+        }
+
+        <button @onclick="InspectAsync" disabled="@(_isBusy || string.IsNullOrEmpty(_selectedTab))">Inspect</button>
+        <button @onclick="PreviewDataAsync" disabled="@(_isBusy || string.IsNullOrEmpty(_selectedTab))">Preview data</button>
+    }
+
+    @if (_error is not null)
+    {
+        <p class="status error">@_error</p>
+    }
+
+    @if (_rawRows is not null)
+    {
+        <h2>Raw data</h2>
+        <p class="setup-hint">
+            Every cell by row/column position, exactly as it is on the sheet - no assumption that row 1
+            is a header or that it's a simple one-row-per-record table. Useful for a dashboard-style tab
+            with fields scattered around rather than a plain grid.
+        </p>
+
+        @if (_rawRows.Count == 0)
+        {
+            <p class="setup-hint">This sheet has no data in the previewed range.</p>
+        }
+        else
+        {
+            <div class="grid-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            @for (var col = 0; col < _rawColumnCount; col++)
+                            {
+                                <th>@SheetHelpers.GetColumnName(col)</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var r = 0; r < _rawRows.Count; r++)
+                        {
+                            var row = _rawRows[r];
+                            <tr>
+                                <td class="row-index">@(r + 1)</td>
+                                @for (var col = 0; col < _rawColumnCount; col++)
+                                {
+                                    <td>@(col < row.Count ? row[col] : "")</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (_rawRows.Count >= RawPreviewMaxRows)
+            {
+                <p class="setup-hint">Showing the first @RawPreviewMaxRows rows.</p>
+            }
+        }
+    }
+
+    @if (_structure is not null)
+    {
+        <div class="grid-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Column</th>
+                        <th>Format</th>
+                        <th>Raw type</th>
+                        <th>Pattern</th>
+                        <th>Validation</th>
+                        <th>Protected</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var header in _structure.Headers)
+                    {
+                        <tr>
+                            <td>@header.Name</td>
+                            <td>@header.Column</td>
+                            <td>@header.Format</td>
+                            <td>@header.RawFormatType</td>
+                            <td>@header.FormatPattern</td>
+                            <td>@header.Validation</td>
+                            <td>@(header.Protect ? "Yes" : "")</td>
+                        </tr>
+                        @if (!string.IsNullOrEmpty(header.Note))
+                        {
+                            <tr class="detail-row">
+                                <td colspan="7"><strong>Note:</strong> @header.Note</td>
+                            </tr>
+                        }
+                        @if (!string.IsNullOrEmpty(header.Formula))
+                        {
+                            <tr class="detail-row">
+                                <td colspan="7"><strong>Formula:</strong> <code>@header.Formula</code></td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <label>
+            <span>Class name</span>
+            <input value="@_className" @oninput="e => _className = e.Value?.ToString() ?? string.Empty" />
+        </label>
+        <button @onclick="GenerateClass">Generate class</button>
+
+        @if (_generatedClass is not null)
+        {
+            <textarea rows="16" readonly value="@_generatedClass"></textarea>
+            <button @onclick="CopyToClipboardAsync">Copy</button>
+            @if (_copyStatus is not null)
+            {
+                <span class="setup-hint">@_copyStatus</span>
+            }
+        }
+    }
+}
+
+@code {
+    private const int RawPreviewMaxRows = 200;
+
+    private List<ISheetOperations>? _connectedDomains;
+    private string _selectedDomain = "";
+    private List<string>? _tabNames;
+    private bool _tabNamesLoading;
+    private string _selectedTab = "";
+    private bool _isBusy;
+    private string? _error;
+    private SheetModel? _structure;
+    private List<List<string?>>? _rawRows;
+    private int _rawColumnCount;
+    private string _className = "";
+    private string? _generatedClass;
+    private string? _copyStatus;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var connected = new List<ISheetOperations>();
+        foreach (var ops in Domains.Domains)
+        {
+            if (ops.TryGetManager(out _, out _))
+            {
+                connected.Add(ops);
+            }
+        }
+
+        _connectedDomains = connected;
+
+        if (_connectedDomains.Count > 0)
+        {
+            _selectedDomain = _connectedDomains[0].DomainName;
+            await LoadTabNamesAsync();
+        }
+    }
+
+    private async Task OnDomainChangedAsync()
+    {
+        _structure = null;
+        _rawRows = null;
+        _generatedClass = null;
+        _error = null;
+        await LoadTabNamesAsync();
+    }
+
+    private async Task LoadTabNamesAsync()
+    {
+        var ops = Domains.TryGet(_selectedDomain);
+        if (ops is null)
+        {
+            return;
+        }
+
+        _tabNamesLoading = true;
+        _tabNames = null;
+        StateHasChanged();
+
+        _tabNames = await ops.GetAllSheetTabNamesAsync();
+        _selectedTab = _tabNames.FirstOrDefault() ?? "";
+        _tabNamesLoading = false;
+    }
+
+    private async Task InspectAsync()
+    {
+        var ops = Domains.TryGet(_selectedDomain);
+        if (ops is null || string.IsNullOrEmpty(_selectedTab))
+        {
+            return;
+        }
+
+        _isBusy = true;
+        _error = null;
+        _structure = null;
+        _generatedClass = null;
+
+        try
+        {
+            _structure = await ops.GetLiveSheetStructureAsync(_selectedTab);
+            if (_structure is null)
+            {
+                _error = $"Couldn't read the \"{_selectedTab}\" sheet's structure.";
+            }
+            else
+            {
+                _className = EntityClassGenerator.SuggestClassName(_structure.Name);
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task PreviewDataAsync()
+    {
+        var ops = Domains.TryGet(_selectedDomain);
+        if (ops is null || string.IsNullOrEmpty(_selectedTab))
+        {
+            return;
+        }
+
+        _isBusy = true;
+        _error = null;
+        _rawRows = null;
+
+        try
+        {
+            _rawRows = await ops.GetLiveSheetRawValuesAsync(_selectedTab, RawPreviewMaxRows);
+            _rawColumnCount = _rawRows.Count == 0 ? 0 : _rawRows.Max(row => row.Count);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private void GenerateClass()
+    {
+        if (_structure is not null)
+        {
+            _generatedClass = EntityClassGenerator.Generate(_className, _structure);
+            _copyStatus = null;
+        }
+    }
+
+    private async Task CopyToClipboardAsync()
+    {
+        if (_generatedClass is null)
+        {
+            return;
+        }
+
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", _generatedClass);
+        _copyStatus = "Copied.";
+    }
+}

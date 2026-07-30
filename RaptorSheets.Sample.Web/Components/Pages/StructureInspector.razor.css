@@ -1,0 +1,24 @@
+/* .grid-scroll and base table/th/td/row-hover/zebra styling live globally in wwwroot/app.css now -
+   shared across every table on the site instead of duplicated per component. */
+
+/* Note/Formula get their own full-width row instead of a cramped column - both can be long
+   (multi-paragraph documentation, or a long ARRAYFORMULA expression), so they need room to wrap
+   rather than forcing the table into horizontal scroll. */
+.detail-row td {
+    white-space: pre-line;
+    word-break: break-word;
+    background: var(--color-surface-sunken);
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+}
+
+.detail-row code {
+    font-size: 0.8rem;
+}
+
+.row-index {
+    background: var(--color-surface-muted);
+    color: var(--color-text-subtle);
+    font-size: 0.78rem;
+    text-align: right;
+}

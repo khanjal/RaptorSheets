@@ -347,3 +347,51 @@ input[type="number"] {
     background: var(--color-surface-muted);
     color: var(--color-text-muted);
 }
+
+/* Tables - shared by every data-table component (EntityGrid, Structure Inspector, and any future
+   one) so header/zebra styling stays consistent site-wide without each .razor.css redeclaring it.
+   Global rather than scoped: Blazor CSS isolation can't reach across component files, and these
+   components already needed near-identical rules before this was pulled out. */
+
+.grid-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--color-border-muted);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    margin-bottom: 1rem;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.88rem;
+}
+
+th, td {
+    border-bottom: 1px solid var(--color-border-muted);
+    padding: 0.5rem 0.65rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+th {
+    background: var(--color-surface-muted);
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    position: sticky;
+    top: 0;
+}
+
+/* :where() keeps this at effectively zero specificity beyond tbody/tr, so any component's own
+   row-state class (row-new/row-edited/row-deleted/detail-row/...) always wins over it without
+   needing to coordinate specificity or stylesheet order across files. */
+tbody tr:where(:nth-child(even)) {
+    background: var(--color-surface-sunken);
+}
+
+tbody tr:hover {
+    background: var(--color-surface-muted);
+}

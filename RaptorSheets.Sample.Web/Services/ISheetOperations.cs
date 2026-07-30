@@ -62,6 +62,18 @@ public interface ISheetOperations
 
     Task<List<string>> GetAllSheetTabNamesAsync();
     SheetModel? GetSheetLayout(string sheetName);
+
+    /// <summary>Reads a sheet's structure back from the live spreadsheet - the actual/current shape,
+    /// in contrast with GetSheetLayout's configured/expected shape from this domain's [Column]
+    /// attributes. Works for any live tab name, not just ones this domain's registry knows about, so
+    /// it's the one that can inspect a hand-built tab RaptorSheets has never heard of.</summary>
+    Task<SheetModel?> GetLiveSheetStructureAsync(string sheetName);
+
+    /// <summary>Raw cell values by row/column position, with no assumption that row 0 is a header or
+    /// that the sheet is a simple one-row-per-record table - for a sheet that isn't (a dashboard with
+    /// scattered fields, multiple mini-tables, a transposed matrix, ...). Ragged rows, bounded to
+    /// maxRows.</summary>
+    Task<List<List<string?>>> GetLiveSheetRawValuesAsync(string sheetName, int maxRows = 200);
     Task<(object SheetsContainer, List<MessageEntity> Messages)> GetSheetAsync(string sheetName);
     Task<List<MessageEntity>> ChangeSheetDataAsync(string sheetName, PropertyInfo listProperty, IList dirtyRows);
     Task<List<MessageEntity>> CreateSheetAsync(string sheetName);

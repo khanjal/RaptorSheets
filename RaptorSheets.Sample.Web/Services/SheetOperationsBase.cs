@@ -117,6 +117,10 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
 
     public SheetModel? GetSheetLayout(string sheetName) => Manager!.GetSheetLayout(sheetName);
 
+    public async Task<SheetModel?> GetLiveSheetStructureAsync(string sheetName) => await Manager!.GetLiveSheetStructure(sheetName);
+
+    public async Task<List<List<string?>>> GetLiveSheetRawValuesAsync(string sheetName, int maxRows = 200) => await Manager!.GetLiveSheetRawValues(sheetName, maxRows);
+
     public async Task<(object SheetsContainer, List<MessageEntity> Messages)> GetSheetAsync(string sheetName)
     {
         var result = await Manager!.GetSheet(sheetName);
