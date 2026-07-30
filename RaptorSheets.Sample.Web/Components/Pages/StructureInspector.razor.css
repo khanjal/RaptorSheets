@@ -1,5 +1,18 @@
-/* .grid-scroll and base table/th/td/row-hover/zebra styling live globally in wwwroot/app.css now -
-   shared across every table on the site instead of duplicated per component. */
+/* .grid-scroll and base table/th/td/row-hover styling live globally in wwwroot/app.css now - shared
+   across every table on the site instead of duplicated per component. The global zebra rule
+   (tbody tr:where(:nth-child(even))) counts raw DOM position though, which breaks down here: a
+   header row can be followed by 0, 1, or 2 .detail-row siblings (Note/Formula), shifting every
+   later row's DOM parity out of sync with which row is actually the Nth header. So this table
+   stripes explicitly per logical row instead, with an always-present class on every primary row -
+   not just the alternate one - so it reliably overrides the global rule (a class selector always
+   beats :where()'s near-zero specificity) regardless of how many detail rows precede it. */
+.row-plain {
+    background: var(--color-surface);
+}
+
+.row-alt {
+    background: var(--color-surface-sunken);
+}
 
 /* Note/Formula get their own full-width row instead of a cramped column - both can be long
    (multi-paragraph documentation, or a long ARRAYFORMULA expression), so they need room to wrap

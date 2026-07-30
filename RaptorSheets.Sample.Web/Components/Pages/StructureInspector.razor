@@ -131,9 +131,10 @@ else
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var header in _structure.Headers)
+                    @for (var i = 0; i < _structure.Headers.Count; i++)
                     {
-                        <tr>
+                        var header = _structure.Headers[i];
+                        <tr class="@(i % 2 == 1 ? "row-alt" : "row-plain")">
                             <td>@header.Name</td>
                             <td>@header.Column</td>
                             <td>@header.Format</td>
