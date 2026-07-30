@@ -24,6 +24,7 @@ public class SheetManagerGenericBaseTests
     {
         public PropertyEntity Properties { get; set; } = new();
         public List<MessageEntity> Messages { get; set; } = [];
+        public Dictionary<string, SheetModel> Structures { get; set; } = [];
         public List<IList<object>> Rows { get; set; } = [];
     }
 

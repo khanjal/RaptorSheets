@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using RaptorSheets.Core.Models.Google;
 
 namespace RaptorSheets.Core.Entities;
 
@@ -22,4 +23,7 @@ public abstract class SheetEntityBase<TSheets> : ISheetEntity where TSheets : ne
 
     [JsonPropertyName("messages")]
     public List<MessageEntity> Messages { get; set; } = [];
+
+    [JsonPropertyName("structures")]
+    public Dictionary<string, SheetModel> Structures { get; set; } = [];
 }

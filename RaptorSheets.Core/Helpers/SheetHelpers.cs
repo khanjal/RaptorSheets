@@ -102,6 +102,42 @@ public static class SheetHelpers
         };
     }
 
+    // Matches this library's own fixed 18-color palette (Colors) within floating-point tolerance.
+    // Only ever resolves colors this library itself could have written; a color set by hand in
+    // Sheets (or by another tool) simply won't match and returns false.
+    private const float ColorTolerance = 0.01f;
+
+    public static bool TryGetSheetColor(Color? color, out SheetColor sheetColor)
+    {
+        sheetColor = SheetColor.BLACK;
+
+        if (color == null)
+        {
+            return false;
+        }
+
+        foreach (SheetColor candidate in Enum.GetValues(typeof(SheetColor)))
+        {
+            if (ColorsMatch(color, GetColor(candidate)))
+            {
+                sheetColor = candidate;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool ColorsMatch(Color a, Color b)
+    {
+        return FloatsMatch(a.Red, b.Red) && FloatsMatch(a.Green, b.Green) && FloatsMatch(a.Blue, b.Blue);
+    }
+
+    private static bool FloatsMatch(float? a, float? b)
+    {
+        return Math.Abs((a ?? 0) - (b ?? 0)) < ColorTolerance;
+    }
+
     public static string GetColumnName(int index)
     {
         var letters = GoogleConfig.ColumnLetters;

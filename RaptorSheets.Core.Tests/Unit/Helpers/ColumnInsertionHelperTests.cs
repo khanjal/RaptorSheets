@@ -3,6 +3,7 @@ using Moq;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models;
+using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Services;
 using Xunit;
 
@@ -15,6 +16,7 @@ public class ColumnInsertionHelperTests
     {
         public PropertyEntity Properties { get; set; } = new();
         public List<MessageEntity> Messages { get; set; } = [];
+        public Dictionary<string, SheetModel> Structures { get; set; } = [];
     }
 
     [Fact]

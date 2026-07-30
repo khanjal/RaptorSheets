@@ -177,6 +177,56 @@ public class SheetRegistry<TEntity> where TEntity : class, ISheetEntity, new()
         return missingColumns;
     }
 
+    /// <summary>
+    /// Detects columns missing entirely from a grid-data Spreadsheet, reusing the header row already
+    /// present in each known sheet's grid data - no extra API call needed. Unlike the
+    /// <see cref="DetectMissingColumns(BatchGetValuesByDataFilterResponse?)"/> overload, SheetId is
+    /// set directly from <paramref name="spreadsheet"/>'s own sheet metadata since it's already
+    /// available here, rather than left for the caller to fill in.
+    /// </summary>
+    internal Dictionary<string, List<ColumnInsertionInfo>> DetectMissingColumns(Spreadsheet? spreadsheet)
+    {
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>();
+
+        if (spreadsheet?.Sheets == null)
+        {
+            return missingColumns;
+        }
+
+        foreach (var sheet in spreadsheet.Sheets)
+        {
+            var title = sheet.Properties.Title;
+
+            if (!_factories.TryGetValue(title, out var factory))
+            {
+                continue;
+            }
+
+            var headerRow = HeaderHelpers.GetHeadersFromCellData(sheet.Data?.ElementAtOrDefault(0)?.RowData?.ElementAtOrDefault(0)?.Values);
+
+            if (headerRow.Count == 0)
+            {
+                continue;
+            }
+
+            HeaderHelpers.CheckSheetHeaders(headerRow, factory(), out var insertionInfo);
+
+            if (insertionInfo.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (var info in insertionInfo)
+            {
+                info.SheetId = sheet.Properties.SheetId ?? 0;
+            }
+
+            missingColumns[title] = insertionInfo;
+        }
+
+        return missingColumns;
+    }
+
     private void Process(TEntity entity, string sheetName, IList<IList<object>> values)
     {
         if (values == null || values.Count == 0)
