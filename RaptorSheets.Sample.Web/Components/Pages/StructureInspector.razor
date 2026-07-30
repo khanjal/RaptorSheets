@@ -134,7 +134,8 @@ else
                     @for (var i = 0; i < _structure.Headers.Count; i++)
                     {
                         var header = _structure.Headers[i];
-                        <tr class="@(i % 2 == 1 ? "row-alt" : "row-plain")">
+                        var stripeClass = i % 2 == 1 ? "row-alt" : "row-plain";
+                        <tr class="@stripeClass">
                             <td>@header.Name</td>
                             <td>@header.Column</td>
                             <td>@header.Format</td>
@@ -145,13 +146,13 @@ else
                         </tr>
                         @if (!string.IsNullOrEmpty(header.Note))
                         {
-                            <tr class="detail-row">
+                            <tr class="detail-row @stripeClass">
                                 <td colspan="7"><strong>Note:</strong> @header.Note</td>
                             </tr>
                         }
                         @if (!string.IsNullOrEmpty(header.Formula))
                         {
-                            <tr class="detail-row">
+                            <tr class="detail-row @stripeClass">
                                 <td colspan="7"><strong>Formula:</strong> <code>@header.Formula</code></td>
                             </tr>
                         }

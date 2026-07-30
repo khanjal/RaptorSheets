@@ -5,7 +5,15 @@
    later row's DOM parity out of sync with which row is actually the Nth header. So this table
    stripes explicitly per logical row instead, with an always-present class on every primary row -
    not just the alternate one - so it reliably overrides the global rule (a class selector always
-   beats :where()'s near-zero specificity) regardless of how many detail rows precede it. */
+   beats :where()'s near-zero specificity) regardless of how many detail rows precede it.
+
+   Each header's .detail-row(s) get the SAME row-plain/row-alt class as their own primary row
+   (see the markup), not a fixed color of their own - a detail row sits between its parent and the
+   next primary row, and a fixed color risked visually fusing it with whichever neighbor happened to
+   share that color instead of the row it actually belongs to. Sharing the parent's stripe guarantees
+   it groups with its parent (same color) and stays distinct from the next record (opposite color,
+   since primary rows strictly alternate) - the smaller font/muted color/prefix label below are what
+   still mark it as supplementary, not the background. */
 .row-plain {
     background: var(--color-surface);
 }
@@ -16,11 +24,11 @@
 
 /* Note/Formula get their own full-width row instead of a cramped column - both can be long
    (multi-paragraph documentation, or a long ARRAYFORMULA expression), so they need room to wrap
-   rather than forcing the table into horizontal scroll. */
+   rather than forcing the table into horizontal scroll. No background here - inherits row-plain/
+   row-alt from the shared class on the same <tr> (see comment above). */
 .detail-row td {
     white-space: pre-line;
     word-break: break-word;
-    background: var(--color-surface-sunken);
     color: var(--color-text-muted);
     font-size: 0.82rem;
 }
