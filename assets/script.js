@@ -71,20 +71,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Header scroll behavior
 let lastScrollTop = 0;
+let headerTicking = false;
 const header = document.querySelector('.header');
 
 window.addEventListener('scroll', function() {
-    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
-    if (scrollTop > lastScrollTop && scrollTop > 100) {
-        // Scrolling down
-        header.style.transform = 'translateY(-100%)';
-    } else {
-        // Scrolling up
-        header.style.transform = 'translateY(0)';
-    }
-    
-    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    if (headerTicking) return;
+    headerTicking = true;
+
+    window.requestAnimationFrame(function() {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        if (scrollTop > lastScrollTop && scrollTop > 100) {
+            // Scrolling down
+            header.style.transform = 'translateY(-100%)';
+        } else {
+            // Scrolling up
+            header.style.transform = 'translateY(0)';
+        }
+
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        headerTicking = false;
+    });
 }, { passive: true });
 
 // Mobile menu toggle
@@ -120,12 +127,18 @@ function toggleMobileMenu() {
 document.addEventListener('DOMContentLoaded', toggleMobileMenu);
 
 // Add subtle parallax effect to hero section
+const hero = document.querySelector('.hero');
+let heroTicking = false;
+
 window.addEventListener('scroll', function() {
-    const scrolled = window.pageYOffset;
-    const hero = document.querySelector('.hero');
-    if (hero) {
+    if (!hero || heroTicking) return;
+    heroTicking = true;
+
+    window.requestAnimationFrame(function() {
+        const scrolled = window.pageYOffset;
         hero.style.transform = `translateY(${scrolled * 0.5}px)`;
-    }
+        heroTicking = false;
+    });
 }, { passive: true });
 
 // Preload images for better performance

@@ -28,6 +28,12 @@ public class RaptorSheetsOptions
     public Models.GoogleRetryOptions Retry { get; set; } = Models.GoogleRetryOptions.Default;
 
     /// <summary>
+    /// In-flight request cap for this domain's manager. Defaults to
+    /// <see cref="Models.GoogleConcurrencyOptions.Default"/> (unlimited).
+    /// </summary>
+    public Models.GoogleConcurrencyOptions Concurrency { get; set; } = Models.GoogleConcurrencyOptions.Default;
+
+    /// <summary>
     /// Throws when the options can't produce a working client. Called during service resolution so a
     /// misconfigured host fails at startup with a clear message rather than at the first API call.
     /// </summary>

@@ -68,6 +68,27 @@ public class ColumnOptions
     /// Creates a fluent builder for ColumnOptions.
     /// </summary>
     public static ColumnOptionsBuilder Builder() => new();
+
+    /// <summary>
+    /// Validates this instance, throwing if a property holds a value with no defined meaning.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <see cref="Order"/> is less than -1. -1 is the "use declaration order" sentinel; any other
+    /// negative value is silently treated the same as -1 by <see cref="ColumnAttribute.HasExplicitOrder"/>,
+    /// masking what was likely meant to be an explicit priority.
+    /// </exception>
+    public void Validate()
+    {
+        if (Order < -1)
+        {
+            // "Order" is a property, not a parameter of this method - S3928's real-parameter check
+            // is a false positive here; nameof(Order) is still the correct thing to report.
+#pragma warning disable S3928
+            throw new ArgumentOutOfRangeException(nameof(Order), Order,
+                "Order must be -1 (use declaration order) or a non-negative explicit priority.");
+#pragma warning restore S3928
+        }
+    }
 }
 
 /// <summary>
@@ -161,9 +182,13 @@ public class ColumnOptionsBuilder
     }
 
     /// <summary>
-    /// Builds the ColumnOptions instance.
+    /// Builds the ColumnOptions instance, after validating it.
     /// </summary>
-    public ColumnOptions Build() => _options;
+    public ColumnOptions Build()
+    {
+        _options.Validate();
+        return _options;
+    }
 
     /// <summary>
     /// Implicit conversion to ColumnOptions for convenience.
