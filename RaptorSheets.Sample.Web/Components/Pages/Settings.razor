@@ -5,6 +5,7 @@
 @inject DomainRegistry Domains
 @inject UserSecretsWriter SecretsWriter
 @inject GenericSheetOperations GenericOps
+@inject IJSRuntime JS
 
 <PageTitle>Settings - RaptorSheets Sample</PageTitle>
 
@@ -18,6 +19,18 @@
 
 <section class="settings-section">
     <h2>Credentials</h2>
+
+    <details class="credentials-walkthrough" open="@(_currentClientEmail is null)">
+        <summary>Don't have a service account yet?</summary>
+        <ol>
+            <li>In <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a>, create or pick a project.</li>
+            <li>Enable the <a href="https://console.cloud.google.com/apis/library/sheets.googleapis.com" target="_blank" rel="noopener">Google Sheets API</a> for that project.</li>
+            <li>Under <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener">IAM &amp; Admin &gt; Service Accounts</a>, create a service account - any name, no project roles needed, since its access comes entirely from spreadsheets you individually share with it.</li>
+            <li>Open the new service account, go to its <strong>Keys</strong> tab, and add a new key of type <strong>JSON</strong> - it downloads immediately.</li>
+            <li>Paste that file's contents into the box below (or fill in the five fields by hand).</li>
+            <li>Once saved, share each spreadsheet you want to connect with this account's email as <strong>Editor</strong> - see the Connections section below.</li>
+        </ol>
+    </details>
 
     @if (_currentClientEmail is not null)
     {
@@ -97,6 +110,24 @@
 
 <section class="settings-section">
     <h2>Connections</h2>
+
+    @if (_currentClientEmail is not null)
+    {
+        <p class="setup-hint">
+            Share each spreadsheet below with <code>@_currentClientEmail</code> as <strong>Editor</strong> first -
+            RaptorSheets can't read or write a sheet it hasn't been invited to.
+            <button type="button" class="link-button" @onclick="CopyClientEmailAsync">Copy email</button>
+            @if (_emailCopyStatus is not null)
+            {
+                <span>@_emailCopyStatus</span>
+            }
+        </p>
+    }
+    else
+    {
+        <p class="status error">Add credentials above first - a connection needs a service account to read or write through.</p>
+    }
+
     <p class="setup-hint">
         Your own spreadsheets - add as many as you like, including more than one of the same type
         (useful for comparing spreadsheets, or keeping a backup alongside your main one). A "Generic"
@@ -242,6 +273,7 @@
 
 @code {
     private string? _currentClientEmail;
+    private string? _emailCopyStatus;
     private bool _showCredentialsForm;
     private bool _revealSecret;
     private string _pasteJson = string.Empty;
@@ -604,6 +636,17 @@
         {
             slot.ActionBusy = false;
         }
+    }
+
+    private async Task CopyClientEmailAsync()
+    {
+        if (_currentClientEmail is null)
+        {
+            return;
+        }
+
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", _currentClientEmail);
+        _emailCopyStatus = "Copied.";
     }
 
     // Prefills everything except the private key, which never comes back down to the browser once

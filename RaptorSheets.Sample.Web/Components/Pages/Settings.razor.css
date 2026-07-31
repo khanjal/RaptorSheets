@@ -26,6 +26,27 @@
         margin-bottom: 0.5rem;
     }
 
+.credentials-walkthrough {
+    margin-bottom: 1rem;
+}
+
+    .credentials-walkthrough summary {
+        cursor: pointer;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+    }
+
+    .credentials-walkthrough ol {
+        margin: 0.6rem 0 0;
+        padding-left: 1.25rem;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+    }
+
+        .credentials-walkthrough li + li {
+            margin-top: 0.4rem;
+        }
+
 .spreadsheet-slot {
     padding: 0.75rem 0;
     border-bottom: 1px solid var(--color-border-muted);
