@@ -19,11 +19,7 @@ builder.Services.AddRaptorSheetsStock();
 builder.Services.AddRaptorSheetsJob();
 builder.Services.AddRaptorSheetsHome();
 
-// GigSheetOperations is also registered under its own concrete type, not just ISheetOperations,
-// since Home.razor's Gig-only setup wizard needs the strongly-typed manager for
-// CreateAllSheets/GenerateDemoData - both resolve to the same scoped instance either way.
-builder.Services.AddScoped<GigSheetOperations>();
-builder.Services.AddScoped<ISheetOperations>(sp => sp.GetRequiredService<GigSheetOperations>());
+builder.Services.AddScoped<ISheetOperations, GigSheetOperations>();
 // StockSheetOperations is deliberately not registered here yet - RaptorSheets.Stock's entities
 // (StockEntity/PriceEntity/CostEntity/...) have no [Column] attributes at all (unlike Gig/Job/Home),
 // so this generic reflection-driven UI can't discover any columns for them; every Stock sheet would
@@ -33,6 +29,17 @@ builder.Services.AddScoped<ISheetOperations>(sp => sp.GetRequiredService<GigShee
 builder.Services.AddScoped<ISheetOperations, JobSheetOperations>();
 builder.Services.AddScoped<ISheetOperations, HomeSheetOperations>();
 builder.Services.AddScoped<DomainRegistry>();
+
+// GenericSheetOperations connects a spreadsheet with no compiled domain schema (SpreadsheetConnection
+// Type == "generic") - built on Gig's already-registered ISheetManagerFactory purely as a carrier,
+// see that class's own doc comment. Deliberately not registered as ISheetOperations.
+builder.Services.AddScoped<GenericSheetOperations>();
+
+// LocalConnectionsStore (connections.json, next to secrets.json, never committed) holds the user's
+// own spreadsheet connections - see its doc comment for why this replaced a single
+// spreadsheets:live:{domain} key per domain in user secrets. It's static, not DI-registered.
+// ConnectionRegistry adds the synthesized test-fallback connections on top (see its own doc comment).
+builder.Services.AddScoped<ConnectionRegistry>();
 
 builder.Services.AddSingleton<ReferenceSheetCache>();
 

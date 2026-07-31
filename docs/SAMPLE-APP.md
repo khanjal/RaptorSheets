@@ -86,26 +86,29 @@ deliberately declare the **same `<UserSecretsId>`**, so they read one `secrets.j
 (`%APPDATA%\Microsoft\UserSecrets\d3dcd413-.../secrets.json` on Windows,
 `~/.microsoft/usersecrets/d3dcd413-.../secrets.json` on Linux/macOS) instead of each needing its own
 copy kept in sync by hand. The service account credentials really are shared - one Google Cloud
-service account works for both. **The spreadsheet IDs are not shared, though**: they live under two
-separate keys per domain, `spreadsheets:live:{domain}` and `spreadsheets:test:{domain}`.
+service account works for both. User secrets holds **only** those credentials plus
+`spreadsheets:test:{domain}` - the dedicated, disposable spreadsheets `RaptorSheets.Test`'s
+integration suite points at, which it deletes and regenerates on every run (see the test suite's own
+`CleanSlateSheetFixture`). Set those via the CLI or CI secrets, not the Settings UI.
 
-- **`spreadsheets:live:{domain}`** is what the Settings page reads and writes - your own spreadsheet,
-  for real data. This is the ID a Clear button blanks and a save can disconnect.
-- **`spreadsheets:test:{domain}`** is never touched by Settings. It's the dedicated, disposable
-  spreadsheet `RaptorSheets.Test`'s integration suite points at, which it deletes and regenerates on
-  every run (see the test suite's own `CleanSlateSheetFixture`). Set it via the CLI or CI secrets, not
-  this UI.
+**Your own spreadsheets are a separate, local-only "Connections" list**, not user secrets: a
+`connections.json` file next to `secrets.json` (same folder, so it needs no extra `.gitignore` entry -
+neither was ever inside the repo), fully managed from the Settings page's "Connections" section. Each
+connection has a type (`gig`/`stock`/`job`/`home`, or `generic` for a spreadsheet with no compiled
+`[Column]` schema - usable only in the Structure Inspector), a label, and a spreadsheet ID. Unlike the
+old single `spreadsheets:live:{domain}` key, **you can add more than one connection of the same
+type** - useful for comparing spreadsheets or keeping a backup alongside your main one; NavMenu nests
+by connection label whenever a domain has more than one.
 
 This split exists specifically so recording real data through this app can never land on the
-spreadsheet the tests wipe. As a convenience, whenever a domain has no `spreadsheets:live:{domain}`
-configured, `Sheet.razor`/`Home.razor` fall back to showing `spreadsheets:test:{domain}` instead (with
-a banner making clear that's what's happening) - so there's something to look at before you've
-connected your own spreadsheet, rather than just an empty/error state. Stock's spreadsheet ID lives
-here too even though the sample app's nav doesn't browse it yet. Nothing is read from
-`appsettings.json`, so there's nothing to accidentally commit either way.
+spreadsheet the tests wipe. As a convenience, whenever a domain type has zero real connections,
+`Sheet.razor`/`Home.razor` fall back to showing `spreadsheets:test:{domain}` instead (synthesized as a
+connection on the fly, with a banner making clear that's what's happening) - so there's something to
+look at before you've added your own connection, rather than just an empty/error state. Stock's
+Connections entries work today even though the sample app's nav doesn't browse Stock sheets yet.
+Nothing is read from `appsettings.json`, so there's nothing to accidentally commit either way.
 
-Prefer the CLI? Same store, either project's directory works - just be sure to use `live`, not `test`,
-for your own data:
+Prefer the CLI for credentials/test IDs? Same store, either project's directory works:
 
 ```bash
 cd RaptorSheets.Sample.Web
@@ -115,8 +118,11 @@ dotnet user-secrets set "google_credentials:private_key_id" "your-key-id"
 dotnet user-secrets set "google_credentials:private_key" "your-private-key"
 dotnet user-secrets set "google_credentials:client_email" "service@project.iam.gserviceaccount.com"
 dotnet user-secrets set "google_credentials:client_id" "your-client-id"
-dotnet user-secrets set "spreadsheets:live:gig" "your-gig-spreadsheet-id"
+dotnet user-secrets set "spreadsheets:test:gig" "your-test-gig-spreadsheet-id"
 ```
+
+There's no CLI equivalent for adding a real connection - `connections.json` isn't a
+`dotnet user-secrets`-managed file, so use the Settings page's "Connections" section for those.
 
 **If the Gig spreadsheet you connect is blank** (no Gig sheets on it yet - checked via
 `GetAllSheetTabNames()` against the known Gig sheet names, not just "zero tabs", since a fresh

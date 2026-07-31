@@ -1,6 +1,7 @@
 @using RaptorSheets.Sample.Web.Services
 @implements IDisposable
 @inject DomainRegistry Domains
+@inject ConnectionRegistry Connections
 @inject NavigationManager NavManager
 
 <nav>
@@ -8,7 +9,8 @@
 
     @foreach (var domain in Domains.Domains)
     {
-        var expanded = IsExpanded(domain.DomainName);
+        var connections = Connections.GetByType(domain.DomainName);
+        var expanded = IsDomainExpanded(domain.DomainName);
         <div class="domain-group">
             <button type="button" class="domain-toggle" @onclick="() => ToggleDomain(domain.DomainName)">
                 <span class="chevron @(expanded ? "expanded" : "")">&#9656;</span>
@@ -16,14 +18,47 @@
             </button>
             @if (expanded)
             {
-                <ul>
-                    @foreach (var sheetName in GetSheetNames(domain))
-                    {
-                        <li>
-                            <NavLink href="@BuildHref(domain.DomainName, sheetName)">@sheetName</NavLink>
-                        </li>
-                    }
-                </ul>
+                @if (connections.Count == 0)
+                {
+                    <p class="nav-empty"><a href="/settings">Not configured</a></p>
+                }
+                else if (connections.Count == 1)
+                {
+                    <ul>
+                        @foreach (var sheetName in GetSheetNames(domain))
+                        {
+                            <li>
+                                <NavLink href="@BuildHref(connections[0].Id, sheetName)">@sheetName</NavLink>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <ul class="connection-list">
+                        @foreach (var connection in connections)
+                        {
+                            var connectionExpanded = IsConnectionExpanded(connection.Id);
+                            <li>
+                                <button type="button" class="domain-toggle connection-toggle" @onclick="() => ToggleConnection(connection.Id)">
+                                    <span class="chevron @(connectionExpanded ? "expanded" : "")">&#9656;</span>
+                                    <span>@connection.Label</span>
+                                </button>
+                                @if (connectionExpanded)
+                                {
+                                    <ul>
+                                        @foreach (var sheetName in GetSheetNames(domain))
+                                        {
+                                            <li>
+                                                <NavLink href="@BuildHref(connection.Id, sheetName)">@sheetName</NavLink>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
             }
         </div>
     }
@@ -36,6 +71,7 @@
 
 @code {
     private string? _expandedDomain;
+    private string? _expandedConnectionId;
 
     protected override void OnInitialized()
     {
@@ -49,22 +85,40 @@
         InvokeAsync(StateHasChanged);
     }
 
-    // Whichever domain the current sheet page belongs to starts expanded, so landing on (or
-    // refreshing) a sheet page doesn't hide the very entry you're on.
+    // Whichever domain/connection the current sheet page belongs to starts expanded, so landing on
+    // (or refreshing) a sheet page doesn't hide the very entry you're on. The route's second segment
+    // is a connection id, not a domain name - resolve it back through ConnectionRegistry to know
+    // which domain group (and, if it has multiple connections, which sub-entry) to expand.
     private void SyncExpandedDomainToRoute()
     {
         var segments = NavManager.ToBaseRelativePath(NavManager.Uri).Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length >= 2 && string.Equals(segments[0], "sheet", StringComparison.OrdinalIgnoreCase))
+        if (segments.Length < 2 || !string.Equals(segments[0], "sheet", StringComparison.OrdinalIgnoreCase))
         {
-            _expandedDomain = segments[1];
+            return;
         }
+
+        var connectionId = segments[1];
+        var connection = Connections.TryGet(connectionId);
+        if (connection is null)
+        {
+            return;
+        }
+
+        _expandedDomain = connection.Type;
+        _expandedConnectionId = connectionId;
     }
 
-    private bool IsExpanded(string domainName) =>
+    private bool IsDomainExpanded(string domainName) =>
         string.Equals(_expandedDomain, domainName, StringComparison.OrdinalIgnoreCase);
 
     private void ToggleDomain(string domainName) =>
-        _expandedDomain = IsExpanded(domainName) ? null : domainName;
+        _expandedDomain = IsDomainExpanded(domainName) ? null : domainName;
+
+    private bool IsConnectionExpanded(string connectionId) =>
+        string.Equals(_expandedConnectionId, connectionId, StringComparison.Ordinal);
+
+    private void ToggleConnection(string connectionId) =>
+        _expandedConnectionId = IsConnectionExpanded(connectionId) ? null : connectionId;
 
     private static IEnumerable<string> GetSheetNames(ISheetOperations domain) =>
         SheetMetadata.GetSheetDescriptors(domain.SheetsType, domain.SheetNamesType)
@@ -73,8 +127,8 @@
 
     // Sheet names aren't always URL-safe as-is - Job/Home have names with spaces and "&"
     // (e.g. "Interview Types", "Doors & Windows").
-    private static string BuildHref(string domainName, string sheetName) =>
-        $"sheet/{domainName}/{Uri.EscapeDataString(sheetName)}";
+    private static string BuildHref(string connectionId, string sheetName) =>
+        $"sheet/{connectionId}/{Uri.EscapeDataString(sheetName)}";
 
     public void Dispose() => NavManager.LocationChanged -= OnLocationChanged;
 }

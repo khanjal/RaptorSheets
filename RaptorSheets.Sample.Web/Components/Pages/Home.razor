@@ -1,7 +1,7 @@
 @page "/"
-@using RaptorSheets.Gig.Entities
 @using RaptorSheets.Sample.Web.Services
-@inject GigSheetOperations ConnectionProvider
+@inject DomainRegistry Domains
+@inject ConnectionRegistry Connections
 
 <PageTitle>RaptorSheets Sample</PageTitle>
 
@@ -14,9 +14,9 @@
 
 @if (_connected)
 {
-    <p class="status ok">Connected to the @ConnectionProvider.DomainLabel spreadsheet. Pick a sheet from the left to get started.</p>
+    <p class="status ok">Connected to the @_ops?.DomainLabel spreadsheet "@_connection?.Label". Pick a sheet from the left to get started.</p>
 
-    @if (ConnectionProvider.UsingTestFallback)
+    @if (_connection?.IsTestFallback == true)
     {
         <p class="status warning">
             No spreadsheet configured yet, so this is showing the shared test dataset RaptorSheets'
@@ -24,11 +24,18 @@
             permanent. <a href="/settings">Set your own spreadsheet in Settings</a> to keep what you add.
         </p>
     }
+    else
+    {
+        <p class="setup-hint">
+            Have more than one Gig spreadsheet? This page always starts with the first one you added -
+            switch, add, or remove connections from <a href="/settings">Settings</a>.
+        </p>
+    }
 
     @if (_isBlankSpreadsheet)
     {
         <div class="demo-prompt">
-            <p>This spreadsheet doesn't have any @ConnectionProvider.DomainLabel sheets on it yet.</p>
+            <p>This spreadsheet doesn't have any @_ops?.DomainLabel sheets on it yet.</p>
             <button class="btn-primary" @onclick="CreateDemoDataAsync" disabled="@_isBusy">
                 @(_isBusy ? "Setting up..." : "Create sheets + fill with demo data")
             </button>
@@ -49,6 +56,9 @@ else
 }
 
 @code {
+    private ISheetOperations? _ops;
+    private ITypedConnectedSheet? _sheet;
+    private SpreadsheetConnection? _connection;
     private bool _connected;
     private string? _connectionError;
     private bool _isBlankSpreadsheet;
@@ -57,18 +67,37 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        _ops = Domains.TryGet("gig");
         await RefreshConnectionStateAsync();
     }
 
     private async Task RefreshConnectionStateAsync()
     {
-        _connected = ConnectionProvider.TryGetTypedManager(out var manager, out _connectionError);
         _isBlankSpreadsheet = false;
 
-        if (_connected && manager is not null)
+        if (_ops is null)
         {
-            var tabNames = await manager.GetAllSheetTabNames();
-            var knownSheetNames = SheetMetadata.GetSheetDescriptors(typeof(GigSheets), typeof(RaptorSheets.Gig.Constants.SheetsConfig.SheetNames))
+            _connected = false;
+            _connectionError = "The Gig domain isn't registered.";
+            return;
+        }
+
+        // First connection found (including the synthesized shared-test-dataset one) - see this
+        // page's own setup hint above for why "first" is fine here even with multiple connections.
+        _connection = Connections.GetByType(_ops.DomainName).FirstOrDefault();
+        if (_connection is null)
+        {
+            _connected = false;
+            _connectionError = "No Gig spreadsheet configured yet.";
+            return;
+        }
+
+        _connected = _ops.TryConnect(_connection, out _sheet, out _connectionError);
+
+        if (_connected && _sheet is not null)
+        {
+            var tabNames = await _sheet.GetAllSheetTabNamesAsync();
+            var knownSheetNames = SheetMetadata.GetSheetDescriptors(_ops.SheetsType, _ops.SheetNamesType)
                 .Select(d => d.Name)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -78,7 +107,7 @@ else
 
     private async Task CreateDemoDataAsync()
     {
-        if (!ConnectionProvider.TryGetTypedManager(out _, out _))
+        if (_sheet is null)
         {
             return;
         }
@@ -89,9 +118,9 @@ else
         {
             // Safe specifically because this button only ever shows when _isBlankSpreadsheet is
             // true - no Gig sheets exist yet, so there's no real data these fresh sheets could
-            // possibly overwrite (see ISheetOperations.InsertDemoDataAsync for why that's not true
+            // possibly overwrite (see IConnectedSheet.InsertDemoDataAsync for why that's not true
             // in general).
-            var createMessages = await ConnectionProvider.CreateAllSheetsAsync();
+            var createMessages = await _sheet.CreateAllSheetsAsync();
             var createErrors = createMessages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
             if (createErrors.Count > 0)
             {
@@ -99,7 +128,7 @@ else
                 return;
             }
 
-            var messages = await ConnectionProvider.InsertDemoDataAsync();
+            var messages = await _sheet.InsertDemoDataAsync();
             var errors = messages.Where(m => string.Equals(m.Level, "ERROR", StringComparison.OrdinalIgnoreCase)).ToList();
             if (errors.Count > 0)
             {
