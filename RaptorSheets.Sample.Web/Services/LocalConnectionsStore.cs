@@ -4,11 +4,12 @@ namespace RaptorSheets.Sample.Web.Services;
 
 /// <summary>
 /// Reads/writes connections.json - the user's own list of spreadsheet connections, kept deliberately
-/// separate from user secrets (see UserSecretsWriter's doc comment): unlike a single fixed ID per
-/// domain, this is a list (multiple connections per domain type, plus "generic" ones), and none of it
-/// is secret, so a flat key/value secrets file was never the right shape for it. Lives in the same
-/// per-user-secrets-id folder as secrets.json (LocalStoragePaths), so it needs no .gitignore entry -
-/// neither file was ever inside the repo tree.
+/// separate from user secrets (see UserSecretsWriter's and LocalStoragePaths' doc comments): unlike a
+/// single fixed ID per domain, this is a list (multiple connections per domain type, plus "generic"
+/// ones), and none of it is secret, so a flat key/value secrets file was never the right shape for it -
+/// nor is nesting it inside a folder literally named "UserSecrets", even though nothing in it actually
+/// is one. Lives in this app's own local-data folder (LocalStoragePaths.GetAppDataRootFolder) instead,
+/// so it needs no .gitignore entry either way - neither file was ever inside the repo tree.
 ///
 /// Whole-list read/serialize/write, unlike UserSecretsWriter's JsonNode merge - nothing else reads or
 /// writes this file, so there's no "preserve unknown keys" concern. Always reads fresh from disk
@@ -91,5 +92,5 @@ public static class LocalConnectionsStore
         File.WriteAllText(path, JsonSerializer.Serialize(connections, Options));
     }
 
-    private static string GetConnectionsPath() => Path.Combine(LocalStoragePaths.GetUserSecretsRootFolder(), "connections.json");
+    private static string GetConnectionsPath() => Path.Combine(LocalStoragePaths.GetAppDataRootFolder(), "connections.json");
 }

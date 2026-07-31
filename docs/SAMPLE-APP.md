@@ -92,8 +92,12 @@ integration suite points at, which it deletes and regenerates on every run (see 
 `CleanSlateSheetFixture`). Set those via the CLI or CI secrets, not the Settings UI.
 
 **Your own spreadsheets are a separate, local-only "Connections" list**, not user secrets: a
-`connections.json` file next to `secrets.json` (same folder, so it needs no extra `.gitignore` entry -
-neither was ever inside the repo), fully managed from the Settings page's "Connections" section. Each
+`connections.json` file in this app's own local-data folder
+(`%APPDATA%\RaptorSheets.Sample.Web\connections.json` on Windows,
+`~/.config/RaptorSheets.Sample.Web/connections.json` on Linux/macOS) - deliberately not inside the
+`UserSecrets` folder alongside `secrets.json`, since none of it is actually secret. Needs no
+`.gitignore` entry either way, since it was never inside the repo. Fully managed from the Settings
+page's "Connections" section. Each
 connection has a type (`gig`/`stock`/`job`/`home`, or `generic` for a spreadsheet with no compiled
 `[Column]` schema - usable only in the Structure Inspector), a label, and a spreadsheet ID. Unlike the
 old single `spreadsheets:live:{domain}` key, **you can add more than one connection of the same
