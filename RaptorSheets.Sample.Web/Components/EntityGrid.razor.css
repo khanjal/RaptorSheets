@@ -10,6 +10,13 @@
     gap: 0.6rem;
 }
 
+/* app.css gives a bare button a default top margin so one sitting right after a label/paragraph
+   isn't flush against it - wrong here, where every button already sits in a flex row (this one, or
+   a table cell) that centers/aligns its own content without needing that. */
+.toolbar button {
+    margin-top: 0;
+}
+
 .toolbar .filter {
     flex: 0 0 16rem;
 }
@@ -146,6 +153,16 @@
     display: flex;
     gap: 0.5rem;
     margin-top: 1.25rem;
+}
+
+    .add-form-actions button {
+        margin-top: 0;
+    }
+
+/* Delete/Restore/Remove sit alone in their own table cell - a top margin would offset them
+   vertically against the rest of that row's plain-text/input cells. */
+td button {
+    margin-top: 0;
 }
 
 /* .grid-scroll and base table/th/td/row-hover/zebra styling live globally in wwwroot/app.css now -

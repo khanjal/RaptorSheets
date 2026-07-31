@@ -211,6 +211,24 @@ button.btn-primary, button.btn-primary:disabled {
         border-color: var(--color-accent-hover);
     }
 
+/* A button directly following a label/paragraph (e.g. Inspect/Preview data right after the Tab
+   field) has no default gap the way label's own margin-top gives it from whatever precedes *it* -
+   without this, the button sits flush against the field above. Excluded wherever a button already
+   sits inside a flex row that manages its own spacing via gap (field-with-action's Remove button
+   next to Spreadsheet ID, demo-data-row, saved-sheets-add, chip) - adding a second, independent
+   top margin there would misalign it against its row siblings. */
+button {
+    margin-top: 0.6rem;
+}
+
+.field-with-action button,
+.demo-data-row button,
+.saved-sheets-add button,
+.chip button,
+.settings-actions button {
+    margin-top: 0;
+}
+
 /* Form fields */
 
 label {
@@ -252,7 +270,7 @@ textarea {
     width: 100%;
 }
 
-input[type="text"]:not(.filter):not(.field-compact):not(.field-wide), input:not([type]) {
+input[type="text"]:not(.filter):not(.field-compact):not(.field-wide):not(.field-wider), input:not([type]) {
     width: 100%;
 }
 
@@ -274,6 +292,21 @@ input[type="text"]:not(.filter):not(.field-compact):not(.field-wide), input:not(
     width: 10rem;
 }
 
+/* For a dropdown whose option text is itself a full label (e.g. "RaptorSheets.Gig Unit Tests (Gig)")
+   rather than a short fixed word (e.g. "Gig") - .field-wide's 10rem truncates those illegibly. */
+.field-wider {
+    width: 20rem;
+}
+
+/* Lets one field in a flex row (e.g. a Spreadsheet ID or Tab field next to a fixed-width dropdown)
+   fill whatever width the fixed-width siblings don't use, instead of shrink-wrapping to its content
+   or overflowing it - min-width:0 is what lets it actually shrink below its content's natural width
+   when the row runs out of room, which flex items don't do by default. */
+.field-grow {
+    flex: 1;
+    min-width: 0;
+}
+
 /* The add-item form is a different story: it's a fixed-width CSS grid, and when there isn't room
    for every column at its full desired width, the grid compresses the columns - but a fixed-width
    input doesn't shrink along with its now-narrower column, so it overflows into the next field.
@@ -288,7 +321,7 @@ input[type="text"]:not(.filter):not(.field-compact):not(.field-wide), input:not(
     max-width: 10rem;
 }
 
-.field-compact, .field-wide {
+.field-compact, .field-wide, .field-wider {
     font-size: 0.85rem;
     padding: 0.3rem 0.45rem;
 }

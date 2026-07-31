@@ -36,6 +36,13 @@
         padding-bottom: 0;
     }
 
+.connection-slot-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
 .field-with-action {
     display: flex;
     align-items: center;
@@ -57,8 +64,18 @@
         font-size: 0.8rem;
     }
 
+/* Sticky rather than duplicated at the top of each section - Settings writes credentials,
+   connections, and test IDs in one atomic call (see UserSecretsWriter/LocalConnectionsStore), so a
+   single Save that's always reachable while scrolling matches that "one save does everything" model
+   better than a separate button per section would. */
 .settings-actions {
+    position: sticky;
+    bottom: 0;
+    max-width: 40rem;
     margin-top: 1.5rem;
+    padding: 1rem 0;
+    background: var(--color-canvas);
+    border-top: 1px solid var(--color-border-muted);
 }
 
     .settings-actions .status {

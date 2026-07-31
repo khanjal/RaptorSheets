@@ -43,3 +43,106 @@
     font-size: 0.78rem;
     text-align: right;
 }
+
+/* Connection, Tab, and Inspect/Preview data all fit on one line at typical widths instead of
+   stacking - Tab (field-grow) takes whatever room Connection's fixed field-wider width and the
+   button group don't use, and wraps to its own line first if the viewport gets too narrow. */
+.inspector-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+    .inspector-controls > label,
+    .inspector-controls > p {
+        margin-top: 0;
+    }
+
+.inspector-actions {
+    display: flex;
+    gap: 0.6rem;
+}
+
+    .inspector-actions button {
+        margin-top: 0;
+    }
+
+.saved-sheets {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border-muted);
+}
+
+    .saved-sheets summary {
+        font-size: 0.9rem;
+        font-weight: 650;
+        cursor: pointer;
+    }
+
+    .saved-sheets[open] summary {
+        margin-bottom: 0.3rem;
+    }
+
+/* Groups a result table's heading with its Hide/Show toggle - Raw data and Structure can both be
+   open at once (Preview data then Inspect, or vice versa) and each can run to hundreds of rows, so
+   collapsing one back down without losing the fetched data (no re-fetch needed to show it again) is
+   what keeps the page scrollable instead of a long wall of two big tables stacked on top of each other. */
+.result-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+    .result-heading h2 {
+        margin: 0;
+    }
+
+    .result-heading button {
+        margin-top: 0;
+    }
+
+.chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0.6rem 0 0;
+    padding: 0;
+}
+
+.chip {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.chip-label {
+    border: none;
+    border-radius: 0;
+    background: var(--color-surface);
+}
+
+.chip-remove {
+    border: none;
+    border-left: 1px solid var(--color-border);
+    border-radius: 0;
+    background: var(--color-surface-muted);
+    padding: 0.45rem 0.6rem;
+    color: var(--color-text-subtle);
+}
+
+    .chip-remove:hover:not(:disabled) {
+        color: var(--color-text);
+    }
+
+.saved-sheets-add {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}
