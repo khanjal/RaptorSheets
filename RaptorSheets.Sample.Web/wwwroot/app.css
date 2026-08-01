@@ -386,8 +386,15 @@ input[type="number"] {
    Global rather than scoped: Blazor CSS isolation can't reach across component files, and these
    components already needed near-identical rules before this was pulled out. */
 
+/* Bounded height + overflow-y so the horizontal scrollbar sits at a fixed, always-reachable spot
+   right under the visible rows - unbounded (the old behavior), a table with hundreds of rows grew as
+   tall as its content, pushing that scrollbar down past however many screens of rows there were,
+   effectively hiding it. This also gives th's position:sticky (below) a bounded scrolling ancestor to
+   stick within, instead of sticking to the whole page. */
 .grid-scroll {
     overflow-x: auto;
+    overflow-y: auto;
+    max-height: 28rem;
     border: 1px solid var(--color-border-muted);
     border-radius: var(--radius-md);
     background: var(--color-surface);
