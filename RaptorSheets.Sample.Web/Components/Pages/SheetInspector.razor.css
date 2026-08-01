@@ -60,7 +60,25 @@
    corner cell). --sheet-inspector-thead-height/--sheet-inspector-first-col-width are content-
    dependent (row-number digit count, header row height) so they're measured in the co-located
    SheetInspector.razor.js module and written onto the container as CSS custom properties - see
-   RecalculateStickyOffsetsAsync in the code-behind for when that recalculation runs. */
+   RecalculateStickyOffsetsAsync in the code-behind for when that recalculation runs.
+
+   Three z-index tiers, not ad hoc per-cell numbers - three different bugs found live (the corner
+   cell, the "A" column-letter header, and row 1's own row-index cell) all turned out to be the same
+   mistake: two sticky cells that can end up sharing the same screen pixels during scroll need
+   different z-index, and "give this one a value that happens to differ from that one" kept missing
+   some OTHER sticky sibling it could still tie with.
+     - 10: frozen on the LEFT axis only (a normal row's row-index cell, or its column A cell) - the
+       lowest tier, safe to be scrolled under by anything below.
+     - 11: frozen on the TOP axis only, applied to a WHOLE row/band at once (every thead th; every td
+       in the frozen header row via .raw-header-row) - a tier-11 cell with no left-freeze of its own
+       (e.g. thead's "C", or row 1's own "Plural" cell) can still slide horizontally into a tier-10 or
+       tier-12 cell's screen space as the page scrolls, and being equal-or-higher z-index than tier 10
+       would otherwise paint over it.
+     - 12: frozen on BOTH axes - the corner cell (thead x row-index), the "A" header (thead x column
+       A), row 1's own row-index cell (frozen header row x row-index), and row 1's own column-A cell
+       (frozen header row x column A). None of these four ever spatially overlap each other (each is a
+       different row-band x column-band combination), so one shared value is enough for all of them -
+       they only ever need to beat their own band's tier-11 siblings, never each other. */
 #raw-grid-scroll .row-index {
     position: sticky;
     left: 0;
@@ -68,27 +86,26 @@
 }
 
 #raw-grid-scroll table thead th {
-    z-index: 12;
+    z-index: 11;
 }
 
-/* The corner cell is both row- and column-frozen (the intersection), so it has to out-rank every
-   other sticky cell it can ever overlap - both regular thead th (12, above) and .row-index td (10,
-   above). Its own rule, not folded into either of those, on purpose: combining it with .row-index in
-   one comma-separated selector (an earlier version of this rule) made this cell match a MORE specific
-   selector than "table thead th", so its z-index came from the row-index rule instead (10, tied with
-   the very cells scrolling past underneath it) - ties break by paint order, and tbody paints after
-   thead, so row numbers showed through the corner while scrolling. */
 #raw-grid-scroll table thead th:first-child {
     position: sticky;
     left: 0;
-    z-index: 13;
+    z-index: 12;
 }
 
-#raw-grid-scroll.freeze-col-a table td:nth-child(2),
-#raw-grid-scroll.freeze-col-a table th:nth-child(2) {
+#raw-grid-scroll.freeze-col-a table td:nth-child(2) {
     position: sticky;
     left: var(--sheet-inspector-first-col-width, 0px);
     z-index: 10;
+    background: var(--color-surface-muted);
+}
+
+#raw-grid-scroll.freeze-col-a table th:nth-child(2) {
+    position: sticky;
+    left: var(--sheet-inspector-first-col-width, 0px);
+    z-index: 12;
     background: var(--color-surface-muted);
 }
 
@@ -97,6 +114,16 @@
     top: var(--sheet-inspector-thead-height, 0px);
     z-index: 11;
 }
+
+/* Row 1's own row-index/column-A cells are tier-12 intersections too (frozen header row x a frozen
+   column), same as the corner cell and "A" header above - without this override they'd stay at
+   whatever tier-10 value their own column rules gave them, tied with the blanket tier-11 rule right
+   above for every OTHER cell in this same row, and lose to it (later in source order wins ties). */
+#raw-grid-scroll.auto-freeze-header tbody tr.raw-header-row td.row-index,
+#raw-grid-scroll.auto-freeze-header.freeze-col-a tbody tr.raw-header-row td:nth-child(2) {
+    z-index: 12;
+}
+
 
 .freeze-controls {
     display: flex;
