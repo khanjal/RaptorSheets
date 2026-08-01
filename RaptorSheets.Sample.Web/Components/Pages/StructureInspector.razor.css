@@ -52,6 +52,7 @@
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 1rem;
+    max-width: 50rem;
 }
 
     .inspector-controls > label,

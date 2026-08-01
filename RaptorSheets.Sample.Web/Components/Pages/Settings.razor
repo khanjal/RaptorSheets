@@ -11,6 +11,8 @@
 
 <h1>Settings</h1>
 
+<div class="settings-content">
+
 <p>
     Credentials live here, in the same secrets store <a href="/">the sample app</a> connects with -
     update it here instead of the CLI. Your own spreadsheet connections live in a separate local file
@@ -269,6 +271,8 @@
     }
 
     <button class="btn-primary" @onclick="SaveAsync" disabled="@_isBusy">@(_isBusy ? "Saving..." : "Save")</button>
+</div>
+
 </div>
 
 @code {
