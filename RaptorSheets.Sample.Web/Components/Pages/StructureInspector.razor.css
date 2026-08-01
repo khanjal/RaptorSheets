@@ -44,6 +44,16 @@
     text-align: right;
 }
 
+/* Only ever applied to Raw data's row 1 when _structure is not null (see the markup) - reflects that
+   Structure already read this sheet as a normal header-row-1 layout, it isn't a fresh guess made here.
+   A class selector beats app.css's global :where()-based zebra rule (near-zero specificity), so this
+   wins even on an even/odd row either way. */
+.raw-header-row td {
+    background: var(--color-accent-muted);
+    color: var(--color-text);
+    font-weight: 650;
+}
+
 /* Connection, Tab, and Inspect/Bulk generate all fit on one line at typical widths instead of
    stacking - Tab (field-grow) takes whatever room Connection's fixed field-wider width and the
    button group don't use, and wraps to its own line first if the viewport gets too narrow. */
@@ -52,7 +62,7 @@
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 1rem;
-    max-width: 70rem;
+    max-width: 55rem;
 }
 
     .inspector-controls > label,
@@ -60,15 +70,13 @@
         margin-top: 0;
     }
 
-    /* Roughly doubles the Tab field's old ~14-17rem effective width without letting it run away on a
-       wide viewport - a min-width alone (an earlier version of this rule) left flex:1 free to stretch
-       all the way to whatever .inspector-controls' own max-width left over, which is what made the
-       field balloon out on a wide screen instead of just "double." Overriding app.css's global
-       .field-grow here is safe and doesn't leak: Blazor scopes every rule in this file to
-       StructureInspector's own markup. */
+    /* Bounded both ways so flex:1 can't stretch the field out on a wide viewport (a min-width alone,
+       an earlier version of this rule, did exactly that). Overriding app.css's global .field-grow here
+       is safe and doesn't leak: Blazor scopes every rule in this file to StructureInspector's own
+       markup. */
     .inspector-controls .field-grow {
-        min-width: 22rem;
-        max-width: 32rem;
+        min-width: 11rem;
+        max-width: 16rem;
     }
 
 .inspector-actions {
