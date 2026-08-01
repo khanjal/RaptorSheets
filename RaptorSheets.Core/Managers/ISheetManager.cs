@@ -75,4 +75,9 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     /// sheet doesn't pull the whole thing; works for any live sheet name, registered or not.
     /// </summary>
     Task<List<List<string?>>> GetLiveSheetRawValues(string sheet, int maxRows = 200, CancellationToken cancellationToken = default);
+
+    /// <inheritdoc cref="GetLiveSheetRawValues(string, int, CancellationToken)"/>
+    /// <summary>Same as the single-sheet overload, but for multiple live sheets in one batched call -
+    /// keyed by sheet name (case-insensitive).</summary>
+    Task<Dictionary<string, List<List<string?>>>> GetLiveSheetsRawValues(List<string> sheets, int maxRows = 200, CancellationToken cancellationToken = default);
 }

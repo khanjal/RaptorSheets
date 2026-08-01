@@ -44,7 +44,7 @@
     text-align: right;
 }
 
-/* Connection, Tab, and Inspect/Preview data all fit on one line at typical widths instead of
+/* Connection, Tab, and Inspect/Bulk generate all fit on one line at typical widths instead of
    stacking - Tab (field-grow) takes whatever room Connection's fixed field-wider width and the
    button group don't use, and wraps to its own line first if the viewport gets too narrow. */
 .inspector-controls {
@@ -52,12 +52,23 @@
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 1rem;
-    max-width: 50rem;
+    max-width: 70rem;
 }
 
     .inspector-controls > label,
     .inspector-controls > p {
         margin-top: 0;
+    }
+
+    /* Roughly doubles the Tab field's old ~14-17rem effective width without letting it run away on a
+       wide viewport - a min-width alone (an earlier version of this rule) left flex:1 free to stretch
+       all the way to whatever .inspector-controls' own max-width left over, which is what made the
+       field balloon out on a wide screen instead of just "double." Overriding app.css's global
+       .field-grow here is safe and doesn't leak: Blazor scopes every rule in this file to
+       StructureInspector's own markup. */
+    .inspector-controls .field-grow {
+        min-width: 22rem;
+        max-width: 32rem;
     }
 
 .inspector-actions {
@@ -67,6 +78,16 @@
 
     .inspector-actions button {
         margin-top: 0;
+    }
+
+.field-with-action {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+    .field-with-action input {
+        flex: 1;
     }
 
 .saved-sheets {
@@ -85,23 +106,36 @@
         margin-bottom: 0.3rem;
     }
 
-/* Groups a result table's heading with its Hide/Show toggle - Raw data and Structure can both be
-   open at once (Preview data then Inspect, or vice versa) and each can run to hundreds of rows, so
-   collapsing one back down without losing the fetched data (no re-fetch needed to show it again) is
-   what keeps the page scrollable instead of a long wall of two big tables stacked on top of each other. */
-.result-heading {
+/* Structure and Raw data are fetched together by one Inspect click but shown one at a time - a tab
+   strip instead of two independently-collapsible sections, since each can run to hundreds of rows and
+   showing both stacked at once made the page a long wall of tables. Only a tab whose data actually
+   came back renders (see the markup's null checks), so a failed structure read doesn't leave a dead
+   tab pointing at nothing. */
+.result-tabs {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    gap: 0.4rem;
     margin-top: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
 }
 
-    .result-heading h2 {
-        margin: 0;
+.result-tab {
+    margin-top: 0;
+    border: none;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background: none;
+    padding: 0.5rem 0.9rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+    .result-tab:hover:not(.active) {
+        background: var(--color-surface-muted);
     }
 
-    .result-heading button {
-        margin-top: 0;
+    .result-tab.active {
+        color: var(--color-accent);
+        background: var(--color-surface-muted);
+        box-shadow: inset 0 -2px 0 var(--color-accent);
     }
 
 .chip-list {
@@ -139,6 +173,63 @@
     .chip-remove:hover:not(:disabled) {
         color: var(--color-text);
     }
+
+/* Two-stage bulk generation: OpenBulkPicker just lists _tabNames back (all pre-checked, no fetch),
+   so the batched structure/sample reads only ever run for whatever's still checked when Generate is
+   clicked. */
+.bulk-picker {
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-sunken);
+}
+
+.bulk-picker-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+    .bulk-picker-header button {
+        margin-top: 0;
+    }
+
+/* No max-height/overflow here on purpose - the list grows with its content (the page scrolls, not a
+   nested region) rather than trapping a long tab list behind its own inner scrollbar. */
+.bulk-picker-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: 0.3rem 1rem;
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+}
+
+/* Overrides the global label's flex-column (built for a field's own label-above-input shape) - this
+   one pairs a checkbox with its tab name side by side instead. */
+.checkbox-label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0;
+    font-size: 0.85rem;
+    color: var(--color-text);
+}
+
+    .checkbox-label input[type="checkbox"] {
+        align-self: auto;
+    }
+
+/* .inspector-actions button{margin-top:0} (above) zeroes the button row's own top margin everywhere
+   else on this page, but here it left Generate/Cancel sitting flush against the checkbox list right
+   above it - this restores breathing room for just this instance. */
+.bulk-picker .inspector-actions {
+    margin-top: 0.85rem;
+}
 
 .saved-sheets-add {
     display: flex;

@@ -13,7 +13,7 @@ namespace RaptorSheets.Sample.Web.Services;
 ///
 /// Built on Gig's compiled manager type purely as an invisible carrier - never surfaced past
 /// IConnectedSheet. This is provably safe, not a hack: every method IConnectedSheet exposes
-/// (GetSpreadsheetTitle, GetAllSheetTabNames, GetLiveSheetStructure, GetLiveSheetRawValues) is
+/// (GetSpreadsheetTitle, GetAllSheetTabNames, GetLiveSheetStructure(s), GetLiveSheet(s)RawValues) is
 /// implemented on RaptorSheets.Core.Managers.SheetManagerBase without ever touching that domain's
 /// _registry/_canonicalSheetNames - confirmed by reading each implementation directly. Any
 /// already-registered domain's manager type would work identically; Gig is picked only because it's
@@ -83,7 +83,13 @@ public sealed class GenericSheetOperations(
 
         public Task<SheetModel?> GetLiveSheetStructureAsync(string sheetName) => manager.GetLiveSheetStructure(sheetName);
 
+        public Task<Dictionary<string, SheetModel>> GetLiveSheetStructuresAsync(List<string> sheetNames) =>
+            manager.GetLiveSheetStructures(sheetNames);
+
         public Task<List<List<string?>>> GetLiveSheetRawValuesAsync(string sheetName, int maxRows = 200) =>
             manager.GetLiveSheetRawValues(sheetName, maxRows);
+
+        public Task<Dictionary<string, List<List<string?>>>> GetLiveSheetsRawValuesAsync(List<string> sheetNames, int maxRows = 200) =>
+            manager.GetLiveSheetsRawValues(sheetNames, maxRows);
     }
 }

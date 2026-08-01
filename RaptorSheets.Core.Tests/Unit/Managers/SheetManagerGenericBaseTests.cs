@@ -688,4 +688,83 @@ public class SheetManagerGenericBaseTests
         Assert.Contains(request.Requests, req => req.AddSheet?.Properties.Title == BaseSheetName);
         Assert.Contains(request.Requests, req => req.UpdateCells?.Range.SheetId == 42);
     }
+
+    [Fact]
+    public async Task GetLiveSheetsRawValues_MapsEachRangeBackToItsOwnSheetName()
+    {
+        // Google doesn't guarantee response order matches the request, and each returned range only
+        // echoes back the DataFilter that produced it (sheet name + the "!A1:ZZ{maxRows}" suffix this
+        // call appends) - this response is deliberately built out of request order to prove the lookup
+        // doesn't just assume ValueRanges[i] belongs to sheets[i].
+        var response = new BatchGetValuesByDataFilterResponse
+        {
+            ValueRanges =
+            [
+                new MatchedValueRange
+                {
+                    DataFilters = [new DataFilter { A1Range = "Another!A1:ZZ5" }],
+                    ValueRange = new ValueRange { Values = new List<IList<object>> { new List<object> { "x" } } }
+                },
+                new MatchedValueRange
+                {
+                    DataFilters = [new DataFilter { A1Range = $"{SheetName}!A1:ZZ5" }],
+                    ValueRange = new ValueRange { Values = new List<IList<object>> { new List<object> { "Header" }, new List<object> { "Row1" } } }
+                }
+            ]
+        };
+
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetBatchData(It.IsAny<List<string>>(), "A1:ZZ5", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        var manager = BuildManager(mockService.Object);
+
+        var results = await manager.GetLiveSheetsRawValues([SheetName, "Another"], maxRows: 5);
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal(new List<string?> { "Header" }, results[SheetName][0]);
+        Assert.Equal(new List<string?> { "Row1" }, results[SheetName][1]);
+        Assert.Equal(new List<string?> { "x" }, results["Another"][0]);
+    }
+
+    [Fact]
+    public async Task GetLiveSheetsRawValues_WithEmptySheetList_ReturnsEmptyWithoutCallingService()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var manager = BuildManager(mockService.Object);
+
+        var results = await manager.GetLiveSheetsRawValues([]);
+
+        Assert.Empty(results);
+        mockService.Verify(s => s.GetBatchData(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetLiveSheetRawValues_SingleSheet_StillReturnsItsOwnValues()
+    {
+        // Regression check for the GetLiveSheetsRawValues refactor: the single-sheet overload used to
+        // blindly take ValueRanges.FirstOrDefault() (safe only because it never requested more than one
+        // sheet); it now goes through the same by-name dictionary lookup the bulk method uses.
+        var response = new BatchGetValuesByDataFilterResponse
+        {
+            ValueRanges =
+            [
+                new MatchedValueRange
+                {
+                    DataFilters = [new DataFilter { A1Range = $"{SheetName}!A1:ZZ200" }],
+                    ValueRange = new ValueRange { Values = new List<IList<object>> { new List<object> { "Only" } } }
+                }
+            ]
+        };
+
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetBatchData(It.IsAny<List<string>>(), "A1:ZZ200", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        var manager = BuildManager(mockService.Object);
+
+        var values = await manager.GetLiveSheetRawValues(SheetName);
+
+        Assert.Equal(new List<string?> { "Only" }, Assert.Single(values));
+    }
 }

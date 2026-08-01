@@ -1256,16 +1256,55 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     /// </summary>
     public async Task<List<List<string?>>> GetLiveSheetRawValues(string sheet, int maxRows = 200, CancellationToken cancellationToken = default)
     {
-        var range = $"A1:ZZ{Math.Max(1, maxRows)}";
-        var response = await _googleSheetService.GetBatchData([sheet], range, cancellationToken);
-        var values = response?.ValueRanges?.FirstOrDefault()?.ValueRange?.Values;
+        var results = await GetLiveSheetsRawValues([sheet], maxRows, cancellationToken);
+        return results.TryGetValue(sheet, out var values) ? values : [];
+    }
 
-        if (values == null)
+    /// <summary>
+    /// Reads raw, position-only values for multiple live sheets in one batched call, keyed by sheet
+    /// name (case-insensitive) - same "one API call regardless of sheet count" shape as
+    /// <see cref="GetLiveSheetStructures"/>, via <see cref="IGoogleSheetService.GetBatchData(List{string}, string?, CancellationToken)"/>'s
+    /// existing per-sheet DataFilter support. Each returned range's sheet name is recovered by
+    /// stripping the exact <c>!{range}</c> suffix this call appended to every request filter - safe
+    /// because Google echoes each DataFilter back verbatim in MatchedValueRange, so it's guaranteed to
+    /// match byte-for-byte (unlike parsing a general A1 range, which would need to handle
+    /// single-quoted sheet names containing '!' or spaces).
+    /// </summary>
+    public async Task<Dictionary<string, List<List<string?>>>> GetLiveSheetsRawValues(List<string> sheets, int maxRows = 200, CancellationToken cancellationToken = default)
+    {
+        var result = new Dictionary<string, List<List<string?>>>(StringComparer.OrdinalIgnoreCase);
+
+        if (sheets == null || sheets.Count == 0)
         {
-            return [];
+            return result;
         }
 
-        return values.Select(row => row.Select(cell => cell?.ToString()).ToList()).ToList();
+        var range = $"A1:ZZ{Math.Max(1, maxRows)}";
+        var suffix = $"!{range}";
+        var response = await _googleSheetService.GetBatchData(sheets, range, cancellationToken);
+
+        if (response?.ValueRanges == null)
+        {
+            return result;
+        }
+
+        foreach (var matchedValue in response.ValueRanges)
+        {
+            var a1Range = matchedValue.DataFilters?.FirstOrDefault()?.A1Range;
+            if (a1Range == null || !a1Range.EndsWith(suffix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var sheetName = a1Range[..^suffix.Length];
+            var values = matchedValue.ValueRange?.Values;
+
+            result[sheetName] = values == null
+                ? []
+                : values.Select(row => row.Select(cell => cell?.ToString()).ToList()).ToList();
+        }
+
+        return result;
     }
 
     #endregion

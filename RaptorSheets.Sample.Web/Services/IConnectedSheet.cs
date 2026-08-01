@@ -24,11 +24,22 @@ public interface IConnectedSheet
     /// it's the one that can inspect a hand-built tab RaptorSheets has never heard of.</summary>
     Task<SheetModel?> GetLiveSheetStructureAsync(string sheetName);
 
+    /// <summary>Same as <see cref="GetLiveSheetStructureAsync"/>, but for multiple tabs in one batched
+    /// API call - keyed by sheet name (case-insensitive). What a bulk "generate classes for every tab"
+    /// action uses instead of one round trip per tab.</summary>
+    Task<Dictionary<string, SheetModel>> GetLiveSheetStructuresAsync(List<string> sheetNames);
+
     /// <summary>Raw cell values by row/column position, with no assumption that row 0 is a header or
     /// that the sheet is a simple one-row-per-record table - for a sheet that isn't (a dashboard with
     /// scattered fields, multiple mini-tables, a transposed matrix, ...). Ragged rows, bounded to
     /// maxRows.</summary>
     Task<List<List<string?>>> GetLiveSheetRawValuesAsync(string sheetName, int maxRows = 200);
+
+    /// <summary>Same as <see cref="GetLiveSheetRawValuesAsync"/>, but for multiple tabs in one batched
+    /// API call - keyed by sheet name (case-insensitive). Used to sample a few real rows per tab
+    /// alongside a bulk structure read, so class generation can infer a column's type (e.g. numeric)
+    /// even on a tab that was never explicitly formatted in Google Sheets.</summary>
+    Task<Dictionary<string, List<List<string?>>>> GetLiveSheetsRawValuesAsync(List<string> sheetNames, int maxRows = 200);
 }
 
 /// <summary>
