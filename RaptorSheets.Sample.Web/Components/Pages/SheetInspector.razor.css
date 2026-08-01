@@ -54,6 +54,58 @@
     font-weight: 650;
 }
 
+/* Row/column freezing for the Raw data grid specifically (#raw-grid-scroll id) - never the Structure
+   table, which also lives on this page and would otherwise match the same bare
+   "table thead th:first-child" selector (its first header is a real "Name" column, not a blank
+   corner cell). --sheet-inspector-thead-height/--sheet-inspector-first-col-width are content-
+   dependent (row-number digit count, header row height) so they're measured in the co-located
+   SheetInspector.razor.js module and written onto the container as CSS custom properties - see
+   RecalculateStickyOffsetsAsync in the code-behind for when that recalculation runs. */
+#raw-grid-scroll .row-index {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+#raw-grid-scroll table thead th {
+    z-index: 12;
+}
+
+/* The corner cell is both row- and column-frozen (the intersection), so it has to out-rank every
+   other sticky cell it can ever overlap - both regular thead th (12, above) and .row-index td (10,
+   above). Its own rule, not folded into either of those, on purpose: combining it with .row-index in
+   one comma-separated selector (an earlier version of this rule) made this cell match a MORE specific
+   selector than "table thead th", so its z-index came from the row-index rule instead (10, tied with
+   the very cells scrolling past underneath it) - ties break by paint order, and tbody paints after
+   thead, so row numbers showed through the corner while scrolling. */
+#raw-grid-scroll table thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 13;
+}
+
+#raw-grid-scroll.freeze-col-a table td:nth-child(2),
+#raw-grid-scroll.freeze-col-a table th:nth-child(2) {
+    position: sticky;
+    left: var(--sheet-inspector-first-col-width, 0px);
+    z-index: 10;
+    background: var(--color-surface-muted);
+}
+
+#raw-grid-scroll.auto-freeze-header tbody tr.raw-header-row td {
+    position: sticky;
+    top: var(--sheet-inspector-thead-height, 0px);
+    z-index: 11;
+}
+
+.freeze-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
 /* Connection, Tab, and Inspect/Bulk generate all fit on one line at typical widths instead of
    stacking - Tab (field-grow) takes whatever room Connection's fixed field-wider width and the
    button group don't use, and wraps to its own line first if the viewport gets too narrow. */

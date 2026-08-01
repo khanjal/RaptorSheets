@@ -1,4 +1,5 @@
 @page "/sheet-inspector"
+@implements IAsyncDisposable
 @using System.Text
 @using RaptorSheets.Core.Helpers
 @using RaptorSheets.Core.Models.Google
@@ -200,7 +201,22 @@ else
             }
             else
             {
-                <div class="grid-scroll">
+                <div class="freeze-controls">
+                    <label class="checkbox-label">
+                        <input type="checkbox" @bind="_freezeFirstColumn" />
+                        <span>Freeze column A</span>
+                    </label>
+                    @if (_structure is not null)
+                    {
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked disabled />
+                            <span>Freeze header row (auto)</span>
+                        </label>
+                    }
+                </div>
+
+                <div class="@($"grid-scroll{(_freezeFirstColumn ? " freeze-col-a" : "")}{(_structure is not null ? " auto-freeze-header" : "")}")"
+                     id="raw-grid-scroll" @ref="_rawGridScrollRef">
                     <table>
                         <thead>
                             <tr>
@@ -373,7 +389,58 @@ else
     private string? _bulkCopyStatus;
     private string? _bulkContainerBaseName;
 
+    // Freeze-column-A toggle for the Raw data grid (see #raw-grid-scroll's freeze-col-a class in the
+    // markup and the matching rules in SheetInspector.razor.css). The header row freezes automatically
+    // whenever _structure is not null - see the auto-freeze-header class - so there's no equivalent
+    // toggle for it.
+    private bool _freezeFirstColumn;
+    private ElementReference _rawGridScrollRef;
+    private IJSObjectReference? _stickyModule;
+
     private SpreadsheetConnection? SelectedConnection => _connections?.FirstOrDefault(c => c.Id == _selectedConnectionId);
+
+    // Recalculates on every render where the Raw data grid is actually visible, rather than trying to
+    // track every state change that could affect it (freeze toggle, switching back to this result tab
+    // after Structure, a fresh Inspect) with individual "please recalculate" flags - a dirty-flag approach
+    // was tried first and missed the "switch to the Raw data tab" case specifically, since #raw-grid-scroll
+    // doesn't exist in the DOM yet when Inspect completes (Structure is the default active tab), so the
+    // offsets stayed at their 0px fallback until something else happened to flip a flag. Re-measuring here
+    // is cheap (two offsetHeight/offsetWidth reads) and only runs while this grid is on screen.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_activeResultTab != ResultTab.RawData || _rawRows is not { Count: > 0 })
+        {
+            return;
+        }
+
+        try
+        {
+            _stickyModule ??= await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./Components/Pages/SheetInspector.razor.js");
+            await _stickyModule.InvokeVoidAsync("updateStickyOffsets", _rawGridScrollRef);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Expected during a Blazor Server circuit teardown (e.g. navigating away mid-call) - not a
+            // real failure, so not worth surfacing.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_stickyModule is not null)
+        {
+            try
+            {
+                await _stickyModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Same expected teardown race as above - the circuit is already gone, so there's
+                // nothing left to dispose on the JS side.
+            }
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
