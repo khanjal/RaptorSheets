@@ -95,11 +95,22 @@
     z-index: 12;
 }
 
+/* A visible edge for wherever the frozen region currently ends, since "these columns don't move" isn't
+   otherwise obvious until you actually try scrolling. Right border (owned by the frozen side), not a
+   border on the first scrolling column - that boundary moves depending on freeze-col-a (row-index
+   alone by default, column A's own right edge once it's frozen too), and a right-border only ever
+   needs reassigning to a different cell, not kept in sync on both sides of a moving seam. */
+#raw-grid-scroll:not(.freeze-col-a) .row-index,
+#raw-grid-scroll:not(.freeze-col-a) table thead th:first-child {
+    border-right: 2px solid var(--color-border);
+}
+
 #raw-grid-scroll.freeze-col-a table td:nth-child(2) {
     position: sticky;
     left: var(--sheet-inspector-first-col-width, 0px);
     z-index: 10;
     background: var(--color-surface-muted);
+    border-right: 2px solid var(--color-border);
 }
 
 #raw-grid-scroll.freeze-col-a table th:nth-child(2) {
@@ -107,6 +118,7 @@
     left: var(--sheet-inspector-first-col-width, 0px);
     z-index: 12;
     background: var(--color-surface-muted);
+    border-right: 2px solid var(--color-border);
 }
 
 #raw-grid-scroll.auto-freeze-header tbody tr.raw-header-row td {
