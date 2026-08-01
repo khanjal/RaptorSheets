@@ -21,10 +21,10 @@ public sealed record SpreadsheetConnection(string Id, string Type, string Label,
     public bool IsTestFallback => Id.StartsWith("test:", StringComparison.Ordinal);
 
     /// <summary>
-    /// Extra tab names Structure Inspector offers for this connection beyond whatever's actually
+    /// Extra tab names Sheet Inspector offers for this connection beyond whatever's actually
     /// live on the spreadsheet right now - either a hand-typed custom name, or one borrowed from
     /// another domain's known sheet names (e.g. trying "Trips" on a Generic connection before it
-    /// exists there). Purely a Structure Inspector convenience list - never consulted by typed CRUD,
+    /// exists there). Purely a Sheet Inspector convenience list - never consulted by typed CRUD,
     /// which only ever looks at ITypedConnectedSheet's fixed Sheets container. A settable property
     /// rather than a positional constructor parameter so every existing call site that builds a
     /// SpreadsheetConnection positionally (throwaway connections, the test-fallback synthesis in

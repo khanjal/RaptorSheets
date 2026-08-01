@@ -9,7 +9,7 @@ namespace RaptorSheets.Sample.Web.Services;
 /// domain metadata (SheetsType, ValidationSheetMap, ...) because none of it means anything for an
 /// arbitrary sheet, which is exactly what keeps a generic connection structurally incapable of the
 /// typed CRUD ITypedConnectedSheet exposes - it only ever hands back the plain IConnectedSheet
-/// surface (structure/raw-data reads), which is all Structure Inspector needs.
+/// surface (structure/raw-data reads), which is all Sheet Inspector needs.
 ///
 /// Built on Gig's compiled manager type purely as an invisible carrier - never surfaced past
 /// IConnectedSheet. This is provably safe, not a hack: every method IConnectedSheet exposes

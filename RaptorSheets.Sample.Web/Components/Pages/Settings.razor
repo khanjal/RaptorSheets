@@ -134,7 +134,7 @@
         Your own spreadsheets - add as many as you like, including more than one of the same type
         (useful for comparing spreadsheets, or keeping a backup alongside your main one). A "Generic"
         connection has no compiled schema and only works in the
-        <a href="/structure-inspector">Structure Inspector</a> - for a sheet that isn't one of
+        <a href="/sheet-inspector">Sheet Inspector</a> - for a sheet that isn't one of
         RaptorSheets' known domains. Kept separate from RaptorSheets' integration test suite, which
         reads the dedicated spreadsheets configured below and regularly deletes/regenerates them. Each
         connection's label is its spreadsheet's own title in Google Sheets - nothing to type here.
@@ -310,9 +310,9 @@
         public string? Title { get; set; }
         public bool TitleLoading { get; set; }
 
-        // Not editable here - Structure Inspector owns Add/Remove for this list. Carried through
+        // Not editable here - Sheet Inspector owns Add/Remove for this list. Carried through
         // load/save purely so saving an unrelated field (Label, SpreadsheetId, ...) here doesn't
-        // silently wipe it out from under Structure Inspector.
+        // silently wipe it out from under Sheet Inspector.
         public IReadOnlyList<string> CustomSheetNames { get; set; } = [];
 
         // Populated by CheckSheetsAsync - ExistingDataRows > 0 is what actually gates the

@@ -72,7 +72,7 @@
 
     /* Bounded both ways so flex:1 can't stretch the field out on a wide viewport (a min-width alone,
        an earlier version of this rule, did exactly that). Overriding app.css's global .field-grow here
-       is safe and doesn't leak: Blazor scopes every rule in this file to StructureInspector's own
+       is safe and doesn't leak: Blazor scopes every rule in this file to SheetInspector's own
        markup. */
     .inspector-controls .field-grow {
         min-width: 11rem;

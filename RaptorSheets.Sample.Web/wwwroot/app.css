@@ -381,7 +381,7 @@ input[type="number"] {
     color: var(--color-text-muted);
 }
 
-/* Tables - shared by every data-table component (EntityGrid, Structure Inspector, and any future
+/* Tables - shared by every data-table component (EntityGrid, Sheet Inspector, and any future
    one) so header/zebra styling stays consistent site-wide without each .razor.css redeclaring it.
    Global rather than scoped: Blazor CSS isolation can't reach across component files, and these
    components already needed near-identical rules before this was pulled out. */

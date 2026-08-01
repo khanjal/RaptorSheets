@@ -99,7 +99,7 @@ integration suite points at, which it deletes and regenerates on every run (see 
 `.gitignore` entry either way, since it was never inside the repo. Fully managed from the Settings
 page's "Connections" section. Each
 connection has a type (`gig`/`stock`/`job`/`home`, or `generic` for a spreadsheet with no compiled
-`[Column]` schema - usable only in the Structure Inspector), a label, and a spreadsheet ID. Unlike the
+`[Column]` schema - usable only in the Sheet Inspector), a label, and a spreadsheet ID. Unlike the
 old single `spreadsheets:live:{domain}` key, **you can add more than one connection of the same
 type** - useful for comparing spreadsheets or keeping a backup alongside your main one; NavMenu nests
 by connection label whenever a domain has more than one.
