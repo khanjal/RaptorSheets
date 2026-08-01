@@ -105,12 +105,23 @@
     border-right: 2px solid var(--color-border);
 }
 
+/* Zebra-striped like the rest of its row, not a flat color - a frozen cell still needs an opaque
+   background (otherwise scrolled content bleeds through underneath it), but it doesn't need to be the
+   SAME color regardless of row; matching the row's own stripe keeps column A - usually the column
+   actually being used to identify which row is which - readable at a glance across the frozen seam,
+   the same way a spreadsheet's row banding survives freezing panes. Explicit colors, not "inherit
+   background" - a sticky cell needs its own opaque value, since letting the row's own background
+   show through it defeats the point (that's exactly the bleed-through this exists to prevent). */
 #raw-grid-scroll.freeze-col-a table td:nth-child(2) {
     position: sticky;
     left: var(--sheet-inspector-first-col-width, 0px);
     z-index: 10;
-    background: var(--color-surface-muted);
+    background: var(--color-surface);
     border-right: 2px solid var(--color-border);
+}
+
+#raw-grid-scroll.freeze-col-a table tbody tr:nth-child(even) td:nth-child(2) {
+    background: var(--color-surface-sunken);
 }
 
 #raw-grid-scroll.freeze-col-a table th:nth-child(2) {
