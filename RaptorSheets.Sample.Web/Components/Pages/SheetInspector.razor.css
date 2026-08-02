@@ -124,6 +124,16 @@
     background: var(--color-surface-sunken);
 }
 
+/* Row 1's own column-A cell is the one place zebra shouldn't win: .raw-header-row's accent-muted
+   background (above) is what marks a whole row as "this is the header," but the zebra rule just above
+   has an ID in its selector (#raw-grid-scroll...) and .raw-header-row td doesn't, so without this
+   override zebra's plain surface color always beat the accent one for this single cell - the header
+   row's own name column looked like an ordinary data row instead of dropping out of the frozen area's
+   zebra pattern the same way it already does everywhere else. */
+#raw-grid-scroll.freeze-col-a table tbody tr.raw-header-row td:nth-child(2) {
+    background: var(--color-accent-muted);
+}
+
 #raw-grid-scroll.freeze-col-a table th:nth-child(2) {
     position: sticky;
     left: var(--sheet-inspector-first-col-width, 0px);
