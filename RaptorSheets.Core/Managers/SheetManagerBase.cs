@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
@@ -635,6 +636,64 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     }
 
     /// <summary>
+    /// Same orchestration as <see cref="GetSheets(List{string}, CancellationToken)"/> when
+    /// <paramref name="includeStructure"/> is false (delegates to it directly, so that path is
+    /// unaffected). When true, switches from the values-only batchGet call to a single full
+    /// grid-data Spreadsheet fetch that serves both row data and structure - not a second call on
+    /// top of the values-only path.
+    /// </summary>
+    public async Task<TEntity> GetSheets(List<string> sheetNames, bool includeStructure, CancellationToken cancellationToken = default)
+    {
+        if (!includeStructure)
+        {
+            return await GetSheets(sheetNames, cancellationToken);
+        }
+
+        var data = new TEntity();
+        var messages = new List<MessageEntity>();
+        var stringSheetList = string.Join(", ", sheetNames);
+
+        var ranges = sheetNames.Select(s => $"{s}!{GoogleConfig.Range}").ToList();
+        var result = await _googleSheetService.GetSheetInfoResult(ranges, cancellationToken);
+        var spreadsheetInfo = result.Value;
+
+        var failureSuggestsMissingSheet = result.Failure is null or
+        {
+            Reason: GoogleApiFailureReason.NotFound or GoogleApiFailureReason.Unknown
+        };
+
+        if (spreadsheetInfo == null && failureSuggestsMissingSheet)
+        {
+            var (restoreResult, _) = await TryRestoreMissingSheetsAsync(messages, cancellationToken);
+
+            if (restoreResult != null)
+            {
+                return restoreResult;
+            }
+        }
+
+        if (spreadsheetInfo == null)
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage(
+                BuildUnavailableMessage(stringSheetList, result.Failure), MessageType.GET_SHEETS));
+            data.Messages.AddRange(messages);
+            return data;
+        }
+
+        messages.Add(MessageHelpers.CreateInfoMessage($"Retrieved sheet(s): {stringSheetList}", MessageType.GET_SHEETS));
+        messages.AddRange(_registry.CheckUnknownSheets(spreadsheetInfo));
+
+        data = _registry.MapData(spreadsheetInfo);
+        data.Structures = SheetStructureHelper.ParseSheetStructures(spreadsheetInfo, sheetNames);
+
+        await AutoHealMissingColumnsAsync(spreadsheetInfo, messages, cancellationToken);
+
+        data.Messages.AddRange(messages);
+
+        return data;
+    }
+
+    /// <summary>
     /// Turns a classified failure into a message that tells the caller what to actually do, instead
     /// of the same "unable to retrieve" sentence for every cause. The distinction that matters most:
     /// <see cref="GoogleApiFailureReason.QuotaExceeded"/> must read as transient, never as "the data
@@ -734,6 +793,12 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         return await GetSheets(new List<string>(_canonicalSheetNames), cancellationToken);
     }
 
+    /// <inheritdoc cref="GetSheets(List{string}, bool, CancellationToken)"/>
+    public async Task<TEntity> GetAllSheets(bool includeStructure, CancellationToken cancellationToken = default)
+    {
+        return await GetSheets(new List<string>(_canonicalSheetNames), includeStructure, cancellationToken);
+    }
+
     /// <summary>
     /// Fetches a single named sheet, or an error entity if the name isn't one of this domain's
     /// canonical sheets. Every domain manager previously re-implemented this identically.
@@ -748,6 +813,19 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         }
 
         return await GetSheets([sheet], cancellationToken);
+    }
+
+    /// <inheritdoc cref="GetSheets(List{string}, bool, CancellationToken)"/>
+    public async Task<TEntity> GetSheet(string sheet, bool includeStructure, CancellationToken cancellationToken = default)
+    {
+        var sheetExists = _canonicalSheetNames.Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
+
+        if (!sheetExists)
+        {
+            return new TEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
+        }
+
+        return await GetSheets([sheet], includeStructure, cancellationToken);
     }
 
     // Google.Apis.Sheets.v4 types are Core's own implementation detail, not part of the public
@@ -910,9 +988,42 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
             }
         }
 
-        // Fold header-formula refresh requests for any sheet that cross-references one of the
-        // sheets just healed into the SAME column-insertion batch, so both land in one atomic API
-        // call. Reuses the spreadsheetInfo already passed in rather than fetching it again.
+        await InsertMissingColumnsWithRefreshAsync(missingColumns, spreadsheetInfo, messages, cancellationToken);
+    }
+
+    /// <summary>
+    /// Same as the overload above, for a caller that already has a full grid-data
+    /// <see cref="Spreadsheet"/> (structure-aware <see cref="GetSheets(List{string}, bool, CancellationToken)"/>)
+    /// rather than a values-only batchGet response - <see cref="SheetRegistry{TEntity}.DetectMissingColumns(Spreadsheet?)"/>
+    /// already resolves each column's SheetId directly from the spreadsheet's own metadata, so no
+    /// separate fill-in pass is needed here.
+    /// </summary>
+    protected async Task AutoHealMissingColumnsAsync(
+        Spreadsheet spreadsheetInfo,
+        List<MessageEntity> messages,
+        CancellationToken cancellationToken = default)
+    {
+        var missingColumns = _registry.DetectMissingColumns(spreadsheetInfo);
+
+        if (missingColumns.Count == 0)
+        {
+            return;
+        }
+
+        await InsertMissingColumnsWithRefreshAsync(missingColumns, spreadsheetInfo, messages, cancellationToken);
+    }
+
+    /// <summary>
+    /// Fold header-formula refresh requests for any sheet that cross-references one of the sheets
+    /// just healed into the SAME column-insertion batch, so both land in one atomic API call. Reuses
+    /// whatever spreadsheetInfo the caller already has rather than fetching it again.
+    /// </summary>
+    private async Task InsertMissingColumnsWithRefreshAsync(
+        Dictionary<string, List<ColumnInsertionInfo>> missingColumns,
+        Spreadsheet? spreadsheetInfo,
+        List<MessageEntity> messages,
+        CancellationToken cancellationToken)
+    {
         var dependentRefreshRequests = await BuildDependentRefreshRequestsAsync(missingColumns.Keys, spreadsheetInfo, cancellationToken);
         var insertResult = await ColumnInsertionHelper.InsertMissingColumnsAsync<TEntity>(_googleSheetService, missingColumns, dependentRefreshRequests, cancellationToken);
         messages.AddRange(insertResult.Messages);
@@ -1094,6 +1205,106 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         }
 
         return sheetModels;
+    }
+
+    /// <summary>
+    /// Reads a single sheet's structure back from the live spreadsheet, or null if the sheet doesn't
+    /// exist. Unlike <see cref="GetSheetLayout"/>, this works for any live sheet name - it never
+    /// consults the registry.
+    /// </summary>
+    public async Task<Models.Google.SheetModel?> GetLiveSheetStructure(string sheet, CancellationToken cancellationToken = default)
+    {
+        var structures = await GetLiveSheetStructures([sheet], cancellationToken);
+        return structures.TryGetValue(sheet, out var structure) ? structure : null;
+    }
+
+    /// <summary>
+    /// Reads structure for multiple live sheets in one call, keyed by sheet name (case-insensitive).
+    /// Only the header row plus the first data row are fetched
+    /// (<see cref="GoogleConfig.HeaderStructureRange"/>) - <see cref="SheetStructureHelper"/> needs
+    /// both (name/note/formula come from the header row, format/validation from the first data row -
+    /// see its type-level doc comment for why) - still far cheaper than the full grid-data fetch
+    /// <see cref="GetSheets(List{string}, bool, CancellationToken)"/> uses when structure is bundled
+    /// with row data.
+    /// </summary>
+    public async Task<Dictionary<string, Models.Google.SheetModel>> GetLiveSheetStructures(List<string> sheets, CancellationToken cancellationToken = default)
+    {
+        var result = new Dictionary<string, Models.Google.SheetModel>(StringComparer.OrdinalIgnoreCase);
+
+        if (sheets == null || sheets.Count == 0)
+        {
+            return result;
+        }
+
+        var ranges = sheets.Select(s => $"{s}!{GoogleConfig.HeaderStructureRange}").ToList();
+        var spreadsheetInfo = await _googleSheetService.GetSheetInfo(ranges, cancellationToken);
+
+        return spreadsheetInfo?.Sheets == null ? result : SheetStructureHelper.ParseSheetStructures(spreadsheetInfo, sheets);
+    }
+
+    /// <inheritdoc cref="GetLiveSheetStructures(List{string}, CancellationToken)"/>
+    /// <summary>Reads structure for every canonical sheet in this domain.</summary>
+    public async Task<Dictionary<string, Models.Google.SheetModel>> GetAllLiveSheetStructures(CancellationToken cancellationToken = default)
+    {
+        return await GetLiveSheetStructures(new List<string>(_canonicalSheetNames), cancellationToken);
+    }
+
+    /// <summary>
+    /// Raw, position-only read - see the interface doc comment for why this exists alongside
+    /// GetLiveSheetStructure. Uses the values-only batch path (not grid data - no formatting/
+    /// structure needed here), bounded to a fixed row range so a huge sheet doesn't get pulled whole.
+    /// </summary>
+    public async Task<List<List<string?>>> GetLiveSheetRawValues(string sheet, int maxRows = 200, CancellationToken cancellationToken = default)
+    {
+        var results = await GetLiveSheetsRawValues([sheet], maxRows, cancellationToken);
+        return results.TryGetValue(sheet, out var values) ? values : [];
+    }
+
+    /// <summary>
+    /// Reads raw, position-only values for multiple live sheets in one batched call, keyed by sheet
+    /// name (case-insensitive) - same "one API call regardless of sheet count" shape as
+    /// <see cref="GetLiveSheetStructures"/>, via <see cref="IGoogleSheetService.GetBatchData(List{string}, string?, CancellationToken)"/>'s
+    /// existing per-sheet DataFilter support. Each returned range's sheet name is recovered by
+    /// stripping the exact <c>!{range}</c> suffix this call appended to every request filter - safe
+    /// because Google echoes each DataFilter back verbatim in MatchedValueRange, so it's guaranteed to
+    /// match byte-for-byte (unlike parsing a general A1 range, which would need to handle
+    /// single-quoted sheet names containing '!' or spaces).
+    /// </summary>
+    public async Task<Dictionary<string, List<List<string?>>>> GetLiveSheetsRawValues(List<string> sheets, int maxRows = 200, CancellationToken cancellationToken = default)
+    {
+        var result = new Dictionary<string, List<List<string?>>>(StringComparer.OrdinalIgnoreCase);
+
+        if (sheets == null || sheets.Count == 0)
+        {
+            return result;
+        }
+
+        var range = $"A1:ZZ{Math.Max(1, maxRows)}";
+        var suffix = $"!{range}";
+        var response = await _googleSheetService.GetBatchData(sheets, range, cancellationToken);
+
+        if (response?.ValueRanges == null)
+        {
+            return result;
+        }
+
+        foreach (var matchedValue in response.ValueRanges)
+        {
+            var a1Range = matchedValue.DataFilters?.FirstOrDefault()?.A1Range;
+            if (a1Range == null || !a1Range.EndsWith(suffix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var sheetName = a1Range[..^suffix.Length];
+            var values = matchedValue.ValueRange?.Values;
+
+            result[sheetName] = values == null
+                ? []
+                : values.Select(row => row.Select(cell => cell?.ToString()).ToList()).ToList();
+        }
+
+        return result;
     }
 
     #endregion

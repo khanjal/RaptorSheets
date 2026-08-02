@@ -16,6 +16,7 @@ public class SheetRegistryTests
     {
         public PropertyEntity Properties { get; set; } = new();
         public List<MessageEntity> Messages { get; set; } = [];
+        public Dictionary<string, SheetModel> Structures { get; set; } = [];
         public List<TestRowEntity> Widgets { get; set; } = [];
     }
 
@@ -463,6 +464,113 @@ public class SheetRegistryTests
 
         Assert.Empty(missingColumns);
         Assert.Single(messages);
+    }
+
+    // DetectMissingColumns(Spreadsheet) - the grid-data counterpart to
+    // DetectMissingColumns(BatchGetValuesByDataFilterResponse), used by the includeStructure=true
+    // path of SheetManagerBase{TEntity}.GetSheets/AutoHealMissingColumnsAsync. Unlike that overload
+    // (SheetId left at 0 for the caller to fill in) and unlike CheckSheetHeaders(Spreadsheet, out ...)
+    // (wraps results in extra "Found sheet header issue(s)" messages), this sets SheetId directly and
+    // returns no messages, keeping the auto-heal message contract unchanged.
+
+    [Fact]
+    public void DetectMissingColumns_Spreadsheet_WithMissingColumn_SetsSheetIdDirectly()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModelWithTwoColumns, (_, _) => { });
+
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new Sheet
+                {
+                    Properties = new SheetProperties { Title = "Widgets", SheetId = 99 },
+                    // Only "Name" present - "Price" is missing entirely
+                    Data = [new GridData { RowData = [new RowData { Values = [new CellData { FormattedValue = "Name" }] }] }]
+                }
+            ]
+        };
+
+        var missingColumns = registry.DetectMissingColumns(spreadsheet);
+
+        Assert.True(missingColumns.ContainsKey("Widgets"));
+        var missing = Assert.Single(missingColumns["Widgets"]);
+        Assert.Equal("Price", missing.ColumnName);
+        Assert.Equal(1, missing.ColumnIndex);
+        Assert.Equal(99, missing.SheetId);
+    }
+
+    [Fact]
+    public void DetectMissingColumns_Spreadsheet_WithNoMissingColumns_ReturnsEmptyDictionary()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModel, (_, _) => { });
+
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new Sheet
+                {
+                    Properties = new SheetProperties { Title = "Widgets", SheetId = 1 },
+                    Data = [new GridData { RowData = [new RowData { Values = [new CellData { FormattedValue = "Name" }] }] }]
+                }
+            ]
+        };
+
+        var missingColumns = registry.DetectMissingColumns(spreadsheet);
+
+        Assert.Empty(missingColumns);
+    }
+
+    [Fact]
+    public void DetectMissingColumns_Spreadsheet_WithUnregisteredSheet_IsIgnored()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModelWithTwoColumns, (_, _) => { });
+
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new Sheet
+                {
+                    Properties = new SheetProperties { Title = "SomeOtherSheet", SheetId = 5 },
+                    Data = [new GridData { RowData = [new RowData { Values = [new CellData { FormattedValue = "Name" }] }] }]
+                }
+            ]
+        };
+
+        var missingColumns = registry.DetectMissingColumns(spreadsheet);
+
+        Assert.Empty(missingColumns);
+    }
+
+    [Fact]
+    public void DetectMissingColumns_Spreadsheet_WithNullSpreadsheet_ReturnsEmptyDictionary()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+
+        var missingColumns = registry.DetectMissingColumns((Spreadsheet?)null);
+
+        Assert.Empty(missingColumns);
+    }
+
+    [Fact]
+    public void DetectMissingColumns_Spreadsheet_WithNoHeaderRow_IsSkipped()
+    {
+        var registry = new SheetRegistry<TestSheetEntity>();
+        registry.Register("Widgets", TestSheetModelWithTwoColumns, (_, _) => { });
+
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets = [new Sheet { Properties = new SheetProperties { Title = "Widgets", SheetId = 1 }, Data = [] }]
+        };
+
+        var missingColumns = registry.DetectMissingColumns(spreadsheet);
+
+        Assert.Empty(missingColumns);
     }
 
     // GetDependents - backs RefreshDependentSheetsAsync's "sheet B's headers changed, rewrite every

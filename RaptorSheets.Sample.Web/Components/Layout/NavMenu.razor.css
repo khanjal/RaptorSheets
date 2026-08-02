@@ -20,6 +20,9 @@ nav {
     margin-bottom: 0.25rem;
 }
 
+/* app.css's default button top margin is meant for a button following a label/paragraph in a form -
+   wrong here, where domain-toggle/connection-toggle's own spacing (domain-group's margin-bottom,
+   this file's own rules) already sets the nav's vertical rhythm. */
 .domain-toggle {
     display: flex;
     align-items: center;
@@ -30,6 +33,7 @@ nav {
     padding: 0.4rem 0.5rem;
     border-radius: var(--radius-sm);
     cursor: pointer;
+    margin-top: 0;
 }
 
     .domain-toggle:hover {
@@ -96,4 +100,30 @@ li {
     margin-top: 1.75rem;
     padding-top: 1rem;
     border-top: 1px solid var(--color-border-muted);
+}
+
+.nav-empty {
+    margin: 0.25rem 0 0.5rem;
+    padding: 0 0.6rem;
+    font-size: 0.82rem;
+}
+
+    .nav-empty a {
+        color: var(--color-text-subtle);
+    }
+
+/* One level deeper than a plain sheet <li> - a connection's own sheet list under it. */
+.connection-list > li {
+    margin: 0.15rem 0;
+}
+
+.connection-toggle {
+    padding-left: 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.connection-list ul {
+    padding-left: 0.9rem;
 }

@@ -1,7 +1,10 @@
+.settings-content {
+    max-width: 64rem;
+}
+
 .settings-section {
-    max-width: 40rem;
     margin-top: 1.5rem;
-    padding: 1.25rem 1.5rem 1.5rem;
+    padding: 1.5rem 2rem 1.75rem;
     border: 1px solid var(--color-border-muted);
     border-radius: var(--radius-lg);
     background: var(--color-surface);
@@ -26,6 +29,27 @@
         margin-bottom: 0.5rem;
     }
 
+.credentials-walkthrough {
+    margin-bottom: 1rem;
+}
+
+    .credentials-walkthrough summary {
+        cursor: pointer;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+    }
+
+    .credentials-walkthrough ol {
+        margin: 0.6rem 0 0;
+        padding-left: 1.25rem;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+    }
+
+        .credentials-walkthrough li + li {
+            margin-top: 0.4rem;
+        }
+
 .spreadsheet-slot {
     padding: 0.75rem 0;
     border-bottom: 1px solid var(--color-border-muted);
@@ -35,6 +59,13 @@
         border-bottom: none;
         padding-bottom: 0;
     }
+
+.connection-slot-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-start;
+}
 
 .field-with-action {
     display: flex;
@@ -57,8 +88,17 @@
         font-size: 0.8rem;
     }
 
+/* Sticky rather than duplicated at the top of each section - Settings writes credentials,
+   connections, and test IDs in one atomic call (see UserSecretsWriter/LocalConnectionsStore), so a
+   single Save that's always reachable while scrolling matches that "one save does everything" model
+   better than a separate button per section would. */
 .settings-actions {
+    position: sticky;
+    bottom: 0;
     margin-top: 1.5rem;
+    padding: 1rem 0;
+    background: var(--color-canvas);
+    border-top: 1px solid var(--color-border-muted);
 }
 
     .settings-actions .status {

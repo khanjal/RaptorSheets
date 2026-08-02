@@ -1,0 +1,818 @@
+@page "/sheet-inspector"
+@implements IAsyncDisposable
+@using System.Text
+@using RaptorSheets.Core.Helpers
+@using RaptorSheets.Core.Models.Google
+@using RaptorSheets.Sample.Web.Services
+@inject DomainRegistry Domains
+@inject ConnectionRegistry Connections
+@inject GenericSheetOperations GenericOps
+@inject IJSRuntime JS
+
+<PageTitle>Sheet Inspector - RaptorSheets Sample</PageTitle>
+
+<h1>Sheet Inspector</h1>
+
+<p>
+    Point at any tab on one of your connections and see what RaptorSheets detects from a live read -
+    including a hand-built tab that isn't part of a domain's known schema yet, or an entire "Generic"
+    connection with no schema at all - then generate a starting-point C# class for it.
+</p>
+
+@if (_connections is null)
+{
+    <p>Loading...</p>
+}
+else if (_connections.Count == 0)
+{
+    <p class="status error">No spreadsheet connected yet - configure one in <a href="/settings">Settings</a>.</p>
+}
+else
+{
+    <div class="inspector-controls">
+        <label>
+            <span>Connection</span>
+            <select class="field-wider" @bind="_selectedConnectionId" @bind:after="OnConnectionChangedAsync">
+                @foreach (var connection in _connections)
+                {
+                    <option value="@connection.Id">@connection.Label (@DisplayType(connection.Type))</option>
+                }
+            </select>
+        </label>
+
+        @if (_tabNamesLoading)
+        {
+            <p class="setup-hint">Loading tabs...</p>
+        }
+        else if (_tabNames is not null)
+        {
+            <label class="field-grow">
+                <span>Tab</span>
+                <div class="field-with-action">
+                    <input type="text" list="tab-options" value="@_selectedTab"
+                           @oninput="e => _selectedTab = e.Value?.ToString() ?? string.Empty"
+                           placeholder="Pick or type a tab name" />
+                    <button type="button" class="link-button" title="Clear to browse the full tab list"
+                            disabled="@string.IsNullOrEmpty(_selectedTab)" @onclick="() => _selectedTab = string.Empty">Clear</button>
+                </div>
+                <datalist id="tab-options">
+                    @foreach (var tabName in _tabNames.Union(SelectedConnection?.CustomSheetNames ?? []))
+                    {
+                        <option value="@tabName" />
+                    }
+                </datalist>
+            </label>
+
+            <div class="inspector-actions">
+                <button @onclick="InspectAsync" disabled="@(_isBusy || string.IsNullOrEmpty(_selectedTab))">Inspect</button>
+                @if (_tabNames.Count > 0)
+                {
+                    <button @onclick="OpenBulkPicker" disabled="@_isBusy">Bulk generate classes</button>
+                }
+            </div>
+        }
+    </div>
+
+    @if (_tabNames is { Count: 0 })
+    {
+        <p class="setup-hint">No tabs found yet - type a name to inspect one directly.</p>
+    }
+
+    @if (_bulkPicker is not null)
+    {
+        <div class="bulk-picker">
+            <div class="bulk-picker-header">
+                <span>@_bulkPicker.Count(t => t.Selected) of @_bulkPicker.Count tabs selected</span>
+                <button type="button" class="link-button" @onclick="() => SetAllBulkSelected(true)">Select all</button>
+                <button type="button" class="link-button" @onclick="() => SetAllBulkSelected(false)">Select none</button>
+            </div>
+
+            <ul class="bulk-picker-list">
+                @foreach (var tab in _bulkPicker)
+                {
+                    <li @key="tab.Name">
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked="@tab.Selected" @onchange="e => tab.Selected = (bool)e.Value!" />
+                            <span>@tab.Name</span>
+                        </label>
+                    </li>
+                }
+            </ul>
+
+            <div class="inspector-actions">
+                <button @onclick="GenerateAllClassesAsync" disabled="@(_isBusy || !_bulkPicker.Any(t => t.Selected))">
+                    Generate classes for @_bulkPicker.Count(t => t.Selected) tab@(_bulkPicker.Count(t => t.Selected) == 1 ? "" : "s")
+                </button>
+                <button type="button" class="link-button" @onclick="() => _bulkPicker = null">Cancel</button>
+            </div>
+        </div>
+    }
+
+    @if (_tabNames is not null && SelectedConnection is { } activeConnection)
+    {
+        <details class="saved-sheets" open="@(activeConnection.CustomSheetNames.Count > 0)">
+            <summary>Saved sheet names</summary>
+            <p class="setup-hint">
+                Extra tab names to offer here later, saved per connection - a hand-built tab
+                that isn't live yet, or one you know from another domain's schema (e.g. trying
+                "Trips" on a Generic connection).
+            </p>
+
+            @if (activeConnection.CustomSheetNames.Count > 0)
+            {
+                <ul class="chip-list">
+                    @foreach (var name in activeConnection.CustomSheetNames)
+                    {
+                        <li class="chip" @key="name">
+                            <button type="button" class="chip-label" @onclick="() => _selectedTab = name">@name</button>
+                            <button type="button" class="chip-remove" title="Remove"
+                                    @onclick="() => RemoveCustomSheetName(activeConnection, name)">&times;</button>
+                        </li>
+                    }
+                </ul>
+            }
+
+            @if (activeConnection.IsTestFallback)
+            {
+                <p class="setup-hint">Saved sheet names aren't kept for the shared test dataset - add a real connection in Settings first.</p>
+            }
+            else
+            {
+                <div class="saved-sheets-add">
+                    <button type="button"
+                            disabled="@(string.IsNullOrWhiteSpace(_selectedTab) || activeConnection.CustomSheetNames.Contains(_selectedTab))"
+                            @onclick="() => AddCustomSheetName(activeConnection, _selectedTab)">
+                        Save "@_selectedTab" to list
+                    </button>
+
+                    @if (_knownSheetSuggestions.Count > 0)
+                    {
+                        <select class="field-wide" @bind="_selectedKnownSheet">
+                            <option value="">Add a known sheet...</option>
+                            @foreach (var suggestion in _knownSheetSuggestions)
+                            {
+                                <option value="@suggestion.Name">@suggestion.Name (@suggestion.DomainLabel)</option>
+                            }
+                        </select>
+                        <button type="button" disabled="@string.IsNullOrEmpty(_selectedKnownSheet)" @onclick="AddKnownSheet">Add</button>
+                    }
+                </div>
+            }
+        </details>
+    }
+
+    @if (_error is not null)
+    {
+        <p class="status error">@_error</p>
+    }
+
+    @if (_structure is not null || _rawRows is not null)
+    {
+        <div class="result-tabs" role="tablist">
+            @if (_structure is not null)
+            {
+                <button type="button" role="tab" aria-selected="@(_activeResultTab == ResultTab.Structure)"
+                        class="result-tab @(_activeResultTab == ResultTab.Structure ? "active" : "")"
+                        @onclick="() => _activeResultTab = ResultTab.Structure">Structure (@_structure.Headers.Count)</button>
+            }
+            @if (_rawRows is not null)
+            {
+                <button type="button" role="tab" aria-selected="@(_activeResultTab == ResultTab.RawData)"
+                        class="result-tab @(_activeResultTab == ResultTab.RawData ? "active" : "")"
+                        @onclick="() => _activeResultTab = ResultTab.RawData">Raw data (@_rawRows.Count)</button>
+            }
+        </div>
+
+        @if (_activeResultTab == ResultTab.RawData && _rawRows is not null)
+        {
+            <p class="setup-hint">
+                Every cell by row/column position, exactly as it is on the sheet - no assumption that row 1
+                is a header or that it's a simple one-row-per-record table. Useful for a dashboard-style tab
+                with fields scattered around rather than a plain grid.
+                @if (_structure is not null)
+                {
+                    <text> Row 1 is highlighted below because Structure already confirmed it's this sheet's header row - not a new guess, just reflecting that.</text>
+                }
+            </p>
+
+            @if (_rawRows.Count == 0)
+            {
+                <p class="setup-hint">This sheet has no data in the previewed range.</p>
+            }
+            else
+            {
+                <div class="freeze-controls">
+                    <label class="checkbox-label">
+                        <input type="checkbox" @bind="_freezeFirstColumn" />
+                        <span>Freeze column A</span>
+                    </label>
+                    @if (_structure is not null)
+                    {
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked disabled />
+                            <span>Freeze header row (auto)</span>
+                        </label>
+                    }
+                </div>
+
+                <div class="@($"grid-scroll{(_freezeFirstColumn ? " freeze-col-a" : "")}{(_structure is not null ? " auto-freeze-header" : "")}")"
+                     id="raw-grid-scroll" @ref="_rawGridScrollRef">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                @for (var col = 0; col < _rawColumnCount; col++)
+                                {
+                                    <th>@SheetHelpers.GetColumnName(col)</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (var r = 0; r < _rawRows.Count; r++)
+                            {
+                                var row = _rawRows[r];
+                                <tr class="@(r == 0 && _structure is not null ? "raw-header-row" : "")">
+                                    <td class="row-index">@(r + 1)</td>
+                                    @for (var col = 0; col < _rawColumnCount; col++)
+                                    {
+                                        <td>@(col < row.Count ? row[col] : "")</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (_rawRows.Count >= RawPreviewMaxRows)
+                {
+                    <p class="setup-hint">Showing the first @RawPreviewMaxRows rows.</p>
+                }
+            }
+        }
+
+        @if (_activeResultTab == ResultTab.Structure && _structure is not null)
+        {
+            <div class="grid-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Column</th>
+                            <th>Format</th>
+                            <th>Raw type</th>
+                            <th>Pattern</th>
+                            <th>Validation</th>
+                            <th>Protected</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < _structure.Headers.Count; i++)
+                        {
+                            var header = _structure.Headers[i];
+                            var stripeClass = i % 2 == 1 ? "row-alt" : "row-plain";
+                            <tr class="@stripeClass">
+                                <td>@header.Name</td>
+                                <td>@header.Column</td>
+                                <td>@header.Format</td>
+                                <td>@header.RawFormatType</td>
+                                <td>@header.FormatPattern</td>
+                                <td>@header.Validation</td>
+                                <td>@(header.Protect ? "Yes" : "")</td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(header.Note))
+                            {
+                                <tr class="detail-row @stripeClass">
+                                    <td colspan="7"><strong>Note:</strong> @header.Note</td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(header.Formula))
+                            {
+                                <tr class="detail-row @stripeClass">
+                                    <td colspan="7"><strong>Formula:</strong> <code>@header.Formula</code></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <label>
+                <span>Class name</span>
+                <input value="@_className" @oninput="e => _className = e.Value?.ToString() ?? string.Empty" />
+            </label>
+            <button @onclick="GenerateClass">Generate class</button>
+
+            @if (_generatedClass is not null)
+            {
+                <textarea rows="16" readonly value="@_generatedClass"></textarea>
+                <button @onclick="CopyToClipboardAsync">Copy</button>
+                @if (_copyStatus is not null)
+                {
+                    <span class="setup-hint">@_copyStatus</span>
+                }
+            }
+        }
+    }
+
+    @if (_bulkGeneratedClasses is not null)
+    {
+        <h2>Generated classes (@_bulkFoundTabs.Count of @_bulkTotalTabs)</h2>
+
+        <p class="setup-hint">
+            One click, every tab: structure and a few sample rows per tab were fetched in two batched
+            calls (not one call per tab), and a column's type falls back to sampled values only when
+            that tab never had real Google Sheets formatting to go on.
+        </p>
+
+        @if (_bulkMissingTabs.Count > 0)
+        {
+            <p class="setup-hint">Couldn't read structure for: @string.Join(", ", _bulkMissingTabs)</p>
+        }
+
+        @if (_bulkContainerBaseName is not null)
+        {
+            <p class="setup-hint">
+                Also includes a <code>@(_bulkContainerBaseName)Sheets</code>/<code>@(_bulkContainerBaseName)Entity</code>
+                container aggregating every class above - "@_bulkContainerBaseName" is a derived
+                placeholder from the connection's label, rename both to fit.
+            </p>
+        }
+
+        <textarea rows="24" readonly value="@_bulkGeneratedClasses"></textarea>
+        <button @onclick="CopyBulkToClipboardAsync">Copy all</button>
+        @if (_bulkCopyStatus is not null)
+        {
+            <span class="setup-hint">@_bulkCopyStatus</span>
+        }
+    }
+}
+
+@code {
+    private enum ResultTab { Structure, RawData }
+
+    // Mutable (not a record) so the checkbox's @onchange can flip .Selected on the exact same instance
+    // the @foreach is iterating - a record's `with` expression would replace the list entry instead,
+    // which doesn't play well with Blazor's diffing against the same @key.
+    private sealed class BulkTabSelection(string name)
+    {
+        public string Name { get; } = name;
+        public bool Selected { get; set; } = true;
+    }
+
+    private const int RawPreviewMaxRows = 200;
+
+    private List<SpreadsheetConnection>? _connections;
+    private string _selectedConnectionId = "";
+    private List<string>? _tabNames;
+    private bool _tabNamesLoading;
+    private string _selectedTab = "";
+    private bool _isBusy;
+    private string? _error;
+    private SheetModel? _structure;
+    private List<List<string?>>? _rawRows;
+    private int _rawColumnCount;
+    private ResultTab _activeResultTab = ResultTab.Structure;
+    private string _className = "";
+    private string? _generatedClass;
+    private string? _copyStatus;
+    private List<(string Name, string DomainLabel)> _knownSheetSuggestions = [];
+    private string _selectedKnownSheet = "";
+
+    // Bulk row samples are just for type inference (see EntityClassGenerator.Generate's sampleRows
+    // param) - a handful of rows is plenty for that and keeps the second batched call's response small
+    // across every tab, unlike the single-tab preview's much larger RawPreviewMaxRows.
+    private const int BulkSampleRows = 20;
+    private List<BulkTabSelection>? _bulkPicker;
+    private string? _bulkGeneratedClasses;
+    private int _bulkTotalTabs;
+    private List<string> _bulkFoundTabs = [];
+    private List<string> _bulkMissingTabs = [];
+    private string? _bulkCopyStatus;
+    private string? _bulkContainerBaseName;
+
+    // Freeze-column-A toggle for the Raw data grid (see #raw-grid-scroll's freeze-col-a class in the
+    // markup and the matching rules in SheetInspector.razor.css). The header row freezes automatically
+    // whenever _structure is not null - see the auto-freeze-header class - so there's no equivalent
+    // toggle for it.
+    private bool _freezeFirstColumn;
+    private ElementReference _rawGridScrollRef;
+    private IJSObjectReference? _stickyModule;
+
+    private SpreadsheetConnection? SelectedConnection => _connections?.FirstOrDefault(c => c.Id == _selectedConnectionId);
+
+    // Recalculates on every render where the Raw data grid is actually visible, rather than trying to
+    // track every state change that could affect it (freeze toggle, switching back to this result tab
+    // after Structure, a fresh Inspect) with individual "please recalculate" flags - a dirty-flag approach
+    // was tried first and missed the "switch to the Raw data tab" case specifically, since #raw-grid-scroll
+    // doesn't exist in the DOM yet when Inspect completes (Structure is the default active tab), so the
+    // offsets stayed at their 0px fallback until something else happened to flip a flag. Re-measuring here
+    // is cheap (two offsetHeight/offsetWidth reads) and only runs while this grid is on screen.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_activeResultTab != ResultTab.RawData || _rawRows is not { Count: > 0 })
+        {
+            return;
+        }
+
+        try
+        {
+            _stickyModule ??= await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./Components/Pages/SheetInspector.razor.js");
+            await _stickyModule.InvokeVoidAsync("updateStickyOffsets", _rawGridScrollRef);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Expected during a Blazor Server circuit teardown (e.g. navigating away mid-call) - not a
+            // real failure, so not worth surfacing.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_stickyModule is not null)
+        {
+            try
+            {
+                await _stickyModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Same expected teardown race as above - the circuit is already gone, so there's
+                // nothing left to dispose on the JS side.
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Deliberately excludes the synthesized test-fallback connections ConnectionRegistry adds for
+        // any typed domain with no real connection yet (see its own doc comment) - useful as a
+        // "there's always something to look at" default on Home/Sheet, but out of place here: this
+        // page is for inspecting a spreadsheet you actually pointed at, not the shared dataset
+        // RaptorSheets' own test suite deletes and regenerates on every run.
+        _connections = Connections.GetAll().Where(c => !c.IsTestFallback).ToList();
+
+        // Sourced from every registered typed domain (not just the selected connection's own type) -
+        // deliberately cross-domain, so a Generic (or e.g. Stock) connection can borrow a known Gig/
+        // Job/Home sheet name as a starting guess. Static for the page's lifetime; doesn't depend on
+        // which connection is selected.
+        _knownSheetSuggestions = Domains.Domains
+            .SelectMany(d => SheetMetadata.GetSheetDescriptors(d.SheetsType, d.SheetNamesType)
+                .Where(desc => !d.ExcludedSheetNames.Contains(desc.Name))
+                .Select(desc => (Name: desc.Name, DomainLabel: d.DomainLabel)))
+            .OrderBy(s => s.DomainLabel, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (_connections.Count > 0)
+        {
+            _selectedConnectionId = _connections[0].Id;
+            await LoadTabNamesAsync();
+        }
+    }
+
+    // Dispatches to the right factory for the connection's type - a typed domain's own
+    // ISheetOperations for gig/stock/job/home, or the schema-agnostic GenericSheetOperations for
+    // "generic". Returns the plain IConnectedSheet surface either way, since this page only ever
+    // needs the structure/raw-data reads every connection supports (ITypedConnectedSheet's extra CRUD
+    // members aren't used here).
+    private bool TryConnect(SpreadsheetConnection connection, out IConnectedSheet? sheet, out string? error)
+    {
+        if (string.Equals(connection.Type, "generic", StringComparison.OrdinalIgnoreCase))
+        {
+            var connected = GenericOps.TryConnect(connection, out var genericSheet, out error);
+            sheet = genericSheet;
+            return connected;
+        }
+
+        var ops = Domains.TryGet(connection.Type);
+        if (ops is null)
+        {
+            sheet = null;
+            error = $"\"{connection.Type}\" isn't a known domain.";
+            return false;
+        }
+
+        var typedConnected = ops.TryConnect(connection, out var typedSheet, out error);
+        sheet = typedSheet;
+        return typedConnected;
+    }
+
+    private async Task OnConnectionChangedAsync()
+    {
+        _structure = null;
+        _rawRows = null;
+        _generatedClass = null;
+        _bulkPicker = null;
+        _bulkGeneratedClasses = null;
+        _bulkContainerBaseName = null;
+        _error = null;
+        await LoadTabNamesAsync();
+    }
+
+    private async Task LoadTabNamesAsync()
+    {
+        var connection = _connections?.FirstOrDefault(c => c.Id == _selectedConnectionId);
+        if (connection is null || !TryConnect(connection, out var sheet, out _) || sheet is null)
+        {
+            return;
+        }
+
+        _tabNamesLoading = true;
+        _tabNames = null;
+        StateHasChanged();
+
+        _tabNames = await sheet.GetAllSheetTabNamesAsync();
+
+        // Deliberately left blank rather than defaulting to _tabNames[0] - an <input list> datalist
+        // filters its popup by the field's current text, so pre-filling this hid every other tab
+        // behind a filter the user never asked for and had no visual cue existed (reported live: only
+        // "Biomes" - the sheet's first tab - showed when clicking the dropdown arrow). Starting empty
+        // means the arrow shows the complete, unfiltered list.
+        _selectedTab = "";
+        _tabNamesLoading = false;
+    }
+
+    // One click now fetches structure and raw data together (they're two independent reads off the
+    // same tab, run concurrently) instead of needing "Inspect" and "Preview data" as separate actions -
+    // the result tabs below let the user switch between them without a second round-trip.
+    private async Task InspectAsync()
+    {
+        var connection = _connections?.FirstOrDefault(c => c.Id == _selectedConnectionId);
+        if (connection is null || string.IsNullOrEmpty(_selectedTab))
+        {
+            return;
+        }
+
+        _isBusy = true;
+        _error = null;
+        _structure = null;
+        _rawRows = null;
+        _generatedClass = null;
+        _bulkGeneratedClasses = null;
+
+        try
+        {
+            if (!TryConnect(connection, out var sheet, out var connectionError) || sheet is null)
+            {
+                _error = connectionError;
+                return;
+            }
+
+            var structureTask = sheet.GetLiveSheetStructureAsync(_selectedTab);
+            var rawRowsTask = sheet.GetLiveSheetRawValuesAsync(_selectedTab, RawPreviewMaxRows);
+            await Task.WhenAll(structureTask, rawRowsTask);
+
+            _structure = structureTask.Result;
+            _rawRows = rawRowsTask.Result;
+            _rawColumnCount = _rawRows.Count == 0 ? 0 : _rawRows.Max(row => row.Count);
+
+            if (_structure is not null)
+            {
+                _className = EntityClassGenerator.SuggestClassName(_structure.Name);
+                _activeResultTab = ResultTab.Structure;
+            }
+            else
+            {
+                _error = $"Couldn't read the \"{_selectedTab}\" sheet's structure.";
+                _activeResultTab = ResultTab.RawData;
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private void GenerateClass()
+    {
+        if (_structure is not null)
+        {
+            // _rawRows came from the same Inspect click, off the same tab - reused here purely as
+            // type-inference samples (see EntityClassGenerator.Generate's sampleRows param), not
+            // re-fetched.
+            _generatedClass = EntityClassGenerator.Generate(_className, _structure, _rawRows);
+            _copyStatus = null;
+        }
+    }
+
+    private async Task CopyToClipboardAsync()
+    {
+        if (_generatedClass is null)
+        {
+            return;
+        }
+
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", _generatedClass);
+        _copyStatus = "Copied.";
+    }
+
+    // Opens the picker rather than fetching anything yet - listing _tabNames back at itself, all
+    // pre-checked, is free (already loaded), so there's no reason to do the batched structure/sample
+    // reads before the user has confirmed which tabs they actually want.
+    private void OpenBulkPicker()
+    {
+        if (_tabNames is not { Count: > 0 })
+        {
+            return;
+        }
+
+        _bulkPicker = _tabNames.Select(name => new BulkTabSelection(name)).ToList();
+    }
+
+    private void SetAllBulkSelected(bool selected)
+    {
+        if (_bulkPicker is null)
+        {
+            return;
+        }
+
+        foreach (var tab in _bulkPicker)
+        {
+            tab.Selected = selected;
+        }
+    }
+
+    // Structure and sample rows for every SELECTED tab come back from two batched calls (one per read
+    // type, not one per tab - see GetLiveSheetStructuresAsync/GetLiveSheetsRawValuesAsync), then a
+    // class is generated per tab that actually had a readable structure and concatenated into one
+    // output. A tab missing from the structures dictionary (deleted mid-flight, or something Google's
+    // structure read just couldn't resolve) is reported, not silently dropped. _bulkPicker is
+    // deliberately left populated afterward (not cleared) so the selection can be tweaked and
+    // regenerated without reopening the picker from scratch.
+    private async Task GenerateAllClassesAsync()
+    {
+        var connection = _connections?.FirstOrDefault(c => c.Id == _selectedConnectionId);
+        var selectedTabs = _bulkPicker?.Where(t => t.Selected).Select(t => t.Name).ToList();
+        if (connection is null || selectedTabs is not { Count: > 0 })
+        {
+            return;
+        }
+
+        _isBusy = true;
+        _error = null;
+        _structure = null;
+        _rawRows = null;
+        _generatedClass = null;
+        _bulkGeneratedClasses = null;
+        _bulkCopyStatus = null;
+
+        try
+        {
+            if (!TryConnect(connection, out var sheet, out var connectionError) || sheet is null)
+            {
+                _error = connectionError;
+                return;
+            }
+
+            var structuresTask = sheet.GetLiveSheetStructuresAsync(selectedTabs);
+            var samplesTask = sheet.GetLiveSheetsRawValuesAsync(selectedTabs, BulkSampleRows);
+            await Task.WhenAll(structuresTask, samplesTask);
+
+            var structures = structuresTask.Result;
+            var samples = samplesTask.Result;
+
+            var sb = new StringBuilder();
+            var found = new List<string>();
+            var missing = new List<string>();
+            var usedClassNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var usedPropertyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var containerEntries = new List<(string PropertyName, string ClassName)>();
+
+            // Row classes are generated in this same pass (each is self-contained, needs nothing from
+            // the container), but their text is held here rather than appended straight to sb - the
+            // container reads better skimmed first, before the individual classes it aggregates, so
+            // it's written to sb further down only once every entry is known.
+            var rowClassOutputs = new List<(string TabName, string GeneratedText)>();
+
+            foreach (var tabName in selectedTabs)
+            {
+                if (!structures.TryGetValue(tabName, out var structure))
+                {
+                    missing.Add(tabName);
+                    continue;
+                }
+
+                found.Add(tabName);
+                samples.TryGetValue(tabName, out var sampleRows);
+
+                var className = UniqueBulkClassName(EntityClassGenerator.SuggestClassName(structure.Name), usedClassNames);
+
+                // Deduped independently from className (separate set, no "strip Entity" hack) - class
+                // names can end up with a numeric suffix from UniqueBulkClassName that lands after
+                // "Entity" (e.g. "SetupEntity2"), which a naive strip would mishandle.
+                var propertyName = UniqueBulkClassName(EntityClassGenerator.SuggestPropertyName(structure.Name), usedPropertyNames);
+                containerEntries.Add((propertyName, className));
+
+                rowClassOutputs.Add((tabName, EntityClassGenerator.Generate(className, structure, sampleRows, includeUsings: false)));
+            }
+
+            // One shared `using` header for the whole file, not one per class - EntityClassGenerator's
+            // own header would otherwise land after earlier classes once concatenated, which C#
+            // rejects (a using directive must precede every type declaration in the file).
+            sb.Append(EntityClassGenerator.UsingsHeader);
+
+            if (containerEntries.Count > 0)
+            {
+                _bulkContainerBaseName = EntityClassGenerator.SuggestContainerBaseName(connection.Label);
+                sb.AppendLine($"// ===== {_bulkContainerBaseName}Sheets / {_bulkContainerBaseName}Entity =====");
+                sb.Append(EntityClassGenerator.GenerateContainer(_bulkContainerBaseName, containerEntries));
+                sb.AppendLine();
+            }
+            else
+            {
+                _bulkContainerBaseName = null;
+            }
+
+            foreach (var (tabName, generatedText) in rowClassOutputs)
+            {
+                sb.AppendLine($"// ===== {tabName} =====");
+                sb.Append(generatedText);
+                sb.AppendLine();
+            }
+
+            _bulkTotalTabs = selectedTabs.Count;
+            _bulkFoundTabs = found;
+            _bulkMissingTabs = missing;
+            _bulkGeneratedClasses = sb.ToString();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // Two different live tabs can suggest the same class name (e.g. "Setup" and "setup"), which would
+    // otherwise produce two same-named classes in one file - not a problem GenerateClass's single-tab
+    // path has, since there's only ever one class name field there.
+    private static string UniqueBulkClassName(string baseName, HashSet<string> usedNames)
+    {
+        var candidate = baseName;
+        var suffix = 2;
+        while (!usedNames.Add(candidate))
+        {
+            candidate = $"{baseName}{suffix++}";
+        }
+
+        return candidate;
+    }
+
+    private async Task CopyBulkToClipboardAsync()
+    {
+        if (_bulkGeneratedClasses is null)
+        {
+            return;
+        }
+
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", _bulkGeneratedClasses);
+        _bulkCopyStatus = "Copied.";
+    }
+
+    // Test-fallback connections aren't in LocalConnectionsStore at all (see SpreadsheetConnection.
+    // IsTestFallback), so Update would silently no-op for one - the "Save"/"Add" buttons are hidden
+    // for that case in the markup, so this is only ever reached for a real, persisted connection.
+    private void AddCustomSheetName(SpreadsheetConnection connection, string sheetName)
+    {
+        if (string.IsNullOrWhiteSpace(sheetName) || connection.CustomSheetNames.Contains(sheetName))
+        {
+            return;
+        }
+
+        ReplaceConnection(connection with { CustomSheetNames = [.. connection.CustomSheetNames, sheetName] });
+    }
+
+    private void RemoveCustomSheetName(SpreadsheetConnection connection, string sheetName) =>
+        ReplaceConnection(connection with { CustomSheetNames = connection.CustomSheetNames.Where(n => n != sheetName).ToList() });
+
+    private void AddKnownSheet()
+    {
+        if (SelectedConnection is not { } connection || string.IsNullOrEmpty(_selectedKnownSheet))
+        {
+            return;
+        }
+
+        AddCustomSheetName(connection, _selectedKnownSheet);
+        _selectedTab = _selectedKnownSheet;
+        _selectedKnownSheet = "";
+    }
+
+    private void ReplaceConnection(SpreadsheetConnection updated)
+    {
+        LocalConnectionsStore.Update(updated);
+
+        var index = _connections?.FindIndex(c => c.Id == updated.Id) ?? -1;
+        if (index >= 0)
+        {
+            _connections![index] = updated;
+        }
+    }
+
+    private static string DisplayType(string type) => type switch
+    {
+        "gig" => "Gig",
+        "stock" => "Stock",
+        "job" => "Job",
+        "home" => "Home",
+        "generic" => "Generic",
+        _ => type
+    };
+}

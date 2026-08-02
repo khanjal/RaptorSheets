@@ -18,6 +18,12 @@ its own hand-rolled header/mapping code), tracked as a follow-up rather than wor
 `RaptorSheets.Sample.Web/Services/StockSheetOperations.cs` is already written and ready - once
 Stock's entities get `[Column]` attributes, it's a one-line uncomment in `Program.cs` to wire it in.
 
+There's also a domain-agnostic **[Sheet Inspector](#sheet-inspector)** at `/sheet-inspector`, reachable
+from the nav regardless of which domains are wired up - point it at any live tab on any connection
+(including one of RaptorSheets' own known domains, or a schema-less "Generic" connection) and see its
+structure/raw data straight from a live read, with a best-effort C# class stub generated from what it
+finds.
+
 Styling is a small set of CSS custom properties defined once in `wwwroot/app.css` (`--color-*`,
 `--radius-*`, `--shadow-*`) with a `prefers-color-scheme: dark` override alongside the light
 defaults - every component stylesheet references the tokens rather than hardcoding colors, so
@@ -86,26 +92,33 @@ deliberately declare the **same `<UserSecretsId>`**, so they read one `secrets.j
 (`%APPDATA%\Microsoft\UserSecrets\d3dcd413-.../secrets.json` on Windows,
 `~/.microsoft/usersecrets/d3dcd413-.../secrets.json` on Linux/macOS) instead of each needing its own
 copy kept in sync by hand. The service account credentials really are shared - one Google Cloud
-service account works for both. **The spreadsheet IDs are not shared, though**: they live under two
-separate keys per domain, `spreadsheets:live:{domain}` and `spreadsheets:test:{domain}`.
+service account works for both. User secrets holds **only** those credentials plus
+`spreadsheets:test:{domain}` - the dedicated, disposable spreadsheets `RaptorSheets.Test`'s
+integration suite points at, which it deletes and regenerates on every run (see the test suite's own
+`CleanSlateSheetFixture`). Set those via the CLI or CI secrets, not the Settings UI.
 
-- **`spreadsheets:live:{domain}`** is what the Settings page reads and writes - your own spreadsheet,
-  for real data. This is the ID a Clear button blanks and a save can disconnect.
-- **`spreadsheets:test:{domain}`** is never touched by Settings. It's the dedicated, disposable
-  spreadsheet `RaptorSheets.Test`'s integration suite points at, which it deletes and regenerates on
-  every run (see the test suite's own `CleanSlateSheetFixture`). Set it via the CLI or CI secrets, not
-  this UI.
+**Your own spreadsheets are a separate, local-only "Connections" list**, not user secrets: a
+`connections.json` file in this app's own local-data folder
+(`%APPDATA%\RaptorSheets.Sample.Web\connections.json` on Windows,
+`~/.config/RaptorSheets.Sample.Web/connections.json` on Linux/macOS) - deliberately not inside the
+`UserSecrets` folder alongside `secrets.json`, since none of it is actually secret. Needs no
+`.gitignore` entry either way, since it was never inside the repo. Fully managed from the Settings
+page's "Connections" section. Each
+connection has a type (`gig`/`stock`/`job`/`home`, or `generic` for a spreadsheet with no compiled
+`[Column]` schema - usable only in the Sheet Inspector), a label, and a spreadsheet ID. Unlike the
+old single `spreadsheets:live:{domain}` key, **you can add more than one connection of the same
+type** - useful for comparing spreadsheets or keeping a backup alongside your main one; NavMenu nests
+by connection label whenever a domain has more than one.
 
 This split exists specifically so recording real data through this app can never land on the
-spreadsheet the tests wipe. As a convenience, whenever a domain has no `spreadsheets:live:{domain}`
-configured, `Sheet.razor`/`Home.razor` fall back to showing `spreadsheets:test:{domain}` instead (with
-a banner making clear that's what's happening) - so there's something to look at before you've
-connected your own spreadsheet, rather than just an empty/error state. Stock's spreadsheet ID lives
-here too even though the sample app's nav doesn't browse it yet. Nothing is read from
-`appsettings.json`, so there's nothing to accidentally commit either way.
+spreadsheet the tests wipe. As a convenience, whenever a domain type has zero real connections,
+`Sheet.razor`/`Home.razor` fall back to showing `spreadsheets:test:{domain}` instead (synthesized as a
+connection on the fly, with a banner making clear that's what's happening) - so there's something to
+look at before you've added your own connection, rather than just an empty/error state. Stock's
+Connections entries work today even though the sample app's nav doesn't browse Stock sheets yet.
+Nothing is read from `appsettings.json`, so there's nothing to accidentally commit either way.
 
-Prefer the CLI? Same store, either project's directory works - just be sure to use `live`, not `test`,
-for your own data:
+Prefer the CLI for credentials/test IDs? Same store, either project's directory works:
 
 ```bash
 cd RaptorSheets.Sample.Web
@@ -115,8 +128,11 @@ dotnet user-secrets set "google_credentials:private_key_id" "your-key-id"
 dotnet user-secrets set "google_credentials:private_key" "your-private-key"
 dotnet user-secrets set "google_credentials:client_email" "service@project.iam.gserviceaccount.com"
 dotnet user-secrets set "google_credentials:client_id" "your-client-id"
-dotnet user-secrets set "spreadsheets:live:gig" "your-gig-spreadsheet-id"
+dotnet user-secrets set "spreadsheets:test:gig" "your-test-gig-spreadsheet-id"
 ```
+
+There's no CLI equivalent for adding a real connection - `connections.json` isn't a
+`dotnet user-secrets`-managed file, so use the Settings page's "Connections" section for those.
 
 **If the Gig spreadsheet you connect is blank** (no Gig sheets on it yet - checked via
 `GetAllSheetTabNames()` against the known Gig sheet names, not just "zero tabs", since a fresh
@@ -231,6 +247,82 @@ to hang the whole page, since a single-threaded circuit can't handle a nav click
 reflow until that render finishes. Genuine scroll-triggered loading would need a JS interop call to
 read scroll position that Blazor doesn't provide out of the box, so this trades automatic-on-scroll
 for something that needs no JS at all.
+
+## Sheet Inspector
+
+**`/sheet-inspector` reverse-engineers a live tab instead of rendering a known entity.** Every other
+page in this app already knows its shape from a domain's `[Column]` attributes; this one is for the
+opposite situation - a hand-built tab RaptorSheets has never seen, or an entire **"Generic"**
+connection with no compiled schema at all (see the `Type` dropdown in Settings' Connections section).
+A Generic connection is only usable here - `GenericSheetOperations` deliberately isn't an
+`ISheetOperations` (it carries none of the domain metadata - `SheetsType`, `ValidationSheetMap` - that
+would mean anything for an arbitrary sheet), so it only ever hands back the plain `IConnectedSheet`
+surface (structure/raw-data reads), never the typed CRUD `ITypedConnectedSheet` adds. Under the hood
+it's built on Gig's compiled manager type purely as an invisible carrier - every method
+`IConnectedSheet` exposes is implemented on `SheetManagerBase` itself without touching that domain's
+registry, so any already-registered domain's manager would work identically; Gig is picked only
+because it's always unconditionally registered.
+
+**One "Inspect" click fires two independent reads concurrently** - `GetLiveSheetStructureAsync` and
+`GetLiveSheetRawValuesAsync` (`Task.WhenAll`, not sequential) - rather than needing separate
+"Inspect"/"Preview data" actions; a **Structure**/**Raw data** tab toggle then switches between the
+two already-fetched results with no second round-trip. Typing a tab name that isn't in the
+`<datalist>` (an unregistered sheet, or one that doesn't exist yet) still works - both reads accept
+any live tab name.
+
+**Structure** lists every detected header - Name, Column letter, `Format`, raw Google
+`NumberFormat.Type`, format pattern, validation rule, and whether it's protected - the same
+`SheetModel`/`SheetCellModel` shape `GetLiveSheetStructure` returns (see its own doc comment on
+`ISheetManager`). A Note or Formula gets its own full-width detail row directly below the header it
+belongs to (long text needs room to wrap, not a cramped column), sharing that header's zebra stripe
+rather than a fixed color of its own, so it visually groups with its parent instead of risking fusion
+with whichever neighbor happened to land on the same alternating color.
+
+**Raw data** is `GetLiveSheetRawValues` - every cell by pure row/column position, capped at 200 rows
+(`RawPreviewMaxRows`), with no assumption that row 1 is a header or that the sheet is a simple
+one-row-per-record table. Rows are ragged (only as long as their own last populated cell), which
+matters for a dashboard-style tab with fields scattered around rather than a plain grid. Whenever
+Structure was also read for the same tab, row 1 highlights and the header row auto-freezes in the
+grid - not a second guess, just reflecting what Structure already confirmed (format/validation live on
+the *first data row*, never the header cell itself - see `GoogleRequestHelpers.GenerateRepeatCellRequest`
+- so a structure read that came back clean already proves row 0 really is the header). Freezing column
+A is a separate, always-available checkbox, since that has nothing to do with whether a header was
+detected.
+
+**"Generate class"** turns the current Structure result into a best-effort `[Column]`-decorated C#
+class stub via `EntityClassGenerator` - a starting point for strongly-typing a hand-built tab, not a
+finished mapping (the header comment on every generated class says so explicitly). Property type
+resolution, in order: a `BOOLEAN` validation rule wins outright; then a recognized Google Sheets
+`Format` (currency/number/percent/accounting/distance to `decimal?`, date/weekday/duration/time to
+`string` - those round-trip as formatted strings via `GenericSheetMapper`, not `DateTime`, matching
+how every shipped domain entity types them); then the raw `NumberFormat.Type` when no `Format` enum
+matched (`NUMBER`/`CURRENCY`/`PERCENT` to `decimal?`, everything else - including `TEXT` - to
+`string`). That last case is deliberate, not a fallback to guess past: a column explicitly formatted
+as Plain Text (e.g. a version column holding `"1.10"`/`"1.9"`) must stay `string` even though sampled
+values look numeric, since Sheets would otherwise silently collapse `"1.10"` to `1.1` - real row
+samples are only consulted (`InferTypeFromSamples`) when a column has **no** format metadata
+whatsoever, true for a plain hand-built sheet nobody ever explicitly formatted, and even then every
+non-blank sample must agree on one type or it falls back to `string` rather than produce a class that
+can't parse its own data.
+
+**"Bulk generate classes"** is a two-stage confirm, not one click: it first opens a picker listing
+every known tab name, all pre-checked (free - already loaded from `GetAllSheetTabNamesAsync`, no read
+happens yet), so the selection can be trimmed before anything is fetched. Confirming runs exactly two
+batched calls total - `GetLiveSheetStructuresAsync`/`GetLiveSheetsRawValuesAsync` across every selected
+tab at once, not one round-trip per tab - then generates one class per tab that actually returned a
+structure (a tab missing from the result, e.g. deleted mid-flight, is listed as couldn't-read rather
+than silently dropped) and concatenates them under one shared `using` header. It also emits an
+aggregating container - `{Base}Sheets`/`{Base}Entity`, mirroring e.g.
+`RaptorSheets.Gig.Entities.GigSheets`/`SheetEntity` exactly - where `{Base}` is a derived placeholder
+from the connection's own label; the
+generated comment says outright that it's a placeholder, since there's no other prompt telling you to
+rename it before using it for real.
+
+**Saved sheet names** (the "Saved sheets" panel below the Tab field) lets a connection remember extra
+tab names to offer later - a hand-built tab that isn't live yet, or one borrowed from a completely
+different domain's schema (the suggestion list is sourced from every registered domain, not just the
+selected connection's own type - useful for trying, say, a known Gig sheet name against a Generic
+connection).
 
 ## Known limitations (first pass)
 

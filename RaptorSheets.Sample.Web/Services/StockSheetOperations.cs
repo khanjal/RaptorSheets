@@ -24,10 +24,10 @@ public class StockSheetOperations(
     public override IReadOnlyDictionary<string, string> ValidationSheetMap { get; } = new Dictionary<string, string>();
 
     // PopulateDemoData directly, not SetupDemo - sheet creation is CreateAllSheetsAsync's job
-    // (see ISheetOperations.InsertDemoDataAsync).
-    public override async Task<List<MessageEntity>> InsertDemoDataAsync()
+    // (see IConnectedSheet.InsertDemoDataAsync).
+    protected override async Task<List<MessageEntity>> InsertDemoDataAsync(RaptorSheets.Stock.Managers.ISheetManager manager)
     {
-        var result = await Manager!.PopulateDemoData();
+        var result = await manager.PopulateDemoData();
         return result.Messages;
     }
 }

@@ -17,6 +17,12 @@ public class SheetCellModel
     
     public Format? Format { get; set; }
     public string? FormatPattern { get; set; }
+
+    // Google's own coarse NumberFormat.Type (e.g. "DATE", "NUMBER", "CURRENCY", "TEXT") as read back
+    // from a live sheet. Unlike Format above - which is this library's own, more specific enum and
+    // can be ambiguous or null for a pattern it doesn't recognize (e.g. a custom NumberFormatPattern) -
+    // this is always exact whenever a live cell has a format, at the cost of being coarser.
+    public string? RawFormatType { get; set; }
     public bool Protect { get; set; } = false;
     public string Validation { get; set; } = "";
     public string Note { get; set; } = "";

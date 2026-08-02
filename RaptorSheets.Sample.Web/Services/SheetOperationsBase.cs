@@ -16,6 +16,12 @@ namespace RaptorSheets.Sample.Web.Services;
 /// genuinely differ per domain: the identifying properties (DomainName/DomainLabel/SheetsType/...)
 /// and InsertDemoDataAsync, whose implementation differs because Gig has no PopulateDemoData
 /// convenience method the way Stock/Job/Home do.
+///
+/// Stateless factory, not a cached-connection singleton: TryConnect builds a fresh manager on every
+/// call (cheap - see ISheetManagerFactory's own doc comment) and wraps it in a private
+/// TypedConnectedSheet, rather than caching one Manager per domain the way earlier versions of this
+/// class did. That's what lets a domain type have zero, one, or many live connections at once - the
+/// old model could only ever represent "the one live spreadsheet for this domain."
 /// </summary>
 // S2436: all 3 parameters are load-bearing, not incidental - TManager and TEntity alone can't give
 // strongly-typed access to TEntity.Sheets (declared on SheetEntityBase<TSheets>, not on TEntity's
@@ -31,17 +37,6 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
     where TEntity : SheetEntityBase<TSheets>, new()
     where TSheets : new()
 {
-    /// <summary>Null until TryGetManager (or the concrete subclass's own typed accessor, if it has
-    /// one) has been called at least once - see Connect.</summary>
-    protected TManager? Manager { get; private set; }
-
-    private string? _error;
-    private bool _attempted;
-    private bool _usingTestFallback;
-
-    /// <inheritdoc/>
-    public bool UsingTestFallback => _usingTestFallback;
-
     public abstract string DomainName { get; }
     public abstract string DomainLabel { get; }
     public abstract Type SheetsType { get; }
@@ -49,55 +44,25 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
     public abstract IReadOnlySet<string> ExcludedSheetNames { get; }
     public abstract IReadOnlyDictionary<string, string> ValidationSheetMap { get; }
 
-    public bool TryGetManager(out object? manager, out string? error)
+    public bool TryConnect(SpreadsheetConnection connection, out ITypedConnectedSheet? sheet, out string? error)
     {
-        if (!_attempted)
-        {
-            _attempted = true;
-            Connect();
-        }
+        sheet = null;
 
-        manager = Manager;
-        error = _error;
-        return Manager is not null;
-    }
-
-    /// <summary>Forgets the cached attempt so the next TryGetManager call reconnects - for after the
-    /// setup form writes new secrets, since configuration.Reload() alone doesn't invalidate this.</summary>
-    public void Reset()
-    {
-        _attempted = false;
-        Manager = null;
-        _error = null;
-        _usingTestFallback = false;
-    }
-
-    private void Connect()
-    {
-        // spreadsheets:live:{domain} is the user's own data, written by the Settings page - this is
-        // what Connect prefers whenever it's set. spreadsheets:test:{domain} is the dedicated
-        // spreadsheet RaptorSheets.Test.Common reads exclusively (see TestConfigurationHelpers) and
-        // that suite deletes and regenerates on every run - falling back to it here is only ever a
-        // "nothing configured yet, here's something to look at" convenience, flagged via
-        // UsingTestFallback so the UI can warn it isn't permanent storage.
-        var liveSpreadsheetId = configuration[$"spreadsheets:live:{DomainName}"];
-        var testSpreadsheetId = configuration[$"spreadsheets:test:{DomainName}"];
         var credentials = configuration.GetSection("google_credentials").Get<Dictionary<string, string>>();
 
-        var spreadsheetId = string.IsNullOrWhiteSpace(liveSpreadsheetId) ? testSpreadsheetId : liveSpreadsheetId;
-
-        if (string.IsNullOrWhiteSpace(spreadsheetId) || credentials is not { Count: > 0 })
+        if (string.IsNullOrWhiteSpace(connection.SpreadsheetId) || credentials is not { Count: > 0 })
         {
-            _error = $"No {DomainLabel} spreadsheet configured. Set \"spreadsheets:live:{DomainName}\" and " +
-                      "\"google_credentials\" with dotnet user-secrets - see docs/SAMPLE-APP.md.";
-            return;
+            error = $"No spreadsheet configured for \"{connection.Label}\". Add credentials and a " +
+                     "spreadsheet ID in Settings.";
+            return false;
         }
-
-        _usingTestFallback = string.IsNullOrWhiteSpace(liveSpreadsheetId);
 
         try
         {
-            Manager = factory.Create(credentials, spreadsheetId);
+            var manager = factory.Create(credentials, connection.SpreadsheetId);
+            sheet = new TypedConnectedSheet(manager, this, cache, connection);
+            error = null;
+            return true;
         }
         catch (Exception ex)
         {
@@ -108,76 +73,73 @@ public abstract class SheetOperationsBase<TManager, TEntity, TSheets>(
             // this constructor's own validation controls. This is the boundary where arbitrary
             // user-supplied credential text meets the system, so catching broadly here and showing a
             // message is correct - the alternative is an uncaught exception tearing down the circuit.
-            _error = $"Couldn't connect to the {DomainLabel} spreadsheet: {ex.Message}";
-            _usingTestFallback = false;
+            error = $"Couldn't connect to \"{connection.Label}\": {ex.Message}";
+            return false;
         }
     }
 
-    public async Task<List<string>> GetAllSheetTabNamesAsync() => await Manager!.GetAllSheetTabNames();
+    /// <summary>Domain-specific demo-data write for the manager TryConnect just built - Gig has no
+    /// PopulateDemoData convenience method the way Stock/Job/Home do, so this can't be unified across
+    /// domains into a single shared implementation.</summary>
+    protected abstract Task<List<MessageEntity>> InsertDemoDataAsync(TManager manager);
 
-    public SheetModel? GetSheetLayout(string sheetName) => Manager!.GetSheetLayout(sheetName);
-
-    public async Task<(object SheetsContainer, List<MessageEntity> Messages)> GetSheetAsync(string sheetName)
+    private sealed class TypedConnectedSheet(
+        TManager manager,
+        SheetOperationsBase<TManager, TEntity, TSheets> owner,
+        ReferenceSheetCache cache,
+        SpreadsheetConnection connection) : ITypedConnectedSheet
     {
-        var result = await Manager!.GetSheet(sheetName);
-        return (result.Sheets!, result.Messages);
-    }
+        public Task<string?> GetSpreadsheetTitleAsync() => manager.GetSpreadsheetTitle();
 
-    public async Task<List<MessageEntity>> ChangeSheetDataAsync(string sheetName, PropertyInfo listProperty, IList dirtyRows)
-    {
-        var entity = new TEntity();
-        listProperty.SetValue(entity.Sheets, dirtyRows);
-        var result = await Manager!.ChangeSheetData([sheetName], entity);
-        return result.Messages;
-    }
+        public Task<List<string>> GetAllSheetTabNamesAsync() => manager.GetAllSheetTabNames();
 
-    public async Task<List<MessageEntity>> CreateSheetAsync(string sheetName)
-    {
-        var result = await Manager!.CreateSheets([sheetName]);
-        return result.Messages;
-    }
+        public Task<SheetModel?> GetLiveSheetStructureAsync(string sheetName) => manager.GetLiveSheetStructure(sheetName);
 
-    public async Task<List<MessageEntity>> CreateAllSheetsAsync()
-    {
-        var result = await Manager!.CreateAllSheets();
-        return result.Messages;
-    }
+        public Task<Dictionary<string, SheetModel>> GetLiveSheetStructuresAsync(List<string> sheetNames) =>
+            manager.GetLiveSheetStructures(sheetNames);
 
-    public Task<Dictionary<string, IReadOnlyList<string>>> GetReferenceValuesAsync(
-        IReadOnlyList<SheetDescriptor> referenceDescriptors, CancellationToken cancellationToken = default) =>
-        cache.GetIdentityValuesAsync(
-            DomainName,
-            async (names, ct) => (await Manager!.GetSheets(names, ct)).Sheets!,
-            referenceDescriptors,
-            cancellationToken);
+        public Task<List<List<string?>>> GetLiveSheetRawValuesAsync(string sheetName, int maxRows = 200) =>
+            manager.GetLiveSheetRawValues(sheetName, maxRows);
 
-    public async Task<string?> GetSpreadsheetTitleAsync() => await Manager!.GetSpreadsheetTitle();
+        public Task<Dictionary<string, List<List<string?>>>> GetLiveSheetsRawValuesAsync(List<string> sheetNames, int maxRows = 200) =>
+            manager.GetLiveSheetsRawValues(sheetNames, maxRows);
 
-    public async Task<string?> GetSpreadsheetTitleForIdAsync(string spreadsheetId)
-    {
-        var credentials = configuration.GetSection("google_credentials").Get<Dictionary<string, string>>();
-        if (string.IsNullOrWhiteSpace(spreadsheetId) || credentials is not { Count: > 0 })
+        public SheetModel? GetSheetLayout(string sheetName) => manager.GetSheetLayout(sheetName);
+
+        public async Task<(object SheetsContainer, List<MessageEntity> Messages)> GetSheetAsync(string sheetName)
         {
-            return null;
+            var result = await manager.GetSheet(sheetName);
+            return (result.Sheets!, result.Messages);
         }
 
-        try
+        public async Task<List<MessageEntity>> ChangeSheetDataAsync(string sheetName, PropertyInfo listProperty, IList dirtyRows)
         {
-            // Deliberately a throwaway manager, not assigned to Manager - this must not disturb the
-            // cached TryGetManager/Connect state (which resolves spreadsheets:live:{domain}, falling
-            // back to spreadsheets:test:{domain}), since this checks a specific, caller-supplied ID
-            // instead.
-            var probeManager = factory.Create(credentials, spreadsheetId);
-            return await probeManager.GetSpreadsheetTitle();
+            var entity = new TEntity();
+            listProperty.SetValue(entity.Sheets, dirtyRows);
+            var result = await manager.ChangeSheetData([sheetName], entity);
+            return result.Messages;
         }
-        catch (Exception)
+
+        public async Task<List<MessageEntity>> CreateSheetAsync(string sheetName)
         {
-            // Same reasoning as Connect()'s catch: arbitrary user-pasted text meeting the system here,
-            // not a bug - a bad ID or malformed credentials just means "can't verify," not a crash.
-            return null;
+            var result = await manager.CreateSheets([sheetName]);
+            return result.Messages;
         }
+
+        public async Task<List<MessageEntity>> CreateAllSheetsAsync()
+        {
+            var result = await manager.CreateAllSheets();
+            return result.Messages;
+        }
+
+        public Task<List<MessageEntity>> InsertDemoDataAsync() => owner.InsertDemoDataAsync(manager);
+
+        public Task<Dictionary<string, IReadOnlyList<string>>> GetReferenceValuesAsync(
+            IReadOnlyList<SheetDescriptor> referenceDescriptors, CancellationToken cancellationToken = default) =>
+            cache.GetIdentityValuesAsync(
+                $"{owner.DomainName}:{connection.SpreadsheetId}",
+                async (names, ct) => (await manager.GetSheets(names, ct)).Sheets!,
+                referenceDescriptors,
+                cancellationToken);
     }
-
-    /// <inheritdoc cref="ISheetOperations.InsertDemoDataAsync"/>
-    public abstract Task<List<MessageEntity>> InsertDemoDataAsync();
 }

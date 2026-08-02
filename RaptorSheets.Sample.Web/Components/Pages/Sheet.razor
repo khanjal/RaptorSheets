@@ -1,18 +1,19 @@
-@page "/sheet/{Domain}/{SheetName}"
+@page "/sheet/{ConnectionId}/{SheetName}"
 @using System.Collections
 @using RaptorSheets.Core.Entities
 @using RaptorSheets.Core.Utilities
 @using RaptorSheets.Sample.Web.Services
 @inject DomainRegistry Domains
+@inject ConnectionRegistry Connections
 
 <PageTitle>@SheetName - RaptorSheets Sample</PageTitle>
 
 <h1>@SheetName</h1>
 
-@if (_ops is not null && _ops.UsingTestFallback)
+@if (_isTestFallback)
 {
     <p class="status warning">
-        Showing the shared test dataset - no spreadsheet is configured for @_ops.DomainLabel yet, so
+        Showing the shared test dataset - no spreadsheet is configured for @_ops?.DomainLabel yet, so
         this falls back to the same spreadsheet RaptorSheets' integration tests delete and regenerate
         on every run. Anything added here won't be permanent.
         <a href="/settings">Set your own spreadsheet in Settings</a> to keep what you add.
@@ -49,12 +50,14 @@ else
 
 @code {
     [Parameter]
-    public string Domain { get; set; } = string.Empty;
+    public string ConnectionId { get; set; } = string.Empty;
 
     [Parameter]
     public string SheetName { get; set; } = string.Empty;
 
     private ISheetOperations? _ops;
+    private ITypedConnectedSheet? _sheet;
+    private bool _isTestFallback;
     private SheetDescriptor? _descriptor;
     private Type? _gridType;
     private Dictionary<string, object>? _gridParameters;
@@ -71,19 +74,29 @@ else
         _gridType = null;
         _gridParameters = null;
         _messages = [];
+        _isTestFallback = false;
 
-        _ops = Domains.TryGet(Domain);
-        if (_ops is null)
+        var connection = Connections.TryGet(ConnectionId);
+        if (connection is null)
         {
-            _error = $"\"{Domain}\" isn't a known domain.";
+            _error = $"\"{ConnectionId}\" isn't a known connection.";
             return;
         }
 
-        if (!_ops.TryGetManager(out _, out var connectionError))
+        _ops = Domains.TryGet(connection.Type);
+        if (_ops is null)
+        {
+            _error = $"\"{connection.Type}\" isn't a known domain.";
+            return;
+        }
+
+        if (!_ops.TryConnect(connection, out _sheet, out var connectionError))
         {
             _error = connectionError;
             return;
         }
+
+        _isTestFallback = connection.IsTestFallback;
 
         _descriptor = SheetMetadata.GetSheetDescriptors(_ops.SheetsType, _ops.SheetNamesType)
             .FirstOrDefault(d => string.Equals(d.Name, SheetName, StringComparison.OrdinalIgnoreCase));
@@ -103,19 +116,19 @@ else
         _isBusy = true;
         try
         {
-            var tabNames = await _ops!.GetAllSheetTabNamesAsync();
+            var tabNames = await _sheet!.GetAllSheetTabNamesAsync();
             if (!tabNames.Contains(_descriptor!.Name, StringComparer.OrdinalIgnoreCase))
             {
                 _notFoundOnSheet = true;
                 return;
             }
 
-            var isReadOnly = _ops.GetSheetLayout(_descriptor.Name)?.ProtectSheet ?? false;
+            var isReadOnly = _sheet.GetSheetLayout(_descriptor.Name)?.ProtectSheet ?? false;
 
             // Fast path: just the sheet being viewed, same single read as before dropdowns existed.
             // Reference-sheet data for dropdowns loads separately, in the background, so a big sheet
             // like Trips (thousands of rows) isn't held up waiting on six lookup sheets.
-            var (sheetsContainer, messages) = await _ops.GetSheetAsync(_descriptor.Name);
+            var (sheetsContainer, messages) = await _sheet.GetSheetAsync(_descriptor.Name);
             _messages = messages;
 
             var rows = _descriptor.GetRows(sheetsContainer);
@@ -162,10 +175,10 @@ else
             .Select(d => d!)
             .ToList();
 
-        // Cached per reference-sheet-name across the whole app, not per page visit - these sheets
-        // are read-only and rarely change, so repeat navigations reuse the same values for a while
+        // Cached per connection across the whole app, not per page visit - these sheets are
+        // read-only and rarely change, so repeat navigations reuse the same values for a while
         // instead of re-fetching.
-        var valuesBySheet = await _ops.GetReferenceValuesAsync(referenceDescriptors);
+        var valuesBySheet = await _sheet!.GetReferenceValuesAsync(referenceDescriptors);
 
         if (generation != _loadGeneration)
         {
@@ -199,7 +212,7 @@ else
         _isBusy = true;
         try
         {
-            _messages = await _ops!.CreateSheetAsync(_descriptor!.Name);
+            _messages = await _sheet!.CreateSheetAsync(_descriptor!.Name);
             await LoadAsync();
         }
         finally
@@ -210,7 +223,7 @@ else
 
     private async Task SaveAsync(IList dirtyRows)
     {
-        _messages = await _ops!.ChangeSheetDataAsync(_descriptor!.Name, _descriptor.ListProperty, dirtyRows);
+        _messages = await _sheet!.ChangeSheetDataAsync(_descriptor!.Name, _descriptor.ListProperty, dirtyRows);
         await LoadAsync();
     }
 }

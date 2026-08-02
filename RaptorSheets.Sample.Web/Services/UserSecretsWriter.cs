@@ -1,8 +1,5 @@
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace RaptorSheets.Sample.Web.Services;
 
@@ -12,18 +9,17 @@ namespace RaptorSheets.Sample.Web.Services;
 /// RaptorSheets.Test (the integration test suite's shared infra) declare the same UserSecretsId,
 /// both projects read the same file - the credentials are one service account either way.
 ///
-/// The spreadsheet IDs are split into two independent slots per domain, spreadsheets:live:{domain}
-/// and spreadsheets:test:{domain} - both editable here, but kept deliberately separate in the UI
-/// (see Settings.razor's two sections) since they mean very different things. spreadsheets:live:* is
-/// a user's own real data. spreadsheets:test:* is what RaptorSheets.Test's integration suite reads
-/// (see TestConfigurationHelpers) and deletes/regenerates on every run (CleanSlateSheetFixture) -
-/// editing it here is a convenience for contributors who'd otherwise reach for the CLI to set up
-/// their own local test spreadsheet, not something a typical Sample.Web user needs. Recording real
-/// data must never end up on the spreadsheet the tests wipe, which is why SheetOperationsBase only
-/// ever falls back to spreadsheets:test:* for *display* when spreadsheets:live:* is unset - it never
-/// treats them as interchangeable beyond that read-only convenience. user-secrets is nothing more
-/// than a JSON file at a well-known path - this reads it (if it exists), merges in whatever changed,
-/// and writes it back, preserving any other keys already there.
+/// Only credentials and the 4 spreadsheets:test:{domain} IDs live here. A user's own real
+/// spreadsheet connections live in <see cref="LocalConnectionsStore"/> instead (connections.json,
+/// same folder, never user secrets) - see that class for why: unlike a single fixed "live" ID per
+/// domain, connections are a user-managed list (multiple per domain type allowed, plus a
+/// non-strongly-typed "generic" type) and don't belong in a single flat key/value secrets file.
+/// spreadsheets:test:* is what RaptorSheets.Test's integration suite reads (see
+/// TestConfigurationHelpers) and deletes/regenerates on every run (CleanSlateSheetFixture) - editing
+/// it here is a convenience for contributors who'd otherwise reach for the CLI to set up their own
+/// local test spreadsheet, not something a typical Sample.Web user needs. user-secrets is nothing
+/// more than a JSON file at a well-known path - this reads it (if it exists), merges in whatever
+/// changed, and writes it back, preserving any other keys already there.
 /// </summary>
 public class UserSecretsWriter(IConfigurationRoot configurationRoot)
 {
@@ -37,10 +33,6 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
         string? PrivateKeyId,
         string? ClientEmail,
         string? ClientId,
-        string? GigLiveSpreadsheetId,
-        string? StockLiveSpreadsheetId,
-        string? JobLiveSpreadsheetId,
-        string? HomeLiveSpreadsheetId,
         string? GigTestSpreadsheetId,
         string? StockTestSpreadsheetId,
         string? JobTestSpreadsheetId,
@@ -51,10 +43,6 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
         configurationRoot["google_credentials:private_key_id"],
         configurationRoot["google_credentials:client_email"],
         configurationRoot["google_credentials:client_id"],
-        configurationRoot["spreadsheets:live:gig"],
-        configurationRoot["spreadsheets:live:stock"],
-        configurationRoot["spreadsheets:live:job"],
-        configurationRoot["spreadsheets:live:home"],
         configurationRoot["spreadsheets:test:gig"],
         configurationRoot["spreadsheets:test:stock"],
         configurationRoot["spreadsheets:test:job"],
@@ -67,9 +55,9 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
     /// without having typed a new key must not wipe the existing one - each credential field is
     /// merged individually rather than replaced as an atomic unit.
     ///
-    /// The 8 spreadsheet IDs (4 live, 4 test) behave differently: unlike the private key, they're
-    /// always visibly prefilled with the current value (nothing about them is secret), so a blank
-    /// field here is a deliberate "clear it" rather than "I didn't touch this" - see WriteSettings.
+    /// The 4 test spreadsheet IDs behave differently: unlike the private key, they're always
+    /// visibly prefilled with the current value (nothing about them is secret), so a blank field
+    /// here is a deliberate "clear it" rather than "I didn't touch this" - see WriteSettings.
     /// </summary>
     public sealed record SettingsUpdate(
         string? CredentialType,
@@ -77,10 +65,6 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
         string? PrivateKey,
         string? ClientEmail,
         string? ClientId,
-        string? GigLiveSpreadsheetId,
-        string? StockLiveSpreadsheetId,
-        string? JobLiveSpreadsheetId,
-        string? HomeLiveSpreadsheetId,
         string? GigTestSpreadsheetId,
         string? StockTestSpreadsheetId,
         string? JobTestSpreadsheetId,
@@ -106,6 +90,25 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
             ? JsonNode.Parse(File.ReadAllText(path)) as JsonObject ?? new JsonObject()
             : new JsonObject();
 
+        // `dotnet user-secrets set "spreadsheets:test:gig" "..."` (and, historically, an older
+        // version of this method) writes a *flat* top-level key literally named
+        // "spreadsheets:test:gig" - JsonNode.Parse treats that as one opaque string key, not a path,
+        // so secrets["spreadsheets"] below finds nothing and this method would otherwise add a
+        // *second*, nested representation of the same setting alongside the untouched flat one.
+        // Both survive being written to disk, but the JSON configuration provider that reads this
+        // file back flattens nested objects into the same colon-separated paths, so the two
+        // representations collide as a "duplicate key" and the whole file fails to load. Migrate any
+        // flat legacy key under a section this method manages into the nested form before proceeding,
+        // so only one representation of each setting ever exists on disk.
+        var legacyFlatKeys = secrets.Select(kvp => kvp.Key)
+            .Where(key => key.StartsWith("google_credentials:", StringComparison.Ordinal) || key.StartsWith("spreadsheets:", StringComparison.Ordinal))
+            .ToList();
+
+        foreach (var key in legacyFlatKeys)
+        {
+            secrets.Remove(key);
+        }
+
         if (hasAnyCredentialField)
         {
             var googleCredentials = secrets["google_credentials"] as JsonObject ?? new JsonObject();
@@ -117,17 +120,10 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
             secrets["google_credentials"] = googleCredentials;
         }
 
-        // Unlike credential fields, blank here means "remove this domain's spreadsheet ID" - the
-        // Settings page always submits all 8 (every field is visibly prefilled, so there's no
+        // Unlike credential fields, blank here means "remove this domain's test spreadsheet ID" -
+        // the Settings page always submits all 4 (every field is visibly prefilled, so there's no
         // "field genuinely absent" case the way there is for the never-redisplayed private key).
         var spreadsheets = secrets["spreadsheets"] as JsonObject ?? new JsonObject();
-
-        var live = spreadsheets["live"] as JsonObject ?? new JsonObject();
-        SetOrRemove(live, "gig", update.GigLiveSpreadsheetId);
-        SetOrRemove(live, "stock", update.StockLiveSpreadsheetId);
-        SetOrRemove(live, "job", update.JobLiveSpreadsheetId);
-        SetOrRemove(live, "home", update.HomeLiveSpreadsheetId);
-        spreadsheets["live"] = live;
 
         var test = spreadsheets["test"] as JsonObject ?? new JsonObject();
         SetOrRemove(test, "gig", update.GigTestSpreadsheetId);
@@ -167,15 +163,5 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
         }
     }
 
-    private static string GetSecretsPath()
-    {
-        var userSecretsId = Assembly.GetEntryAssembly()?.GetCustomAttribute<UserSecretsIdAttribute>()?.UserSecretsId
-            ?? throw new InvalidOperationException("This assembly has no UserSecretsId configured.");
-
-        var userSecretsRoot = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "UserSecrets")
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".microsoft", "usersecrets");
-
-        return Path.Combine(userSecretsRoot, userSecretsId, "secrets.json");
-    }
+    private static string GetSecretsPath() => Path.Combine(LocalStoragePaths.GetUserSecretsRootFolder(), "secrets.json");
 }

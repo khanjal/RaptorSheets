@@ -23,8 +23,18 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     Task<TEntity> DeleteAllSheets(CancellationToken cancellationToken = default);
     Task<TEntity> DeleteSheets(List<string> sheets, CancellationToken cancellationToken = default);
     Task<TEntity> GetSheet(string sheet, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Same as the overload above, but when <paramref name="includeStructure"/> is true also
+    /// populates each returned entity's <c>Structures</c> with a live read of every requested
+    /// sheet's structure (see <see cref="GetLiveSheetStructure"/>) in the same API call used to fetch
+    /// data - no second round trip. Defaults to false so existing callers are unaffected.
+    /// </summary>
+    Task<TEntity> GetSheet(string sheet, bool includeStructure, CancellationToken cancellationToken = default);
     Task<TEntity> GetAllSheets(CancellationToken cancellationToken = default);
+    Task<TEntity> GetAllSheets(bool includeStructure, CancellationToken cancellationToken = default);
     Task<TEntity> GetSheets(List<string> sheets, CancellationToken cancellationToken = default);
+    Task<TEntity> GetSheets(List<string> sheets, bool includeStructure, CancellationToken cancellationToken = default);
 
     // Metadata & Properties
     Task<List<PropertyEntity>> GetAllSheetProperties(CancellationToken cancellationToken = default);
@@ -41,4 +51,33 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     SheetModel? GetSheetLayout(string sheet);
     List<SheetModel> GetSheetLayouts(List<string> sheets);
     Task<TEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Live Sheet Structure: reads a sheet's structure (headers, formats, validation, notes, freeze
+    /// counts, protection, ...) back from the live spreadsheet - the actual/current shape, in
+    /// contrast with <see cref="GetSheetLayout"/>'s configured/expected shape from this domain's
+    /// <c>[Column]</c> attributes. Works for any live sheet name, not just ones this domain knows
+    /// about - only the header row and the first data row are fetched (format/validation live on the
+    /// latter, never the header cell itself), so it's cheap.
+    /// </summary>
+    Task<SheetModel?> GetLiveSheetStructure(string sheet, CancellationToken cancellationToken = default);
+    Task<Dictionary<string, SheetModel>> GetLiveSheetStructures(List<string> sheets, CancellationToken cancellationToken = default);
+    Task<Dictionary<string, SheetModel>> GetAllLiveSheetStructures(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reads a sheet's raw cell values back from the live spreadsheet by row/column position, with no
+    /// assumption that row 0 is a header or that data is a simple one-row-per-record table - unlike
+    /// <see cref="GetSheet"/>/<see cref="GetLiveSheetStructure"/>, both of which assume that shape.
+    /// Useful for a sheet that doesn't follow it (a dashboard packing multiple mini-tables, label:value
+    /// pairs scattered at arbitrary positions, a transposed matrix, ...) so a caller can see what's
+    /// actually there before deciding how - or whether - to model it. Rows are ragged (only as long as
+    /// their own last populated cell) and bounded to <paramref name="maxRows"/> so a preview of a huge
+    /// sheet doesn't pull the whole thing; works for any live sheet name, registered or not.
+    /// </summary>
+    Task<List<List<string?>>> GetLiveSheetRawValues(string sheet, int maxRows = 200, CancellationToken cancellationToken = default);
+
+    /// <inheritdoc cref="GetLiveSheetRawValues(string, int, CancellationToken)"/>
+    /// <summary>Same as the single-sheet overload, but for multiple live sheets in one batched call -
+    /// keyed by sheet name (case-insensitive).</summary>
+    Task<Dictionary<string, List<List<string?>>>> GetLiveSheetsRawValues(List<string> sheets, int maxRows = 200, CancellationToken cancellationToken = default);
 }

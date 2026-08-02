@@ -1,3 +1,5 @@
+using RaptorSheets.Core.Models.Google;
+
 namespace RaptorSheets.Core.Entities;
 
 /// <summary>
@@ -10,4 +12,11 @@ public interface ISheetEntity
 {
     PropertyEntity Properties { get; set; }
     List<MessageEntity> Messages { get; set; }
+
+    /// <summary>
+    /// Live-read sheet structure (headers, formats, validation, notes, ...), keyed by sheet name.
+    /// Only populated when a caller opts in (e.g. <c>GetSheets(sheets, includeStructure: true, ...)</c>
+    /// or <c>GetLiveSheetStructure(s)</c>) - empty otherwise.
+    /// </summary>
+    Dictionary<string, SheetModel> Structures { get; set; }
 }

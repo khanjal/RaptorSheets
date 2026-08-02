@@ -166,6 +166,12 @@ code {
 
 /* Buttons */
 
+/* margin-top: a button directly following a label/paragraph (e.g. Inspect/Preview data right after
+   the Tab field) has no default gap the way label's own margin-top gives it from whatever precedes
+   *it* - without this, the button sits flush against the field above. Excluded wherever a button
+   already sits inside a flex row that manages its own spacing via gap (field-with-action's Remove
+   button next to Spreadsheet ID, demo-data-row, saved-sheets-add, chip) - adding a second,
+   independent top margin there would misalign it against its row siblings. */
 button {
     appearance: none;
     -webkit-appearance: none;
@@ -179,6 +185,7 @@ button {
     color: var(--color-text);
     cursor: pointer;
     transition: background-color 120ms ease, border-color 120ms ease, transform 60ms ease;
+    margin-top: 0.6rem;
 }
 
 button:hover:not(:disabled) {
@@ -210,6 +217,14 @@ button.btn-primary, button.btn-primary:disabled {
         background-color: var(--color-accent-hover);
         border-color: var(--color-accent-hover);
     }
+
+.field-with-action button,
+.demo-data-row button,
+.saved-sheets-add button,
+.chip button,
+.settings-actions button {
+    margin-top: 0;
+}
 
 /* Form fields */
 
@@ -252,7 +267,7 @@ textarea {
     width: 100%;
 }
 
-input[type="text"]:not(.filter):not(.field-compact):not(.field-wide), input:not([type]) {
+input[type="text"]:not(.filter):not(.field-compact):not(.field-wide):not(.field-wider), input:not([type]) {
     width: 100%;
 }
 
@@ -274,6 +289,21 @@ input[type="text"]:not(.filter):not(.field-compact):not(.field-wide), input:not(
     width: 10rem;
 }
 
+/* For a dropdown whose option text is itself a full label (e.g. "RaptorSheets.Gig Unit Tests (Gig)")
+   rather than a short fixed word (e.g. "Gig") - .field-wide's 10rem truncates those illegibly. */
+.field-wider {
+    width: 20rem;
+}
+
+/* Lets one field in a flex row (e.g. a Spreadsheet ID or Tab field next to a fixed-width dropdown)
+   fill whatever width the fixed-width siblings don't use, instead of shrink-wrapping to its content
+   or overflowing it - min-width:0 is what lets it actually shrink below its content's natural width
+   when the row runs out of room, which flex items don't do by default. */
+.field-grow {
+    flex: 1;
+    min-width: 0;
+}
+
 /* The add-item form is a different story: it's a fixed-width CSS grid, and when there isn't room
    for every column at its full desired width, the grid compresses the columns - but a fixed-width
    input doesn't shrink along with its now-narrower column, so it overflows into the next field.
@@ -288,7 +318,7 @@ input[type="text"]:not(.filter):not(.field-compact):not(.field-wide), input:not(
     max-width: 10rem;
 }
 
-.field-compact, .field-wide {
+.field-compact, .field-wide, .field-wider {
     font-size: 0.85rem;
     padding: 0.3rem 0.45rem;
 }
@@ -346,4 +376,59 @@ input[type="number"] {
     border-radius: var(--radius-sm);
     background: var(--color-surface-muted);
     color: var(--color-text-muted);
+}
+
+/* Tables - shared by every data-table component (EntityGrid, Sheet Inspector, and any future
+   one) so header/zebra styling stays consistent site-wide without each .razor.css redeclaring it.
+   Global rather than scoped: Blazor CSS isolation can't reach across component files, and these
+   components already needed near-identical rules before this was pulled out. */
+
+/* Bounded height + overflow-y so the horizontal scrollbar sits at a fixed, always-reachable spot
+   right under the visible rows - unbounded (the old behavior), a table with hundreds of rows grew as
+   tall as its content, pushing that scrollbar down past however many screens of rows there were,
+   effectively hiding it. This also gives th's position:sticky (below) a bounded scrolling ancestor to
+   stick within, instead of sticking to the whole page. */
+.grid-scroll {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 28rem;
+    border: 1px solid var(--color-border-muted);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    margin-bottom: 1rem;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.88rem;
+}
+
+th, td {
+    border-bottom: 1px solid var(--color-border-muted);
+    padding: 0.5rem 0.65rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+th {
+    background: var(--color-surface-muted);
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    position: sticky;
+    top: 0;
+}
+
+/* :where() keeps this at effectively zero specificity beyond tbody/tr, so any component's own
+   row-state class (row-new/row-edited/row-deleted/detail-row/...) always wins over it without
+   needing to coordinate specificity or stylesheet order across files. */
+tbody tr:where(:nth-child(even)) {
+    background: var(--color-surface-sunken);
+}
+
+tbody tr:hover {
+    background: var(--color-surface-muted);
 }

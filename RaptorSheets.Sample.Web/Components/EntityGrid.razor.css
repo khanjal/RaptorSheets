@@ -10,6 +10,13 @@
     gap: 0.6rem;
 }
 
+/* app.css gives a bare button a default top margin so one sitting right after a label/paragraph
+   isn't flush against it - wrong here, where every button already sits in a flex row (this one, or
+   a table cell) that centers/aligns its own content without needing that. */
+.toolbar button {
+    margin-top: 0;
+}
+
 .toolbar .filter {
     flex: 0 0 16rem;
 }
@@ -148,40 +155,18 @@
     margin-top: 1.25rem;
 }
 
-.grid-scroll {
-    overflow-x: auto;
-    border: 1px solid var(--color-border-muted);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
+    .add-form-actions button {
+        margin-top: 0;
+    }
+
+/* Delete/Restore/Remove sit alone in their own table cell - a top margin would offset them
+   vertically against the rest of that row's plain-text/input cells. */
+td button {
+    margin-top: 0;
 }
 
-table {
-    border-collapse: collapse;
-    width: 100%;
-    font-size: 0.88rem;
-}
-
-th, td {
-    border-bottom: 1px solid var(--color-border-muted);
-    padding: 0.5rem 0.65rem;
-    text-align: left;
-    white-space: nowrap;
-}
-
-th {
-    background: var(--color-surface-muted);
-    color: var(--color-text-muted);
-    font-size: 0.78rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    position: sticky;
-    top: 0;
-}
-
-tr:hover {
-    background: var(--color-surface-muted);
-}
+/* .grid-scroll and base table/th/td/row-hover/zebra styling live globally in wwwroot/app.css now -
+   shared across every table on the site instead of duplicated per component. */
 
 .readonly-badge {
     margin-left: 0.3rem;

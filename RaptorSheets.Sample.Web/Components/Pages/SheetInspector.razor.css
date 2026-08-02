@@ -1,0 +1,370 @@
+/* .grid-scroll and base table/th/td/row-hover styling live globally in wwwroot/app.css now - shared
+   across every table on the site instead of duplicated per component. The global zebra rule
+   (tbody tr:where(:nth-child(even))) counts raw DOM position though, which breaks down here: a
+   header row can be followed by 0, 1, or 2 .detail-row siblings (Note/Formula), shifting every
+   later row's DOM parity out of sync with which row is actually the Nth header. So this table
+   stripes explicitly per logical row instead, with an always-present class on every primary row -
+   not just the alternate one - so it reliably overrides the global rule (a class selector always
+   beats :where()'s near-zero specificity) regardless of how many detail rows precede it.
+
+   Each header's .detail-row(s) get the SAME row-plain/row-alt class as their own primary row
+   (see the markup), not a fixed color of their own - a detail row sits between its parent and the
+   next primary row, and a fixed color risked visually fusing it with whichever neighbor happened to
+   share that color instead of the row it actually belongs to. Sharing the parent's stripe guarantees
+   it groups with its parent (same color) and stays distinct from the next record (opposite color,
+   since primary rows strictly alternate) - the smaller font/muted color/prefix label below are what
+   still mark it as supplementary, not the background. */
+.row-plain {
+    background: var(--color-surface);
+}
+
+.row-alt {
+    background: var(--color-surface-sunken);
+}
+
+/* Note/Formula get their own full-width row instead of a cramped column - both can be long
+   (multi-paragraph documentation, or a long ARRAYFORMULA expression), so they need room to wrap
+   rather than forcing the table into horizontal scroll. No background here - inherits row-plain/
+   row-alt from the shared class on the same <tr> (see comment above). */
+.detail-row td {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+}
+
+.detail-row code {
+    font-size: 0.8rem;
+}
+
+.row-index {
+    background: var(--color-surface-muted);
+    color: var(--color-text-subtle);
+    font-size: 0.78rem;
+    text-align: right;
+}
+
+/* Only ever applied to Raw data's row 1 when _structure is not null (see the markup) - reflects that
+   Structure already read this sheet as a normal header-row-1 layout, it isn't a fresh guess made here.
+   A class selector beats app.css's global :where()-based zebra rule (near-zero specificity), so this
+   wins even on an even/odd row either way. */
+.raw-header-row td {
+    background: var(--color-accent-muted);
+    color: var(--color-text);
+    font-weight: 650;
+}
+
+/* Row/column freezing for the Raw data grid specifically (#raw-grid-scroll id) - never the Structure
+   table, which also lives on this page and would otherwise match the same bare
+   "table thead th:first-child" selector (its first header is a real "Name" column, not a blank
+   corner cell). --sheet-inspector-thead-height/--sheet-inspector-first-col-width are content-
+   dependent (row-number digit count, header row height) so they're measured in the co-located
+   SheetInspector.razor.js module and written onto the container as CSS custom properties - see
+   RecalculateStickyOffsetsAsync in the code-behind for when that recalculation runs.
+
+   Three z-index tiers, not ad hoc per-cell numbers - three different bugs found live (the corner
+   cell, the "A" column-letter header, and row 1's own row-index cell) all turned out to be the same
+   mistake: two sticky cells that can end up sharing the same screen pixels during scroll need
+   different z-index, and "give this one a value that happens to differ from that one" kept missing
+   some OTHER sticky sibling it could still tie with.
+     - 10: frozen on the LEFT axis only (a normal row's row-index cell, or its column A cell) - the
+       lowest tier, safe to be scrolled under by anything below.
+     - 11: frozen on the TOP axis only, applied to a WHOLE row/band at once (every thead th; every td
+       in the frozen header row via .raw-header-row) - a tier-11 cell with no left-freeze of its own
+       (e.g. thead's "C", or row 1's own "Plural" cell) can still slide horizontally into a tier-10 or
+       tier-12 cell's screen space as the page scrolls, and being equal-or-higher z-index than tier 10
+       would otherwise paint over it.
+     - 12: frozen on BOTH axes - the corner cell (thead x row-index), the "A" header (thead x column
+       A), row 1's own row-index cell (frozen header row x row-index), and row 1's own column-A cell
+       (frozen header row x column A). None of these four ever spatially overlap each other (each is a
+       different row-band x column-band combination), so one shared value is enough for all of them -
+       they only ever need to beat their own band's tier-11 siblings, never each other. */
+#raw-grid-scroll .row-index {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+#raw-grid-scroll table thead th {
+    z-index: 11;
+}
+
+#raw-grid-scroll table thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 12;
+}
+
+/* A visible edge for wherever the frozen region currently ends, since "these columns don't move" isn't
+   otherwise obvious until you actually try scrolling. Right border (owned by the frozen side), not a
+   border on the first scrolling column - that boundary moves depending on freeze-col-a (row-index
+   alone by default, column A's own right edge once it's frozen too), and a right-border only ever
+   needs reassigning to a different cell, not kept in sync on both sides of a moving seam.
+
+   inset box-shadow, not border-right - the table has border-collapse:collapse (app.css), which
+   computes cell borders as part of the table's shared border grid instead of each cell's own box.
+   That grid doesn't reliably repaint with a position:sticky cell's compositor-driven offset during
+   horizontal scroll, even though the same cell's background/text stick correctly - the border visibly
+   lagged behind, scrolling with the content instead of staying pinned to the frozen column's edge. An
+   inset shadow paints entirely inside the sticky cell's own box, so it's unaffected by border-collapse
+   and moves with the cell instead of the table's border grid. (A plain outward box-shadow doesn't work
+   either - it bleeds into the neighboring cell's box and gets painted over by that cell's own opaque
+   background.) */
+#raw-grid-scroll:not(.freeze-col-a) .row-index,
+#raw-grid-scroll:not(.freeze-col-a) table thead th:first-child {
+    box-shadow: inset -2px 0 0 0 var(--color-border);
+}
+
+/* Zebra-striped like the rest of its row, not a flat color - a frozen cell still needs an opaque
+   background (otherwise scrolled content bleeds through underneath it), but it doesn't need to be the
+   SAME color regardless of row; matching the row's own stripe keeps column A - usually the column
+   actually being used to identify which row is which - readable at a glance across the frozen seam,
+   the same way a spreadsheet's row banding survives freezing panes. Explicit colors, not "inherit
+   background" - a sticky cell needs its own opaque value, since letting the row's own background
+   show through it defeats the point (that's exactly the bleed-through this exists to prevent). */
+#raw-grid-scroll.freeze-col-a table td:nth-child(2) {
+    position: sticky;
+    left: var(--sheet-inspector-first-col-width, 0px);
+    z-index: 10;
+    background: var(--color-surface);
+    box-shadow: inset -2px 0 0 0 var(--color-border);
+}
+
+#raw-grid-scroll.freeze-col-a table tbody tr:nth-child(even) td:nth-child(2) {
+    background: var(--color-surface-sunken);
+}
+
+/* Row 1's own column-A cell is the one place zebra shouldn't win: .raw-header-row's accent-muted
+   background (above) is what marks a whole row as "this is the header," but the zebra rule just above
+   has an ID in its selector (#raw-grid-scroll...) and .raw-header-row td doesn't, so without this
+   override zebra's plain surface color always beat the accent one for this single cell - the header
+   row's own name column looked like an ordinary data row instead of dropping out of the frozen area's
+   zebra pattern the same way it already does everywhere else. */
+#raw-grid-scroll.freeze-col-a table tbody tr.raw-header-row td:nth-child(2) {
+    background: var(--color-accent-muted);
+}
+
+#raw-grid-scroll.freeze-col-a table th:nth-child(2) {
+    position: sticky;
+    left: var(--sheet-inspector-first-col-width, 0px);
+    z-index: 12;
+    background: var(--color-surface-muted);
+    box-shadow: inset -2px 0 0 0 var(--color-border);
+}
+
+#raw-grid-scroll.auto-freeze-header tbody tr.raw-header-row td {
+    position: sticky;
+    top: var(--sheet-inspector-thead-height, 0px);
+    z-index: 11;
+}
+
+/* Row 1's own row-index/column-A cells are tier-12 intersections too (frozen header row x a frozen
+   column), same as the corner cell and "A" header above - without this override they'd stay at
+   whatever tier-10 value their own column rules gave them, tied with the blanket tier-11 rule right
+   above for every OTHER cell in this same row, and lose to it (later in source order wins ties). */
+#raw-grid-scroll.auto-freeze-header tbody tr.raw-header-row td.row-index,
+#raw-grid-scroll.auto-freeze-header.freeze-col-a tbody tr.raw-header-row td:nth-child(2) {
+    z-index: 12;
+}
+
+
+.freeze-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* Connection, Tab, and Inspect/Bulk generate all fit on one line at typical widths instead of
+   stacking - Tab (field-grow) takes whatever room Connection's fixed field-wider width and the
+   button group don't use, and wraps to its own line first if the viewport gets too narrow. */
+.inspector-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    max-width: 55rem;
+}
+
+    .inspector-controls > label,
+    .inspector-controls > p {
+        margin-top: 0;
+    }
+
+    /* Bounded both ways so flex:1 can't stretch the field out on a wide viewport (a min-width alone,
+       an earlier version of this rule, did exactly that). Overriding app.css's global .field-grow here
+       is safe and doesn't leak: Blazor scopes every rule in this file to SheetInspector's own
+       markup. */
+    .inspector-controls .field-grow {
+        min-width: 11rem;
+        max-width: 16rem;
+    }
+
+.inspector-actions {
+    display: flex;
+    gap: 0.6rem;
+}
+
+    .inspector-actions button {
+        margin-top: 0;
+    }
+
+.field-with-action {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+    .field-with-action input {
+        flex: 1;
+    }
+
+.saved-sheets {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border-muted);
+}
+
+    .saved-sheets summary {
+        font-size: 0.9rem;
+        font-weight: 650;
+        cursor: pointer;
+    }
+
+    .saved-sheets[open] summary {
+        margin-bottom: 0.3rem;
+    }
+
+/* Structure and Raw data are fetched together by one Inspect click but shown one at a time - a tab
+   strip instead of two independently-collapsible sections, since each can run to hundreds of rows and
+   showing both stacked at once made the page a long wall of tables. Only a tab whose data actually
+   came back renders (see the markup's null checks), so a failed structure read doesn't leave a dead
+   tab pointing at nothing. */
+.result-tabs {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.result-tab {
+    margin-top: 0;
+    border: none;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background: none;
+    padding: 0.5rem 0.9rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+    .result-tab:hover:not(.active) {
+        background: var(--color-surface-muted);
+    }
+
+    .result-tab.active {
+        color: var(--color-accent);
+        background: var(--color-surface-muted);
+        box-shadow: inset 0 -2px 0 var(--color-accent);
+    }
+
+.chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0.6rem 0 0;
+    padding: 0;
+}
+
+.chip {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.chip-label {
+    border: none;
+    border-radius: 0;
+    background: var(--color-surface);
+}
+
+.chip-remove {
+    border: none;
+    border-left: 1px solid var(--color-border);
+    border-radius: 0;
+    background: var(--color-surface-muted);
+    padding: 0.45rem 0.6rem;
+    color: var(--color-text-subtle);
+}
+
+    .chip-remove:hover:not(:disabled) {
+        color: var(--color-text);
+    }
+
+/* Two-stage bulk generation: OpenBulkPicker just lists _tabNames back (all pre-checked, no fetch),
+   so the batched structure/sample reads only ever run for whatever's still checked when Generate is
+   clicked. */
+.bulk-picker {
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-sunken);
+}
+
+.bulk-picker-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+    .bulk-picker-header button {
+        margin-top: 0;
+    }
+
+/* No max-height/overflow here on purpose - the list grows with its content (the page scrolls, not a
+   nested region) rather than trapping a long tab list behind its own inner scrollbar. */
+.bulk-picker-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: 0.3rem 1rem;
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+}
+
+/* Overrides the global label's flex-column (built for a field's own label-above-input shape) - this
+   one pairs a checkbox with its tab name side by side instead. */
+.checkbox-label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0;
+    font-size: 0.85rem;
+    color: var(--color-text);
+}
+
+    .checkbox-label input[type="checkbox"] {
+        align-self: auto;
+    }
+
+/* .inspector-actions button{margin-top:0} (above) zeroes the button row's own top margin everywhere
+   else on this page, but here it left Generate/Cancel sitting flush against the checkbox list right
+   above it - this restores breathing room for just this instance. */
+.bulk-picker .inspector-actions {
+    margin-top: 0.85rem;
+}
+
+.saved-sheets-add {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}

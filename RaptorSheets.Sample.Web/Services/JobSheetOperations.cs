@@ -35,10 +35,10 @@ public class JobSheetOperations(
     };
 
     // PopulateDemoData directly, not SetupDemo - sheet creation is CreateAllSheetsAsync's job
-    // (see ISheetOperations.InsertDemoDataAsync).
-    public override async Task<List<MessageEntity>> InsertDemoDataAsync()
+    // (see IConnectedSheet.InsertDemoDataAsync).
+    protected override async Task<List<MessageEntity>> InsertDemoDataAsync(RaptorSheets.Job.Managers.ISheetManager manager)
     {
-        var result = await Manager!.PopulateDemoData();
+        var result = await manager.PopulateDemoData();
         return result.Messages;
     }
 }
