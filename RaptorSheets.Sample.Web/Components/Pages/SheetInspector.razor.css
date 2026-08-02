@@ -99,10 +99,20 @@
    otherwise obvious until you actually try scrolling. Right border (owned by the frozen side), not a
    border on the first scrolling column - that boundary moves depending on freeze-col-a (row-index
    alone by default, column A's own right edge once it's frozen too), and a right-border only ever
-   needs reassigning to a different cell, not kept in sync on both sides of a moving seam. */
+   needs reassigning to a different cell, not kept in sync on both sides of a moving seam.
+
+   inset box-shadow, not border-right - the table has border-collapse:collapse (app.css), which
+   computes cell borders as part of the table's shared border grid instead of each cell's own box.
+   That grid doesn't reliably repaint with a position:sticky cell's compositor-driven offset during
+   horizontal scroll, even though the same cell's background/text stick correctly - the border visibly
+   lagged behind, scrolling with the content instead of staying pinned to the frozen column's edge. An
+   inset shadow paints entirely inside the sticky cell's own box, so it's unaffected by border-collapse
+   and moves with the cell instead of the table's border grid. (A plain outward box-shadow doesn't work
+   either - it bleeds into the neighboring cell's box and gets painted over by that cell's own opaque
+   background.) */
 #raw-grid-scroll:not(.freeze-col-a) .row-index,
 #raw-grid-scroll:not(.freeze-col-a) table thead th:first-child {
-    border-right: 2px solid var(--color-border);
+    box-shadow: inset -2px 0 0 0 var(--color-border);
 }
 
 /* Zebra-striped like the rest of its row, not a flat color - a frozen cell still needs an opaque
@@ -117,7 +127,7 @@
     left: var(--sheet-inspector-first-col-width, 0px);
     z-index: 10;
     background: var(--color-surface);
-    border-right: 2px solid var(--color-border);
+    box-shadow: inset -2px 0 0 0 var(--color-border);
 }
 
 #raw-grid-scroll.freeze-col-a table tbody tr:nth-child(even) td:nth-child(2) {
@@ -139,7 +149,7 @@
     left: var(--sheet-inspector-first-col-width, 0px);
     z-index: 12;
     background: var(--color-surface-muted);
-    border-right: 2px solid var(--color-border);
+    box-shadow: inset -2px 0 0 0 var(--color-border);
 }
 
 #raw-grid-scroll.auto-freeze-header tbody tr.raw-header-row td {
