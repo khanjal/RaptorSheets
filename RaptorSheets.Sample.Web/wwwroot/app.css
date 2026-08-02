@@ -166,6 +166,12 @@ code {
 
 /* Buttons */
 
+/* margin-top: a button directly following a label/paragraph (e.g. Inspect/Preview data right after
+   the Tab field) has no default gap the way label's own margin-top gives it from whatever precedes
+   *it* - without this, the button sits flush against the field above. Excluded wherever a button
+   already sits inside a flex row that manages its own spacing via gap (field-with-action's Remove
+   button next to Spreadsheet ID, demo-data-row, saved-sheets-add, chip) - adding a second,
+   independent top margin there would misalign it against its row siblings. */
 button {
     appearance: none;
     -webkit-appearance: none;
@@ -179,6 +185,7 @@ button {
     color: var(--color-text);
     cursor: pointer;
     transition: background-color 120ms ease, border-color 120ms ease, transform 60ms ease;
+    margin-top: 0.6rem;
 }
 
 button:hover:not(:disabled) {
@@ -210,16 +217,6 @@ button.btn-primary, button.btn-primary:disabled {
         background-color: var(--color-accent-hover);
         border-color: var(--color-accent-hover);
     }
-
-/* A button directly following a label/paragraph (e.g. Inspect/Preview data right after the Tab
-   field) has no default gap the way label's own margin-top gives it from whatever precedes *it* -
-   without this, the button sits flush against the field above. Excluded wherever a button already
-   sits inside a flex row that manages its own spacing via gap (field-with-action's Remove button
-   next to Spreadsheet ID, demo-data-row, saved-sheets-add, chip) - adding a second, independent
-   top margin there would misalign it against its row siblings. */
-button {
-    margin-top: 0.6rem;
-}
 
 .field-with-action button,
 .demo-data-row button,

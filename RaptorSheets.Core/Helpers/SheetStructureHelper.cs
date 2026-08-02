@@ -100,7 +100,13 @@ public static class SheetStructureHelper
         }
 
         var rowData = sheet.Data?.ElementAtOrDefault(0)?.RowData;
-        var headerCells = rowData?.ElementAtOrDefault(0)?.Values;
+
+        if (rowData == null)
+        {
+            return model;
+        }
+
+        var headerCells = rowData.ElementAtOrDefault(0)?.Values;
 
         if (headerCells == null)
         {
@@ -119,7 +125,7 @@ public static class SheetStructureHelper
             model.FontColor = fontColor;
         }
 
-        var formatCells = rowData?.ElementAtOrDefault(1)?.Values;
+        var formatCells = rowData.ElementAtOrDefault(1)?.Values;
 
         for (var index = 0; index < headerCells.Count; index++)
         {

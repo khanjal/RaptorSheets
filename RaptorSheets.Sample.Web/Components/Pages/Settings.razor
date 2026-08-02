@@ -763,24 +763,24 @@
             ? value.GetString()
             : null;
 
+    private UserSecretsWriter.SettingsUpdate BuildSettingsUpdate() => new(
+        _showCredentialsForm ? _credType : null,
+        _showCredentialsForm ? _credPrivateKeyId : null,
+        _showCredentialsForm ? _credPrivateKey : null,
+        _showCredentialsForm ? _credClientEmail : null,
+        _showCredentialsForm ? _credClientId : null,
+        GetTestSlot("gig").Value,
+        GetTestSlot("stock").Value,
+        GetTestSlot("job").Value,
+        GetTestSlot("home").Value);
+
     private async Task SaveAsync()
     {
         _isBusy = true;
         _message = null;
         try
         {
-            var update = new UserSecretsWriter.SettingsUpdate(
-                _showCredentialsForm ? _credType : null,
-                _showCredentialsForm ? _credPrivateKeyId : null,
-                _showCredentialsForm ? _credPrivateKey : null,
-                _showCredentialsForm ? _credClientEmail : null,
-                _showCredentialsForm ? _credClientId : null,
-                GetTestSlot("gig").Value,
-                GetTestSlot("stock").Value,
-                GetTestSlot("job").Value,
-                GetTestSlot("home").Value);
-
-            var result = SecretsWriter.WriteSettings(update);
+            var result = SecretsWriter.WriteSettings(BuildSettingsUpdate());
 
             if (!result.Success)
             {
