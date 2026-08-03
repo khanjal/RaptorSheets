@@ -98,6 +98,8 @@ public static class SheetHelpers
             SheetColor.RED => Colors.Red,
             SheetColor.WHITE => Colors.White,
             SheetColor.YELLOW => Colors.Yellow,
+            SheetColor.RED_BERRY => Colors.RedBerry,
+            SheetColor.CORNFLOWER_BLUE => Colors.CornflowerBlue,
             _ => Colors.White,
         };
     }

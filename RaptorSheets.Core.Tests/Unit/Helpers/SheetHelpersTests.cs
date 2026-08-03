@@ -484,6 +484,8 @@ public class SheetHelpersTests
     [InlineData(SheetColor.PINK)]
     [InlineData(SheetColor.PURPLE)]
     [InlineData(SheetColor.RED)]
+    [InlineData(SheetColor.RED_BERRY)]
+    [InlineData(SheetColor.CORNFLOWER_BLUE)]
     [InlineData(SheetColor.WHITE)]
     [InlineData(SheetColor.YELLOW)]
     public void GetColor_WithValidColorEnum_ShouldReturnColor(SheetColor colorEnum)
@@ -505,6 +507,8 @@ public class SheetHelpersTests
         Assert.Equivalent(Colors.Magenta, SheetHelpers.GetColor(SheetColor.MAGENTA));
         Assert.Equivalent(Colors.Magenta, SheetHelpers.GetColor(SheetColor.PINK));
         Assert.Equivalent(Colors.White, SheetHelpers.GetColor(SheetColor.WHITE));
+        Assert.Equivalent(Colors.RedBerry, SheetHelpers.GetColor(SheetColor.RED_BERRY));
+        Assert.Equivalent(Colors.CornflowerBlue, SheetHelpers.GetColor(SheetColor.CORNFLOWER_BLUE));
     }
 
     [Fact]
@@ -515,6 +519,53 @@ public class SheetHelpersTests
 
         // Assert
         Assert.Equivalent(Colors.White, result);
+    }
+
+    [Fact]
+    public void GetColor_RedBerryAndCornflowerBlue_MatchGoogleSheetsStandardSwatches()
+    {
+        // #980000 and #4a86e8 - Google Sheets' own "standard colors" swatches (see issue #89).
+        var redBerry = SheetHelpers.GetColor(SheetColor.RED_BERRY);
+        Assert.Equal(0.596078431372549f, redBerry.Red);
+        Assert.Equal(0f, redBerry.Green);
+        Assert.Equal(0f, redBerry.Blue);
+
+        var cornflowerBlue = SheetHelpers.GetColor(SheetColor.CORNFLOWER_BLUE);
+        Assert.Equal(0.2901960784313725f, cornflowerBlue.Red);
+        Assert.Equal(0.5254901960784314f, cornflowerBlue.Green);
+        Assert.Equal(0.9098039215686274f, cornflowerBlue.Blue);
+    }
+
+    #endregion
+
+    #region TryGetSheetColor Tests
+
+    [Theory]
+    [InlineData(SheetColor.RED_BERRY)]
+    [InlineData(SheetColor.CORNFLOWER_BLUE)]
+    [InlineData(SheetColor.RED)]
+    [InlineData(SheetColor.BLUE)]
+    public void TryGetSheetColor_WithColorThisLibraryWrote_ResolvesBackToSameEnum(SheetColor original)
+    {
+        // Act
+        var resolved = SheetHelpers.TryGetSheetColor(SheetHelpers.GetColor(original), out var sheetColor);
+
+        // Assert
+        Assert.True(resolved);
+        Assert.Equal(original, sheetColor);
+    }
+
+    [Fact]
+    public void TryGetSheetColor_WithColorNotInPalette_ReturnsFalse()
+    {
+        // Arrange - a color no SheetColor value maps to.
+        var customColor = new Color { Red = 0.12f, Green = 0.34f, Blue = 0.56f };
+
+        // Act
+        var resolved = SheetHelpers.TryGetSheetColor(customColor, out _);
+
+        // Assert
+        Assert.False(resolved);
     }
 
     #endregion

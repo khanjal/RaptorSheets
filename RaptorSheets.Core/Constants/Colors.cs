@@ -25,4 +25,7 @@ public static class Colors
     public static Color Red => new() { Red = 1, Green = 0, Blue = 0 };
     public static Color White => new() { Red = 1, Green = 1, Blue = 1 };
     public static Color Yellow => new() { Red = 1, Green = 1, Blue = 0 };
+    // Google Sheets' own "standard colors" swatches (#980000 / #4a86e8) - see issue #89.
+    public static Color RedBerry => new() { Red = (float?)0.596078431372549, Green = 0, Blue = 0 };
+    public static Color CornflowerBlue => new() { Red = (float?)0.2901960784313725, Green = (float?)0.5254901960784314, Blue = (float?)0.9098039215686274 };
 }
