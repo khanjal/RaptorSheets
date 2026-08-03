@@ -484,6 +484,13 @@ public class SheetHelpersTests
     [InlineData(SheetColor.RED)]
     [InlineData(SheetColor.RED_BERRY)]
     [InlineData(SheetColor.CORNFLOWER_BLUE)]
+    [InlineData(SheetColor.DARK_GREY_4)]
+    [InlineData(SheetColor.DARK_GREY_3)]
+    [InlineData(SheetColor.DARK_GREY_2)]
+    [InlineData(SheetColor.DARK_GREY_1)]
+    [InlineData(SheetColor.GREY)]
+    [InlineData(SheetColor.LIGHT_GREY_2)]
+    [InlineData(SheetColor.LIGHT_GREY_3)]
     [InlineData(SheetColor.WHITE)]
     [InlineData(SheetColor.YELLOW)]
     public void GetColor_WithValidColorEnum_ShouldReturnColor(SheetColor colorEnum)
@@ -531,6 +538,28 @@ public class SheetHelpersTests
         Assert.Equal(0.2901960784313725f, cornflowerBlue.Red);
         Assert.Equal(0.5254901960784314f, cornflowerBlue.Green);
         Assert.Equal(0.9098039215686274f, cornflowerBlue.Blue);
+    }
+
+    [Fact]
+    public void GetColor_NewGreys_MatchValues()
+    {
+        var g4 = SheetHelpers.GetColor(SheetColor.DARK_GREY_4);
+        Assert.Equal(0.2627450980392157f, g4.Red);
+        Assert.Equal(0.2627450980392157f, g4.Green);
+        Assert.Equal(0.2627450980392157f, g4.Blue);
+
+        var g1 = SheetHelpers.GetColor(SheetColor.DARK_GREY_1);
+        Assert.Equal(0.7176470588235294f, g1.Red);
+        Assert.Equal(0.7176470588235294f, g1.Green);
+        Assert.Equal(0.7176470588235294f, g1.Blue);
+    }
+
+    [Fact]
+    public void GetHex_ReturnsExpectedHexValues()
+    {
+        Assert.Equal("#FF0000", SheetHelpers.GetHex(SheetColor.RED));
+        Assert.Equal("#980000", SheetHelpers.GetHex(SheetColor.RED_BERRY));
+        Assert.Equal("#434343", SheetHelpers.GetHex(SheetColor.DARK_GREY_4));
     }
 
     [Fact]

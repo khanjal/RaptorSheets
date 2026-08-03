@@ -98,8 +98,21 @@ public static class SheetHelpers
             SheetColor.YELLOW => Colors.Yellow,
             SheetColor.RED_BERRY => Colors.RedBerry,
             SheetColor.CORNFLOWER_BLUE => Colors.CornflowerBlue,
+            SheetColor.DARK_GREY_4 => Colors.DarkGrey4,
+            SheetColor.DARK_GREY_3 => Colors.DarkGrey3,
+            SheetColor.DARK_GREY_2 => Colors.DarkGrey2,
+            SheetColor.DARK_GREY_1 => Colors.DarkGrey1,
+            SheetColor.GREY => Colors.Grey,
+            SheetColor.LIGHT_GREY_2 => Colors.LightGrey2,
+            SheetColor.LIGHT_GREY_3 => Colors.LightGrey3,
             _ => Colors.White,
         };
+    }
+
+    public static string GetHex(SheetColor colorEnum)
+    {
+        var color = GetColor(colorEnum);
+        return $"#{(byte)((color.Red ?? 0) * 255):X2}{(byte)((color.Green ?? 0) * 255):X2}{(byte)((color.Blue ?? 0) * 255):X2}";
     }
 
     // Matches this library's own fixed 18-color palette (Colors) within floating-point tolerance.

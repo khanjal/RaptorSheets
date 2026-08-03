@@ -43,4 +43,18 @@ public static class Colors
     public static Color RedBerry => new() { Red = (float?)0.596078431372549, Green = 0, Blue = 0 };
     // #4a86e8 - Google's "Cornflower Blue" (standard colors row).
     public static Color CornflowerBlue => new() { Red = (float?)0.2901960784313725, Green = (float?)0.5254901960784314, Blue = (float?)0.9098039215686274 };
+    // #434343 - Google's 'Dark grey 4' (grayscale row).
+    public static Color DarkGrey4 => new() { Red = (float?)0.2627450980392157, Green = (float?)0.2627450980392157, Blue = (float?)0.2627450980392157 };
+    // #666666 - Google's 'Dark grey 3' (grayscale row).
+    public static Color DarkGrey3 => new() { Red = (float?)0.4, Green = (float?)0.4, Blue = (float?)0.4 };
+    // #999999 - Google's 'Dark grey 2' (grayscale row).
+    public static Color DarkGrey2 => new() { Red = (float?)0.6, Green = (float?)0.6, Blue = (float?)0.6 };
+    // #b7b7b7 - Google's 'Dark grey 1' (grayscale row).
+    public static Color DarkGrey1 => new() { Red = (float?)0.7176470588235294, Green = (float?)0.7176470588235294, Blue = (float?)0.7176470588235294 };
+    // #cccccc - Google's 'Grey' (grayscale row).
+    public static Color Grey => new() { Red = (float?)0.8, Green = (float?)0.8, Blue = (float?)0.8 };
+    // #efefef - Google's 'Light grey 2' (grayscale row).
+    public static Color LightGrey2 => new() { Red = (float?)0.9372549019607843, Green = (float?)0.9372549019607843, Blue = (float?)0.9372549019607843 };
+    // #f3f3f3 - Google's 'Light grey 3' (grayscale row).
+    public static Color LightGrey3 => new() { Red = (float?)0.9529411764705882, Green = (float?)0.9529411764705882, Blue = (float?)0.9529411764705882 };
 }
