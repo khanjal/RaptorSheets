@@ -31,12 +31,12 @@ public enum SheetColor
     YELLOW,
     WHITE,
     RED_BERRY,
-    CORNFLOWER_BLUE
-    ,DARK_GREY_4
-    ,DARK_GREY_3
-    ,DARK_GREY_2
-    ,DARK_GREY_1
-    ,GREY
-    ,LIGHT_GREY_2
-    ,LIGHT_GREY_3
+    CORNFLOWER_BLUE,
+    DARK_GREY_4,
+    DARK_GREY_3,
+    DARK_GREY_2,
+    DARK_GREY_1,
+    GREY,
+    LIGHT_GREY_2,
+    LIGHT_GREY_3
 }
