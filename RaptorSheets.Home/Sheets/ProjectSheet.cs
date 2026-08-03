@@ -16,7 +16,7 @@ public static class ProjectSheet
     {
         Name = SheetsConfig.SheetNames.Projects,
         TabColor = SheetColor.GREEN,
-        CellColor = SheetColor.LIGHT_GREEN,
+        CellColor = SheetColor.LIGHT_GREEN_3,
         // No explicit FontColor - GREEN is now Google's real bright/light Green swatch (#00ff00,
         // see issue #89's palette rebase), so the default BLACK reads fine.
         FreezeColumnCount = 1,

@@ -18,8 +18,8 @@ public static class ScheduleSheet
     internal static SheetModel BaseSheet => new()
     {
         Name = SheetsConfig.SheetNames.Schedules,
-        CellColor = SheetColor.LIGHT_GRAY,
-        TabColor = SheetColor.LIGHT_GRAY,
+        CellColor = SheetColor.LIGHT_GREY_1,
+        TabColor = SheetColor.LIGHT_GREY_1,
         FreezeColumnCount = 0,
         FreezeRowCount = 1,
         ProtectSheet = true,

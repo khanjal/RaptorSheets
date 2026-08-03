@@ -104,7 +104,7 @@ public class CoreIntegrationTests
         {
             Name = "IntegrationTestSheet",
             TabColor = SheetColor.BLUE,
-            CellColor = SheetColor.LIGHT_GRAY,
+            CellColor = SheetColor.LIGHT_GREY_1,
             Headers = new List<SheetCellModel>
             {
                 new SheetCellModel { Name = "ID", Format = Format.NUMBER },

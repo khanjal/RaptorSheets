@@ -17,7 +17,7 @@ public static class SetupSheet
     {
         Name = SheetsConfig.SheetNames.Setup,
         TabColor = SheetColor.ORANGE,
-        CellColor = SheetColor.LIGHT_YELLOW,
+        CellColor = SheetColor.LIGHT_YELLOW_3,
         FontColor = SheetColor.WHITE,
         FreezeColumnCount = 0,
         FreezeRowCount = 1,

@@ -470,14 +470,14 @@ public class SheetHelpersTests
     [InlineData(SheetColor.BLACK)]
     [InlineData(SheetColor.BLUE)]
     [InlineData(SheetColor.CYAN)]
-    [InlineData(SheetColor.DARK_YELLOW)]
+    [InlineData(SheetColor.DARK_YELLOW_1)]
     [InlineData(SheetColor.GREEN)]
-    [InlineData(SheetColor.LIGHT_CYAN)]
-    [InlineData(SheetColor.LIGHT_GRAY)]
-    [InlineData(SheetColor.LIGHT_GREEN)]
-    [InlineData(SheetColor.LIGHT_PURPLE)]
-    [InlineData(SheetColor.LIGHT_RED)]
-    [InlineData(SheetColor.LIGHT_YELLOW)]
+    [InlineData(SheetColor.LIGHT_CYAN_3)]
+    [InlineData(SheetColor.LIGHT_GREY_1)]
+    [InlineData(SheetColor.LIGHT_GREEN_3)]
+    [InlineData(SheetColor.LIGHT_PURPLE_3)]
+    [InlineData(SheetColor.LIGHT_RED_3)]
+    [InlineData(SheetColor.LIGHT_YELLOW_3)]
     [InlineData(SheetColor.ORANGE)]
     [InlineData(SheetColor.MAGENTA)]
     [InlineData(SheetColor.PURPLE)]
@@ -559,7 +559,7 @@ public class SheetHelpersTests
 
         // #d9d9d9 - Google's "Light grey 1" - the old value had an accidental green tint
         // (Red 0.906, Green 0.976, Blue 0.937), which this also fixes.
-        var lightGray = SheetHelpers.GetColor(SheetColor.LIGHT_GRAY);
+        var lightGray = SheetHelpers.GetColor(SheetColor.LIGHT_GREY_1);
         Assert.Equal(lightGray.Red, lightGray.Green);
         Assert.Equal(lightGray.Green, lightGray.Blue);
     }

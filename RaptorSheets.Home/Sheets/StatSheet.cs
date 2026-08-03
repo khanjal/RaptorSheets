@@ -16,7 +16,7 @@ public static class StatSheet
     {
         Name = SheetsConfig.SheetNames.Stats,
         TabColor = SheetColor.PURPLE,
-        CellColor = SheetColor.LIGHT_PURPLE,
+        CellColor = SheetColor.LIGHT_PURPLE_3,
         FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,

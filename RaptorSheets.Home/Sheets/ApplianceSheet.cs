@@ -18,7 +18,7 @@ public static class ApplianceSheet
     {
         Name = SheetsConfig.SheetNames.Appliances,
         TabColor = SheetColor.BLUE,
-        CellColor = SheetColor.LIGHT_GRAY,
+        CellColor = SheetColor.LIGHT_GREY_1,
         FontColor = SheetColor.WHITE, // BLUE is a dark TabColor - see SheetColor for the dark/light list
         FreezeColumnCount = 1,
         FreezeRowCount = 1,

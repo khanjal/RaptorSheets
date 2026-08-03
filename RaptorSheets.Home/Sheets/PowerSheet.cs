@@ -16,7 +16,7 @@ public static class PowerSheet
     {
         Name = SheetsConfig.SheetNames.Power,
         TabColor = SheetColor.RED,
-        CellColor = SheetColor.LIGHT_RED,
+        CellColor = SheetColor.LIGHT_RED_3,
         FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,

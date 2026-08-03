@@ -16,7 +16,7 @@ public static class MaintenanceSheet
     {
         Name = SheetsConfig.SheetNames.Maintenance,
         TabColor = SheetColor.ORANGE,
-        CellColor = SheetColor.LIGHT_RED,
+        CellColor = SheetColor.LIGHT_RED_3,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<MaintenanceEntity>()

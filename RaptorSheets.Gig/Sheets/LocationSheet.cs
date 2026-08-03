@@ -17,7 +17,7 @@ public static class LocationSheet
     {
         Name = SheetsConfig.SheetNames.Locations,
         TabColor = SheetColor.BLUE,
-        CellColor = SheetColor.LIGHT_GRAY,
+        CellColor = SheetColor.LIGHT_GREY_1,
         FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
