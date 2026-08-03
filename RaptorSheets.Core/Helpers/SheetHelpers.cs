@@ -75,7 +75,6 @@ public static class SheetHelpers
         return sheetValues;
     }
 
-    // https://www.rapidtables.com/convert/color/hex-to-rgb.html
     public static Color GetColor(SheetColor colorEnum)
     {
         return colorEnum switch
@@ -91,9 +90,8 @@ public static class SheetHelpers
             SheetColor.LIGHT_PURPLE => Colors.LightPurple,
             SheetColor.LIGHT_RED => Colors.LightRed,
             SheetColor.LIGHT_YELLOW => Colors.LightYellow,
-            SheetColor.LIME => Colors.Lime,
             SheetColor.ORANGE => Colors.Orange,
-            SheetColor.MAGENTA or SheetColor.PINK => Colors.Magenta,
+            SheetColor.MAGENTA => Colors.Magenta,
             SheetColor.PURPLE => Colors.Purple,
             SheetColor.RED => Colors.Red,
             SheetColor.WHITE => Colors.White,

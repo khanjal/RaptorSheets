@@ -17,7 +17,8 @@ public static class ProjectSheet
         Name = SheetsConfig.SheetNames.Projects,
         TabColor = SheetColor.GREEN,
         CellColor = SheetColor.LIGHT_GREEN,
-        FontColor = SheetColor.WHITE, // GREEN is a dark TabColor - see SheetColor for the dark/light list
+        // No explicit FontColor - GREEN is now Google's real bright/light Green swatch (#00ff00,
+        // see issue #89's palette rebase), so the default BLACK reads fine.
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ProjectEntity>()

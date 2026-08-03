@@ -478,10 +478,8 @@ public class SheetHelpersTests
     [InlineData(SheetColor.LIGHT_PURPLE)]
     [InlineData(SheetColor.LIGHT_RED)]
     [InlineData(SheetColor.LIGHT_YELLOW)]
-    [InlineData(SheetColor.LIME)]
     [InlineData(SheetColor.ORANGE)]
     [InlineData(SheetColor.MAGENTA)]
-    [InlineData(SheetColor.PINK)]
     [InlineData(SheetColor.PURPLE)]
     [InlineData(SheetColor.RED)]
     [InlineData(SheetColor.RED_BERRY)]
@@ -505,7 +503,6 @@ public class SheetHelpersTests
         Assert.Equivalent(Colors.Blue, SheetHelpers.GetColor(SheetColor.BLUE));
         Assert.Equivalent(Colors.Cyan, SheetHelpers.GetColor(SheetColor.CYAN));
         Assert.Equivalent(Colors.Magenta, SheetHelpers.GetColor(SheetColor.MAGENTA));
-        Assert.Equivalent(Colors.Magenta, SheetHelpers.GetColor(SheetColor.PINK));
         Assert.Equivalent(Colors.White, SheetHelpers.GetColor(SheetColor.WHITE));
         Assert.Equivalent(Colors.RedBerry, SheetHelpers.GetColor(SheetColor.RED_BERRY));
         Assert.Equivalent(Colors.CornflowerBlue, SheetHelpers.GetColor(SheetColor.CORNFLOWER_BLUE));
@@ -534,6 +531,37 @@ public class SheetHelpersTests
         Assert.Equal(0.2901960784313725f, cornflowerBlue.Red);
         Assert.Equal(0.5254901960784314f, cornflowerBlue.Green);
         Assert.Equal(0.9098039215686274f, cornflowerBlue.Blue);
+    }
+
+    [Fact]
+    public void GetColor_RebasedPaletteEntries_MatchGoogleSheetsSwatches()
+    {
+        // Every previously-invented value now maps to a genuine Google Sheets swatch (see issue #89's
+        // full palette rebase) - spot-check the ones that shifted the most.
+
+        // #00ff00 - Google's "Green" (standard colors row), not CSS green (0, 0.5, 0).
+        var green = SheetHelpers.GetColor(SheetColor.GREEN);
+        Assert.Equal(0f, green.Red);
+        Assert.Equal(1f, green.Green);
+        Assert.Equal(0f, green.Blue);
+
+        // #9900ff - Google's "Purple" (standard colors row), not CSS purple (0.5, 0, 0.5).
+        var purple = SheetHelpers.GetColor(SheetColor.PURPLE);
+        Assert.Equal(0.6f, purple.Red);
+        Assert.Equal(0f, purple.Green);
+        Assert.Equal(1f, purple.Blue);
+
+        // #00ffff - Google's "Cyan" (standard colors row), not the previous custom muted cyan.
+        var cyan = SheetHelpers.GetColor(SheetColor.CYAN);
+        Assert.Equal(0f, cyan.Red);
+        Assert.Equal(1f, cyan.Green);
+        Assert.Equal(1f, cyan.Blue);
+
+        // #d9d9d9 - Google's "Light grey 1" - the old value had an accidental green tint
+        // (Red 0.906, Green 0.976, Blue 0.937), which this also fixes.
+        var lightGray = SheetHelpers.GetColor(SheetColor.LIGHT_GRAY);
+        Assert.Equal(lightGray.Red, lightGray.Green);
+        Assert.Equal(lightGray.Green, lightGray.Blue);
     }
 
     #endregion

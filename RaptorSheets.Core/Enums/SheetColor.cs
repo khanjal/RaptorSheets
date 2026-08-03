@@ -7,8 +7,8 @@ namespace RaptorSheets.Core.Enums;
 /// TabColor is one of the darker values below needs FontColor set to WHITE (or another light color)
 /// explicitly, or the header text becomes illegible.
 ///
-/// Dark (needs a light FontColor when used as TabColor): BLACK, BLUE, CORNFLOWER_BLUE, GREEN, MAGENTA, PINK, PURPLE, RED, RED_BERRY.
-/// Light (default BLACK FontColor is fine): CYAN, DARK_YELLOW, LIGHT_*, LIME, ORANGE, WHITE, YELLOW.
+/// Dark (needs a light FontColor when used as TabColor): BLACK, BLUE, CORNFLOWER_BLUE, MAGENTA, PURPLE, RED, RED_BERRY.
+/// Light (default BLACK FontColor is fine): CYAN, DARK_YELLOW, GREEN, LIGHT_*, ORANGE, WHITE, YELLOW.
 /// </summary>
 public enum SheetColor
 {
@@ -24,17 +24,12 @@ public enum SheetColor
     LIGHT_PURPLE,
     LIGHT_RED,
     LIGHT_YELLOW,
-    LIME,
     MAGENTA,
     ORANGE,
-    PINK,
     PURPLE,
     RED,
     YELLOW,
     WHITE,
-
-    // Appended after WHITE (not inserted alphabetically above) so existing values keep their
-    // ordinal - see issue #89.
     RED_BERRY,
     CORNFLOWER_BLUE
 }
