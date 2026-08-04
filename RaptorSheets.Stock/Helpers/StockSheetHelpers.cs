@@ -42,26 +42,14 @@ public static class StockSheetHelpers
         // factory returns the real, formula-laden SheetModel - GetSheetLayout/RefreshHeaderFormulasAsync
         // and SheetRegistry.GetDependents' cross-sheet formula scan both rely on that, matching the
         // convention Gig/Job already follow (e.g. TripSheet.GetSheet passed directly to RegisterGeneric).
-        registry.Register(SheetName.ACCOUNTS.GetDescription(), AccountSheet.GetSheet, (se, values) =>
-        {
-            var headers = values[0];
-            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, AccountSheet.GetSheet()));
-            se.Sheets.Accounts = AccountSheet.MapFromRangeData(values);
-        });
+        registry.RegisterGeneric<SheetEntity, AccountEntity>(SheetName.ACCOUNTS.GetDescription(), AccountSheet.GetSheet,
+            (se, rows) => se.Sheets.Accounts = rows);
 
-        registry.Register(SheetName.STOCKS.GetDescription(), StockSheet.GetSheet, (se, values) =>
-        {
-            var headers = values[0];
-            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, StockSheet.GetSheet()));
-            se.Sheets.Stocks = StockSheet.MapFromRangeData(values);
-        });
+        registry.RegisterGeneric<SheetEntity, StockEntity>(SheetName.STOCKS.GetDescription(), StockSheet.GetSheet,
+            (se, rows) => se.Sheets.Stocks = rows);
 
-        registry.Register(SheetName.TICKERS.GetDescription(), TickerSheet.GetSheet, (se, values) =>
-        {
-            var headers = values[0];
-            se.Messages.AddRange(HeaderHelpers.CheckSheetHeaders(headers, TickerSheet.GetSheet()));
-            se.Sheets.Tickers = TickerSheet.MapFromRangeData(values);
-        });
+        registry.RegisterGeneric<SheetEntity, TickerEntity>(SheetName.TICKERS.GetDescription(), TickerSheet.GetSheet,
+            (se, rows) => se.Sheets.Tickers = rows);
 
         return registry;
     }

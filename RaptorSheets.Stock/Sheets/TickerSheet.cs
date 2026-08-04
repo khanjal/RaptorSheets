@@ -11,51 +11,6 @@ namespace RaptorSheets.Stock.Sheets;
 
 public static class TickerSheet
 {
-    public static List<TickerEntity> MapFromRangeData(IList<IList<object>> values)
-    {
-        var entities = new List<TickerEntity>();
-        var headers = new Dictionary<int, string>();
-        var filteredValues = values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).Select(x => x.ToList()).ToList();
-        var id = 0;
-
-        foreach (var value in filteredValues)
-        {
-            id++;
-            if (id == 1)
-            {
-                headers = HeaderHelpers.ParserHeader(value);
-                continue;
-            }
-
-            if (value.Count < headers.Count)
-            {
-                value.AddItems(headers.Count - value.Count);
-            }
-
-            TickerEntity entity = new()
-            {
-                RowId = id,
-                Ticker = HeaderHelpers.GetStringValue(Header.TICKER.GetDescription(), value, headers),
-                Name = HeaderHelpers.GetStringValue(Header.NAME.GetDescription(), value, headers),
-                Accounts = HeaderHelpers.GetIntValue(Header.ACCOUNTS.GetDescription(), value, headers),
-                Shares = HeaderHelpers.GetDecimalValue(Header.SHARES.GetDescription(), value, headers),
-                AverageCost = HeaderHelpers.GetDecimalValue(Header.AVERAGE_COST.GetDescription(), value, headers),
-                CostTotal = HeaderHelpers.GetDecimalValue(Header.COST_TOTAL.GetDescription(), value, headers),
-                CurrentPrice = HeaderHelpers.GetDecimalValue(Header.CURRENT_PRICE.GetDescription(), value, headers),
-                CurrentTotal = HeaderHelpers.GetDecimalValue(Header.CURRENT_TOTAL.GetDescription(), value, headers),
-                Return = HeaderHelpers.GetDecimalValue(Header.RETURN.GetDescription(), value, headers),
-                PeRatio = HeaderHelpers.GetDecimalValue(Header.PE_RATIO.GetDescription(), value, headers),
-                WeekHigh52 = HeaderHelpers.GetDecimalValue(Header.WEEK_HIGH_52.GetDescription(), value, headers),
-                WeekLow52 = HeaderHelpers.GetDecimalValue(Header.WEEK_LOW_52.GetDescription(), value, headers),
-                MaxHigh = HeaderHelpers.GetDecimalValue(Header.MAX_HIGH.GetDescription(), value, headers),
-                MinLow = HeaderHelpers.GetDecimalValue(Header.MIN_LOW.GetDescription(), value, headers)
-            };
-
-            entities.Add(entity);
-        }
-        return entities;
-    }
-
     /// <summary>
     /// Bare sheet definition (name/colors/freeze/headers, no formulas) - internal so
     /// AccountSheet/StockSheet can resolve this sheet's column positions for their own cross-sheet
@@ -71,13 +26,7 @@ public static class TickerSheet
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
-        Headers = [
-            new SheetCellModel { Name = Header.TICKER.GetDescription() },
-            new SheetCellModel { Name = Header.NAME.GetDescription() },
-            new SheetCellModel { Name = Header.ACCOUNTS.GetDescription() },
-            .. SheetsConfig.CommonPriceSheetHeaders,
-            .. SheetsConfig.CommonHistorySheetHeaders
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TickerEntity>()
     };
 
     public static SheetModel GetSheet()

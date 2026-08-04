@@ -1,43 +1,34 @@
-﻿using RaptorSheets.Core.Extensions;
-using RaptorSheets.Core.Models.Google;
-using System.Diagnostics.CodeAnalysis;
-using Header = RaptorSheets.Stock.Enums.Header;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Stock.Constants;
 
 /// <summary>
-/// Header lists shared across more than one sheet - each sheet's own SheetModel definition lives
-/// alongside its formulas/row-mapping in RaptorSheets.Stock.Sheets (AccountSheet/StockSheet/TickerSheet).
+/// Header name string constants for use in [Column(...)] attributes on Stock's entities -
+/// attribute arguments must be compile-time constants, so these mirror (and must stay in sync
+/// with) RaptorSheets.Stock.Enums.Header's [Description] text. Each sheet's own SheetModel
+/// definition (headers generated from its entity, formulas/row-mapping applied on top) lives in
+/// RaptorSheets.Stock.Sheets (AccountSheet/StockSheet/TickerSheet).
 /// </summary>
 [ExcludeFromCodeCoverage]
 public static class SheetsConfig
 {
-    internal static List<SheetCellModel> CommonCostSheetHeaders =>
-    [
-        new SheetCellModel { Name = Header.SHARES.GetDescription() },
-        new SheetCellModel { Name = Header.AVERAGE_COST.GetDescription() },
-        new SheetCellModel { Name = Header.COST_TOTAL.GetDescription() },
-    ];
-
-    internal static List<SheetCellModel> CommonPriceSheetHeaders =>
-    [
-        .. CommonCostSheetHeaders,
-        new SheetCellModel { Name = Header.CURRENT_PRICE.GetDescription() },
-        .. CommonReturnSheetHeaders,
-    ];
-
-    internal static List<SheetCellModel> CommonReturnSheetHeaders =>
-    [
-        new SheetCellModel { Name = Header.CURRENT_TOTAL.GetDescription() },
-        new SheetCellModel { Name = Header.RETURN.GetDescription() },
-    ];
-
-    internal static List<SheetCellModel> CommonHistorySheetHeaders =>
-    [
-        new SheetCellModel { Name = Header.PE_RATIO.GetDescription() },
-        new SheetCellModel { Name = Header.WEEK_HIGH_52.GetDescription() },
-        new SheetCellModel { Name = Header.WEEK_LOW_52.GetDescription() },
-        new SheetCellModel { Name = Header.MAX_HIGH.GetDescription() },
-        new SheetCellModel { Name = Header.MIN_LOW.GetDescription() }
-    ];
+    public static class HeaderNames
+    {
+        public const string Account = "Account";
+        public const string Accounts = "Accts";
+        public const string AverageCost = "Avg Cost";
+        public const string CostTotal = "Cost Total";
+        public const string CurrentPrice = "Current Price";
+        public const string CurrentTotal = "Current Total";
+        public const string MaxHigh = "Max High";
+        public const string MinLow = "Min Low";
+        public const string Name = "Name";
+        public const string PeRatio = "P/E Ratio";
+        public const string Return = "Return";
+        public const string Shares = "Shares";
+        public const string Stocks = "Stocks";
+        public const string Ticker = "Ticker";
+        public const string WeekHigh52 = "52 Wk High";
+        public const string WeekLow52 = "52 Wk Low";
+    }
 }
