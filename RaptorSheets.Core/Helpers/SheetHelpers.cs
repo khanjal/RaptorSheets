@@ -105,6 +105,11 @@ public static class SheetHelpers
             SheetColor.GREY => Colors.Grey,
             SheetColor.LIGHT_GREY_2 => Colors.LightGrey2,
             SheetColor.LIGHT_GREY_3 => Colors.LightGrey3,
+            SheetColor.LIGHT_RED_BERRY_3 => Colors.LightRedBerry3,
+            SheetColor.LIGHT_ORANGE_3 => Colors.LightOrange3,
+            SheetColor.LIGHT_CORNFLOWER_BLUE_3 => Colors.LightCornflowerBlue3,
+            SheetColor.LIGHT_BLUE_3 => Colors.LightBlue3,
+            SheetColor.LIGHT_MAGENTA_3 => Colors.LightMagenta3,
             _ => Colors.White,
         };
     }

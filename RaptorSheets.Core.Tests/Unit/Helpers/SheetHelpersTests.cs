@@ -491,6 +491,11 @@ public class SheetHelpersTests
     [InlineData(SheetColor.GREY)]
     [InlineData(SheetColor.LIGHT_GREY_2)]
     [InlineData(SheetColor.LIGHT_GREY_3)]
+    [InlineData(SheetColor.LIGHT_RED_BERRY_3)]
+    [InlineData(SheetColor.LIGHT_ORANGE_3)]
+    [InlineData(SheetColor.LIGHT_CORNFLOWER_BLUE_3)]
+    [InlineData(SheetColor.LIGHT_BLUE_3)]
+    [InlineData(SheetColor.LIGHT_MAGENTA_3)]
     [InlineData(SheetColor.WHITE)]
     [InlineData(SheetColor.YELLOW)]
     public void GetColor_WithValidColorEnum_ShouldReturnColor(SheetColor colorEnum)
@@ -538,6 +543,22 @@ public class SheetHelpersTests
         Assert.Equal(0.2901960784313725f, cornflowerBlue.Red);
         Assert.Equal(0.5254901960784314f, cornflowerBlue.Green);
         Assert.Equal(0.9098039215686274f, cornflowerBlue.Blue);
+    }
+
+    [Fact]
+    public void GetColor_LightTier3Additions_MatchGoogleSheetsSwatches()
+    {
+        // #e6b8af - Google's "light red berry 3".
+        var lightRedBerry3 = SheetHelpers.GetColor(SheetColor.LIGHT_RED_BERRY_3);
+        Assert.Equal(0.9019607843137255f, lightRedBerry3.Red);
+        Assert.Equal(0.7215686274509804f, lightRedBerry3.Green);
+        Assert.Equal(0.6862745098039216f, lightRedBerry3.Blue);
+
+        // #ead1dc - Google's "light magenta 3".
+        var lightMagenta3 = SheetHelpers.GetColor(SheetColor.LIGHT_MAGENTA_3);
+        Assert.Equal(0.9176470588235294f, lightMagenta3.Red);
+        Assert.Equal(0.8196078431372549f, lightMagenta3.Green);
+        Assert.Equal(0.8627450980392157f, lightMagenta3.Blue);
     }
 
     [Fact]

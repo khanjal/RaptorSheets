@@ -1,6 +1,9 @@
 namespace RaptorSheets.Core.Enums;
 
 /// <summary>
+/// Every value here is a genuine swatch from Google Sheets' own color picker - see
+/// <see cref="RaptorSheets.Core.Constants.Colors"/> for the sourced hex values.
+///
 /// A sheet's <c>TabColor</c> (SheetModel) is used as the header row's *background* band color
 /// (see GoogleRequestHelpers.GenerateBandingRequest), while <c>FontColor</c> is the header row's
 /// text color (see SheetHelpers.HeadersToRowData). FontColor defaults to BLACK, so any sheet whose
@@ -38,5 +41,10 @@ public enum SheetColor
     DARK_GREY_1,
     GREY,
     LIGHT_GREY_2,
-    LIGHT_GREY_3
+    LIGHT_GREY_3,
+    LIGHT_RED_BERRY_3,
+    LIGHT_ORANGE_3,
+    LIGHT_CORNFLOWER_BLUE_3,
+    LIGHT_BLUE_3,
+    LIGHT_MAGENTA_3
 }
