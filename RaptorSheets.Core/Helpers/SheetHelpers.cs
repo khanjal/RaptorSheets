@@ -117,10 +117,16 @@ public static class SheetHelpers
     public static string GetHex(SheetColor colorEnum)
     {
         var color = GetColor(colorEnum);
-        return $"#{(byte)((color.Red ?? 0) * 255):X2}{(byte)((color.Green ?? 0) * 255):X2}{(byte)((color.Blue ?? 0) * 255):X2}";
+        return $"#{ToHexByte(color.Red)}{ToHexByte(color.Green)}{ToHexByte(color.Blue)}";
     }
 
-    // Matches this library's own fixed 18-color palette (Colors) within floating-point tolerance.
+    private static string ToHexByte(float? channel)
+    {
+        var value = Math.Clamp((int)Math.Round((channel ?? 0) * 255, MidpointRounding.AwayFromZero), 0, 255);
+        return value.ToString("X2");
+    }
+
+    // Matches this library's own fixed color palette (Colors) within floating-point tolerance.
     // Only ever resolves colors this library itself could have written; a color set by hand in
     // Sheets (or by another tool) simply won't match and returns false.
     private const float ColorTolerance = 0.01f;
