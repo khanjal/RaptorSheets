@@ -11,9 +11,11 @@ namespace RaptorSheets.Core.Tests.Integration.CoreTest;
 /// <summary>
 /// Domain-agnostic manager for the Items/Log/Summary schema in CoreTestEntities.cs, wired the same
 /// way a real domain's SheetManager is (registry, SheetGenerationHelper, ChangeSheetDataCoreAsync) so
-/// this test suite exercises the exact same code path every domain manager uses - see #100.
+/// this test suite exercises the exact same code path every domain manager uses - see #100. Declares
+/// ISheetManager&lt;CoreTestSheetEntity&gt; explicitly (same as every real domain's own SheetManager)
+/// so it satisfies SheetPlumbingTestsBase&lt;TEntity,TManager&gt;'s generic constraint.
 /// </summary>
-public class CoreTestManager : SheetManagerBase<CoreTestSheetEntity>
+public class CoreTestManager : SheetManagerBase<CoreTestSheetEntity>, ISheetManager<CoreTestSheetEntity>
 {
     private static readonly SheetRegistry<CoreTestSheetEntity> s_registry = BuildRegistry();
 

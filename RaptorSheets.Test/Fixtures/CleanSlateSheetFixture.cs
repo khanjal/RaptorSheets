@@ -22,8 +22,15 @@ public class CleanSlateSheetFixture<TEntity, TManager> : IAsyncLifetime
     private readonly Func<Dictionary<string, string>, string, TManager> _managerFactory;
     private readonly Func<TManager, Task>? _seedAsync;
 
-    protected string SpreadsheetId { get; }
-    protected Dictionary<string, string> Credential { get; private set; } = new();
+    /// <summary>
+    /// Public (not just protected) so a domain's own plumbing-test adapter (see
+    /// SheetPlumbingTestsBase&lt;TEntity,TManager&gt; in RaptorSheets.Test.Common.Integration) can
+    /// construct its own throwaway IGoogleSheetService for the raw-batch-update escape hatch those
+    /// scenarios need, without requiring a domain to stand up a whole test-only manager subclass just
+    /// to reach it.
+    /// </summary>
+    public string SpreadsheetId { get; }
+    public Dictionary<string, string> Credential { get; private set; } = new();
 
     public TManager? Manager { get; private set; }
     public bool HasCredentials { get; private set; }
