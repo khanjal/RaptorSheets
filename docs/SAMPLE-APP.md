@@ -12,8 +12,9 @@ from the nav and browse/edit its sheets the same way. Domain labels are delibera
 bare domain name ("Home" alone reads as this app's own Home page, not a domain) - see
 `ISheetOperations.DomainLabel`. Stock's entities only recently gained `[Column]` attributes (it
 predated the `[Column]`/`GenericSheetMapper<T>` convention the other three domains are built on,
-and used its own hand-rolled header/mapping code until then) - `RaptorSheets.Sample.Web/Services/
-StockSheetOperations.cs` was already written and ready well before that port landed.
+and used its own hand-rolled header/mapping code until then) -
+`RaptorSheets.Sample.Web/Services/StockSheetOperations.cs` was already written and ready well
+before that port landed.
 
 There's also a domain-agnostic **[Sheet Inspector](#sheet-inspector)** at `/sheet-inspector`, reachable
 from the nav regardless of which domains are wired up - point it at any live tab on any connection
