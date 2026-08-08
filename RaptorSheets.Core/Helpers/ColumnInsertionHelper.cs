@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Services;
 
@@ -44,7 +45,8 @@ public static class ColumnInsertionHelper
                     column.SheetId,
                     rowIndex: 0,
                     rows: [headerRow],
-                    startColumnIndex: column.ColumnIndex));
+                    startColumnIndex: column.ColumnIndex,
+                    fields: Field.USER_ENTERED_VALUE_AND_NOTE.GetDescription()));
 
                 var formatRequest = GoogleRequestHelpers.GenerateColumnFormatRequest(column.SheetId, column.ColumnIndex, column.Format, column.FormatPattern);
                 if (formatRequest != null)

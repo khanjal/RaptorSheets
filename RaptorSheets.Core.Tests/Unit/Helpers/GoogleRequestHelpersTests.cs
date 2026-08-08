@@ -323,6 +323,18 @@ public class GoogleRequestHelpersTests
     }
 
     [Fact]
+    public void GenerateColumnFormatRequest_ShouldScopeFieldsMaskToNumberFormatOnly()
+    {
+        // Regression guard: this request must never use a field mask (like "*" or
+        // "userEnteredFormat") that could clear existing values, notes, validation, or other
+        // userEnteredFormat sub-fields on a live, already-populated column - see ReapplyFormatting.
+        var result = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId: 1, columnIndex: 0, format: Format.ACCOUNTING, formatPattern: null);
+
+        Assert.Equal(Field.NUMBER_FORMAT.GetDescription(), result!.RepeatCell.Fields);
+        Assert.Null(result.RepeatCell.Cell.UserEnteredValue);
+    }
+
+    [Fact]
     public void GenerateColumnFormatRequest_WithFormatPatternOnly_ShouldReturnRequest()
     {
         // Act
@@ -596,6 +608,28 @@ public class GoogleRequestHelpersTests
         Assert.Equal(2, request.UpdateCells.Range.EndColumnIndex);
         Assert.Equal(2, request.UpdateCells.Range.StartRowIndex);
         Assert.Equal(3, request.UpdateCells.Range.EndRowIndex);
+    }
+
+    [Fact]
+    public void GenerateUpdateCellsRequest_WithoutFieldsArgument_DefaultsToUserEnteredValueOnly()
+    {
+        // Every pre-existing caller relies on this default staying exactly what it was before the
+        // optional `fields` parameter was added.
+        var rows = new List<RowData> { new() { Values = [new CellData()] } };
+
+        var request = GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId: 5, rowIndex: 0, rows: rows);
+
+        Assert.Equal(Field.USER_ENTERED_VALUE.GetDescription(), request.UpdateCells.Fields);
+    }
+
+    [Fact]
+    public void GenerateUpdateCellsRequest_WithFieldsArgument_UsesProvidedMask()
+    {
+        var rows = new List<RowData> { new() { Values = [new CellData()] } };
+
+        var request = GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId: 5, rowIndex: 0, rows: rows, fields: Field.USER_ENTERED_VALUE_AND_NOTE.GetDescription());
+
+        Assert.Equal("userEnteredValue,note", request.UpdateCells.Fields);
     }
 
     [Fact]

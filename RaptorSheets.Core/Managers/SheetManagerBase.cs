@@ -1193,7 +1193,10 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
 
         if (!options.ReapplyColumnFormats)
         {
-            entity.Messages.Add(MessageHelpers.CreateInfoMessage("No formatting options enabled - nothing to reapply", MessageType.GENERAL));
+            // Only ReapplyColumnFormats is implemented today (see FormattingOptionsEntity's doc
+            // comment) - the other flags are accepted but are no-ops, so this message must not imply
+            // they did something just because the caller set them.
+            entity.Messages.Add(MessageHelpers.CreateInfoMessage("ReapplyColumnFormats is disabled - nothing to reapply (other FormattingOptionsEntity flags are not implemented yet)", MessageType.GENERAL));
             return entity;
         }
 

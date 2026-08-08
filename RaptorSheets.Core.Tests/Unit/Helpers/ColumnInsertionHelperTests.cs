@@ -125,6 +125,9 @@ public class ColumnInsertionHelperTests
 
         var updateRequest = requests.Single(r => r.UpdateCells != null);
         Assert.Equal("Enter USD", updateRequest.UpdateCells.Rows[0].Values[0].Note);
+        // The API silently ignores any CellData field not listed in Fields - setting Note above is
+        // pointless unless the mask actually includes it.
+        Assert.Equal("userEnteredValue,note", updateRequest.UpdateCells.Fields);
     }
 
     [Fact]

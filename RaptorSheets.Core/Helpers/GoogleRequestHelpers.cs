@@ -347,10 +347,18 @@ public static class GoogleRequestHelpers
     /// formatting only, not validation) at <paramref name="columnIndex"/> on <paramref name="sheetId"/>.
     /// Returns null when there's nothing to reapply. Shared by
     /// <see cref="Managers.SheetManagerBase{TEntity}.ReapplyFormatting(List{string}, Entities.FormattingOptionsEntity?, CancellationToken)"/>
-    /// (#28, whole-sheet reapply) and <see cref="ColumnInsertionHelper"/> (#53, a single newly-inserted
-    /// column) - the same per-column format logic each domain's own sheet-creation code
-    /// (GenerateHeadersFormatAndProtection) already computes, minus Validation: that needs a domain's
-    /// own Validation enum + range resolution, which isn't available here in Core.
+    /// (#28, whole-sheet reapply against a live, data-filled sheet) and <see cref="ColumnInsertionHelper"/>
+    /// (#53, a single newly-inserted, still-empty column) - the same per-column format logic each
+    /// domain's own sheet-creation code (GenerateHeadersFormatAndProtection) already computes, minus
+    /// Validation: that needs a domain's own Validation enum + range resolution, which isn't available
+    /// here in Core.
+    ///
+    /// Deliberately does NOT go through <see cref="GenerateRepeatCellRequest"/> - that method hardcodes
+    /// <see cref="Field.USER_ENTERED_VALUE_AND_FORMAT"/> ("*"), which is safe only when creating a
+    /// brand-new sheet (nothing to clear yet). Reapplying to an existing, populated column with that
+    /// mask would blank out every value in the column, since this request's Cell never sets
+    /// UserEnteredValue. Uses the narrower <see cref="Field.NUMBER_FORMAT"/> mask instead, so only the
+    /// number format changes and existing values/formulas/notes/validation in the column are untouched.
     /// </summary>
     public static Request? GenerateColumnFormatRequest(int sheetId, int columnIndex, Format? format, string? formatPattern)
     {
@@ -372,7 +380,12 @@ public static class GoogleRequestHelpers
             ? SheetHelpers.GetCellFormat(formatToUse, formatPattern)
             : SheetHelpers.GetCellFormat(formatToUse);
 
-        var repeatCellRequest = GenerateRepeatCellRequest(new RepeatCellModel { GridRange = range, CellFormat = cellFormat });
+        var repeatCellRequest = new RepeatCellRequest
+        {
+            Fields = Field.NUMBER_FORMAT.GetDescription(),
+            Range = range,
+            Cell = new CellData { UserEnteredFormat = cellFormat }
+        };
 
         return new Request { RepeatCell = repeatCellRequest };
     }
@@ -394,7 +407,14 @@ public static class GoogleRequestHelpers
         return new Request { AddSheet = sheetRequest };
     }
 
-    public static Request GenerateUpdateCellsRequest(int sheetId, int rowIndex, IList<RowData> rows, int startColumnIndex = 0)
+    /// <param name="fields">
+    /// Field mask for the update - defaults to <see cref="Field.USER_ENTERED_VALUE"/> (existing
+    /// behavior, unchanged for every pre-existing caller). Pass a wider mask (e.g.
+    /// <see cref="Field.USER_ENTERED_VALUE_AND_NOTE"/>) when the rows being written also set
+    /// CellData fields beyond UserEnteredValue - anything set on a Cell but not listed in the mask is
+    /// silently ignored by the API, not applied.
+    /// </param>
+    public static Request GenerateUpdateCellsRequest(int sheetId, int rowIndex, IList<RowData> rows, int startColumnIndex = 0, string? fields = null)
     {
         // Indexes are 1 less than rowIds
         var range = new GridRange
@@ -409,7 +429,7 @@ public static class GoogleRequestHelpers
         // Create Sheet Data
         var updateCellsRequest = new UpdateCellsRequest
         {
-            Fields = Field.USER_ENTERED_VALUE.GetDescription(),
+            Fields = fields ?? Field.USER_ENTERED_VALUE.GetDescription(),
             Rows = rows,
             Range = range,
         };
