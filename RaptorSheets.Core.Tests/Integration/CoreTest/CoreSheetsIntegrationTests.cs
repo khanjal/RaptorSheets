@@ -8,6 +8,8 @@ using RaptorSheets.Test.Common.Attributes;
 using RaptorSheets.Test.Common.Fixtures;
 using RaptorSheets.Test.Common.Helpers;
 using Xunit;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace RaptorSheets.Core.Tests.Integration.CoreTest;
 
@@ -23,10 +25,12 @@ namespace RaptorSheets.Core.Tests.Integration.CoreTest;
 /// fixture (<see cref="CoreCleanSlateFixture"/>) deletes/recreates every sheet before tests run.
 ///
 /// Each test is self-contained (writes/deletes/recreates whatever it needs) rather than relying on
-/// another test's side effects, since xUnit doesn't guarantee method execution order within a class.
+/// another test's side effects, since xUnit doesn't guarantee method execution order within a class -
+/// with one deliberate exception, see <see cref="RunLargeDatasetLastOrderer"/>.
 /// </summary>
 [Collection("CoreSheetsIntegration")]
 [Category("Integration")]
+[TestCaseOrderer("RaptorSheets.Core.Tests.Integration.CoreTest.RunLargeDatasetLastOrderer", "RaptorSheets.Core.Tests")]
 public class CoreSheetsIntegrationTests
 {
     private readonly CoreTestManager? Manager;
@@ -797,5 +801,24 @@ public class CoreCleanSlateFixture : CleanSlateSheetFixture<CoreTestSheetEntity,
         TestConfigurationHelpers.GetCoreSpreadsheet(),
         (credential, spreadsheetId) => new CoreTestManager(credential, spreadsheetId))
     {
+    }
+}
+
+/// <summary>
+/// xUnit doesn't guarantee test method execution order within a class. Every test here is written to
+/// tolerate that (see the test class's own doc comment) - except one: LargeDataset_1000Rows_... is the
+/// only test deliberately designed to leave a large, visible dataset behind for a human looking at the
+/// live sheet afterward. If DeleteAllSheets_ThenCreateAllSheets_UsesTempSheetSafetyNet (which wipes
+/// every sheet back to empty as part of proving the temp-sheet safety net) happened to run AFTER it,
+/// the live sheet would look empty despite the run having just proven bulk write/read/self-heal/
+/// reapply all work correctly - confirmed live: this is exactly what was happening before this orderer
+/// was added. Forces the large-dataset test to run strictly last; every other test's relative order is
+/// left to xUnit's default (harmless, since they're all genuinely order-independent).
+/// </summary>
+public class RunLargeDatasetLastOrderer : ITestCaseOrderer
+{
+    public IEnumerable<TTestCase> OrderTestCases<TTestCase>(IEnumerable<TTestCase> testCases) where TTestCase : ITestCase
+    {
+        return testCases.OrderBy(tc => tc.TestMethod.Method.Name.Contains("LargeDataset", StringComparison.Ordinal) ? 1 : 0);
     }
 }
