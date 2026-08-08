@@ -104,7 +104,7 @@ public static class StockSheet
     internal static SheetModel BaseSheet => new()
     {
         Name = Enums.SheetName.STOCKS.GetDescription(),
-        CellColor = SheetColor.LIGHT_CYAN,
+        CellColor = SheetColor.LIGHT_CYAN_3,
         TabColor = SheetColor.CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,

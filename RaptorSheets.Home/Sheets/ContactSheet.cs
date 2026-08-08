@@ -16,7 +16,7 @@ public static class ContactSheet
     {
         Name = SheetsConfig.SheetNames.Contacts,
         TabColor = SheetColor.CYAN,
-        CellColor = SheetColor.LIGHT_CYAN,
+        CellColor = SheetColor.LIGHT_CYAN_3,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ContactEntity>()

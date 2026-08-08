@@ -470,20 +470,32 @@ public class SheetHelpersTests
     [InlineData(SheetColor.BLACK)]
     [InlineData(SheetColor.BLUE)]
     [InlineData(SheetColor.CYAN)]
-    [InlineData(SheetColor.DARK_YELLOW)]
+    [InlineData(SheetColor.DARK_YELLOW_1)]
     [InlineData(SheetColor.GREEN)]
-    [InlineData(SheetColor.LIGHT_CYAN)]
-    [InlineData(SheetColor.LIGHT_GRAY)]
-    [InlineData(SheetColor.LIGHT_GREEN)]
-    [InlineData(SheetColor.LIGHT_PURPLE)]
-    [InlineData(SheetColor.LIGHT_RED)]
-    [InlineData(SheetColor.LIGHT_YELLOW)]
-    [InlineData(SheetColor.LIME)]
+    [InlineData(SheetColor.LIGHT_CYAN_3)]
+    [InlineData(SheetColor.LIGHT_GREY_1)]
+    [InlineData(SheetColor.LIGHT_GREEN_3)]
+    [InlineData(SheetColor.LIGHT_PURPLE_3)]
+    [InlineData(SheetColor.LIGHT_RED_3)]
+    [InlineData(SheetColor.LIGHT_YELLOW_3)]
     [InlineData(SheetColor.ORANGE)]
     [InlineData(SheetColor.MAGENTA)]
-    [InlineData(SheetColor.PINK)]
     [InlineData(SheetColor.PURPLE)]
     [InlineData(SheetColor.RED)]
+    [InlineData(SheetColor.RED_BERRY)]
+    [InlineData(SheetColor.CORNFLOWER_BLUE)]
+    [InlineData(SheetColor.DARK_GREY_4)]
+    [InlineData(SheetColor.DARK_GREY_3)]
+    [InlineData(SheetColor.DARK_GREY_2)]
+    [InlineData(SheetColor.DARK_GREY_1)]
+    [InlineData(SheetColor.GREY)]
+    [InlineData(SheetColor.LIGHT_GREY_2)]
+    [InlineData(SheetColor.LIGHT_GREY_3)]
+    [InlineData(SheetColor.LIGHT_RED_BERRY_3)]
+    [InlineData(SheetColor.LIGHT_ORANGE_3)]
+    [InlineData(SheetColor.LIGHT_CORNFLOWER_BLUE_3)]
+    [InlineData(SheetColor.LIGHT_BLUE_3)]
+    [InlineData(SheetColor.LIGHT_MAGENTA_3)]
     [InlineData(SheetColor.WHITE)]
     [InlineData(SheetColor.YELLOW)]
     public void GetColor_WithValidColorEnum_ShouldReturnColor(SheetColor colorEnum)
@@ -503,8 +515,9 @@ public class SheetHelpersTests
         Assert.Equivalent(Colors.Blue, SheetHelpers.GetColor(SheetColor.BLUE));
         Assert.Equivalent(Colors.Cyan, SheetHelpers.GetColor(SheetColor.CYAN));
         Assert.Equivalent(Colors.Magenta, SheetHelpers.GetColor(SheetColor.MAGENTA));
-        Assert.Equivalent(Colors.Magenta, SheetHelpers.GetColor(SheetColor.PINK));
         Assert.Equivalent(Colors.White, SheetHelpers.GetColor(SheetColor.WHITE));
+        Assert.Equivalent(Colors.RedBerry, SheetHelpers.GetColor(SheetColor.RED_BERRY));
+        Assert.Equivalent(Colors.CornflowerBlue, SheetHelpers.GetColor(SheetColor.CORNFLOWER_BLUE));
     }
 
     [Fact]
@@ -515,6 +528,122 @@ public class SheetHelpersTests
 
         // Assert
         Assert.Equivalent(Colors.White, result);
+    }
+
+    [Fact]
+    public void GetColor_RedBerryAndCornflowerBlue_MatchGoogleSheetsStandardSwatches()
+    {
+        // #980000 and #4a86e8 - Google Sheets' own "standard colors" swatches (see issue #89).
+        var redBerry = SheetHelpers.GetColor(SheetColor.RED_BERRY);
+        Assert.Equal(0.596078431372549f, redBerry.Red);
+        Assert.Equal(0f, redBerry.Green);
+        Assert.Equal(0f, redBerry.Blue);
+
+        var cornflowerBlue = SheetHelpers.GetColor(SheetColor.CORNFLOWER_BLUE);
+        Assert.Equal(0.2901960784313725f, cornflowerBlue.Red);
+        Assert.Equal(0.5254901960784314f, cornflowerBlue.Green);
+        Assert.Equal(0.9098039215686274f, cornflowerBlue.Blue);
+    }
+
+    [Fact]
+    public void GetColor_LightTier3Additions_MatchGoogleSheetsSwatches()
+    {
+        // #e6b8af - Google's "light red berry 3".
+        var lightRedBerry3 = SheetHelpers.GetColor(SheetColor.LIGHT_RED_BERRY_3);
+        Assert.Equal(0.9019607843137255f, lightRedBerry3.Red);
+        Assert.Equal(0.7215686274509804f, lightRedBerry3.Green);
+        Assert.Equal(0.6862745098039216f, lightRedBerry3.Blue);
+
+        // #ead1dc - Google's "light magenta 3".
+        var lightMagenta3 = SheetHelpers.GetColor(SheetColor.LIGHT_MAGENTA_3);
+        Assert.Equal(0.9176470588235294f, lightMagenta3.Red);
+        Assert.Equal(0.8196078431372549f, lightMagenta3.Green);
+        Assert.Equal(0.8627450980392157f, lightMagenta3.Blue);
+    }
+
+    [Fact]
+    public void GetColor_NewGreys_MatchValues()
+    {
+        var g4 = SheetHelpers.GetColor(SheetColor.DARK_GREY_4);
+        Assert.Equal(0.2627450980392157f, g4.Red);
+        Assert.Equal(0.2627450980392157f, g4.Green);
+        Assert.Equal(0.2627450980392157f, g4.Blue);
+
+        var g1 = SheetHelpers.GetColor(SheetColor.DARK_GREY_1);
+        Assert.Equal(0.7176470588235294f, g1.Red);
+        Assert.Equal(0.7176470588235294f, g1.Green);
+        Assert.Equal(0.7176470588235294f, g1.Blue);
+    }
+
+    [Fact]
+    public void GetHex_ReturnsExpectedHexValues()
+    {
+        Assert.Equal("#FF0000", SheetHelpers.GetHex(SheetColor.RED));
+        Assert.Equal("#980000", SheetHelpers.GetHex(SheetColor.RED_BERRY));
+        Assert.Equal("#434343", SheetHelpers.GetHex(SheetColor.DARK_GREY_4));
+    }
+
+    [Fact]
+    public void GetColor_RebasedPaletteEntries_MatchGoogleSheetsSwatches()
+    {
+        // Every previously-invented value now maps to a genuine Google Sheets swatch (see issue #89's
+        // full palette rebase) - spot-check the ones that shifted the most.
+
+        // #00ff00 - Google's "Green" (standard colors row), not CSS green (0, 0.5, 0).
+        var green = SheetHelpers.GetColor(SheetColor.GREEN);
+        Assert.Equal(0f, green.Red);
+        Assert.Equal(1f, green.Green);
+        Assert.Equal(0f, green.Blue);
+
+        // #9900ff - Google's "Purple" (standard colors row), not CSS purple (0.5, 0, 0.5).
+        var purple = SheetHelpers.GetColor(SheetColor.PURPLE);
+        Assert.Equal(0.6f, purple.Red);
+        Assert.Equal(0f, purple.Green);
+        Assert.Equal(1f, purple.Blue);
+
+        // #00ffff - Google's "Cyan" (standard colors row), not the previous custom muted cyan.
+        var cyan = SheetHelpers.GetColor(SheetColor.CYAN);
+        Assert.Equal(0f, cyan.Red);
+        Assert.Equal(1f, cyan.Green);
+        Assert.Equal(1f, cyan.Blue);
+
+        // #d9d9d9 - Google's "Light grey 1" - the old value had an accidental green tint
+        // (Red 0.906, Green 0.976, Blue 0.937), which this also fixes.
+        var lightGray = SheetHelpers.GetColor(SheetColor.LIGHT_GREY_1);
+        Assert.Equal(lightGray.Red, lightGray.Green);
+        Assert.Equal(lightGray.Green, lightGray.Blue);
+    }
+
+    #endregion
+
+    #region TryGetSheetColor Tests
+
+    [Theory]
+    [InlineData(SheetColor.RED_BERRY)]
+    [InlineData(SheetColor.CORNFLOWER_BLUE)]
+    [InlineData(SheetColor.RED)]
+    [InlineData(SheetColor.BLUE)]
+    public void TryGetSheetColor_WithColorThisLibraryWrote_ResolvesBackToSameEnum(SheetColor original)
+    {
+        // Act
+        var resolved = SheetHelpers.TryGetSheetColor(SheetHelpers.GetColor(original), out var sheetColor);
+
+        // Assert
+        Assert.True(resolved);
+        Assert.Equal(original, sheetColor);
+    }
+
+    [Fact]
+    public void TryGetSheetColor_WithColorNotInPalette_ReturnsFalse()
+    {
+        // Arrange - a color no SheetColor value maps to.
+        var customColor = new Color { Red = 0.12f, Green = 0.34f, Blue = 0.56f };
+
+        // Act
+        var resolved = SheetHelpers.TryGetSheetColor(customColor, out _);
+
+        // Assert
+        Assert.False(resolved);
     }
 
     #endregion

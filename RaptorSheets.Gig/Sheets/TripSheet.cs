@@ -19,8 +19,8 @@ public static class TripSheet
     internal static SheetModel BaseSheet => new()
     {
         Name = SheetsConfig.SheetNames.Trips,
-        TabColor = SheetColor.DARK_YELLOW,
-        CellColor = SheetColor.LIGHT_YELLOW,
+        TabColor = SheetColor.DARK_YELLOW_1,
+        CellColor = SheetColor.LIGHT_YELLOW_3,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<TripEntity>()

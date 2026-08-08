@@ -22,7 +22,7 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.TimeEnd, isInput: true, formatType: Format.TIME)]
     public string Finish { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
+    [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService, note: ColumnNotes.ServiceSource)]
     public string Service { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Number, isInput: true, note: ColumnNotes.ShiftNumber)]
@@ -71,8 +71,11 @@ public class ShiftEntity : SheetRowEntityBase
         note: ColumnNotes.ShiftDistance)]
     public decimal? Distance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Region, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion)]
+    [Column(SheetsConfig.HeaderNames.Region, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion, note: ColumnNotes.RegionSource)]
     public string Region { get; set; } = "";
+
+    [Column(SheetsConfig.HeaderNames.Tags, isInput: true)]
+    public string Tags { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Note, isInput: true)]
     public string Note { get; set; } = "";

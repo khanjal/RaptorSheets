@@ -18,7 +18,7 @@ public static class ApplicationSheet
     internal static SheetModel BaseSheet => new()
     {
         Name = SheetsConfig.SheetNames.Applications,
-        CellColor = SheetColor.LIGHT_CYAN,
+        CellColor = SheetColor.LIGHT_CYAN_3,
         TabColor = SheetColor.BLUE,
         FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,

@@ -19,7 +19,7 @@ public static class ServiceSheet
     {
         Name = SheetsConfig.SheetNames.Services,
         TabColor = SheetColor.CYAN,
-        CellColor = SheetColor.LIGHT_CYAN,
+        CellColor = SheetColor.LIGHT_CYAN_3,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,
