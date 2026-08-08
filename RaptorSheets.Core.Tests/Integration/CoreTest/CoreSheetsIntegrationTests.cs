@@ -196,6 +196,12 @@ public class CoreSheetsIntegrationTests
         Assert.Contains(CoreTestSheetNames.Summary, tabNames);
     }
 
+    private async Task<int> GetSheetIdAsync(string sheetName)
+    {
+        var property = (await Manager!.GetSheetProperties([sheetName]))[0];
+        return int.Parse(property.Id);
+    }
+
     private async Task TryDeleteNonCanonicalSheetAsync(string sheetName)
     {
         var properties = await Manager!.GetSheetProperties([sheetName]);
@@ -267,6 +273,204 @@ public class CoreSheetsIntegrationTests
         var afterHeal = await Manager!.GetSheets([CoreTestSheetNames.Summary]);
         var hardwareRow = Assert.Single(afterHeal.Sheets.Summary, s => s.Category == "Hardware");
         Assert.True(hardwareRow.Total > 0);
+    }
+
+    /// <summary>
+    /// Same self-heal, but on Items - a genuine user-INPUT column, not a formula column, and with
+    /// real data already in it. Self-heal restores the column's structure (header/format/note) fully,
+    /// but deleting a column deletes its cell content along with it - there is nothing left to
+    /// recover the row's prior value from. Both halves are asserted explicitly: structure comes back
+    /// correctly configured, data for that pre-existing row does not.
+    /// </summary>
+    [FactCheckUserSecrets]
+    public async Task MissingColumn_OnInputSheet_RestoresStructureButNotData()
+    {
+        SkipIfNoCredentials();
+
+        var data = new CoreTestSheetEntity();
+        data.Sheets.Items.Add(new ItemEntity { RowId = 2, Name = "Wrench", Category = "Hardware", Amount = 42m, Active = true });
+        await Manager!.ChangeSheetData([CoreTestSheetNames.Items], data);
+        await Task.Delay(2000);
+
+        var itemsSheetId = await GetSheetIdAsync(CoreTestSheetNames.Items);
+        var itemsModel = ItemSheetDefinition.GetSheet();
+        itemsModel.Headers.UpdateColumns();
+        var amountIndex = itemsModel.Headers.First(h => h.Name == "Amount").Index;
+
+        var deleteRequest = new BatchUpdateSpreadsheetRequest
+        {
+            Requests =
+            [
+                new Request
+                {
+                    DeleteDimension = new DeleteDimensionRequest
+                    {
+                        Range = new DimensionRange { SheetId = itemsSheetId, Dimension = "COLUMNS", StartIndex = amountIndex, EndIndex = amountIndex + 1 }
+                    }
+                }
+            ]
+        };
+        Assert.True(await Manager!.ExecuteRawBatchUpdateAsync(deleteRequest));
+        await Task.Delay(2000);
+
+        var healingRead = await Manager!.GetSheets([CoreTestSheetNames.Items]);
+        Assert.Contains(healingRead.Messages, m => m.Message.Contains("Inserting column") && m.Message.Contains("Amount"));
+        await Task.Delay(2000);
+
+        // Structure (format/note) is fully restored, matching the original entity's [Column] config.
+        // EntitySheetConfigHelper appends a "Cell Format: ..." line to the note for any column with a
+        // custom number pattern (see its ApplyNotesAndValidation) - Contains, not Equal, on purpose.
+        var structure = await Manager!.GetLiveSheetStructure(CoreTestSheetNames.Items);
+        var amountHeader = structure!.Headers.First(h => h.Name == "Amount");
+        Assert.Equal(Format.ACCOUNTING, amountHeader.Format);
+        Assert.Contains("Enter the amount in USD", amountHeader.Note);
+
+        // But the pre-existing row's Amount value is genuinely gone.
+        var afterHeal = await Manager!.GetSheets([CoreTestSheetNames.Items]);
+        var wrench = afterHeal.Sheets.Items.FirstOrDefault(i => i.Name == "Wrench");
+        Assert.NotNull(wrench);
+        Assert.Equal(0m, wrench!.Amount);
+    }
+
+    /// <summary>
+    /// Deletes two of Summary's three columns at once (right-to-left, same convention
+    /// ColumnInsertionHelper itself uses for insertion, so the second delete's index isn't shifted by
+    /// the first) and confirms self-heal restores both AND puts them back at their canonical
+    /// positions - not just that the data is findable by name somewhere.
+    /// </summary>
+    [FactCheckUserSecrets]
+    public async Task MultipleMissingColumns_OnGetSheets_RestoresAllAtCorrectPositions()
+    {
+        SkipIfNoCredentials();
+
+        var data = new CoreTestSheetEntity();
+        data.Sheets.Items.Add(new ItemEntity { RowId = 2, Name = "Hammer", Category = "Hardware", Amount = 15m, Active = true });
+        await Manager!.ChangeSheetData([CoreTestSheetNames.Items], data);
+        await Task.Delay(2000);
+
+        var summarySheetId = await GetSheetIdAsync(CoreTestSheetNames.Summary);
+        var summaryModel = SummarySheetDefinition.GetSheet();
+        summaryModel.Headers.UpdateColumns();
+        var totalIndex = summaryModel.Headers.First(h => h.Name == "Total").Index;
+        var countIndex = summaryModel.Headers.First(h => h.Name == "Count").Index;
+
+        var deleteRequests = new[] { totalIndex, countIndex }
+            .OrderByDescending(i => i)
+            .Select(index => new Request
+            {
+                DeleteDimension = new DeleteDimensionRequest
+                {
+                    Range = new DimensionRange { SheetId = summarySheetId, Dimension = "COLUMNS", StartIndex = index, EndIndex = index + 1 }
+                }
+            })
+            .ToList();
+
+        Assert.True(await Manager!.ExecuteRawBatchUpdateAsync(new BatchUpdateSpreadsheetRequest { Requests = deleteRequests }));
+        await Task.Delay(2000);
+
+        var healingRead = await Manager!.GetSheets([CoreTestSheetNames.Summary]);
+        Assert.Contains(healingRead.Messages, m => m.Message.Contains("Inserting column") && m.Message.Contains("Total"));
+        Assert.Contains(healingRead.Messages, m => m.Message.Contains("Inserting column") && m.Message.Contains("Count"));
+        await Task.Delay(2000);
+
+        var structure = await Manager!.GetLiveSheetStructure(CoreTestSheetNames.Summary);
+        var liveOrder = structure!.Headers.OrderBy(h => h.Index).Select(h => h.Name).ToList();
+        Assert.Equal(new[] { "Category", "Total", "Count" }, liveOrder);
+
+        var afterHeal = await Manager!.GetSheets([CoreTestSheetNames.Summary]);
+        var hardwareRow = Assert.Single(afterHeal.Sheets.Summary, s => s.Category == "Hardware");
+        Assert.True(hardwareRow.Total > 0);
+        Assert.True(hardwareRow.Count > 0);
+    }
+
+    /// <summary>
+    /// Simulates a user manually dragging a column to a new position (no deletion, nothing missing) -
+    /// a scenario the library has never had live coverage for. Confirms reads stay correct (header
+    /// matching is name-based, not positional - see HeaderHelpers.BuildHeaderIndex), that the mismatch
+    /// is reported as a warning rather than silently ignored, that the library does NOT auto-correct
+    /// the live sheet's order on its own (it only ever writes on request, never surprise-mutates on a
+    /// read), and that a subsequent write still lands in the correct columns despite the reorder.
+    /// </summary>
+    [FactCheckUserSecrets]
+    public async Task ColumnsReordered_ReadsAndWritesStayCorrect_LibraryDoesNotAutoCorrectOrder()
+    {
+        SkipIfNoCredentials();
+
+        var data = new CoreTestSheetEntity();
+        data.Sheets.Items.Add(new ItemEntity { RowId = 2, Name = "Level", Category = "Hardware", Amount = 20m, Active = true });
+        await Manager!.ChangeSheetData([CoreTestSheetNames.Items], data);
+        await Task.Delay(2000);
+
+        var itemsSheetId = await GetSheetIdAsync(CoreTestSheetNames.Items);
+        var itemsModel = ItemSheetDefinition.GetSheet();
+        itemsModel.Headers.UpdateColumns();
+        var categoryIndex = itemsModel.Headers.First(h => h.Name == "Category").Index;
+        var amountIndex = itemsModel.Headers.First(h => h.Name == "Amount").Index;
+
+        try
+        {
+            // Swap Category and Amount's physical positions.
+            var moveRequest = new BatchUpdateSpreadsheetRequest
+            {
+                Requests =
+                [
+                    new Request
+                    {
+                        MoveDimension = new MoveDimensionRequest
+                        {
+                            Source = new DimensionRange { SheetId = itemsSheetId, Dimension = "COLUMNS", StartIndex = categoryIndex, EndIndex = categoryIndex + 1 },
+                            DestinationIndex = amountIndex + 1
+                        }
+                    }
+                ]
+            };
+            Assert.True(await Manager!.ExecuteRawBatchUpdateAsync(moveRequest));
+            await Task.Delay(2000);
+
+            var readResult = await Manager!.GetSheets([CoreTestSheetNames.Items]);
+            var level = readResult.Sheets.Items.FirstOrDefault(i => i.Name == "Level");
+            Assert.NotNull(level);
+            Assert.Equal("Hardware", level!.Category);
+            Assert.Equal(20m, level.Amount);
+            Assert.Contains(readResult.Messages, m => m.Message.Contains("should be"));
+
+            var structure = await Manager!.GetLiveSheetStructure(CoreTestSheetNames.Items);
+            var liveOrder = structure!.Headers.OrderBy(h => h.Index).Select(h => h.Name).ToList();
+            Assert.NotEqual(new[] { "Name", "Category", "Amount", "Active" }, liveOrder);
+
+            var update = new CoreTestSheetEntity();
+            update.Sheets.Items.Add(new ItemEntity { RowId = 2, Name = "Level", Category = "Tools", Amount = 33m, Active = false });
+            var writeResult = await Manager!.ChangeSheetData([CoreTestSheetNames.Items], update);
+            Assert.Empty(CriticalErrors(writeResult));
+            await Task.Delay(2000);
+
+            var finalRead = await Manager!.GetSheets([CoreTestSheetNames.Items]);
+            var updated = finalRead.Sheets.Items.FirstOrDefault(i => i.Name == "Level");
+            Assert.NotNull(updated);
+            Assert.Equal("Tools", updated!.Category);
+            Assert.Equal(33m, updated.Amount);
+            Assert.False(updated.Active);
+        }
+        finally
+        {
+            // Restore canonical order. Critical, not cosmetic: Summary's SUMIF/COUNTIF formulas are
+            // always (re)computed from the STATIC canonical entity definition (SummarySheetDefinition
+            // never reads the live sheet), so a permanently reordered Items would make every later
+            // test's Summary assertions silently sum the wrong physical column - exactly what caused
+            // a cascading failure across unrelated tests during development of this test. Delete and
+            // recreate rather than trying to reverse-engineer MoveDimensionRequest's exact
+            // before/after-removal index semantics (genuinely easy to get subtly wrong) - this reuses
+            // the delete/self-heal path already proven reliable elsewhere in this suite and guarantees
+            // exact canonical order regardless.
+            await Manager!.DeleteSheets([CoreTestSheetNames.Items]);
+            await Task.Delay(2000);
+            await Manager!.GetSheets([CoreTestSheetNames.Items]); // triggers self-heal recreation
+            await Task.Delay(2000);
+
+            var restoredStructure = await Manager!.GetLiveSheetStructure(CoreTestSheetNames.Items);
+            var restoredOrder = restoredStructure!.Headers.OrderBy(h => h.Index).Select(h => h.Name).ToList();
+            Assert.Equal(new[] { "Name", "Category", "Amount", "Active" }, restoredOrder);
+        }
     }
 
     /// <summary>
@@ -352,6 +556,121 @@ public class CoreSheetsIntegrationTests
         var title = await Manager!.GetSpreadsheetTitle();
 
         Assert.False(string.IsNullOrWhiteSpace(title));
+    }
+
+    /// <summary>
+    /// Simulates a user manually inserting their own extra column in the middle of Items (with their
+    /// own header text and a value on the existing row) - never tested before, live or mocked.
+    /// Confirms known columns keep reading/writing correctly despite the shift, and that the unknown
+    /// column is flagged (CheckExtraColumns) rather than silently dropped or deleted. What a
+    /// subsequent write does to the unknown column's own value is investigated, not assumed - see
+    /// the assertion's own comment for what was actually found.
+    /// </summary>
+    [FactCheckUserSecrets]
+    public async Task ExtraUnexpectedColumn_IsFlaggedNotRemoved_KnownColumnsUnaffected()
+    {
+        SkipIfNoCredentials();
+
+        var data = new CoreTestSheetEntity();
+        data.Sheets.Items.Add(new ItemEntity { RowId = 2, Name = "Level", Category = "Hardware", Amount = 20m, Active = true });
+        await Manager!.ChangeSheetData([CoreTestSheetNames.Items], data);
+        await Task.Delay(2000);
+
+        var itemsSheetId = await GetSheetIdAsync(CoreTestSheetNames.Items);
+
+        // Insert a blank column at index 2 (between Category and Amount), then give it a header and
+        // a value on row 2 in one follow-up write - simulating a user adding their own column by hand.
+        var insertRequest = new BatchUpdateSpreadsheetRequest
+        {
+            Requests =
+            [
+                new Request
+                {
+                    InsertDimension = new InsertDimensionRequest
+                    {
+                        Range = new DimensionRange { SheetId = itemsSheetId, Dimension = "COLUMNS", StartIndex = 2, EndIndex = 3 },
+                        InheritFromBefore = false
+                    }
+                }
+            ]
+        };
+        Assert.True(await Manager!.ExecuteRawBatchUpdateAsync(insertRequest));
+        await Task.Delay(1000);
+
+        var writeCommentRequest = new BatchUpdateSpreadsheetRequest
+        {
+            Requests =
+            [
+                new Request
+                {
+                    UpdateCells = new UpdateCellsRequest
+                    {
+                        Fields = "userEnteredValue",
+                        Range = new GridRange { SheetId = itemsSheetId, StartRowIndex = 0, EndRowIndex = 2, StartColumnIndex = 2, EndColumnIndex = 3 },
+                        Rows =
+                        [
+                            new RowData { Values = [new CellData { UserEnteredValue = new ExtendedValue { StringValue = "Comments" } }] },
+                            new RowData { Values = [new CellData { UserEnteredValue = new ExtendedValue { StringValue = "user note" } }] }
+                        ]
+                    }
+                }
+            ]
+        };
+        Assert.True(await Manager!.ExecuteRawBatchUpdateAsync(writeCommentRequest));
+        await Task.Delay(2000);
+
+        try
+        {
+            // Known columns still read correctly despite the shift; the unknown one is flagged, not
+            // erased. Google's ACCOUNTING-adjacent formatting pads raw text with spaces to visually
+            // align it with numeric columns - Trim before comparing raw cell values (Amount's own
+            // "$ 20.00" is padded the same way, confirming this isn't specific to the new column).
+            var readResult = await Manager!.GetSheets([CoreTestSheetNames.Items]);
+            var level = readResult.Sheets.Items.FirstOrDefault(i => i.Name == "Level");
+            Assert.NotNull(level);
+            Assert.Equal("Hardware", level!.Category);
+            Assert.Equal(20m, level.Amount);
+            Assert.Contains(readResult.Messages, m => m.Message.Contains("Extra column") && m.Message.Contains("Comments"));
+
+            var beforeWrite = await Manager!.GetLiveSheetRawValues(CoreTestSheetNames.Items);
+            Assert.Contains(beforeWrite[1], v => v?.Trim() == "user note");
+
+            // FINDING (confirmed live): a normal write DOES clear an unrecognized column's existing
+            // value. GenerateUpdateCellsRequest's field mask is "userEnteredValue" only, and the empty
+            // CellData GenericSheetMapper.MapToRowData writes for any non-input header has no
+            // UserEnteredValue set - Google treats "field is in the mask but absent from the payload"
+            // as "clear it", not "leave it alone". The placeholder's own comment ("to preserve column
+            // position") is accurate about the column's structural position surviving, but misleading
+            // about the CELL'S VALUE - that does not survive. Concretely: if a user manually adds their
+            // own column with real data, the next ordinary write to that same row (through any known
+            // column) silently wipes out the user's column too, not just formula/output columns.
+            var update = new CoreTestSheetEntity();
+            update.Sheets.Items.Add(new ItemEntity { RowId = 2, Name = "Level", Category = "Hardware", Amount = 25m, Active = true });
+            await Manager!.ChangeSheetData([CoreTestSheetNames.Items], update);
+            await Task.Delay(2000);
+
+            var afterWrite = await Manager!.GetLiveSheetRawValues(CoreTestSheetNames.Items);
+            Assert.DoesNotContain(afterWrite[1], v => v?.Trim() == "user note");
+        }
+        finally
+        {
+            // Clean up the inserted column so it doesn't linger and corrupt every later test's
+            // column-position assumptions - this exact kind of oversight (a mutating test not
+            // restoring state) caused a previous cascading failure in this suite. The longer delay
+            // (matching every other structural-change test here) gives Google's automatic cross-sheet
+            // formula-reference adjustment (Summary's SUMIF/COUNTIF ranges into Items) time to
+            // resettle before the next sequential test starts - 1000ms wasn't enough and caused a
+            // second round of cascading failures during development.
+            var deleteCommentColumn = new BatchUpdateSpreadsheetRequest
+            {
+                Requests = [new Request { DeleteDimension = new DeleteDimensionRequest
+                {
+                    Range = new DimensionRange { SheetId = itemsSheetId, Dimension = "COLUMNS", StartIndex = 2, EndIndex = 3 }
+                }}]
+            };
+            await Manager!.ExecuteRawBatchUpdateAsync(deleteCommentColumn);
+            await Task.Delay(2000);
+        }
     }
 }
 
