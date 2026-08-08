@@ -585,17 +585,32 @@ public class CoreSheetsIntegrationTests
         }
         finally
         {
-            // Delete all 1,000 rows in one batched request (ActionType.DELETE, routed through
-            // GoogleRequestHelpers.ChangeSheetData<T>'s save/delete split) - not just blank them out -
-            // so neither leftover rows nor a permanent "StressTest" category in Summary corrupt any
-            // later test's assertions.
+            // Leave most of the stress data behind rather than scrubbing back to a single bare row -
+            // delete only a randomized large section of it (ActionType.DELETE, routed through
+            // GoogleRequestHelpers.ChangeSheetData<T>'s save/delete split). Never touches RowId 2 (i=0)
+            // - the shared baseline row every other test in this suite overwrites/reads - everything
+            // else is fair game, since nothing downstream depends on a specific surviving stress row's
+            // RowId, only that Items (and Summary's "StressTest" aggregate) end up genuinely populated
+            // for a human looking at the live sheet, not emptied back out every run.
+            var rng = new Random();
+            var deletableCount = rowCount - 1; // exclude i=0 (RowId 2)
+            var sectionLength = rng.Next(deletableCount / 2, (int)(deletableCount * 0.8));
+            var sectionStart = rng.Next(1, rowCount - sectionLength);
+
             var cleanup = new CoreTestSheetEntity();
-            for (var i = 0; i < rowCount; i++)
+            for (var i = sectionStart; i < sectionStart + sectionLength; i++)
             {
                 cleanup.Sheets.Items.Add(new ItemEntity { RowId = i + 2, Action = ActionType.DELETE.GetDescription() });
             }
             await Manager!.ChangeSheetData([CoreTestSheetNames.Items], cleanup);
             await Task.Delay(3000);
+
+            // Verify the partial cleanup actually left the expected amount behind, rather than
+            // assuming the delete request did what was asked. Deterministic: rowCount total minus
+            // exactly the deleted section (RowId 2/i=0 is never part of the deleted range).
+            var afterCleanup = await Manager!.GetSheets([CoreTestSheetNames.Items]);
+            var remainingStressRows = afterCleanup.Sheets.Items.Count(i => i.Category == stressCategory);
+            Assert.Equal(rowCount - sectionLength, remainingStressRows);
         }
     }
 
