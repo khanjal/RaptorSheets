@@ -53,6 +53,15 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     Task<TEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Re-applies formatting from a sheet's canonical SheetModel onto the live sheet - see
+    /// <see cref="Managers.SheetManagerBase{TEntity}.ReapplyFormatting(string, FormattingOptionsEntity?, CancellationToken)"/>.
+    /// </summary>
+    Task<TEntity> ReapplyFormatting(string sheet, FormattingOptionsEntity? options = null, CancellationToken cancellationToken = default);
+
+    /// <inheritdoc cref="ReapplyFormatting(string, FormattingOptionsEntity?, CancellationToken)"/>
+    Task<TEntity> ReapplyFormatting(List<string> sheets, FormattingOptionsEntity? options = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Live Sheet Structure: reads a sheet's structure (headers, formats, validation, notes, freeze
     /// counts, protection, ...) back from the live spreadsheet - the actual/current shape, in
     /// contrast with <see cref="GetSheetLayout"/>'s configured/expected shape from this domain's

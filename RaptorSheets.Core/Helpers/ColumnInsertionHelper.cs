@@ -37,7 +37,7 @@ public static class ColumnInsertionHelper
 
                 var headerRow = new RowData
                 {
-                    Values = [new CellData { UserEnteredValue = new ExtendedValue { StringValue = column.ColumnName } }]
+                    Values = [BuildHeaderCell(column)]
                 };
 
                 requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(
@@ -45,10 +45,48 @@ public static class ColumnInsertionHelper
                     rowIndex: 0,
                     rows: [headerRow],
                     startColumnIndex: column.ColumnIndex));
+
+                var formatRequest = GoogleRequestHelpers.GenerateColumnFormatRequest(column.SheetId, column.ColumnIndex, column.Format, column.FormatPattern);
+                if (formatRequest != null)
+                {
+                    requests.Add(formatRequest);
+                }
             }
         }
 
         return requests;
+    }
+
+    /// <summary>
+    /// Mirrors <see cref="SheetHelpers"/>'s header-cell Formula/Protect-implies-formula-cell
+    /// convention for a single re-inserted column (GitHub issue #53, gap 1) - a re-inserted formula
+    /// column previously got only its header text back and computed nothing underneath it. Doesn't
+    /// replicate that method's sheet-level bold/border header styling - this call site only has a
+    /// single column's info, not the whole sheet's FontColor/ProtectSheet context.
+    /// </summary>
+    private static CellData BuildHeaderCell(ColumnInsertionInfo column)
+    {
+        var value = new ExtendedValue();
+
+        // Use a formula if the column explicitly has one (non-empty) or if it's protected - an empty-
+        // string formula only counts when protection is intended (same rule as sheet-creation time).
+        if (column.Protect || !string.IsNullOrEmpty(column.Formula))
+        {
+            value.FormulaValue = column.Formula ?? column.ColumnName;
+        }
+        else
+        {
+            value.StringValue = column.ColumnName;
+        }
+
+        var cell = new CellData { UserEnteredValue = value };
+
+        if (!string.IsNullOrEmpty(column.Note))
+        {
+            cell.Note = column.Note;
+        }
+
+        return cell;
     }
 
     /// <summary>

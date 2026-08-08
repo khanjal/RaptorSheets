@@ -308,6 +308,42 @@ public class GoogleRequestHelpersTests
     }
 
     [Fact]
+    public void GenerateColumnFormatRequest_WithFormat_ShouldReturnRepeatCellRequestForThatColumn()
+    {
+        // Act
+        var result = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId: 7, columnIndex: 3, format: Format.ACCOUNTING, formatPattern: null);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result!.RepeatCell);
+        Assert.Equal(7, result.RepeatCell.Range.SheetId);
+        Assert.Equal(3, result.RepeatCell.Range.StartColumnIndex);
+        Assert.Equal(4, result.RepeatCell.Range.EndColumnIndex);
+        Assert.NotNull(result.RepeatCell.Cell.UserEnteredFormat);
+    }
+
+    [Fact]
+    public void GenerateColumnFormatRequest_WithFormatPatternOnly_ShouldReturnRequest()
+    {
+        // Act
+        var result = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId: 1, columnIndex: 0, format: null, formatPattern: "0.00%");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result!.RepeatCell?.Cell.UserEnteredFormat);
+    }
+
+    [Fact]
+    public void GenerateColumnFormatRequest_WithNeitherFormatNorPattern_ShouldReturnNull()
+    {
+        // Act
+        var result = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId: 1, columnIndex: 0, format: null, formatPattern: null);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
     public void GenerateSheetPropertes_ShouldReturnValidRequest()
     {
         // Arrange

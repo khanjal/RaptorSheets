@@ -342,6 +342,41 @@ public static class GoogleRequestHelpers
         return repeatCellRequest;
     }
 
+    /// <summary>
+    /// Builds the RepeatCell request that reapplies a single column's Format/FormatPattern (data-type
+    /// formatting only, not validation) at <paramref name="columnIndex"/> on <paramref name="sheetId"/>.
+    /// Returns null when there's nothing to reapply. Shared by
+    /// <see cref="Managers.SheetManagerBase{TEntity}.ReapplyFormatting(List{string}, Entities.FormattingOptionsEntity?, CancellationToken)"/>
+    /// (#28, whole-sheet reapply) and <see cref="ColumnInsertionHelper"/> (#53, a single newly-inserted
+    /// column) - the same per-column format logic each domain's own sheet-creation code
+    /// (GenerateHeadersFormatAndProtection) already computes, minus Validation: that needs a domain's
+    /// own Validation enum + range resolution, which isn't available here in Core.
+    /// </summary>
+    public static Request? GenerateColumnFormatRequest(int sheetId, int columnIndex, Format? format, string? formatPattern)
+    {
+        if (format == null && string.IsNullOrEmpty(formatPattern))
+        {
+            return null;
+        }
+
+        var range = new GridRange
+        {
+            SheetId = sheetId,
+            StartColumnIndex = columnIndex,
+            EndColumnIndex = columnIndex + 1,
+            StartRowIndex = 1,
+        };
+
+        var formatToUse = format ?? Format.NUMBER;
+        var cellFormat = !string.IsNullOrEmpty(formatPattern)
+            ? SheetHelpers.GetCellFormat(formatToUse, formatPattern)
+            : SheetHelpers.GetCellFormat(formatToUse);
+
+        var repeatCellRequest = GenerateRepeatCellRequest(new RepeatCellModel { GridRange = range, CellFormat = cellFormat });
+
+        return new Request { RepeatCell = repeatCellRequest };
+    }
+
     public static Request GenerateSheetPropertes(SheetModel sheet)
     {
         var sheetRequest = new AddSheetRequest
