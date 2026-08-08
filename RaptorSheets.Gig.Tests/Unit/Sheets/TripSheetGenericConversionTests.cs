@@ -225,5 +225,40 @@ public class TripSheetGenericConversionTests
         Assert.False(string.IsNullOrEmpty(keyHeader.Formula));
         Assert.StartsWith("=", keyHeader.Formula);
     }
+
+    [Fact]
+    public void TripSheet_GetSheet_ShouldIncludeTagsColumn()
+    {
+        // Act
+        var sheet = TripSheet.GetSheet();
+
+        // Assert - Tags is an optional, unvalidated input column (see issue #42)
+        var tagsHeader = sheet.Headers.FirstOrDefault(h => h.Name == "Tags");
+        Assert.NotNull(tagsHeader);
+        Assert.True(string.IsNullOrEmpty(tagsHeader.Formula));
+    }
+
+    [Fact]
+    public void TripSheet_TagsColumn_ShouldRoundTripCommaDelimitedStringUnchanged()
+    {
+        // Arrange - RaptorSheets stores Tags as opaque text; splitting into an array is the
+        // caller's concern, not this library's (see issue #42).
+        var trips = new List<TripEntity> { new() { Date = "2024-01-15", Tags = "work,personal,late-night" } };
+        var headers = new List<object> { "Date", "Tags" };
+
+        // Act - write
+        var written = GenericSheetMapper<TripEntity>.MapToRangeData(trips, headers);
+
+        // Assert - write
+        Assert.Equal("work,personal,late-night", written[0][1]);
+
+        // Act - read the written value back
+        var writtenRow = written[0].Select(v => v!).ToList();
+        var values = new List<IList<object>> { headers, writtenRow };
+        var readBack = GenericSheetMapper<TripEntity>.MapFromRangeData(values);
+
+        // Assert - read
+        Assert.Equal("work,personal,late-night", readBack[0].Tags);
+    }
 }
 

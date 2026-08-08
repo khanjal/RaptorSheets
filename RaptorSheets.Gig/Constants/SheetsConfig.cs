@@ -88,6 +88,7 @@ public static class SheetsConfig
         public const string Place = "Place";
         public const string Region = "Region";
         public const string Service = "Service";
+        public const string Tags = "Tags";
         public const string TaxDeductible = "Tax Deductible";
         public const string TimeActive = "Active";
         public const string TimeEnd = "Finish";

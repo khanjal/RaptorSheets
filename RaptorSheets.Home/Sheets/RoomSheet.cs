@@ -17,7 +17,7 @@ public static class RoomSheet
     {
         Name = SheetsConfig.SheetNames.Rooms,
         TabColor = SheetColor.CYAN,
-        CellColor = SheetColor.LIGHT_CYAN,
+        CellColor = SheetColor.LIGHT_CYAN_3,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<RoomEntity>()

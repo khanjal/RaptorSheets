@@ -18,7 +18,7 @@ public static class AddressSheet
     internal static SheetModel BaseSheet => new()
     {
         Name = SheetsConfig.SheetNames.Addresses,
-        CellColor = SheetColor.LIGHT_CYAN,
+        CellColor = SheetColor.LIGHT_CYAN_3,
         TabColor = SheetColor.CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,

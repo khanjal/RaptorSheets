@@ -15,7 +15,7 @@ public static class SetupSheet
     internal static SheetModel BaseSheet => new()
     {
         Name = SheetsConfig.SheetNames.Setup,
-        CellColor = SheetColor.LIGHT_PURPLE,
+        CellColor = SheetColor.LIGHT_PURPLE_3,
         TabColor = SheetColor.PURPLE,
         FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,

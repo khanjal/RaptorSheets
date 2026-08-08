@@ -75,7 +75,6 @@ public static class SheetHelpers
         return sheetValues;
     }
 
-    // https://www.rapidtables.com/convert/color/hex-to-rgb.html
     public static Color GetColor(SheetColor colorEnum)
     {
         return colorEnum switch
@@ -83,26 +82,51 @@ public static class SheetHelpers
             SheetColor.BLACK => Colors.Black,
             SheetColor.BLUE => Colors.Blue,
             SheetColor.CYAN => Colors.Cyan,
-            SheetColor.DARK_YELLOW => Colors.DarkYellow,
+            SheetColor.DARK_YELLOW_1 => Colors.DarkYellow1,
             SheetColor.GREEN => Colors.Green,
-            SheetColor.LIGHT_CYAN => Colors.LightCyan,
-            SheetColor.LIGHT_GRAY => Colors.LightGray,
-            SheetColor.LIGHT_GREEN => Colors.LightGreen,
-            SheetColor.LIGHT_PURPLE => Colors.LightPurple,
-            SheetColor.LIGHT_RED => Colors.LightRed,
-            SheetColor.LIGHT_YELLOW => Colors.LightYellow,
-            SheetColor.LIME => Colors.Lime,
+            SheetColor.LIGHT_CYAN_3 => Colors.LightCyan3,
+            SheetColor.LIGHT_GREY_1 => Colors.LightGrey1,
+            SheetColor.LIGHT_GREEN_3 => Colors.LightGreen3,
+            SheetColor.LIGHT_PURPLE_3 => Colors.LightPurple3,
+            SheetColor.LIGHT_RED_3 => Colors.LightRed3,
+            SheetColor.LIGHT_YELLOW_3 => Colors.LightYellow3,
             SheetColor.ORANGE => Colors.Orange,
-            SheetColor.MAGENTA or SheetColor.PINK => Colors.Magenta,
+            SheetColor.MAGENTA => Colors.Magenta,
             SheetColor.PURPLE => Colors.Purple,
             SheetColor.RED => Colors.Red,
             SheetColor.WHITE => Colors.White,
             SheetColor.YELLOW => Colors.Yellow,
+            SheetColor.RED_BERRY => Colors.RedBerry,
+            SheetColor.CORNFLOWER_BLUE => Colors.CornflowerBlue,
+            SheetColor.DARK_GREY_4 => Colors.DarkGrey4,
+            SheetColor.DARK_GREY_3 => Colors.DarkGrey3,
+            SheetColor.DARK_GREY_2 => Colors.DarkGrey2,
+            SheetColor.DARK_GREY_1 => Colors.DarkGrey1,
+            SheetColor.GREY => Colors.Grey,
+            SheetColor.LIGHT_GREY_2 => Colors.LightGrey2,
+            SheetColor.LIGHT_GREY_3 => Colors.LightGrey3,
+            SheetColor.LIGHT_RED_BERRY_3 => Colors.LightRedBerry3,
+            SheetColor.LIGHT_ORANGE_3 => Colors.LightOrange3,
+            SheetColor.LIGHT_CORNFLOWER_BLUE_3 => Colors.LightCornflowerBlue3,
+            SheetColor.LIGHT_BLUE_3 => Colors.LightBlue3,
+            SheetColor.LIGHT_MAGENTA_3 => Colors.LightMagenta3,
             _ => Colors.White,
         };
     }
 
-    // Matches this library's own fixed 18-color palette (Colors) within floating-point tolerance.
+    public static string GetHex(SheetColor colorEnum)
+    {
+        var color = GetColor(colorEnum);
+        return $"#{ToHexByte(color.Red)}{ToHexByte(color.Green)}{ToHexByte(color.Blue)}";
+    }
+
+    private static string ToHexByte(float? channel)
+    {
+        var value = Math.Clamp((int)Math.Round((channel ?? 0) * 255, MidpointRounding.AwayFromZero), 0, 255);
+        return value.ToString("X2");
+    }
+
+    // Matches this library's own fixed color palette (Colors) within floating-point tolerance.
     // Only ever resolves colors this library itself could have written; a color set by hand in
     // Sheets (or by another tool) simply won't match and returns false.
     private const float ColorTolerance = 0.01f;

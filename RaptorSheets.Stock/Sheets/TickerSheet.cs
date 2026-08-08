@@ -21,7 +21,7 @@ public static class TickerSheet
     internal static SheetModel BaseSheet => new()
     {
         Name = Enums.SheetName.TICKERS.GetDescription(),
-        CellColor = SheetColor.LIGHT_YELLOW,
+        CellColor = SheetColor.LIGHT_YELLOW_3,
         TabColor = SheetColor.ORANGE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,

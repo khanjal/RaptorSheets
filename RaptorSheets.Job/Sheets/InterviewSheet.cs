@@ -18,9 +18,10 @@ public static class InterviewSheet
     internal static SheetModel BaseSheet => new()
     {
         Name = SheetsConfig.SheetNames.Interviews,
-        CellColor = SheetColor.LIGHT_GRAY,
+        CellColor = SheetColor.LIGHT_GREY_1,
         TabColor = SheetColor.GREEN,
-        FontColor = SheetColor.WHITE,
+        // No explicit FontColor - GREEN is now Google's real bright/light Green swatch (#00ff00,
+        // see issue #89's palette rebase), so the default BLACK reads fine.
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = false,

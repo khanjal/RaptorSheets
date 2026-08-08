@@ -18,8 +18,8 @@ public static class DailySheet
     internal static SheetModel BaseSheet => new()
     {
         Name = SheetsConfig.SheetNames.Daily,
-        TabColor = SheetColor.LIGHT_GREEN,
-        CellColor = SheetColor.LIGHT_GRAY,
+        TabColor = SheetColor.LIGHT_GREEN_3,
+        CellColor = SheetColor.LIGHT_GREY_1,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,

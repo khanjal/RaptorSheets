@@ -15,7 +15,7 @@ public class TripEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Date, isInput: true, formatType: Format.DATE)]
     public string Date { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService)]
+    [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService, note: ColumnNotes.ServiceSource)]
     public string Service { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Number, isInput: true, note: ColumnNotes.ShiftNumber)]
@@ -75,23 +75,26 @@ public class TripEntity : SheetRowEntityBase
         note: ColumnNotes.TripDistance)]
     public decimal? Distance { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Name, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeName)]
+    [Column(SheetsConfig.HeaderNames.Name, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeName, note: ColumnNotes.TripNameSource)]
     public string Name { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AddressStart, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeAddress)]
+    [Column(SheetsConfig.HeaderNames.AddressStart, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeAddress, note: ColumnNotes.AddressSource)]
     public string StartAddress { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.AddressEnd, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeAddress)]
+    [Column(SheetsConfig.HeaderNames.AddressEnd, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeAddress, note: ColumnNotes.AddressSource)]
     public string EndAddress { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.UnitEnd, isInput: true, note: ColumnNotes.UnitTypes)]
     public string EndUnit { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.OrderNumber, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.OrderNumber, isInput: true, note: ColumnNotes.OrderNumber)]
     public string OrderNumber { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Region, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion)]
+    [Column(SheetsConfig.HeaderNames.Region, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion, note: ColumnNotes.RegionSource)]
     public string Region { get; set; } = "";
+
+    [Column(SheetsConfig.HeaderNames.Tags, isInput: true)]
+    public string Tags { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Note, isInput: true)]
     public string Note { get; set; } = "";

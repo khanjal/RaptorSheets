@@ -16,9 +16,9 @@ public static class PaintSheet
     {
         Name = SheetsConfig.SheetNames.Paints,
         TabColor = SheetColor.MAGENTA,
-        // LIGHT_RED, not PINK: PINK resolves to the exact same RGB as MAGENTA (SheetHelpers.GetColor),
+        // LIGHT_RED_3, not PINK: PINK resolves to the exact same RGB as MAGENTA (SheetHelpers.GetColor),
         // which made the header row and alternating rows indistinguishable.
-        CellColor = SheetColor.LIGHT_RED,
+        CellColor = SheetColor.LIGHT_RED_3,
         FontColor = SheetColor.WHITE, // MAGENTA is a dark TabColor - see SheetColor for the dark/light list
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
