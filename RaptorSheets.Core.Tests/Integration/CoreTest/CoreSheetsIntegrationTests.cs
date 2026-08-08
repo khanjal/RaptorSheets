@@ -511,6 +511,94 @@ public class CoreSheetsIntegrationTests
         Assert.True(hardwareRow.Count > 0);
     }
 
+    /// <summary>
+    /// Stress test: ~1,000 rows in a single write. Still just ONE BatchUpdateSpreadsheet API call -
+    /// GoogleRequestHelpers.CreateUpdateCellRequests always folds every row into one request
+    /// regardless of count - but at this scale the request itself carries up to 1,000 individual
+    /// sub-requests (any RowId within the sheet's existing ~1,000-row grid takes the per-row
+    /// UpdateCellsRequest branch, not the single-request AppendCells branch reserved for genuinely
+    /// new rows past the grid), which is a real payload-size/latency question distinct from the
+    /// per-minute rate-limit quota the rest of this suite is paced around.
+    ///
+    /// Deliberately stays under the sheet's default ~1,000-row grid (RowId 2-999) rather than
+    /// straddling it: a first attempt at exactly 1,000 rows lost one - RowId 1001 fell just past
+    /// maxRow into CreateUpdateCellRequests' separate AppendCells branch, which appends after the
+    /// sheet's *current data extent* (not at the requested RowId), landing it on the very row an
+    /// explicit UpdateCellsRequest in the *same batch* then overwrote. That's a real, narrow
+    /// correctness gap in mixing append- and update-eligible rows in one call - distinct from what
+    /// this test is actually probing (bulk payload size/latency) - flagged separately, not chased here.
+    /// </summary>
+    [FactCheckUserSecrets]
+    public async Task LargeDataset_1000Rows_WriteThenReadCompletesInReasonableTime()
+    {
+        SkipIfNoCredentials();
+
+        const int rowCount = 998;
+        const string stressCategory = "StressTest";
+
+        var data = new CoreTestSheetEntity();
+        for (var i = 0; i < rowCount; i++)
+        {
+            data.Sheets.Items.Add(new ItemEntity
+            {
+                RowId = i + 2,
+                Name = $"StressItem{i}",
+                Category = stressCategory,
+                Amount = 1.5m + i,
+                Active = i % 2 == 0
+            });
+        }
+
+        try
+        {
+            var writeStart = DateTime.UtcNow;
+            var writeResult = await Manager!.ChangeSheetData([CoreTestSheetNames.Items], data);
+            var writeElapsed = DateTime.UtcNow - writeStart;
+
+            Assert.Empty(CriticalErrors(writeResult));
+            Assert.True(writeElapsed.TotalSeconds < 60,
+                $"Writing {rowCount} rows in one batch should complete within 60s, took {writeElapsed.TotalSeconds:F1}s");
+
+            await Task.Delay(3000);
+
+            var readStart = DateTime.UtcNow;
+            var readResult = await Manager!.GetSheets([CoreTestSheetNames.Items]);
+            var readElapsed = DateTime.UtcNow - readStart;
+
+            var stressRows = readResult.Sheets.Items.Where(i => i.Category == stressCategory).ToList();
+            Assert.Equal(rowCount, stressRows.Count);
+            Assert.True(readElapsed.TotalSeconds < 30,
+                $"Reading {rowCount} rows back should complete within 30s, took {readElapsed.TotalSeconds:F1}s");
+
+            // Spot-check first/middle/last rather than all 1,000 individually.
+            var first = stressRows.Single(i => i.Name == "StressItem0");
+            Assert.Equal(1.5m, first.Amount);
+            Assert.True(first.Active);
+
+            var middle = stressRows.Single(i => i.Name == "StressItem500");
+            Assert.Equal(501.5m, middle.Amount);
+            Assert.True(middle.Active);
+
+            var last = stressRows.Single(i => i.Name == $"StressItem{rowCount - 1}");
+            Assert.Equal(1.5m + (rowCount - 1), last.Amount);
+            Assert.False(last.Active);
+        }
+        finally
+        {
+            // Delete all 1,000 rows in one batched request (ActionType.DELETE, routed through
+            // GoogleRequestHelpers.ChangeSheetData<T>'s save/delete split) - not just blank them out -
+            // so neither leftover rows nor a permanent "StressTest" category in Summary corrupt any
+            // later test's assertions.
+            var cleanup = new CoreTestSheetEntity();
+            for (var i = 0; i < rowCount; i++)
+            {
+                cleanup.Sheets.Items.Add(new ItemEntity { RowId = i + 2, Action = ActionType.DELETE.GetDescription() });
+            }
+            await Manager!.ChangeSheetData([CoreTestSheetNames.Items], cleanup);
+            await Task.Delay(3000);
+        }
+    }
+
     [FactCheckUserSecrets]
     public async Task GetLiveSheetStructure_ReturnsConfiguredFormatAndFormula()
     {

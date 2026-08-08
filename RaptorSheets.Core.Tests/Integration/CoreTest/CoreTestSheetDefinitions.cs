@@ -20,6 +20,9 @@ public static class ItemSheetDefinition
         Name = CoreTestSheetNames.Items,
         TabColor = SheetColor.BLUE,
         CellColor = SheetColor.LIGHT_BLUE_3,
+        // BLUE is in SheetColor's own "Dark" list (see its doc comment) - needs an explicit light
+        // FontColor or the default BLACK header text is illegible against it.
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<ItemEntity>()
@@ -55,6 +58,8 @@ public static class SummarySheetDefinition
         Name = CoreTestSheetNames.Summary,
         TabColor = SheetColor.PURPLE,
         CellColor = SheetColor.LIGHT_PURPLE_3,
+        // PURPLE is in SheetColor's "Dark" list too - same reasoning as Items' BLUE above.
+        FontColor = SheetColor.WHITE,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
         ProtectSheet = true,

@@ -53,17 +53,29 @@ public class CoreTestManager : SheetManagerBase<CoreTestSheetEntity>
 
     // Summary is fully formula-driven (no isInput: true columns), so only Items/Log are writable -
     // same "only some sheets are genuinely user-writable" pattern as Stock's Accounts/Tickers.
+    //
+    // Routes through GoogleRequestHelpers.ChangeSheetData<T> (not CreateUpdateCellRequests directly)
+    // so entities with Action = ActionType.DELETE.GetDescription() are actually deleted - matching
+    // Gig/Job's own accessor pattern. An earlier version of this file called CreateUpdateCellRequests
+    // directly (matching Stock's own accessor, which never needs delete support since Stocks has no
+    // delete path either) and silently had no delete support at all as a result.
     private static readonly Dictionary<string, GoogleRequestHelpers.SheetChangeAccessor<CoreTestSheetEntity>> _sheetAccessors =
         new(StringComparer.OrdinalIgnoreCase)
         {
             [CoreTestSheetNames.Items] = new(
                 entity => entity.Sheets.Items.Count,
                 entity => entity.Sheets.Items,
-                (data, properties) => GoogleRequestHelpers.CreateUpdateCellRequests(data as List<ItemEntity> ?? [], properties, GenericSheetMapper<ItemEntity>.MapToRowData)),
+                (data, properties) => GoogleRequestHelpers.ChangeSheetData(
+                    data as List<ItemEntity> ?? [],
+                    properties,
+                    (entities, props) => GoogleRequestHelpers.CreateUpdateCellRequests(entities, props, GenericSheetMapper<ItemEntity>.MapToRowData))),
             [CoreTestSheetNames.Log] = new(
                 entity => entity.Sheets.Log.Count,
                 entity => entity.Sheets.Log,
-                (data, properties) => GoogleRequestHelpers.CreateUpdateCellRequests(data as List<LogEntity> ?? [], properties, GenericSheetMapper<LogEntity>.MapToRowData)),
+                (data, properties) => GoogleRequestHelpers.ChangeSheetData(
+                    data as List<LogEntity> ?? [],
+                    properties,
+                    (entities, props) => GoogleRequestHelpers.CreateUpdateCellRequests(entities, props, GenericSheetMapper<LogEntity>.MapToRowData))),
         };
 
     public async Task<CoreTestSheetEntity> ChangeSheetData(List<string> sheets, CoreTestSheetEntity sheetEntity, CancellationToken cancellationToken = default)
