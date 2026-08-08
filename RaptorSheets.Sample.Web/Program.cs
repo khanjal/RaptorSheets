@@ -20,12 +20,7 @@ builder.Services.AddRaptorSheetsJob();
 builder.Services.AddRaptorSheetsHome();
 
 builder.Services.AddScoped<ISheetOperations, GigSheetOperations>();
-// StockSheetOperations is deliberately not registered here yet - RaptorSheets.Stock's entities
-// (StockEntity/PriceEntity/CostEntity/...) have no [Column] attributes at all (unlike Gig/Job/Home),
-// so this generic reflection-driven UI can't discover any columns for them; every Stock sheet would
-// render with no data, just the Delete button. That's a gap in the Stock library itself (tracked as
-// a follow-up), not something to work around here - see docs/SAMPLE-APP.md. The class is otherwise
-// complete and ready to register as ISheetOperations once Stock's entities get [Column] attributes.
+builder.Services.AddScoped<ISheetOperations, StockSheetOperations>();
 builder.Services.AddScoped<ISheetOperations, JobSheetOperations>();
 builder.Services.AddScoped<ISheetOperations, HomeSheetOperations>();
 builder.Services.AddScoped<DomainRegistry>();

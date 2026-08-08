@@ -1,4 +1,3 @@
-using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
@@ -12,87 +11,6 @@ namespace RaptorSheets.Stock.Sheets;
 
 public static class StockSheet
 {
-    public static List<StockEntity> MapFromRangeData(IList<IList<object>> values)
-    {
-        var entities = new List<StockEntity>();
-        var headers = new Dictionary<int, string>();
-        var filteredValues = values!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).Select(x => x.ToList()).ToList();
-        var id = 0;
-
-        foreach (var value in filteredValues)
-        {
-            id++;
-            if (id == 1)
-            {
-                headers = HeaderHelpers.ParserHeader(value);
-                continue;
-            }
-
-            if (value.Count < headers.Count)
-            {
-                value.AddItems(headers.Count - value.Count);
-            }
-
-            StockEntity entity = new()
-            {
-                RowId = id,
-                Account = HeaderHelpers.GetStringValue(Header.ACCOUNT.GetDescription(), value, headers),
-                Ticker = HeaderHelpers.GetStringValue(Header.TICKER.GetDescription(), value, headers),
-                Name = HeaderHelpers.GetStringValue(Header.NAME.GetDescription(), value, headers),
-                Shares = HeaderHelpers.GetDecimalValue(Header.SHARES.GetDescription(), value, headers),
-                AverageCost = HeaderHelpers.GetDecimalValue(Header.AVERAGE_COST.GetDescription(), value, headers),
-                CostTotal = HeaderHelpers.GetDecimalValue(Header.COST_TOTAL.GetDescription(), value, headers),
-                CurrentPrice = HeaderHelpers.GetDecimalValue(Header.CURRENT_PRICE.GetDescription(), value, headers),
-                CurrentTotal = HeaderHelpers.GetDecimalValue(Header.CURRENT_TOTAL.GetDescription(), value, headers),
-                Return = HeaderHelpers.GetDecimalValue(Header.RETURN.GetDescription(), value, headers),
-                PeRatio = HeaderHelpers.GetDecimalValue(Header.PE_RATIO.GetDescription(), value, headers),
-                WeekHigh52 = HeaderHelpers.GetDecimalValue(Header.WEEK_HIGH_52.GetDescription(), value, headers),
-                WeekLow52 = HeaderHelpers.GetDecimalValue(Header.WEEK_LOW_52.GetDescription(), value, headers),
-                MaxHigh = HeaderHelpers.GetDecimalValue(Header.MAX_HIGH.GetDescription(), value, headers),
-                MinLow = HeaderHelpers.GetDecimalValue(Header.MIN_LOW.GetDescription(), value, headers),
-            };
-
-            entities.Add(entity);
-        }
-        return entities;
-    }
-
-    /// <summary>
-    /// Maps StockEntity to Google Sheets RowData for ChangeSheetData/CreateUpdateCellRequests.
-    /// Ticker/Account/Shares are the only genuinely user-insertable columns on the Stocks sheet -
-    /// every other column (Name/AverageCost/CostTotal/CurrentPrice/CurrentTotal/Return/PeRatio/
-    /// 52-week high-low/MaxHigh/MinLow) is a header-row ARRAYFORMULA (GOOGLEFINANCE off this row's
-    /// own Ticker, or a cross-sheet pull from the Tickers reference sheet) that auto-extends over
-    /// newly appended rows, so writing to those would clobber the array formula. They get an empty
-    /// CellData placeholder to preserve column position without overwriting anything.
-    /// </summary>
-    public static IList<RowData> MapToRowData(List<StockEntity> entities, IList<object> headers)
-    {
-        var rows = new List<RowData>();
-
-        foreach (var entity in entities)
-        {
-            var cells = new List<CellData>();
-
-            foreach (var header in headers)
-            {
-                var headerEnum = header!.ToString()!.Trim().GetValueFromName<Header>();
-
-                cells.Add(headerEnum switch
-                {
-                    Header.TICKER => new CellData { UserEnteredValue = new ExtendedValue { StringValue = entity.Ticker } },
-                    Header.ACCOUNT => new CellData { UserEnteredValue = new ExtendedValue { StringValue = entity.Account } },
-                    Header.SHARES => new CellData { UserEnteredValue = new ExtendedValue { NumberValue = (double)entity.Shares } },
-                    _ => new CellData()
-                });
-            }
-
-            rows.Add(new RowData { Values = cells });
-        }
-
-        return rows;
-    }
-
     /// <summary>
     /// Bare sheet definition (name/colors/freeze/headers, no formulas) - internal so
     /// AccountSheet/TickerSheet can resolve this sheet's column positions for their own cross-sheet
@@ -108,13 +26,7 @@ public static class StockSheet
         TabColor = SheetColor.CYAN,
         FreezeColumnCount = 1,
         FreezeRowCount = 1,
-        Headers = [
-            new SheetCellModel { Name = Header.TICKER.GetDescription() },
-            new SheetCellModel { Name = Header.NAME.GetDescription() },
-            new SheetCellModel { Name = Header.ACCOUNT.GetDescription() },
-            .. SheetsConfig.CommonPriceSheetHeaders,
-            .. SheetsConfig.CommonHistorySheetHeaders
-        ]
+        Headers = EntitySheetConfigHelper.GenerateHeadersFromEntity<StockEntity>()
     };
 
     public static SheetModel GetSheet()

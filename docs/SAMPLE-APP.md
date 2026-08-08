@@ -7,16 +7,14 @@ result land in the actual Google Sheet.
 
 It's plain ASP.NET Core - `dotnet run` is the whole setup story, no Node/npm toolchain required.
 
-Wired up for **Gig Work, Job Applications, and Home Maintenance** - pick any of them from the nav and
-browse/edit its sheets the same way. Domain labels are deliberately more than the bare domain name
-("Home" alone reads as this app's own Home page, not a domain) - see `ISheetOperations.DomainLabel`.
-**Stock Tracking isn't in the nav yet**: its entities have no `[Column]` attributes at all (unlike
-the other three domains), which this app's generic rendering depends on entirely for headers,
-editability, and validation - every Stock sheet would render with no columns. That's a gap in the
-Stock library itself (it predates the `[Column]`/`GenericSheetMapper<T>` convention and still uses
-its own hand-rolled header/mapping code), tracked as a follow-up rather than worked around here.
-`RaptorSheets.Sample.Web/Services/StockSheetOperations.cs` is already written and ready - once
-Stock's entities get `[Column]` attributes, it's a one-line uncomment in `Program.cs` to wire it in.
+Wired up for **Gig Work, Job Applications, Home Maintenance, and Stock Tracking** - pick any of them
+from the nav and browse/edit its sheets the same way. Domain labels are deliberately more than the
+bare domain name ("Home" alone reads as this app's own Home page, not a domain) - see
+`ISheetOperations.DomainLabel`. Stock's entities only recently gained `[Column]` attributes (it
+predated the `[Column]`/`GenericSheetMapper<T>` convention the other three domains are built on,
+and used its own hand-rolled header/mapping code until then) -
+`RaptorSheets.Sample.Web/Services/StockSheetOperations.cs` was already written and ready well
+before that port landed.
 
 There's also a domain-agnostic **[Sheet Inspector](#sheet-inspector)** at `/sheet-inspector`, reachable
 from the nav regardless of which domains are wired up - point it at any live tab on any connection
@@ -66,9 +64,9 @@ current value, so a blank one is a deliberate signal, and saving removes that do
 meant to, especially useful right after pasting a URL. This check runs in the background per field
 (so the page doesn't wait on 4 API calls before it's usable) and re-runs after every save.
 
-Gig/Job/Home each get **"Create missing sheets"** and **"Insert demo data"** buttons next to their ID
-field (Stock doesn't, since it isn't wired into the nav - see below) - deliberately two buttons, not
-one. Every domain's `GenerateDemoData()` always assigns `RowId` starting fresh at 2, and the
+Every domain - Gig/Job/Home/Stock - gets **"Create missing sheets"** and **"Insert demo data"** buttons
+next to its ID field - deliberately two buttons, not one. Every domain's `GenerateDemoData()` always
+assigns `RowId` starting fresh at 2, and the
 underlying write path decides overwrite-vs-append purely by comparing `RowId` against the sheet's
 total *grid* row count (usually 1000+), not its populated-row count - so `RowId 2` almost always lands
 in the "overwrite this literal spreadsheet row" branch. **Calling insert-demo-data against a
@@ -114,9 +112,8 @@ This split exists specifically so recording real data through this app can never
 spreadsheet the tests wipe. As a convenience, whenever a domain type has zero real connections,
 `Sheet.razor`/`Home.razor` fall back to showing `spreadsheets:test:{domain}` instead (synthesized as a
 connection on the fly, with a banner making clear that's what's happening) - so there's something to
-look at before you've added your own connection, rather than just an empty/error state. Stock's
-Connections entries work today even though the sample app's nav doesn't browse Stock sheets yet.
-Nothing is read from `appsettings.json`, so there's nothing to accidentally commit either way.
+look at before you've added your own connection, rather than just an empty/error state. Nothing is
+read from `appsettings.json`, so there's nothing to accidentally commit either way.
 
 Prefer the CLI for credentials/test IDs? Same store, either project's directory works:
 
@@ -142,8 +139,8 @@ Google Sheet always starts with one default "Sheet1" tab), the Home page offers 
 [RaptorSheets.Gig's README](../RaptorSheets.Gig/README.md#demo-setup). The other 14 sheets fill in
 on their own from the sheet formulas once Shifts/Trips/Expenses have real rows. This particular
 blank-spreadsheet wizard is Gig-only, since it's tied to the Home page's Gig connection status - the
-equivalent for Job/Home (and Stock, once it's wired up) is the "Create sheets + fill with demo data"
-button on each domain's spreadsheet ID field in **Settings**, described above.
+equivalent for Job/Home/Stock is the "Create sheets + fill with demo data" button on each domain's
+spreadsheet ID field in **Settings**, described above.
 
 ## Multiple domains, one generic layer
 

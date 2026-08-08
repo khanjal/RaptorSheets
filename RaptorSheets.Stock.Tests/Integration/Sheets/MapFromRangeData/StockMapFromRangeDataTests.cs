@@ -1,7 +1,7 @@
 ﻿using RaptorSheets.Core.Extensions;
 using RaptorSheets.Stock.Entities;
 using RaptorSheets.Stock.Enums;
-using RaptorSheets.Stock.Sheets;
+using RaptorSheets.Core.Mappers;
 using RaptorSheets.Stock.Tests.Data.Attributes;
 using RaptorSheets.Test.Common.Helpers;
 using Xunit;
@@ -19,7 +19,7 @@ public class StockMapFromRangeDataTests
     {
         this.fixture = fixture;
         _values = this.fixture.ValueRanges?.First(x => x.DataFilters[0].A1Range == SheetName.STOCKS.GetDescription()).ValueRange.Values;
-        _entities = StockSheet.MapFromRangeData(_values!);
+        _entities = GenericSheetMapper<StockEntity>.MapFromRangeData(_values!);
     }
 
     [FactCheckUserSecrets]
@@ -52,7 +52,7 @@ public class StockMapFromRangeDataTests
         var sheetOrder = new int[] { 0 }.Concat(RandomHelpers.GetRandomOrder(1, _values![0].Count - 1)).ToArray();
         var randomValues = RandomHelpers.RandomizeValues(_values, sheetOrder);
 
-        var randomEntities = StockSheet.MapFromRangeData(randomValues);
+        var randomEntities = GenericSheetMapper<StockEntity>.MapFromRangeData(randomValues);
         var nonEmptyRandomValues = randomValues!.Where(x => !string.IsNullOrEmpty(x[0].ToString())).ToList();
         Assert.Equal(nonEmptyRandomValues.Count - 1, randomEntities.Count);
 

@@ -1,5 +1,5 @@
+using RaptorSheets.Core.Mappers;
 using RaptorSheets.Stock.Entities;
-using RaptorSheets.Stock.Sheets;
 using Xunit;
 
 namespace RaptorSheets.Stock.Tests.Unit.Sheets;
@@ -12,7 +12,7 @@ public class StockSheetTests
         var entities = new List<StockEntity> { new() { RowId = 2, Shares = 10, Account = "Fidelity", Ticker = "AAPL" } };
         var headers = new List<object> { "Account", "Ticker", "Shares", "Avg Cost" };
 
-        var result = StockSheet.MapToRowData(entities, headers);
+        var result = GenericSheetMapper<StockEntity>.MapToRowData(entities, headers);
 
         Assert.Single(result);
         var cells = result[0].Values;
@@ -33,7 +33,7 @@ public class StockSheetTests
         };
         var headers = new List<object> { "Shares" };
 
-        var result = StockSheet.MapToRowData(entities, headers);
+        var result = GenericSheetMapper<StockEntity>.MapToRowData(entities, headers);
 
         Assert.Equal(2, result.Count);
         Assert.Equal(5, result[0].Values[0].UserEnteredValue?.NumberValue);
@@ -49,7 +49,7 @@ public class StockSheetTests
         var entities = new List<StockEntity> { new() { RowId = 2, Shares = 3, Account = "Fidelity", Ticker = "AAPL" } };
         var headers = new List<object> { "Avg Cost" };
 
-        var result = StockSheet.MapToRowData(entities, headers);
+        var result = GenericSheetMapper<StockEntity>.MapToRowData(entities, headers);
 
         Assert.Single(result[0].Values);
         Assert.Null(result[0].Values[0].UserEnteredValue);

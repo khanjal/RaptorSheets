@@ -69,9 +69,9 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
         return GenerateSheetHelpers.Generate(sheetNames);
     }
 
-    // Only the Stocks sheet is genuinely user-writable today (Ticker/Account/Shares - see
-    // StockSheet.MapToRowData) - Accounts and Tickers are fully formula/GOOGLEFINANCE-driven
-    // rollups, so they get no accessor entry (same as Gig's read-only summary sheets -
+    // Only the Stocks sheet is genuinely user-writable today (Ticker/Account/Shares - the only
+    // isInput: true columns on StockEntity) - Accounts and Tickers are fully formula/GOOGLEFINANCE-
+    // driven rollups, so they get no accessor entry (same as Gig's read-only summary sheets -
     // Daily/Weekly/Monthly/Yearly - having none).
     private static readonly Dictionary<string, GoogleRequestHelpers.SheetChangeAccessor<SheetEntity>> _sheetAccessors =
         new(StringComparer.OrdinalIgnoreCase)
