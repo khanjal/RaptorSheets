@@ -492,6 +492,19 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     {
         var sheetsToDeleteNames = sheetsToDelete.Select(s => s.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        // A TempSheet left over from a previous full-delete cycle (this method's own doc comment:
+        // "left in place afterward") already satisfies "at least one sheet remains" on its own -
+        // don't ask BuildDeletionRequests to add a second one with the same name. Google rejects a
+        // duplicate tab name, which fails the whole batch atomically (found via live testing - see
+        // #100 - since no existing test spreadsheet had ever had its last non-canonical tab removed,
+        // this path had never actually been exercised). Only fall through to the general check below
+        // if this call is itself deleting the existing TempSheet.
+        var tempSheetAlreadyExists = allTabNames.Any(t => t.Equals(TempSheetName, StringComparison.OrdinalIgnoreCase));
+        if (tempSheetAlreadyExists && !sheetsToDeleteNames.Contains(TempSheetName))
+        {
+            return false;
+        }
+
         // Check if we're deleting all existing sheets (excluding any existing TempSheet)
         var remainingSheets = allTabNames.Where(tabName =>
             !sheetsToDeleteNames.Contains(tabName) &&
