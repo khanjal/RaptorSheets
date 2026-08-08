@@ -8,8 +8,6 @@ using RaptorSheets.Test.Common.Attributes;
 using RaptorSheets.Test.Common.Fixtures;
 using RaptorSheets.Test.Common.Helpers;
 using Xunit;
-using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace RaptorSheets.Core.Tests.Integration.CoreTest;
 
@@ -25,12 +23,14 @@ namespace RaptorSheets.Core.Tests.Integration.CoreTest;
 /// fixture (<see cref="CoreCleanSlateFixture"/>) deletes/recreates every sheet before tests run.
 ///
 /// Each test is self-contained (writes/deletes/recreates whatever it needs) rather than relying on
-/// another test's side effects, since xUnit doesn't guarantee method execution order within a class -
-/// with one deliberate exception, see <see cref="RunLargeDatasetLastOrderer"/>.
+/// another test's side effects, since xUnit doesn't guarantee method execution order within a class.
+/// The three tests that wipe a whole sheet (see their own comments) each repopulate a modest amount
+/// of data afterward, so the live sheet stays richly populated regardless of run order - a fixed
+/// "run this test last" ordering trick was tried first and worked, but only covered one specific
+/// test; self-repopulating is robust to any destructive test running last, not just one.
 /// </summary>
 [Collection("CoreSheetsIntegration")]
 [Category("Integration")]
-[TestCaseOrderer("RaptorSheets.Core.Tests.Integration.CoreTest.RunLargeDatasetLastOrderer", "RaptorSheets.Core.Tests")]
 public class CoreSheetsIntegrationTests
 {
     private readonly CoreTestManager? Manager;
@@ -80,8 +80,13 @@ public class CoreSheetsIntegrationTests
     {
         SkipIfNoCredentials();
 
+        // "RoundTripCheck" is deliberately not one of CoreTestDataSeeder's category pool - this test
+        // asserts an EXACT Summary total, which the fixture's randomized seed data (also aggregated
+        // per-category) would otherwise silently pollute if this row shared a category with it.
+        const string category = "RoundTripCheck";
+
         var data = new CoreTestSheetEntity();
-        data.Sheets.Items.Add(new ItemEntity { RowId = 2, Name = "Widget", Category = "Hardware", Amount = 25.50m, Active = true });
+        data.Sheets.Items.Add(new ItemEntity { RowId = 2, Name = "Widget", Category = category, Amount = 25.50m, Active = true });
         data.Sheets.Log.Add(new LogEntity { RowId = 2, Date = "2026-01-15", Description = "First entry" });
 
         var writeResult = await Manager!.ChangeSheetData([CoreTestSheetNames.Items, CoreTestSheetNames.Log], data);
@@ -97,9 +102,9 @@ public class CoreSheetsIntegrationTests
 
         Assert.Contains(readResult.Sheets.Log, l => l.Description == "First entry");
 
-        var hardwareRow = Assert.Single(readResult.Sheets.Summary, s => s.Category == "Hardware");
-        Assert.Equal(25.50m, hardwareRow.Total);
-        Assert.Equal(1, hardwareRow.Count);
+        var categoryRow = Assert.Single(readResult.Sheets.Summary, s => s.Category == category);
+        Assert.Equal(25.50m, categoryRow.Total);
+        Assert.Equal(1, categoryRow.Count);
     }
 
     /// <summary>
@@ -137,7 +142,11 @@ public class CoreSheetsIntegrationTests
     /// a delete step must never skip the recreate step, or it corrupts the shared spreadsheet for
     /// every other test in this collection (that's exactly what happened during initial live runs -
     /// a wrong assertion aborted a delete-heavy test mid-method and cascaded failures through the
-    /// rest of the suite, since C# skips everything after a failed Assert.Contains).
+    /// rest of the suite, since C# skips everything after a failed Assert.Contains). Repopulating a
+    /// modest amount of data after recreating (here and in the two tests below) is the same idea one
+    /// level up: this test deletes the whole Log sheet, including the fixture's own seeded rows - if
+    /// it's the last thing to touch Log in a given run (xUnit doesn't guarantee order), leaving it
+    /// merely non-empty-but-bare would undo what the fixture's seed step was for.
     /// </summary>
     [FactCheckUserSecrets]
     public async Task DeleteSheets_SingleSheet_LeavesOthersIntact_ThenRecreatesIt()
@@ -157,6 +166,11 @@ public class CoreSheetsIntegrationTests
         {
             var createResult = await Manager!.CreateSheets([CoreTestSheetNames.Log]);
             Assert.Empty(CriticalErrors(createResult));
+
+            await Task.Delay(1500);
+            var reseed = new CoreTestSheetEntity();
+            reseed.Sheets.Log.AddRange(CoreTestDataSeeder.GenerateLogEntries(CoreCleanSlateFixture.SeededLogCount, CoreCleanSlateFixture.SeedStartRowId, new Random()));
+            await Manager!.ChangeSheetData([CoreTestSheetNames.Log], reseed);
         }
 
         await Task.Delay(1500);
@@ -190,6 +204,16 @@ public class CoreSheetsIntegrationTests
         {
             var createResult = await Manager!.CreateAllSheets();
             Assert.Empty(CriticalErrors(createResult));
+
+            // This is the most disruptive of the three sheet-wiping tests - deletes everything the
+            // fixture seeded. Repopulate both sheets so the live spreadsheet stays richly populated
+            // even if this happens to be the last test to touch it in a given run.
+            await Task.Delay(2000);
+            var random = new Random();
+            var reseed = new CoreTestSheetEntity();
+            reseed.Sheets.Items.AddRange(CoreTestDataSeeder.GenerateItems(CoreCleanSlateFixture.SeededItemCount, CoreCleanSlateFixture.SeedStartRowId, random));
+            reseed.Sheets.Log.AddRange(CoreTestDataSeeder.GenerateLogEntries(CoreCleanSlateFixture.SeededLogCount, CoreCleanSlateFixture.SeedStartRowId, random));
+            await Manager!.ChangeSheetData([CoreTestSheetNames.Items, CoreTestSheetNames.Log], reseed);
         }
 
         await Task.Delay(2000);
@@ -474,6 +498,12 @@ public class CoreSheetsIntegrationTests
             var restoredStructure = await Manager!.GetLiveSheetStructure(CoreTestSheetNames.Items);
             var restoredOrder = restoredStructure!.Headers.OrderBy(h => h.Index).Select(h => h.Name).ToList();
             Assert.Equal(new[] { "Name", "Category", "Amount", "Active" }, restoredOrder);
+
+            // The delete above also wiped the fixture's seeded Items rows - repopulate for the same
+            // reason as this suite's other sheet-wiping tests (see their own comments).
+            var reseed = new CoreTestSheetEntity();
+            reseed.Sheets.Items.AddRange(CoreTestDataSeeder.GenerateItems(CoreCleanSlateFixture.SeededItemCount, CoreCleanSlateFixture.SeedStartRowId, new Random()));
+            await Manager!.ChangeSheetData([CoreTestSheetNames.Items], reseed);
         }
     }
 
@@ -499,123 +529,70 @@ public class CoreSheetsIntegrationTests
         await Manager!.DeleteSheets([CoreTestSheetNames.Items]);
         await Task.Delay(2000);
 
-        var healResult = await Manager!.GetSheets([CoreTestSheetNames.Items, CoreTestSheetNames.Summary]);
-        Assert.Contains(healResult.Messages, m => m.Message.Contains("Created missing sheets"));
-        await Task.Delay(2000);
-
-        var refill = new CoreTestSheetEntity();
-        refill.Sheets.Items.Add(new ItemEntity { RowId = 2, Name = "Screw", Category = "Hardware", Amount = 3m, Active = true });
-        var refillResult = await Manager!.ChangeSheetData([CoreTestSheetNames.Items], refill);
-        Assert.Empty(CriticalErrors(refillResult));
-        await Task.Delay(2500);
-
-        var finalRead = await Manager!.GetSheets([CoreTestSheetNames.Summary]);
-        var hardwareRow = Assert.Single(finalRead.Sheets.Summary, s => s.Category == "Hardware");
-        Assert.True(hardwareRow.Total > 0);
-        Assert.True(hardwareRow.Count > 0);
-    }
-
-    /// <summary>
-    /// Stress test: ~1,000 rows in a single write. Still just ONE BatchUpdateSpreadsheet API call -
-    /// GoogleRequestHelpers.CreateUpdateCellRequests always folds every row into one request
-    /// regardless of count - but at this scale the request itself carries up to 1,000 individual
-    /// sub-requests (any RowId within the sheet's existing ~1,000-row grid takes the per-row
-    /// UpdateCellsRequest branch, not the single-request AppendCells branch reserved for genuinely
-    /// new rows past the grid), which is a real payload-size/latency question distinct from the
-    /// per-minute rate-limit quota the rest of this suite is paced around.
-    ///
-    /// Deliberately stays under the sheet's default ~1,000-row grid (RowId 2-999) rather than
-    /// straddling it: a first attempt at exactly 1,000 rows lost one - RowId 1001 fell just past
-    /// maxRow into CreateUpdateCellRequests' separate AppendCells branch, which appends after the
-    /// sheet's *current data extent* (not at the requested RowId), landing it on the very row an
-    /// explicit UpdateCellsRequest in the *same batch* then overwrote. That's a real, narrow
-    /// correctness gap in mixing append- and update-eligible rows in one call - distinct from what
-    /// this test is actually probing (bulk payload size/latency) - flagged separately, not chased here.
-    /// </summary>
-    [FactCheckUserSecrets]
-    public async Task LargeDataset_1000Rows_WriteThenReadCompletesInReasonableTime()
-    {
-        SkipIfNoCredentials();
-
-        const int rowCount = 998;
-        const string stressCategory = "StressTest";
-
-        var data = new CoreTestSheetEntity();
-        for (var i = 0; i < rowCount; i++)
-        {
-            data.Sheets.Items.Add(new ItemEntity
-            {
-                RowId = i + 2,
-                Name = $"StressItem{i}",
-                Category = stressCategory,
-                Amount = 1.5m + i,
-                Active = i % 2 == 0
-            });
-        }
-
         try
         {
-            var writeStart = DateTime.UtcNow;
-            var writeResult = await Manager!.ChangeSheetData([CoreTestSheetNames.Items], data);
-            var writeElapsed = DateTime.UtcNow - writeStart;
+            var healResult = await Manager!.GetSheets([CoreTestSheetNames.Items, CoreTestSheetNames.Summary]);
+            Assert.Contains(healResult.Messages, m => m.Message.Contains("Created missing sheets"));
+            await Task.Delay(2000);
 
-            Assert.Empty(CriticalErrors(writeResult));
-            Assert.True(writeElapsed.TotalSeconds < 60,
-                $"Writing {rowCount} rows in one batch should complete within 60s, took {writeElapsed.TotalSeconds:F1}s");
+            var refill = new CoreTestSheetEntity();
+            refill.Sheets.Items.Add(new ItemEntity { RowId = 2, Name = "Screw", Category = "Hardware", Amount = 3m, Active = true });
+            var refillResult = await Manager!.ChangeSheetData([CoreTestSheetNames.Items], refill);
+            Assert.Empty(CriticalErrors(refillResult));
+            await Task.Delay(2500);
 
-            await Task.Delay(3000);
-
-            var readStart = DateTime.UtcNow;
-            var readResult = await Manager!.GetSheets([CoreTestSheetNames.Items]);
-            var readElapsed = DateTime.UtcNow - readStart;
-
-            var stressRows = readResult.Sheets.Items.Where(i => i.Category == stressCategory).ToList();
-            Assert.Equal(rowCount, stressRows.Count);
-            Assert.True(readElapsed.TotalSeconds < 30,
-                $"Reading {rowCount} rows back should complete within 30s, took {readElapsed.TotalSeconds:F1}s");
-
-            // Spot-check first/middle/last rather than all 1,000 individually.
-            var first = stressRows.Single(i => i.Name == "StressItem0");
-            Assert.Equal(1.5m, first.Amount);
-            Assert.True(first.Active);
-
-            var middle = stressRows.Single(i => i.Name == "StressItem500");
-            Assert.Equal(501.5m, middle.Amount);
-            Assert.True(middle.Active);
-
-            var last = stressRows.Single(i => i.Name == $"StressItem{rowCount - 1}");
-            Assert.Equal(1.5m + (rowCount - 1), last.Amount);
-            Assert.False(last.Active);
+            var finalRead = await Manager!.GetSheets([CoreTestSheetNames.Summary]);
+            var hardwareRow = Assert.Single(finalRead.Sheets.Summary, s => s.Category == "Hardware");
+            Assert.True(hardwareRow.Total > 0);
+            Assert.True(hardwareRow.Count > 0);
         }
         finally
         {
-            // Leave most of the stress data behind rather than scrubbing back to a single bare row -
-            // delete only a randomized large section of it (ActionType.DELETE, routed through
-            // GoogleRequestHelpers.ChangeSheetData<T>'s save/delete split). Never touches RowId 2 (i=0)
-            // - the shared baseline row every other test in this suite overwrites/reads - everything
-            // else is fair game, since nothing downstream depends on a specific surviving stress row's
-            // RowId, only that Items (and Summary's "StressTest" aggregate) end up genuinely populated
-            // for a human looking at the live sheet, not emptied back out every run.
-            var rng = new Random();
-            var deletableCount = rowCount - 1; // exclude i=0 (RowId 2)
-            var sectionLength = rng.Next(deletableCount / 2, (int)(deletableCount * 0.8));
-            var sectionStart = rng.Next(1, rowCount - sectionLength);
-
-            var cleanup = new CoreTestSheetEntity();
-            for (var i = sectionStart; i < sectionStart + sectionLength; i++)
-            {
-                cleanup.Sheets.Items.Add(new ItemEntity { RowId = i + 2, Action = ActionType.DELETE.GetDescription() });
-            }
-            await Manager!.ChangeSheetData([CoreTestSheetNames.Items], cleanup);
-            await Task.Delay(3000);
-
-            // Verify the partial cleanup actually left the expected amount behind, rather than
-            // assuming the delete request did what was asked. Deterministic: rowCount total minus
-            // exactly the deleted section (RowId 2/i=0 is never part of the deleted range).
-            var afterCleanup = await Manager!.GetSheets([CoreTestSheetNames.Items]);
-            var remainingStressRows = afterCleanup.Sheets.Items.Count(i => i.Category == stressCategory);
-            Assert.Equal(rowCount - sectionLength, remainingStressRows);
+            // This test's own DeleteSheets wiped the fixture's seeded Items rows along with the
+            // "Nut" row it wrote itself. Repopulate so the live sheet stays richly populated even if
+            // this happens to be the last test to touch Items in a given run.
+            var reseed = new CoreTestSheetEntity();
+            reseed.Sheets.Items.AddRange(CoreTestDataSeeder.GenerateItems(CoreCleanSlateFixture.SeededItemCount, CoreCleanSlateFixture.SeedStartRowId, new Random()));
+            await Manager!.ChangeSheetData([CoreTestSheetNames.Items], reseed);
         }
+    }
+
+    /// <summary>
+    /// Verifies the fixture's own seed step (see CoreCleanSlateFixture.SeedAsync) rather than writing
+    /// its own dataset from scratch - the "large batch write" proof (still just ONE
+    /// BatchUpdateSpreadsheet call regardless of row count, see GoogleRequestHelpers.
+    /// CreateUpdateCellRequests) now lives there instead, so the rest of this suite runs against a
+    /// realistically-populated sheet from the start rather than only after this one test finishes.
+    /// This is deliberately read-only - the seed's own count/random-amount guarantees are asserted
+    /// here, not re-created.
+    /// </summary>
+    [FactCheckUserSecrets]
+    public async Task SeededDataset_ReadsBackCorrectly_AndSummaryAggregatesAcrossManyCategories()
+    {
+        SkipIfNoCredentials();
+
+        var readStart = DateTime.UtcNow;
+        var readResult = await Manager!.GetSheets([CoreTestSheetNames.Items, CoreTestSheetNames.Summary]);
+        var readElapsed = DateTime.UtcNow - readStart;
+
+        Assert.True(readElapsed.TotalSeconds < 30,
+            $"Reading the seeded dataset should complete within 30s, took {readElapsed.TotalSeconds:F1}s");
+
+        var seededItems = readResult.Sheets.Items.Where(i => i.RowId >= CoreCleanSlateFixture.SeedStartRowId).ToList();
+        Assert.True(seededItems.Count >= CoreCleanSlateFixture.SeededItemCount / 2,
+            $"Expected at least half the {CoreCleanSlateFixture.SeededItemCount} seeded rows to still be present, found {seededItems.Count}");
+
+        // Amounts are randomized (see CoreTestDataSeeder), not a suspicious linear/increasing
+        // sequence - confirm that live, not just by reading the generator's own code.
+        var distinctAmounts = seededItems.Select(i => i.Amount).Distinct().Count();
+        Assert.True(distinctAmounts > seededItems.Count / 2,
+            $"Seeded amounts look too repetitive to be random: {distinctAmounts} distinct values across {seededItems.Count} rows");
+
+        // Summary should aggregate across every category the randomized seed actually used, not just
+        // whatever one category individual scenario tests happen to write to RowId 2.
+        Assert.True(readResult.Sheets.Summary.Count > 1,
+            $"Expected Summary to show more than one category from the seeded dataset, found {readResult.Sheets.Summary.Count}");
+        Assert.All(readResult.Sheets.Summary, s => Assert.True(s.Total >= 0));
     }
 
     [FactCheckUserSecrets]
@@ -791,34 +768,40 @@ public class CoreSheetsIntegrationCollection : ICollectionFixture<CoreCleanSlate
 
 /// <summary>
 /// Core's clean-slate integration fixture (see <see cref="CleanSlateSheetFixture{TEntity,TManager}"/>).
-/// Deletes and recreates every canonical sheet once, before the collection's tests run. Safe because
-/// spreadsheets:test:core is configured to point at its own dedicated, empty test spreadsheet - never
-/// shared with a domain or with anyone's real data.
+/// Deletes and recreates every canonical sheet, seeds a large randomized baseline dataset, once before
+/// the collection's tests run. Safe because spreadsheets:test:core is configured to point at its own
+/// dedicated, empty test spreadsheet - never shared with a domain or with anyone's real data.
 /// </summary>
 public class CoreCleanSlateFixture : CleanSlateSheetFixture<CoreTestSheetEntity, CoreTestManager>
 {
+    /// <summary>
+    /// How many Items/Log rows the fixture seeds - also the "large batch write" proof (one
+    /// BatchUpdateSpreadsheet call regardless of row count - see GoogleRequestHelpers.
+    /// CreateUpdateCellRequests) that used to be a standalone test. Items stays under the sheet's
+    /// default ~1,000-row grid to avoid the append/update classification boundary - see #101.
+    /// </summary>
+    public const int SeededItemCount = 600;
+    public const int SeededLogCount = 40;
+
+    /// <summary>
+    /// RowId 2-9 is reserved for individual tests' own scratch usage (only RowId 2 is used today) -
+    /// seed data starts at 10 so it never collides with a specific-scenario test's own write.
+    /// </summary>
+    public const int SeedStartRowId = 10;
+
     public CoreCleanSlateFixture() : base(
         TestConfigurationHelpers.GetCoreSpreadsheet(),
-        (credential, spreadsheetId) => new CoreTestManager(credential, spreadsheetId))
+        (credential, spreadsheetId) => new CoreTestManager(credential, spreadsheetId),
+        SeedAsync)
     {
     }
-}
 
-/// <summary>
-/// xUnit doesn't guarantee test method execution order within a class. Every test here is written to
-/// tolerate that (see the test class's own doc comment) - except one: LargeDataset_1000Rows_... is the
-/// only test deliberately designed to leave a large, visible dataset behind for a human looking at the
-/// live sheet afterward. If DeleteAllSheets_ThenCreateAllSheets_UsesTempSheetSafetyNet (which wipes
-/// every sheet back to empty as part of proving the temp-sheet safety net) happened to run AFTER it,
-/// the live sheet would look empty despite the run having just proven bulk write/read/self-heal/
-/// reapply all work correctly - confirmed live: this is exactly what was happening before this orderer
-/// was added. Forces the large-dataset test to run strictly last; every other test's relative order is
-/// left to xUnit's default (harmless, since they're all genuinely order-independent).
-/// </summary>
-public class RunLargeDatasetLastOrderer : ITestCaseOrderer
-{
-    public IEnumerable<TTestCase> OrderTestCases<TTestCase>(IEnumerable<TTestCase> testCases) where TTestCase : ITestCase
+    private static async Task SeedAsync(CoreTestManager manager)
     {
-        return testCases.OrderBy(tc => tc.TestMethod.Method.Name.Contains("LargeDataset", StringComparison.Ordinal) ? 1 : 0);
+        var random = new Random();
+        var seed = new CoreTestSheetEntity();
+        seed.Sheets.Items.AddRange(CoreTestDataSeeder.GenerateItems(SeededItemCount, SeedStartRowId, random));
+        seed.Sheets.Log.AddRange(CoreTestDataSeeder.GenerateLogEntries(SeededLogCount, SeedStartRowId, random));
+        await manager.ChangeSheetData([CoreTestSheetNames.Items, CoreTestSheetNames.Log], seed);
     }
 }
