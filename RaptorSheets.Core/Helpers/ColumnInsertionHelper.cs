@@ -17,8 +17,17 @@ public static class ColumnInsertionHelper
 {
     /// <summary>
     /// Builds the InsertDimension + UpdateCells requests for every missing column, one sheet at a
-    /// time. Columns within a sheet are inserted right-to-left (highest index first) so earlier
-    /// insertions don't shift the index of columns still to be inserted.
+    /// time. Columns within a sheet are inserted left-to-right (lowest index first): at the moment a
+    /// given column's insert request runs, every column with a lower canonical index either already
+    /// existed or was already re-inserted earlier in this same loop, so the live grid is always at
+    /// least as wide as the target index - insertion never lands beyond the current bound. The
+    /// reverse (highest-index-first) order this used to use breaks precisely when many columns are
+    /// missing at once and the live sheet's grid has shrunk to fewer columns than the highest target
+    /// index - Google rejects an InsertDimension whose StartIndex exceeds the sheet's current column
+    /// count ("range.startIndex is larger than current grid size"), silently failing the entire
+    /// self-heal batch. Found live restoring Gig's 15-column Daily rollup after deleting every
+    /// non-key column - Core's/Stock's much smaller dependent sheets never had enough missing columns
+    /// to hit it.
     /// </summary>
     public static List<Request> BuildInsertRequests(Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
     {
@@ -26,7 +35,7 @@ public static class ColumnInsertionHelper
 
         foreach (var (_, columns) in missingColumns)
         {
-            var sortedColumns = columns.OrderByDescending(c => c.ColumnIndex).ToList();
+            var sortedColumns = columns.OrderBy(c => c.ColumnIndex).ToList();
 
             foreach (var column in sortedColumns)
             {

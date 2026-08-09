@@ -44,10 +44,13 @@ public class ColumnInsertionHelperTests
     }
 
     [Fact]
-    public void BuildInsertRequests_WithMultipleMissingColumnsInOneSheet_InsertsRightToLeft()
+    public void BuildInsertRequests_WithMultipleMissingColumnsInOneSheet_InsertsLeftToRight()
     {
-        // Inserting right-to-left (highest index first) so earlier insertions in the batch
-        // don't shift the index of columns still waiting to be inserted.
+        // Inserting left-to-right (lowest index first): by the time a given column's insert runs,
+        // every lower-indexed column already exists (either it was never missing, or was already
+        // re-inserted earlier this same loop), so the live grid is always at least as wide as the
+        // target index. The reverse order used to insert beyond the live grid's current width
+        // whenever many columns were missing at once - see BuildInsertRequests' own doc comment.
         var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
         {
             ["Widgets"] =
@@ -66,7 +69,7 @@ public class ColumnInsertionHelperTests
             .Select(r => r.InsertDimension.Range.StartIndex)
             .ToList();
 
-        Assert.Equal([3, 1, 0], insertIndices);
+        Assert.Equal([0, 1, 3], insertIndices);
     }
 
     [Fact]
