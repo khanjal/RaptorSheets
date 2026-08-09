@@ -140,6 +140,56 @@ public class HeaderHelpersTests
     }
 
     [Fact]
+    public void GetIntValueOrNull_WithNonIntegralSheetCellValue_ShouldReturnNull()
+    {
+        // Arrange - matches the string path's "contains a decimal point -> null" rule; a
+        // fractional EffectiveNumber must not be silently truncated into a wrong integer
+        var headers = new Dictionary<int, string> { { 0, "Count" } };
+        var values = new List<object> { new SheetCellValue("5.9", 5.9) };
+
+        // Act
+        var result = HeaderHelpers.GetIntValueOrNull("Count", values, headers);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Theory]
+    [InlineData(3_000_000_000d)] // beyond int.MaxValue
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    public void GetIntValueOrNull_WithOutOfRangeSheetCellValue_ShouldReturnNull(double effectiveNumber)
+    {
+        // Arrange
+        var headers = new Dictionary<int, string> { { 0, "Count" } };
+        var values = new List<object> { new SheetCellValue("irrelevant", effectiveNumber) };
+
+        // Act
+        var result = HeaderHelpers.GetIntValueOrNull("Count", values, headers);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Theory]
+    [InlineData(double.MaxValue)] // beyond decimal.MaxValue
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    public void GetDecimalValueOrNull_WithOutOfRangeSheetCellValue_ShouldReturnNullNotThrow(double effectiveNumber)
+    {
+        // Arrange - decimal's range is far narrower than double's; an unchecked cast would throw
+        // OverflowException here, violating the library's reads-never-fail design
+        var headers = new Dictionary<int, string> { { 0, "Amount" } };
+        var values = new List<object> { new SheetCellValue("irrelevant", effectiveNumber) };
+
+        // Act
+        var result = HeaderHelpers.GetDecimalValueOrNull("Amount", values, headers);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
     public void CheckSheetHeaders_ShouldReturnCorrectMessages()
     {
         // Arrange

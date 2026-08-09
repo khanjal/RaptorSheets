@@ -112,9 +112,19 @@ public static class HeaderHelpers
 
         // Structure-aware reads carry the real computed number - use it directly instead of
         // re-parsing display text, sidestepping locale/formatting quirks entirely (issue #80).
+        // Matches the string path's semantics below: a non-integral, NaN/Infinity, or
+        // out-of-int-range value isn't a parse failure to hide behind a silent truncation/cast -
+        // it's a genuine type mismatch, so it reads back as null just like "5.9" or "99999999999"
+        // does via the text path.
         if (values[columnId] is SheetCellValue cellValue)
         {
-            return (int)cellValue.EffectiveNumber;
+            var number = cellValue.EffectiveNumber;
+            if (!double.IsInteger(number) || number < int.MinValue || number > int.MaxValue)
+            {
+                return null;
+            }
+
+            return (int)number;
         }
 
         var value = values[columnId]?.ToString()?.Trim();
@@ -161,10 +171,19 @@ public static class HeaderHelpers
         // re-parsing display text. This is the actual fix for issue #80: an accounting-formatted
         // zero renders as "$ -", which IsBlankNumericDisplay below treats as null rather than 0 -
         // a real EffectiveValue sidesteps that guess entirely, correct or not, since it's the
-        // literal number Sheets computed.
+        // literal number Sheets computed. Guard the double->decimal cast first - decimal's range
+        // is far narrower than double's, and an unchecked cast throws OverflowException for
+        // NaN/Infinity/out-of-range values, which would violate reads-never-fail.
         if (values[columnId] is SheetCellValue cellValue)
         {
-            return (decimal)cellValue.EffectiveNumber;
+            var number = cellValue.EffectiveNumber;
+            if (double.IsNaN(number) || double.IsInfinity(number) ||
+                number < (double)decimal.MinValue || number > (double)decimal.MaxValue)
+            {
+                return null;
+            }
+
+            return (decimal)number;
         }
 
         var value = values[columnId]?.ToString()?.Trim();
