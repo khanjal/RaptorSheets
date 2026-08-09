@@ -64,7 +64,7 @@ public static class HeaderHelpers
             return "";
         }
 
-        var dateString = values[columnId]!.ToString() ?? "";
+        var dateString = values[columnId].ToString() ?? "";
         
         if (DateTime.TryParse(dateString, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime result))
         {

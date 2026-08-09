@@ -189,7 +189,7 @@ public static class TypedFieldUtils
 
     #region Private Conversion Methods
 
-    private static object? ParseCurrency(string value)
+    private static decimal? ParseCurrency(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             return null;
@@ -206,7 +206,7 @@ public static class TypedFieldUtils
         return null;
     }
 
-    private static object? ParsePhoneNumber(string value)
+    private static long? ParsePhoneNumber(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             return null;
@@ -223,7 +223,7 @@ public static class TypedFieldUtils
         return long.TryParse(digitsOnly, out var result) ? result : null;
     }
 
-    private static object? ParseDateTime(object value)
+    private static DateTime? ParseDateTime(object value)
     {
         // Handle Google Sheets serial number format
         if (value is double serialNumber)
@@ -299,12 +299,12 @@ public static class TypedFieldUtils
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
-    private static object? ConvertCurrencyToSheet(object value)
+    private static double ConvertCurrencyToSheet(object value)
     {
         return Convert.ToDouble(value, CultureInfo.InvariantCulture);
     }
 
-    private static object? ConvertPhoneNumberToSheet(object value)
+    private static long ConvertPhoneNumberToSheet(object value)
     {
         return Convert.ToInt64(value, CultureInfo.InvariantCulture);
     }
@@ -320,7 +320,7 @@ public static class TypedFieldUtils
         return value;
     }
 
-    private static object? ConvertPercentageToSheet(object value)
+    private static double ConvertPercentageToSheet(object value)
     {
         // Google Sheets expects percentage values as decimals (e.g., 0.5 for 50%)
         return Convert.ToDouble(value, CultureInfo.InvariantCulture);

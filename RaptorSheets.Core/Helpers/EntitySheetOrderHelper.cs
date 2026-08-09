@@ -119,7 +119,7 @@ public static class EntitySheetOrderHelper
         HashSet<string> availableSheetsSet,
         List<string> errors)
     {
-        if (string.IsNullOrEmpty(sheetOrderAttr.SheetName) || !availableSheetsSet.Contains(sheetOrderAttr.SheetName!))
+        if (string.IsNullOrEmpty(sheetOrderAttr.SheetName) || !availableSheetsSet.Contains(sheetOrderAttr.SheetName))
         {
             errors.Add($"Property '{property.Name}' in entity '{entityType.Name}' " +
                       $"references sheet '{sheetOrderAttr.SheetName ?? "null"}' which is not available in " +
@@ -150,7 +150,7 @@ public static class EntitySheetOrderHelper
         HashSet<string> usedSheetNames,
         List<string> errors)
     {
-        if (!usedSheetNames.Add(sheetOrderAttr.SheetName!))
+        if (!usedSheetNames.Add(sheetOrderAttr.SheetName))
         {
             errors.Add($"Sheet name '{sheetOrderAttr.SheetName}' is used multiple times in entity '{entityType.Name}'. " +
                       $"Each SheetOrder attribute must reference a unique sheet name.");

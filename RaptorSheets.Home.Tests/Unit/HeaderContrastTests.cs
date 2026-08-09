@@ -26,13 +26,20 @@ public class HeaderContrastTests
             return; // light TabColor - default BLACK font is legible, no FontColor needed
         }
 
-        Assert.True(!IsDark(sheet.FontColor),
+        Assert.False(IsDark(sheet.FontColor),
             $"'{sheetName}' has a dark TabColor ({sheet.TabColor}) but FontColor is {sheet.FontColor} " +
             "(likely the BLACK default) - header text will be illegible. Set FontColor to WHITE.");
     }
 
-    public static IEnumerable<object[]> AllSheetNames() =>
-        SheetsConfig.SheetUtilities.GetAllSheetNames().Select(n => new object[] { n });
+    public static TheoryData<string> AllSheetNames()
+    {
+        var data = new TheoryData<string>();
+        foreach (var name in SheetsConfig.SheetUtilities.GetAllSheetNames())
+        {
+            data.Add(name);
+        }
+        return data;
+    }
 
     /// <summary>
     /// YIQ perceived-brightness formula (the same threshold used by common WCAG-adjacent contrast

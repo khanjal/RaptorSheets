@@ -166,8 +166,8 @@ public class GigFormulasTests
             Assert.NotEmpty(formula);
             
             // Each formula should contain at least one valid Google Sheets function or valid operators
-            var containsValidFunction = expectedFunctions.Any(func => formula.Contains(func)) || 
-                                      formula.Contains("+") || formula.Contains("/") || formula.Contains("-");
+            var containsValidFunction = expectedFunctions.Any(func => formula.Contains(func)) ||
+                                      formula.Contains('+') || formula.Contains('/') || formula.Contains('-');
             
             Assert.True(containsValidFunction, $"Formula '{formula}' should contain at least one valid Google Sheets function or operator");
         }

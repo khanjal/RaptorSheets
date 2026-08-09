@@ -148,7 +148,7 @@ public static class SheetOrderingHelper
         return insertionEntries;
     }
 
-    private static IList<Request> BuildRequestsFromEntries(IEnumerable<(string Name, int TargetIndex, int OriginalOrder)> entries)
+    private static List<Request> BuildRequestsFromEntries(IEnumerable<(string Name, int TargetIndex, int OriginalOrder)> entries)
     {
         var requests = new List<Request>();
 

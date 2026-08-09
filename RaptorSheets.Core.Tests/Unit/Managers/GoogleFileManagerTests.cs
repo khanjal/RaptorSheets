@@ -452,7 +452,7 @@ public class GoogleFileManagerTests
     public void GoogleFileManager_ImplementsIGoogleFileManager()
     {
         // Assert
-        Assert.IsAssignableFrom<IGoogleFileManager>(_manager);
+        Assert.IsType<IGoogleFileManager>(_manager, exactMatch: false);
     }
 
     [Fact]

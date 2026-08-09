@@ -44,7 +44,7 @@ public static class RegionSheet
         // Configure specific headers unique to RegionSheet
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
+            var headerEnum = header.Name.ToString().Trim().GetValueFromName<Header>();
 
             switch (headerEnum)
             {

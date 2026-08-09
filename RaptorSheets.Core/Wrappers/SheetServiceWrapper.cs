@@ -82,7 +82,7 @@ public class SheetServiceWrapper : ISheetServiceWrapper
 
     private static string ResolveParameter(Dictionary<string, string> parameters, params string[] candidates)
     {
-        if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+        ArgumentNullException.ThrowIfNull(parameters);
 
         // Direct lookup (exact key)
         foreach (var c in candidates)

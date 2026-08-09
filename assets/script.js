@@ -89,7 +89,7 @@ window.addEventListener('scroll', function() {
             header.style.transform = 'translateY(0)';
         }
 
-        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        lastScrollTop = Math.max(0, scrollTop);
         headerTicking = false;
     });
 }, { passive: true });

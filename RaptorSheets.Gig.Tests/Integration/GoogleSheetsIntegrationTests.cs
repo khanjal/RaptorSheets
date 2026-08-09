@@ -56,7 +56,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         {
             var formulaHeaders = layout.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
 
-            if (formulaHeaders.Any())
+            if (formulaHeaders.Count > 0)
             {
                 System.Diagnostics.Debug.WriteLine($"  🔍 Validating {layout.Name}: {formulaHeaders.Count} formula columns");
 
@@ -675,7 +675,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         // If a creation notice exists, ensure it references the Deliveries sheet
         if (creationNotice != null)
         {
-            Assert.True(creationNotice.Message.IndexOf("Deliveries", StringComparison.OrdinalIgnoreCase) >= 0,
+            Assert.True(creationNotice.Message.Contains("Deliveries", StringComparison.OrdinalIgnoreCase),
                 $"Creation notice should include Deliveries. Notice: {creationNotice.Message}");
         }
 
@@ -754,7 +754,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             Assert.True(shift.RowId > 0);
         });
         
-        if (demoData.Sheets.Trips.Any())
+        if (demoData.Sheets.Trips.Count > 0)
         {
             Assert.All(demoData.Sheets.Trips, trip =>
             {

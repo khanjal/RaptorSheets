@@ -225,15 +225,16 @@ public static class DemoHelpers
         DateTime date)
     {
         var key = (service, date.ToString(CellFormatPatterns.Date));
-        if (!serviceDayShiftNumber.ContainsKey(key))
+        if (!serviceDayShiftNumber.TryGetValue(key, out var shiftNumber))
         {
-            serviceDayShiftNumber[key] = 1;
+            shiftNumber = 1;
         }
         else
         {
-            serviceDayShiftNumber[key]++;
+            shiftNumber++;
         }
-        return serviceDayShiftNumber[key];
+        serviceDayShiftNumber[key] = shiftNumber;
+        return shiftNumber;
     }
 
     /// <summary>

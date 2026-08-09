@@ -432,7 +432,7 @@ public static class GenericSheetMapper<T> where T : class, new()
         if (propertyInfo.Property.PropertyType.IsGenericType &&
             propertyInfo.Property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
-            return value?.ToString() ?? "";
+            return value.ToString();
         }
 
         // For boolean, return the value directly (not as string)

@@ -89,7 +89,11 @@ public class GoogleSheetService : IGoogleSheetService
         }
         catch (Exception ex)
         {
+            // logMessage is always a compile-time literal supplied by each call site; CA2254 can't
+            // verify that statically through this shared wrapper.
+#pragma warning disable CA2254
             _logger.LogError(ex, logMessage, logArgs);
+#pragma warning restore CA2254
             return GoogleApiResult<T>.Failed(GoogleApiFailure.FromException(ex));
         }
         finally

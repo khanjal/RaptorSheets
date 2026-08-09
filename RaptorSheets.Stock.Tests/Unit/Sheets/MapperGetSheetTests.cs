@@ -5,14 +5,18 @@ using Xunit;
 
 namespace RaptorSheets.Stock.Tests.Unit.Sheets;
 
-public class MapperGetSheetTests
+public partial class MapperGetSheetTests
 {
-    public static IEnumerable<object[]> Sheets =>
-    new List<object[]>
+    [GeneratedRegex(@"'Tickers'![A-Z]+\d*:[A-Z]+")]
+    private static partial Regex TickersColumnReferenceRegex();
+
+
+    public static TheoryData<SheetModel, SheetModel> Sheets =>
+    new()
     {
-        new object[] { AccountSheet.GetSheet(), AccountSheet.BaseSheet },
-        new object[] { StockSheet.GetSheet(), StockSheet.BaseSheet },
-        new object[] { TickerSheet.GetSheet(), TickerSheet.BaseSheet },
+        { AccountSheet.GetSheet(), AccountSheet.BaseSheet },
+        { StockSheet.GetSheet(), StockSheet.BaseSheet },
+        { TickerSheet.GetSheet(), TickerSheet.BaseSheet },
     };
 
     [Theory]
@@ -52,7 +56,7 @@ public class MapperGetSheetTests
 
         Assert.NotEmpty(crossSheetFormulaHeaders);
         Assert.All(crossSheetFormulaHeaders, header =>
-            Assert.True(Regex.IsMatch(header.Formula!, @"'Tickers'![A-Z]+\d*:[A-Z]+"),
+            Assert.True(TickersColumnReferenceRegex().IsMatch(header.Formula!),
                 $"'{header.Name}' formula references Tickers! without a real column: {header.Formula}"));
     }
 

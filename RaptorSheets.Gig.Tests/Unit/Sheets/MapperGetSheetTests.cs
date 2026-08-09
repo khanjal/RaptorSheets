@@ -11,26 +11,26 @@ namespace RaptorSheets.Gig.Tests.Unit.Sheets;
 [Category("Unit Tests")]
 public class MapperGetSheetTests
 {
-    public static IEnumerable<object[]> Sheets =>
-    new List<object[]>
+    public static TheoryData<SheetModel, SheetModel> Sheets =>
+    new()
     {
-        new object[] { AddressSheet.GetSheet(), AddressSheet.BaseSheet },
-        new object[] { DailySheet.GetSheet(), DailySheet.BaseSheet },
-        new object[] { ExpenseSheet.GetSheet(), ExpenseSheet.BaseSheet },
-        new object[] { MonthlySheet.GetSheet(), MonthlySheet.BaseSheet },
-        new object[] { NameSheet.GetSheet(), NameSheet.BaseSheet },
-        new object[] { PlaceSheet.GetSheet(), PlaceSheet.BaseSheet },
-        new object[] { RegionSheet.GetSheet(), RegionSheet.BaseSheet },
-        new object[] { ServiceSheet.GetSheet(), ServiceSheet.BaseSheet },
-        new object[] { SetupSheet.GetSheet(), SetupSheet.BaseSheet },
-        new object[] { ShiftSheet.GetSheet(), ShiftSheet.BaseSheet },
-        new object[] { TripSheet.GetSheet(), TripSheet.BaseSheet },
-        new object[] { TypeSheet.GetSheet(), TypeSheet.BaseSheet },
-        new object[] { WeekdaySheet.GetSheet(), WeekdaySheet.BaseSheet },
-        new object[] { WeeklySheet.GetSheet(), WeeklySheet.BaseSheet },
-        new object[] { YearlySheet.GetSheet(), YearlySheet.BaseSheet },
-        new object[] { DeliverySheet.GetSheet(), DeliverySheet.BaseSheet },
-        new object[] { LocationSheet.GetSheet(), LocationSheet.BaseSheet },
+        { AddressSheet.GetSheet(), AddressSheet.BaseSheet },
+        { DailySheet.GetSheet(), DailySheet.BaseSheet },
+        { ExpenseSheet.GetSheet(), ExpenseSheet.BaseSheet },
+        { MonthlySheet.GetSheet(), MonthlySheet.BaseSheet },
+        { NameSheet.GetSheet(), NameSheet.BaseSheet },
+        { PlaceSheet.GetSheet(), PlaceSheet.BaseSheet },
+        { RegionSheet.GetSheet(), RegionSheet.BaseSheet },
+        { ServiceSheet.GetSheet(), ServiceSheet.BaseSheet },
+        { SetupSheet.GetSheet(), SetupSheet.BaseSheet },
+        { ShiftSheet.GetSheet(), ShiftSheet.BaseSheet },
+        { TripSheet.GetSheet(), TripSheet.BaseSheet },
+        { TypeSheet.GetSheet(), TypeSheet.BaseSheet },
+        { WeekdaySheet.GetSheet(), WeekdaySheet.BaseSheet },
+        { WeeklySheet.GetSheet(), WeeklySheet.BaseSheet },
+        { YearlySheet.GetSheet(), YearlySheet.BaseSheet },
+        { DeliverySheet.GetSheet(), DeliverySheet.BaseSheet },
+        { LocationSheet.GetSheet(), LocationSheet.BaseSheet },
     };
 
     [Theory]
