@@ -390,6 +390,40 @@ public static class GoogleRequestHelpers
         return new Request { RepeatCell = repeatCellRequest };
     }
 
+    /// <summary>
+    /// Builds the RepeatCell request that reapplies a single column's data validation rule at
+    /// <paramref name="columnIndex"/> on <paramref name="sheetId"/>. Returns null when there's
+    /// nothing to reapply. Mirrors <see cref="GenerateColumnFormatRequest"/> - same narrow field
+    /// mask reasoning (<see cref="Field.DATA_VALIDATION"/> only, so a re-inserted column's
+    /// validation can be set without touching its value/format/note), same
+    /// <see cref="Helpers.ColumnInsertionHelper"/> call site (GitHub issue #103, the validation
+    /// counterpart to #53's Format restoration).
+    /// </summary>
+    public static Request? GenerateColumnValidationRequest(int sheetId, int columnIndex, DataValidationRule? validation)
+    {
+        if (validation == null)
+        {
+            return null;
+        }
+
+        var range = new GridRange
+        {
+            SheetId = sheetId,
+            StartColumnIndex = columnIndex,
+            EndColumnIndex = columnIndex + 1,
+            StartRowIndex = 1,
+        };
+
+        var repeatCellRequest = new RepeatCellRequest
+        {
+            Fields = Field.DATA_VALIDATION.GetDescription(),
+            Range = range,
+            Cell = new CellData { DataValidation = validation }
+        };
+
+        return new Request { RepeatCell = repeatCellRequest };
+    }
+
     public static Request GenerateSheetPropertes(SheetModel sheet)
     {
         var sheetRequest = new AddSheetRequest
@@ -540,13 +574,24 @@ public static class GoogleRequestHelpers
     }
 
     /// <summary>
-    /// Generic method to create update cell requests for any row entity type
+    /// Generic method to create update cell requests for any row entity type.
+    ///
+    /// The append/update split is keyed off <see cref="Property.MAX_ROW_VALUE"/> - the sheet's
+    /// *actual* last populated row (<see cref="SheetPropertyHelper.FindLastRowWithData"/>) - not
+    /// <see cref="Property.MAX_ROW"/> (the grid's row *capacity*, typically ~1000 by default).
+    /// <see cref="GenerateAppendCells"/> always lands right after the real data extent regardless of
+    /// RowId, so using the capacity as the threshold let a row classified as "update" (RowId within
+    /// capacity but past the real data) land on the exact same physical row an append in the same
+    /// batch was about to write - both requests go in one batch, append first then update, so the
+    /// update silently clobbered what append just wrote (GitHub issue #101, found stress-testing a
+    /// ~1,000-row write against a sheet with far fewer real rows). Keying off the actual data extent
+    /// instead means a row can only be "update" when something genuinely already exists there.
     /// </summary>
     public static IEnumerable<Request> CreateUpdateCellRequests<T>(List<T> entities, PropertyEntity? sheetProperties, Func<List<T>, IList<object>, IList<RowData>> mapToRowData)
         where T : SheetRowEntityBase
     {
         var headers = sheetProperties?.Attributes[Property.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
-        var maxRow = int.Parse(sheetProperties?.Attributes[Property.MAX_ROW.GetDescription()] ?? "0");
+        var maxRowValue = int.Parse(sheetProperties?.Attributes.GetValueOrDefault(Property.MAX_ROW_VALUE.GetDescription(), "0") ?? "0");
         int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
 
         if (entities.Count == 0 || sheetProperties == null || headers?.Count == 0 || sheetId == 0)
@@ -556,14 +601,16 @@ public static class GoogleRequestHelpers
 
         var requests = new List<Request>();
 
-        var appendEntities = entities.Where(x => x.RowId > maxRow).ToList();
+        // Sorted by RowId so multiple appended rows land in the sheet in the same relative order as
+        // their assigned RowIds, rather than whatever order they happened to appear in `entities`.
+        var appendEntities = entities.Where(x => x.RowId > maxRowValue).OrderBy(x => x.RowId).ToList();
         if (appendEntities.Count > 0)
         {
             var appendData = mapToRowData(appendEntities, headers!);
             requests.Add(GenerateAppendCells(sheetId, appendData));
         }
 
-        var updateEntities = entities.Where(x => x.RowId <= maxRow).ToList();
+        var updateEntities = entities.Where(x => x.RowId <= maxRowValue).ToList();
         foreach (var entity in updateEntities)
         {
             var rowData = mapToRowData([entity], headers!);

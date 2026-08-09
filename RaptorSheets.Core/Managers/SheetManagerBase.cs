@@ -414,8 +414,6 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
             var needsTempSheet = NeedsTempSheet(existingSheetsToDelete, allTabNames);
             var tempSheetName = needsTempSheet ? TempSheetName : null;
 
-            var requests = BuildDeletionRequests(existingSheetsToDelete, tempSheetName);
-
             if (!string.IsNullOrEmpty(tempSheetName))
             {
                 entity.Messages.Add(MessageHelpers.CreateInfoMessage(
@@ -427,20 +425,16 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
                 $"Deleting {existingSheetsToDelete.Count} of {allTabNames.Count} sheets",
                 MessageType.DELETE_SHEET));
 
-            var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
-            var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest, cancellationToken);
+            var protectedSheets = existingSheetsToDelete.Where(IsProtectedSheet).ToList();
 
-            if (result != null)
+            if (protectedSheets.Count <= 1)
             {
-                entity.Messages.Add(MessageHelpers.CreateInfoMessage(
-                    "Sheet deletion completed successfully",
-                    MessageType.DELETE_SHEET));
+                // Common case - unchanged from before #102: everything in one batch call.
+                await ExecuteDeleteBatchAsync(existingSheetsToDelete, tempSheetName, entity, cancellationToken);
             }
             else
             {
-                entity.Messages.Add(MessageHelpers.CreateErrorMessage(
-                    "Sheet deletion failed - unable to execute batch request",
-                    MessageType.DELETE_SHEET));
+                await ExecuteSplitDeleteAsync(existingSheetsToDelete, protectedSheets, tempSheetName, entity, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -451,6 +445,64 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         }
 
         return entity;
+    }
+
+    private bool IsProtectedSheet(PropertyEntity property)
+    {
+        return _registry.GetSheetLayout(property.Name)?.ProtectSheet ?? false;
+    }
+
+    /// <summary>
+    /// Builds and sends a single delete batch for <paramref name="sheetsToDelete"/> (optionally
+    /// preceded by a temp-sheet-creation request), reporting success/failure onto
+    /// <paramref name="entity"/>. Both <see cref="DeleteSheets"/> paths funnel through this - the
+    /// unsplit common case calls it once with everything; the split path (#102) calls it once per
+    /// group/sheet, so the exact same success/failure message text can appear more than once when
+    /// split, one per call.
+    /// </summary>
+    private async Task ExecuteDeleteBatchAsync(List<PropertyEntity> sheetsToDelete, string? tempSheetName, TEntity entity, CancellationToken cancellationToken)
+    {
+        var requests = BuildDeletionRequests(sheetsToDelete, tempSheetName);
+        var batchRequest = new BatchUpdateSpreadsheetRequest { Requests = requests };
+        var result = await _googleSheetService.BatchUpdateSpreadsheet(batchRequest, cancellationToken);
+
+        if (result != null)
+        {
+            entity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                "Sheet deletion completed successfully",
+                MessageType.DELETE_SHEET));
+        }
+        else
+        {
+            entity.Messages.Add(MessageHelpers.CreateErrorMessage(
+                "Sheet deletion failed - unable to execute batch request",
+                MessageType.DELETE_SHEET));
+        }
+    }
+
+    /// <summary>
+    /// Google 500s deleting 2+ protected sheets in a single batch (GitHub issue #102 - reproduced
+    /// 5/5 live against Stock's Accounts/Tickers, both <see cref="Models.Google.SheetModel.ProtectSheet"/>);
+    /// deleting the same sheets one at a time works reliably. Splits into one call for every
+    /// unprotected sheet (plus the temp-sheet safety net, if needed - it must exist before any
+    /// sheet that would otherwise be "the last one" is deleted, so it goes in this first call), then
+    /// one call per protected sheet. No longer atomic - each call's own success/failure is reported
+    /// via <see cref="ExecuteDeleteBatchAsync"/> rather than one combined pass/fail, since a caller
+    /// retrying "all at once" after a partial failure would just hit the same 500 again.
+    /// </summary>
+    private async Task ExecuteSplitDeleteAsync(List<PropertyEntity> sheetsToDelete, List<PropertyEntity> protectedSheets, string? tempSheetName, TEntity entity, CancellationToken cancellationToken)
+    {
+        var unprotectedSheets = sheetsToDelete.Except(protectedSheets).ToList();
+
+        if (unprotectedSheets.Count > 0 || !string.IsNullOrEmpty(tempSheetName))
+        {
+            await ExecuteDeleteBatchAsync(unprotectedSheets, tempSheetName, entity, cancellationToken);
+        }
+
+        foreach (var protectedSheet in protectedSheets)
+        {
+            await ExecuteDeleteBatchAsync([protectedSheet], null, entity, cancellationToken);
+        }
     }
 
     private async Task<List<PropertyEntity>> GetExistingSheetsToDelete(List<string> sheets, TEntity entity, CancellationToken cancellationToken = default)
@@ -960,12 +1012,40 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     #region Header Management / Column Healing
 
     /// <summary>
+    /// Resolves a re-inserted column's raw <see cref="ColumnInsertionInfo.Validation"/> name into a
+    /// concrete <see cref="DataValidationRule"/> - like the header's other restored properties
+    /// (Formula/Format/Note/Protect - see #53), except validation resolution needs a domain's own
+    /// <c>Validation</c> enum and range-sheet mapping, which isn't available in Core. Defaults to a
+    /// no-op so no domain is forced to change; domains that want self-heal to restore dropdowns
+    /// override this, typically delegating straight to their existing <c>GetDataValidation</c>
+    /// resolver (GitHub issue #103).
+    /// </summary>
+    protected virtual DataValidationRule? GetDataValidation(ColumnInsertionInfo column) => null;
+
+    /// <summary>
+    /// Fills in <see cref="ColumnInsertionInfo.ValidationRule"/> for every column about to be
+    /// inserted, via <see cref="GetDataValidation"/> - same "detected with a placeholder, filled in
+    /// by the caller before acting on it" convention already used for <see cref="ColumnInsertionInfo.SheetId"/>.
+    /// </summary>
+    private void ResolveValidationRules(Dictionary<string, List<ColumnInsertionInfo>> missingColumns)
+    {
+        foreach (var columns in missingColumns.Values)
+        {
+            foreach (var column in columns)
+            {
+                column.ValidationRule = GetDataValidation(column);
+            }
+        }
+    }
+
+    /// <summary>
     /// Physically inserts columns detected as missing (via a domain's static CheckSheetHeaders
     /// out-overload or via <see cref="SheetRegistry{TEntity}.DetectMissingColumns"/>) at their
     /// expected position, and writes the header text into each newly-inserted column.
     /// </summary>
     public async Task<TEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns, CancellationToken cancellationToken = default)
     {
+        ResolveValidationRules(missingColumns);
         return await ColumnInsertionHelper.InsertMissingColumnsAsync<TEntity>(_googleSheetService, missingColumns, cancellationToken: cancellationToken);
     }
 
@@ -1037,6 +1117,7 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         List<MessageEntity> messages,
         CancellationToken cancellationToken)
     {
+        ResolveValidationRules(missingColumns);
         var dependentRefreshRequests = await BuildDependentRefreshRequestsAsync(missingColumns.Keys, spreadsheetInfo, cancellationToken);
         var insertResult = await ColumnInsertionHelper.InsertMissingColumnsAsync<TEntity>(_googleSheetService, missingColumns, dependentRefreshRequests, cancellationToken);
         messages.AddRange(insertResult.Messages);
@@ -1179,6 +1260,108 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         var dependents = _registry.GetDependents(changedSheetNames);
 
         return dependents.Count == 0 ? [] : await BuildHeaderFormulaRequestsAsync(dependents, spreadsheetInfo, cancellationToken);
+    }
+
+    #endregion
+
+    #region Broken Column Detection / Reapply
+
+    /// <summary>
+    /// Detects columns that already exist (by name, in both the canonical layout and the live
+    /// sheet) but whose live Formula has silently drifted from canonical - e.g. a formula manually
+    /// overwritten or a spilling QUERY that broke (GitHub issue #53, gap 2). Distinct from missing-
+    /// column self-heal (<see cref="AutoHealMissingColumnsAsync(BatchGetValuesByDataFilterResponse, Spreadsheet?, List{MessageEntity}, CancellationToken)"/>) -
+    /// a column absent from the live sheet entirely is that path's job, not this one's; this only
+    /// ever looks at columns present under the same name on both sides.
+    ///
+    /// Opt-in only - never called from a read path, matching [[raptorsheets-design-philosophy]]'s
+    /// "reads never silently mutate" precedent; a caller explicitly requests this check.
+    ///
+    /// Formula-only: unlike Formula, a live-read <see cref="Models.Google.SheetCellModel.Validation"/>
+    /// is the raw condition off the sheet (e.g. "ONE_OF_RANGE:Names!A2:A") while the canonical
+    /// layout's is a domain enum token (e.g. "RANGE_SERVICE") - see
+    /// <see cref="SheetStructureHelper"/>'s own type-level doc comment - so Core has no reliable way
+    /// to compare them; a live-vs-canonical Validation comparison would mismatch even when correct.
+    /// Format is similarly left out (not needed by the issue this closes - reapplying a whole
+    /// sheet's column formats already exists via <see cref="ReapplyFormatting(List{string}, FormattingOptionsEntity?, CancellationToken)"/>).
+    /// </summary>
+    public async Task<List<ColumnInsertionInfo>> DetectBrokenColumnsAsync(string sheet, CancellationToken cancellationToken = default)
+    {
+        var canonical = _registry.GetSheetLayout(sheet);
+
+        if (canonical == null)
+        {
+            return [];
+        }
+
+        var live = await GetLiveSheetStructure(sheet, cancellationToken);
+
+        if (live == null)
+        {
+            return [];
+        }
+
+        // A HideHeaderName column never has its own header cell written (its text spills from an
+        // earlier header's QUERY formula instead - see SheetHelpers' use of the flag), so the live
+        // read never has a FormattedValue for it and it simply won't be found below - no separate
+        // exclusion needed here.
+        var liveHeadersByName = live.Headers.ToDictionary(h => h.Name, StringComparer.OrdinalIgnoreCase);
+        var broken = new List<ColumnInsertionInfo>();
+
+        foreach (var canonicalHeader in canonical.Headers)
+        {
+            if (!liveHeadersByName.TryGetValue(canonicalHeader.Name, out var liveHeader))
+            {
+                continue;
+            }
+
+            if (canonicalHeader.Formula == liveHeader.Formula)
+            {
+                continue;
+            }
+
+            broken.Add(new ColumnInsertionInfo
+            {
+                SheetName = sheet,
+                SheetId = live.Id,
+                ColumnIndex = liveHeader.Index,
+                ColumnName = canonicalHeader.Name,
+                ColumnLetter = liveHeader.Column,
+                Formula = canonicalHeader.Formula,
+                Note = canonicalHeader.Note,
+                Protect = canonicalHeader.Protect
+            });
+        }
+
+        return broken;
+    }
+
+    /// <summary>
+    /// Rewrites just the header cell (name/formula/note) of every column in
+    /// <paramref name="brokenColumns"/> with its canonical Formula - the reapply counterpart to
+    /// <see cref="DetectBrokenColumnsAsync"/>, sharing <see cref="ColumnInsertionHelper"/>'s
+    /// header-cell-write request with missing-column restoration (#53, gap 3). Safe on an existing,
+    /// populated column: the narrow field mask only ever touches that one header cell, never the
+    /// data rows beneath it.
+    /// </summary>
+    public async Task<TEntity> ReapplyColumnFormulas(string sheet, List<ColumnInsertionInfo> brokenColumns, CancellationToken cancellationToken = default)
+    {
+        var entity = new TEntity();
+
+        if (brokenColumns == null || brokenColumns.Count == 0)
+        {
+            entity.Messages.Add(MessageHelpers.CreateInfoMessage("No broken columns to reapply", MessageType.GENERAL));
+            return entity;
+        }
+
+        var requests = ColumnInsertionHelper.BuildHeaderFixRequests(brokenColumns);
+        var response = await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = requests }, cancellationToken);
+
+        entity.Messages.Add(response != null
+            ? MessageHelpers.CreateInfoMessage($"Reapplied formula for {brokenColumns.Count} column(s) on {sheet}", MessageType.GENERAL)
+            : MessageHelpers.CreateErrorMessage($"Failed to reapply column formulas on {sheet}", MessageType.GENERAL));
+
+        return entity;
     }
 
     #endregion

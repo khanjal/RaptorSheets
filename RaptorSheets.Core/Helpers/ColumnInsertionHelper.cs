@@ -45,22 +45,18 @@ public static class ColumnInsertionHelper
                     column.ColumnIndex + 1,
                     inheritFromBefore: true));
 
-                var headerRow = new RowData
-                {
-                    Values = [BuildHeaderCell(column)]
-                };
-
-                requests.Add(GoogleRequestHelpers.GenerateUpdateCellsRequest(
-                    column.SheetId,
-                    rowIndex: 0,
-                    rows: [headerRow],
-                    startColumnIndex: column.ColumnIndex,
-                    fields: Field.USER_ENTERED_VALUE_AND_NOTE.GetDescription()));
+                requests.Add(BuildHeaderUpdateRequest(column));
 
                 var formatRequest = GoogleRequestHelpers.GenerateColumnFormatRequest(column.SheetId, column.ColumnIndex, column.Format, column.FormatPattern);
                 if (formatRequest != null)
                 {
                     requests.Add(formatRequest);
+                }
+
+                var validationRequest = GoogleRequestHelpers.GenerateColumnValidationRequest(column.SheetId, column.ColumnIndex, column.ValidationRule);
+                if (validationRequest != null)
+                {
+                    requests.Add(validationRequest);
                 }
             }
         }
@@ -98,6 +94,44 @@ public static class ColumnInsertionHelper
         }
 
         return cell;
+    }
+
+    /// <summary>
+    /// Builds the single-column, row-0-only UpdateCells request that writes a column's header cell
+    /// (name/formula/note, via <see cref="BuildHeaderCell"/>) using the narrow
+    /// <see cref="Field.USER_ENTERED_VALUE_AND_NOTE"/> field mask - touches nothing but that one
+    /// header cell, so it's safe to use both on a freshly-inserted (empty) column
+    /// (<see cref="BuildInsertRequests"/>) and, unlike that path's own <see cref="Field.USER_ENTERED_VALUE_AND_FORMAT"/>-
+    /// masked sheet-creation write, on an existing, already-populated column too - it never touches
+    /// format/validation/data rows (GitHub issue #53, gap 3: reapplying just a drifted column shares
+    /// this exact request shape with #53 gap 1's missing-column restoration).
+    /// </summary>
+    private static Request BuildHeaderUpdateRequest(ColumnInsertionInfo column)
+    {
+        var headerRow = new RowData
+        {
+            Values = [BuildHeaderCell(column)]
+        };
+
+        return GoogleRequestHelpers.GenerateUpdateCellsRequest(
+            column.SheetId,
+            rowIndex: 0,
+            rows: [headerRow],
+            startColumnIndex: column.ColumnIndex,
+            fields: Field.USER_ENTERED_VALUE_AND_NOTE.GetDescription());
+    }
+
+    /// <summary>
+    /// Builds one header-cell-fix request per entry in <paramref name="brokenColumns"/> - the
+    /// reapply counterpart to <see cref="BuildInsertRequests"/>'s insertion, for columns that
+    /// already exist but whose live Formula has drifted from canonical (GitHub issue #53, gap 3;
+    /// detection lives in <see cref="Managers.SheetManagerBase{TEntity}.DetectBrokenColumnsAsync"/>).
+    /// No InsertDimension (the column isn't missing) and no format/validation reapply (out of scope -
+    /// see DetectBrokenColumnsAsync's own doc comment for why only Formula is safely comparable).
+    /// </summary>
+    public static List<Request> BuildHeaderFixRequests(List<ColumnInsertionInfo> brokenColumns)
+    {
+        return brokenColumns.Select(BuildHeaderUpdateRequest).ToList();
     }
 
     /// <summary>

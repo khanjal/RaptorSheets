@@ -91,4 +91,32 @@ public class InsertMissingColumnsBehaviorTests
         Assert.Contains(capturedRequest.Requests, r => r.InsertDimension != null && r.InsertDimension.Range.SheetId == 7);
         Assert.Contains(result.Messages, m => m.Message.Contains("Successfully inserted 1 missing column(s)"));
     }
+
+    [Fact]
+    public async Task InsertMissingColumns_WithRawValidationName_ResolvesAndAppliesDataValidationRule()
+    {
+        // #103: a re-inserted dropdown column (e.g. Trip Service) must get its validation rule
+        // back - the raw Validation name is resolved via SheetManager's GetDataValidation override.
+        var mockService = new Mock<IGoogleSheetService>();
+        BatchUpdateSpreadsheetRequest? capturedRequest = null;
+        mockService
+            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => capturedRequest = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new SheetManager(mockService.Object);
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Trips"] = [new ColumnInsertionInfo { SheetName = "Trips", SheetId = 7, ColumnIndex = 3, ColumnName = "Cash", ColumnLetter = "D", Validation = "BOOLEAN" }]
+        };
+
+        // Act
+        await manager.InsertMissingColumns(missingColumns);
+
+        // Assert
+        Assert.NotNull(capturedRequest);
+        var validationRequest = capturedRequest.Requests.Single(r => r.RepeatCell != null);
+        Assert.Equal("dataValidation", validationRequest.RepeatCell.Fields);
+        Assert.Equal("BOOLEAN", validationRequest.RepeatCell.Cell.DataValidation.Condition.Type);
+    }
 }

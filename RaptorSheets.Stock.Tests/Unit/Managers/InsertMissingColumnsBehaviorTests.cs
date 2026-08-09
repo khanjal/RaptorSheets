@@ -82,4 +82,32 @@ public class InsertMissingColumnsBehaviorTests
         // Assert
         Assert.Contains(result.Messages, m => m.Message.Contains("Successfully inserted 1 missing column(s)"));
     }
+
+    [Fact]
+    public async Task InsertMissingColumns_WithRawValidationName_ResolvesAndAppliesDataValidationRule()
+    {
+        // #103: a re-inserted dropdown column's raw Validation name must be resolved via
+        // SheetManager's GetDataValidation override and applied as a real DataValidationRule.
+        var mockService = new Mock<IGoogleSheetService>();
+        BatchUpdateSpreadsheetRequest? capturedRequest = null;
+        mockService
+            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => capturedRequest = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new SheetManager(mockService.Object);
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Stocks"] = [new ColumnInsertionInfo { SheetName = "Stocks", SheetId = 3, ColumnIndex = 1, ColumnName = "Active", Validation = "BOOLEAN" }]
+        };
+
+        // Act
+        await manager.InsertMissingColumns(missingColumns);
+
+        // Assert
+        Assert.NotNull(capturedRequest);
+        var validationRequest = capturedRequest.Requests.Single(r => r.RepeatCell != null);
+        Assert.Equal("dataValidation", validationRequest.RepeatCell.Fields);
+        Assert.Equal("BOOLEAN", validationRequest.RepeatCell.Cell.DataValidation.Condition.Type);
+    }
 }

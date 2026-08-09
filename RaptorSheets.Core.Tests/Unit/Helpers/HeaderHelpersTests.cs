@@ -502,6 +502,29 @@ public class HeaderHelpersTests
     }
 
     [Fact]
+    public void CheckSheetHeaders_WithMissingColumn_ShouldCarryRawValidationName()
+    {
+        // #103: the raw Validation name must survive detection so a domain's SheetManagerBase
+        // override (GetDataValidation) can resolve it into a concrete DataValidationRule later.
+        var values = new List<object> { "Header1" };
+        var sheetModel = new SheetModel
+        {
+            Name = "TestSheet",
+            Headers =
+            [
+                new SheetCellModel { Name = "Header1" },
+                new SheetCellModel { Name = "Header2", Validation = "RANGE_SERVICE" }
+            ]
+        };
+
+        HeaderHelpers.CheckSheetHeaders(values, sheetModel, out var insertionInfo);
+
+        var missing = Assert.Single(insertionInfo);
+        Assert.Equal("RANGE_SERVICE", missing.Validation);
+        Assert.Null(missing.ValidationRule); // resolved later by SheetManagerBase, not at detection time
+    }
+
+    [Fact]
     public void CheckSheetHeaders_WithNoMissingColumns_ShouldReturnEmptyInsertionInfo()
     {
         var values = new List<object> { "Header1", "Header2" };

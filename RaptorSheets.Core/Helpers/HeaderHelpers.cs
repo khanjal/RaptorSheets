@@ -285,7 +285,8 @@ public static class HeaderHelpers
                     Format = sheetHeader.Format,
                     FormatPattern = sheetHeader.FormatPattern,
                     Note = sheetHeader.Note,
-                    Protect = sheetHeader.Protect
+                    Protect = sheetHeader.Protect,
+                    Validation = sheetHeader.Validation
                 });
 
                 messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}] - can be inserted", MessageType.CHECK_SHEET));

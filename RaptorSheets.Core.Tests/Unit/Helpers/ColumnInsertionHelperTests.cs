@@ -164,6 +164,40 @@ public class ColumnInsertionHelperTests
     }
 
     [Fact]
+    public void BuildInsertRequests_WithValidationRule_AlsoAddsColumnValidationRequest()
+    {
+        // #103: a re-inserted dropdown column must get its validation rule back, not just its
+        // header text/format.
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Widgets"] = [new ColumnInsertionInfo { SheetName = "Widgets", SheetId = 5, ColumnIndex = 2, ColumnName = "Service", ValidationRule = new DataValidationRule() }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        // Insert + header update + validation reapply = 3 requests for this one column.
+        Assert.Equal(3, requests.Count);
+        var validationRequest = requests.Single(r => r.RepeatCell != null);
+        Assert.Equal(2, validationRequest.RepeatCell.Range.StartColumnIndex);
+        Assert.NotNull(validationRequest.RepeatCell.Cell.DataValidation);
+    }
+
+    [Fact]
+    public void BuildInsertRequests_WithFormatAndValidationRule_AddsBothRequests()
+    {
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Widgets"] = [new ColumnInsertionInfo { SheetName = "Widgets", SheetId = 5, ColumnIndex = 2, ColumnName = "Service", Format = Format.ACCOUNTING, ValidationRule = new DataValidationRule() }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        // Insert + header update + format reapply + validation reapply = 4 requests.
+        Assert.Equal(4, requests.Count);
+        Assert.Equal(2, requests.Count(r => r.RepeatCell != null));
+    }
+
+    [Fact]
     public async Task InsertMissingColumnsAsync_WithNoMissingColumns_ReturnsInfoMessageWithoutCallingService()
     {
         var mockService = new Mock<IGoogleSheetService>();
@@ -210,5 +244,51 @@ public class ColumnInsertionHelperTests
         var result = await ColumnInsertionHelper.InsertMissingColumnsAsync<TestSheetEntity>(mockService.Object, missingColumns);
 
         Assert.Contains(result.Messages, m => m.Message.Contains("Failed to insert missing columns"));
+    }
+
+    [Fact]
+    public void BuildHeaderFixRequests_WithBrokenColumn_WritesCanonicalFormulaToHeaderCellOnly()
+    {
+        // #53 gap 3: reapplying a drifted existing column's formula must touch only that column's
+        // header cell (row 0) - never an InsertDimension (the column already exists) and never the
+        // data rows beneath it.
+        var brokenColumns = new List<ColumnInsertionInfo>
+        {
+            new() { SheetName = "Widgets", SheetId = 5, ColumnIndex = 2, ColumnLetter = "C", ColumnName = "Total", Formula = "=SUM(A:A)" }
+        };
+
+        var requests = ColumnInsertionHelper.BuildHeaderFixRequests(brokenColumns);
+
+        var request = Assert.Single(requests);
+        Assert.Null(request.InsertDimension);
+        Assert.NotNull(request.UpdateCells);
+        Assert.Equal(5, request.UpdateCells.Range.SheetId);
+        Assert.Equal(0, request.UpdateCells.Range.StartRowIndex);
+        Assert.Equal(2, request.UpdateCells.Range.StartColumnIndex);
+        Assert.Equal("=SUM(A:A)", request.UpdateCells.Rows[0].Values[0].UserEnteredValue.FormulaValue);
+        Assert.Equal("userEnteredValue,note", request.UpdateCells.Fields);
+    }
+
+    [Fact]
+    public void BuildHeaderFixRequests_WithMultipleBrokenColumns_ReturnsOneRequestPerColumn()
+    {
+        var brokenColumns = new List<ColumnInsertionInfo>
+        {
+            new() { SheetName = "Widgets", SheetId = 5, ColumnIndex = 1, ColumnName = "B", Formula = "=A1" },
+            new() { SheetName = "Widgets", SheetId = 5, ColumnIndex = 3, ColumnName = "D", Formula = "=C1" }
+        };
+
+        var requests = ColumnInsertionHelper.BuildHeaderFixRequests(brokenColumns);
+
+        Assert.Equal(2, requests.Count);
+        Assert.All(requests, r => Assert.NotNull(r.UpdateCells));
+    }
+
+    [Fact]
+    public void BuildHeaderFixRequests_WithNoBrokenColumns_ReturnsEmptyList()
+    {
+        var requests = ColumnInsertionHelper.BuildHeaderFixRequests([]);
+
+        Assert.Empty(requests);
     }
 }
