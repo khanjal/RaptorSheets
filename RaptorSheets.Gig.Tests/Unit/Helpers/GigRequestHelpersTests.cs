@@ -231,14 +231,15 @@ public class GigRequestHelpersTests
     public void CreateUpdateCellTripRequests_WithUpdateTrips_ShouldReturnUpdateRequests()
     {
         // Arrange
-        var trips = new List<TripEntity> { new() { RowId = 5 } }; // RowId <= maxRow
-        var sheetProperties = new PropertyEntity 
-        { 
+        var trips = new List<TripEntity> { new() { RowId = 5 } }; // RowId <= maxRowValue
+        var sheetProperties = new PropertyEntity
+        {
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
                 { Property.HEADERS.GetDescription(), "Date,Number,Service" },
-                { Property.MAX_ROW.GetDescription(), "10" }
+                { Property.MAX_ROW.GetDescription(), "10" },
+                { Property.MAX_ROW_VALUE.GetDescription(), "5" }
             }
         };
 
@@ -257,18 +258,19 @@ public class GigRequestHelpersTests
     public void CreateUpdateCellTripRequests_WithMixedTrips_ShouldReturnBothTypes()
     {
         // Arrange
-        var trips = new List<TripEntity> 
-        { 
-            new() { RowId = 5 },  // Update (RowId <= maxRow)
-            new() { RowId = 15 }  // Append (RowId > maxRow)
+        var trips = new List<TripEntity>
+        {
+            new() { RowId = 5 },  // Update (RowId <= maxRowValue)
+            new() { RowId = 15 }  // Append (RowId > maxRowValue)
         };
-        var sheetProperties = new PropertyEntity 
-        { 
+        var sheetProperties = new PropertyEntity
+        {
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
                 { Property.HEADERS.GetDescription(), "Date,Number,Service" },
-                { Property.MAX_ROW.GetDescription(), "10" }
+                { Property.MAX_ROW.GetDescription(), "10" },
+                { Property.MAX_ROW_VALUE.GetDescription(), "5" }
             }
         };
 
@@ -280,6 +282,43 @@ public class GigRequestHelpersTests
         Assert.Equal(2, result.Count);
         Assert.Contains(result, r => r.AppendCells != null);  // One append request
         Assert.Contains(result, r => r.UpdateCells != null);  // One update request
+    }
+
+    [Fact]
+    public void CreateUpdateCellTripRequests_WithRowIdWithinCapacityButPastRealData_ShouldAppendNotCollide()
+    {
+        // #101 regression: RowId=3 sits well within the sheet's grid capacity (MAX_ROW=1000, the
+        // default) but past its actual data extent (MAX_ROW_VALUE=1 - only the header row is real).
+        // Before the fix, classifying by capacity treated RowId=3 as "update at explicit index 2" -
+        // the exact same physical row AppendCells lands the RowId=1001 entity on, since Append always
+        // writes right after the real data extent regardless of RowId. Both requests landed in the
+        // same batch (append first, then update), so the update silently clobbered the appended row.
+        // The fix means both entities are recognized as append-eligible and folded into one
+        // AppendCells request - no UpdateCells request should exist at all.
+        var trips = new List<TripEntity>
+        {
+            new() { RowId = 1001 },
+            new() { RowId = 3 }
+        };
+        var sheetProperties = new PropertyEntity
+        {
+            Id = "1",
+            Attributes = new Dictionary<string, string>
+            {
+                { Property.HEADERS.GetDescription(), "Date,Number,Service" },
+                { Property.MAX_ROW.GetDescription(), "1000" },
+                { Property.MAX_ROW_VALUE.GetDescription(), "1" }
+            }
+        };
+
+        // Act
+        var result = GigRequestHelpers.CreateUpdateCellTripRequests(trips, sheetProperties).ToList();
+
+        // Assert
+        Assert.Single(result);
+        Assert.NotNull(result[0].AppendCells);
+        Assert.DoesNotContain(result, r => r.UpdateCells != null);
+        Assert.Equal(2, result[0].AppendCells.Rows.Count);
     }
 
     #endregion
@@ -360,14 +399,15 @@ public class GigRequestHelpersTests
     public void CreateUpdateCellShiftRequests_WithUpdateShifts_ShouldReturnUpdateRequests()
     {
         // Arrange
-        var shifts = new List<ShiftEntity> { new() { RowId = 5 } }; // RowId <= maxRow
-        var sheetProperties = new PropertyEntity 
-        { 
+        var shifts = new List<ShiftEntity> { new() { RowId = 5 } }; // RowId <= maxRowValue
+        var sheetProperties = new PropertyEntity
+        {
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
                 { Property.HEADERS.GetDescription(), "Date,Number,Service" },
-                { Property.MAX_ROW.GetDescription(), "10" }
+                { Property.MAX_ROW.GetDescription(), "10" },
+                { Property.MAX_ROW_VALUE.GetDescription(), "5" }
             }
         };
 
@@ -459,14 +499,15 @@ public class GigRequestHelpersTests
     public void CreateUpdateCellSetupRequests_WithUpdateSetup_ShouldReturnUpdateRequests()
     {
         // Arrange
-        var setup = new List<SetupEntity> { new() { RowId = 5 } }; // RowId <= maxRow
-        var sheetProperties = new PropertyEntity 
-        { 
+        var setup = new List<SetupEntity> { new() { RowId = 5 } }; // RowId <= maxRowValue
+        var sheetProperties = new PropertyEntity
+        {
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
                 { Property.HEADERS.GetDescription(), "Name,Value,Description" },
-                { Property.MAX_ROW.GetDescription(), "10" }
+                { Property.MAX_ROW.GetDescription(), "10" },
+                { Property.MAX_ROW_VALUE.GetDescription(), "5" }
             }
         };
 
@@ -495,13 +536,14 @@ public class GigRequestHelpersTests
             new() { RowId = 15, Action = ActionType.DELETE.GetDescription() } // Delete trip
         };
         
-        var sheetProperties = new PropertyEntity 
-        { 
+        var sheetProperties = new PropertyEntity
+        {
             Id = "1",
             Attributes = new Dictionary<string, string>
             {
                 { Property.HEADERS.GetDescription(), "Date,Service,Pay,Tips" },
-                { Property.MAX_ROW.GetDescription(), "8" }
+                { Property.MAX_ROW.GetDescription(), "8" },
+                { Property.MAX_ROW_VALUE.GetDescription(), "5" }
             }
         };
 
@@ -511,11 +553,11 @@ public class GigRequestHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(3, result.Count); // Should have append, update, and delete requests
-        
-        // Should have one append request (RowId 10 > maxRow 8)
+
+        // Should have one append request (RowId 10 > maxRowValue 5)
         Assert.Single(result, r => r.AppendCells != null);
-        
-        // Should have one update request (RowId 5 <= maxRow 8) 
+
+        // Should have one update request (RowId 5 <= maxRowValue 5)
         Assert.Single(result, r => r.UpdateCells != null);
         
         // Should have one delete request (RowId 15 marked for deletion)

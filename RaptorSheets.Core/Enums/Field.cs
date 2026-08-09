@@ -35,5 +35,12 @@ public enum Field
     /// validation.
     /// </summary>
     [Description("userEnteredValue,note")]
-    USER_ENTERED_VALUE_AND_NOTE
+    USER_ENTERED_VALUE_AND_NOTE,
+
+    /// <summary>
+    /// Use this field to update only a cell's data validation rule, without touching value, format,
+    /// or note.
+    /// </summary>
+    [Description("dataValidation")]
+    DATA_VALIDATION
 }

@@ -57,6 +57,17 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
         return GenerateSheetsHelpers.Generate(sheetNames);
     }
 
+    /// <summary>
+    /// Resolves a self-healed column's raw Validation value into a concrete data validation rule,
+    /// restoring dropdowns on a re-inserted column (GitHub issue #103). Job stores the actual A1
+    /// range directly as the validation value, so no enum conversion is needed here - see
+    /// <see cref="JobSheetHelpers.GetDataValidation(string?)"/>.
+    /// </summary>
+    protected override DataValidationRule? GetDataValidation(ColumnInsertionInfo column)
+    {
+        return string.IsNullOrEmpty(column.Validation) ? null : JobSheetHelpers.GetDataValidation(column.Validation);
+    }
+
     #endregion
 
     #region Update Operations

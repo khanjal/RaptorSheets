@@ -527,6 +527,321 @@ public class SheetManagerGenericBaseTests
         Assert.Contains(result.Messages, m => m.Message.Contains("Error deleting sheets") && m.Message.Contains("boom"));
     }
 
+    // #102: Google 500s deleting 2+ protected sheets in one batch (reproduced 5/5 live against
+    // Stock's Accounts/Tickers). DeleteSheets splits into separate batch calls once 2+ of the
+    // sheets being deleted are protected; 0 or 1 protected sheet keeps the single-batch path above
+    // completely unchanged (see IsProtectedSheet/ExecuteSplitDeleteAsync).
+
+    private static SheetRegistry<TestEntity> BuildRegistryWithProtection(params (string Name, bool Protect)[] sheets)
+    {
+        var registry = new SheetRegistry<TestEntity>();
+        foreach (var (name, protect) in sheets)
+        {
+            registry.Register(name, () => new SheetModel { Name = name, ProtectSheet = protect }, (_, _) => { });
+        }
+        return registry;
+    }
+
+    [Fact]
+    public async Task DeleteSheets_With2PlusProtectedSheets_SplitsIntoSeparateBatchCalls()
+    {
+        const string Unprotected = "Stocks";
+        const string ProtectedA = "Accounts";
+        const string ProtectedB = "Tickers";
+
+        var registry = BuildRegistryWithProtection((Unprotected, false), (ProtectedA, true), (ProtectedB, true));
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet>
+            {
+                new() { Properties = new SheetProperties { Title = Unprotected, SheetId = 1 } },
+                new() { Properties = new SheetProperties { Title = ProtectedA, SheetId = 2 } },
+                new() { Properties = new SheetProperties { Title = ProtectedB, SheetId = 3 } }
+            }
+        };
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        var capturedRequests = new List<BatchUpdateSpreadsheetRequest>();
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => capturedRequests.Add(r))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = new TestManagerWithGeneration(mockService.Object, registry, [Unprotected, ProtectedA, ProtectedB]);
+
+        var result = await manager.DeleteSheets([Unprotected, ProtectedA, ProtectedB]);
+
+        // 3 separate calls: one grouped call (unprotected sheet + temp-sheet safety net, since all
+        // 3 canonical sheets are being deleted), plus one call per protected sheet.
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
+
+        Assert.Contains(capturedRequests[0].Requests, r => r.AddSheet != null && r.AddSheet.Properties.Title == SheetManagerBase.TempSheetName);
+        Assert.Contains(capturedRequests[0].Requests, r => r.DeleteSheet != null && r.DeleteSheet.SheetId == 1);
+
+        var laterDeletedIds = capturedRequests.Skip(1)
+            .SelectMany(r => r.Requests)
+            .Where(r => r.DeleteSheet != null)
+            .Select(r => r.DeleteSheet.SheetId)
+            .ToList();
+        Assert.Equal([2, 3], laterDeletedIds);
+        // Each protected sheet gets its own call, containing nothing but that one delete.
+        Assert.All(capturedRequests.Skip(1), r => Assert.Single(r.Requests));
+
+        Assert.Equal(3, result.Messages.Count(m => m.Message.Contains("Sheet deletion completed successfully")));
+    }
+
+    [Fact]
+    public async Task DeleteSheets_With1ProtectedSheet_StaysOnSingleBatchCall()
+    {
+        // Boundary guard: exactly 1 protected sheet must NOT trigger the split path.
+        const string Unprotected = "Stocks";
+        const string ProtectedA = "Accounts";
+
+        var registry = BuildRegistryWithProtection((Unprotected, false), (ProtectedA, true));
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet>
+            {
+                new() { Properties = new SheetProperties { Title = Unprotected, SheetId = 1 } },
+                new() { Properties = new SheetProperties { Title = ProtectedA, SheetId = 2 } }
+            }
+        };
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = new TestManagerWithGeneration(mockService.Object, registry, [Unprotected, ProtectedA]);
+
+        var result = await manager.DeleteSheets([Unprotected, ProtectedA]);
+
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Contains(result.Messages, m => m.Message.Contains("Sheet deletion completed successfully"));
+    }
+
+    [Fact]
+    public async Task DeleteSheets_With2PlusProtectedSheets_WhenOneCallFails_StillAttemptsTheRest()
+    {
+        // A caller relying on "delete everything" shouldn't be stuck just because one protected
+        // sheet's call failed - the others should still be attempted, with failure reported
+        // per-call rather than aborting the whole operation. An untouched "Other" sheet is included
+        // so no temp-sheet call is needed here, keeping this test focused on the fail/continue
+        // behavior rather than the temp-sheet call already covered above.
+        const string ProtectedA = "Accounts";
+        const string ProtectedB = "Tickers";
+        const string Other = "Other";
+
+        var registry = BuildRegistryWithProtection((ProtectedA, true), (ProtectedB, true), (Other, false));
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet>
+            {
+                new() { Properties = new SheetProperties { Title = ProtectedA, SheetId = 2 } },
+                new() { Properties = new SheetProperties { Title = ProtectedB, SheetId = 3 } },
+                new() { Properties = new SheetProperties { Title = Other, SheetId = 4 } }
+            }
+        };
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.SetupSequence(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BatchUpdateSpreadsheetResponse?)null)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = new TestManagerWithGeneration(mockService.Object, registry, [ProtectedA, ProtectedB, Other]);
+
+        var result = await manager.DeleteSheets([ProtectedA, ProtectedB]);
+
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        Assert.Contains(result.Messages, m => m.Message.Contains("Sheet deletion failed"));
+        Assert.Contains(result.Messages, m => m.Message.Contains("Sheet deletion completed successfully"));
+    }
+
+    // DetectBrokenColumnsAsync / ReapplyColumnFormulas (#53 gaps 2/3) - detecting and fixing a
+    // column that already exists under the same name on both sides but whose live Formula has
+    // drifted from canonical. Distinct from missing-column self-heal, which is covered elsewhere.
+
+    private static SheetRegistry<TestEntity> BuildRegistryWithHeaders(string sheetName, List<SheetCellModel> headers)
+    {
+        var registry = new SheetRegistry<TestEntity>();
+        registry.Register(sheetName, () => new SheetModel { Name = sheetName, Headers = headers }, (_, _) => { });
+        return registry;
+    }
+
+    private static Spreadsheet BuildLiveStructureSpreadsheet(string sheetName, int sheetId, params (string Name, string? Formula)[] liveHeaders)
+    {
+        return new Spreadsheet
+        {
+            Sheets = new List<Sheet>
+            {
+                new()
+                {
+                    Properties = new SheetProperties { Title = sheetName, SheetId = sheetId },
+                    Data = new List<GridData>
+                    {
+                        new()
+                        {
+                            RowData = new List<RowData>
+                            {
+                                new()
+                                {
+                                    Values = liveHeaders.Select(h => new CellData
+                                    {
+                                        FormattedValue = h.Name,
+                                        UserEnteredValue = string.IsNullOrEmpty(h.Formula) ? null : new ExtendedValue { FormulaValue = h.Formula }
+                                    }).ToList()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    [Fact]
+    public async Task DetectBrokenColumnsAsync_WithDriftedFormula_ReturnsCanonicalFixAtLivePosition()
+    {
+        var headers = new List<SheetCellModel> { new() { Name = "Date" }, new() { Name = "Total", Formula = "=SUM(A:A)" } };
+        var registry = BuildRegistryWithHeaders(SheetName, headers);
+        var spreadsheet = BuildLiveStructureSpreadsheet(SheetName, 42, ("Date", null), ("Total", "=OLD_BROKEN_FORMULA"));
+
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        var manager = new TestManagerWithGeneration(mockService.Object, registry, [SheetName]);
+
+        var broken = await manager.DetectBrokenColumnsAsync(SheetName);
+
+        var column = Assert.Single(broken);
+        Assert.Equal("Total", column.ColumnName);
+        Assert.Equal("=SUM(A:A)", column.Formula); // canonical - ready to reapply, not the drifted live one
+        Assert.Equal(42, column.SheetId);
+        Assert.Equal(1, column.ColumnIndex);
+        Assert.Equal("B", column.ColumnLetter);
+    }
+
+    [Fact]
+    public async Task DetectBrokenColumnsAsync_WithMatchingFormula_ReturnsEmpty()
+    {
+        var headers = new List<SheetCellModel> { new() { Name = "Date" }, new() { Name = "Total", Formula = "=SUM(A:A)" } };
+        var registry = BuildRegistryWithHeaders(SheetName, headers);
+        var spreadsheet = BuildLiveStructureSpreadsheet(SheetName, 42, ("Date", null), ("Total", "=SUM(A:A)"));
+
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        var manager = new TestManagerWithGeneration(mockService.Object, registry, [SheetName]);
+
+        var broken = await manager.DetectBrokenColumnsAsync(SheetName);
+
+        Assert.Empty(broken);
+    }
+
+    [Fact]
+    public async Task DetectBrokenColumnsAsync_WithMissingColumn_DoesNotFlagIt()
+    {
+        // A column absent from the live sheet entirely is missing-column self-heal's job, not this
+        // one's - it must not also show up here as "broken".
+        var headers = new List<SheetCellModel> { new() { Name = "Date" }, new() { Name = "Total", Formula = "=SUM(A:A)" } };
+        var registry = BuildRegistryWithHeaders(SheetName, headers);
+        var spreadsheet = BuildLiveStructureSpreadsheet(SheetName, 42, ("Date", null)); // "Total" missing entirely
+
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        var manager = new TestManagerWithGeneration(mockService.Object, registry, [SheetName]);
+
+        var broken = await manager.DetectBrokenColumnsAsync(SheetName);
+
+        Assert.Empty(broken);
+    }
+
+    [Fact]
+    public async Task DetectBrokenColumnsAsync_WithDuplicateOrBlankLiveHeaderNames_DoesNotThrow()
+    {
+        // Copilot review on PR #104: a live sheet can genuinely have duplicate or blank header
+        // names (cells cleared/renamed by hand) - detection must tolerate that rather than crash
+        // the whole check with a ToDictionary key collision.
+        var headers = new List<SheetCellModel> { new() { Name = "Date" }, new() { Name = "Total", Formula = "=SUM(A:A)" } };
+        var registry = BuildRegistryWithHeaders(SheetName, headers);
+        var spreadsheet = BuildLiveStructureSpreadsheet(SheetName, 42,
+            ("", null),                 // blank header name
+            ("Total", "=SUM(A:A)"),     // first "Total" - matches canonical
+            ("Total", "=OLD_BROKEN"));  // duplicate "Total" - would collide in a plain ToDictionary
+
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        var manager = new TestManagerWithGeneration(mockService.Object, registry, [SheetName]);
+
+        var broken = await manager.DetectBrokenColumnsAsync(SheetName);
+
+        // First occurrence of "Total" wins and matches canonical, so nothing is flagged.
+        Assert.Empty(broken);
+    }
+
+    [Fact]
+    public async Task ReapplyColumnFormulas_WithBrokenColumns_CallsBatchUpdateAndReportsSuccess()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = BuildGeneratingManager(mockService.Object);
+        var broken = new List<ColumnInsertionInfo>
+        {
+            new() { SheetName = SheetName, SheetId = 1, ColumnIndex = 1, ColumnName = "Total", Formula = "=SUM(A:A)" }
+        };
+
+        var result = await manager.ReapplyColumnFormulas(SheetName, broken);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Reapplied formula for 1 column"));
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ReapplyColumnFormulas_WithNoBrokenColumns_DoesNotCallService()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        var result = await manager.ReapplyColumnFormulas(SheetName, []);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("No broken columns to reapply"));
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task InsertMissingColumns_WithAlreadyResolvedValidationRule_DoesNotOverwriteIt()
+    {
+        // Copilot review on PR #104: a caller of the public InsertMissingColumns API may already
+        // have populated ValidationRule directly. TestManagerWithGeneration doesn't override
+        // GetDataValidation (base class no-op, always returns null) - if resolution unconditionally
+        // overwrote an already-set rule, it would silently wipe this one out.
+        var mockService = new Mock<IGoogleSheetService>();
+        BatchUpdateSpreadsheetRequest? capturedRequest = null;
+        mockService
+            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => capturedRequest = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = BuildGeneratingManager(mockService.Object);
+        var preResolvedRule = new DataValidationRule { Condition = new BooleanCondition { Type = "BOOLEAN" } };
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            [SheetName] = [new ColumnInsertionInfo { SheetName = SheetName, SheetId = 1, ColumnIndex = 0, ColumnName = "Active", ValidationRule = preResolvedRule }]
+        };
+
+        await manager.InsertMissingColumns(missingColumns);
+
+        Assert.NotNull(capturedRequest);
+        var validationRequest = capturedRequest.Requests.Single(r => r.RepeatCell != null);
+        Assert.Same(preResolvedRule, validationRequest.RepeatCell.Cell.DataValidation);
+    }
+
     // RefreshHeaderFormulasAsync / RefreshDependentSheetsAsync - the automated replacement for
     // manually "reapplying" a sheet to fix a stale cross-sheet formula reference (#REF!/#ERROR!/
     // #N/A caused by a referenced sheet's headers changing after a dependent's formula was

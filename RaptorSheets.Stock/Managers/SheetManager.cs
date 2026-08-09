@@ -9,6 +9,7 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Managers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Stock.Entities;
+using RaptorSheets.Stock.Enums;
 using RaptorSheets.Stock.Helpers;
 using RaptorSheets.Core.Models.Google;
 using SheetName = RaptorSheets.Stock.Enums.SheetName;
@@ -67,6 +68,18 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
     protected override BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
     {
         return GenerateSheetHelpers.Generate(sheetNames);
+    }
+
+    /// <summary>
+    /// Resolves a self-healed column's raw Validation name into a concrete data validation rule,
+    /// restoring dropdowns on a re-inserted column (GitHub issue #103). Stock's resolver takes no
+    /// range parameter - none of its validations are self-referential.
+    /// </summary>
+    protected override DataValidationRule? GetDataValidation(ColumnInsertionInfo column)
+    {
+        return string.IsNullOrEmpty(column.Validation)
+            ? null
+            : StockSheetHelpers.GetDataValidation(column.Validation.GetValueFromName<Validation>());
     }
 
     // Only the Stocks sheet is genuinely user-writable today (Ticker/Account/Shares - the only

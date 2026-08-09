@@ -2,12 +2,14 @@ using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Managers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Home.Constants;
 using RaptorSheets.Home.Entities;
+using RaptorSheets.Home.Enums;
 using RaptorSheets.Home.Helpers;
 
 namespace RaptorSheets.Home.Managers;
@@ -55,6 +57,22 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
     protected override BatchUpdateSpreadsheetRequest GenerateSheetsRequest(List<string> sheetNames)
     {
         return GenerateSheetsHelpers.Generate(sheetNames);
+    }
+
+    /// <summary>
+    /// Resolves a self-healed column's raw Validation name into a concrete data validation rule,
+    /// restoring dropdowns on a re-inserted column (GitHub issue #103) the same way
+    /// <see cref="GenerateSheetsHelpers"/> already does at sheet-creation time.
+    /// </summary>
+    protected override DataValidationRule? GetDataValidation(ColumnInsertionInfo column)
+    {
+        if (string.IsNullOrEmpty(column.Validation))
+        {
+            return null;
+        }
+
+        var columnRange = $"{column.ColumnLetter}2:{column.ColumnLetter}";
+        return HomeSheetHelpers.GetDataValidation(column.Validation.GetValueFromName<Validation>(), columnRange);
     }
 
     #endregion

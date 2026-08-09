@@ -356,6 +356,45 @@ public class GoogleRequestHelpersTests
     }
 
     [Fact]
+    public void GenerateColumnValidationRequest_WithValidation_ShouldReturnRepeatCellRequestForThatColumn()
+    {
+        // Act
+        var result = GoogleRequestHelpers.GenerateColumnValidationRequest(sheetId: 7, columnIndex: 3, validation: new DataValidationRule());
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result!.RepeatCell);
+        Assert.Equal(7, result.RepeatCell.Range.SheetId);
+        Assert.Equal(3, result.RepeatCell.Range.StartColumnIndex);
+        Assert.Equal(4, result.RepeatCell.Range.EndColumnIndex);
+        Assert.Equal(1, result.RepeatCell.Range.StartRowIndex);
+        Assert.NotNull(result.RepeatCell.Cell.DataValidation);
+    }
+
+    [Fact]
+    public void GenerateColumnValidationRequest_ShouldScopeFieldsMaskToDataValidationOnly()
+    {
+        // Regression guard: mirrors GenerateColumnFormatRequest's own guard - this request must
+        // never use a broad field mask that could clear existing values, format, or notes on a
+        // live, already-populated column.
+        var result = GoogleRequestHelpers.GenerateColumnValidationRequest(sheetId: 1, columnIndex: 0, validation: new DataValidationRule());
+
+        Assert.Equal(Field.DATA_VALIDATION.GetDescription(), result!.RepeatCell.Fields);
+        Assert.Null(result.RepeatCell.Cell.UserEnteredValue);
+        Assert.Null(result.RepeatCell.Cell.UserEnteredFormat);
+    }
+
+    [Fact]
+    public void GenerateColumnValidationRequest_WithNullValidation_ShouldReturnNull()
+    {
+        // Act
+        var result = GoogleRequestHelpers.GenerateColumnValidationRequest(sheetId: 1, columnIndex: 0, validation: null);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
     public void GenerateSheetPropertes_ShouldReturnValidRequest()
     {
         // Arrange

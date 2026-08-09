@@ -1,3 +1,4 @@
+using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Enums;
 
 namespace RaptorSheets.Core.Models;
@@ -55,4 +56,21 @@ public class ColumnInsertionInfo
     /// convention used at sheet-creation time).
     /// </summary>
     public bool Protect { get; set; }
+
+    /// <summary>
+    /// The canonical column's raw validation name (e.g. "RANGE_SERVICE"), if any - each domain's own
+    /// <c>Validation</c> enum member name, exactly as stored on <see cref="Models.Google.SheetCellModel.Validation"/>.
+    /// Resolving this into a concrete <see cref="ValidationRule"/> is domain-specific (see
+    /// <see cref="Managers.SheetManagerBase{TEntity}.GetDataValidation(ColumnInsertionInfo)"/>), so it's
+    /// carried here only as the raw input to that resolution (GitHub issue #103).
+    /// </summary>
+    public string? Validation { get; set; }
+
+    /// <summary>
+    /// The resolved data validation rule for this column, if any. Left null when the column is
+    /// detected - like <see cref="SheetId"/>, it's filled in afterward by
+    /// <see cref="Managers.SheetManagerBase{TEntity}"/> via its <c>GetDataValidation</c> hook, since
+    /// resolving <see cref="Validation"/> requires domain-specific knowledge Core doesn't have.
+    /// </summary>
+    public DataValidationRule? ValidationRule { get; set; }
 }
