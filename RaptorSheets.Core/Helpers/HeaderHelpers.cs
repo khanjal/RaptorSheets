@@ -110,6 +110,13 @@ public static class HeaderHelpers
             return null;
         }
 
+        // Structure-aware reads carry the real computed number - use it directly instead of
+        // re-parsing display text, sidestepping locale/formatting quirks entirely (issue #80).
+        if (values[columnId] is SheetCellValue cellValue)
+        {
+            return (int)cellValue.EffectiveNumber;
+        }
+
         var value = values[columnId]?.ToString()?.Trim();
 
         // If the string contains a decimal point, it's not a valid integer
@@ -148,6 +155,16 @@ public static class HeaderHelpers
         if (columnId >= values.Count || columnId < 0 || values[columnId] == null)
         {
             return null;
+        }
+
+        // Structure-aware reads carry the real computed number - use it directly instead of
+        // re-parsing display text. This is the actual fix for issue #80: an accounting-formatted
+        // zero renders as "$ -", which IsBlankNumericDisplay below treats as null rather than 0 -
+        // a real EffectiveValue sidesteps that guess entirely, correct or not, since it's the
+        // literal number Sheets computed.
+        if (values[columnId] is SheetCellValue cellValue)
+        {
+            return (decimal)cellValue.EffectiveNumber;
         }
 
         var value = values[columnId]?.ToString()?.Trim();

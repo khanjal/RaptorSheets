@@ -95,6 +95,51 @@ public class HeaderHelpersTests
     }
 
     [Fact]
+    public void GetDecimalValueOrNull_WithSheetCellValue_ShouldUseEffectiveNumber()
+    {
+        // Arrange - accounting format renders a real 0 as "$ -", which IsBlankNumericDisplay
+        // would treat as null; a SheetCellValue's EffectiveNumber is the real computed value
+        // and takes priority over re-parsing the display text (issue #80)
+        var headers = new Dictionary<int, string> { { 0, "Amount" } };
+        var values = new List<object> { new SheetCellValue("$ -", 0) };
+
+        // Act
+        var result = HeaderHelpers.GetDecimalValueOrNull("Amount", values, headers);
+
+        // Assert
+        Assert.Equal(0m, result);
+    }
+
+    [Fact]
+    public void GetDecimalValueOrNull_WithSheetCellValueNonZero_ShouldUseEffectiveNumber()
+    {
+        // Arrange - a locale-formatted display ("1,234.50") that a SheetCellValue lets us skip
+        // parsing entirely
+        var headers = new Dictionary<int, string> { { 0, "Amount" } };
+        var values = new List<object> { new SheetCellValue("1,234.50", 1234.50) };
+
+        // Act
+        var result = HeaderHelpers.GetDecimalValueOrNull("Amount", values, headers);
+
+        // Assert
+        Assert.Equal(1234.50m, result);
+    }
+
+    [Fact]
+    public void GetIntValueOrNull_WithSheetCellValue_ShouldUseEffectiveNumber()
+    {
+        // Arrange
+        var headers = new Dictionary<int, string> { { 0, "Count" } };
+        var values = new List<object> { new SheetCellValue("5", 5) };
+
+        // Act
+        var result = HeaderHelpers.GetIntValueOrNull("Count", values, headers);
+
+        // Assert
+        Assert.Equal(5, result);
+    }
+
+    [Fact]
     public void CheckSheetHeaders_ShouldReturnCorrectMessages()
     {
         // Arrange

@@ -3,6 +3,7 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Mappers;
+using RaptorSheets.Core.Models.Google;
 using Xunit;
 
 namespace RaptorSheets.Core.Tests.Unit.Mappers;
@@ -112,6 +113,24 @@ public class GenericSheetMapperMappingIssueTests
         var result = GenericSheetMapper<TestEntity>.MapFromRangeData(values, "Sheet1", out var issues);
 
         Assert.Null(result[0].Amount);
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void AccountingDashWithNonZeroEffectiveValue_ShouldReadTheRealNumber()
+    {
+        // A structure-aware read (SheetHelpers.GetSheetValues) carries the real computed number
+        // alongside the display text - proving the actual fix for issue #80, not just the
+        // "treat a dash as null" workaround above: a cell that *displays* as a blank dash but
+        // *is* a real non-zero value (e.g. a format rounding 0.004 down to "$ -") now reads back
+        // correctly instead of being nulled out by the FormattedValue-only heuristic.
+        var values = Rows(
+            ["Name", "Amount", "Count", "Active", "Note"],
+            ["John", new SheetCellValue("$ -", 0.004), "5", "TRUE", ""]);
+
+        var result = GenericSheetMapper<TestEntity>.MapFromRangeData(values, "Sheet1", out var issues);
+
+        Assert.Equal(0.004m, result[0].Amount);
         Assert.Empty(issues);
     }
 
