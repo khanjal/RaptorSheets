@@ -760,6 +760,30 @@ public class SheetManagerGenericBaseTests
     }
 
     [Fact]
+    public async Task DetectBrokenColumnsAsync_WithDuplicateOrBlankLiveHeaderNames_DoesNotThrow()
+    {
+        // Copilot review on PR #104: a live sheet can genuinely have duplicate or blank header
+        // names (cells cleared/renamed by hand) - detection must tolerate that rather than crash
+        // the whole check with a ToDictionary key collision.
+        var headers = new List<SheetCellModel> { new() { Name = "Date" }, new() { Name = "Total", Formula = "=SUM(A:A)" } };
+        var registry = BuildRegistryWithHeaders(SheetName, headers);
+        var spreadsheet = BuildLiveStructureSpreadsheet(SheetName, 42,
+            ("", null),                 // blank header name
+            ("Total", "=SUM(A:A)"),     // first "Total" - matches canonical
+            ("Total", "=OLD_BROKEN"));  // duplicate "Total" - would collide in a plain ToDictionary
+
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        var manager = new TestManagerWithGeneration(mockService.Object, registry, [SheetName]);
+
+        var broken = await manager.DetectBrokenColumnsAsync(SheetName);
+
+        // First occurrence of "Total" wins and matches canonical, so nothing is flagged.
+        Assert.Empty(broken);
+    }
+
+    [Fact]
     public async Task ReapplyColumnFormulas_WithBrokenColumns_CallsBatchUpdateAndReportsSuccess()
     {
         var mockService = new Mock<IGoogleSheetService>();
@@ -788,6 +812,34 @@ public class SheetManagerGenericBaseTests
 
         Assert.Contains(result.Messages, m => m.Message.Contains("No broken columns to reapply"));
         mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task InsertMissingColumns_WithAlreadyResolvedValidationRule_DoesNotOverwriteIt()
+    {
+        // Copilot review on PR #104: a caller of the public InsertMissingColumns API may already
+        // have populated ValidationRule directly. TestManagerWithGeneration doesn't override
+        // GetDataValidation (base class no-op, always returns null) - if resolution unconditionally
+        // overwrote an already-set rule, it would silently wipe this one out.
+        var mockService = new Mock<IGoogleSheetService>();
+        BatchUpdateSpreadsheetRequest? capturedRequest = null;
+        mockService
+            .Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => capturedRequest = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = BuildGeneratingManager(mockService.Object);
+        var preResolvedRule = new DataValidationRule { Condition = new BooleanCondition { Type = "BOOLEAN" } };
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            [SheetName] = [new ColumnInsertionInfo { SheetName = SheetName, SheetId = 1, ColumnIndex = 0, ColumnName = "Active", ValidationRule = preResolvedRule }]
+        };
+
+        await manager.InsertMissingColumns(missingColumns);
+
+        Assert.NotNull(capturedRequest);
+        var validationRequest = capturedRequest.Requests.Single(r => r.RepeatCell != null);
+        Assert.Same(preResolvedRule, validationRequest.RepeatCell.Cell.DataValidation);
     }
 
     // RefreshHeaderFormulasAsync / RefreshDependentSheetsAsync - the automated replacement for

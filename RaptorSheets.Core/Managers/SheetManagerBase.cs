@@ -1033,7 +1033,11 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         {
             foreach (var column in columns)
             {
-                column.ValidationRule = GetDataValidation(column);
+                // Only fill in when unset. A caller of the public insertion API may have already
+                // supplied a resolved rule directly, bypassing the resolution hook below - always
+                // re-resolving would silently wipe that out with a null whenever the hook doesn't
+                // recognize the column, e.g. the base class's no-op default.
+                column.ValidationRule ??= GetDataValidation(column);
             }
         }
     }
@@ -1305,7 +1309,16 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         // earlier header's QUERY formula instead - see SheetHelpers' use of the flag), so the live
         // read never has a FormattedValue for it and it simply won't be found below - no separate
         // exclusion needed here.
-        var liveHeadersByName = live.Headers.ToDictionary(h => h.Name, StringComparer.OrdinalIgnoreCase);
+        //
+        // Grouped rather than a plain ToDictionary: a live sheet can genuinely have blank or
+        // duplicate header names (a user clearing/renaming cells by hand), and this method's whole
+        // job is tolerating real-world sheet drift - a ToDictionary key collision would throw and
+        // abort detection entirely instead of just skipping the ambiguous column. First occurrence
+        // wins for a duplicate name.
+        var liveHeadersByName = live.Headers
+            .Where(h => !string.IsNullOrEmpty(h.Name))
+            .GroupBy(h => h.Name, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
         var broken = new List<ColumnInsertionInfo>();
 
         foreach (var canonicalHeader in canonical.Headers)
