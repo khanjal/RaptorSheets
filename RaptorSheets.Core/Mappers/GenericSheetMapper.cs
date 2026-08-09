@@ -428,17 +428,19 @@ public static class GenericSheetMapper<T> where T : class, new()
             return "";
         }
 
-        // For nullable types, return empty string if null
+        // For boolean, return the value directly (not as string). Must run before the nullable-type
+        // check below - a bool? property's PropertyType is also Nullable<>, and would otherwise get
+        // stringified there instead of returned as a real boolean.
+        if (propertyInfo.Column.FieldType == FieldType.Boolean)
+        {
+            return value;
+        }
+
+        // For nullable types, return the value as a string
         if (propertyInfo.Property.PropertyType.IsGenericType &&
             propertyInfo.Property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
             return value.ToString();
-        }
-
-        // For boolean, return the value directly (not as string)
-        if (propertyInfo.Column.FieldType == FieldType.Boolean)
-        {
-            return value;
         }
 
         return value.ToString();

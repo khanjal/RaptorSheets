@@ -29,6 +29,9 @@ public class GenericSheetMapperTests
         [Column("Active", isInput: true)]
         public bool Active { get; set; }
 
+        [Column("IsFlagged", isInput: true)]
+        public bool? IsFlagged { get; set; }
+
         [Column("Distance", formatPattern: CellFormatPatterns.Distance, isInput: true)]
         public decimal? Distance { get; set; }
 
@@ -146,6 +149,26 @@ public class GenericSheetMapperTests
         Assert.Equal("5", result[0][3]);
         Assert.True((bool?)result[0][4]); // Boolean value
         Assert.Equal("10.5", result[0][5]);
+    }
+
+    [Fact]
+    public void MapToRangeData_WithNullableBooleanTrue_ShouldReturnBooleanNotString()
+    {
+        // Arrange - a bool? property still infers FieldType.Boolean (TypeInferenceHelper unwraps
+        // Nullable<T>), so it must be returned as a real boolean, not stringified via ToString()
+        // like other nullable value types, to stay consistent with non-nullable bool columns.
+        var entities = new List<TestEntity>
+        {
+            new() { Name = "John", IsFlagged = true }
+        };
+        var headers = new List<object> { "Name", "IsFlagged" };
+
+        // Act
+        var result = GenericSheetMapper<TestEntity>.MapToRangeData(entities, headers);
+
+        // Assert
+        Assert.IsType<bool>(result[0][1]);
+        Assert.True((bool)result[0][1]!);
     }
 
     [Fact]
