@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using Moq;
 using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
@@ -43,10 +44,13 @@ public class ColumnInsertionHelperTests
     }
 
     [Fact]
-    public void BuildInsertRequests_WithMultipleMissingColumnsInOneSheet_InsertsRightToLeft()
+    public void BuildInsertRequests_WithMultipleMissingColumnsInOneSheet_InsertsLeftToRight()
     {
-        // Inserting right-to-left (highest index first) so earlier insertions in the batch
-        // don't shift the index of columns still waiting to be inserted.
+        // Inserting left-to-right (lowest index first): by the time a given column's insert runs,
+        // every lower-indexed column already exists (either it was never missing, or was already
+        // re-inserted earlier this same loop), so the live grid is always at least as wide as the
+        // target index. The reverse order used to insert beyond the live grid's current width
+        // whenever many columns were missing at once - see BuildInsertRequests' own doc comment.
         var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
         {
             ["Widgets"] =
@@ -65,7 +69,7 @@ public class ColumnInsertionHelperTests
             .Select(r => r.InsertDimension.Range.StartIndex)
             .ToList();
 
-        Assert.Equal([3, 1, 0], insertIndices);
+        Assert.Equal([0, 1, 3], insertIndices);
     }
 
     [Fact]
@@ -74,6 +78,89 @@ public class ColumnInsertionHelperTests
         var requests = ColumnInsertionHelper.BuildInsertRequests([]);
 
         Assert.Empty(requests);
+    }
+
+    [Fact]
+    public void BuildInsertRequests_WithFormula_WritesFormulaValueNotPlainText()
+    {
+        // #53 gap 1: a re-inserted formula column previously got only its header text back and
+        // computed nothing underneath it.
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Widgets"] = [new ColumnInsertionInfo { SheetName = "Widgets", SheetId = 5, ColumnIndex = 2, ColumnName = "Total", Formula = "=SUM(A:A)" }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        var updateRequest = requests.Single(r => r.UpdateCells != null);
+        var value = updateRequest.UpdateCells.Rows[0].Values[0].UserEnteredValue;
+        Assert.Equal("=SUM(A:A)", value.FormulaValue);
+        Assert.Null(value.StringValue);
+    }
+
+    [Fact]
+    public void BuildInsertRequests_WhenProtectedWithNoFormula_StillWritesFormulaCell()
+    {
+        // Matches SheetHelpers' header-cell convention: Protect alone (empty formula) still means
+        // "write a formula cell", distinguishing an intentional empty formula from plain text.
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Widgets"] = [new ColumnInsertionInfo { SheetName = "Widgets", SheetId = 5, ColumnIndex = 0, ColumnName = "Locked", Protect = true }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        var updateRequest = requests.Single(r => r.UpdateCells != null);
+        var value = updateRequest.UpdateCells.Rows[0].Values[0].UserEnteredValue;
+        Assert.Equal("Locked", value.FormulaValue);
+        Assert.Null(value.StringValue);
+    }
+
+    [Fact]
+    public void BuildInsertRequests_WithNote_RestoresNoteOnHeaderCell()
+    {
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Widgets"] = [new ColumnInsertionInfo { SheetName = "Widgets", SheetId = 5, ColumnIndex = 0, ColumnName = "Price", Note = "Enter USD" }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        var updateRequest = requests.Single(r => r.UpdateCells != null);
+        Assert.Equal("Enter USD", updateRequest.UpdateCells.Rows[0].Values[0].Note);
+        // The API silently ignores any CellData field not listed in Fields - setting Note above is
+        // pointless unless the mask actually includes it.
+        Assert.Equal("userEnteredValue,note", updateRequest.UpdateCells.Fields);
+    }
+
+    [Fact]
+    public void BuildInsertRequests_WithFormat_AlsoAddsColumnFormatRequest()
+    {
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Widgets"] = [new ColumnInsertionInfo { SheetName = "Widgets", SheetId = 5, ColumnIndex = 2, ColumnName = "Price", Format = Format.ACCOUNTING }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        // Insert + header update + format reapply = 3 requests for this one column.
+        Assert.Equal(3, requests.Count);
+        var formatRequest = requests.Single(r => r.RepeatCell != null);
+        Assert.Equal(2, formatRequest.RepeatCell.Range.StartColumnIndex);
+    }
+
+    [Fact]
+    public void BuildInsertRequests_WithoutFormat_DoesNotAddColumnFormatRequest()
+    {
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Widgets"] = [new ColumnInsertionInfo { SheetName = "Widgets", SheetId = 5, ColumnIndex = 2, ColumnName = "Price" }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        Assert.Equal(2, requests.Count);
+        Assert.DoesNotContain(requests, r => r.RepeatCell != null);
     }
 
     [Fact]

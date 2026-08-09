@@ -34,92 +34,12 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     #region 1. Environment Setup & Validation
 
-    [FactCheckUserSecrets]
-    public async Task Environment_ShouldHaveAllRequiredSheets()
-    {
-        // Act
-        var properties = await SheetManager!.GetSheetProperties(TestSheets);
-        var existingSheets = properties.Where(p => !string.IsNullOrEmpty(p.Id)).ToList();
-        
-        // Assert
-        Assert.True(existingSheets.Count >= TestSheets.Count, 
-            $"Should have at least {TestSheets.Count} sheets, found {existingSheets.Count}");
-        
-        foreach (var sheet in existingSheets)
-        {
-            Assert.NotNull(sheet.Name);
-            Assert.NotNull(sheet.Id);
-            Assert.NotNull(sheet.Attributes);
-            Assert.True(TestSheets.Contains(sheet.Name, StringComparer.OrdinalIgnoreCase),
-                $"Sheet '{sheet.Name}' should be in test sheets list");
-        }
-    }
-
-    [FactCheckUserSecrets]
-    public async Task Environment_SheetProperties_ShouldHaveValidStructure()
-    {
-        // Act
-        var properties = await SheetManager!.GetSheetProperties(TestSheets);
-        
-        // Assert
-        Assert.NotEmpty(properties);
-        Assert.All(properties, prop =>
-        {
-            Assert.NotNull(prop.Name);
-            Assert.NotNull(prop.Attributes);
-            
-            if (!string.IsNullOrEmpty(prop.Id))
-            {
-                // Sheet exists - validate it has headers
-                Assert.True(prop.Attributes.ContainsKey("Headers") || 
-                           prop.Attributes.Count == 0, 
-                           $"Sheet '{prop.Name}' should have headers or empty attributes");
-            }
-        });
-    }
-
-    [FactCheckUserSecrets]
-    public async Task CreatedSheets_ShouldHaveCorrectHeaders()
-    {
-        // This test validates that the sheet creation process generated correct headers
-        // It compares actual headers in Google Sheets vs expected headers from GetSheetLayout
-        
-        // Act - Get actual headers from Google Sheets
-        var spreadsheetInfo = await SheetManager!.GetSpreadsheetInfo(
-            TestSheets.Select(name => $"{name}!1:1").ToList());
-        
-        Assert.NotNull(spreadsheetInfo);
-        Assert.NotNull(spreadsheetInfo.Sheets);
-        
-        // Assert - Validate headers for each sheet
-        foreach (var sheet in spreadsheetInfo.Sheets)
-        {
-            var sheetName = sheet.Properties.Title;
-            var actualHeaders = sheet.Data?[0]?.RowData?[0]?.Values
-                ?.Select(v => v.FormattedValue ?? "")
-                .Where(h => !string.IsNullOrEmpty(h))
-                .ToList() ?? [];
-            
-            // Get expected layout from GetSheetLayout
-            var expectedLayout = SheetManager.GetSheetLayout(sheetName);
-            
-            if (expectedLayout != null)
-            {
-                var expectedHeaders = expectedLayout.Headers.Select(h => h.Name).ToList();
-                
-                System.Diagnostics.Debug.WriteLine($"  🔍 Validating {sheetName}: {actualHeaders.Count} headers");
-                
-                Assert.NotEmpty(actualHeaders);
-                Assert.Equal(expectedHeaders.Count, actualHeaders.Count);
-                
-                // Verify header names match in order
-                for (int i = 0; i < expectedHeaders.Count && i < actualHeaders.Count; i++)
-                {
-                    Assert.Equal(expectedHeaders[i], actualHeaders[i]);
-                }
-            }
-        }
-    }
+    // Environment_ShouldHaveAllRequiredSheets, Environment_SheetProperties_ShouldHaveValidStructure,
+    // and CreatedSheets_ShouldHaveCorrectHeaders were removed here - all now covered by the shared
+    // GigPlumbingTests (SheetPlumbingTestsBase in RaptorSheets.Test.Common), which proves the exact
+    // same sheet-creation/header-generation mechanism this file used to re-verify per sheet. The
+    // three tests below stay: they check things the shared suite doesn't (formula well-formedness on
+    // Shifts/Trips/Expenses' own computed columns, tab visual properties, sheet tab order).
 
     [FactCheckUserSecrets]
     public void CreatedSheets_ShouldHaveCorrectFormulas()

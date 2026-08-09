@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using System.Linq;
@@ -464,6 +465,40 @@ public class HeaderHelpersTests
         Assert.Equal("TestSheet", insertionInfo[0].SheetName);
         Assert.Equal(0, insertionInfo[0].SheetId); // caller fills this in from spreadsheet metadata
         Assert.Contains(messages, m => m.Message.Contains("Missing column [Header2]") && m.Message.Contains("can be inserted"));
+    }
+
+    [Fact]
+    public void CheckSheetHeaders_WithMissingColumn_ShouldCarryFormulaFormatNoteAndProtect()
+    {
+        // #53 gap 1: insertion info previously only carried the header name/index - a re-inserted
+        // formula column got its header text back but computed nothing underneath it.
+        var values = new List<object> { "Header1" };
+        var sheetModel = new SheetModel
+        {
+            Name = "TestSheet",
+            Headers =
+            [
+                new SheetCellModel { Name = "Header1" },
+                new SheetCellModel
+                {
+                    Name = "Header2",
+                    Formula = "=SUM(A:A)",
+                    Format = Format.ACCOUNTING,
+                    FormatPattern = "#,##0.00",
+                    Note = "Computed automatically",
+                    Protect = true
+                }
+            ]
+        };
+
+        HeaderHelpers.CheckSheetHeaders(values, sheetModel, out var insertionInfo);
+
+        var missing = Assert.Single(insertionInfo);
+        Assert.Equal("=SUM(A:A)", missing.Formula);
+        Assert.Equal(Format.ACCOUNTING, missing.Format);
+        Assert.Equal("#,##0.00", missing.FormatPattern);
+        Assert.Equal("Computed automatically", missing.Note);
+        Assert.True(missing.Protect);
     }
 
     [Fact]

@@ -308,6 +308,54 @@ public class GoogleRequestHelpersTests
     }
 
     [Fact]
+    public void GenerateColumnFormatRequest_WithFormat_ShouldReturnRepeatCellRequestForThatColumn()
+    {
+        // Act
+        var result = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId: 7, columnIndex: 3, format: Format.ACCOUNTING, formatPattern: null);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result!.RepeatCell);
+        Assert.Equal(7, result.RepeatCell.Range.SheetId);
+        Assert.Equal(3, result.RepeatCell.Range.StartColumnIndex);
+        Assert.Equal(4, result.RepeatCell.Range.EndColumnIndex);
+        Assert.NotNull(result.RepeatCell.Cell.UserEnteredFormat);
+    }
+
+    [Fact]
+    public void GenerateColumnFormatRequest_ShouldScopeFieldsMaskToNumberFormatOnly()
+    {
+        // Regression guard: this request must never use a field mask (like "*" or
+        // "userEnteredFormat") that could clear existing values, notes, validation, or other
+        // userEnteredFormat sub-fields on a live, already-populated column - see ReapplyFormatting.
+        var result = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId: 1, columnIndex: 0, format: Format.ACCOUNTING, formatPattern: null);
+
+        Assert.Equal(Field.NUMBER_FORMAT.GetDescription(), result!.RepeatCell.Fields);
+        Assert.Null(result.RepeatCell.Cell.UserEnteredValue);
+    }
+
+    [Fact]
+    public void GenerateColumnFormatRequest_WithFormatPatternOnly_ShouldReturnRequest()
+    {
+        // Act
+        var result = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId: 1, columnIndex: 0, format: null, formatPattern: "0.00%");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result!.RepeatCell?.Cell.UserEnteredFormat);
+    }
+
+    [Fact]
+    public void GenerateColumnFormatRequest_WithNeitherFormatNorPattern_ShouldReturnNull()
+    {
+        // Act
+        var result = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId: 1, columnIndex: 0, format: null, formatPattern: null);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
     public void GenerateSheetPropertes_ShouldReturnValidRequest()
     {
         // Arrange
@@ -560,6 +608,28 @@ public class GoogleRequestHelpersTests
         Assert.Equal(2, request.UpdateCells.Range.EndColumnIndex);
         Assert.Equal(2, request.UpdateCells.Range.StartRowIndex);
         Assert.Equal(3, request.UpdateCells.Range.EndRowIndex);
+    }
+
+    [Fact]
+    public void GenerateUpdateCellsRequest_WithoutFieldsArgument_DefaultsToUserEnteredValueOnly()
+    {
+        // Every pre-existing caller relies on this default staying exactly what it was before the
+        // optional `fields` parameter was added.
+        var rows = new List<RowData> { new() { Values = [new CellData()] } };
+
+        var request = GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId: 5, rowIndex: 0, rows: rows);
+
+        Assert.Equal(Field.USER_ENTERED_VALUE.GetDescription(), request.UpdateCells.Fields);
+    }
+
+    [Fact]
+    public void GenerateUpdateCellsRequest_WithFieldsArgument_UsesProvidedMask()
+    {
+        var rows = new List<RowData> { new() { Values = [new CellData()] } };
+
+        var request = GoogleRequestHelpers.GenerateUpdateCellsRequest(sheetId: 5, rowIndex: 0, rows: rows, fields: Field.USER_ENTERED_VALUE_AND_NOTE.GetDescription());
+
+        Assert.Equal("userEnteredValue,note", request.UpdateCells.Fields);
     }
 
     [Fact]

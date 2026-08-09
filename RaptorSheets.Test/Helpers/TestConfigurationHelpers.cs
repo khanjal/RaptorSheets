@@ -62,4 +62,16 @@ public static class TestConfigurationHelpers
 
         return _configuration!["spreadsheets:test:job"] ?? string.Empty;
     }
+
+    /// <summary>
+    /// Core's own dedicated test spreadsheet - not shared with any domain. Used for live integration
+    /// coverage of domain-agnostic SheetManagerBase plumbing (self-heal, reapply, insertion, dependent
+    /// formula refresh) that the four domain-owned spreadsheets above only ever exercised by accident.
+    /// </summary>
+    public static string GetCoreSpreadsheet()
+    {
+        GetConfiguration();
+
+        return _configuration!["spreadsheets:test:core"] ?? string.Empty;
+    }
 }

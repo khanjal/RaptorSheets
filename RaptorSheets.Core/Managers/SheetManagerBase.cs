@@ -492,6 +492,19 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     {
         var sheetsToDeleteNames = sheetsToDelete.Select(s => s.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        // A TempSheet left over from a previous full-delete cycle (this method's own doc comment:
+        // "left in place afterward") already satisfies "at least one sheet remains" on its own -
+        // don't ask BuildDeletionRequests to add a second one with the same name. Google rejects a
+        // duplicate tab name, which fails the whole batch atomically (found via live testing - see
+        // #100 - since no existing test spreadsheet had ever had its last non-canonical tab removed,
+        // this path had never actually been exercised). Only fall through to the general check below
+        // if this call is itself deleting the existing TempSheet.
+        var tempSheetAlreadyExists = allTabNames.Any(t => t.Equals(TempSheetName, StringComparison.OrdinalIgnoreCase));
+        if (tempSheetAlreadyExists && !sheetsToDeleteNames.Contains(TempSheetName))
+        {
+            return false;
+        }
+
         // Check if we're deleting all existing sheets (excluding any existing TempSheet)
         var remainingSheets = allTabNames.Where(tabName =>
             !sheetsToDeleteNames.Contains(tabName) &&
@@ -1166,6 +1179,83 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         var dependents = _registry.GetDependents(changedSheetNames);
 
         return dependents.Count == 0 ? [] : await BuildHeaderFormulaRequestsAsync(dependents, spreadsheetInfo, cancellationToken);
+    }
+
+    #endregion
+
+    #region Reapply Formatting
+
+    /// <summary>
+    /// Re-applies formatting from a sheet's canonical, in-memory SheetModel (the domain's own
+    /// XMapper.GetSheet(), via the registry) onto the live sheet - the manual counterpart to the
+    /// automatic self-heal this base already does for missing sheets/columns (see #28). Only
+    /// <see cref="FormattingOptionsEntity.ReapplyColumnFormats"/> is implemented today; see that
+    /// type's doc comment for the rest. Deliberately opt-in only, never triggered from a read -
+    /// matches this library's reads-never-mutate precedent.
+    /// </summary>
+    public async Task<TEntity> ReapplyFormatting(string sheet, FormattingOptionsEntity? options = null, CancellationToken cancellationToken = default)
+    {
+        return await ReapplyFormatting([sheet], options, cancellationToken);
+    }
+
+    /// <inheritdoc cref="ReapplyFormatting(string, FormattingOptionsEntity?, CancellationToken)"/>
+    public async Task<TEntity> ReapplyFormatting(List<string> sheets, FormattingOptionsEntity? options = null, CancellationToken cancellationToken = default)
+    {
+        var entity = new TEntity();
+        options ??= new FormattingOptionsEntity();
+
+        if (!options.ReapplyColumnFormats)
+        {
+            // Only ReapplyColumnFormats is implemented today (see FormattingOptionsEntity's doc
+            // comment) - the other flags are accepted but are no-ops, so this message must not imply
+            // they did something just because the caller set them.
+            entity.Messages.Add(MessageHelpers.CreateInfoMessage("ReapplyColumnFormats is disabled - nothing to reapply (other FormattingOptionsEntity flags are not implemented yet)", MessageType.GENERAL));
+            return entity;
+        }
+
+        var sheetIdsByName = await ResolveSheetIdsViaPropertiesAsync(sheets, cancellationToken);
+        var requests = new List<Request>();
+
+        foreach (var sheetName in sheets)
+        {
+            if (!sheetIdsByName.TryGetValue(sheetName, out var sheetId))
+            {
+                entity.Messages.Add(MessageHelpers.CreateWarningMessage($"{sheetName} does not exist - skipped", MessageType.GENERAL));
+                continue;
+            }
+
+            var sheetModel = _registry.GetSheetLayout(sheetName);
+            if (sheetModel == null)
+            {
+                entity.Messages.Add(MessageHelpers.CreateWarningMessage($"{sheetName} is not a known sheet - skipped", MessageType.GENERAL));
+                continue;
+            }
+
+            sheetModel.Headers.UpdateColumns();
+
+            foreach (var header in sheetModel.Headers)
+            {
+                var request = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId, header.Index, header.Format, header.FormatPattern);
+                if (request != null)
+                {
+                    requests.Add(request);
+                }
+            }
+        }
+
+        if (requests.Count == 0)
+        {
+            entity.Messages.Add(MessageHelpers.CreateInfoMessage("No column formats to reapply", MessageType.GENERAL));
+            return entity;
+        }
+
+        var response = await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = requests }, cancellationToken);
+
+        entity.Messages.Add(response != null
+            ? MessageHelpers.CreateInfoMessage($"Reapplied column formats for {string.Join(", ", sheets)}", MessageType.GENERAL)
+            : MessageHelpers.CreateErrorMessage("Failed to reapply formatting", MessageType.GENERAL));
+
+        return entity;
     }
 
     #endregion

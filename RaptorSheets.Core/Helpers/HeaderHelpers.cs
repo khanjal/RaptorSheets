@@ -280,7 +280,12 @@ public static class HeaderHelpers
                     SheetName = sheetModel.Name,
                     ColumnIndex = index,
                     ColumnName = sheetHeader.Name,
-                    ColumnLetter = SheetHelpers.GetColumnName(index)
+                    ColumnLetter = SheetHelpers.GetColumnName(index),
+                    Formula = sheetHeader.Formula,
+                    Format = sheetHeader.Format,
+                    FormatPattern = sheetHeader.FormatPattern,
+                    Note = sheetHeader.Note,
+                    Protect = sheetHeader.Protect
                 });
 
                 messages.Add(MessageHelpers.CreateErrorMessage($"[{sheetColumn}]: Missing column [{sheetHeader.Name}] - can be inserted", MessageType.CHECK_SHEET));

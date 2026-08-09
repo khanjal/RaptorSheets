@@ -456,6 +456,40 @@ public class SheetManagerGenericBaseTests
     }
 
     [Fact]
+    public async Task DeleteSheets_WhenTempSheetAlreadyExists_DoesNotAddDuplicate()
+    {
+        // Regression test (found via live testing - #100): a TempSheet left over from a previous
+        // full-delete cycle ("left in place afterward" - see its own doc comment) already satisfies
+        // "at least one sheet remains". The old NeedsTempSheet logic unconditionally excluded any
+        // sheet named "TempSheet" from the remaining-sheets count, so it asked to add a SECOND
+        // "TempSheet" even when one already existed - Google rejects a duplicate tab name, which
+        // fails the whole delete batch atomically and leaves the requested sheets undeleted.
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet>
+            {
+                new() { Properties = new SheetProperties { Title = SheetName, SheetId = 111 } },
+                new() { Properties = new SheetProperties { Title = SheetManagerBase.TempSheetName, SheetId = 222 } }
+            }
+        };
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        var result = await manager.DeleteSheets([SheetName]);
+
+        Assert.DoesNotContain(result.Messages, m => m.Message.Contains("safety sheet"));
+        Assert.DoesNotContain(captured!.Requests, r => r.AddSheet != null);
+        Assert.Contains(result.Messages, m => m.Message.Contains("Sheet deletion completed successfully"));
+    }
+
+    [Fact]
     public async Task DeleteSheets_WithNullBatchResponse_ReturnsErrorMessage()
     {
         var mockService = new Mock<IGoogleSheetService>();
@@ -766,5 +800,70 @@ public class SheetManagerGenericBaseTests
         var values = await manager.GetLiveSheetRawValues(SheetName);
 
         Assert.Equal(new List<string?> { "Only" }, Assert.Single(values));
+    }
+
+    // ReapplyFormatting - the manual, opt-in counterpart to auto-heal for #28. Only
+    // FormattingOptionsEntity.ReapplyColumnFormats is implemented today.
+
+    private static SheetRegistry<TestEntity> BuildRegistryWithFormattedHeader()
+    {
+        var registry = new SheetRegistry<TestEntity>();
+        registry.Register(SheetName, () => new SheetModel
+        {
+            Name = SheetName,
+            Headers = [new SheetCellModel { Name = "Amount", Format = Format.ACCOUNTING }, new SheetCellModel { Name = "Label" }]
+        }, (_, _) => { });
+        return registry;
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_DefaultOptions_ReappliesFormatForFormattedHeadersOnly()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((SheetName, 10));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName);
+
+        Assert.NotNull(captured);
+        // Only "Amount" has a Format - "Label" doesn't, so exactly one RepeatCell request, not two.
+        var request = Assert.Single(captured!.Requests);
+        Assert.Equal(10, request.RepeatCell.Range.SheetId);
+        Assert.Equal(0, request.RepeatCell.Range.StartColumnIndex);
+        Assert.Contains(result.Messages, m => m.Message.Contains("Reapplied column formats"));
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyColumnFormatsDisabled_MakesNoApiCall()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, FormattingOptionsEntity.None);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("nothing to reapply"));
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_ForNonExistentSheet_ReturnsWarningWithoutCallingService()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(new Spreadsheet { Sheets = new List<Sheet>() });
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("does not exist"));
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
