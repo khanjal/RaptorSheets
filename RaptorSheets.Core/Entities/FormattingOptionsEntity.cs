@@ -3,12 +3,11 @@ namespace RaptorSheets.Core.Entities;
 /// <summary>
 /// Which categories of a sheet's formatting to reapply via
 /// <see cref="Managers.SheetManagerBase{TEntity}.ReapplyFormatting(List{string}, FormattingOptionsEntity?, CancellationToken)"/>
-/// (see GitHub issue #28). Only <see cref="ReapplyColumnFormats"/> is implemented today - the other
-/// four flags exist so the public API shape doesn't need to break when they land. Each needs its own
-/// new Google API request builder (tab/banding colors and frozen rows need an UpdateSheetProperties
-/// builder; protection needs a read-then-delete-then-readd pass to dedupe against this library's own
-/// previously-added ProtectedRanges; borders need a new per-column attribute surface that doesn't
-/// exist yet) - tracked as follow-up work, not attempted here.
+/// (see GitHub issue #28). <see cref="ReapplyBorders"/> is the one flag still unimplemented - it
+/// needs a new per-column attribute surface (a border style configuration point on
+/// <c>ColumnAttribute</c>/<c>SheetCellModel</c>) that doesn't exist yet, a bigger, separate task from
+/// the other four (which only needed new Google API request builders, no schema change). Setting it
+/// is accepted but is currently a no-op.
 /// </summary>
 public class FormattingOptionsEntity
 {

@@ -1384,10 +1384,11 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     /// <summary>
     /// Re-applies formatting from a sheet's canonical, in-memory SheetModel (the domain's own
     /// XMapper.GetSheet(), via the registry) onto the live sheet - the manual counterpart to the
-    /// automatic self-heal this base already does for missing sheets/columns (see #28). Only
-    /// <see cref="FormattingOptionsEntity.ReapplyColumnFormats"/> is implemented today; see that
-    /// type's doc comment for the rest. Deliberately opt-in only, never triggered from a read -
-    /// matches this library's reads-never-mutate precedent.
+    /// automatic self-heal this base already does for missing sheets/columns (see #28).
+    /// <see cref="FormattingOptionsEntity.ReapplyBorders"/> is still unimplemented (needs a new
+    /// per-column attribute surface that doesn't exist yet - a bigger, separate task); every other
+    /// flag is live. Deliberately opt-in only, never triggered from a read - matches this library's
+    /// reads-never-mutate precedent.
     /// </summary>
     public async Task<TEntity> ReapplyFormatting(string sheet, FormattingOptionsEntity? options = null, CancellationToken cancellationToken = default)
     {
@@ -1400,16 +1401,24 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         var entity = new TEntity();
         options ??= new FormattingOptionsEntity();
 
-        if (!options.ReapplyColumnFormats)
+        if (!options.ReapplyColumnFormats && !options.ReapplyColors && !options.ReapplyProtection && !options.ReapplyFrozenRows && !options.ReapplyBorders)
         {
-            // Only ReapplyColumnFormats is implemented today (see FormattingOptionsEntity's doc
-            // comment) - the other flags are accepted but are no-ops, so this message must not imply
-            // they did something just because the caller set them.
-            entity.Messages.Add(MessageHelpers.CreateInfoMessage("ReapplyColumnFormats is disabled - nothing to reapply (other FormattingOptionsEntity flags are not implemented yet)", MessageType.GENERAL));
+            entity.Messages.Add(MessageHelpers.CreateInfoMessage("All FormattingOptionsEntity flags are disabled - nothing to reapply", MessageType.GENERAL));
             return entity;
         }
 
-        var sheetIdsByName = await ResolveSheetIdsViaPropertiesAsync(sheets, cancellationToken);
+        // ReapplyColors/ReapplyProtection need live ProtectedRanges/BandedRanges to reapply
+        // correctly (update-in-place vs. add-fresh, and which protection to delete before re-adding)
+        // - only pay for the full metadata fetch when one of them is actually requested. A plain
+        // spreadsheets.get with no ranges/IncludeGridData already returns both, so this is one call
+        // either way, not an extra one on top of the existing sheet-properties lookup.
+        var needsLiveMetadata = options.ReapplyColors || options.ReapplyProtection;
+        var spreadsheetInfo = needsLiveMetadata ? await _googleSheetService.GetSheetInfo(cancellationToken) : null;
+
+        var sheetIdsByName = spreadsheetInfo != null
+            ? ResolveSheetIdsFromSpreadsheet(sheets, spreadsheetInfo)
+            : await ResolveSheetIdsViaPropertiesAsync(sheets, cancellationToken);
+
         var requests = new List<Request>();
 
         foreach (var sheetName in sheets)
@@ -1428,30 +1437,112 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
             }
 
             sheetModel.Headers.UpdateColumns();
-
-            foreach (var header in sheetModel.Headers)
-            {
-                var request = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId, header.Index, header.Format, header.FormatPattern);
-                if (request != null)
-                {
-                    requests.Add(request);
-                }
-            }
+            AddReapplyRequestsForSheet(options, sheetModel, sheetId, spreadsheetInfo, requests);
         }
 
         if (requests.Count == 0)
         {
-            entity.Messages.Add(MessageHelpers.CreateInfoMessage("No column formats to reapply", MessageType.GENERAL));
+            entity.Messages.Add(MessageHelpers.CreateInfoMessage("Nothing to reapply", MessageType.GENERAL));
             return entity;
         }
 
         var response = await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = requests }, cancellationToken);
 
         entity.Messages.Add(response != null
-            ? MessageHelpers.CreateInfoMessage($"Reapplied column formats for {string.Join(", ", sheets)}", MessageType.GENERAL)
+            ? MessageHelpers.CreateInfoMessage($"Reapplied {BuildAppliedCategoriesLabel(options)} for {string.Join(", ", sheets)}", MessageType.GENERAL)
             : MessageHelpers.CreateErrorMessage("Failed to reapply formatting", MessageType.GENERAL));
 
         return entity;
+    }
+
+    /// <summary>
+    /// Builds every request for one sheet across whichever <see cref="FormattingOptionsEntity"/>
+    /// flags are set, appending them onto the shared <paramref name="requests"/> list that
+    /// <see cref="ReapplyFormatting(List{string}, FormattingOptionsEntity?, CancellationToken)"/>
+    /// sends as one batch for every sheet.
+    /// </summary>
+    private static void AddReapplyRequestsForSheet(FormattingOptionsEntity options, Models.Google.SheetModel sheetModel, int sheetId, Spreadsheet? spreadsheetInfo, List<Request> requests)
+    {
+        if (options.ReapplyColumnFormats)
+        {
+            AddColumnFormatReapplyRequests(sheetModel, sheetId, requests);
+        }
+
+        var propertiesRequest = GoogleRequestHelpers.GenerateSheetPropertiesReapplyRequest(sheetModel, sheetId, options.ReapplyColors, options.ReapplyFrozenRows);
+        if (propertiesRequest != null)
+        {
+            requests.Add(propertiesRequest);
+        }
+
+        var liveSheet = spreadsheetInfo?.Sheets?.FirstOrDefault(s => s.Properties.SheetId == sheetId);
+
+        if (options.ReapplyColors)
+        {
+            var bandingExists = liveSheet?.BandedRanges?.Any(b => b.BandedRangeId == sheetId) ?? false;
+            requests.Add(GoogleRequestHelpers.GenerateBandingReapplyRequest(sheetModel, sheetId, bandingExists));
+        }
+
+        if (options.ReapplyProtection)
+        {
+            AddProtectionReapplyRequests(sheetModel, sheetId, liveSheet, requests);
+        }
+    }
+
+    private static string BuildAppliedCategoriesLabel(FormattingOptionsEntity options)
+    {
+        var categories = new List<string>();
+        if (options.ReapplyColumnFormats) categories.Add("column formats");
+        if (options.ReapplyColors) categories.Add("colors");
+        if (options.ReapplyFrozenRows) categories.Add("frozen rows");
+        if (options.ReapplyProtection) categories.Add("protection");
+
+        return string.Join(", ", categories);
+    }
+
+    private static void AddColumnFormatReapplyRequests(Models.Google.SheetModel sheetModel, int sheetId, List<Request> requests)
+    {
+        foreach (var header in sheetModel.Headers)
+        {
+            var request = GoogleRequestHelpers.GenerateColumnFormatRequest(sheetId, header.Index, header.Format, header.FormatPattern);
+            if (request != null)
+            {
+                requests.Add(request);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Deletes this library's own previously-added protection (by description marker - see
+    /// <see cref="GoogleRequestHelpers.GenerateDeleteOwnedProtectionRequests"/>) and re-adds it fresh
+    /// against the sheet's *current* canonical layout - the same whole-sheet-or-header range
+    /// <see cref="GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet"/> builds at creation
+    /// time, plus one column-level range per formula column when the sheet itself isn't protected.
+    /// </summary>
+    private static void AddProtectionReapplyRequests(Models.Google.SheetModel sheetModel, int sheetId, Sheet? liveSheet, List<Request> requests)
+    {
+        requests.AddRange(GoogleRequestHelpers.GenerateDeleteOwnedProtectionRequests(liveSheet?.ProtectedRanges));
+
+        // GenerateProtectedRangeForHeaderOrSheet/GenerateColumnProtection read SheetId off the model
+        // itself (same convention sheet creation uses - see SheetGenerationHelper.Generate setting
+        // sheetModel.Id before calling either) rather than taking it as a parameter, so it must be
+        // set to the live id first.
+        sheetModel.Id = sheetId;
+        requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
+
+        if (sheetModel.ProtectSheet)
+        {
+            return;
+        }
+
+        requests.AddRange(sheetModel.Headers
+            .Where(header => !string.IsNullOrEmpty(header.Formula))
+            .Select(header => GoogleRequestHelpers.GenerateColumnProtection(new GridRange
+            {
+                SheetId = sheetId,
+                StartColumnIndex = header.Index,
+                EndColumnIndex = header.Index + 1,
+                StartRowIndex = 1,
+            })));
     }
 
     #endregion
