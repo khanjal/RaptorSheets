@@ -54,7 +54,7 @@ public static class InterviewSheet
 
         sheet.Headers.ForEach(header =>
         {
-            var headerName = header!.Name.ToString()!.Trim();
+            var headerName = header.Name.ToString().Trim();
 
             switch (headerName)
             {

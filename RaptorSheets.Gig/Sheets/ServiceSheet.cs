@@ -44,7 +44,7 @@ public static class ServiceSheet
         // Configure specific headers unique to ServiceSheet
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
+            var headerEnum = header.Name.ToString().Trim().GetValueFromName<Header>();
 
             switch (headerEnum)
             {

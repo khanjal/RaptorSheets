@@ -21,7 +21,7 @@ public static class ReferenceSheetFormulaHelper
     {
         sheet.Headers.ForEach(header =>
         {
-            var name = header!.Name.ToString()!.Trim();
+            var name = header.Name.ToString().Trim();
             if (name == valueHeader)
             {
                 header.Formula = GoogleFormulaBuilder.BuildArrayLiteralUniqueFilteredSorted(valueHeader, uniqueSourceRange);

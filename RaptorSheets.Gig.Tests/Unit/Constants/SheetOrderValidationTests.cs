@@ -20,7 +20,7 @@ public class SheetOrderValidationTests
         Assert.Empty(validationErrors);
         
         // If this fails, the explicit array needs to be updated to match the constants
-        if (validationErrors.Any())
+        if (validationErrors.Count > 0)
         {
             var errorDetails = string.Join("\n", validationErrors.Select(e => $"  - {e}"));
             Assert.Fail($"Sheet order synchronization issues found:\n{errorDetails}");

@@ -360,7 +360,7 @@ body {
 }
 
 .status-badge--live {
-    background-color: #10b981;
+    background-color: #047857; /* Darker than the original #10b981 - that only hit ~2.5:1 contrast with white text, well under WCAG AA's 4.5:1 for small text */
     color: white;
 }
 
@@ -1197,31 +1197,6 @@ body {
         padding-right: 3.5rem; /* Make room for copy button */
     }
     
-    .copy-btn {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        min-width: 36px;
-        min-height: 36px;
-        padding: 0.375rem;
-        font-size: 0.65rem;
-        border-radius: 0.25rem;
-        z-index: 10;
-    }
-    
-    /* Improve badge display on mobile */
-    .developer__badges {
-        gap: 0.5rem;
-        margin-top: 1rem;
-        justify-content: center;
-        padding: 0;
-    }
-    
-    .developer__badges img {
-        height: 16px;
-        max-width: none; /* Allow badges to maintain aspect ratio */
-    }
-    
     .features__grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
@@ -1280,15 +1255,17 @@ body {
         padding: 0.5rem;
         font-size: 0.7rem;
         border-radius: 0.375rem;
+        z-index: 10;
         display: flex;
         align-items: center;
         justify-content: center;
     }
-    
+
     /* Improve badge display on mobile */
     .developer__badges {
         gap: 0.75rem;
         margin-top: 1rem;
+        justify-content: center;
         padding: 0 1rem;
     }
     
@@ -1365,7 +1342,6 @@ html {
     }
     
     .code-block code {
-        word-break: break-word;
         white-space: pre-wrap;
         overflow-wrap: break-word;
         max-width: 100%;
@@ -1420,7 +1396,6 @@ html {
     }
     
     .code-block code {
-        word-break: break-word;
         white-space: pre-wrap;
         overflow-wrap: break-word;
         max-width: calc(100% - 2.5rem);

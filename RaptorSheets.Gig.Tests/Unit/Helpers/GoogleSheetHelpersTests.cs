@@ -11,36 +11,44 @@ namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
 public class GoogleSheetHelpersTests
 {
-    public static TheoryData<SheetModel, BatchUpdateSpreadsheetRequest> Sheets
+    public static TheoryData<string> Sheets =>
+    new()
     {
-        get
-        {
-            var data = new TheoryData<SheetModel, BatchUpdateSpreadsheetRequest>
-            {
-                { AddressSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.ADDRESSES.GetDescription()]) },
-                { DailySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.DAILY.GetDescription()]) },
-                { ExpenseSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.EXPENSES.GetDescription()]) },
-                { MonthlySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.MONTHLY.GetDescription()]) },
-                { NameSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.NAMES.GetDescription()]) },
-                { PlaceSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.PLACES.GetDescription()]) },
-                { RegionSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.REGIONS.GetDescription()]) },
-                { ServiceSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SERVICES.GetDescription()]) },
-                { SetupSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SETUP.GetDescription()]) },
-                { ShiftSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SHIFTS.GetDescription()]) },
-                { TripSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.TRIPS.GetDescription()]) },
-                { TypeSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.TYPES.GetDescription()]) },
-                { WeekdaySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.WEEKDAYS.GetDescription()]) },
-                { WeeklySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.WEEKLY.GetDescription()]) },
-                { YearlySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.YEARLY.GetDescription()]) }
-            };
-            return data;
-        }
-    }
+        nameof(AddressSheet), nameof(DailySheet), nameof(ExpenseSheet), nameof(MonthlySheet),
+        nameof(NameSheet), nameof(PlaceSheet), nameof(RegionSheet), nameof(ServiceSheet),
+        nameof(SetupSheet), nameof(ShiftSheet), nameof(TripSheet), nameof(TypeSheet),
+        nameof(WeekdaySheet), nameof(WeeklySheet), nameof(YearlySheet),
+    };
+
+    // TheoryData rows must be natively serializable (xUnit1045) so Test Explorer can enumerate
+    // individual rows - SheetModel/BatchUpdateSpreadsheetRequest aren't, so the theory data is a
+    // sheet-type name and each test resolves the actual (config, batchRequest) pair here instead.
+    private static (SheetModel Config, BatchUpdateSpreadsheetRequest BatchRequest) ResolveSheet(string sheetName) => sheetName switch
+    {
+        nameof(AddressSheet) => (AddressSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.ADDRESSES.GetDescription()])),
+        nameof(DailySheet) => (DailySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.DAILY.GetDescription()])),
+        nameof(ExpenseSheet) => (ExpenseSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.EXPENSES.GetDescription()])),
+        nameof(MonthlySheet) => (MonthlySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.MONTHLY.GetDescription()])),
+        nameof(NameSheet) => (NameSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.NAMES.GetDescription()])),
+        nameof(PlaceSheet) => (PlaceSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.PLACES.GetDescription()])),
+        nameof(RegionSheet) => (RegionSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.REGIONS.GetDescription()])),
+        nameof(ServiceSheet) => (ServiceSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SERVICES.GetDescription()])),
+        nameof(SetupSheet) => (SetupSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SETUP.GetDescription()])),
+        nameof(ShiftSheet) => (ShiftSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.SHIFTS.GetDescription()])),
+        nameof(TripSheet) => (TripSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.TRIPS.GetDescription()])),
+        nameof(TypeSheet) => (TypeSheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.TYPES.GetDescription()])),
+        nameof(WeekdaySheet) => (WeekdaySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.WEEKDAYS.GetDescription()])),
+        nameof(WeeklySheet) => (WeeklySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.WEEKLY.GetDescription()])),
+        nameof(YearlySheet) => (YearlySheet.GetSheet(), GenerateSheetsHelpers.Generate([SheetName.YEARLY.GetDescription()])),
+        _ => throw new ArgumentOutOfRangeException(nameof(sheetName), sheetName, "Unknown sheet type")
+    };
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenSheetConfig_ThenReturnSheetRequest(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
+    public void GivenSheetConfig_ThenReturnSheetRequest(string sheetName)
     {
+        var (config, batchRequest) = ResolveSheet(sheetName);
+
         var index = 0; // AddSheet should be first request
 
         Assert.NotNull(batchRequest.Requests[index].AddSheet);
@@ -54,8 +62,10 @@ public class GoogleSheetHelpersTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenSheetHeaders_ThenReturnSheetHeaders(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
+    public void GivenSheetHeaders_ThenReturnSheetHeaders(string sheetName)
     {
+        var (config, batchRequest) = ResolveSheet(sheetName);
+
         // Get the SheetId from the batch request (which has the randomly generated ID)
         var sheetId = batchRequest.Requests[0].AddSheet.Properties.SheetId;
 
@@ -77,8 +87,9 @@ public class GoogleSheetHelpersTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenSheetColors_ThenReturnSheetBanding(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
+    public void GivenSheetColors_ThenReturnSheetBanding(string sheetName)
     {
+        var (config, batchRequest) = ResolveSheet(sheetName);
         var sheetId = batchRequest.Requests[0].AddSheet.Properties.SheetId;
 
         var bandedRange = batchRequest.Requests.First(x => x.AddBanding != null).AddBanding.BandedRange;
@@ -89,8 +100,9 @@ public class GoogleSheetHelpersTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenSheetProtected_ThenReturnProtectRequest(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
+    public void GivenSheetProtected_ThenReturnProtectRequest(string sheetName)
     {
+        var (config, batchRequest) = ResolveSheet(sheetName);
         var sheetId = batchRequest.Requests[0].AddSheet.Properties.SheetId;
         var protectRange = batchRequest.Requests.Where(x => x.AddProtectedRange != null).ToList();
 
@@ -123,8 +135,9 @@ public class GoogleSheetHelpersTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenSheetNotProtected_ThenReturnProtectRequests(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
+    public void GivenSheetNotProtected_ThenReturnProtectRequests(string sheetName)
     {
+        var (config, batchRequest) = ResolveSheet(sheetName);
         var sheetId = batchRequest.Requests[0].AddSheet.Properties.SheetId;
         var protectRange = batchRequest.Requests.Where(x => x.AddProtectedRange != null).ToList();
 
@@ -156,8 +169,9 @@ public class GoogleSheetHelpersTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenSheetHeaderFormatOrValidation_ThenReturnRepeatCellsRequest(SheetModel config, BatchUpdateSpreadsheetRequest batchRequest)
+    public void GivenSheetHeaderFormatOrValidation_ThenReturnRepeatCellsRequest(string sheetName)
     {
+        var (config, batchRequest) = ResolveSheet(sheetName);
         var repeatCells = batchRequest.Requests.Where(x => x.RepeatCell != null).ToList();
         var repeatHeaders = config.Headers.Where(x => x.Format != null || !string.IsNullOrEmpty(x.Validation)).ToList();
 

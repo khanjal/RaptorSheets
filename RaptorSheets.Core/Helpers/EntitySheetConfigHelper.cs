@@ -315,23 +315,23 @@ public static class EntitySheetConfigHelper
 
     private static bool IsTimePattern(string pattern)
     {
-        return (pattern.Contains("h") || pattern.Contains("m") || pattern.Contains("s")) && 
-               pattern.Contains(":") && 
-               !pattern.Contains("[");
+        return (pattern.Contains('h') || pattern.Contains('m') || pattern.Contains('s')) &&
+               pattern.Contains(':') &&
+               !pattern.Contains('[');
     }
 
     private static bool IsDatePattern(string pattern)
     {
-        return (pattern.Contains("y") || pattern.Contains("d")) && 
-               (pattern.Contains("m") || pattern.Contains("M")) &&
-               !pattern.Contains(":");
+        return (pattern.Contains('y') || pattern.Contains('d')) &&
+               (pattern.Contains('m') || pattern.Contains('M')) &&
+               !pattern.Contains(':');
     }
 
     private static bool IsWeekdayPattern(string pattern)
     {
-        return pattern.Contains("ddd") && 
-               !pattern.Contains("y") && 
-               !pattern.Contains("/");
+        return pattern.Contains("ddd") &&
+               !pattern.Contains('y') &&
+               !pattern.Contains('/');
     }
 
     private static bool IsCurrencyPattern(string pattern)
@@ -346,11 +346,11 @@ public static class EntitySheetConfigHelper
 
     private static bool IsPercentagePattern(string pattern)
     {
-        return pattern.Contains("%");
+        return pattern.Contains('%');
     }
 
     private static bool IsNumberPattern(string pattern)
     {
-        return pattern.Contains("#") || pattern.Contains("0");
+        return pattern.Contains('#') || pattern.Contains('0');
     }
 }

@@ -44,7 +44,7 @@ public static class StockSheet
         for (int i = 0; i < sheet.Headers.Count; i++)
         {
             var header = sheet.Headers[i];
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
+            var headerEnum = header.Name.ToString().Trim().GetValueFromName<Header>();
             var keyRange = GoogleConfig.KeyRange;
 
             switch (headerEnum)

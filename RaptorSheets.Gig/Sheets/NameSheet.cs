@@ -49,7 +49,7 @@ public static class NameSheet
         // Configure specific headers unique to NameSheet
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
+            var headerEnum = header.Name.ToString().Trim().GetValueFromName<Header>();
 
             switch (headerEnum)
             {

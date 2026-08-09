@@ -40,7 +40,7 @@ public static class TickerSheet
         var keyRange = GoogleConfig.KeyRange;
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
+            var headerEnum = header.Name.ToString().Trim().GetValueFromName<Header>();
 
             switch (headerEnum)
             {

@@ -116,7 +116,7 @@ public class NameSheetTests
         var formulaHeaders = sheet.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
 
         // Assert - High-level validation only (don't test formula internals)
-        if (formulaHeaders.Any())
+        if (formulaHeaders.Count > 0)
         {
             // All formulas should start with =
             Assert.All(formulaHeaders, header => Assert.StartsWith("=", header.Formula));

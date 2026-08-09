@@ -16,8 +16,8 @@ public static class GoogleRequestHelpers
         var appendCellsRequest = new AppendCellsRequest
         {
             Fields = Field.USER_ENTERED_VALUE_AND_FORMAT.GetDescription(),
-            Rows = SheetHelpers.HeadersToRowData(sheet!),
-            SheetId = sheet!.Id
+            Rows = SheetHelpers.HeadersToRowData(sheet),
+            SheetId = sheet.Id
         };
 
         return new Request { AppendCells = appendCellsRequest };
@@ -40,7 +40,7 @@ public static class GoogleRequestHelpers
         // Append more columns if the default amount isn't enough
         var defaultColumns = GoogleConfig.DefaultColumnCount;
 
-        if (sheet!.Headers.Count <= defaultColumns)
+        if (sheet.Headers.Count <= defaultColumns)
         {
             return null;
         }
@@ -77,9 +77,9 @@ public static class GoogleRequestHelpers
         {
             BandedRange = new BandedRange
             {
-                BandedRangeId = sheet!.Id,
+                BandedRangeId = sheet.Id,
                 Range = new GridRange { SheetId = sheet.Id },
-                RowProperties = new BandingProperties { HeaderColor = SheetHelpers.GetColor(sheet!.TabColor), FirstBandColor = SheetHelpers.GetColor(SheetColor.WHITE), SecondBandColor = SheetHelpers.GetColor(sheet!.CellColor) }
+                RowProperties = new BandingProperties { HeaderColor = SheetHelpers.GetColor(sheet.TabColor), FirstBandColor = SheetHelpers.GetColor(SheetColor.WHITE), SecondBandColor = SheetHelpers.GetColor(sheet.CellColor) }
             }
         };
         return new Request { AddBanding = addBandingRequest };
@@ -281,7 +281,7 @@ public static class GoogleRequestHelpers
     {
         // Protect sheet or header
         var addProtectedRangeRequest = new AddProtectedRangeRequest();
-        if (sheet!.ProtectSheet)
+        if (sheet.ProtectSheet)
         {
             addProtectedRangeRequest = new AddProtectedRangeRequest
             {
@@ -295,7 +295,7 @@ public static class GoogleRequestHelpers
             {
                 SheetId = sheet.Id,
                 StartColumnIndex = 0,
-                EndColumnIndex = sheet!.Headers.Count,
+                EndColumnIndex = sheet.Headers.Count,
                 StartRowIndex = 0,
                 EndRowIndex = 1
             };
@@ -432,7 +432,7 @@ public static class GoogleRequestHelpers
             {
                 // Create Sheet With Properties
                 SheetId = sheet.Id,
-                Title = sheet!.Name,
+                Title = sheet.Name,
                 TabColor = SheetHelpers.GetColor(sheet.TabColor),
                 GridProperties = new GridProperties { FrozenColumnCount = sheet.FreezeColumnCount, FrozenRowCount = sheet.FreezeRowCount }
             }

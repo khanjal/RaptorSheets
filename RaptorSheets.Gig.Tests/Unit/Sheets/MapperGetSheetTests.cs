@@ -11,32 +11,47 @@ namespace RaptorSheets.Gig.Tests.Unit.Sheets;
 [Category("Unit Tests")]
 public class MapperGetSheetTests
 {
-    public static IEnumerable<object[]> Sheets =>
-    new List<object[]>
+    public static TheoryData<string> Sheets =>
+    new()
     {
-        new object[] { AddressSheet.GetSheet(), AddressSheet.BaseSheet },
-        new object[] { DailySheet.GetSheet(), DailySheet.BaseSheet },
-        new object[] { ExpenseSheet.GetSheet(), ExpenseSheet.BaseSheet },
-        new object[] { MonthlySheet.GetSheet(), MonthlySheet.BaseSheet },
-        new object[] { NameSheet.GetSheet(), NameSheet.BaseSheet },
-        new object[] { PlaceSheet.GetSheet(), PlaceSheet.BaseSheet },
-        new object[] { RegionSheet.GetSheet(), RegionSheet.BaseSheet },
-        new object[] { ServiceSheet.GetSheet(), ServiceSheet.BaseSheet },
-        new object[] { SetupSheet.GetSheet(), SetupSheet.BaseSheet },
-        new object[] { ShiftSheet.GetSheet(), ShiftSheet.BaseSheet },
-        new object[] { TripSheet.GetSheet(), TripSheet.BaseSheet },
-        new object[] { TypeSheet.GetSheet(), TypeSheet.BaseSheet },
-        new object[] { WeekdaySheet.GetSheet(), WeekdaySheet.BaseSheet },
-        new object[] { WeeklySheet.GetSheet(), WeeklySheet.BaseSheet },
-        new object[] { YearlySheet.GetSheet(), YearlySheet.BaseSheet },
-        new object[] { DeliverySheet.GetSheet(), DeliverySheet.BaseSheet },
-        new object[] { LocationSheet.GetSheet(), LocationSheet.BaseSheet },
+        nameof(AddressSheet), nameof(DailySheet), nameof(ExpenseSheet), nameof(MonthlySheet),
+        nameof(NameSheet), nameof(PlaceSheet), nameof(RegionSheet), nameof(ServiceSheet),
+        nameof(SetupSheet), nameof(ShiftSheet), nameof(TripSheet), nameof(TypeSheet),
+        nameof(WeekdaySheet), nameof(WeeklySheet), nameof(YearlySheet), nameof(DeliverySheet),
+        nameof(LocationSheet),
+    };
+
+    // TheoryData rows must be natively serializable (xUnit1045) so Test Explorer can enumerate
+    // individual rows - SheetModel isn't, so the theory data is a sheet-type name and each test
+    // resolves the actual (result, config) pair here instead of carrying SheetModel instances.
+    private static (SheetModel Result, SheetModel Config) ResolveSheet(string sheetName) => sheetName switch
+    {
+        nameof(AddressSheet) => (AddressSheet.GetSheet(), AddressSheet.BaseSheet),
+        nameof(DailySheet) => (DailySheet.GetSheet(), DailySheet.BaseSheet),
+        nameof(ExpenseSheet) => (ExpenseSheet.GetSheet(), ExpenseSheet.BaseSheet),
+        nameof(MonthlySheet) => (MonthlySheet.GetSheet(), MonthlySheet.BaseSheet),
+        nameof(NameSheet) => (NameSheet.GetSheet(), NameSheet.BaseSheet),
+        nameof(PlaceSheet) => (PlaceSheet.GetSheet(), PlaceSheet.BaseSheet),
+        nameof(RegionSheet) => (RegionSheet.GetSheet(), RegionSheet.BaseSheet),
+        nameof(ServiceSheet) => (ServiceSheet.GetSheet(), ServiceSheet.BaseSheet),
+        nameof(SetupSheet) => (SetupSheet.GetSheet(), SetupSheet.BaseSheet),
+        nameof(ShiftSheet) => (ShiftSheet.GetSheet(), ShiftSheet.BaseSheet),
+        nameof(TripSheet) => (TripSheet.GetSheet(), TripSheet.BaseSheet),
+        nameof(TypeSheet) => (TypeSheet.GetSheet(), TypeSheet.BaseSheet),
+        nameof(WeekdaySheet) => (WeekdaySheet.GetSheet(), WeekdaySheet.BaseSheet),
+        nameof(WeeklySheet) => (WeeklySheet.GetSheet(), WeeklySheet.BaseSheet),
+        nameof(YearlySheet) => (YearlySheet.GetSheet(), YearlySheet.BaseSheet),
+        nameof(DeliverySheet) => (DeliverySheet.GetSheet(), DeliverySheet.BaseSheet),
+        nameof(LocationSheet) => (LocationSheet.GetSheet(), LocationSheet.BaseSheet),
+        _ => throw new ArgumentOutOfRangeException(nameof(sheetName), sheetName, "Unknown sheet type")
     };
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenGetSheetConfig_ThenReturnSheet(SheetModel result, SheetModel sheetConfig)
+    public void GivenGetSheetConfig_ThenReturnSheet(string sheetName)
     {
+        var (result, sheetConfig) = ResolveSheet(sheetName);
+
         Assert.Equal(sheetConfig.CellColor, result.CellColor);
         Assert.Equal(sheetConfig.FreezeColumnCount, result.FreezeColumnCount);
         Assert.Equal(sheetConfig.FreezeRowCount, result.FreezeRowCount);
@@ -65,8 +80,10 @@ public class MapperGetSheetTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GetSheet_ShouldGenerateValidFormulas(SheetModel sheet, SheetModel _)
+    public void GetSheet_ShouldGenerateValidFormulas(string sheetName)
     {
+        var (sheet, _) = ResolveSheet(sheetName);
+
         // Act - Get headers with formulas
         var formulaHeaders = sheet.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
 
@@ -99,8 +116,10 @@ public class MapperGetSheetTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GetSheet_ShouldHaveProperColumnIndexes(SheetModel sheet, SheetModel _)
+    public void GetSheet_ShouldHaveProperColumnIndexes(string sheetName)
     {
+        var (sheet, _) = ResolveSheet(sheetName);
+
         // Assert
         Assert.All(sheet.Headers, header => Assert.True(header.Index >= 0));
         Assert.All(sheet.Headers, header => Assert.False(string.IsNullOrEmpty(header.Column)));
@@ -112,8 +131,10 @@ public class MapperGetSheetTests
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GetSheet_ShouldHaveProperFormatting(SheetModel sheet, SheetModel _)
+    public void GetSheet_ShouldHaveProperFormatting(string sheetName)
     {
+        var (sheet, _) = ResolveSheet(sheetName);
+
         // Act - Get headers with specific formats
         var dateHeaders = sheet.Headers.Where(h => h.Format == Format.DATE).ToList();
         var accountingHeaders = sheet.Headers.Where(h => h.Format == Format.ACCOUNTING).ToList();

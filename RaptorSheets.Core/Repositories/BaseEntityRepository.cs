@@ -66,7 +66,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// <returns>True if successful, false otherwise</returns>
     public virtual async Task<bool> AddAsync(T entity, CancellationToken cancellationToken = default)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        ArgumentNullException.ThrowIfNull(entity);
 
         var headers = await GetHeadersAsync(cancellationToken);
         var rowData = TypedEntityMapper<T>.MapToRangeData(new List<T> { entity }, headers);
@@ -84,7 +84,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// <returns>True if successful, false otherwise</returns>
     public virtual async Task<bool> AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
     {
-        if (entities == null) throw new ArgumentNullException(nameof(entities));
+        ArgumentNullException.ThrowIfNull(entities);
 
         var entitiesList = entities.ToList();
         if (entitiesList.Count == 0) return true;
@@ -106,7 +106,7 @@ public abstract class BaseEntityRepository<T> where T : class, new()
     /// <returns>True if successful, false otherwise</returns>
     public virtual async Task<bool> UpdateAsync(T entity, int rowIndex, CancellationToken cancellationToken = default)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        ArgumentNullException.ThrowIfNull(entity);
         if (rowIndex < 1) throw new ArgumentOutOfRangeException(nameof(rowIndex), "Row index must be 1 or greater");
 
         var headers = await GetHeadersAsync(cancellationToken);

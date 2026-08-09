@@ -51,7 +51,7 @@ public static class ShiftSheet
 
         sheet.Headers.ForEach(header =>
         {
-            var headerEnum = header!.Name.ToString()!.Trim().GetValueFromName<Header>();
+            var headerEnum = header.Name.ToString().Trim().GetValueFromName<Header>();
 
             switch (headerEnum)
             {
