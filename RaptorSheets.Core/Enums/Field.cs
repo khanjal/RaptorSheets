@@ -42,5 +42,24 @@ public enum Field
     /// or note.
     /// </summary>
     [Description("dataValidation")]
-    DATA_VALIDATION
+    DATA_VALIDATION,
+
+    /// <summary>
+    /// Use this field to update only a sheet's tab color.
+    /// </summary>
+    [Description("tabColor")]
+    TAB_COLOR,
+
+    /// <summary>
+    /// Use this field to update only a sheet's frozen row/column counts.
+    /// </summary>
+    [Description("gridProperties.frozenRowCount,gridProperties.frozenColumnCount")]
+    FROZEN_ROWS_AND_COLUMNS,
+
+    /// <summary>
+    /// Use this field to update only a banded range's row/column color properties, without touching
+    /// its range bounds.
+    /// </summary>
+    [Description("rowProperties")]
+    BANDING_ROW_PROPERTIES
 }

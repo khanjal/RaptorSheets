@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
 using Moq;
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
@@ -1181,4 +1182,228 @@ public class SheetManagerGenericBaseTests
         Assert.Contains(result.Messages, m => m.Message.Contains("does not exist"));
         mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithOnlyReapplyBordersSet_ReturnsNotImplementedMessageWithoutApiCall()
+    {
+        // Copilot review on PR #107: ReapplyBorders alone must short-circuit with a message
+        // explaining why, instead of silently resolving sheet ids for nothing and returning the
+        // same generic "nothing to reapply" message a caller who set no flags at all would get.
+        var mockService = new Mock<IGoogleSheetService>();
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyBorders = true });
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("ReapplyBorders is not implemented yet"));
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<CancellationToken>()), Times.Never);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyColors_WhenLiveMetadataFetchFails_AbortsWithError()
+    {
+        // Copilot review on PR #107: proceeding without live metadata when ReapplyColors/
+        // ReapplyProtection need it would silently degrade into always-add instead of
+        // update-or-add/delete-then-add, corrupting the sheet with duplicate banded or protected
+        // ranges rather than reapplying cleanly - must abort instead.
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync((Spreadsheet?)null);
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyColors = true });
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Unable to retrieve live sheet metadata"));
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyProtection_WhenLiveMetadataFetchFails_AbortsWithError()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync((Spreadsheet?)null);
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyProtection = true });
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Unable to retrieve live sheet metadata"));
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyColors_WhenLiveSheetHasNullProperties_DoesNotThrow()
+    {
+        // Copilot review on PR #107: a live Sheet entry with null Properties (partially-populated
+        // API response) must be skipped, not throw a NullReferenceException and break the whole call.
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((SheetName, 10));
+        spreadsheet.Sheets.Add(new Sheet { Properties = null! });
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyColors = true });
+
+        Assert.NotNull(captured);
+        Assert.Contains(result.Messages, m => m.Message.Contains("Reapplied colors for"));
+    }
+
+    // ReapplyColors/ReapplyFrozenRows/ReapplyProtection (#28) - the remaining FormattingOptionsEntity
+    // flags beyond ReapplyColumnFormats. ReapplyBorders stays unimplemented (needs a new attribute
+    // surface - see FormattingOptionsEntity's doc comment) and isn't covered here.
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyColors_SetsTabColorAndAddsBandingWhenNoneExistsLive()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((SheetName, 10)); // no BandedRanges - nothing live to update
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyColors = true });
+
+        Assert.NotNull(captured);
+        var propertiesRequest = captured!.Requests.Single(r => r.UpdateSheetProperties != null);
+        Assert.Equal("tabColor", propertiesRequest.UpdateSheetProperties.Fields);
+        Assert.Equal(10, propertiesRequest.UpdateSheetProperties.Properties.SheetId);
+
+        var bandingRequest = captured.Requests.Single(r => r.AddBanding != null || r.UpdateBanding != null);
+        Assert.NotNull(bandingRequest.AddBanding); // no banding existed live - falls back to Add
+        Assert.Equal(10, bandingRequest.AddBanding.BandedRange.BandedRangeId);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Reapplied colors for"));
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyColors_UpdatesExistingBandingInPlace()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((SheetName, 10));
+        spreadsheet.Sheets[0].BandedRanges = [new BandedRange { BandedRangeId = 10 }];
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyColors = true });
+
+        var bandingRequest = captured!.Requests.Single(r => r.AddBanding != null || r.UpdateBanding != null);
+        Assert.NotNull(bandingRequest.UpdateBanding);
+        Assert.Equal(10, bandingRequest.UpdateBanding.BandedRange.BandedRangeId);
+        Assert.Equal("rowProperties", bandingRequest.UpdateBanding.Fields);
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyFrozenRows_SetsFrozenRowAndColumnMask()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((SheetName, 10));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyFrozenRows = true });
+
+        var request = Assert.Single(captured!.Requests);
+        Assert.Equal("gridProperties.frozenRowCount,gridProperties.frozenColumnCount", request.UpdateSheetProperties.Fields);
+        Assert.Contains(result.Messages, m => m.Message.Contains("Reapplied frozen rows for"));
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithColorsAndFrozenRowsTogether_BuildsOneCombinedPropertiesRequest()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((SheetName, 10));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyColors = true, ReapplyFrozenRows = true });
+
+        // One combined UpdateSheetProperties request, not two separate ones.
+        var propertiesRequest = captured!.Requests.Single(r => r.UpdateSheetProperties != null);
+        var fields = (string)propertiesRequest.UpdateSheetProperties.Fields;
+        Assert.Contains("tabColor", fields);
+        Assert.Contains("frozenRowCount", fields);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Reapplied colors, frozen rows for"));
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyProtection_DeletesOwnedRangesLeavesUserRangesAndReadds()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((SheetName, 10));
+        spreadsheet.Sheets[0].ProtectedRanges =
+        [
+            new ProtectedRange { ProtectedRangeId = 1, Description = ProtectionWarnings.HeaderWarning },
+            new ProtectedRange { ProtectedRangeId = 2, Description = "A user's own manual note" }
+        ];
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyProtection = true });
+
+        Assert.NotNull(captured);
+        var deletedIds = captured!.Requests.Where(r => r.DeleteProtectedRange != null).Select(r => r.DeleteProtectedRange.ProtectedRangeId).ToList();
+        Assert.Equal([1], deletedIds); // only the library-owned range, never the user's own
+
+        Assert.Contains(captured.Requests, r => r.AddProtectedRange != null); // fresh protection re-added
+        Assert.Contains(result.Messages, m => m.Message.Contains("Reapplied protection for"));
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyProtection_NoExistingProtection_OnlyAddsFresh()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((SheetName, 10)); // no ProtectedRanges yet
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyProtection = true });
+
+        Assert.DoesNotContain(captured!.Requests, r => r.DeleteProtectedRange != null);
+        Assert.Contains(captured.Requests, r => r.AddProtectedRange != null);
+    }
+
 }

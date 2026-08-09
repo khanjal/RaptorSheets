@@ -516,6 +516,101 @@ public static class GoogleRequestHelpers
     }
 
     /// <summary>
+    /// Builds the UpdateSheetProperties request behind <see cref="Managers.SheetManagerBase{TEntity}.ReapplyFormatting(List{string}, Entities.FormattingOptionsEntity?, CancellationToken)"/>'s
+    /// <c>ReapplyColors</c> (tab color) and <c>ReapplyFrozenRows</c> flags - both are plain
+    /// <see cref="SheetProperties"/> fields, so one request/field-mask covers whichever of the two
+    /// the caller asked for (GitHub issue #28). Returns null when neither applies - nothing to send.
+    /// </summary>
+    public static Request? GenerateSheetPropertiesReapplyRequest(SheetModel sheet, int sheetId, bool includeTabColor, bool includeFrozenRows)
+    {
+        if (!includeTabColor && !includeFrozenRows)
+        {
+            return null;
+        }
+
+        var properties = new SheetProperties { SheetId = sheetId };
+        var fields = new List<string>();
+
+        if (includeTabColor)
+        {
+            properties.TabColor = SheetHelpers.GetColor(sheet.TabColor);
+            fields.Add(Field.TAB_COLOR.GetDescription());
+        }
+
+        if (includeFrozenRows)
+        {
+            properties.GridProperties = new GridProperties { FrozenRowCount = sheet.FreezeRowCount, FrozenColumnCount = sheet.FreezeColumnCount };
+            fields.Add(Field.FROZEN_ROWS_AND_COLUMNS.GetDescription());
+        }
+
+        return new Request
+        {
+            UpdateSheetProperties = new UpdateSheetPropertiesRequest
+            {
+                Properties = properties,
+                Fields = string.Join(",", fields)
+            }
+        };
+    }
+
+    /// <summary>
+    /// Builds the other half of <c>ReapplyColors</c> - alternating row banding (GitHub issue #28).
+    /// <see cref="GenerateBandingRequest(SheetModel)"/> (sheet creation) deliberately sets
+    /// <c>BandedRangeId = sheet.Id</c>, so a banded range created by this library always has a known,
+    /// predictable ID - if one still exists live (<paramref name="bandingExists"/>, checked by the
+    /// caller against the sheet's current <c>BandedRanges</c>), update it in place; otherwise fall
+    /// back to adding a fresh one (e.g. a sheet whose banding was manually removed since creation).
+    /// </summary>
+    public static Request GenerateBandingReapplyRequest(SheetModel sheet, int sheetId, bool bandingExists)
+    {
+        var bandedRange = new BandedRange
+        {
+            BandedRangeId = sheetId,
+            Range = new GridRange { SheetId = sheetId },
+            RowProperties = new BandingProperties { HeaderColor = SheetHelpers.GetColor(sheet.TabColor), FirstBandColor = SheetHelpers.GetColor(SheetColor.WHITE), SecondBandColor = SheetHelpers.GetColor(sheet.CellColor) }
+        };
+
+        if (bandingExists)
+        {
+            return new Request
+            {
+                UpdateBanding = new UpdateBandingRequest
+                {
+                    BandedRange = bandedRange,
+                    Fields = Field.BANDING_ROW_PROPERTIES.GetDescription()
+                }
+            };
+        }
+
+        return new Request { AddBanding = new AddBandingRequest { BandedRange = bandedRange } };
+    }
+
+    /// <summary>
+    /// Builds the delete half of <c>ReapplyProtection</c> (GitHub issue #28): a
+    /// <see cref="DeleteProtectedRangeRequest"/> for every existing protected range this library
+    /// itself added, identified by <see cref="Description"/> matching one of
+    /// <see cref="ProtectionWarnings"/>'s three marker strings - a user's own manually-added
+    /// protection never matches these and is left untouched. The caller is expected to follow this
+    /// with fresh add requests (<see cref="GenerateProtectedRangeForHeaderOrSheet"/> plus one
+    /// <see cref="GenerateColumnProtection"/> per formula column) in the same batch - Google applies
+    /// a batch's requests in array order, so delete-then-add for the same conceptual range is safe.
+    /// </summary>
+    public static List<Request> GenerateDeleteOwnedProtectionRequests(IList<ProtectedRange>? existingProtectedRanges)
+    {
+        if (existingProtectedRanges == null)
+        {
+            return [];
+        }
+
+        var ownedDescriptions = new HashSet<string> { ProtectionWarnings.SheetWarning, ProtectionWarnings.HeaderWarning, ProtectionWarnings.ColumnWarning };
+
+        return existingProtectedRanges
+            .Where(r => r.ProtectedRangeId.HasValue && r.Description != null && ownedDescriptions.Contains(r.Description))
+            .Select(r => new Request { DeleteProtectedRange = new DeleteProtectedRangeRequest { ProtectedRangeId = r.ProtectedRangeId!.Value } })
+            .ToList();
+    }
+
+    /// <summary>
     /// Computes the target zero-based sheet index for moving a sheet to the end position
     /// after adding new sheets in the same batch operation.
     /// </summary>
