@@ -1183,6 +1183,78 @@ public class SheetManagerGenericBaseTests
         mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task ReapplyFormatting_WithOnlyReapplyBordersSet_ReturnsNotImplementedMessageWithoutApiCall()
+    {
+        // Copilot review on PR #107: ReapplyBorders alone must short-circuit with a message
+        // explaining why, instead of silently resolving sheet ids for nothing and returning the
+        // same generic "nothing to reapply" message a caller who set no flags at all would get.
+        var mockService = new Mock<IGoogleSheetService>();
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyBorders = true });
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("ReapplyBorders is not implemented yet"));
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<CancellationToken>()), Times.Never);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyColors_WhenLiveMetadataFetchFails_AbortsWithError()
+    {
+        // Copilot review on PR #107: proceeding without live metadata when ReapplyColors/
+        // ReapplyProtection need it would silently degrade into always-add instead of
+        // update-or-add/delete-then-add, corrupting the sheet with duplicate banded or protected
+        // ranges rather than reapplying cleanly - must abort instead.
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync((Spreadsheet?)null);
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyColors = true });
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Unable to retrieve live sheet metadata"));
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyProtection_WhenLiveMetadataFetchFails_AbortsWithError()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync((Spreadsheet?)null);
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyProtection = true });
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Unable to retrieve live sheet metadata"));
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReapplyFormatting_WithReapplyColors_WhenLiveSheetHasNullProperties_DoesNotThrow()
+    {
+        // Copilot review on PR #107: a live Sheet entry with null Properties (partially-populated
+        // API response) must be skipped, not throw a NullReferenceException and break the whole call.
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((SheetName, 10));
+        spreadsheet.Sheets.Add(new Sheet { Properties = null! });
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse());
+
+        var manager = new TestManager(mockService.Object, BuildRegistryWithFormattedHeader(), [SheetName]);
+
+        var result = await manager.ReapplyFormatting(SheetName, new FormattingOptionsEntity { ReapplyColumnFormats = false, ReapplyColors = true });
+
+        Assert.NotNull(captured);
+        Assert.Contains(result.Messages, m => m.Message.Contains("Reapplied colors for"));
+    }
+
     // ReapplyColors/ReapplyFrozenRows/ReapplyProtection (#28) - the remaining FormattingOptionsEntity
     // flags beyond ReapplyColumnFormats. ReapplyBorders stays unimplemented (needs a new attribute
     // surface - see FormattingOptionsEntity's doc comment) and isn't covered here.

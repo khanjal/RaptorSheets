@@ -1401,9 +1401,11 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         var entity = new TEntity();
         options ??= new FormattingOptionsEntity();
 
-        if (!options.ReapplyColumnFormats && !options.ReapplyColors && !options.ReapplyProtection && !options.ReapplyFrozenRows && !options.ReapplyBorders)
+        var hasImplementedFlag = options.ReapplyColumnFormats || options.ReapplyColors || options.ReapplyProtection || options.ReapplyFrozenRows;
+
+        if (!hasImplementedFlag)
         {
-            entity.Messages.Add(MessageHelpers.CreateInfoMessage("All FormattingOptionsEntity flags are disabled - nothing to reapply", MessageType.GENERAL));
+            entity.Messages.Add(MessageHelpers.CreateInfoMessage(BuildNothingToReapplyMessage(options), MessageType.GENERAL));
             return entity;
         }
 
@@ -1413,7 +1415,23 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         // spreadsheets.get with no ranges/IncludeGridData already returns both, so this is one call
         // either way, not an extra one on top of the existing sheet-properties lookup.
         var needsLiveMetadata = options.ReapplyColors || options.ReapplyProtection;
-        var spreadsheetInfo = needsLiveMetadata ? await _googleSheetService.GetSheetInfo(cancellationToken) : null;
+        Spreadsheet? spreadsheetInfo = null;
+
+        if (needsLiveMetadata)
+        {
+            spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
+
+            if (spreadsheetInfo == null)
+            {
+                // Proceeding without it would silently degrade ReapplyColors/ReapplyProtection into
+                // always-add instead of update-or-add / delete-then-add, corrupting the sheet with
+                // duplicate banded or protected ranges rather than reapplying cleanly - abort instead.
+                entity.Messages.Add(MessageHelpers.CreateErrorMessage(
+                    "Unable to retrieve live sheet metadata required for ReapplyColors/ReapplyProtection",
+                    MessageType.GENERAL));
+                return entity;
+            }
+        }
 
         var sheetIdsByName = spreadsheetInfo != null
             ? ResolveSheetIdsFromSpreadsheet(sheets, spreadsheetInfo)
@@ -1474,7 +1492,7 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
             requests.Add(propertiesRequest);
         }
 
-        var liveSheet = spreadsheetInfo?.Sheets?.FirstOrDefault(s => s.Properties.SheetId == sheetId);
+        var liveSheet = spreadsheetInfo?.Sheets?.FirstOrDefault(s => s.Properties?.SheetId == sheetId);
 
         if (options.ReapplyColors)
         {
@@ -1486,6 +1504,18 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         {
             AddProtectionReapplyRequests(sheetModel, sheetId, liveSheet, requests);
         }
+    }
+
+    /// <summary>
+    /// Distinguishes "asked for the one flag that isn't implemented yet" from "asked for nothing at
+    /// all" - otherwise a caller who explicitly set only <see cref="FormattingOptionsEntity.ReapplyBorders"/>
+    /// gets the same generic message as one who set nothing, with no hint why.
+    /// </summary>
+    private static string BuildNothingToReapplyMessage(FormattingOptionsEntity options)
+    {
+        return options.ReapplyBorders
+            ? "ReapplyBorders is not implemented yet - nothing to reapply"
+            : "All FormattingOptionsEntity flags are disabled - nothing to reapply";
     }
 
     private static string BuildAppliedCategoriesLabel(FormattingOptionsEntity options)
