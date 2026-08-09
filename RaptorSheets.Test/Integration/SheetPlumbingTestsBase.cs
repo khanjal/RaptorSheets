@@ -79,7 +79,7 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
         };
 
         await Config.ExecuteRawBatchUpdateAsync(deleteRequest, default);
-        await Task.Delay(1000);
+        await Task.Delay(Config.SettleDelay);
     }
 
     private static Request DeleteColumnRequest(int sheetId, int columnIndex) => new()
@@ -473,7 +473,7 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
             Requests = [new Request { InsertDimension = new InsertDimensionRequest { Range = new DimensionRange { SheetId = inputSheetId, Dimension = "COLUMNS", StartIndex = extraColumnIndex, EndIndex = extraColumnIndex + 1 }, InheritFromBefore = false } }]
         };
         Assert.True(await Config.ExecuteRawBatchUpdateAsync(insertRequest, default));
-        await Task.Delay(1000);
+        await Task.Delay(Config.SettleDelay);
 
         var writeExtraColumnRequest = new BatchUpdateSpreadsheetRequest
         {
