@@ -64,7 +64,12 @@ public class DemoHelpersTests
     [Fact]
     public void BuildCustomerAddressPool_ShouldPopulateEveryCustomerWithOneToTwoValidAddresses()
     {
-        var pool = DemoHelpers.BuildCustomerAddressPool(new Random(54321), 100);
+        // 2000 draws against a ~1456-name space (56 first names x 26 last initials) guarantees name
+        // collisions among "regular" customers, and with ~5% of those also generating a household
+        // member, this reliably exercises a household member landing on an already-2-address
+        // customer regardless of seed - a Copilot review catch on PR #105: that collision path used
+        // to append unconditionally, growing some entries past the documented 1-2 cap.
+        var pool = DemoHelpers.BuildCustomerAddressPool(new Random(54321), 2000);
 
         Assert.NotEmpty(pool);
         foreach (var (name, addresses) in pool)

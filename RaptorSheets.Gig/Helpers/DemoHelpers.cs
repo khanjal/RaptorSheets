@@ -22,6 +22,17 @@ public static class DemoHelpers
     }
 
     /// <summary>
+    /// A place/customer address pool (see #95) paired with its keys, materialized once. Trip
+    /// generation picks a random key for every single trip - caching the key array here means that
+    /// pick is an O(1) index into an array built once per <see cref="GenerateDemoData"/> call,
+    /// instead of re-materializing <c>Addresses.Keys</c> into a new list on every trip.
+    /// </summary>
+    private sealed record AddressPool(Dictionary<string, List<string>> Addresses, string[] Keys)
+    {
+        public static AddressPool From(Dictionary<string, List<string>> addresses) => new(addresses, [.. addresses.Keys]);
+    }
+
+    /// <summary>
     /// Context object for shift generation parameters.
     /// </summary>
     private sealed class ShiftGenerationContext
@@ -32,8 +43,8 @@ public static class DemoHelpers
         public required List<string> Services { get; init; }
         public required List<string> Regions { get; init; }
         public required Dictionary<(string, string), int> ServiceDayShiftNumber { get; init; }
-        public required Dictionary<string, List<string>> PlaceAddresses { get; init; }
-        public required Dictionary<string, List<string>> CustomerAddresses { get; init; }
+        public required AddressPool PlaceAddresses { get; init; }
+        public required AddressPool CustomerAddresses { get; init; }
     }
 
     /// <summary>
@@ -49,8 +60,8 @@ public static class DemoHelpers
         public required DateTime ShiftStart { get; init; }
         public required TimeSpan ShiftDuration { get; init; }
         public required int TripNumber { get; init; }
-        public required Dictionary<string, List<string>> PlaceAddresses { get; init; }
-        public required Dictionary<string, List<string>> CustomerAddresses { get; init; }
+        public required AddressPool PlaceAddresses { get; init; }
+        public required AddressPool CustomerAddresses { get; init; }
     }
 
     /// <summary>
@@ -74,9 +85,9 @@ public static class DemoHelpers
 
         // Built once per call (not shared/static - see #95) so repeat trips to the same place or
         // customer land on a consistent address, without one call's pools leaking into the next.
-        var placeAddresses = BuildPlaceAddressPool(random);
+        var placeAddresses = AddressPool.From(BuildPlaceAddressPool(random));
         var customerCount = Math.Clamp((int)(endDate - startDate).TotalDays * 3, 15, 300);
-        var customerAddresses = BuildCustomerAddressPool(random, customerCount);
+        var customerAddresses = AddressPool.From(BuildCustomerAddressPool(random, customerCount));
 
         for (var date = startDate; date <= endDate; date = date.AddDays(1))
         {
@@ -95,8 +106,8 @@ public static class DemoHelpers
         SheetEntity sheetEntity,
         DateTime date,
         DemoIdContext idContext,
-        Dictionary<string, List<string>> placeAddresses,
-        Dictionary<string, List<string>> customerAddresses)
+        AddressPool placeAddresses,
+        AddressPool customerAddresses)
     {
         // Services from CSV data: DoorDash (most common), Uber, Instacart
         var services = new List<string> { "DoorDash", "Uber Eats", "Grubhub", "Instacart", "Shipt" };
@@ -559,16 +570,16 @@ public static class DemoHelpers
     /// </summary>
     private static TripLocationData GenerateTripLocationData(
         Random random,
-        Dictionary<string, List<string>> placeAddresses,
-        Dictionary<string, List<string>> customerAddresses)
+        AddressPool placeAddresses,
+        AddressPool customerAddresses)
     {
-        var placeKeys = placeAddresses.Keys.ToList();
-        var place = placeKeys[random.Next(placeKeys.Count)];
-        var startAddress = placeAddresses[place][random.Next(placeAddresses[place].Count)];
+        var place = placeAddresses.Keys[random.Next(placeAddresses.Keys.Length)];
+        var placeAddressList = placeAddresses.Addresses[place];
+        var startAddress = placeAddressList[random.Next(placeAddressList.Count)];
 
-        var customerKeys = customerAddresses.Keys.ToList();
-        var customerName = customerKeys[random.Next(customerKeys.Count)];
-        var endAddress = customerAddresses[customerName][random.Next(customerAddresses[customerName].Count)];
+        var customerName = customerAddresses.Keys[random.Next(customerAddresses.Keys.Length)];
+        var customerAddressList = customerAddresses.Addresses[customerName];
+        var endAddress = customerAddressList[random.Next(customerAddressList.Count)];
 
         return new TripLocationData
         {
@@ -636,24 +647,36 @@ public static class DemoHelpers
             // and last initial - e.g. a spouse or roommate ordering under their own name.
             if (random.NextDouble() < 0.05)
             {
-                var lastInitial = name.Split(' ', StringSplitOptions.RemoveEmptyEntries) is [_, var initialPart, ..] && initialPart.Length > 0
-                    ? initialPart[0].ToString()
-                    : GoogleConfig.ColumnLetters[random.Next(GoogleConfig.ColumnLetters.Length)].ToString();
-                var householdMemberName = $"{FirstNames[random.Next(FirstNames.Length)]} {lastInitial}.";
-                var sharedAddress = addresses[random.Next(addresses.Count)];
-
-                if (!pool.TryGetValue(householdMemberName, out var memberAddresses))
-                {
-                    pool[householdMemberName] = [sharedAddress];
-                }
-                else if (!memberAddresses.Contains(sharedAddress))
-                {
-                    memberAddresses.Add(sharedAddress);
-                }
+                AddHouseholdMember(pool, random, name, addresses);
             }
         }
 
         return pool;
+    }
+
+    /// <summary>
+    /// Adds (or extends) a household member of <paramref name="name"/> sharing one of its addresses
+    /// and last initial. The generated member name can collide with an existing pool entry (another
+    /// customer, or another household member) - always capped at 2 addresses (the same max a
+    /// "regular" customer gets in <see cref="BuildCustomerAddressPool"/>) rather than appending
+    /// unconditionally, so a collision can't push an entry past that contract.
+    /// </summary>
+    private static void AddHouseholdMember(Dictionary<string, List<string>> pool, Random random, string name, List<string> addresses)
+    {
+        var lastInitial = name.Split(' ', StringSplitOptions.RemoveEmptyEntries) is [_, var initialPart, ..] && initialPart.Length > 0
+            ? initialPart[0].ToString()
+            : GoogleConfig.ColumnLetters[random.Next(GoogleConfig.ColumnLetters.Length)].ToString();
+        var householdMemberName = $"{FirstNames[random.Next(FirstNames.Length)]} {lastInitial}.";
+        var sharedAddress = addresses[random.Next(addresses.Count)];
+
+        if (!pool.TryGetValue(householdMemberName, out var memberAddresses))
+        {
+            pool[householdMemberName] = [sharedAddress];
+        }
+        else if (memberAddresses.Count < 2 && !memberAddresses.Contains(sharedAddress))
+        {
+            memberAddresses.Add(sharedAddress);
+        }
     }
 
     private static string GenerateRandomAddress(Random random)
