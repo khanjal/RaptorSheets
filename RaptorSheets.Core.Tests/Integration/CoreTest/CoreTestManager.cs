@@ -84,15 +84,4 @@ public class CoreTestManager : SheetManagerBase<CoreTestSheetEntity>, ISheetMana
     {
         return await ChangeSheetDataCoreAsync(sheets, sheetEntity, _sheetAccessors, cancellationToken: cancellationToken);
     }
-
-    /// <summary>
-    /// Test-only escape hatch: issues an arbitrary batch request directly via the protected
-    /// _googleSheetService field this class inherits, bypassing every normal write path. Used to
-    /// simulate a column being manually deleted/corrupted outside the library entirely - exactly the
-    /// scenario missing-column self-heal (see CoreSheetsIntegrationTests) exists to recover from.
-    /// </summary>
-    public async Task<bool> ExecuteRawBatchUpdateAsync(BatchUpdateSpreadsheetRequest request, CancellationToken cancellationToken = default)
-    {
-        return await _googleSheetService.BatchUpdateSpreadsheet(request, cancellationToken) != null;
-    }
 }

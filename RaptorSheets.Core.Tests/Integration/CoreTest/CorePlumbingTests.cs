@@ -1,4 +1,5 @@
 using RaptorSheets.Core.Entities;
+using RaptorSheets.Core.Services;
 using RaptorSheets.Test.Common.Attributes;
 using RaptorSheets.Test.Common.Integration;
 using Xunit;
@@ -21,19 +22,19 @@ public class CorePlumbingTests : SheetPlumbingTestsBase<CoreTestSheetEntity, Cor
     private const string TestCategory = "PlumbingTest";
     private const decimal TestAmount = 42.42m;
 
-    private readonly CoreTestManager? _manager;
+    private readonly CoreCleanSlateFixture _fixture;
 
     public CorePlumbingTests(CoreCleanSlateFixture fixture)
     {
-        _manager = fixture.Manager;
-        Config = BuildConfig(_manager);
+        _fixture = fixture;
+        Config = BuildConfig(fixture);
     }
 
-    protected override CoreTestManager? Manager => _manager;
+    protected override CoreTestManager? Manager => _fixture.Manager;
 
     protected override PlumbingTestConfig<CoreTestSheetEntity> Config { get; }
 
-    private static PlumbingTestConfig<CoreTestSheetEntity> BuildConfig(CoreTestManager? manager) => new()
+    private static PlumbingTestConfig<CoreTestSheetEntity> BuildConfig(CoreCleanSlateFixture fixture) => new()
     {
         InputSheetName = CoreTestSheetNames.Items,
         TestColumnName = "Amount",
@@ -44,13 +45,17 @@ public class CorePlumbingTests : SheetPlumbingTestsBase<CoreTestSheetEntity, Cor
         },
         ContainsTestRow = (entity, rowId) => entity.Sheets.Items.Any(i =>
             i.RowId == rowId && i.Name == TestName && i.Category == TestCategory && i.Amount == TestAmount && i.Active),
-        ExecuteRawBatchUpdateAsync = (request, ct) => manager!.ExecuteRawBatchUpdateAsync(request, ct),
+        ExecuteRawBatchUpdateAsync = async (request, ct) =>
+        {
+            var rawService = new GoogleSheetService(fixture.Credential, fixture.SpreadsheetId);
+            return await rawService.BatchUpdateSpreadsheet(request, ct) != null;
+        },
         BulkReseedAsync = async ct =>
         {
             var random = new Random();
             var reseed = new CoreTestSheetEntity();
             reseed.Sheets.Items.AddRange(CoreTestDataSeeder.GenerateItems(CoreCleanSlateFixture.SeededItemCount, CoreCleanSlateFixture.SeedStartRowId, random));
-            await manager!.ChangeSheetData([CoreTestSheetNames.Items], reseed, ct);
+            await fixture.Manager!.ChangeSheetData([CoreTestSheetNames.Items], reseed, ct);
         },
         SettleDelay = TimeSpan.FromSeconds(2),
     };
