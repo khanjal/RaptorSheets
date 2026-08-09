@@ -11,18 +11,29 @@ public partial class MapperGetSheetTests
     private static partial Regex TickersColumnReferenceRegex();
 
 
-    public static TheoryData<SheetModel, SheetModel> Sheets =>
+    public static TheoryData<string> Sheets =>
     new()
     {
-        { AccountSheet.GetSheet(), AccountSheet.BaseSheet },
-        { StockSheet.GetSheet(), StockSheet.BaseSheet },
-        { TickerSheet.GetSheet(), TickerSheet.BaseSheet },
+        nameof(AccountSheet), nameof(StockSheet), nameof(TickerSheet),
+    };
+
+    // TheoryData rows must be natively serializable (xUnit1045) so Test Explorer can enumerate
+    // individual rows - SheetModel isn't, so the theory data is a sheet-type name and the test
+    // resolves the actual (result, config) pair here instead of carrying SheetModel instances.
+    private static (SheetModel Result, SheetModel Config) ResolveSheet(string sheetName) => sheetName switch
+    {
+        nameof(AccountSheet) => (AccountSheet.GetSheet(), AccountSheet.BaseSheet),
+        nameof(StockSheet) => (StockSheet.GetSheet(), StockSheet.BaseSheet),
+        nameof(TickerSheet) => (TickerSheet.GetSheet(), TickerSheet.BaseSheet),
+        _ => throw new ArgumentOutOfRangeException(nameof(sheetName), sheetName, "Unknown sheet type")
     };
 
     [Theory]
     [MemberData(nameof(Sheets))]
-    public void GivenGetSheetConfig_ThenReturnSheet(SheetModel result, SheetModel sheetConfig)
+    public void GivenGetSheetConfig_ThenReturnSheet(string sheetName)
     {
+        var (result, sheetConfig) = ResolveSheet(sheetName);
+
         Assert.Equal(sheetConfig.CellColor, result.CellColor);
         Assert.Equal(sheetConfig.FreezeColumnCount, result.FreezeColumnCount);
         Assert.Equal(sheetConfig.FreezeRowCount, result.FreezeRowCount);
