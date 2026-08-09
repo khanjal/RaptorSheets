@@ -32,6 +32,8 @@ public static class DemoHelpers
         public required List<string> Services { get; init; }
         public required List<string> Regions { get; init; }
         public required Dictionary<(string, string), int> ServiceDayShiftNumber { get; init; }
+        public required Dictionary<string, List<string>> PlaceAddresses { get; init; }
+        public required Dictionary<string, List<string>> CustomerAddresses { get; init; }
     }
 
     /// <summary>
@@ -47,6 +49,8 @@ public static class DemoHelpers
         public required DateTime ShiftStart { get; init; }
         public required TimeSpan ShiftDuration { get; init; }
         public required int TripNumber { get; init; }
+        public required Dictionary<string, List<string>> PlaceAddresses { get; init; }
+        public required Dictionary<string, List<string>> CustomerAddresses { get; init; }
     }
 
     /// <summary>
@@ -68,12 +72,18 @@ public static class DemoHelpers
         var sheetEntity = new SheetEntity();
         var idContext = new DemoIdContext();
 
+        // Built once per call (not shared/static - see #95) so repeat trips to the same place or
+        // customer land on a consistent address, without one call's pools leaking into the next.
+        var placeAddresses = BuildPlaceAddressPool(random);
+        var customerCount = Math.Clamp((int)(endDate - startDate).TotalDays * 3, 15, 300);
+        var customerAddresses = BuildCustomerAddressPool(random, customerCount);
+
         for (var date = startDate; date <= endDate; date = date.AddDays(1))
         {
-            GenerateDailyShiftsAndTrips(random, sheetEntity, date, idContext);
+            GenerateDailyShiftsAndTrips(random, sheetEntity, date, idContext, placeAddresses, customerAddresses);
             GenerateDailyExpenses(random, sheetEntity, date, idContext);
         }
-        
+
         return sheetEntity;
     }
 
@@ -81,10 +91,12 @@ public static class DemoHelpers
     /// Generates shifts and associated trips for a single day.
     /// </summary>
     private static void GenerateDailyShiftsAndTrips(
-        Random random, 
-        SheetEntity sheetEntity, 
+        Random random,
+        SheetEntity sheetEntity,
         DateTime date,
-        DemoIdContext idContext)
+        DemoIdContext idContext,
+        Dictionary<string, List<string>> placeAddresses,
+        Dictionary<string, List<string>> customerAddresses)
     {
         // Services from CSV data: DoorDash (most common), Uber, Instacart
         var services = new List<string> { "DoorDash", "Uber Eats", "Grubhub", "Instacart", "Shipt" };
@@ -109,7 +121,9 @@ public static class DemoHelpers
             Date = date,
             Services = servicesToday,
             Regions = regions,
-            ServiceDayShiftNumber = serviceDayShiftNumber
+            ServiceDayShiftNumber = serviceDayShiftNumber,
+            PlaceAddresses = placeAddresses,
+            CustomerAddresses = customerAddresses
         };
 
         for (int s = 0; s < numShiftsToday; s++)
@@ -177,7 +191,9 @@ public static class DemoHelpers
                 Region = region,
                 ShiftStart = shiftStart,
                 ShiftDuration = shiftDuration,
-                TripNumber = 0 // Will be set in loop
+                TripNumber = 0, // Will be set in loop
+                PlaceAddresses = context.PlaceAddresses,
+                CustomerAddresses = context.CustomerAddresses
             };
 
             for (int tripIndex = 0; tripIndex < tripCount; tripIndex++)
@@ -361,7 +377,7 @@ public static class DemoHelpers
         var earnings = GenerateTripEarnings(context.Random, context.Service);
 
         // Generate trip location data
-        var locationData = GenerateTripLocationData(context.Random);
+        var locationData = GenerateTripLocationData(context.Random, context.PlaceAddresses, context.CustomerAddresses);
 
         var tripEntity = new TripEntity
         {
@@ -535,48 +551,169 @@ public static class DemoHelpers
     }
 
     /// <summary>
-    /// Generates trip location data including places, addresses, and customer names.
+    /// Picks trip location data from this call's place/customer address pools (see #95) - the
+    /// pickup (<see cref="TripLocationData.StartAddress"/>) is one of the chosen place's own
+    /// addresses, the dropoff (<see cref="TripLocationData.EndAddress"/>) is one of the chosen
+    /// customer's, so the same restaurant or repeat customer stays at a consistent address across
+    /// trips within this call instead of a fresh random address every time.
     /// </summary>
-    private static TripLocationData GenerateTripLocationData(Random random)
+    private static TripLocationData GenerateTripLocationData(
+        Random random,
+        Dictionary<string, List<string>> placeAddresses,
+        Dictionary<string, List<string>> customerAddresses)
     {
-        // Real restaurant and fast food places
-        var restaurantPlaces = new[] 
-        { 
-            "McDonald's", "Chipotle", "Starbucks", "Panera Bread", "Taco Bell", 
-            "Subway", "Panda Express", "In-N-Out Burger", "Chick-fil-A", "Olive Garden",
-            "Red Lobster", "The Cheesecake Factory", "P.F. Chang's", "Five Guys", "Shake Shack",
-            "Wendy's", "KFC", "Popeyes", "Buffalo Wild Wings", "Applebee's"
-        };
+        var placeKeys = placeAddresses.Keys.ToList();
+        var place = placeKeys[random.Next(placeKeys.Count)];
+        var startAddress = placeAddresses[place][random.Next(placeAddresses[place].Count)];
 
-        // Realistic street addresses
-        var sampleAddresses = new[] 
-        { 
-            "123 Market St", "456 Mission St", "789 Main St", "321 Broadway", "654 University Ave", 
-            "987 El Camino Real", "147 Castro St", "258 Valencia St", "369 Geary St", "741 Post St",
-            "852 Van Ness Ave", "963 Divisadero St", "159 Hayes St", "753 Polk St", "951 Columbus Ave"
-        };
-
-        // First name + Last initial format
-        var firstNames = new[] 
-        { 
-            "John", "Sarah", "Michael", "Emily", "David", "Jessica", "Chris", "Ashley", 
-            "Ryan", "Amanda", "Kevin", "Jennifer", "Brian", "Lauren", "Daniel", "Rachel",
-            "Matthew", "Michelle", "James", "Nicole", "Andrew", "Stephanie", "Jason", "Megan"
-        };
-        
-        // Use GoogleConfig.ColumnLetters for last initial
-        var columnLetters = GoogleConfig.ColumnLetters;
-        var lastInitial = columnLetters[random.Next(columnLetters.Length)].ToString();
-        var customerName = $"{firstNames[random.Next(firstNames.Length)]} {lastInitial}.";
+        var customerKeys = customerAddresses.Keys.ToList();
+        var customerName = customerKeys[random.Next(customerKeys.Count)];
+        var endAddress = customerAddresses[customerName][random.Next(customerAddresses[customerName].Count)];
 
         return new TripLocationData
         {
-            Place = restaurantPlaces[random.Next(restaurantPlaces.Length)],
-            StartAddress = sampleAddresses[random.Next(sampleAddresses.Length)],
-            EndAddress = sampleAddresses[random.Next(sampleAddresses.Length)],
+            Place = place,
+            StartAddress = startAddress,
+            EndAddress = endAddress,
             CustomerName = customerName
         };
     }
+
+    /// <summary>
+    /// Builds this call's place -> address pool (1-5 addresses per place) - see #95. Scoped to a
+    /// single <see cref="GenerateDemoData"/> call rather than shared/static state, so a repeat visit
+    /// to the same place within this call's data lands on one of a small, consistent set of
+    /// addresses instead of a fresh random one each time, without constraining any other call.
+    /// </summary>
+    internal static Dictionary<string, List<string>> BuildPlaceAddressPool(Random random)
+    {
+        var pool = new Dictionary<string, List<string>>();
+
+        foreach (var place in RestaurantPlaces)
+        {
+            var addressCount = random.Next(1, 6); // 1-5 addresses
+            var addresses = new List<string>(addressCount);
+
+            for (var i = 0; i < addressCount; i++)
+            {
+                addresses.Add(GenerateRandomAddress(random));
+            }
+
+            pool[place] = addresses;
+        }
+
+        return pool;
+    }
+
+    /// <summary>
+    /// Builds this call's customer -> address pool (1-2 addresses per customer, plus an occasional
+    /// household member sharing a customer's address and last initial) - see #95.
+    /// <paramref name="customerCount"/> is derived from the demo date range by the caller rather than
+    /// a flat constant, so the pool's size (and therefore how often a customer repeats) scales with
+    /// how much data this call is actually going to generate.
+    /// </summary>
+    internal static Dictionary<string, List<string>> BuildCustomerAddressPool(Random random, int customerCount)
+    {
+        var pool = new Dictionary<string, List<string>>();
+
+        for (var i = 0; i < customerCount; i++)
+        {
+            var name = GenerateRandomCustomerName(random);
+
+            if (!pool.TryGetValue(name, out var addresses))
+            {
+                addresses = [];
+                pool[name] = addresses;
+            }
+
+            var targetCount = random.Next(1, 3); // 1-2 addresses
+            while (addresses.Count < targetCount)
+            {
+                addresses.Add(GenerateRandomAddress(random));
+            }
+
+            // ~5% chance this customer has a household member who shares one of their addresses
+            // and last initial - e.g. a spouse or roommate ordering under their own name.
+            if (random.NextDouble() < 0.05)
+            {
+                var lastInitial = name.Split(' ', StringSplitOptions.RemoveEmptyEntries) is [_, var initialPart, ..] && initialPart.Length > 0
+                    ? initialPart[0].ToString()
+                    : GoogleConfig.ColumnLetters[random.Next(GoogleConfig.ColumnLetters.Length)].ToString();
+                var householdMemberName = $"{FirstNames[random.Next(FirstNames.Length)]} {lastInitial}.";
+                var sharedAddress = addresses[random.Next(addresses.Count)];
+
+                if (!pool.TryGetValue(householdMemberName, out var memberAddresses))
+                {
+                    pool[householdMemberName] = [sharedAddress];
+                }
+                else if (!memberAddresses.Contains(sharedAddress))
+                {
+                    memberAddresses.Add(sharedAddress);
+                }
+            }
+        }
+
+        return pool;
+    }
+
+    private static string GenerateRandomAddress(Random random)
+    {
+        var streetNumber = random.Next(100, 1000);
+        var streetName = StreetNames[random.Next(StreetNames.Length)];
+        var streetType = StreetTypes[random.Next(StreetTypes.Length)];
+        return $"{streetNumber} {streetName} {streetType}";
+    }
+
+    private static string GenerateRandomCustomerName(Random random)
+    {
+        // Use GoogleConfig.ColumnLetters for last initial
+        var lastInitial = GoogleConfig.ColumnLetters[random.Next(GoogleConfig.ColumnLetters.Length)].ToString();
+        return $"{FirstNames[random.Next(FirstNames.Length)]} {lastInitial}.";
+    }
+
+    // Real restaurant and fast food places.
+    private static readonly string[] RestaurantPlaces =
+    [
+        "McDonald's", "Chipotle", "Starbucks", "Panera Bread", "Taco Bell",
+        "Subway", "Panda Express", "In-N-Out Burger", "Chick-fil-A", "Olive Garden",
+        "Red Lobster", "The Cheesecake Factory", "P.F. Chang's", "Five Guys", "Shake Shack",
+        "Wendy's", "KFC", "Popeyes", "Buffalo Wild Wings", "Applebee's",
+        "Domino's Pizza", "Pizza Hut", "Dunkin' Donuts", "Burger King", "Arby's",
+        "Sonic Drive-In", "Jersey Mike's", "Jimmy John's", "Qdoba", "Del Taco",
+        "Raising Cane's", "Zaxby's", "Wingstop", "Blaze Pizza", "Culver's",
+        "Whataburger", "Hardee's", "Carl's Jr.", "Bojangles", "El Pollo Loco",
+        "Boston Market", "Captain D's", "Checkers", "Church's Chicken", "Freddy's",
+        "Hooters", "Jack in the Box", "Little Caesars", "Papa John's", "Tim Hortons"
+    ];
+
+    private static readonly string[] StreetNames =
+    [
+        "Market", "Mission", "Main", "Broadway", "University",
+        "El Camino Real", "Castro", "Valencia", "Geary", "Post",
+        "Maple", "Oak", "Pine", "Cedar", "Elm",
+        "Sunset", "Oceanview", "Highland", "Meadowbrook", "Ridgeway",
+        "Spring", "Summer", "Autumn", "Winter", "Hillcrest",
+        "Park", "Lake", "River", "Forest", "Mountain",
+        "Garden", "Orchard", "Vineyard", "Willow", "Birch",
+        "Chestnut", "Magnolia", "Sycamore", "Hawthorne", "Dogwood",
+        "Aspen", "Juniper", "Spruce", "Fir", "Alder"
+    ];
+
+    private static readonly string[] StreetTypes =
+    [
+        "St", "Ave", "Blvd", "Rd", "Dr", "Ln", "Way", "Ct", "Pl", "Terrace"
+    ];
+
+    private static readonly string[] FirstNames =
+    [
+        "John", "Sarah", "Michael", "Emily", "David", "Jessica", "Chris", "Ashley",
+        "Ryan", "Amanda", "Kevin", "Jennifer", "Brian", "Lauren", "Daniel", "Rachel",
+        "Matthew", "Michelle", "James", "Nicole", "Andrew", "Stephanie", "Jason", "Megan",
+        "Aisha", "Hiroshi", "Carlos", "Fatima", "Liam", "Sophia", "Zhang", "Priya",
+        "Ethan", "Olivia", "Noah", "Emma", "Lucas", "Isabella", "Mason", "Ava",
+        "Logan", "Mia", "Elijah", "Charlotte", "Alexander", "Amelia", "Jacob", "Harper",
+        "Sebastian", "Ella", "Benjamin", "Scarlett", "Henry", "Grace", "Jackson", "Chloe"
+    ];
 
     /// <summary>
     /// Container for trip travel data.
