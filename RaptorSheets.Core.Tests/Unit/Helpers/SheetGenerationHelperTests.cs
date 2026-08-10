@@ -183,4 +183,86 @@ public class SheetGenerationHelperTests
 
         Assert.DoesNotContain(result.Requests, r => r.SetBasicFilter != null);
     }
+
+    [Fact]
+    public void Generate_ForColumnFlaggedWithConditionalFormat_InvokesResolverAndAddsRequest()
+    {
+        var sheetModel = new SheetModel
+        {
+            Name = "Trips",
+            Headers = [new SheetCellModel { Name = "Total", ConditionalFormat = "NEGATIVE_BALANCE" }]
+        };
+        var rule = new BooleanRule { Condition = new BooleanCondition { Type = "NUMBER_LESS" } };
+
+        var result = SheetGenerationHelper.Generate(["Trips"], _ => sheetModel, _ => null, _ => rule);
+
+        var addedRule = result.Requests.Single(r => r.AddConditionalFormatRule != null).AddConditionalFormatRule;
+        Assert.Same(rule, addedRule.Rule.BooleanRule);
+        Assert.Equal(0, addedRule.Index);
+    }
+
+    [Fact]
+    public void Generate_ForMultipleColumnsFlaggedWithConditionalFormat_AssignsSequentialIndexes()
+    {
+        var sheetModel = new SheetModel
+        {
+            Name = "Trips",
+            Headers =
+            [
+                new SheetCellModel { Name = "Pay", ConditionalFormat = "NEGATIVE_BALANCE" },
+                new SheetCellModel { Name = "Tips", ConditionalFormat = "NEGATIVE_BALANCE" }
+            ]
+        };
+
+        var result = SheetGenerationHelper.Generate(
+            ["Trips"], _ => sheetModel, _ => null, _ => new BooleanRule());
+
+        var indexes = result.Requests
+            .Where(r => r.AddConditionalFormatRule != null)
+            .Select(r => r.AddConditionalFormatRule.Index)
+            .ToList();
+        Assert.Equal([0, 1], indexes);
+    }
+
+    [Fact]
+    public void Generate_ForColumnFlaggedWithConditionalFormat_WithoutResolver_AddsNothing()
+    {
+        // Backward-compat guard: getConditionalFormat is optional, so existing callers that don't
+        // pass one (all 4 domains, as of this feature) must be unaffected even if a header happens
+        // to have ConditionalFormat set.
+        var sheetModel = new SheetModel
+        {
+            Name = "Trips",
+            Headers = [new SheetCellModel { Name = "Total", ConditionalFormat = "NEGATIVE_BALANCE" }]
+        };
+
+        var result = SheetGenerationHelper.Generate(["Trips"], _ => sheetModel, _ => null);
+
+        Assert.DoesNotContain(result.Requests, r => r.AddConditionalFormatRule != null);
+    }
+
+    [Fact]
+    public void Generate_ForColumnFlaggedWithConditionalFormat_WhenResolverReturnsNull_AddsNothing()
+    {
+        var sheetModel = new SheetModel
+        {
+            Name = "Trips",
+            Headers = [new SheetCellModel { Name = "Total", ConditionalFormat = "NEGATIVE_BALANCE" }]
+        };
+
+        var result = SheetGenerationHelper.Generate(["Trips"], _ => sheetModel, _ => null, _ => null);
+
+        Assert.DoesNotContain(result.Requests, r => r.AddConditionalFormatRule != null);
+    }
+
+    [Fact]
+    public void Generate_ForColumnWithoutConditionalFormat_DoesNotInvokeResolver()
+    {
+        var sheetModel = BuildSheetModel("Trips");
+        var invoked = false;
+
+        SheetGenerationHelper.Generate(["Trips"], _ => sheetModel, _ => null, _ => { invoked = true; return null; });
+
+        Assert.False(invoked);
+    }
 }

@@ -64,6 +64,12 @@ public class ColumnOptions
     public bool NamedRange { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets a domain-specific conditional-format rule identifier for this column
+    /// (default: null). See <see cref="ColumnAttribute.ConditionalFormat"/>.
+    /// </summary>
+    public string? ConditionalFormat { get; set; }
+
+    /// <summary>
     /// Creates a new ColumnOptions instance with default values.
     /// </summary>
     public ColumnOptions()
@@ -83,6 +89,13 @@ public class ColumnOptions
     /// negative value is silently treated the same as -1 by <see cref="ColumnAttribute.HasExplicitOrder"/>,
     /// masking what was likely meant to be an explicit priority.
     /// </exception>
+    /// <exception cref="ArgumentException">
+    /// <see cref="ConditionalFormat"/> is empty or whitespace. Unlike <see cref="ValidationPattern"/>
+    /// (which falls back to a FieldType default under the separate <see cref="EnableValidation"/>
+    /// flag), there's no such fallback here - a blank identifier would resolve to nothing and the
+    /// column would silently get no conditional format, masking what was likely meant to be a real
+    /// rule identifier. Null (never set) is fine; only an explicitly-blank value is rejected.
+    /// </exception>
     public void Validate()
     {
         if (Order < -1)
@@ -92,6 +105,15 @@ public class ColumnOptions
 #pragma warning disable S3928
             throw new ArgumentOutOfRangeException(nameof(Order), Order,
                 "Order must be -1 (use declaration order) or a non-negative explicit priority.");
+#pragma warning restore S3928
+        }
+
+        if (ConditionalFormat != null && string.IsNullOrWhiteSpace(ConditionalFormat))
+        {
+#pragma warning disable S3928
+            throw new ArgumentException(
+                "ConditionalFormat must not be empty or whitespace - omit it (null) for no conditional format, or provide a real rule identifier.",
+                nameof(ConditionalFormat));
 #pragma warning restore S3928
         }
     }
@@ -193,6 +215,16 @@ public class ColumnOptionsBuilder
     public ColumnOptionsBuilder WithNamedRange()
     {
         _options.NamedRange = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets a domain-specific conditional-format rule identifier for this column - see
+    /// <see cref="ColumnAttribute.ConditionalFormat"/>.
+    /// </summary>
+    public ColumnOptionsBuilder WithConditionalFormat(string conditionalFormat)
+    {
+        _options.ConditionalFormat = conditionalFormat;
         return this;
     }
 

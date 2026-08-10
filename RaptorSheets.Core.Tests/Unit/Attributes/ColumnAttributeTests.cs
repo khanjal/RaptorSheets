@@ -201,4 +201,47 @@ public class ColumnAttributeTests
 
         Assert.True(column.NamedRange);
     }
+
+    [Fact]
+    public void ConditionalFormat_DefaultsToNull()
+    {
+        var column = new ColumnAttribute("Test");
+
+        Assert.Null(column.ConditionalFormat);
+    }
+
+    [Fact]
+    public void ConditionalFormat_SetViaNamedArgumentConstructor_IsSet()
+    {
+        var column = new ColumnAttribute("Test", isInput: true, conditionalFormat: "NEGATIVE_BALANCE");
+
+        Assert.Equal("NEGATIVE_BALANCE", column.ConditionalFormat);
+    }
+
+    [Fact]
+    public void ConditionalFormat_SetViaColumnOptions_IsSet()
+    {
+        var column = new ColumnAttribute("Test", ColumnOptions.Builder().WithConditionalFormat("NEGATIVE_BALANCE").Build());
+
+        Assert.Equal("NEGATIVE_BALANCE", column.ConditionalFormat);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ConditionalFormat_SetToBlankViaNamedArgumentConstructor_Throws(string blank)
+    {
+        // A blank value would silently resolve to no conditional format (no separate "enabled"
+        // flag backs it, unlike EnableValidation/ValidationPattern) - reject it as a likely mistake
+        // rather than let it silently do nothing.
+        Assert.Throws<ArgumentException>(() => new ColumnAttribute("Test", isInput: true, conditionalFormat: blank));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ConditionalFormat_SetToBlankViaColumnOptions_Throws(string blank)
+    {
+        Assert.Throws<ArgumentException>(() => ColumnOptions.Builder().WithConditionalFormat(blank).Build());
+    }
 }

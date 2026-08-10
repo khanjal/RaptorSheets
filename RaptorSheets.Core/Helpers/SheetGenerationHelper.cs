@@ -21,10 +21,12 @@ public static class SheetGenerationHelper
     /// <param name="sheets">Sheet names to generate requests for.</param>
     /// <param name="getSheetModel">Resolves a sheet name to its domain-configured SheetModel (headers, formulas, colors, protection).</param>
     /// <param name="getDataValidation">Resolves a header's raw <c>Validation</c> string to a concrete data validation rule; only called for headers where Validation is set.</param>
+    /// <param name="getConditionalFormat">Resolves a header's raw <c>ConditionalFormat</c> string to a concrete boolean rule; only called for headers where ConditionalFormat is set. Optional - domains that don't use conditional formatting can omit it.</param>
     public static BatchUpdateSpreadsheetRequest Generate(
         List<string> sheets,
         Func<string, SheetModel> getSheetModel,
-        Func<SheetCellModel, DataValidationRule?> getDataValidation)
+        Func<SheetCellModel, DataValidationRule?> getDataValidation,
+        Func<SheetCellModel, BooleanRule?>? getConditionalFormat = null)
     {
         if (sheets.Count == 0)
         {
@@ -51,7 +53,7 @@ public static class SheetGenerationHelper
             }
 
             batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
-            GenerateHeadersFormatAndProtection(sheetModel, batchUpdateSpreadsheetRequest, repeatCellRequests, getDataValidation);
+            GenerateHeadersFormatAndProtection(sheetModel, batchUpdateSpreadsheetRequest, repeatCellRequests, getDataValidation, getConditionalFormat);
             batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
             batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
 
@@ -73,10 +75,16 @@ public static class SheetGenerationHelper
         SheetModel sheet,
         BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest,
         List<RepeatCellRequest> repeatCellRequests,
-        Func<SheetCellModel, DataValidationRule?> getDataValidation)
+        Func<SheetCellModel, DataValidationRule?> getDataValidation,
+        Func<SheetCellModel, BooleanRule?>? getConditionalFormat)
     {
         // Ensure headers have proper Column/Index assignments prior to formatting
         sheet.Headers.UpdateColumns();
+
+        // AddConditionalFormatRuleRequest.Index is this rule's position in the sheet's conditional
+        // format list - scoped per sheet (reset for each sheet in the outer loop), incremented as
+        // each flagged column adds one.
+        var conditionalFormatIndex = 0;
 
         foreach (var header in sheet.Headers)
         {
@@ -97,6 +105,18 @@ public static class SheetGenerationHelper
             if (header.NamedRange)
             {
                 batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateNamedRangeRequest(sheet, header));
+            }
+
+            if (!string.IsNullOrEmpty(header.ConditionalFormat) && getConditionalFormat != null)
+            {
+                var conditionalFormatRequest = GoogleRequestHelpers.GenerateConditionalFormatRequest(
+                    sheet.Id, header.Index, getConditionalFormat(header), conditionalFormatIndex);
+
+                if (conditionalFormatRequest != null)
+                {
+                    batchUpdateSpreadsheetRequest.Requests.Add(conditionalFormatRequest);
+                    conditionalFormatIndex++;
+                }
             }
 
             AddFormatAndValidationRequest(header, range, repeatCellRequests, getDataValidation);

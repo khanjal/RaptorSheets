@@ -494,6 +494,44 @@ public static class GoogleRequestHelpers
         };
     }
 
+    /// <summary>
+    /// Builds an AddConditionalFormatRuleRequest for a single header column flagged with
+    /// <see cref="RaptorSheets.Core.Attributes.ColumnAttribute.ConditionalFormat"/> (GitHub issue
+    /// #81) - the actual condition/format (<paramref name="rule"/>) is resolved by a domain's own
+    /// delegate; this only positions it on that column's data (row 1, the header, is excluded) and
+    /// assigns it <paramref name="ruleIndex"/> (the rule's position in the sheet's conditional
+    /// format list - Google requires this, and it must be unique per sheet in one batch).
+    /// </summary>
+    /// <returns>Null when <paramref name="rule"/> is null (nothing to add for this column).</returns>
+    public static Request? GenerateConditionalFormatRequest(int sheetId, int columnIndex, BooleanRule? rule, int ruleIndex)
+    {
+        if (rule == null)
+        {
+            return null;
+        }
+
+        var range = new GridRange
+        {
+            SheetId = sheetId,
+            StartColumnIndex = columnIndex,
+            EndColumnIndex = columnIndex + 1,
+            StartRowIndex = 1,
+        };
+
+        return new Request
+        {
+            AddConditionalFormatRule = new AddConditionalFormatRuleRequest
+            {
+                Index = ruleIndex,
+                Rule = new ConditionalFormatRule
+                {
+                    Ranges = [range],
+                    BooleanRule = rule
+                }
+            }
+        };
+    }
+
     public static Request GenerateSheetPropertes(SheetModel sheet)
     {
         var sheetRequest = new AddSheetRequest
