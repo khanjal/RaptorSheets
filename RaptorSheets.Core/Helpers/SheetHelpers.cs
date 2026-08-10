@@ -66,13 +66,26 @@ public static class SheetHelpers
             }
 
             var values = sheetData.Data[0]?.RowData
-                .Select(x => (IList<object>)x.Values.Select(y => (object)y.FormattedValue).ToList())
+                .Select(x => (IList<object>)x.Values.Select(GetCellValue).ToList())
                 .Where(row => row.Count > 0 && row[0] != null && !string.IsNullOrEmpty(row[0].ToString()))
                 .ToList();
 
             sheetValues.Add(sheetData.Properties.Title, values ?? []);
         }
         return sheetValues;
+    }
+
+    // A structure-aware read (IncludeGridData=true) carries both the display text
+    // (FormattedValue) and the computed value (EffectiveValue) for every cell. Numeric cells get
+    // wrapped in a SheetCellValue so HeaderHelpers' numeric readers can use the real computed
+    // number instead of re-parsing display text (GitHub issue #80, e.g. accounting format
+    // rendering a real 0 as "$ -"). Every other cell keeps its plain FormattedValue string,
+    // unchanged - EffectiveValue's oneof only ever has NumberValue set for numeric cells.
+    private static object? GetCellValue(CellData cell)
+    {
+        return cell.EffectiveValue?.NumberValue is double number
+            ? new SheetCellValue(cell.FormattedValue, number)
+            : cell.FormattedValue;
     }
 
     public static Color GetColor(SheetColor colorEnum)

@@ -462,6 +462,90 @@ public class SheetHelpersTests
         Assert.Equal("ValidRow", result["TestSheet"][0][0]);
     }
 
+    [Fact]
+    public void GetSheetValues_WithNumericEffectiveValue_ShouldWrapAsSheetCellValue()
+    {
+        // Arrange - accounting format renders a real 0 as "$ -"; the EffectiveValue is the
+        // actual computed number regardless of how it's displayed (issue #80)
+        var sheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new()
+                {
+                    Properties = new SheetProperties { Title = "TestSheet" },
+                    Data =
+                    [
+                        new()
+                        {
+                            RowData =
+                            [
+                                new()
+                                {
+                                    Values =
+                                    [
+                                        new() { FormattedValue = "Header" },
+                                        new() { FormattedValue = "$ -", EffectiveValue = new ExtendedValue { NumberValue = 0 } }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Act
+        var result = SheetHelpers.GetSheetValues(sheet);
+
+        // Assert
+        var cell = Assert.IsType<SheetCellValue>(result["TestSheet"][0][1]);
+        Assert.Equal("$ -", cell.FormattedValue);
+        Assert.Equal(0, cell.EffectiveNumber);
+        Assert.Equal("$ -", cell.ToString()); // non-numeric-aware readers still see the display text
+    }
+
+    [Fact]
+    public void GetSheetValues_WithoutEffectiveValue_ShouldReturnPlainFormattedValue()
+    {
+        // Arrange - a text cell (or any cell without a numeric EffectiveValue) must not be
+        // wrapped, so every existing FormattedValue-only reader keeps working unchanged
+        var sheet = new Spreadsheet
+        {
+            Sheets =
+            [
+                new()
+                {
+                    Properties = new SheetProperties { Title = "TestSheet" },
+                    Data =
+                    [
+                        new()
+                        {
+                            RowData =
+                            [
+                                new()
+                                {
+                                    Values =
+                                    [
+                                        new() { FormattedValue = "Header" },
+                                        new() { FormattedValue = "John", EffectiveValue = new ExtendedValue { StringValue = "John" } }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Act
+        var result = SheetHelpers.GetSheetValues(sheet);
+
+        // Assert
+        Assert.IsType<string>(result["TestSheet"][0][1]);
+        Assert.Equal("John", result["TestSheet"][0][1]);
+    }
+
     #endregion
 
     #region GetColor Tests
