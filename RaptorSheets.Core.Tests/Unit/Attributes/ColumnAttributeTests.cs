@@ -201,4 +201,28 @@ public class ColumnAttributeTests
 
         Assert.True(column.NamedRange);
     }
+
+    [Fact]
+    public void ConditionalFormat_DefaultsToNull()
+    {
+        var column = new ColumnAttribute("Test");
+
+        Assert.Null(column.ConditionalFormat);
+    }
+
+    [Fact]
+    public void ConditionalFormat_SetViaNamedArgumentConstructor_IsSet()
+    {
+        var column = new ColumnAttribute("Test", isInput: true, conditionalFormat: "NEGATIVE_BALANCE");
+
+        Assert.Equal("NEGATIVE_BALANCE", column.ConditionalFormat);
+    }
+
+    [Fact]
+    public void ConditionalFormat_SetViaColumnOptions_IsSet()
+    {
+        var column = new ColumnAttribute("Test", ColumnOptions.Builder().WithConditionalFormat("NEGATIVE_BALANCE").Build());
+
+        Assert.Equal("NEGATIVE_BALANCE", column.ConditionalFormat);
+    }
 }

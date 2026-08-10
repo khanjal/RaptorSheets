@@ -95,7 +95,8 @@ public static class EntitySheetConfigHelper
         {
             Name = headerName,
             Format = columnAttr.GetEffectiveFormat(),
-            NamedRange = columnAttr.NamedRange
+            NamedRange = columnAttr.NamedRange,
+            ConditionalFormat = columnAttr.ConditionalFormat ?? ""
         };
 
         // Populate FormatPattern - this becomes the single source of truth

@@ -64,6 +64,12 @@ public class ColumnOptions
     public bool NamedRange { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets a domain-specific conditional-format rule identifier for this column
+    /// (default: null). See <see cref="ColumnAttribute.ConditionalFormat"/>.
+    /// </summary>
+    public string? ConditionalFormat { get; set; }
+
+    /// <summary>
     /// Creates a new ColumnOptions instance with default values.
     /// </summary>
     public ColumnOptions()
@@ -193,6 +199,16 @@ public class ColumnOptionsBuilder
     public ColumnOptionsBuilder WithNamedRange()
     {
         _options.NamedRange = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets a domain-specific conditional-format rule identifier for this column - see
+    /// <see cref="ColumnAttribute.ConditionalFormat"/>.
+    /// </summary>
+    public ColumnOptionsBuilder WithConditionalFormat(string conditionalFormat)
+    {
+        _options.ConditionalFormat = conditionalFormat;
         return this;
     }
 

@@ -89,6 +89,17 @@ public class ColumnAttribute : Attribute
     public bool NamedRange { get; private set; }
 
     /// <summary>
+    /// Gets a domain-specific conditional-format rule identifier for this column (e.g.
+    /// "NEGATIVE_BALANCE"), or null for none. Mirrors <see cref="ValidationPattern"/>'s pattern:
+    /// the identifier is meaningless to Core - a domain's own resolver (see
+    /// <c>SheetGenerationHelper.Generate</c>'s <c>getConditionalFormat</c> delegate) turns it into
+    /// a concrete <c>BooleanRule</c> (which condition, which highlight color, etc.) at
+    /// generation time, the same way <see cref="ValidationPattern"/> is resolved into a
+    /// <c>DataValidationRule</c> by a domain's <c>GetDataValidation</c>.
+    /// </summary>
+    public string? ConditionalFormat { get; private set; }
+
+    /// <summary>
     /// Initializes a column configuration for an OUTPUT column (formula/calculated).
     /// FieldType is automatically inferred from the property type.
     /// This is the most common case - use this constructor for columns with formulas.
@@ -199,6 +210,7 @@ public class ColumnAttribute : Attribute
         Note = options.Note;
         IgnoreMappingErrors = options.IgnoreMappingErrors;
         NamedRange = options.NamedRange;
+        ConditionalFormat = options.ConditionalFormat;
     }
 
     /// <summary>
@@ -216,13 +228,14 @@ public class ColumnAttribute : Attribute
     /// <param name="formatType">Format type for Google Sheets display (DEFAULT = use default from fieldType)</param>
     /// <param name="ignoreMappingErrors">Suppress mapping-error diagnostics for this column (see <see cref="IgnoreMappingErrors"/>)</param>
     /// <param name="namedRange">Give this column's data a named range (see <see cref="NamedRange"/>)</param>
-    // 10 params is intentional: this is the convenience overload for named-argument call sites
+    /// <param name="conditionalFormat">Domain-specific conditional-format rule identifier (see <see cref="ConditionalFormat"/>)</param>
+    // 11 params is intentional: this is the convenience overload for named-argument call sites
     // (used pervasively across every domain's entities); the ColumnOptions-based overload above
     // is the designed escape hatch when more configuration is needed. Note that the ColumnOptions
     // overload can only ever be called programmatically, not as a declarative [Column(...)]
     // attribute - attribute arguments must be compile-time constants, and ColumnOptions is a mutable
     // object initializer. This constructor is therefore the only one that can expose a new option
-    // (like ignoreMappingErrors/namedRange) to code actually using [Column(...)] syntax.
+    // (like ignoreMappingErrors/namedRange/conditionalFormat) to code actually using [Column(...)] syntax.
 #pragma warning disable S107
     public ColumnAttribute(
         string headerName,
@@ -234,7 +247,8 @@ public class ColumnAttribute : Attribute
         int order = -1,
         Format formatType = Format.DEFAULT,
         bool ignoreMappingErrors = false,
-        bool namedRange = false)
+        bool namedRange = false,
+        string? conditionalFormat = null)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
@@ -248,6 +262,7 @@ public class ColumnAttribute : Attribute
         Note = note;
         IgnoreMappingErrors = ignoreMappingErrors;
         NamedRange = namedRange;
+        ConditionalFormat = conditionalFormat;
     }
 #pragma warning restore S107
 
