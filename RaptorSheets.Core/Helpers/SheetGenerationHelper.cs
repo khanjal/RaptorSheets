@@ -56,6 +56,11 @@ public static class SheetGenerationHelper
             GenerateHeadersFormatAndProtection(sheetModel, batchUpdateSpreadsheetRequest, repeatCellRequests, getDataValidation, getConditionalFormat);
             batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
             batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
+
+            if (sheetModel.BasicFilter)
+            {
+                batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBasicFilterRequest(sheetModel));
+            }
         }
 
         foreach (var request in repeatCellRequests)

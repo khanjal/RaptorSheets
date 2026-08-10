@@ -467,6 +467,34 @@ public static class GoogleRequestHelpers
     }
 
     /// <summary>
+    /// Builds a SetBasicFilterRequest for a sheet flagged with <see cref="SheetModel.BasicFilter"/>
+    /// (GitHub issue #81) - covers the header row through every declared column, open-ended on
+    /// rows so it keeps applying as data is added. A sheet has at most one basic filter, so this
+    /// is a whole-sheet request like <see cref="GenerateBandingRequest"/>, not per-column.
+    /// SetBasicFilterRequest always replaces any existing filter outright (Google's API, not a
+    /// choice made here), which is what makes this the simplest of #81's Tier 1 features to
+    /// eventually reapply - no add-vs-update branching needed the way banding/protection require.
+    /// </summary>
+    public static Request GenerateBasicFilterRequest(SheetModel sheet)
+    {
+        var range = new GridRange
+        {
+            SheetId = sheet.Id,
+            StartRowIndex = 0,
+            StartColumnIndex = 0,
+            EndColumnIndex = sheet.Headers.Count,
+        };
+
+        return new Request
+        {
+            SetBasicFilter = new SetBasicFilterRequest
+            {
+                Filter = new BasicFilter { Range = range }
+            }
+        };
+    }
+
+    /// <summary>
     /// Builds an AddConditionalFormatRuleRequest for a single header column flagged with
     /// <see cref="RaptorSheets.Core.Attributes.ColumnAttribute.ConditionalFormat"/> (GitHub issue
     /// #81) - the actual condition/format (<paramref name="rule"/>) is resolved by a domain's own
