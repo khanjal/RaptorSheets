@@ -225,4 +225,23 @@ public class ColumnAttributeTests
 
         Assert.Equal("NEGATIVE_BALANCE", column.ConditionalFormat);
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ConditionalFormat_SetToBlankViaNamedArgumentConstructor_Throws(string blank)
+    {
+        // A blank value would silently resolve to no conditional format (no separate "enabled"
+        // flag backs it, unlike EnableValidation/ValidationPattern) - reject it as a likely mistake
+        // rather than let it silently do nothing.
+        Assert.Throws<ArgumentException>(() => new ColumnAttribute("Test", isInput: true, conditionalFormat: blank));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ConditionalFormat_SetToBlankViaColumnOptions_Throws(string blank)
+    {
+        Assert.Throws<ArgumentException>(() => ColumnOptions.Builder().WithConditionalFormat(blank).Build());
+    }
 }

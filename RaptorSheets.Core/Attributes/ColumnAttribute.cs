@@ -251,6 +251,16 @@ public class ColumnAttribute : Attribute
         string? conditionalFormat = null)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
+        // Null (never set) is fine; an explicitly-blank value would silently resolve to no
+        // conditional format (see ConditionalFormat's own doc comment), masking what was likely
+        // meant to be a real rule identifier - reject it here instead.
+        if (conditionalFormat != null && string.IsNullOrWhiteSpace(conditionalFormat))
+        {
+            throw new ArgumentException(
+                "conditionalFormat must not be empty or whitespace - omit it (null) for no conditional format, or provide a real rule identifier.",
+                nameof(conditionalFormat));
+        }
+
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
         IsFieldTypeExplicit = false;
         FormatType = formatType;
