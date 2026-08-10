@@ -466,6 +466,34 @@ public static class GoogleRequestHelpers
         return char.IsDigit(sanitized[0]) ? "_" + sanitized : sanitized;
     }
 
+    /// <summary>
+    /// Builds a SetBasicFilterRequest for a sheet flagged with <see cref="SheetModel.BasicFilter"/>
+    /// (GitHub issue #81) - covers the header row through every declared column, open-ended on
+    /// rows so it keeps applying as data is added. A sheet has at most one basic filter, so this
+    /// is a whole-sheet request like <see cref="GenerateBandingRequest"/>, not per-column.
+    /// SetBasicFilterRequest always replaces any existing filter outright (Google's API, not a
+    /// choice made here), which is what makes this the simplest of #81's Tier 1 features to
+    /// eventually reapply - no add-vs-update branching needed the way banding/protection require.
+    /// </summary>
+    public static Request GenerateBasicFilterRequest(SheetModel sheet)
+    {
+        var range = new GridRange
+        {
+            SheetId = sheet.Id,
+            StartRowIndex = 0,
+            StartColumnIndex = 0,
+            EndColumnIndex = sheet.Headers.Count,
+        };
+
+        return new Request
+        {
+            SetBasicFilter = new SetBasicFilterRequest
+            {
+                Filter = new BasicFilter { Range = range }
+            }
+        };
+    }
+
     public static Request GenerateSheetPropertes(SheetModel sheet)
     {
         var sheetRequest = new AddSheetRequest

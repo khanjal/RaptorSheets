@@ -444,6 +444,29 @@ public class GoogleRequestHelpersTests
     }
 
     [Fact]
+    public void GenerateBasicFilterRequest_ShouldCoverHeaderRowThroughDeclaredColumns()
+    {
+        // Arrange
+        var sheet = new SheetModel
+        {
+            Id = 5,
+            Headers = [new SheetCellModel { Name = "Date" }, new SheetCellModel { Name = "Amount" }]
+        };
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateBasicFilterRequest(sheet);
+
+        // Assert
+        Assert.NotNull(result.SetBasicFilter);
+        var range = result.SetBasicFilter.Filter.Range;
+        Assert.Equal(5, range.SheetId);
+        Assert.Equal(0, range.StartRowIndex); // includes the header row (filter dropdowns live there)
+        Assert.Equal(0, range.StartColumnIndex);
+        Assert.Equal(2, range.EndColumnIndex);
+        Assert.Null(range.EndRowIndex); // open-ended: keeps applying as data rows are added
+    }
+
+    [Fact]
     public void GenerateSheetPropertes_ShouldReturnValidRequest()
     {
         // Arrange

@@ -162,4 +162,25 @@ public class SheetGenerationHelperTests
 
         Assert.DoesNotContain(result.Requests, r => r.AddNamedRange != null);
     }
+
+    [Fact]
+    public void Generate_ForSheetFlaggedWithBasicFilter_AddsSetBasicFilterRequest()
+    {
+        var sheetModel = BuildSheetModel("Trips");
+        sheetModel.BasicFilter = true;
+
+        var result = SheetGenerationHelper.Generate(["Trips"], _ => sheetModel, _ => null);
+
+        Assert.Contains(result.Requests, r => r.SetBasicFilter != null);
+    }
+
+    [Fact]
+    public void Generate_ForSheetWithoutBasicFilterFlag_DoesNotAddSetBasicFilterRequest()
+    {
+        var sheetModel = BuildSheetModel("Trips"); // BasicFilter defaults to false
+
+        var result = SheetGenerationHelper.Generate(["Trips"], _ => sheetModel, _ => null);
+
+        Assert.DoesNotContain(result.Requests, r => r.SetBasicFilter != null);
+    }
 }
