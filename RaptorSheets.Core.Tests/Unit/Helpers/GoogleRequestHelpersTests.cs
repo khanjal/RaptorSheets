@@ -444,6 +444,41 @@ public class GoogleRequestHelpersTests
     }
 
     [Fact]
+    public void GenerateConditionalFormatRequest_WithRule_ShouldCoverOnlyTheColumnsDataExcludingTheHeaderRow()
+    {
+        // Arrange
+        var rule = new BooleanRule
+        {
+            Condition = new BooleanCondition { Type = "NUMBER_LESS", Values = [new ConditionValue { UserEnteredValue = "0" }] },
+            Format = new CellFormat { BackgroundColor = new Color { Red = 1 } }
+        };
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateConditionalFormatRequest(sheetId: 5, columnIndex: 3, rule: rule, ruleIndex: 2);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result!.AddConditionalFormatRule);
+        Assert.Equal(2, result.AddConditionalFormatRule.Index);
+        Assert.Same(rule, result.AddConditionalFormatRule.Rule.BooleanRule);
+        var range = Assert.Single(result.AddConditionalFormatRule.Rule.Ranges);
+        Assert.Equal(5, range.SheetId);
+        Assert.Equal(3, range.StartColumnIndex);
+        Assert.Equal(4, range.EndColumnIndex);
+        Assert.Equal(1, range.StartRowIndex); // row 0 (the header) is excluded
+    }
+
+    [Fact]
+    public void GenerateConditionalFormatRequest_WithNullRule_ShouldReturnNull()
+    {
+        // Act
+        var result = GoogleRequestHelpers.GenerateConditionalFormatRequest(sheetId: 1, columnIndex: 0, rule: null, ruleIndex: 0);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
     public void GenerateSheetPropertes_ShouldReturnValidRequest()
     {
         // Arrange

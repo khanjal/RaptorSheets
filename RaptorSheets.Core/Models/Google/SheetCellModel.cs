@@ -30,4 +30,8 @@ public class SheetCellModel
     // Opt-in: gives this column's data (excluding the header row) a Google Sheets named range,
     // named "{SheetName}_{HeaderName}". See ColumnAttribute.NamedRange.
     public bool NamedRange { get; set; } = false;
+
+    // Domain-specific conditional-format rule identifier, resolved into a concrete BooleanRule by
+    // a domain's own resolver at generation time. See ColumnAttribute.ConditionalFormat.
+    public string ConditionalFormat { get; set; } = "";
 }
