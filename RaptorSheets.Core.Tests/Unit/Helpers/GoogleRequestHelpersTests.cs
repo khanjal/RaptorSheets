@@ -793,6 +793,98 @@ public class GoogleRequestHelpersTests
         Assert.Equal(5, request.UpdateCells.Range.EndColumnIndex);
     }
 
+    #region CreateUpdateCellRequests / CreateDeleteRequests sheetId resolution (GH #114)
+
+    // GH #114: sheetId used to be resolved as `int.TryParse(...) ? id : 0`, then checked via
+    // `sheetId == 0` as an "invalid" sentinel - which also fires for a tab whose real gid genuinely
+    // is 0 (a spreadsheet's first-ever tab, not an edge case). These assert the fixed behavior:
+    // TryParse's own success flag distinguishes "invalid id" from "id is legitimately zero".
+
+    private static PropertyEntity BuildSheetProperties(string id, int maxRowValue = 0) => new()
+    {
+        Id = id,
+        Attributes = new Dictionary<string, string>
+        {
+            [Property.HEADERS.GetDescription()] = "Header1",
+            [Property.MAX_ROW_VALUE.GetDescription()] = maxRowValue.ToString(),
+        },
+    };
+
+    private static readonly Func<List<TestRow>, IList<object>, IList<RowData>> NoOpMapToRowData =
+        (rows, _) => rows.Select(_ => new RowData()).ToList();
+
+    [Fact]
+    public void CreateUpdateCellRequests_WithSheetIdZero_AppendsNewRow()
+    {
+        // Arrange - RowId 1 with MaxRowValue 0 means this row is past the real data extent, so it
+        // should append, not update.
+        var sheetProperties = BuildSheetProperties(id: "0", maxRowValue: 0);
+        var entities = new List<TestRow> { new() { RowId = 1 } };
+
+        // Act
+        var requests = GoogleRequestHelpers.CreateUpdateCellRequests(entities, sheetProperties, NoOpMapToRowData).ToList();
+
+        // Assert
+        var request = Assert.Single(requests);
+        Assert.NotNull(request.AppendCells);
+        Assert.Equal(0, request.AppendCells.SheetId);
+    }
+
+    [Fact]
+    public void CreateUpdateCellRequests_WithSheetIdZero_UpdatesExistingRow()
+    {
+        // Arrange - RowId 2 within MaxRowValue 5 means this targets an already-populated row.
+        var sheetProperties = BuildSheetProperties(id: "0", maxRowValue: 5);
+        var entities = new List<TestRow> { new() { RowId = 2 } };
+
+        // Act
+        var requests = GoogleRequestHelpers.CreateUpdateCellRequests(entities, sheetProperties, NoOpMapToRowData).ToList();
+
+        // Assert
+        var request = Assert.Single(requests);
+        Assert.NotNull(request.UpdateCells);
+        Assert.Equal(0, request.UpdateCells.Range.SheetId);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("not-a-number")]
+    public void CreateUpdateCellRequests_WithUnparseableSheetId_ReturnsEmpty(string id)
+    {
+        var sheetProperties = BuildSheetProperties(id);
+        var entities = new List<TestRow> { new() { RowId = 1 } };
+
+        var requests = GoogleRequestHelpers.CreateUpdateCellRequests(entities, sheetProperties, NoOpMapToRowData);
+
+        Assert.Empty(requests);
+    }
+
+    [Fact]
+    public void CreateDeleteRequests_WithSheetIdZero_ReturnsDeleteRequest()
+    {
+        var sheetProperties = BuildSheetProperties(id: "0");
+
+        var requests = GoogleRequestHelpers.CreateDeleteRequests([3], sheetProperties).ToList();
+
+        var request = Assert.Single(requests);
+        Assert.NotNull(request.DeleteDimension);
+        Assert.Equal(0, request.DeleteDimension.Range.SheetId);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("not-a-number")]
+    public void CreateDeleteRequests_WithUnparseableSheetId_ReturnsEmpty(string id)
+    {
+        var sheetProperties = BuildSheetProperties(id);
+
+        var requests = GoogleRequestHelpers.CreateDeleteRequests([3], sheetProperties);
+
+        Assert.Empty(requests);
+    }
+
+    #endregion
+
     #region ChangeSheetData dispatch (ResolveSheetsWithData / BuildChangeRequests)
 
     private sealed class TestRow : SheetRowEntityBase { }

@@ -742,9 +742,9 @@ public static class GoogleRequestHelpers
 
     public static IEnumerable<Request> CreateDeleteRequests(List<int> rowIds, PropertyEntity? sheetProperties)
     {
-        int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
-
-        if (rowIds.Count == 0 || sheetProperties == null || sheetId == 0)
+        // TryParse's own success flag, not "parsed value == 0" - gid 0 (a sheet's first-ever tab,
+        // an entirely ordinary case) is a valid id, not a failure sentinel. See GH #114.
+        if (rowIds.Count == 0 || sheetProperties == null || !int.TryParse(sheetProperties.Id, out var sheetId))
         {
             return [];
         }
@@ -793,11 +793,17 @@ public static class GoogleRequestHelpers
     public static IEnumerable<Request> CreateUpdateCellRequests<T>(List<T> entities, PropertyEntity? sheetProperties, Func<List<T>, IList<object>, IList<RowData>> mapToRowData)
         where T : SheetRowEntityBase
     {
-        var headers = sheetProperties?.Attributes[Property.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
-        var maxRowValue = int.Parse(sheetProperties?.Attributes.GetValueOrDefault(Property.MAX_ROW_VALUE.GetDescription(), "0") ?? "0");
-        int sheetId = int.TryParse(sheetProperties?.Id, out var id) ? id : 0;
+        // TryParse's own success flag, not "parsed value == 0" - gid 0 (a sheet's first-ever tab,
+        // an entirely ordinary case) is a valid id, not a failure sentinel. See GH #114.
+        if (entities.Count == 0 || sheetProperties == null || !int.TryParse(sheetProperties.Id, out var sheetId))
+        {
+            return [];
+        }
 
-        if (entities.Count == 0 || sheetProperties == null || headers?.Count == 0 || sheetId == 0)
+        var headers = sheetProperties.Attributes[Property.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
+        var maxRowValue = int.Parse(sheetProperties.Attributes.GetValueOrDefault(Property.MAX_ROW_VALUE.GetDescription(), "0") ?? "0");
+
+        if (headers?.Count == 0)
         {
             return [];
         }
