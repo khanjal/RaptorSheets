@@ -58,6 +58,12 @@ public class ColumnOptions
     public bool IgnoreMappingErrors { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets whether Google Sheets should get a named range for this column's data
+    /// (default: false). See <see cref="ColumnAttribute.NamedRange"/>.
+    /// </summary>
+    public bool NamedRange { get; set; } = false;
+
+    /// <summary>
     /// Creates a new ColumnOptions instance with default values.
     /// </summary>
     public ColumnOptions()
@@ -178,6 +184,15 @@ public class ColumnOptionsBuilder
     public ColumnOptionsBuilder IgnoreMappingErrors()
     {
         _options.IgnoreMappingErrors = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Gives this column's data a named range - see <see cref="ColumnAttribute.NamedRange"/>.
+    /// </summary>
+    public ColumnOptionsBuilder WithNamedRange()
+    {
+        _options.NamedRange = true;
         return this;
     }
 

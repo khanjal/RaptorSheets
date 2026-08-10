@@ -89,34 +89,48 @@ public static class SheetGenerationHelper
                 batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateColumnProtection(range));
             }
 
-            // If there's no format or validation then go to the next header
-            if (header.Format == null && string.IsNullOrEmpty(header.Validation) && string.IsNullOrEmpty(header.FormatPattern))
+            if (header.NamedRange)
             {
-                continue;
+                batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateNamedRangeRequest(sheet, header));
             }
 
-            var repeatCellModel = new RepeatCellModel
-            {
-                GridRange = range,
-            };
-
-            if (header.Format != null || !string.IsNullOrEmpty(header.FormatPattern))
-            {
-                var formatToUse = header.Format ?? Format.NUMBER; // Default to NUMBER if only pattern provided
-
-                // FormatPattern is the single source of truth - always populated either from a
-                // custom pattern or derived from Format
-                repeatCellModel.CellFormat = !string.IsNullOrEmpty(header.FormatPattern)
-                    ? SheetHelpers.GetCellFormat(formatToUse, header.FormatPattern)
-                    : SheetHelpers.GetCellFormat(formatToUse);
-            }
-
-            if (!string.IsNullOrEmpty(header.Validation))
-            {
-                repeatCellModel.DataValidation = getDataValidation(header);
-            }
-
-            repeatCellRequests.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
+            AddFormatAndValidationRequest(header, range, repeatCellRequests, getDataValidation);
         }
+    }
+
+    private static void AddFormatAndValidationRequest(
+        SheetCellModel header,
+        GridRange range,
+        List<RepeatCellRequest> repeatCellRequests,
+        Func<SheetCellModel, DataValidationRule?> getDataValidation)
+    {
+        // If there's no format or validation then there's nothing to add
+        if (header.Format == null && string.IsNullOrEmpty(header.Validation) && string.IsNullOrEmpty(header.FormatPattern))
+        {
+            return;
+        }
+
+        var repeatCellModel = new RepeatCellModel
+        {
+            GridRange = range,
+        };
+
+        if (header.Format != null || !string.IsNullOrEmpty(header.FormatPattern))
+        {
+            var formatToUse = header.Format ?? Format.NUMBER; // Default to NUMBER if only pattern provided
+
+            // FormatPattern is the single source of truth - always populated either from a
+            // custom pattern or derived from Format
+            repeatCellModel.CellFormat = !string.IsNullOrEmpty(header.FormatPattern)
+                ? SheetHelpers.GetCellFormat(formatToUse, header.FormatPattern)
+                : SheetHelpers.GetCellFormat(formatToUse);
+        }
+
+        if (!string.IsNullOrEmpty(header.Validation))
+        {
+            repeatCellModel.DataValidation = getDataValidation(header);
+        }
+
+        repeatCellRequests.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
     }
 }

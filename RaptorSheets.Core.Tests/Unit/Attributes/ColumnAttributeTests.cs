@@ -173,8 +173,32 @@ public class ColumnAttributeTests
         
         // Act
         var pattern = column.GetEffectiveNumberFormatPattern();
-        
+
         // Assert
         Assert.Equal(CellFormatPatterns.Weekday, pattern);
+    }
+
+    [Fact]
+    public void NamedRange_DefaultsToFalse()
+    {
+        var column = new ColumnAttribute("Test");
+
+        Assert.False(column.NamedRange);
+    }
+
+    [Fact]
+    public void NamedRange_SetViaNamedArgumentConstructor_IsTrue()
+    {
+        var column = new ColumnAttribute("Test", isInput: true, namedRange: true);
+
+        Assert.True(column.NamedRange);
+    }
+
+    [Fact]
+    public void NamedRange_SetViaColumnOptions_IsTrue()
+    {
+        var column = new ColumnAttribute("Test", ColumnOptions.Builder().WithNamedRange().Build());
+
+        Assert.True(column.NamedRange);
     }
 }

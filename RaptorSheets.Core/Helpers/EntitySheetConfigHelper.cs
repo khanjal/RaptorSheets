@@ -94,7 +94,8 @@ public static class EntitySheetConfigHelper
         var header = new SheetCellModel
         {
             Name = headerName,
-            Format = columnAttr.GetEffectiveFormat()
+            Format = columnAttr.GetEffectiveFormat(),
+            NamedRange = columnAttr.NamedRange
         };
 
         // Populate FormatPattern - this becomes the single source of truth

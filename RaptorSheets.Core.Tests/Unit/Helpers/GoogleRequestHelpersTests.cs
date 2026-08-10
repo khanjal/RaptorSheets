@@ -395,6 +395,55 @@ public class GoogleRequestHelpersTests
     }
 
     [Fact]
+    public void GenerateNamedRangeRequest_ShouldCoverOnlyTheColumnsDataExcludingTheHeaderRow()
+    {
+        // Arrange
+        var sheet = new SheetModel { Id = 5, Name = "Shifts" };
+        var header = new SheetCellModel { Name = "Total Pay", Index = 3 };
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateNamedRangeRequest(sheet, header);
+
+        // Assert
+        Assert.NotNull(result.AddNamedRange);
+        var range = result.AddNamedRange.NamedRange.Range;
+        Assert.Equal(5, range.SheetId);
+        Assert.Equal(3, range.StartColumnIndex);
+        Assert.Equal(4, range.EndColumnIndex);
+        Assert.Equal(1, range.StartRowIndex); // row 0 (the header) is excluded
+    }
+
+    [Theory]
+    [InlineData("Shifts", "Total Pay", "Shifts_Total_Pay")]
+    [InlineData("Deliveries", "Amt/Trip", "Deliveries_Amt_Trip")]
+    [InlineData("Stocks", "P/E Ratio", "Stocks_P_E_Ratio")]
+    public void GenerateNamedRangeRequest_ShouldSanitizeInvalidIdentifierCharacters(string sheetName, string headerName, string expectedName)
+    {
+        // Arrange
+        var sheet = new SheetModel { Id = 1, Name = sheetName };
+        var header = new SheetCellModel { Name = headerName, Index = 0 };
+
+        // Act
+        var result = GoogleRequestHelpers.GenerateNamedRangeRequest(sheet, header);
+
+        // Assert
+        Assert.Equal(expectedName, result.AddNamedRange.NamedRange.Name);
+    }
+
+    [Fact]
+    public void GenerateNamedRangeRequest_WithHeaderStartingWithDigit_ShouldPrefixUnderscore()
+    {
+        // Google rejects named ranges that look like a cell reference (e.g. "2024_Total") -
+        // guard against a header/sheet name pair that would sanitize down to start with a digit
+        var sheet = new SheetModel { Id = 1, Name = "2024" };
+        var header = new SheetCellModel { Name = "Total", Index = 0 };
+
+        var result = GoogleRequestHelpers.GenerateNamedRangeRequest(sheet, header);
+
+        Assert.Equal("_2024_Total", result.AddNamedRange.NamedRange.Name);
+    }
+
+    [Fact]
     public void GenerateSheetPropertes_ShouldReturnValidRequest()
     {
         // Arrange

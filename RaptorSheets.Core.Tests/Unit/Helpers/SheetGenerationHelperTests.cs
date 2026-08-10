@@ -134,4 +134,32 @@ public class SheetGenerationHelperTests
 
         Assert.Equal(["A", "B", "C", "D"], sheetModel.Headers.Select(h => h.Column));
     }
+
+    [Fact]
+    public void Generate_ForColumnFlaggedWithNamedRange_AddsNamedRangeRequest()
+    {
+        // Regression guard: a NamedRange-only header (no Format/Validation/FormatPattern) must
+        // not be silently skipped by the "nothing to format" early-exit that governs whether a
+        // RepeatCell request gets built - named ranges are a separate request entirely.
+        var sheetModel = new SheetModel
+        {
+            Name = "Trips",
+            Headers = [new SheetCellModel { Name = "Key", NamedRange = true }]
+        };
+
+        var result = SheetGenerationHelper.Generate(["Trips"], _ => sheetModel, _ => null);
+
+        var namedRange = result.Requests.Single(r => r.AddNamedRange != null).AddNamedRange.NamedRange;
+        Assert.Equal("Trips_Key", namedRange.Name);
+    }
+
+    [Fact]
+    public void Generate_ForColumnWithoutNamedRangeFlag_DoesNotAddNamedRangeRequest()
+    {
+        var sheetModel = BuildSheetModel("Trips");
+
+        var result = SheetGenerationHelper.Generate(["Trips"], _ => sheetModel, _ => null);
+
+        Assert.DoesNotContain(result.Requests, r => r.AddNamedRange != null);
+    }
 }

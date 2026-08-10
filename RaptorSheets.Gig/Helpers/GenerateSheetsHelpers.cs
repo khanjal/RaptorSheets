@@ -14,43 +14,7 @@ public static class GenerateSheetsHelpers
 {
     internal static BatchUpdateSpreadsheetRequest Generate(List<string> sheets)
     {
-        if (sheets.Count == 0)
-        {
-            // Skip unnecessary processing when the collection is empty
-            return new BatchUpdateSpreadsheetRequest { Requests = new List<Request>() };
-        }
-
-        var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
-        {
-            Requests = []
-        };
-        var repeatCellRequests = new List<RepeatCellRequest>();
-
-        foreach (var sheet in sheets)
-        {
-            var sheetModel = GetSheetModel(sheet);
-            sheetModel.Id = Random.Shared.Next();
-
-            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateSheetPropertes(sheetModel));
-
-            var appendDimension = GoogleRequestHelpers.GenerateAppendDimension(sheetModel);
-            if (appendDimension != null)
-            {
-                batchUpdateSpreadsheetRequest.Requests.Add(appendDimension);
-            }
-
-            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateAppendCells(sheetModel));
-            GenerateHeadersFormatAndProtection(sheetModel, batchUpdateSpreadsheetRequest, repeatCellRequests);
-            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateBandingRequest(sheetModel));
-            batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateProtectedRangeForHeaderOrSheet(sheetModel));
-        }
-
-        foreach (var request in repeatCellRequests)
-        {
-            batchUpdateSpreadsheetRequest.Requests.Add(new Request { RepeatCell = request });
-        }
-
-        return batchUpdateSpreadsheetRequest;
+        return SheetGenerationHelper.Generate(sheets, GetSheetModel, GetDataValidation);
     }
 
     public static List<string> GetSheetNames()
@@ -96,61 +60,9 @@ public static class GenerateSheetsHelpers
         throw new NotImplementedException($"Sheet model not found for: {sheet}");
     }
 
-    private static void GenerateHeadersFormatAndProtection(
-        SheetModel sheet,
-        BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest,
-        List<RepeatCellRequest> repeatCellRequests)
+    private static DataValidationRule? GetDataValidation(SheetCellModel header)
     {
-        // Ensure headers have proper Column/Index assignments prior to formatting, like Stock implementation
-        sheet.Headers.UpdateColumns();
-
-        // Format/Protect Column Cells
-        foreach (var header in sheet.Headers)
-        {
-            var range = new GridRange
-            {
-                SheetId = sheet.Id,
-                StartColumnIndex = header.Index,
-                EndColumnIndex = header.Index + 1,
-                StartRowIndex = 1,
-            };
-
-            // If whole sheet isn't protected then protect certain columns
-            if (!string.IsNullOrEmpty(header.Formula) && !sheet.ProtectSheet)
-            {
-                batchUpdateSpreadsheetRequest.Requests.Add(GoogleRequestHelpers.GenerateColumnProtection(range));
-            }
-
-            // If there's no format or validation then go to next header
-            if (header.Format == null && string.IsNullOrEmpty(header.Validation) && string.IsNullOrEmpty(header.FormatPattern))
-            {
-                continue;
-            }
-
-            var repeatCellModel = new RepeatCellModel
-            {
-                GridRange = range,
-            };
-
-            // Apply formatting if Format or FormatPattern exists
-            if (header.Format != null || !string.IsNullOrEmpty(header.FormatPattern))
-            {
-                var formatToUse = header.Format ?? Format.NUMBER; // Default to NUMBER if only pattern provided
-
-                // FormatPattern is the single source of truth - it's always populated
-                // Either from custom pattern or derived from Format
-                repeatCellModel.CellFormat = !string.IsNullOrEmpty(header.FormatPattern)
-                    ? SheetHelpers.GetCellFormat(formatToUse, header.FormatPattern)
-                    : SheetHelpers.GetCellFormat(formatToUse);
-            }
-
-            if (!string.IsNullOrEmpty(header.Validation))
-            {
-                var columnRange = $"{header.Column}2:{header.Column}";
-                repeatCellModel.DataValidation = GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<Validation>(), columnRange);
-            }
-
-            repeatCellRequests.Add(GoogleRequestHelpers.GenerateRepeatCellRequest(repeatCellModel));
-        }
-    }  
+        var columnRange = $"{header.Column}2:{header.Column}";
+        return GigSheetHelpers.GetDataValidation(header.Validation.GetValueFromName<Validation>(), columnRange);
+    }
 }

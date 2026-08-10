@@ -79,6 +79,16 @@ public class ColumnAttribute : Attribute
     public bool IgnoreMappingErrors { get; private set; }
 
     /// <summary>
+    /// Gets whether Google Sheets should get a named range for this column's data (excluding the
+    /// header row), named "{SheetName}_{HeaderName}" (non-identifier characters replaced with
+    /// underscores). Opt-in, not automatic - a named range per column on every sheet would add
+    /// dozens to hundreds of entries to a spreadsheet's named range list by default. Set this on
+    /// columns whose range is worth referencing by name (e.g. from another sheet's formula)
+    /// instead of raw A1 notation.
+    /// </summary>
+    public bool NamedRange { get; private set; }
+
+    /// <summary>
     /// Initializes a column configuration for an OUTPUT column (formula/calculated).
     /// FieldType is automatically inferred from the property type.
     /// This is the most common case - use this constructor for columns with formulas.
@@ -188,6 +198,7 @@ public class ColumnAttribute : Attribute
         ValidationPattern = options.ValidationPattern;
         Note = options.Note;
         IgnoreMappingErrors = options.IgnoreMappingErrors;
+        NamedRange = options.NamedRange;
     }
 
     /// <summary>
@@ -204,13 +215,14 @@ public class ColumnAttribute : Attribute
     /// <param name="order">Column order priority (-1 = use declaration order)</param>
     /// <param name="formatType">Format type for Google Sheets display (DEFAULT = use default from fieldType)</param>
     /// <param name="ignoreMappingErrors">Suppress mapping-error diagnostics for this column (see <see cref="IgnoreMappingErrors"/>)</param>
-    // 9 params is intentional: this is the convenience overload for named-argument call sites
+    /// <param name="namedRange">Give this column's data a named range (see <see cref="NamedRange"/>)</param>
+    // 10 params is intentional: this is the convenience overload for named-argument call sites
     // (used pervasively across every domain's entities); the ColumnOptions-based overload above
     // is the designed escape hatch when more configuration is needed. Note that the ColumnOptions
     // overload can only ever be called programmatically, not as a declarative [Column(...)]
     // attribute - attribute arguments must be compile-time constants, and ColumnOptions is a mutable
     // object initializer. This constructor is therefore the only one that can expose a new option
-    // (like ignoreMappingErrors) to code actually using [Column(...)] syntax.
+    // (like ignoreMappingErrors/namedRange) to code actually using [Column(...)] syntax.
 #pragma warning disable S107
     public ColumnAttribute(
         string headerName,
@@ -221,7 +233,8 @@ public class ColumnAttribute : Attribute
         string? validationPattern = null,
         int order = -1,
         Format formatType = Format.DEFAULT,
-        bool ignoreMappingErrors = false)
+        bool ignoreMappingErrors = false,
+        bool namedRange = false)
     {
         HeaderName = headerName ?? throw new ArgumentNullException(nameof(headerName));
         FieldType = FieldType.String; // Default, will be set by SetFieldTypeFromProperty
@@ -234,6 +247,7 @@ public class ColumnAttribute : Attribute
         ValidationPattern = validationPattern;
         Note = note;
         IgnoreMappingErrors = ignoreMappingErrors;
+        NamedRange = namedRange;
     }
 #pragma warning restore S107
 
