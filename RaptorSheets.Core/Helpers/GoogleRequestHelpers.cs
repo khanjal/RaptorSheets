@@ -4,11 +4,15 @@ using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Models.Google;
+using System.Text.RegularExpressions;
 
 namespace RaptorSheets.Core.Helpers;
 
 public static class GoogleRequestHelpers
 {
+    // Google Sheets named ranges must be letters/digits/underscores only and can't start with a
+    // digit (it would look like an A1/R1C1 cell reference and be rejected).
+    private static readonly Regex NonIdentifierCharRegex = new(@"[^A-Za-z0-9_]", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 
     public static Request GenerateAppendCells(SheetModel sheet)
     {
@@ -422,6 +426,44 @@ public static class GoogleRequestHelpers
         };
 
         return new Request { RepeatCell = repeatCellRequest };
+    }
+
+    /// <summary>
+    /// Builds an AddNamedRangeRequest for a single header column flagged with
+    /// <see cref="RaptorSheets.Core.Attributes.ColumnAttribute.NamedRange"/> (GitHub issue #81) -
+    /// covers that column's data only (row 1, the header, is excluded), named
+    /// "{SheetName}_{HeaderName}" via <see cref="BuildNamedRangeName"/>.
+    /// </summary>
+    public static Request GenerateNamedRangeRequest(SheetModel sheet, SheetCellModel header)
+    {
+        var range = new GridRange
+        {
+            SheetId = sheet.Id,
+            StartColumnIndex = header.Index,
+            EndColumnIndex = header.Index + 1,
+            StartRowIndex = 1,
+        };
+
+        return new Request
+        {
+            AddNamedRange = new AddNamedRangeRequest
+            {
+                NamedRange = new NamedRange
+                {
+                    Name = BuildNamedRangeName(sheet.Name, header.Name),
+                    Range = range
+                }
+            }
+        };
+    }
+
+    // Replaces every character invalid in a Google Sheets named range (spaces, slashes, etc. -
+    // header names like "Amt/Trip" or "Total Pay" are common in this codebase) with an underscore,
+    // and guards against the result starting with a digit.
+    private static string BuildNamedRangeName(string sheetName, string headerName)
+    {
+        var sanitized = NonIdentifierCharRegex.Replace($"{sheetName}_{headerName}", "_");
+        return char.IsDigit(sanitized[0]) ? "_" + sanitized : sanitized;
     }
 
     public static Request GenerateSheetPropertes(SheetModel sheet)

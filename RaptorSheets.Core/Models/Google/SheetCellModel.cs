@@ -26,4 +26,8 @@ public class SheetCellModel
     public bool Protect { get; set; } = false;
     public string Validation { get; set; } = "";
     public string Note { get; set; } = "";
+
+    // Opt-in: gives this column's data (excluding the header row) a Google Sheets named range,
+    // named "{SheetName}_{HeaderName}". See ColumnAttribute.NamedRange.
+    public bool NamedRange { get; set; } = false;
 }
