@@ -77,12 +77,6 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
     /// </summary>
     public WriteResult WriteSettings(SettingsUpdate update)
     {
-        var hasAnyCredentialField = !string.IsNullOrWhiteSpace(update.CredentialType)
-            || !string.IsNullOrWhiteSpace(update.PrivateKeyId)
-            || !string.IsNullOrWhiteSpace(update.PrivateKey)
-            || !string.IsNullOrWhiteSpace(update.ClientEmail)
-            || !string.IsNullOrWhiteSpace(update.ClientId);
-
         var path = GetSecretsPath();
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
@@ -90,42 +84,56 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
             ? JsonNode.Parse(File.ReadAllText(path)) as JsonObject ?? new JsonObject()
             : new JsonObject();
 
+        var googleCredentials = secrets["google_credentials"] as JsonObject ?? new JsonObject();
+        var spreadsheets = secrets["spreadsheets"] as JsonObject ?? new JsonObject();
+        var test = spreadsheets["test"] as JsonObject ?? new JsonObject();
+
         // `dotnet user-secrets set "spreadsheets:test:gig" "..."` (and, historically, an older
         // version of this method) writes a *flat* top-level key literally named
         // "spreadsheets:test:gig" - JsonNode.Parse treats that as one opaque string key, not a path,
-        // so secrets["spreadsheets"] below finds nothing and this method would otherwise add a
-        // *second*, nested representation of the same setting alongside the untouched flat one.
-        // Both survive being written to disk, but the JSON configuration provider that reads this
-        // file back flattens nested objects into the same colon-separated paths, so the two
-        // representations collide as a "duplicate key" and the whole file fails to load. Migrate any
-        // flat legacy key under a section this method manages into the nested form before proceeding,
-        // so only one representation of each setting ever exists on disk.
+        // so secrets["spreadsheets"] above finds nothing for a secrets.json that only has the flat
+        // form. Migrate each flat legacy key's *value* into the nested object it corresponds to
+        // before removing it, rather than just deleting it - otherwise a save that never touches
+        // that section (e.g. only adding a connection, which still calls this method for the 4
+        // always-submitted test-spreadsheet fields) deletes the flat key with nothing written to
+        // replace it, silently erasing a value this method never merged in from disk in the first
+        // place. This previously wiped a live Google service-account key from a connections-only
+        // save. `??=` on each merge keeps whatever the *new* nested object already has -
+        // migration must never override a value this same call is actively setting below.
         var legacyFlatKeys = secrets.Select(kvp => kvp.Key)
-            .Where(key => key.StartsWith("google_credentials:", StringComparison.Ordinal) || key.StartsWith("spreadsheets:", StringComparison.Ordinal))
+            .Where(key => key.StartsWith("google_credentials:", StringComparison.Ordinal) || key.StartsWith("spreadsheets:test:", StringComparison.Ordinal))
             .ToList();
 
         foreach (var key in legacyFlatKeys)
         {
+            var value = secrets[key]?.GetValue<string>();
+
+            if (key.StartsWith("google_credentials:", StringComparison.Ordinal))
+            {
+                var subKey = key["google_credentials:".Length..];
+                googleCredentials[subKey] ??= value;
+            }
+            else
+            {
+                var subKey = key["spreadsheets:test:".Length..];
+                test[subKey] ??= value;
+            }
+
             secrets.Remove(key);
         }
 
-        if (hasAnyCredentialField)
-        {
-            var googleCredentials = secrets["google_credentials"] as JsonObject ?? new JsonObject();
-            SetIfProvided(googleCredentials, "type", update.CredentialType);
-            SetIfProvided(googleCredentials, "private_key_id", update.PrivateKeyId);
-            SetIfProvided(googleCredentials, "private_key", update.PrivateKey);
-            SetIfProvided(googleCredentials, "client_email", update.ClientEmail);
-            SetIfProvided(googleCredentials, "client_id", update.ClientId);
-            secrets["google_credentials"] = googleCredentials;
-        }
+        // The 5 credential fields are independently optional - see SettingsUpdate's docs - so only
+        // ones actually provided this call overwrite the (now legacy-migrated) existing object.
+        SetIfProvided(googleCredentials, "type", update.CredentialType);
+        SetIfProvided(googleCredentials, "private_key_id", update.PrivateKeyId);
+        SetIfProvided(googleCredentials, "private_key", update.PrivateKey);
+        SetIfProvided(googleCredentials, "client_email", update.ClientEmail);
+        SetIfProvided(googleCredentials, "client_id", update.ClientId);
+        secrets["google_credentials"] = googleCredentials;
 
         // Unlike credential fields, blank here means "remove this domain's test spreadsheet ID" -
         // the Settings page always submits all 4 (every field is visibly prefilled, so there's no
         // "field genuinely absent" case the way there is for the never-redisplayed private key).
-        var spreadsheets = secrets["spreadsheets"] as JsonObject ?? new JsonObject();
-
-        var test = spreadsheets["test"] as JsonObject ?? new JsonObject();
         SetOrRemove(test, "gig", update.GigTestSpreadsheetId);
         SetOrRemove(test, "stock", update.StockTestSpreadsheetId);
         SetOrRemove(test, "job", update.JobTestSpreadsheetId);
