@@ -98,7 +98,7 @@ public class UserSecretsWriter(IConfigurationRoot configurationRoot)
         // always-submitted test-spreadsheet fields) deletes the flat key with nothing written to
         // replace it, silently erasing a value this method never merged in from disk in the first
         // place. This previously wiped a live Google service-account key from a connections-only
-        // save. `?? value` on each merge keeps whatever the *new* nested object already has -
+        // save. `??=` on each merge keeps whatever the *new* nested object already has -
         // migration must never override a value this same call is actively setting below.
         var legacyFlatKeys = secrets.Select(kvp => kvp.Key)
             .Where(key => key.StartsWith("google_credentials:", StringComparison.Ordinal) || key.StartsWith("spreadsheets:test:", StringComparison.Ordinal))
