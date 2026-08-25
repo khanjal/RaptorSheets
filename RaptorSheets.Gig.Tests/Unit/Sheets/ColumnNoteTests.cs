@@ -1,4 +1,4 @@
-using RaptorSheets.Gig.Constants;
+﻿using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Sheets;
 using System.ComponentModel;
 
@@ -17,9 +17,37 @@ public class ColumnNoteTests
     {
         { "Trips", SheetsConfig.HeaderNames.Region, ColumnNotes.RegionSource },
         { "Trips", SheetsConfig.HeaderNames.Tags, ColumnNotes.Tags },
+        { "Trips", SheetsConfig.HeaderNames.Service, ColumnNotes.ServiceSource },
+        { "Trips", SheetsConfig.HeaderNames.Name, ColumnNotes.TripNameSource },
+        { "Trips", SheetsConfig.HeaderNames.AddressStart, ColumnNotes.AddressSource },
+        { "Trips", SheetsConfig.HeaderNames.AddressEnd, ColumnNotes.AddressSource },
         { "Shifts", SheetsConfig.HeaderNames.Region, ColumnNotes.RegionSource },
         { "Shifts", SheetsConfig.HeaderNames.Tags, ColumnNotes.Tags },
+        { "Shifts", SheetsConfig.HeaderNames.Service, ColumnNotes.ServiceSource },
     };
+
+    // Every dropdown-backed note in this file opens by saying what the column holds and only then
+    // explains where its values come from. They were all written the other way round originally -
+    // mechanics only - which told a first-time user how to add a value but never what to put there.
+    public static TheoryData<string> DropdownNotes =>
+    [
+        ColumnNotes.ServiceSource,
+        ColumnNotes.RegionSource,
+        ColumnNotes.TripNameSource,
+        ColumnNotes.AddressSource,
+        ColumnNotes.CategorySelf,
+    ];
+
+    [Theory]
+    [MemberData(nameof(DropdownNotes))]
+    public void DropdownNote_ExplainsTheColumnBeforeItsMechanics(string note)
+    {
+        var paragraphs = note.Split("\n\n", StringSplitOptions.RemoveEmptyEntries);
+
+        Assert.Equal(2, paragraphs.Length);
+        Assert.DoesNotContain("Must match", paragraphs[0]);
+        Assert.StartsWith("Must match an existing", paragraphs[1]);
+    }
 
     [Theory]
     [MemberData(nameof(NotedColumns))]
