@@ -6,9 +6,13 @@ namespace RaptorSheets.Gig.Tests.Unit.Sheets;
 
 /// <summary>
 /// Notes are the only in-sheet explanation of what a column is for, so they have to survive the
-/// entity -> SheetModel generation rather than just existing as constants. Covers the two columns
-/// whose purpose is least self-evident from the header alone: Region (a bare place name) and Tags
-/// (free text with a comma convention the sheet cannot otherwise communicate).
+/// entity -> SheetModel generation rather than just existing as constants.
+///
+/// Guards three things: that each note reaches the column it belongs to on the right sheet, that
+/// every dropdown-backed note explains the column before its mechanics rather than the reverse,
+/// and that no input column on Trips/Shifts/Expenses ships without a note at all. The rollup
+/// sheets are deliberately excluded - their columns are computed aggregates that a note would only
+/// clutter.
 /// </summary>
 [Category("Unit Tests")]
 public class ColumnNoteTests
