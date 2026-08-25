@@ -1,4 +1,4 @@
-using Google.Apis.Sheets.v4.Data;
+﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
@@ -53,11 +53,18 @@ public static class ColumnInsertionHelper
                     requests.Add(formatRequest);
                 }
 
-                var validationRequest = GoogleRequestHelpers.GenerateColumnValidationRequest(column.SheetId, column.ColumnIndex, column.ValidationRule);
-                if (validationRequest != null)
-                {
-                    requests.Add(validationRequest);
-                }
+                // Always emit a validation request - set the rule when the column has one, and
+                // explicitly clear it when it does not. The insert above uses InheritFromBefore, so
+                // Google copies the left-hand neighbour's properties into the newly inserted column,
+                // its data validation included. The "set" request is only produced when a rule
+                // exists, so for an unvalidated column nothing else undoes that inheritance and the
+                // column silently comes back wearing its neighbour's dropdown - Gig's Tags column
+                // sits immediately right of the validated Region column and did exactly that.
+                // A null rule here means "this column is defined as unvalidated", not "unknown",
+                // because the canonical SheetModel is what produced it - so clearing is correct.
+                requests.Add(
+                    GoogleRequestHelpers.GenerateColumnValidationRequest(column.SheetId, column.ColumnIndex, column.ValidationRule)
+                    ?? GoogleRequestHelpers.GenerateColumnValidationClearRequest(column.SheetId, column.ColumnIndex));
             }
         }
 

@@ -1,7 +1,8 @@
-using Google.Apis.Sheets.v4.Data;
+﻿using Google.Apis.Sheets.v4.Data;
 using Moq;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
+using RaptorSheets.Core.Extensions;
 using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
@@ -20,6 +21,12 @@ public class ColumnInsertionHelperTests
         public Dictionary<string, SheetModel> Structures { get; set; } = [];
     }
 
+    // RepeatCellRequest.Fields is typed as object, so a direct == against a string literal is a
+    // reference comparison (CS0252) rather than a value one.
+    private static bool IsValidationRequest(Request request) =>
+        request.RepeatCell != null
+        && string.Equals(request.RepeatCell.Fields?.ToString(), Field.DATA_VALIDATION.GetDescription(), StringComparison.Ordinal);
+
     [Fact]
     public void BuildInsertRequests_WithSingleMissingColumn_BuildsInsertAndUpdateRequests()
     {
@@ -30,7 +37,9 @@ public class ColumnInsertionHelperTests
 
         var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
 
-        Assert.Equal(2, requests.Count);
+        // Insert + header update + validation clear = 3 requests. The clear is unconditional; see
+        // BuildInsertRequests_WithoutValidationRule_ClearsInheritedValidation below.
+        Assert.Equal(3, requests.Count);
         var insertRequest = requests[0];
         Assert.NotNull(insertRequest.InsertDimension);
         Assert.Equal(5, insertRequest.InsertDimension.Range.SheetId);
@@ -143,9 +152,9 @@ public class ColumnInsertionHelperTests
 
         var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
 
-        // Insert + header update + format reapply = 3 requests for this one column.
-        Assert.Equal(3, requests.Count);
-        var formatRequest = requests.Single(r => r.RepeatCell != null);
+        // Insert + header update + format reapply + validation clear = 4 requests for this one column.
+        Assert.Equal(4, requests.Count);
+        var formatRequest = requests.Single(r => r.RepeatCell?.Cell?.UserEnteredFormat != null);
         Assert.Equal(2, formatRequest.RepeatCell.Range.StartColumnIndex);
     }
 
@@ -159,8 +168,10 @@ public class ColumnInsertionHelperTests
 
         var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
 
-        Assert.Equal(2, requests.Count);
-        Assert.DoesNotContain(requests, r => r.RepeatCell != null);
+        // Insert + header update + validation clear. No format request - but the clear means this
+        // is no longer "no RepeatCell at all", so assert on the absence of a *format* one.
+        Assert.Equal(3, requests.Count);
+        Assert.DoesNotContain(requests, r => r.RepeatCell?.Cell?.UserEnteredFormat != null);
     }
 
     [Fact]
@@ -180,6 +191,81 @@ public class ColumnInsertionHelperTests
         var validationRequest = requests.Single(r => r.RepeatCell != null);
         Assert.Equal(2, validationRequest.RepeatCell.Range.StartColumnIndex);
         Assert.NotNull(validationRequest.RepeatCell.Cell.DataValidation);
+    }
+
+    [Fact]
+    public void BuildInsertRequests_WithoutValidationRule_ClearsInheritedValidation()
+    {
+        // The insert uses InheritFromBefore, so Google copies the left-hand neighbour's properties -
+        // data validation included - into the newly inserted column. Without an explicit clear, an
+        // unvalidated column inserted directly right of a validated one comes back wearing its
+        // neighbour's dropdown: Gig's Tags column sits immediately right of the validated Region
+        // column and did exactly that.
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Trips"] = [new ColumnInsertionInfo { SheetName = "Trips", SheetId = 5, ColumnIndex = 23, ColumnName = "Tags" }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        var clearRequest = Assert.Single(requests, IsValidationRequest);
+        Assert.Equal(23, clearRequest.RepeatCell.Range.StartColumnIndex);
+        Assert.Equal(24, clearRequest.RepeatCell.Range.EndColumnIndex);
+        Assert.Equal(5, clearRequest.RepeatCell.Range.SheetId);
+        // An absent DataValidation under the dataValidation mask is how the API expresses "remove".
+        Assert.Null(clearRequest.RepeatCell.Cell.DataValidation);
+    }
+
+    [Fact]
+    public void BuildInsertRequests_WithValidationRule_DoesNotAlsoEmitAClear()
+    {
+        // A validated column gets its rule set, not set-then-cleared - exactly one request may
+        // touch the dataValidation mask, or the two would race within the same batch.
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Trips"] = [new ColumnInsertionInfo { SheetName = "Trips", SheetId = 5, ColumnIndex = 22, ColumnName = "Region", ValidationRule = new DataValidationRule() }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        var validationRequest = Assert.Single(requests, IsValidationRequest);
+        Assert.NotNull(validationRequest.RepeatCell.Cell.DataValidation);
+    }
+
+    [Fact]
+    public void BuildInsertRequests_ClearsValidationForEveryUnvalidatedColumn()
+    {
+        // Both Gig sheets are affected - Trips' Tags at index 23 and Shifts' at 17, each directly
+        // right of a validated Region column - so the clear must be per-column, not per-batch.
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Trips"] = [new ColumnInsertionInfo { SheetName = "Trips", SheetId = 1, ColumnIndex = 23, ColumnName = "Tags" }],
+            ["Shifts"] = [new ColumnInsertionInfo { SheetName = "Shifts", SheetId = 2, ColumnIndex = 17, ColumnName = "Tags" }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        var clears = requests.Where(IsValidationRequest).ToList();
+        Assert.Equal(2, clears.Count);
+        Assert.Contains(clears, r => r.RepeatCell.Range.SheetId == 1 && r.RepeatCell.Range.StartColumnIndex == 23);
+        Assert.Contains(clears, r => r.RepeatCell.Range.SheetId == 2 && r.RepeatCell.Range.StartColumnIndex == 17);
+    }
+
+    [Fact]
+    public void BuildInsertRequests_ClearsValidationAfterTheColumnIsInserted()
+    {
+        // Ordering matters: the clear undoes what InheritFromBefore did, so it has to land after
+        // the InsertDimension it is correcting, not before it.
+        var missingColumns = new Dictionary<string, List<ColumnInsertionInfo>>
+        {
+            ["Trips"] = [new ColumnInsertionInfo { SheetName = "Trips", SheetId = 5, ColumnIndex = 23, ColumnName = "Tags" }]
+        };
+
+        var requests = ColumnInsertionHelper.BuildInsertRequests(missingColumns);
+
+        var insertAt = requests.FindIndex(r => r.InsertDimension != null);
+        var clearAt = requests.FindIndex(IsValidationRequest);
+        Assert.True(insertAt >= 0 && clearAt > insertAt, $"expected clear after insert, got insert={insertAt} clear={clearAt}");
     }
 
     [Fact]
