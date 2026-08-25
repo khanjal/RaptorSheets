@@ -81,6 +81,11 @@ jobs:
     needs: [check_workflow, detect_package]
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      # Required for Trusted Publishing: lets the job mint the short-lived OIDC
+      # token that nuget.org exchanges for a temporary API key. Without it the
+      # token request fails silently and the login step yields no key.
+      id-token: write
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -102,16 +107,28 @@ jobs:
           -p:PackageVersion=$VERSION \
           --output .
           
+    # Trusted Publishing: exchange a GitHub OIDC token for a temporary nuget.org
+    # API key, replacing the long-lived `nuget_api_key` secret. The key is valid
+    # for one hour and is single-use, so this step deliberately sits immediately
+    # before the push rather than earlier in the job.
+    #
+    # Matched by the nuget.org policy on khanjal/RaptorSheets + release-packages.yml.
+    # Renaming this workflow file invalidates that policy - update it there first.
+    - name: NuGet login (OIDC to temporary API key)
+      uses: NuGet/login@v1
+      id: login
+      with:
+        # nuget.org profile name (KhanJal), NOT an email address.
+        user: ${{ secrets.NUGET_USER }}
+
     - name: Push to NuGet
-      env:
-        NUGET_API_KEY: ${{ secrets.nuget_api_key }}
       run: |
         PACKAGE="${{ needs.detect_package.outputs.package }}"
         echo "Pushing $PACKAGE to NuGet..."
         dotnet nuget push "$PACKAGE.*.nupkg" \
-          --api-key $NUGET_API_KEY \
+          --api-key ${{ steps.login.outputs.NUGET_API_KEY }} \
           --source https://api.nuget.org/v3/index.json
-          
+
     - name: Create release summary
       run: |
         echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
