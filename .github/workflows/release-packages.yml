@@ -82,6 +82,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      # Declaring any permissions block sets every unlisted scope to `none`, so
+      # checkout's `contents: read` has to be restated here or the clone 403s.
+      contents: read
       # Required for Trusted Publishing: lets the job mint the short-lived OIDC
       # token that nuget.org exchanges for a temporary API key. Without it the
       # token request fails silently and the login step yields no key.
