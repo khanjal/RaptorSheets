@@ -29,6 +29,6 @@ public static class ColumnNotes
     public const string TripDistance = "How many miles/km the trip (request) took.";
     public const string TripKey = "Used to connect Trips to the Shifts sheet.";
     public const string TripNameSource = "The customer - usually first name and last initial, as the app shows it.\n\nOn a return the direction flips and this is who the pickup is from, so set Type to match.\n\nMust match an existing name, or type a new one here to add it to the Names sheet.";
-    public const string Types = "Pickup, Shop, Order, Curbside, Canceled.";
+    public const string Types = "Pickup, Shop, Order, Curbside, Return, Canceled.";
     public const string UnitTypes = "Apartment, Unit, Room, Suite.";
 }

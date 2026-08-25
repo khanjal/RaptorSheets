@@ -71,6 +71,18 @@ public class ColumnNoteTests
     }
 
     [Fact]
+    public void TypesNote_OffersAValueForTheReturnCaseNameAndPlaceReferTo()
+    {
+        // Name and Place both tell the user to "set Type to match" on a return, so Type has to
+        // actually suggest a value for it. The Types sheet is a rollup of types already used -
+        // there is no seeded list - so this note is the only place the canonical set is written
+        // down, and a type missing here is a type nobody knows to enter.
+        Assert.Contains("Return", ColumnNotes.Types);
+        Assert.Contains("set Type to match", ColumnNotes.TripNameSource);
+        Assert.Contains("set Type to match", ColumnNotes.Place);
+    }
+
+    [Fact]
     public void TagsNote_StatesTheCommaConventionAndThatItIsFreeText()
     {
         // Tags is unvalidated on purpose - nothing in the sheet signals the comma convention or
