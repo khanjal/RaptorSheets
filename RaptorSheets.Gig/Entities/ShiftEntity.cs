@@ -74,7 +74,7 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Region, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion, note: ColumnNotes.RegionSource)]
     public string Region { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Tags, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Tags, isInput: true, note: ColumnNotes.Tags)]
     public string Tags { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Note, isInput: true)]

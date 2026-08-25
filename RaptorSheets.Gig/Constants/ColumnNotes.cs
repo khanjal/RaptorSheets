@@ -14,8 +14,9 @@ public static class ColumnNotes
     public const string OrderNumber = "Order/confirmation number from the delivery service's app, if it provides one.";
     public const string Pickup = "Time when the trip (request) was picked up.";
     public const string Place = "Location of pickup (delivery).";
-    public const string RegionSource = "Must match an existing region, or type a new one here to add it to the Regions sheet.";
+    public const string RegionSource = "City, area, or zone you are working in.\n\nMust match an existing region, or type a new one here to add it to the Regions sheet.";
     public const string ServiceSource = "Must match an existing service, or type a new one here to add it to the Services sheet.";
+    public const string Tags = "Your own labels for this row, separated by commas.\n\nFree text - there is no dropdown, so whatever you type is kept as-is.\n\nExample: rain, surge, airport";
     public const string ShiftDistance = "Distance not accounted for on the Trips sheet.";
     public const string ShiftKey = "Used to connect Shifts to the Trips sheet.";
     public const string ShiftNumber = "Shift Number 1-9\n\nLeave blank if there is only one shift for that service for that day.";
