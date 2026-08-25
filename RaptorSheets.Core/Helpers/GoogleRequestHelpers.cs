@@ -1,4 +1,4 @@
-using Google.Apis.Sheets.v4.Data;
+﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
@@ -423,6 +423,40 @@ public static class GoogleRequestHelpers
             Fields = Field.DATA_VALIDATION.GetDescription(),
             Range = range,
             Cell = new CellData { DataValidation = validation }
+        };
+
+        return new Request { RepeatCell = repeatCellRequest };
+    }
+
+    /// <summary>
+    /// Builds the RepeatCell request that strips any data validation from the column at
+    /// <paramref name="columnIndex"/> on <paramref name="sheetId"/> - the counterpart to
+    /// <see cref="GenerateColumnValidationRequest"/> for a column that is meant to carry no
+    /// validation at all. A cleared <see cref="CellData.DataValidation"/> under the
+    /// <see cref="Field.DATA_VALIDATION"/> field mask is how the Sheets API expresses "remove the
+    /// rule": the mask names the field, and the absent value blanks it, without disturbing the
+    /// column's value, format, or note.
+    ///
+    /// Needed because <see cref="Helpers.ColumnInsertionHelper"/> inserts columns with
+    /// InheritFromBefore, which copies the left-hand neighbour's properties - dropdown included -
+    /// into the new column. Gig's unvalidated Tags column sits immediately right of the validated
+    /// Region column and so came back wearing Region's dropdown.
+    /// </summary>
+    public static Request GenerateColumnValidationClearRequest(int sheetId, int columnIndex)
+    {
+        var range = new GridRange
+        {
+            SheetId = sheetId,
+            StartColumnIndex = columnIndex,
+            EndColumnIndex = columnIndex + 1,
+            StartRowIndex = 1,
+        };
+
+        var repeatCellRequest = new RepeatCellRequest
+        {
+            Fields = Field.DATA_VALIDATION.GetDescription(),
+            Range = range,
+            Cell = new CellData()
         };
 
         return new Request { RepeatCell = repeatCellRequest };
