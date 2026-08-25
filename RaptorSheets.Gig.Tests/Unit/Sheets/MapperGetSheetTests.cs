@@ -356,7 +356,10 @@ public class MapperGetSheetTests
         // are separate ARRAYFORMULAs placed after it.
         var queryFormula = sheet.Headers[0].Formula;
         Assert.NotNull(queryFormula);
-        Assert.StartsWith("=QUERY({", queryFormula);
+        // Guarded against an empty Trips sheet - see GuardEmptySource. QUERY types each column
+        // from its data, so with no trips every column reads as text and the sums fail.
+        Assert.StartsWith("=IF(COUNTA(", queryFormula);
+        Assert.Contains("QUERY({", queryFormula);
         Assert.Contains("select Col1, Col2, count(Col1), sum(Col3), sum(Col4), sum(Col5), sum(Col6), sum(Col7), min(Col8), max(Col9)", queryFormula);
         Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Trips', sum(Col3) 'Pay', sum(Col4) 'Tips', sum(Col5) 'Bonus', sum(Col6) 'Total', sum(Col7) 'Dist', min(Col8) 'First Trip', max(Col9) 'Last Trip'", queryFormula);
 
