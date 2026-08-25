@@ -47,8 +47,8 @@ public class ColumnNoteTests
         // Mechanics go last rather than strictly second - a note may need a middle paragraph
         // (Name explains that a return flips its meaning) without inverting the ordering rule.
         Assert.True(paragraphs.Length >= 2, $"expected meaning and mechanics paragraphs, got {paragraphs.Length}");
-        Assert.DoesNotContain("Must match", paragraphs[0]);
-        Assert.StartsWith("Must match an existing", paragraphs[^1]);
+        Assert.DoesNotContain("Choose an existing", paragraphs[0]);
+        Assert.StartsWith("Choose an existing", paragraphs[^1]);
     }
 
     [Theory]
