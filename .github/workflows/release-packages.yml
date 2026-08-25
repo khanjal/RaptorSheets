@@ -68,11 +68,47 @@ jobs:
             exit 1
           fi
         else
-          # Manual workflow dispatch
+          # Manual workflow dispatch. The version box is free text, so it arrives exactly as typed -
+          # unlike the release path above, nothing has stripped a prefix off it yet. Pasting a whole
+          # tag ("core/v5.0.2") used to sail through to `dotnet pack -p:PackageVersion=core/v5.0.2`,
+          # where the slash makes an invalid NuGet version and restore dies with a bare
+          # "MSB4181: RestoreTask returned false but did not log an error" - no mention of the
+          # version, which sends you looking at the SDK instead. Normalise here, then reject
+          # anything that still is not a version.
           PACKAGE="${{ github.event.inputs.package }}"
           VERSION="${{ github.event.inputs.version }}"
+
+          # Trim whitespace, then accept the same shapes the release tags use.
+          VERSION="$(echo "$VERSION" | tr -d '[:space:]')"
+          TYPED="$VERSION"
+
+          case "$VERSION" in
+            gig/*)   PREFIX="RaptorSheets.Gig";   VERSION=${VERSION#gig/} ;;
+            stock/*) PREFIX="RaptorSheets.Stock"; VERSION=${VERSION#stock/} ;;
+            core/*)  PREFIX="RaptorSheets.Core";  VERSION=${VERSION#core/} ;;
+            *)       PREFIX="" ;;
+          esac
+          VERSION=${VERSION#v}
+
+          # A tag prefix that disagrees with the chosen package means one of the two is a mistake -
+          # picking either silently would publish under the wrong package ID.
+          if [ -n "$PREFIX" ] && [ "$PREFIX" != "$PACKAGE" ]; then
+            echo "::error::Version '$TYPED' is prefixed for $PREFIX but the selected package is $PACKAGE."
+            echo "Pick one: either choose $PREFIX as the package, or enter the version without the prefix."
+            exit 1
+          fi
+
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$TYPED' is not a valid version."
+            echo "Enter the version on its own, e.g. 5.0.1 - no package prefix and no leading 'v'."
+            exit 1
+          fi
+
+          if [ "$TYPED" != "$VERSION" ]; then
+            echo "Normalised version input '$TYPED' to '$VERSION'."
+          fi
         fi
-        
+
         echo "package=$PACKAGE" >> $GITHUB_OUTPUT
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Releasing: $PACKAGE version $VERSION"
