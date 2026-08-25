@@ -42,6 +42,34 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
 
+    - name: Check integration test config
+      shell: bash
+      env:
+        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        spreadsheets__test__job: ${{ secrets.JOB_SPREADSHEET_ID }}
+        spreadsheets__test__home: ${{ secrets.HOME_SPREADSHEET_ID }}
+        spreadsheets__test__core: ${{ secrets.CORE_SPREADSHEET_ID }}
+        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+      run: |
+        # Integration tests skip themselves when credentials or a spreadsheet id are missing
+        # (FactCheckUserSecretsBaseAttribute), and a skip is not a failure - so an unset secret
+        # silently removes ~100 live-sheet tests while CI still reports green. Report presence
+        # up front. Values are never printed, only whether they arrived.
+        missing=0
+        for name in google_credentials__private_key_id google_credentials__private_key                     google_credentials__client_email google_credentials__client_id                     spreadsheets__test__gig spreadsheets__test__stock                     spreadsheets__test__job spreadsheets__test__home spreadsheets__test__core; do
+          if [ -z "${!name}" ]; then
+            echo "::warning::$name is empty - the integration tests that need it will skip."
+            missing=$((missing + 1))
+          else
+            echo "present: $name"
+          fi
+        done
+        echo "$missing of 9 integration-test settings are missing."
+
     - name: Run Tests
       shell: bash
       env:
@@ -49,7 +77,7 @@ jobs:
         spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
         spreadsheets__test__job: ${{ secrets.JOB_SPREADSHEET_ID }}
         spreadsheets__test__home: ${{ secrets.HOME_SPREADSHEET_ID }}
-        google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
+        spreadsheets__test__core: ${{ secrets.CORE_SPREADSHEET_ID }}
         google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
         google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
         google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
@@ -69,6 +97,32 @@ jobs:
         done
         echo "Tests failed after 3 attempts"
         exit 1
+
+    - name: Report skipped tests
+      if: always()
+      shell: bash
+      run: |
+        # A skipped test is not a failure, so ~100 skipped live-sheet tests look identical to a
+        # clean run in the checks UI. Surface the count in the job summary so a config regression
+        # is visible without reading the log. Deliberately does NOT fail the build yet: skips are
+        # currently non-zero, and failing here would block every PR before the credentials that
+        # cause them can be fixed. Once the count is genuinely 0, turn this into a hard failure.
+        skipped=$(grep -ho 'skipped="[0-9]*"' $(find . -name '*.trx') 2>/dev/null                   | grep -o '[0-9]*' | paste -sd+ - | bc)
+        skipped=${skipped:-0}
+        {
+          echo "## Test skips"
+          echo ""
+          if [ "$skipped" -eq 0 ]; then
+            echo "No tests skipped."
+          else
+            echo "**$skipped test(s) skipped.** Integration tests skip themselves when credentials"
+            echo "or a spreadsheet id are missing, so a non-zero count here means live-sheet"
+            echo "coverage did not run - see the \"Check integration test config\" step above."
+          fi
+        } >> $GITHUB_STEP_SUMMARY
+        if [ "$skipped" -ne 0 ]; then
+          echo "::warning::$skipped test(s) skipped - live-sheet coverage did not run."
+        fi
 
     - name: Upload Test Results
       if: always()
@@ -154,7 +208,7 @@ jobs:
         spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
         spreadsheets__test__job: ${{ secrets.JOB_SPREADSHEET_ID }}
         spreadsheets__test__home: ${{ secrets.HOME_SPREADSHEET_ID }}
-        google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
+        spreadsheets__test__core: ${{ secrets.CORE_SPREADSHEET_ID }}
         google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
         google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
         google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
