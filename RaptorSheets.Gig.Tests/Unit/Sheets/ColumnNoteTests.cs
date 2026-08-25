@@ -24,6 +24,17 @@ public class ColumnNoteTests
         { "Shifts", SheetsConfig.HeaderNames.Region, ColumnNotes.RegionSource },
         { "Shifts", SheetsConfig.HeaderNames.Tags, ColumnNotes.Tags },
         { "Shifts", SheetsConfig.HeaderNames.Service, ColumnNotes.ServiceSource },
+        { "Trips", SheetsConfig.HeaderNames.Date, ColumnNotes.DateFormat },
+        { "Trips", SheetsConfig.HeaderNames.Dropoff, ColumnNotes.Dropoff },
+        { "Trips", SheetsConfig.HeaderNames.Cash, ColumnNotes.Cash },
+        { "Trips", SheetsConfig.HeaderNames.Bonus, ColumnNotes.Bonus },
+        { "Trips", SheetsConfig.HeaderNames.OdometerStart, ColumnNotes.Odometer },
+        { "Trips", SheetsConfig.HeaderNames.OdometerEnd, ColumnNotes.Odometer },
+        { "Shifts", SheetsConfig.HeaderNames.Date, ColumnNotes.DateFormat },
+        { "Shifts", SheetsConfig.HeaderNames.TimeStart, ColumnNotes.TimeStart },
+        { "Shifts", SheetsConfig.HeaderNames.TimeEnd, ColumnNotes.TimeEnd },
+        { "Shifts", SheetsConfig.HeaderNames.Cash, ColumnNotes.Cash },
+        { "Shifts", SheetsConfig.HeaderNames.Bonus, ColumnNotes.Bonus },
     };
 
     // Every dropdown-backed note in this file opens by saying what the column holds and only then
@@ -58,7 +69,9 @@ public class ColumnNoteTests
         var sheet = sheetName == "Trips" ? TripSheet.GetSheet() : ShiftSheet.GetSheet();
 
         var header = Assert.Single(sheet.Headers, h => h.Name == headerName);
-        Assert.Equal(expectedNote, header.Note);
+        // Formatted columns get a "Cell Format: ..." hint appended by EntitySheetConfigHelper,
+        // so the stored note is the constant plus a suffix rather than the constant alone.
+        Assert.StartsWith(expectedNote, header.Note);
     }
 
     [Fact]
@@ -68,6 +81,37 @@ public class ColumnNoteTests
         // dropdown values come from but never what a region actually is.
         Assert.StartsWith("City, area, or zone", ColumnNotes.RegionSource);
         Assert.Contains("Regions sheet", ColumnNotes.RegionSource);
+    }
+
+    [Fact]
+    public void EveryInputColumnOnTheEnteredSheetsHasANote()
+    {
+        // Trips/Shifts/Expenses are the only sheets a user types into - the rest are rollups whose
+        // columns are computed aggregates and would only be noise if annotated. Columns that are
+        // derived even on these sheets (Day/Month/Year, Amt/*, and the formula totals) are excluded
+        // for the same reason.
+        string[] derived =
+        [
+            "Day", "Month", "Year", "Week", "Weekday", "Total", "Key",
+            "Amt/Trip", "Amt/Hour", "Amt/Dist", "Amt/Day", "Trips/Hour",
+        ];
+
+        foreach (var (name, sheet) in new[]
+        {
+            ("Trips", TripSheet.GetSheet()),
+            ("Shifts", ShiftSheet.GetSheet()),
+            ("Expenses", ExpenseSheet.GetSheet()),
+        })
+        {
+            var missing = sheet.Headers
+                .Where(h => string.IsNullOrWhiteSpace(h.Formula))
+                .Where(h => !derived.Contains(h.Name))
+                .Where(h => string.IsNullOrWhiteSpace(h.Note))
+                .Select(h => h.Name)
+                .ToList();
+
+            Assert.True(missing.Count == 0, $"{name} has un-noted input columns: {string.Join(", ", missing)}");
+        }
     }
 
     [Fact]
