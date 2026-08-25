@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
@@ -12,7 +12,7 @@ public class ExpenseEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: Format.DATE)]
     public string Date { get; set; } = string.Empty;
     
-    [Column(SheetsConfig.HeaderNames.Name, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Name, isInput: true, note: ColumnNotes.ExpenseName)]
     public string Name { get; set; } = string.Empty;
     
     [Column(SheetsConfig.HeaderNames.Amount, isInput: true, formatType: Format.ACCOUNTING)]
@@ -21,6 +21,6 @@ public class ExpenseEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Category, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeSelf, note: ColumnNotes.CategorySelf)]
     public string Category { get; set; } = string.Empty;
     
-    [Column(SheetsConfig.HeaderNames.Description, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Description, isInput: true, note: ColumnNotes.ExpenseDescription)]
     public string Description { get; set; } = string.Empty;
 }

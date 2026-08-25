@@ -1,4 +1,4 @@
-using RaptorSheets.Core.Attributes;
+﻿using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
@@ -13,13 +13,13 @@ public class ShiftEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
     // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, formatType: Format.DATE)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: Format.DATE)]
     public string Date { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeStart, isInput: true, formatType: Format.TIME)]
+    [Column(SheetsConfig.HeaderNames.TimeStart, isInput: true, note: ColumnNotes.TimeStart, formatType: Format.TIME)]
     public string Start { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.TimeEnd, isInput: true, formatType: Format.TIME)]
+    [Column(SheetsConfig.HeaderNames.TimeEnd, isInput: true, note: ColumnNotes.TimeEnd, formatType: Format.TIME)]
     public string Finish { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.Service, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeService, note: ColumnNotes.ServiceSource)]
@@ -47,20 +47,22 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Tips, isInput: true, formatType: Format.ACCOUNTING)]
     public decimal? Tip { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Bonus, isInput: true, formatType: Format.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Bonus, isInput: true, note: ColumnNotes.Bonus, formatType: Format.ACCOUNTING)]
     public decimal? Bonus { get; set; }
 
-    [Column(SheetsConfig.HeaderNames.Cash, isInput: true, formatType: Format.ACCOUNTING)]
+    [Column(SheetsConfig.HeaderNames.Cash, isInput: true, note: ColumnNotes.Cash, formatType: Format.ACCOUNTING)]
     public decimal? Cash { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerStart,
         isInput: true,
+        note: ColumnNotes.Odometer,
         formatPattern: CellFormatPatterns.Distance)]
     [JsonPropertyName("startOdometer")]
     public decimal? OdometerStart { get; set; }
 
     [Column(SheetsConfig.HeaderNames.OdometerEnd,
         isInput: true,
+        note: ColumnNotes.Odometer,
         formatPattern: CellFormatPatterns.Distance)]
     [JsonPropertyName("endOdometer")]
     public decimal? OdometerEnd { get; set; }
@@ -74,10 +76,10 @@ public class ShiftEntity : SheetRowEntityBase
     [Column(SheetsConfig.HeaderNames.Region, isInput: true, enableValidation: true, validationPattern: SheetsConfig.ValidationNames.RangeRegion, note: ColumnNotes.RegionSource)]
     public string Region { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Tags, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Tags, isInput: true, note: ColumnNotes.Tags)]
     public string Tags { get; set; } = "";
 
-    [Column(SheetsConfig.HeaderNames.Note, isInput: true)]
+    [Column(SheetsConfig.HeaderNames.Note, isInput: true, note: ColumnNotes.FreeformNote)]
     public string Note { get; set; } = "";
 
     // Output columns (formulas/calculated) - defaults to isInput: false
