@@ -1,4 +1,4 @@
-using RaptorSheets.Core.Helpers;
+﻿using RaptorSheets.Core.Helpers;
 using Xunit;
 
 namespace RaptorSheets.Core.Tests.Unit.Helpers;
@@ -591,9 +591,41 @@ public class GoogleFormulaBuilderTests
         var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count");
 
         // Assert
-        Assert.StartsWith("=QUERY({Trips!A2:A,Trips!B2:B},\"select Col1, Col2, count(Col1)", result);
+        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B},\"select Col1, Col2, count(Col1)", result);
         Assert.Contains("group by Col1, Col2 order by Col1 asc, count(Col1) desc", result);
         Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Count'", result);
+    }
+
+    [Fact]
+    public void BuildQueryGroupTwoColumns_GuardsAgainstAnEmptySource()
+    {
+        // QUERY infers each column's type from its data. On a freshly created spreadsheet there is
+        // no data at all, so every column reads as text and sum()/avg() over it fails outright with
+        // AVG_SUM_ONLY_NUMERIC - the sheet renders as one big error before the user has typed
+        // anything. The sibling rollups avoid this only because SUMIF returns 0 over an empty range.
+        var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns(
+            "Name", "Address", "Trips!A2:A", "Trips!B2:B", "Trips",
+            new[] { ("Pay", "Trips!C2:C", "sum"), ("First", "Trips!D2:D", "min") });
+
+        // Emptiness is tested on the first grouping range - the query already discards rows where
+        // that column is null, so no rows there means no output rows either way.
+        Assert.StartsWith("=IF(COUNTA(Trips!A2:A)=0,", result);
+
+        // The fallback is the header row on its own, in the same order the query would label them.
+        Assert.Contains("{\"Name\",\"Address\",\"Trips\",\"Pay\",\"First\"}", result);
+
+        // The query itself is unchanged - the guard only decides which branch renders.
+        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B,Trips!C2:C,Trips!D2:D}", result);
+        Assert.Contains("sum(Col3), min(Col4)", result);
+    }
+
+    [Fact]
+    public void BuildQueryGroupTwoColumns_CountOnly_AlsoGuardsAgainstAnEmptySource()
+    {
+        var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count");
+
+        Assert.StartsWith("=IF(COUNTA(Trips!A2:A)=0,", result);
+        Assert.Contains("{\"Name\",\"Address\",\"Count\"}", result);
     }
 
     [Fact]
@@ -621,7 +653,7 @@ public class GoogleFormulaBuilderTests
         var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count", sumColumns);
 
         // Assert
-        Assert.StartsWith("=QUERY({Trips!A2:A,Trips!B2:B,Trips!C2:C,Trips!D2:D},", result);
+        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B,Trips!C2:C,Trips!D2:D},", result);
         Assert.Contains("select Col1, Col2, count(Col1), sum(Col3), sum(Col4)", result);
         Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Count', sum(Col3) 'Pay', sum(Col4) 'Tips'", result);
     }
@@ -634,7 +666,7 @@ public class GoogleFormulaBuilderTests
 
         // Assert
         Assert.DoesNotContain("sum(", result);
-        Assert.StartsWith("=QUERY({Trips!A2:A,Trips!B2:B},\"select Col1, Col2, count(Col1)", result);
+        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B},\"select Col1, Col2, count(Col1)", result);
     }
 
     [Fact]
@@ -652,7 +684,7 @@ public class GoogleFormulaBuilderTests
         var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count", aggregateColumns);
 
         // Assert
-        Assert.StartsWith("=QUERY({Trips!A2:A,Trips!B2:B,Trips!C2:C,Trips!D2:D,Trips!D2:D},", result);
+        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B,Trips!C2:C,Trips!D2:D,Trips!D2:D},", result);
         Assert.Contains("select Col1, Col2, count(Col1), sum(Col3), min(Col4), max(Col5)", result);
         Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Count', sum(Col3) 'Pay', min(Col4) 'First Trip', max(Col5) 'Last Trip'", result);
     }

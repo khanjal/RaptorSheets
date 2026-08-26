@@ -1,4 +1,4 @@
-using RaptorSheets.Core.Constants;
+﻿using RaptorSheets.Core.Constants;
 using System.Diagnostics.CodeAnalysis;
 
 namespace RaptorSheets.Core.Helpers;
@@ -124,6 +124,30 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
+    /// A one-row array literal of the given headers, used as the fallback when the source range is
+    /// empty. QUERY infers each column's type from its data, so with no data at all every column is
+    /// typed as text and any sum()/avg() over it fails with AVG_SUM_ONLY_NUMERIC - the whole sheet
+    /// renders as an error on a freshly created spreadsheet, before the user has entered anything.
+    /// The sibling rollups escape this only because SUMIF returns 0 over an empty range rather than
+    /// erroring; the QUERY-based ones need the emptiness handled explicitly.
+    /// </summary>
+    private static string BuildHeaderOnlyFallback(IEnumerable<string> headers)
+    {
+        return "{" + string.Join(",", headers.Select(h => '"' + h + '"')) + "}";
+    }
+
+    /// <summary>
+    /// Wraps a QUERY so an empty source yields just the header row instead of an error. COUNTA on
+    /// the first grouping range is the emptiness test: the query already discards rows where that
+    /// column is null, so no rows there means no output rows either way - the guard changes what an
+    /// empty sheet renders, never what a populated one does.
+    /// </summary>
+    private static string GuardEmptySource(string countRange, IEnumerable<string> headers, string query)
+    {
+        return "=IF(COUNTA(" + countRange + ")=0," + BuildHeaderOnlyFallback(headers) + "," + query.TrimStart('=') + ")";
+    }
+
+    /// <summary>
     /// Builds a QUERY formula that groups two parallel ranges by the first two columns
     /// and returns a header row plus a count column. This centralizes the common summary pattern.
     /// </summary>
@@ -135,7 +159,7 @@ public static class GoogleFormulaBuilder
 
         var innerQuery = "\"select Col1, Col2, " + countExpr + " where Col1 is not null and Col2 is not null group by Col1, Col2 order by Col1 asc, " + countExpr + " desc label Col1 '" + header1 + "', Col2 '" + header2 + "', " + countExpr + " '" + countHeader + "'\",0";
 
-        return "=QUERY(" + ranges + "," + innerQuery + ")";
+        return GuardEmptySource(range1, [header1, header2, countHeader], "=QUERY(" + ranges + "," + innerQuery + ")");
     }
 
     /// <summary>
@@ -174,7 +198,10 @@ public static class GoogleFormulaBuilder
             " where Col1 is not null and Col2 is not null group by Col1, Col2 order by Col1 asc, " + countExpr +
             " desc label " + string.Join(", ", labelClauses) + "\",0";
 
-        return "=QUERY(" + ranges + "," + innerQuery + ")";
+        var headers = new List<string> { header1, header2, countHeader };
+        headers.AddRange(aggregateColumnList.Select(a => a.Header));
+
+        return GuardEmptySource(range1, headers, "=QUERY(" + ranges + "," + innerQuery + ")");
     }
 
     /// <summary>
