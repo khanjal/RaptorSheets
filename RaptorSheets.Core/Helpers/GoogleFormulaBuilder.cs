@@ -124,11 +124,6 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
-    /// Builds a QUERY formula that groups two parallel ranges by the first two columns
-    /// and returns a header row plus a count column. This centralizes the common summary pattern.
-    /// </summary>
-
-    /// <summary>
     /// A one-row array literal of the given headers, used as the fallback when the source range is
     /// empty. QUERY infers each column's type from its data, so with no data at all every column is
     /// typed as text and any sum()/avg() over it fails with AVG_SUM_ONLY_NUMERIC - the whole sheet
@@ -152,6 +147,10 @@ public static class GoogleFormulaBuilder
         return "=IF(COUNTA(" + countRange + ")=0," + BuildHeaderOnlyFallback(headers) + "," + query.TrimStart('=') + ")";
     }
 
+    /// <summary>
+    /// Builds a QUERY formula that groups two parallel ranges by the first two columns
+    /// and returns a header row plus a count column. This centralizes the common summary pattern.
+    /// </summary>
     public static string BuildQueryGroupTwoColumns(string header1, string header2, string range1, string range2, string countHeader, bool countColumnIsSecond = false)
     {
         var countExpr = countColumnIsSecond ? "count(Col2)" : "count(Col1)";
