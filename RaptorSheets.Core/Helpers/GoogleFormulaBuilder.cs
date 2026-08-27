@@ -124,6 +124,25 @@ public static class GoogleFormulaBuilder
     }
 
     /// <summary>
+    /// Wraps a range destined for sum()/avg() so QUERY always sees it as numeric. QUERY infers a
+    /// column's type from its data, and a column with no numeric values anywhere is typed as text -
+    /// sum() over it then fails the whole formula with AVG_SUM_ONLY_NUMERIC. That is not just an
+    /// empty-spreadsheet problem: Tips and Bonus stay legitimately blank for a driver who never
+    /// receives either, so the column can be empty forever while the sheet is otherwise full.
+    /// N() maps blanks and text to 0 and leaves numbers alone, which fixes the type without
+    /// changing any sum.
+    ///
+    /// Only sum/avg need this. min()/max() operate on non-numeric values quite happily, and the
+    /// date columns feeding them must not be coerced - N() would turn a date into its serial number.
+    /// </summary>
+    private static string CoerceNumericRange(string range, string aggregateFunction)
+    {
+        return aggregateFunction is "sum" or "avg"
+            ? "ARRAYFORMULA(N(" + range + "))"
+            : range;
+    }
+
+    /// <summary>
     /// A one-row array literal of the given headers, used as the fallback when the source range is
     /// empty. QUERY infers each column's type from its data, so with no data at all every column is
     /// typed as text and any sum()/avg() over it fails with AVG_SUM_ONLY_NUMERIC - the whole sheet
@@ -182,7 +201,7 @@ public static class GoogleFormulaBuilder
         var countExpr = countColumnIsSecond ? "count(Col2)" : "count(Col1)";
         var aggregateColumnList = aggregateColumns.ToList();
 
-        var ranges = "{" + range1 + "," + range2 + string.Concat(aggregateColumnList.Select(a => "," + a.Range)) + "}";
+        var ranges = "{" + range1 + "," + range2 + string.Concat(aggregateColumnList.Select(a => "," + CoerceNumericRange(a.Range, a.AggregateFunction))) + "}";
 
         var selectColumns = new List<string> { "Col1", "Col2", countExpr };
         var labelClauses = new List<string> { "Col1 '" + header1 + "'", "Col2 '" + header2 + "'", countExpr + " '" + countHeader + "'" };
