@@ -615,8 +615,38 @@ public class GoogleFormulaBuilderTests
         Assert.Contains("{\"Name\",\"Address\",\"Trips\",\"Pay\",\"First\"}", result);
 
         // The query itself is unchanged - the guard only decides which branch renders.
-        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B,Trips!C2:C,Trips!D2:D}", result);
+        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B,ARRAYFORMULA(N(Trips!C2:C)),Trips!D2:D}", result);
         Assert.Contains("sum(Col3), min(Col4)", result);
+    }
+
+    [Fact]
+    public void BuildQueryGroupTwoColumns_CoercesOnlyTheAggregatedNumericRanges()
+    {
+        // A column with no numeric values anywhere is typed as text by QUERY, and sum() over it
+        // fails the entire formula with AVG_SUM_ONLY_NUMERIC. This is not only an empty-sheet
+        // problem - Tips and Bonus stay blank indefinitely for a driver who never receives either,
+        // so the column can be empty forever while the sheet is otherwise full of trips.
+        var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns(
+            "Name", "Address", "Trips!A2:A", "Trips!B2:B", "Trips",
+            new[]
+            {
+                ("Pay", "Trips!C2:C", "sum"),
+                ("Average", "Trips!D2:D", "avg"),
+                ("First", "Trips!E2:E", "min"),
+                ("Last", "Trips!E2:E", "max"),
+            });
+
+        // sum and avg are the two aggregates the API restricts to numeric columns.
+        Assert.Contains("ARRAYFORMULA(N(Trips!C2:C))", result);
+        Assert.Contains("ARRAYFORMULA(N(Trips!D2:D))", result);
+
+        // min/max accept non-numeric values, and coercing their date range would reduce it to a
+        // serial number - so E stays raw even though it appears twice.
+        Assert.DoesNotContain("ARRAYFORMULA(N(Trips!E2:E))", result);
+
+        // The grouping ranges are never aggregated and must stay untouched - N() would blank them.
+        Assert.DoesNotContain("ARRAYFORMULA(N(Trips!A2:A))", result);
+        Assert.DoesNotContain("ARRAYFORMULA(N(Trips!B2:B))", result);
     }
 
     [Fact]
@@ -653,7 +683,9 @@ public class GoogleFormulaBuilderTests
         var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count", sumColumns);
 
         // Assert
-        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B,Trips!C2:C,Trips!D2:D},", result);
+        // Summed ranges are wrapped so an all-blank column is still typed numeric; the two
+        // grouping ranges are not, since they are never aggregated.
+        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B,ARRAYFORMULA(N(Trips!C2:C)),ARRAYFORMULA(N(Trips!D2:D))},", result);
         Assert.Contains("select Col1, Col2, count(Col1), sum(Col3), sum(Col4)", result);
         Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Count', sum(Col3) 'Pay', sum(Col4) 'Tips'", result);
     }
@@ -684,7 +716,9 @@ public class GoogleFormulaBuilderTests
         var result = GoogleFormulaBuilder.BuildQueryGroupTwoColumns("Name", "Address", "Trips!A2:A", "Trips!B2:B", "Count", aggregateColumns);
 
         // Assert
-        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B,Trips!C2:C,Trips!D2:D,Trips!D2:D},", result);
+        // Only the sum range is coerced. min/max work on non-numeric values, and N() would
+        // turn the date they operate on into a serial number.
+        Assert.Contains("QUERY({Trips!A2:A,Trips!B2:B,ARRAYFORMULA(N(Trips!C2:C)),Trips!D2:D,Trips!D2:D},", result);
         Assert.Contains("select Col1, Col2, count(Col1), sum(Col3), min(Col4), max(Col5)", result);
         Assert.Contains("label Col1 'Name', Col2 'Address', count(Col1) 'Count', sum(Col3) 'Pay', min(Col4) 'First Trip', max(Col5) 'Last Trip'", result);
     }
