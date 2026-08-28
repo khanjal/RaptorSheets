@@ -1,4 +1,4 @@
-using Google.Apis.Sheets.v4.Data;
+﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
@@ -281,6 +281,25 @@ public static class HeaderHelpers
             return messages;
         }
 
+        // A header row showing a spreadsheet error means the formula that produces those headers
+        // failed - not that the columns are absent. On a sheet whose headers are spilled by a
+        // QUERY (Deliveries, Locations), one #VALUE! in the anchor cell makes every expected
+        // header look missing, and the anchor itself - the only one that is not HideHeaderName -
+        // becomes an insertion candidate. Inserting there shifts the broken formula sideways and
+        // corrupts the layout, turning a recoverable formula error into a structural one.
+        // Report it and insert nothing; fixing the formula is what this needs, via the explicit
+        // reapply path rather than a write from the read path (see the tension in GitHub #113).
+        var formulaError = FindFormulaError(values);
+
+        if (formulaError != null)
+        {
+            messages.Add(MessageHelpers.CreateErrorMessage(
+                $"[{sheetModel.Name}]: Header row contains {formulaError} - the formula that builds this sheet is failing. " +
+                "Skipping column insertion; reapply the sheet's formulas instead.",
+                MessageType.CHECK_SHEET));
+            return messages;
+        }
+
         var headerArray = new string[values.Count];
         values.CopyTo(headerArray, 0);
         var index = 0;
@@ -294,6 +313,37 @@ public static class HeaderHelpers
         CheckExtraColumns(values, sheetModel, messages);
 
         return messages;
+    }
+
+
+    /// <summary>
+    /// The error values Google Sheets renders into a cell when a formula fails. A header row
+    /// containing any of them is reporting a broken formula, which is a different problem from a
+    /// missing column and must not be treated as one.
+    /// </summary>
+    private static readonly string[] FormulaErrorValues =
+    [
+        "#VALUE!", "#REF!", "#N/A", "#NAME?", "#DIV/0!", "#NUM!", "#NULL!", "#ERROR!"
+    ];
+
+    /// <summary>
+    /// Returns the first spreadsheet error found in the header row, or null when it is clean.
+    /// Matches on the whole trimmed cell so a column legitimately named e.g. "N/A Reason" is not
+    /// mistaken for an error.
+    /// </summary>
+    private static string? FindFormulaError(IList<object> values)
+    {
+        foreach (var value in values)
+        {
+            var text = value?.ToString()?.Trim();
+
+            if (text != null && FormulaErrorValues.Contains(text, StringComparer.OrdinalIgnoreCase))
+            {
+                return text;
+            }
+        }
+
+        return null;
     }
 
     private static void CheckSingleHeader(SheetCellModel sheetHeader, int index, IList<object> values, string[] headerArray, SheetModel sheetModel, List<MessageEntity> messages, List<ColumnInsertionInfo> insertionInfo)
