@@ -107,7 +107,16 @@ jobs:
         # is visible without reading the log. Deliberately does NOT fail the build yet: skips are
         # currently non-zero, and failing here would block every PR before the credentials that
         # cause them can be fixed. Once the count is genuinely 0, turn this into a hard failure.
-        skipped=$(grep -ho 'skipped="[0-9]*"' $(find . -name '*.trx') 2>/dev/null                   | grep -o '[0-9]*' | paste -sd+ - | bc)
+        # Count individual NotExecuted results rather than reading <Counters>. VSTest records a
+        # skipped test as outcome="NotExecuted" on its UnitTestResult, but does NOT propagate it
+        # into the Counters element - a run with 1 skip still writes notExecuted="0", so both
+        # `skipped=` (which is not a TRX attribute at all) and `notExecuted=` report zero. Verified
+        # against a real TRX: total="622" executed="621" notExecuted="0" for a run with 1 skip.
+        #
+        # find -exec, not $(find) in argument position: with no .trx files the command substitution
+        # expands to nothing and grep reads stdin instead, hanging the step. This runs
+        # `if: always()`, so a build that failed before tests is exactly that case.
+        skipped=$(find . -name '*.trx' -exec grep -o 'outcome="NotExecuted"' {} + 2>/dev/null | wc -l)
         skipped=${skipped:-0}
         {
           echo "## Test skips"
