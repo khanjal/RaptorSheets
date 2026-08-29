@@ -42,61 +42,16 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
 
-    - name: Check integration test config
-      shell: bash
-      env:
-        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
-        spreadsheets__test__job: ${{ secrets.JOB_SPREADSHEET_ID }}
-        spreadsheets__test__home: ${{ secrets.HOME_SPREADSHEET_ID }}
-        spreadsheets__test__core: ${{ secrets.CORE_SPREADSHEET_ID }}
-        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
-        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
-        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
-        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
-      run: |
-        # Integration tests skip themselves when credentials or a spreadsheet id are missing
-        # (FactCheckUserSecretsBaseAttribute), and a skip is not a failure - so an unset secret
-        # silently removes ~100 live-sheet tests while CI still reports green. Report presence
-        # up front. Values are never printed, only whether they arrived.
-        missing=0
-        for name in google_credentials__private_key_id google_credentials__private_key                     google_credentials__client_email google_credentials__client_id                     spreadsheets__test__gig spreadsheets__test__stock                     spreadsheets__test__job spreadsheets__test__home spreadsheets__test__core; do
-          if [ -z "${!name}" ]; then
-            echo "::warning::$name is empty - the integration tests that need it will skip."
-            missing=$((missing + 1))
-          else
-            echo "present: $name"
-          fi
-        done
-        echo "$missing of 9 integration-test settings are missing."
-
     - name: Run Tests
       shell: bash
-      env:
-        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
-        spreadsheets__test__job: ${{ secrets.JOB_SPREADSHEET_ID }}
-        spreadsheets__test__home: ${{ secrets.HOME_SPREADSHEET_ID }}
-        spreadsheets__test__core: ${{ secrets.CORE_SPREADSHEET_ID }}
-        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
-        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
-        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
-        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
-      run: |
-        for i in {1..3}; do
-          echo "Test attempt $i of 3"
-          if dotnet test --no-build --configuration Release --logger trx --verbosity normal; then
-            echo "Tests passed!"
-            exit 0
-          fi
-          if [ $i -lt 3 ]; then
-            SLEEP_TIME=$((10 * (1 << ($i - 1))))
-            echo "Tests failed, retrying in $SLEEP_TIME seconds..."
-            sleep $SLEEP_TIME
-          fi
-        done
-        echo "Tests failed after 3 attempts"
-        exit 1
+      # Unit tests only. The live-sheet integration tests moved to integration-tests.yml: they need
+      # ~18 minutes serialised, they are flaky by nature (Google's metadata is briefly stale after a
+      # tab is regenerated), and this workflow gates both PRs and - via release-packages.yml's
+      # check_workflow - every release. A slow, flaky gate is one people learn to route around.
+      #
+      # No retry loop here either. It existed for network-dependent tests; unit tests are
+      # deterministic, so a retry would only hide a real failure.
+      run: dotnet test --no-build --configuration Release --filter "FullyQualifiedName!~Integration" --logger trx --verbosity normal
 
     - name: Report skipped tests
       if: always()
@@ -212,36 +167,10 @@ jobs:
 
     - name: Test with Coverage for SonarCloud
       shell: bash
-      env:
-        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
-        spreadsheets__test__job: ${{ secrets.JOB_SPREADSHEET_ID }}
-        spreadsheets__test__home: ${{ secrets.HOME_SPREADSHEET_ID }}
-        spreadsheets__test__core: ${{ secrets.CORE_SPREADSHEET_ID }}
-        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
-        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
-        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
-        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+      # Unit-only, matching the gating job above. Coverage therefore reflects what the unit suite
+      # actually exercises rather than being inflated by live-sheet tests that only run elsewhere.
       run: |
-        for i in {1..3}; do
-          echo "Test attempt $i of 3"
-          if dotnet test --no-build --configuration Release \
-            --collect:"XPlat Code Coverage" \
-            --results-directory ./TestResults \
-            --logger trx \
-            --verbosity normal \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover; then
-            echo "Tests passed!"
-            exit 0
-          fi
-          if [ $i -lt 3 ]; then
-            SLEEP_TIME=$((10 * (1 << ($i - 1))))
-            echo "Tests failed, retrying in $SLEEP_TIME seconds..."
-            sleep $SLEEP_TIME
-          fi
-        done
-        echo "Tests failed after 3 attempts"
-        exit 1
+        dotnet test --no-build --configuration Release           --filter "FullyQualifiedName!~Integration"           --collect:"XPlat Code Coverage"           --results-directory ./TestResults           --logger trx           --verbosity normal           -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
     - name: Upload Coverage Results
       if: always()

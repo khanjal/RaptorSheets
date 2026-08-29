@@ -55,5 +55,21 @@ public class PlumbingTestConfig<TEntity> where TEntity : class, ISheetEntity, ne
     public Func<CancellationToken, Task>? BulkReseedAsync { get; init; }
 
     /// <summary>How long to wait after a write for this domain's formulas to settle before reading back.</summary>
+    /// <summary>
+    /// How long to wait after a write before reading values back. This is the expensive one: Stock
+    /// sets it to 20s because its GOOGLEFINANCE-driven columns recompute far more slowly than plain
+    /// SUMIF/COUNTIF, and a read issued too early sees stale or empty values.
+    /// </summary>
     public TimeSpan SettleDelay { get; init; } = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    /// How long to wait after a purely structural change - creating or deleting a sheet, inserting,
+    /// moving or deleting a column, or cleaning one up. Google only has to make metadata consistent
+    /// here; nothing is recomputed, so the long GOOGLEFINANCE settle buys nothing.
+    ///
+    /// Kept separate because applying <see cref="SettleDelay"/> everywhere made Stock's suite take
+    /// 11 minutes of the ~18 the whole live suite needed, most of it spent waiting for a
+    /// recalculation that no following assertion actually read.
+    /// </summary>
+    public TimeSpan StructureSettleDelay { get; init; } = TimeSpan.FromSeconds(2);
 }
