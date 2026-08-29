@@ -1,4 +1,4 @@
-using Google.Apis.Sheets.v4.Data;
+﻿using Google.Apis.Sheets.v4.Data;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
@@ -79,7 +79,7 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
         };
 
         await Config.ExecuteRawBatchUpdateAsync(deleteRequest, default);
-        await Task.Delay(Config.SettleDelay);
+        await Task.Delay(Config.StructureSettleDelay);
     }
 
     private static Request DeleteColumnRequest(int sheetId, int columnIndex) => new()
@@ -166,10 +166,10 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
         {
             var createResult = await Manager!.CreateSheets([dependentSheet]);
             Assert.Empty(CriticalErrors(createResult));
-            await Task.Delay(Config.SettleDelay);
+            await Task.Delay(Config.StructureSettleDelay);
         }
 
-        await Task.Delay(Config.SettleDelay);
+        await Task.Delay(Config.StructureSettleDelay);
         var tabNamesAfterRecreate = await Manager!.GetAllSheetTabNames();
         Assert.Contains(dependentSheet, tabNamesAfterRecreate);
     }
@@ -196,7 +196,7 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
         // call regardless of what DeleteSheets reports, and must always run - a blocking assertion
         // here would risk leaving the input sheet permanently deleted for every later test.
         await Manager!.DeleteSheets([Config.InputSheetName]);
-        await Task.Delay(Config.SettleDelay);
+        await Task.Delay(Config.StructureSettleDelay);
 
         try
         {
@@ -236,18 +236,18 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
         {
             var deleteResult = await Manager!.DeleteAllSheets();
             Assert.Contains(deleteResult.Messages, m => m.Message.Contains("safety sheet"));
-            await Task.Delay(Config.SettleDelay);
+            await Task.Delay(Config.StructureSettleDelay);
         }
         finally
         {
             var createResult = await Manager!.CreateAllSheets();
             Assert.Empty(CriticalErrors(createResult));
-            await Task.Delay(Config.SettleDelay);
+            await Task.Delay(Config.StructureSettleDelay);
 
             await ReseedAsync();
         }
 
-        await Task.Delay(Config.SettleDelay);
+        await Task.Delay(Config.StructureSettleDelay);
 
         var tabNames = await Manager!.GetAllSheetTabNames();
         Assert.Contains(Config.InputSheetName, tabNames);
@@ -282,7 +282,7 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
 
         Assert.True(await Config.ExecuteRawBatchUpdateAsync(
             new BatchUpdateSpreadsheetRequest { Requests = [DeleteColumnRequest(dependentSheetId, formulaHeader.Index)] }, default));
-        await Task.Delay(Config.SettleDelay);
+        await Task.Delay(Config.StructureSettleDelay);
 
         var healingRead = await Manager!.GetSheets([Config.DependentSheetName]);
         Assert.Contains(healingRead.Messages, m => m.Message.Contains("Inserting column") && m.Message.Contains(formulaHeader.Name));
@@ -313,7 +313,7 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
 
         Assert.True(await Config.ExecuteRawBatchUpdateAsync(
             new BatchUpdateSpreadsheetRequest { Requests = [DeleteColumnRequest(inputSheetId, testColumnHeader.Index)] }, default));
-        await Task.Delay(Config.SettleDelay);
+        await Task.Delay(Config.StructureSettleDelay);
 
         var healingRead = await Manager!.GetSheets([Config.InputSheetName]);
         Assert.Contains(healingRead.Messages, m => m.Message.Contains("Inserting column") && m.Message.Contains(Config.TestColumnName));
@@ -358,7 +358,7 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
 
         var deleteRequests = formulaHeaders.Select(h => DeleteColumnRequest(dependentSheetId, h.Index)).ToList();
         Assert.True(await Config.ExecuteRawBatchUpdateAsync(new BatchUpdateSpreadsheetRequest { Requests = deleteRequests }, default));
-        await Task.Delay(Config.SettleDelay);
+        await Task.Delay(Config.StructureSettleDelay);
 
         var healingRead = await Manager!.GetSheets([Config.DependentSheetName]);
         foreach (var header in formulaHeaders)
@@ -412,7 +412,7 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
                 ]
             };
             Assert.True(await Config.ExecuteRawBatchUpdateAsync(moveRequest, default));
-            await Task.Delay(Config.SettleDelay);
+            await Task.Delay(Config.StructureSettleDelay);
 
             var readResult = await Manager!.GetSheets([Config.InputSheetName]);
             Assert.True(Config.ContainsTestRow(readResult, TestRowId));
@@ -435,9 +435,9 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
             // MoveDimensionRequest's exact before/after-removal index semantics (genuinely easy to get
             // subtly wrong) - reuses the delete/self-heal path already proven reliable above.
             await Manager!.DeleteSheets([Config.InputSheetName]);
-            await Task.Delay(Config.SettleDelay);
+            await Task.Delay(Config.StructureSettleDelay);
             await Manager!.GetSheets([Config.InputSheetName]); // triggers self-heal recreation
-            await Task.Delay(Config.SettleDelay);
+            await Task.Delay(Config.StructureSettleDelay);
 
             var restoredStructure = await Manager!.GetLiveSheetStructure(Config.InputSheetName);
             var restoredOrder = restoredStructure!.Headers.OrderBy(h => h.Index).Select(h => h.Name).ToList();
@@ -473,7 +473,7 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
             Requests = [new Request { InsertDimension = new InsertDimensionRequest { Range = new DimensionRange { SheetId = inputSheetId, Dimension = "COLUMNS", StartIndex = extraColumnIndex, EndIndex = extraColumnIndex + 1 }, InheritFromBefore = false } }]
         };
         Assert.True(await Config.ExecuteRawBatchUpdateAsync(insertRequest, default));
-        await Task.Delay(Config.SettleDelay);
+        await Task.Delay(Config.StructureSettleDelay);
 
         var writeExtraColumnRequest = new BatchUpdateSpreadsheetRequest
         {
@@ -520,7 +520,7 @@ public abstract class SheetPlumbingTestsBase<TEntity, TManager>
                 Requests = [DeleteColumnRequest(inputSheetId, extraColumnIndex)]
             };
             await Config.ExecuteRawBatchUpdateAsync(deleteExtraColumn, default);
-            await Task.Delay(Config.SettleDelay);
+            await Task.Delay(Config.StructureSettleDelay);
         }
     }
 

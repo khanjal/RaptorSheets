@@ -44,31 +44,52 @@ jobs:
 
     - name: Run Tests
       shell: bash
-      env:
-        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
-        spreadsheets__test__job: ${{ secrets.JOB_SPREADSHEET_ID }}
-        spreadsheets__test__home: ${{ secrets.HOME_SPREADSHEET_ID }}
-        google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
-        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
-        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
-        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
-        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+      # Unit tests only. The live-sheet integration tests moved to integration-tests.yml: they need
+      # ~18 minutes serialised, they are flaky by nature (Google's metadata is briefly stale after a
+      # tab is regenerated), and this workflow gates both PRs and - via release-packages.yml's
+      # check_workflow - every release. A slow, flaky gate is one people learn to route around.
+      #
+      # No retry loop here either. It existed for network-dependent tests; unit tests are
+      # deterministic, so a retry would only hide a real failure.
+      run: dotnet test --no-build --configuration Release --filter "FullyQualifiedName!~Integration" --logger trx --verbosity normal
+
+    - name: Report skipped tests
+      if: always()
+      shell: bash
       run: |
-        for i in {1..3}; do
-          echo "Test attempt $i of 3"
-          if dotnet test --no-build --configuration Release --logger trx --verbosity normal; then
-            echo "Tests passed!"
-            exit 0
+        # A skipped test is not a failure, so ~100 skipped live-sheet tests look identical to a
+        # clean run in the checks UI. Surface the count in the job summary so a config regression
+        # is visible without reading the log. Deliberately does NOT fail the build yet: skips are
+        # currently non-zero, and failing here would block every PR before the credentials that
+        # cause them can be fixed. Once the count is genuinely 0, turn this into a hard failure.
+        # Count individual NotExecuted results rather than reading <Counters>. VSTest records a
+        # skipped test as outcome="NotExecuted" on its UnitTestResult, but does NOT propagate it
+        # into the Counters element - a run with 1 skip still writes notExecuted="0", so both
+        # `skipped=` (which is not a TRX attribute at all) and `notExecuted=` report zero. Verified
+        # against a real TRX: total="622" executed="621" notExecuted="0" for a run with 1 skip.
+        #
+        # find -exec, not $(find) in argument position: with no .trx files the command substitution
+        # expands to nothing and grep reads stdin instead, hanging the step. This runs
+        # `if: always()`, so a build that failed before tests is exactly that case.
+        # `|| true` is load-bearing: GitHub runs steps under `bash -eo pipefail`, so with zero
+        # matches grep exits 1, pipefail propagates that through wc, and set -e kills the step.
+        # The step meant to report skips would fail precisely when there were none.
+        skipped=$( { find . -name '*.trx' -exec grep -o 'outcome="NotExecuted"' {} + 2>/dev/null || true; } | wc -l )
+        skipped=${skipped:-0}
+        {
+          echo "## Test skips"
+          echo ""
+          if [ "$skipped" -eq 0 ]; then
+            echo "No tests skipped."
+          else
+            echo "**$skipped test(s) skipped.** Integration tests skip themselves when credentials"
+            echo "or a spreadsheet id are missing, so a non-zero count here means live-sheet"
+            echo "coverage did not run - see the \"Check integration test config\" step above."
           fi
-          if [ $i -lt 3 ]; then
-            SLEEP_TIME=$((10 * (1 << ($i - 1))))
-            echo "Tests failed, retrying in $SLEEP_TIME seconds..."
-            sleep $SLEEP_TIME
-          fi
-        done
-        echo "Tests failed after 3 attempts"
-        exit 1
+        } >> $GITHUB_STEP_SUMMARY
+        if [ "$skipped" -ne 0 ]; then
+          echo "::warning::$skipped test(s) skipped - live-sheet coverage did not run."
+        fi
 
     - name: Upload Test Results
       if: always()
@@ -149,36 +170,10 @@ jobs:
 
     - name: Test with Coverage for SonarCloud
       shell: bash
-      env:
-        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
-        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
-        spreadsheets__test__job: ${{ secrets.JOB_SPREADSHEET_ID }}
-        spreadsheets__test__home: ${{ secrets.HOME_SPREADSHEET_ID }}
-        google_credentials__type: ${{ secrets.GOOGLE_CREDENTIALS_TYPE }}
-        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
-        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
-        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
-        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+      # Unit-only, matching the gating job above. Coverage therefore reflects what the unit suite
+      # actually exercises rather than being inflated by live-sheet tests that only run elsewhere.
       run: |
-        for i in {1..3}; do
-          echo "Test attempt $i of 3"
-          if dotnet test --no-build --configuration Release \
-            --collect:"XPlat Code Coverage" \
-            --results-directory ./TestResults \
-            --logger trx \
-            --verbosity normal \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover; then
-            echo "Tests passed!"
-            exit 0
-          fi
-          if [ $i -lt 3 ]; then
-            SLEEP_TIME=$((10 * (1 << ($i - 1))))
-            echo "Tests failed, retrying in $SLEEP_TIME seconds..."
-            sleep $SLEEP_TIME
-          fi
-        done
-        echo "Tests failed after 3 attempts"
-        exit 1
+        dotnet test --no-build --configuration Release           --filter "FullyQualifiedName!~Integration"           --collect:"XPlat Code Coverage"           --results-directory ./TestResults           --logger trx           --verbosity normal           -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
     - name: Upload Coverage Results
       if: always()

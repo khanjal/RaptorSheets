@@ -24,14 +24,55 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-    - name: Check if workflow is successful
+    - name: Require unit and live-sheet tests to have passed on main
       id: check
       run: |
-        workflow_path=".github/workflows/dotnet.yml"
-        status=$(gh api repos/${{ github.repository }}/actions/runs | jq -r ".workflow_runs[] | select(.path==\""$workflow_path\"") | .conclusion" | head -n 1)
-        if [ "$status" != "success" ]; then
-          echo "Workflow $workflow_path did not succeed."
-          echo "Status: $status"
+        # Gate the publish on BOTH suites having passed on main: the unit tests, and the live-sheet
+        # integration tests that actually prove the formulas this library writes are accepted by
+        # Google. The integration suite is deliberately not a PR gate (~18 minutes, and flaky by
+        # nature), but a release is infrequent and deliberate, so it is the right place to insist.
+        #
+        # Filtering is load-bearing. The previous version asked for the newest run of dotnet.yml on
+        # ANY branch and compared .conclusion to "success", which failed twice for reasons that had
+        # nothing to do with the code:
+        #   - an in-progress run reports conclusion=null, which is not "success", so a release cut
+        #     shortly after a merge failed with "Status: null" and read as a test failure;
+        #   - a run on someone's feature branch could decide whether a release off main was allowed.
+        # Asking the API for completed runs on main removes both. (GitHub issue #122.)
+        failed=0
+
+        for workflow in dotnet.yml integration-tests.yml; do
+          latest=$(gh api "repos/${{ github.repository }}/actions/runs?branch=main&status=completed&per_page=50"             --jq "[.workflow_runs[] | select(.path==\".github/workflows/$workflow\")] | first")
+
+          if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+            echo "::error::No completed run of $workflow found on main. Run it before releasing."
+            failed=1
+            continue
+          fi
+
+          conclusion=$(echo "$latest" | jq -r '.conclusion')
+          url=$(echo "$latest" | jq -r '.html_url')
+
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::$workflow last completed on main with '$conclusion' - $url"
+            failed=1
+          else
+            echo "$workflow: success - $url"
+          fi
+        done
+
+        # Surface an in-progress run separately: "still running" is a wait, not a failure, and
+        # conflating the two is what made the old message so misleading.
+        for workflow in dotnet.yml integration-tests.yml; do
+          running=$(gh api "repos/${{ github.repository }}/actions/runs?branch=main&status=in_progress&per_page=50"             --jq "[.workflow_runs[] | select(.path==\".github/workflows/$workflow\")] | length")
+
+          if [ "$running" != "0" ]; then
+            echo "::warning::$workflow is currently running on main - this gate used the last completed run."
+          fi
+        done
+
+        if [ "$failed" -ne 0 ]; then
+          echo "Refusing to publish: see the errors above."
           exit 1
         fi
 

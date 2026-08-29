@@ -1,0 +1,145 @@
+# Live-sheet integration tests. Split out of dotnet.yml deliberately - see the comments there.
+#
+# These talk to real Google spreadsheets: they create, corrupt, heal and regenerate whole tabs.
+# That makes them the only tests that can catch a formula this library writes but Sheets rejects,
+# and also makes them slow (~18 minutes serialised) and inherently flaky (Google's metadata is
+# briefly stale after a tab is regenerated). They are therefore reported, not gated: nothing here
+# blocks a PR, and release-packages.yml's check_workflow watches dotnet.yml, not this file.
+name: Integration Tests
+
+concurrency:
+  # Never run two of these at once. They share one spreadsheet per domain through a single service
+  # account, so a second run would fight the first - which is exactly how 65 failures appeared when
+  # these ran in parallel inside dotnet.yml.
+  group: integration-tests
+  cancel-in-progress: false
+
+on:
+  push:
+    branches: [ "main" ]
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  integration:
+    name: Live Sheet Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Check integration test config
+      shell: bash
+      env:
+        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        spreadsheets__test__job: ${{ secrets.JOB_SPREADSHEET_ID }}
+        spreadsheets__test__home: ${{ secrets.HOME_SPREADSHEET_ID }}
+        spreadsheets__test__core: ${{ secrets.CORE_SPREADSHEET_ID }}
+        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+      run: |
+        # These tests skip themselves when credentials or a spreadsheet id are missing
+        # (FactCheckUserSecretsBaseAttribute), and a skip is not a failure - so an unset secret
+        # silently removes the entire live suite while the run still reports green. Report presence
+        # up front. Values are never printed, only whether they arrived.
+        #
+        # Do NOT reference a secret that does not exist: GitHub expands it to an empty string, and
+        # an empty google_credentials__type defeated the code's `?? "service_account"` default and
+        # disabled all ~100 tests for months.
+        missing=0
+        for name in google_credentials__private_key_id google_credentials__private_key \
+                    google_credentials__client_email google_credentials__client_id \
+                    spreadsheets__test__gig spreadsheets__test__stock \
+                    spreadsheets__test__job spreadsheets__test__home spreadsheets__test__core; do
+          if [ -z "${!name}" ]; then
+            echo "::warning::$name is empty - the integration tests that need it will skip."
+            missing=$((missing + 1))
+          else
+            echo "present: $name"
+          fi
+        done
+        echo "$missing of 9 integration-test settings are missing."
+
+    - name: Run integration tests
+      shell: bash
+      env:
+        spreadsheets__test__gig: ${{ secrets.GIG_SPREADSHEET_ID }}
+        spreadsheets__test__stock: ${{ secrets.STOCK_SPREADSHEET_ID }}
+        spreadsheets__test__job: ${{ secrets.JOB_SPREADSHEET_ID }}
+        spreadsheets__test__home: ${{ secrets.HOME_SPREADSHEET_ID }}
+        spreadsheets__test__core: ${{ secrets.CORE_SPREADSHEET_ID }}
+        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+      run: |
+        # MaxCpuCount=1 is the whole point: VSTest otherwise runs the five test assemblies in
+        # parallel, and they delete and regenerate whole spreadsheets through one service account.
+        # That produced 65 failures in CI against 0 locally, where they were run one project at a
+        # time. Each domain already serialises its own tests via a CollectionDefinition; nothing
+        # serialised them against each other.
+        dotnet test --no-build --configuration Release \
+          --filter "FullyQualifiedName~Integration" \
+          --logger trx \
+          --verbosity normal \
+          -- RunConfiguration.MaxCpuCount=1
+
+    - name: Report skipped tests
+      if: always()
+      shell: bash
+      run: |
+        # VSTest records a skip as outcome="NotExecuted" on the individual result and does NOT
+        # propagate it into <Counters> - a run with 1 skip still writes notExecuted="0" - so
+        # counting individual results is the only reliable source. find -exec, not $(find), or grep
+        # reads stdin when no .trx exists and hangs this always() step.
+        # `|| true` is load-bearing: GitHub runs steps under `bash -eo pipefail`, so with zero
+        # matches grep exits 1, pipefail propagates that through wc, and set -e kills the step.
+        # The step meant to report skips would fail precisely when there were none.
+        skipped=$( { find . -name '*.trx' -exec grep -o 'outcome="NotExecuted"' {} + 2>/dev/null || true; } | wc -l )
+        skipped=${skipped:-0}
+        {
+          echo "## Live sheet test skips"
+          echo ""
+          if [ "$skipped" -eq 0 ]; then
+            echo "No tests skipped - the whole live suite ran."
+          else
+            echo "**$skipped test(s) skipped.** These skip themselves when credentials or a"
+            echo "spreadsheet id are missing, so a non-zero count means part of the live suite"
+            echo "did not run - see the \"Check integration test config\" step above."
+          fi
+        } >> $GITHUB_STEP_SUMMARY
+        if [ "$skipped" -ne 0 ]; then
+          echo "::warning::$skipped test(s) skipped - part of the live suite did not run."
+        fi
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: integration-test-results
+        path: '**/TestResults/*.trx'
+        retention-days: 30
