@@ -28,13 +28,11 @@ public class ColumnNoteTests
         { "Shifts", SheetsConfig.HeaderNames.Region, ColumnNotes.RegionSource },
         { "Shifts", SheetsConfig.HeaderNames.Tags, ColumnNotes.Tags },
         { "Shifts", SheetsConfig.HeaderNames.Service, ColumnNotes.ServiceSource },
-        { "Trips", SheetsConfig.HeaderNames.Date, ColumnNotes.DateFormat },
         { "Trips", SheetsConfig.HeaderNames.Dropoff, ColumnNotes.Dropoff },
         { "Trips", SheetsConfig.HeaderNames.Cash, ColumnNotes.Cash },
         { "Trips", SheetsConfig.HeaderNames.Bonus, ColumnNotes.Bonus },
         { "Trips", SheetsConfig.HeaderNames.OdometerStart, ColumnNotes.Odometer },
         { "Trips", SheetsConfig.HeaderNames.OdometerEnd, ColumnNotes.Odometer },
-        { "Shifts", SheetsConfig.HeaderNames.Date, ColumnNotes.DateFormat },
         { "Shifts", SheetsConfig.HeaderNames.TimeStart, ColumnNotes.TimeStart },
         { "Shifts", SheetsConfig.HeaderNames.TimeEnd, ColumnNotes.TimeEnd },
         { "Shifts", SheetsConfig.HeaderNames.Cash, ColumnNotes.Cash },
@@ -116,6 +114,29 @@ public class ColumnNoteTests
 
             Assert.True(missing.Count == 0, $"{name} has un-noted input columns: {string.Join(", ", missing)}");
         }
+    }
+
+    [Theory]
+    [InlineData("Trips")]
+    [InlineData("Shifts")]
+    [InlineData("Expenses")]
+    public void DateColumn_DescribesItsFormatWithAnExample(string sheetName)
+    {
+        // Date used to carry ColumnNotes.DateFormat ("Format: YYYY-MM-DD"), which the generated
+        // cell-format line now states more completely - pattern plus a rendered example. Keeping
+        // both said the same thing twice, so the hand-written note was dropped.
+        var sheet = sheetName switch
+        {
+            "Trips" => TripSheet.GetSheet(),
+            "Shifts" => ShiftSheet.GetSheet(),
+            _ => ExpenseSheet.GetSheet(),
+        };
+
+        var header = Assert.Single(sheet.Headers, h => h.Name == SheetsConfig.HeaderNames.Date);
+
+        Assert.Contains("Cell Format:", header.Note);
+        Assert.Contains("2026-03-09", header.Note);
+        Assert.DoesNotContain("Format: YYYY-MM-DD", header.Note);
     }
 
     [Fact]
