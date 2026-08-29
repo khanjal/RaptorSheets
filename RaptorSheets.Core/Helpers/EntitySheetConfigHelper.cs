@@ -1,3 +1,4 @@
+﻿using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Attributes;
 using RaptorSheets.Core.Models.Google;
 using RaptorSheets.Core.Utilities;
@@ -127,13 +128,22 @@ public static class EntitySheetConfigHelper
         var numberPattern = TypedFieldUtils.GetNumberFormatPattern(columnAttr);
         if (!string.IsNullOrEmpty(numberPattern) && numberPattern != "@")
         {
+            // Show what the pattern actually renders. The pattern alone is close to useless to a
+            // user - the accounting one is a 60-character run of escapes - so the example is the
+            // part that answers "what will I see in the cell". A pattern with no known example
+            // falls back to just the pattern rather than guessing at one.
+            var example = CellFormatExamples.For(numberPattern);
+            var formatText = example == null
+                ? $"Cell Format: {numberPattern}"
+                : $"Cell Format: {numberPattern}    e.g. {example}";
+
             if (string.IsNullOrEmpty(header.Note))
             {
-                header.Note = $"Cell Format: {numberPattern}";
+                header.Note = formatText;
             }
             else
             {
-                header.Note += $"\n\nCell Format: {numberPattern}";
+                header.Note += $"\n\n{formatText}";
             }
         }
 

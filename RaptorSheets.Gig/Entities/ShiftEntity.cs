@@ -13,7 +13,7 @@ public class ShiftEntity : SheetRowEntityBase
 {
     // Input columns (user-entered data)
     // Date is stored as string (for API flexibility/no timezone issues) but displayed as DATE in Google Sheets
-    [Column(SheetsConfig.HeaderNames.Date, isInput: true, note: ColumnNotes.DateFormat, formatType: Format.DATE)]
+    [Column(SheetsConfig.HeaderNames.Date, isInput: true, formatType: Format.DATE)]
     public string Date { get; set; } = "";
 
     [Column(SheetsConfig.HeaderNames.TimeStart, isInput: true, note: ColumnNotes.TimeStart, formatType: Format.TIME)]
