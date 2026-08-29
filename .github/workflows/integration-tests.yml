@@ -116,7 +116,10 @@ jobs:
         # propagate it into <Counters> - a run with 1 skip still writes notExecuted="0" - so
         # counting individual results is the only reliable source. find -exec, not $(find), or grep
         # reads stdin when no .trx exists and hangs this always() step.
-        skipped=$(find . -name '*.trx' -exec grep -o 'outcome="NotExecuted"' {} + 2>/dev/null | wc -l)
+        # `|| true` is load-bearing: GitHub runs steps under `bash -eo pipefail`, so with zero
+        # matches grep exits 1, pipefail propagates that through wc, and set -e kills the step.
+        # The step meant to report skips would fail precisely when there were none.
+        skipped=$( { find . -name '*.trx' -exec grep -o 'outcome="NotExecuted"' {} + 2>/dev/null || true; } | wc -l )
         skipped=${skipped:-0}
         {
           echo "## Live sheet test skips"
