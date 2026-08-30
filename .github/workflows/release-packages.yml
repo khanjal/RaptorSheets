@@ -27,10 +27,14 @@ jobs:
     - name: Require unit and live-sheet tests to have passed on main
       id: check
       run: |
-        # Gate the publish on BOTH suites having passed on main: the unit tests, and the live-sheet
-        # integration tests that actually prove the formulas this library writes are accepted by
-        # Google. The integration suite is deliberately not a PR gate (~18 minutes, and flaky by
-        # nature), but a release is infrequent and deliberate, so it is the right place to insist.
+        # Gate the publish on the unit suite having passed on main.
+        #
+        # The live-sheet integration suite was briefly required here too - a release is infrequent
+        # and deliberate, so it looked like the right place to insist on live coverage. Reverted
+        # after watching it run: those tests leak state into each other and fail order-dependently
+        # (#130), so gating would block releases on failures unrelated to what is being shipped,
+        # and "re-run until it goes green" only teaches people to ignore red. Worth re-adding once
+        # #130 makes that suite trustworthy.
         #
         # Filtering is load-bearing. The previous version asked for the newest run of dotnet.yml on
         # ANY branch and compared .conclusion to "success", which failed twice for reasons that had
@@ -41,7 +45,7 @@ jobs:
         # Asking the API for completed runs on main removes both. (GitHub issue #122.)
         failed=0
 
-        for workflow in dotnet.yml integration-tests.yml; do
+        for workflow in dotnet.yml; do
           latest=$(gh api "repos/${{ github.repository }}/actions/runs?branch=main&status=completed&per_page=50"             --jq "[.workflow_runs[] | select(.path==\".github/workflows/$workflow\")] | first")
 
           if [ -z "$latest" ] || [ "$latest" = "null" ]; then
@@ -63,7 +67,7 @@ jobs:
 
         # Surface an in-progress run separately: "still running" is a wait, not a failure, and
         # conflating the two is what made the old message so misleading.
-        for workflow in dotnet.yml integration-tests.yml; do
+        for workflow in dotnet.yml; do
           running=$(gh api "repos/${{ github.repository }}/actions/runs?branch=main&status=in_progress&per_page=50"             --jq "[.workflow_runs[] | select(.path==\".github/workflows/$workflow\")] | length")
 
           if [ "$running" != "0" ]; then
