@@ -97,16 +97,37 @@ jobs:
         google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
         google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
       run: |
-        # MaxCpuCount=1 is the whole point: VSTest otherwise runs the five test assemblies in
-        # parallel, and they delete and regenerate whole spreadsheets through one service account.
-        # That produced 65 failures in CI against 0 locally, where they were run one project at a
-        # time. Each domain already serialises its own tests via a CollectionDefinition; nothing
-        # serialised them against each other.
-        dotnet test --no-build --configuration Release \
-          --filter "FullyQualifiedName~Integration" \
-          --logger trx \
-          --verbosity normal \
-          -- RunConfiguration.MaxCpuCount=1
+        # Run each test project in its own dotnet test invocation, one after another.
+        #
+        # `-- RunConfiguration.MaxCpuCount=1` is NOT enough: it limits parallelism inside a single
+        # VSTest run, but `dotnet test` against the solution has MSBuild invoke the projects above
+        # that layer, and those still overlapped. The first CI run finished all five suites in ~4
+        # minutes when serialised they take ~13, and failed with the same shared-spreadsheet
+        # contention this was meant to prevent.
+        #
+        # They share one spreadsheet per domain through a single service account, so two suites
+        # running at once fight over the same tabs. Running one project at a time is exactly how
+        # they pass locally.
+        #
+        # Every project runs even if an earlier one fails - a single failure should not hide the
+        # state of the other four.
+        failed=""
+
+        for project in RaptorSheets.Core.Tests RaptorSheets.Gig.Tests RaptorSheets.Stock.Tests RaptorSheets.Job.Tests RaptorSheets.Home.Tests; do
+          echo "::group::$project"
+          if dotnet test "$project/$project.csproj"                --no-build --configuration Release                --filter "FullyQualifiedName~Integration"                --logger trx                --verbosity normal; then
+            echo "$project: passed"
+          else
+            echo "::warning::$project failed"
+            failed="$failed $project"
+          fi
+          echo "::endgroup::"
+        done
+
+        if [ -n "$failed" ]; then
+          echo "::error::Integration tests failed in:$failed"
+          exit 1
+        fi
 
     - name: Report skipped tests
       if: always()
