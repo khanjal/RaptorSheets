@@ -1,4 +1,4 @@
-using RaptorSheets.Core.Constants;
+﻿using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
@@ -180,6 +180,7 @@ public static class DemoHelpers
             Time = shiftDuration.ToString(),
             Region = region,
             Note = $"Demo {service} shift",
+            Tags = BuildDemoTags(context.Random),
             Bonus = shiftData.Bonus,
             Cash = shiftData.Cash,
             OdometerStart = shiftData.OdometerStart,
@@ -255,6 +256,47 @@ public static class DemoHelpers
     /// <summary>
     /// Determines whether the shift has trips and how many.
     /// </summary>
+    /// <summary>
+    /// The tags demo data draws from. Deliberately a small, repeating vocabulary: tags are meant to
+    /// be a handful of labels a driver reuses, not a unique value per trip, and demo data that
+    /// invented one per row would misrepresent how the column is meant to be used - and make the
+    /// Tags autocomplete in a consuming app look useless.
+    /// </summary>
+    private static readonly string[] DemoTags =
+    [
+        "rain", "surge", "airport", "night", "long wait", "stacked", "apartment", "no tip", "highway", "downtown"
+    ];
+
+    /// <summary>
+    /// Most trips get no tags at all, some get one, a few get two - matching how a driver actually
+    /// uses them. Always tagging every trip would leave the column looking mandatory.
+    /// </summary>
+    private static string BuildDemoTags(Random random)
+    {
+        var roll = random.NextDouble();
+
+        var count = roll switch
+        {
+            < 0.55 => 0,
+            < 0.85 => 1,
+            _ => 2
+        };
+
+        if (count == 0)
+        {
+            return string.Empty;
+        }
+
+        var chosen = new HashSet<string>();
+
+        while (chosen.Count < count)
+        {
+            chosen.Add(DemoTags[random.Next(DemoTags.Length)]);
+        }
+
+        return string.Join(", ", chosen);
+    }
+
     private static (bool hasTrips, int tripCount, int tripsValue) DetermineShiftTrips(Random random)
     {
         // Decide if this shift will have trips (85% chance) or not (15% chance for no-trip shifts)
@@ -415,6 +457,7 @@ public static class DemoHelpers
             OdometerEnd = travelData.OdometerEnd,
             Distance = travelData.Distance,
             Note = $"Demo trip {context.TripNumber}",
+            Tags = BuildDemoTags(context.Random),
             Exclude = context.Random.NextDouble() < 0.05, // 5% chance to exclude
             OrderNumber = context.Random.NextDouble() < 0.1 ? context.Random.Next(100000, 999999).ToString() : string.Empty
         };
