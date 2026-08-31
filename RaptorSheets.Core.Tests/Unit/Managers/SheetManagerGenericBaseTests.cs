@@ -380,6 +380,107 @@ public class SheetManagerGenericBaseTests
     }
 
     [Fact]
+    public async Task CreateAllSheets_WithRemoveDefaultSheet_DeletesItInsteadOfRelocating()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheetWithDefaultSheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = "Sheet1", SheetId = 0 } } }
+        };
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        await manager.CreateAllSheets(removeDefaultSheet: true);
+
+        Assert.NotNull(captured);
+        Assert.Contains(captured!.Requests, r => r.DeleteSheet != null && r.DeleteSheet.SheetId == 0);
+        Assert.DoesNotContain(captured.Requests, r => r.UpdateSheetProperties != null);
+    }
+
+    [Fact]
+    public async Task CreateAllSheets_WithRemoveDefaultSheet_DeletesOnlyAfterTheSheetsAreAdded()
+    {
+        // Google rejects deleting a spreadsheet's last remaining sheet, so the replacements have to
+        // be created earlier in the same batch than the delete.
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheetWithDefaultSheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = "Sheet1", SheetId = 0 } } }
+        };
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        await manager.CreateAllSheets(removeDefaultSheet: true);
+
+        var requests = captured!.Requests.ToList();
+        var addIndex = requests.FindIndex(r => r.AddSheet != null);
+        var deleteIndex = requests.FindIndex(r => r.DeleteSheet != null);
+        Assert.True(addIndex >= 0, "expected an AddSheet request");
+        Assert.True(deleteIndex > addIndex, "delete must come after the sheets that replace it");
+    }
+
+    [Fact]
+    public async Task CreateSheets_WithNoSheetsToCreate_DoesNotDeleteTheDefaultSheet()
+    {
+        // Deleting here would leave the spreadsheet with no sheets at all, since nothing
+        // is being created to take its place.
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheetWithDefaultSheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = "Sheet1", SheetId = 0 } } }
+        };
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        await manager.CreateSheets([], null, removeDefaultSheet: true);
+
+        Assert.DoesNotContain(captured?.Requests ?? new List<Request>(), r => r.DeleteSheet != null);
+    }
+
+    [Fact]
+    public async Task CreateSheets_SelfHealOverload_LeavesTheDefaultSheetInPlace()
+    {
+        // Missing-sheet self-healing runs against spreadsheets this library did not create, so it
+        // must never take the delete path - it relocates, like the default.
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheetWithDefaultSheet = new Spreadsheet
+        {
+            Sheets = new List<Sheet> { new() { Properties = new SheetProperties { Title = "Sheet1", SheetId = 0 } } }
+        };
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheetWithDefaultSheet);
+        BatchUpdateSpreadsheetRequest? captured = null;
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        await manager.CreateSheets(new Dictionary<string, int> { [SheetName] = 0 });
+
+        Assert.DoesNotContain(captured!.Requests, r => r.DeleteSheet != null);
+        Assert.Contains(captured.Requests, r => r.UpdateSheetProperties != null);
+    }
+
+    [Fact]
     public async Task CreateSheets_WithExistingIndexMap_AppliesProvidedIndices()
     {
         var mockService = new Mock<IGoogleSheetService>();
