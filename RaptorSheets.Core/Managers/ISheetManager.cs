@@ -19,6 +19,14 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     // CRUD Operations
     Task<TEntity> ChangeSheetData(List<string> sheets, TEntity sheetEntity, CancellationToken cancellationToken = default);
     Task<TEntity> CreateAllSheets(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Same as the overload above, but when <paramref name="removeDefaultSheet"/> is true deletes
+    /// Google's default "Sheet1" instead of moving it to the end. Only safe for a caller that
+    /// created the spreadsheet itself and therefore knows that tab is untouched - nothing here
+    /// checks it for data.
+    /// </summary>
+    Task<TEntity> CreateAllSheets(bool removeDefaultSheet, CancellationToken cancellationToken = default);
     Task<TEntity> CreateSheets(List<string> sheets, CancellationToken cancellationToken = default);
     Task<TEntity> DeleteAllSheets(CancellationToken cancellationToken = default);
     Task<TEntity> DeleteSheets(List<string> sheets, CancellationToken cancellationToken = default);

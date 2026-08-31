@@ -129,11 +129,31 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     private const string DefaultSheetName = "Sheet1";
 
     /// <summary>
-    /// Creates every canonical sheet for this domain.
+    /// Creates every canonical sheet for this domain, keeping Google's default "Sheet1".
     /// </summary>
     public async Task<TEntity> CreateAllSheets(CancellationToken cancellationToken = default)
     {
-        return await CreateSheets(new List<string>(_canonicalSheetNames), cancellationToken: cancellationToken);
+        return await CreateAllSheets(false, cancellationToken);
+    }
+
+    /// <summary>
+    /// Creates every canonical sheet for this domain.
+    /// </summary>
+    /// <param name="removeDefaultSheet">
+    /// When true, deletes Google's default "Sheet1" instead of relocating it to the end. Intended
+    /// for callers that created the spreadsheet themselves moments earlier and therefore know that
+    /// tab is Google's untouched default rather than something the user put there.
+    /// <para>
+    /// Opt-in on purpose, and nothing here verifies the sheet is empty - passing true without that
+    /// provenance can delete a user's data. Missing-sheet self-healing deliberately never sets it:
+    /// it runs against spreadsheets this library did not create, and reaches
+    /// <see cref="CreateSheets(Dictionary{string, int}, CancellationToken)"/> directly.
+    /// </para>
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task<TEntity> CreateAllSheets(bool removeDefaultSheet, CancellationToken cancellationToken = default)
+    {
+        return await CreateSheets(new List<string>(_canonicalSheetNames), null, removeDefaultSheet, cancellationToken);
     }
 
     /// <summary>
@@ -168,16 +188,29 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     /// Creates sheets, optionally at specific positions. If <paramref name="existingIndexMap"/> is
     /// provided its keys overlapping <paramref name="sheets"/> are treated as desired indices;
     /// otherwise positions are computed from <see cref="_canonicalSheetNames"/> ordering. Also
-    /// relocates Google's default "Sheet1" (if present and otherwise untouched) to the end of the
-    /// spreadsheet in the same batch, to minimize API calls.
+    /// relocates Google's default "Sheet1" to the end of the spreadsheet in the same batch, to
+    /// minimize API calls.
     /// </summary>
     public async Task<TEntity> CreateSheets(List<string> sheets, Dictionary<string, int>? existingIndexMap = null, CancellationToken cancellationToken = default)
+    {
+        return await CreateSheets(sheets, existingIndexMap, false, cancellationToken);
+    }
+
+    /// <inheritdoc cref="CreateSheets(List{string}, Dictionary{string, int}, CancellationToken)"/>
+    /// <param name="sheets">Sheet titles to create.</param>
+    /// <param name="existingIndexMap">Optional title-&gt;desired index overrides.</param>
+    /// <param name="removeDefaultSheet">
+    /// Delete Google's default "Sheet1" rather than moving it to the end. See
+    /// <see cref="CreateAllSheets(bool, CancellationToken)"/> for when this is safe to set.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task<TEntity> CreateSheets(List<string> sheets, Dictionary<string, int>? existingIndexMap, bool removeDefaultSheet, CancellationToken cancellationToken = default)
     {
         var entity = new TEntity();
         var batchUpdateSpreadsheetRequest = GenerateSheetsRequest(sheets);
 
         // Fetch spreadsheet info once and reuse below to avoid duplicate API calls
-        var spreadsheetInfo = await TryMoveDefaultSheetToEndAsync(batchUpdateSpreadsheetRequest, sheets, entity, cancellationToken);
+        var spreadsheetInfo = await TryHandleDefaultSheetAsync(batchUpdateSpreadsheetRequest, sheets, entity, removeDefaultSheet, cancellationToken);
 
         await TryApplyInsertionOrderingAsync(batchUpdateSpreadsheetRequest, sheets, existingIndexMap, spreadsheetInfo, cancellationToken);
 
@@ -213,11 +246,18 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     }
 
     /// <summary>
-    /// Moves Google's default sheet (e.g., "Sheet1"), if present, to the end of the spreadsheet in
-    /// the same batch to minimize API calls. Returns the fetched Spreadsheet either way (even on
-    /// failure after the fetch succeeded) so the caller can reuse it instead of fetching twice.
+    /// Deals with Google's default sheet (e.g., "Sheet1") if it is present, in the same batch as
+    /// the sheet creation itself to minimize API calls: normally by moving it to the end, or by
+    /// deleting it when <paramref name="removeDefaultSheet"/> is set.
+    /// <para>
+    /// The delete request is appended after the AddSheet requests already in the batch, and order
+    /// matters: Google rejects deleting a spreadsheet's only remaining sheet, so the replacements
+    /// have to be created first within the same batch.
+    /// </para>
+    /// Returns the fetched Spreadsheet either way (even on failure after the fetch succeeded) so
+    /// the caller can reuse it instead of fetching twice.
     /// </summary>
-    private async Task<Spreadsheet?> TryMoveDefaultSheetToEndAsync(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, List<string> sheets, TEntity entity, CancellationToken cancellationToken = default)
+    private async Task<Spreadsheet?> TryHandleDefaultSheetAsync(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, List<string> sheets, TEntity entity, bool removeDefaultSheet, CancellationToken cancellationToken = default)
     {
         Spreadsheet? spreadsheetInfo = null;
 
@@ -229,11 +269,29 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
 
             if (defaultSheet != null && defaultSheet.Properties.SheetId.HasValue)
             {
-                var existingCount = spreadsheetInfo!.Sheets!.Count;
-                var targetIndex = GoogleRequestHelpers.ComputeEndIndex(existingCount, sheets.Count);
-                batchUpdateSpreadsheetRequest.Requests.Add(
-                    GoogleRequestHelpers.GenerateUpdateSheetIndex(defaultSheet.Properties.SheetId.Value, targetIndex)
-                );
+                if (removeDefaultSheet)
+                {
+                    // Nothing is created when sheets is empty, so there would be no replacement to
+                    // leave behind - deleting here would strand the spreadsheet with no sheets at all.
+                    if (sheets.Count > 0)
+                    {
+                        batchUpdateSpreadsheetRequest.Requests.Add(new Request
+                        {
+                            DeleteSheet = new DeleteSheetRequest { SheetId = defaultSheet.Properties.SheetId.Value }
+                        });
+
+                        entity.Messages.Add(MessageHelpers.CreateInfoMessage(
+                            $"{DefaultSheetName} removed", MessageType.CREATE_SHEET));
+                    }
+                }
+                else
+                {
+                    var existingCount = spreadsheetInfo!.Sheets!.Count;
+                    var targetIndex = GoogleRequestHelpers.ComputeEndIndex(existingCount, sheets.Count);
+                    batchUpdateSpreadsheetRequest.Requests.Add(
+                        GoogleRequestHelpers.GenerateUpdateSheetIndex(defaultSheet.Properties.SheetId.Value, targetIndex)
+                    );
+                }
             }
         }
         catch
