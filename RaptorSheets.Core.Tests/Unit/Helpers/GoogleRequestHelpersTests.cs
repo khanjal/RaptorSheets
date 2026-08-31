@@ -800,18 +800,73 @@ public class GoogleRequestHelpersTests
     // is 0 (a spreadsheet's first-ever tab, not an edge case). These assert the fixed behavior:
     // TryParse's own success flag distinguishes "invalid id" from "id is legitimately zero".
 
-    private static PropertyEntity BuildSheetProperties(string id, int maxRowValue = 0) => new()
+    private static PropertyEntity BuildSheetProperties(string id, int maxRowValue = 0, int? maxRow = null)
     {
-        Id = id,
-        Attributes = new Dictionary<string, string>
+        var attributes = new Dictionary<string, string>
         {
             [Property.HEADERS.GetDescription()] = "Header1",
             [Property.MAX_ROW_VALUE.GetDescription()] = maxRowValue.ToString(),
-        },
-    };
+        };
+
+        // Omitted entirely when null, so a test can cover the "capacity unknown" path too.
+        if (maxRow.HasValue)
+        {
+            attributes[Property.MAX_ROW.GetDescription()] = maxRow.Value.ToString();
+        }
+
+        return new PropertyEntity { Id = id, Attributes = attributes };
+    }
 
     private static readonly Func<List<TestRow>, IList<object>, IList<RowData>> NoOpMapToRowData =
         (rows, _) => rows.Select(_ => new RowData()).ToList();
+
+    [Fact]
+    public void CreateUpdateCellRequests_WhenTheBlockOverrunsTheGrid_GrowsItFirst()
+    {
+        // Capacity 10, real data ends at row 8, five rows to append -> the block needs rows 9-13, so
+        // three more rows have to exist before anything is written into them. AppendCells used to
+        // grow the grid implicitly; writing at explicit indices means asking for the rows.
+        var sheetProperties = BuildSheetProperties(id: "1", maxRowValue: 8, maxRow: 10);
+        var entities = Enumerable.Range(9, 5).Select(rowId => new TestRow { RowId = rowId }).ToList();
+
+        var requests = GoogleRequestHelpers.CreateUpdateCellRequests(entities, sheetProperties, NoOpMapToRowData).ToList();
+
+        var grow = Assert.Single(requests, r => r.AppendDimension != null);
+        Assert.Equal(3, grow.AppendDimension.Length);
+        Assert.Equal(1, grow.AppendDimension.SheetId);
+        Assert.Equal(Dimension.ROWS.GetDescription(), grow.AppendDimension.Dimension);
+
+        // Order matters: the rows must exist before the write that targets them.
+        Assert.True(
+            requests.FindIndex(r => r.AppendDimension != null) < requests.FindIndex(r => r.UpdateCells != null),
+            "the grid must be grown before the block is written into it");
+    }
+
+    [Fact]
+    public void CreateUpdateCellRequests_WhenTheBlockFitsInTheGrid_DoesNotGrowIt()
+    {
+        // Capacity 100, data ends at 8, five rows to append -> rows 9-13 already exist.
+        var sheetProperties = BuildSheetProperties(id: "1", maxRowValue: 8, maxRow: 100);
+        var entities = Enumerable.Range(9, 5).Select(rowId => new TestRow { RowId = rowId }).ToList();
+
+        var requests = GoogleRequestHelpers.CreateUpdateCellRequests(entities, sheetProperties, NoOpMapToRowData).ToList();
+
+        Assert.DoesNotContain(requests, r => r.AppendDimension != null);
+        Assert.Single(requests, r => r.UpdateCells != null);
+    }
+
+    [Fact]
+    public void CreateUpdateCellRequests_WithUnknownGridCapacity_DoesNotGuessAtGrowingIt()
+    {
+        // No MAX_ROW attribute means capacity is unknown, not zero. Emitting a growth request off a
+        // parsed-to-0 capacity would ask Google for a nonsense number of rows on every append.
+        var sheetProperties = BuildSheetProperties(id: "1", maxRowValue: 8);
+        var entities = Enumerable.Range(9, 5).Select(rowId => new TestRow { RowId = rowId }).ToList();
+
+        var requests = GoogleRequestHelpers.CreateUpdateCellRequests(entities, sheetProperties, NoOpMapToRowData).ToList();
+
+        Assert.DoesNotContain(requests, r => r.AppendDimension != null);
+    }
 
     [Fact]
     public void CreateUpdateCellRequests_WithSheetIdZero_AppendsNewRow()
