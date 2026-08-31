@@ -41,6 +41,47 @@ public class GenericSheetMapperTests
     #region MapFromRangeData Tests
 
     [Fact]
+    public void MapFromRangeData_WithBlankRowsInTheMiddle_NumbersRowsByPhysicalPosition()
+    {
+        // RowId has to be the row's physical position, because writes are positional
+        // (GenerateUpdateCellsRequest(sheetId, entity.RowId - 1, ...)). Numbering only the non-blank
+        // rows made an edit write to a different physical row than the one it was read from, which
+        // duplicated the record instead of updating it (#134).
+        var values = new List<IList<object>>
+        {
+            new List<object> { "Name", "Date", "Amount" },  // row 1: headers
+            new List<object> { "", "", "" },                // row 2: blank
+            new List<object> { "", "", "" },                // row 3: blank
+            new List<object> { "Alpha", "2026-01-01", "1" } // row 4: the only real row
+        };
+
+        var entities = GenericSheetMapper<TestEntity>.MapFromRangeData(values, "Test", out _);
+
+        var entity = Assert.Single(entities);
+        Assert.Equal("Alpha", entity.Name);
+        Assert.Equal(4, entity.RowId);
+    }
+
+    [Fact]
+    public void MapFromRangeData_WithNoBlankRows_StillNumbersFromTwo()
+    {
+        // The contiguous case has to keep behaving exactly as before - this is the shape almost every
+        // sheet has, and changing it would silently retarget every write.
+        var values = new List<IList<object>>
+        {
+            new List<object> { "Name", "Date", "Amount" },
+            new List<object> { "Alpha", "2026-01-01", "1" },
+            new List<object> { "Beta", "2026-01-02", "2" }
+        };
+
+        var entities = GenericSheetMapper<TestEntity>.MapFromRangeData(values, "Test", out _);
+
+        Assert.Equal(2, entities.Count);
+        Assert.Equal(2, entities[0].RowId);
+        Assert.Equal(3, entities[1].RowId);
+    }
+
+    [Fact]
     public void MapFromRangeData_WithValidData_ShouldReturnEntities()
     {
         // Arrange
