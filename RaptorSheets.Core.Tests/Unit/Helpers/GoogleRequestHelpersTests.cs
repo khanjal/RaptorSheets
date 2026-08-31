@@ -824,10 +824,11 @@ public class GoogleRequestHelpersTests
         // Act
         var requests = GoogleRequestHelpers.CreateUpdateCellRequests(entities, sheetProperties, NoOpMapToRowData).ToList();
 
-        // Assert
+        // Assert - appended rows are written at an explicit index now, not via AppendCells.
         var request = Assert.Single(requests);
-        Assert.NotNull(request.AppendCells);
-        Assert.Equal(0, request.AppendCells.SheetId);
+        Assert.NotNull(request.UpdateCells);
+        Assert.Equal(0, request.UpdateCells.Range.SheetId);
+        Assert.Equal(0, request.UpdateCells.Range.StartRowIndex);
     }
 
     [Fact]
