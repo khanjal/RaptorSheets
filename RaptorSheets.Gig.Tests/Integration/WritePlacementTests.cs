@@ -21,9 +21,18 @@ namespace RaptorSheets.Gig.Tests.Integration;
 /// dropped every appended row at 1001. Demo data on a new spreadsheet appeared below a thousand
 /// blank rows.
 ///
-/// Deliberately small and order-independent: it measures the extent before and after its own write
-/// rather than assuming a clean sheet, so it neither depends on nor contributes to the shared-state
-/// coupling tracked in #130. Bulk-volume behaviour belongs in a load test, not here.
+/// Deliberately small, and the assertions are deltas - extent measured before and after its own
+/// write - so these tests cannot false-fail on whatever a previous test left behind (#130).
+///
+/// One caveat worth keeping in mind before reordering anything: detecting *this* bug needs the sheet
+/// to still be fresh. The disagreement only exists while the library reads the extent as row 1 and
+/// Google reads it as 1000; once real rows exist past 1000 the two agree and a regression here would
+/// pass unnoticed. The clean-slate fixture supplies that precondition by recreating every sheet
+/// before the collection runs. If these ever stop running against a freshly created sheet, they keep
+/// passing while covering nothing - so give them their own sheet rather than letting them drift down
+/// the run order. Verified failing against the pre-fix code at Actual: 1002 and Actual: 1100.
+///
+/// Bulk-volume behaviour belongs in a load test, not here.
 /// </summary>
 [Collection("GigSheetsIntegration")]
 public class WritePlacementTests : IntegrationTestBase
@@ -58,6 +67,48 @@ public class WritePlacementTests : IntegrationTestBase
         // Contiguous: two rows written means the extent grows by exactly two. The regression this
         // guards against would land them at 1001+, pushing the extent far past extentBefore + 2.
         Assert.Equal(extentBefore + trips.Count, extentAfter);
+    }
+
+    [FactCheckUserSecrets]
+    public async Task ARealisticBatch_ShouldLandContiguouslyAndInOrder()
+    {
+        SkipIfNoCredentials();
+
+        // A hundred rows rather than two: enough to exercise contiguous block placement and row
+        // ordering at a realistic shape, while staying well under the 1,000-row grid boundary that
+        // belongs to the load tier. Two rows prove the mechanism; a hundred prove it still holds
+        // when a batch is big enough for ordering and alignment to go wrong.
+        const int rowCount = 100;
+
+        var sheet = SheetsConfig.SheetNames.Trips;
+        var extentBefore = await GetDataExtentAsync(sheet);
+        var marker = $"Batch-{Guid.NewGuid():N}"[..16];
+
+        var entity = new SheetEntity();
+        entity.Sheets.Trips.AddRange(Enumerable.Range(0, rowCount).Select(i => new TripEntity
+        {
+            RowId = extentBefore + 1 + i,
+            Date = DateTime.Today.ToString("yyyy-MM-dd"),
+            Service = marker,
+            // Ordinal rides along in a written column so read-back can prove the block kept its order.
+            Name = i.ToString()
+        }));
+
+        await SheetManager!.ChangeSheetData([sheet], entity);
+        await Task.Delay(3000); // let the write and dependent formulas settle
+
+        var extentAfter = await GetDataExtentAsync(sheet);
+        Assert.Equal(extentBefore + rowCount, extentAfter);
+
+        // Read back and confirm the block is intact and in the order it was written - a contiguous
+        // extent alone would not catch rows landing shuffled within the block.
+        var readBack = await SheetManager.GetSheets([sheet]);
+        var written = readBack.Sheets.Trips.Where(t => t.Service == marker).ToList();
+
+        Assert.Equal(rowCount, written.Count);
+        Assert.Equal(
+            Enumerable.Range(0, rowCount).Select(i => i.ToString()).ToList(),
+            written.Select(t => t.Name).ToList());
     }
 
     /// <summary>
