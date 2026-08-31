@@ -223,8 +223,8 @@ public class GigRequestHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        Assert.NotNull(result[0].AppendCells);
-        Assert.Equal(1, result[0].AppendCells.SheetId);
+        Assert.NotNull(result[0].UpdateCells);
+        Assert.Equal(1, result[0].UpdateCells.Range.SheetId);
     }
 
     [Fact]
@@ -280,8 +280,11 @@ public class GigRequestHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
-        Assert.Contains(result, r => r.AppendCells != null);  // One append request
-        Assert.Contains(result, r => r.UpdateCells != null);  // One update request
+        // Both paths write UpdateCells now; they are told apart by where they start. The appended
+        // block begins right after the real data extent (MAX_ROW_VALUE 5 -> index 5), while the
+        // updated row targets its own RowId.
+        Assert.Contains(result, r => r.UpdateCells?.Range.StartRowIndex == 5);
+        Assert.Contains(result, r => r.UpdateCells?.Range.StartRowIndex < 5);
     }
 
     [Fact]
@@ -294,7 +297,7 @@ public class GigRequestHelpersTests
         // writes right after the real data extent regardless of RowId. Both requests landed in the
         // same batch (append first, then update), so the update silently clobbered the appended row.
         // The fix means both entities are recognized as append-eligible and folded into one
-        // AppendCells request - no UpdateCells request should exist at all.
+        // contiguous write - no separate per-row update request should exist to collide with it.
         var trips = new List<TripEntity>
         {
             new() { RowId = 1001 },
@@ -314,11 +317,13 @@ public class GigRequestHelpersTests
         // Act
         var result = GigRequestHelpers.CreateUpdateCellTripRequests(trips, sheetProperties).ToList();
 
-        // Assert
+        // Assert - one contiguous block starting right after the real data extent (row 2, index 1),
+        // rather than two requests racing for the same physical row.
         Assert.Single(result);
-        Assert.NotNull(result[0].AppendCells);
-        Assert.DoesNotContain(result, r => r.UpdateCells != null);
-        Assert.Equal(2, result[0].AppendCells.Rows.Count);
+        Assert.NotNull(result[0].UpdateCells);
+        Assert.Equal(2, result[0].UpdateCells.Rows.Count);
+        Assert.Equal(1, result[0].UpdateCells.Range.StartRowIndex);
+        Assert.Equal(3, result[0].UpdateCells.Range.EndRowIndex);
     }
 
     #endregion
@@ -392,7 +397,7 @@ public class GigRequestHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        Assert.NotNull(result[0].AppendCells);
+        Assert.NotNull(result[0].UpdateCells);
     }
 
     [Fact]
@@ -492,7 +497,7 @@ public class GigRequestHelpersTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        Assert.NotNull(result[0].AppendCells);
+        Assert.NotNull(result[0].UpdateCells);
     }
 
     [Fact]
@@ -554,11 +559,12 @@ public class GigRequestHelpersTests
         Assert.NotNull(result);
         Assert.Equal(3, result.Count); // Should have append, update, and delete requests
 
-        // Should have one append request (RowId 10 > maxRowValue 5)
-        Assert.Single(result, r => r.AppendCells != null);
+        // Should have one appended block (RowId 10 > maxRowValue 5), starting right after the
+        // real data extent rather than wherever Google decides the sheet's data ends.
+        Assert.Single(result, r => r.UpdateCells?.Range.StartRowIndex == 5);
 
-        // Should have one update request (RowId 5 <= maxRowValue 5)
-        Assert.Single(result, r => r.UpdateCells != null);
+        // Should have one update request (RowId 5 <= maxRowValue 5), at its own RowId
+        Assert.Single(result, r => r.UpdateCells?.Range.StartRowIndex == 4);
         
         // Should have one delete request (RowId 15 marked for deletion)
         Assert.Single(result, r => r.DeleteDimension != null);
