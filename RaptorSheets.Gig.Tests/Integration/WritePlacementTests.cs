@@ -74,40 +74,52 @@ public class WritePlacementTests : IntegrationTestBase
     {
         SkipIfNoCredentials();
 
-        // A hundred rows rather than two: enough to exercise contiguous block placement and row
-        // ordering at a realistic shape, while staying well under the 1,000-row grid boundary that
-        // belongs to the load tier. Two rows prove the mechanism; a hundred prove it still holds
-        // when a batch is big enough for ordering and alignment to go wrong.
-        const int rowCount = 100;
-
+        // A realistic batch rather than two hand-built rows: enough to exercise contiguous block
+        // placement and row ordering at a shape where alignment can actually go wrong, while staying
+        // well under the 1,000-row grid boundary that belongs to the load tier.
+        //
+        // Rows come from CreateSimpleTestData (the production DemoHelpers generator) so the values
+        // are the same shape real data has, rather than a stub that could quietly stop resembling it.
+        // Only RowId and two marker fields are overridden - RowId to make these appends whatever ran
+        // before, Service to find them again on read-back, and Name to carry the ordinal that proves
+        // the block kept its order.
         var sheet = SheetsConfig.SheetNames.Trips;
         var extentBefore = await GetDataExtentAsync(sheet);
-        var marker = $"Batch-{Guid.NewGuid():N}"[..16];
+        var marker = $"Place-{Guid.NewGuid():N}"[..14];
+
+        var trips = CreateSimpleTestData(shifts: 20, tripsPerShift: 5, expenses: 0)
+            .Sheets.Trips
+            .Take(100)
+            .ToList();
+
+        // The generator's volume varies with its date range, so assert on what it actually produced
+        // rather than a hardcoded count - but fail loudly if it is too small to be a realistic batch.
+        Assert.True(trips.Count >= 25, $"Expected a realistic batch, generator produced {trips.Count} trips");
+
+        for (var i = 0; i < trips.Count; i++)
+        {
+            trips[i].RowId = extentBefore + 1 + i;
+            trips[i].Service = marker;
+            trips[i].Name = i.ToString();
+        }
 
         var entity = new SheetEntity();
-        entity.Sheets.Trips.AddRange(Enumerable.Range(0, rowCount).Select(i => new TripEntity
-        {
-            RowId = extentBefore + 1 + i,
-            Date = DateTime.Today.ToString("yyyy-MM-dd"),
-            Service = marker,
-            // Ordinal rides along in a written column so read-back can prove the block kept its order.
-            Name = i.ToString()
-        }));
+        entity.Sheets.Trips.AddRange(trips);
 
         await SheetManager!.ChangeSheetData([sheet], entity);
         await Task.Delay(3000); // let the write and dependent formulas settle
 
         var extentAfter = await GetDataExtentAsync(sheet);
-        Assert.Equal(extentBefore + rowCount, extentAfter);
+        Assert.Equal(extentBefore + trips.Count, extentAfter);
 
         // Read back and confirm the block is intact and in the order it was written - a contiguous
         // extent alone would not catch rows landing shuffled within the block.
         var readBack = await SheetManager.GetSheets([sheet]);
         var written = readBack.Sheets.Trips.Where(t => t.Service == marker).ToList();
 
-        Assert.Equal(rowCount, written.Count);
+        Assert.Equal(trips.Count, written.Count);
         Assert.Equal(
-            Enumerable.Range(0, rowCount).Select(i => i.ToString()).ToList(),
+            Enumerable.Range(0, trips.Count).Select(i => i.ToString()).ToList(),
             written.Select(t => t.Name).ToList());
     }
 
