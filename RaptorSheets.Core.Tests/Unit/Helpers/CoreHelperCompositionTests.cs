@@ -5,12 +5,12 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Core.Models.Google;
 using Xunit;
 
-namespace RaptorSheets.Core.Tests.Integration;
+namespace RaptorSheets.Core.Tests.Unit.Helpers;
 
 /// <summary>
 /// Comprehensive integration tests to ensure components work together correctly
 /// </summary>
-public class CoreIntegrationTests
+public class CoreHelperCompositionTests
 {
     [Fact]
     public void ColumnFormulas_WithSheetModel_ShouldGenerateValidFormulas()
