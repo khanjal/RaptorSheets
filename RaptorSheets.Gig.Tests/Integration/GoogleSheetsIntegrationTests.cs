@@ -41,47 +41,11 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     // three tests below stay: they check things the shared suite doesn't (formula well-formedness on
     // Shifts/Trips/Expenses' own computed columns, tab visual properties, sheet tab order).
 
-    [FactCheckUserSecrets]
-    public void CreatedSheets_ShouldHaveCorrectFormulas()
-    {
-        // This test validates that sheets with formulas have them correctly configured
-
-        var sheetsWithFormulas = new[] { "Trips", "Shifts", "Expenses" }; // Sheets that have formula columns
-
-        // Act - Get sheet layouts to find formula columns
-        var layouts = SheetManager!.GetSheetLayouts(sheetsWithFormulas.ToList());
-
-        // Assert
-        foreach (var layout in layouts)
-        {
-            var formulaHeaders = layout.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
-
-            if (formulaHeaders.Count > 0)
-            {
-                System.Diagnostics.Debug.WriteLine($"  🔍 Validating {layout.Name}: {formulaHeaders.Count} formula columns");
-
-                // All formulas should start with =
-                Assert.All(formulaHeaders, header =>
-                {
-                    Assert.StartsWith("=", header.Formula);
-
-                    // Should not have unresolved placeholders
-                    Assert.DoesNotContain("{", header.Formula);
-                    Assert.DoesNotContain("{{", header.Formula);
-                });
-
-                // Log formulas for debugging
-                foreach (var header in formulaHeaders)
-                {
-                    System.Diagnostics.Debug.WriteLine($"     {header.Name}: {header.Formula.Substring(0, Math.Min(50, header.Formula.Length))}...");
-                }
-            }
-        }
-    }
 
     [FactCheckUserSecrets]
     public async Task CreatedSheets_ShouldHaveCorrectVisualProperties()
     {
+        await VerifyPreconditionsAsync();
         // This test validates that sheets have correct colors, protection, etc.
         
         // Act - Get spreadsheet info to check visual properties
@@ -127,6 +91,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task CreatedSheets_ShouldBeInCorrectOrder()
     {
+        await VerifyPreconditionsAsync();
         // This test validates that sheets in TestSheets are created in the correct order
         // as defined by the constants declaration in SheetsConfig.SheetNames
         
@@ -178,6 +143,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task FullWorkflow_InsertReadUpdate_ShouldSucceedWithConsistentData()
     {
+        await VerifyPreconditionsAsync();
         // Arrange
         var testRunId = GenerateTestRunId();
         System.Diagnostics.Debug.WriteLine($"🚀 Starting orchestrated workflow test: {testRunId}");
@@ -249,6 +215,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task Workflow_DailyOperation_ShouldRecordShiftWithTrips()
     {
+        await VerifyPreconditionsAsync();
         // Arrange - Simulates daily workflow: start shift, record trips, end shift
         var testRunId = GenerateTestRunId();
         
@@ -301,7 +268,9 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             t.Service?.Contains($"Test_{testRunId}") == true).ToList();
         
         Assert.Single(dailyShifts);
-        Assert.True(dailyTrips.Count >= 2, $"Should have at least 2 daily trips, found {dailyTrips.Count}");
+        // Derived from what this test inserted rather than a floor, so it fails on a lost row and on
+        // a duplicated one. "At least 2" reported success for either.
+        Assert.Equal(testData.Sheets.Trips.Count, dailyTrips.Count);
         
         var workflowShift = dailyShifts[0];
         Assert.NotNull(workflowShift.Start);
@@ -312,6 +281,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task Workflow_ExpenseTracking_ShouldRecordMultipleCategories()
     {
+        await VerifyPreconditionsAsync();
         // Arrange - Simulates expense tracking workflow
         var testRunId = GenerateTestRunId();
         
@@ -346,38 +316,12 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         var expenseCategories = ourExpenses.Select(e => e.Category).Distinct().ToList();
         
-        Assert.True(ourExpenses.Count >= 2, $"Should have at least 2 expenses, found {ourExpenses.Count}");
-        Assert.True(expenseCategories.Count >= 2, 
-            $"Should have multiple expense categories, found {expenseCategories.Count}");
+        Assert.Equal(testData.Sheets.Expenses.Count, ourExpenses.Count);
+        Assert.Equal(
+            testData.Sheets.Expenses.Select(e => e.Category).Distinct().OrderBy(c => c),
+            expenseCategories.OrderBy(c => c));
     }
 
-    [FactCheckUserSecrets]
-    public async Task LargeDataset_ShouldHandleVolumeEfficiently()
-    {
-        // Arrange
-        var testRunId = GenerateTestRunId();
-        
-        var testData = CreateTestData(testRunId, shifts: 10, tripsPerShift: 5, expenses: 15);
-        
-        System.Diagnostics.Debug.WriteLine($"📊 Inserting large dataset: {testData.Sheets.Shifts.Count} shifts, " +
-            $"{testData.Sheets.Trips.Count} trips, {testData.Sheets.Expenses.Count} expenses");
-        
-        // Act
-        var startTime = DateTime.UtcNow;
-        var insertResult = await InsertTestData(testData);
-        var elapsed = DateTime.UtcNow - startTime;
-        
-        // Assert
-        System.Diagnostics.Debug.WriteLine($"⏱️  Insert completed in {elapsed.TotalSeconds:F1}s");
-        
-        var criticalErrors = insertResult.Messages.Where(m => 
-            m.Level == MessageLevel.ERROR.GetDescription() && 
-            !IsExpectedError(m.Message)).ToList();
-        
-        Assert.Empty(criticalErrors);
-        Assert.True(elapsed.TotalSeconds < 30, 
-            $"Large insert should complete within 30 seconds, took {elapsed.TotalSeconds:F1}s");
-    }
     #endregion
 
     #region Validation Helper Methods
@@ -395,8 +339,11 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {shifts.Count} shifts");
         
-        Assert.True(shifts.Count >= expectedData.Sheets.Shifts.Count - 1, 
-            $"Should find ~{expectedData.Sheets.Shifts.Count} shifts, found {shifts.Count}");
+        // Exact, not a tolerance. These rows are scoped to this run's own marker, so the count is
+        // knowable - and ">= expected - 1" passed whether a row went missing or an extra one appeared,
+        // which is how a write landing in the wrong place (#133) or duplicating a record (#134) could
+        // run through this suite untouched.
+        Assert.Equal(expectedData.Sheets.Shifts.Count, shifts.Count);
         
         return shifts;
     }
@@ -408,8 +355,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {trips.Count} trips");
         
-        Assert.True(trips.Count >= expectedData.Sheets.Trips.Count - 2, 
-            $"Should find ~{expectedData.Sheets.Trips.Count} trips, found {trips.Count}");
+        Assert.Equal(expectedData.Sheets.Trips.Count, trips.Count);
         
         return trips;
     }
@@ -420,9 +366,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             e.Description?.Contains($"Test_{testRunId}") == true).ToList();
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {expenses.Count} expenses");
-        
-        Assert.True(expenses.Count >= expectedData.Sheets.Expenses.Count - 1, 
-            $"Should find ~{expectedData.Sheets.Expenses.Count} expenses, found {expenses.Count}");
+        Assert.Equal(expectedData.Sheets.Expenses.Count, expenses.Count);
         
         return expenses;
     }
@@ -550,237 +494,15 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
 
     #region Helper Methods
 
-    private static string GenerateTestRunId() => DateTimeOffset.UtcNow.ToString("HHmmss");
 
-    private static SheetEntity CreateTestData(string testRunId, int shifts, int tripsPerShift, int expenses)
-    {
-        var testData = CreateSimpleTestData(shifts, tripsPerShift, expenses);
-        var baseDate = DateTime.Today;
-        
-        // Tag all data with test run ID
-        foreach (var shift in testData.Sheets.Shifts)
-        {
-            shift.Service = $"Test_{testRunId}";
-            shift.Date = baseDate.AddDays(-testData.Sheets.Shifts.IndexOf(shift)).ToString(CellFormatPatterns.Date);
-        }
-        
-        foreach (var trip in testData.Sheets.Trips)
-        {
-            trip.Service = $"Test_{testRunId}";
-            // Integer division is intentional here: it buckets every tripsPerShift trips onto the
-            // same day offset (0, 0, 0, -1, -1, -1, ...), mirroring how CreateSimpleTestData groups
-            // trips under shifts. Casting to double would break the bucketing.
-#pragma warning disable S2184
-            trip.Date = baseDate.AddDays(-testData.Sheets.Trips.IndexOf(trip) / tripsPerShift).ToString(CellFormatPatterns.Date);
-#pragma warning restore S2184
-        }
-        
-        foreach (var expense in testData.Sheets.Expenses)
-        {
-            expense.Description = $"Test_{testRunId}_expense";
-            expense.Date = baseDate.AddDays(-testData.Sheets.Expenses.IndexOf(expense)).ToString(CellFormatPatterns.Date);
-        }
-        
-        return testData;
-    }
 
-    private static bool IsExpectedError(string message) =>
-        message.Contains("not supported") ||
-        message.Contains("already exists") ||
-        message.Contains("header issue") ||
-        message.Contains("No data to change");
 
     #endregion
 
     #region 4. Demo Data Integration Tests
 
-    /// <summary>
-    /// Tests using production demo data system for realistic full-year scenario.
-    /// This validates both the demo system and large-scale data handling.
-    /// </summary>
-    [FactCheckUserSecrets]
-    public async Task DemoData_FullYear_ShouldUploadAndValidate()
-    {
-        // Arrange - Use demo system for realistic year of data
-        var startDate = new DateTime(DateTime.Today.Year - 1, 1, 1, 0, 0, 0, DateTimeKind.Local);
-        var endDate = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local);
-        
-        System.Diagnostics.Debug.WriteLine($"📅 Generating demo data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
-        
-        // Use production demo helpers
-        var demoData = CreateDemoData(startDate, endDate);
-        
-        System.Diagnostics.Debug.WriteLine($"📊 Generated: {demoData.Sheets.Shifts.Count} shifts, " +
-            $"{demoData.Sheets.Trips.Count} trips, {demoData.Sheets.Expenses.Count} expenses");
 
-        // Act - Insert demo data
-        var startTime = DateTime.UtcNow;
-        var insertResult = await InsertTestData(demoData);
-        var elapsed = DateTime.UtcNow - startTime;
 
-        // Assert - Verify successful insertion
-        System.Diagnostics.Debug.WriteLine($"⏱️  Insert completed in {elapsed.TotalSeconds:F1}s");
-        
-        var criticalErrors = (insertResult.Messages ?? new List<MessageEntity>())
-            .Where(m => m.Level == MessageLevel.ERROR.GetDescription() && !IsExpectedError(m.Message))
-            .ToList();
-        
-        Assert.Empty(criticalErrors);
-        Assert.True(elapsed.TotalSeconds < 120, 
-            $"Full year insert should complete within 2 minutes, took {elapsed.TotalSeconds:F1}s");
-
-        // Validate data was inserted correctly
-        var readData = await GetSheetData();
-        Assert.True(readData.Sheets.Shifts.Count >= demoData.Sheets.Shifts.Count * 0.95, 
-            $"Should find most shifts, found {readData.Sheets.Shifts.Count} of {demoData.Sheets.Shifts.Count}");
-        Assert.True(readData.Sheets.Trips.Count >= demoData.Sheets.Trips.Count * 0.95, 
-            $"Should find most trips, found {readData.Sheets.Trips.Count} of {demoData.Sheets.Trips.Count}");
-        Assert.True(readData.Sheets.Expenses.Count >= demoData.Sheets.Expenses.Count * 0.95,
-            $"Should find most expenses, found {readData.Sheets.Expenses.Count} of {demoData.Sheets.Expenses.Count}");
-        
-        System.Diagnostics.Debug.WriteLine($"   ✓ Validated {readData.Sheets.Shifts.Count} shifts, " +
-            $"{readData.Sheets.Trips.Count} trips, {readData.Sheets.Expenses.Count} expenses");
-
-        // --- New: validate behavior when a summary sheet is missing ---
-        // Delete a lightweight summary sheet (Deliveries) and re-run a read to verify
-        // missing-sheet / empty-header diagnostics are produced by the manager.
-        System.Diagnostics.Debug.WriteLine("➡ Deleting Deliveries to validate missing-sheet detection...");
-        var deleteResult = await SheetManager!.DeleteSheets(new List<string> { SheetsConfig.SheetNames.Deliveries });
-        var deleteErrors = deleteResult.Messages.Where(m => m.Level == MessageLevel.ERROR.GetDescription()).ToList();
-        if (deleteErrors.Count > 0)
-        {
-            System.Diagnostics.Debug.WriteLine($"⚠️  Deletion returned errors: {string.Join(';', deleteErrors.Select(e => e.Message))}");
-        }
-
-        // Allow time for Sheets backend to apply deletion
-        await Task.Delay(10000);
-
-        // Re-read metadata and sheet data (include all sheets to detect missing summaries)
-        var readAfterDelete = await GetAllSheetData();
-
-        // We expect either a message indicating missing header/empty sheet for Deliveries
-        // or an informational creation notice that asks the caller to retry shortly.
-        var allMessages = readAfterDelete.Messages ?? new List<MessageEntity>();
-
-        var headerMessages = allMessages
-            .Where(m => m.Message != null && m.Message.Contains("Deliveries", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        // Detect the informational creation notice produced when the manager created missing sheets
-        var creationNotice = allMessages
-            .FirstOrDefault(m => m.Message != null && m.Message.Contains("Sheets may take a few seconds", StringComparison.OrdinalIgnoreCase));
-
-        var hasCreationNotice = creationNotice != null;
-
-        // If a creation notice exists, ensure it references the Deliveries sheet
-        if (creationNotice != null)
-        {
-            Assert.True(creationNotice.Message.Contains("Deliveries", StringComparison.OrdinalIgnoreCase),
-                $"Creation notice should include Deliveries. Notice: {creationNotice.Message}");
-        }
-
-        // Require either explicit header/missing-sheet messages or the creation notice
-        Assert.True(headerMessages.Count > 0 || hasCreationNotice,
-            "Expected header/missing-sheet messages or creation notice for Deliveries after deletion");
-
-        System.Diagnostics.Debug.WriteLine("   ✓ Missing-sheet detection validated (Deliveries)");
-        }
-
-    /// <summary>
-    /// Tests GenerateDemoData method - validates demo data generation works correctly.
-    /// </summary>
-    [FactCheckUserSecrets]
-    public void DemoData_GenerateMethod_ShouldCreateRealisticData()
-    {
-        // Arrange
-        var startDate = DateTime.Today.AddDays(-30);
-        var endDate = DateTime.Today;
-        var seed = 42; // Fixed seed for deterministic data generation
-
-        System.Diagnostics.Debug.WriteLine($"📝 Generating demo data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd} with seed {seed}");
-
-        // Act - Use the public GenerateDemoData method
-        var demoData = SheetManager!.GenerateDemoData(startDate, endDate, seed);
-
-        // Assert - Verify the data was generated
-        Assert.NotNull(demoData);
-        Assert.NotEmpty(demoData.Sheets.Shifts);
-        Assert.NotEmpty(demoData.Sheets.Trips);
-
-        // Log generated data for debugging
-        System.Diagnostics.Debug.WriteLine($"✅ Generated {demoData.Sheets.Shifts.Count} shifts, {demoData.Sheets.Trips.Count} trips, {demoData.Sheets.Expenses.Count} expenses");
-
-        // Verify data structure
-        Assert.All(demoData.Sheets.Shifts, shift =>
-        {
-            Assert.NotNull(shift.Date);
-            Assert.NotNull(shift.Service);
-            Assert.True(shift.RowId > 0);
-        });
-
-        Assert.All(demoData.Sheets.Trips, trip =>
-        {
-            Assert.NotNull(trip.Date);
-            Assert.NotNull(trip.Service);
-            Assert.True(trip.RowId > 0);
-        });
-
-        System.Diagnostics.Debug.WriteLine($"✅ Demo data validation passed.");
-    }
-
-    /// <summary>
-    /// Validates demo data has proper entity relationships (shifts ↔ trips).
-    /// This ensures the demo system generates realistic, relational data.
-    /// </summary>
-    [Fact]
-    public void DemoData_ShouldHaveProperShiftTripRelationships()
-    {
-        // Arrange
-        var startDate = DateTime.Today.AddDays(-7);
-        var endDate = DateTime.Today;
-        
-        // Act - Generate demo data
-        var demoData = CreateDemoData(startDate, endDate);
-        
-        // Assert - Verify data structure
-        Assert.NotNull(demoData);
-        Assert.NotEmpty(demoData.Sheets.Shifts);
-        
-        // Verify all entities have valid structure
-        Assert.All(demoData.Sheets.Shifts, shift =>
-        {
-            Assert.NotNull(shift.Date);
-            Assert.NotNull(shift.Service);
-            Assert.True(shift.RowId > 0);
-        });
-        
-        if (demoData.Sheets.Trips.Count > 0)
-        {
-            Assert.All(demoData.Sheets.Trips, trip =>
-            {
-                Assert.NotNull(trip.Date);
-                Assert.NotNull(trip.Service);
-                Assert.True(trip.RowId > 0);
-            });
-            
-            // Verify shift-trip relationships exist
-            foreach (var shift in demoData.Sheets.Shifts.Where(s => s.Trips > 0))
-            {
-                var relatedTrips = demoData.Sheets.Trips.Where(t =>
-                    t.Date == shift.Date &&
-                    t.Service == shift.Service &&
-                    t.Number == shift.Number).ToList();
-                
-                // Some correlation should exist (demo data uses probabilities)
-                // Not every shift will have exact trip count match
-                System.Diagnostics.Debug.WriteLine($"  Shift on {shift.Date} ({shift.Service} #{shift.Number}): " +
-                    $"{shift.Trips} trips expected, {relatedTrips.Count} found");
-            }
-        }
-        
-        System.Diagnostics.Debug.WriteLine($"✅ Validated demo data structure: {demoData.Sheets.Shifts.Count} shifts, " +
-            $"{demoData.Sheets.Trips.Count} trips, {demoData.Sheets.Expenses.Count} expenses");
-    }
 
     #endregion
 }

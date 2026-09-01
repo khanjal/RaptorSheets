@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
@@ -5,20 +6,22 @@ using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Gig.Tests.Integration;
+using RaptorSheets.Test.Common.Fixtures;
 
 namespace RaptorSheets.Gig.Tests.Integration.Base;
 
 /// <summary>
 /// Base class for integration tests with modular, reusable operations. Gets its manager from the
-/// shared <see cref="GigCleanSlateFixture"/> (null when credentials are absent), which has already
+/// clean-slate fixture it is given (null when credentials are absent), which has already
 /// deleted/recreated every sheet before this collection's tests run.
 /// </summary>
 public abstract class IntegrationTestBase
 {
     protected readonly SheetManager? SheetManager;
+    private readonly CleanSlateSheetFixture<SheetEntity, SheetManager> _fixture;
     protected readonly List<string> TestSheets;
 
-    protected IntegrationTestBase(GigCleanSlateFixture fixture)
+    protected IntegrationTestBase(CleanSlateSheetFixture<SheetEntity, SheetManager> fixture)
     {
         TestSheets = [
             SheetsConfig.SheetNames.Shifts,
@@ -27,6 +30,7 @@ public abstract class IntegrationTestBase
         ];
 
         SheetManager = fixture.Manager;
+        _fixture = fixture;
     }
 
     #region Skip Helpers
@@ -40,6 +44,47 @@ public abstract class IntegrationTestBase
     }
 
     #endregion
+
+    /// <summary>
+    /// Confirms the canonical sheets are still present before a test relies on them, recreating any
+    /// a previous test removed and did not restore.
+    ///
+    /// The clean slate runs once per collection, so damage from one test is inherited by every test
+    /// after it - the order-dependent failures in #130. Calling this makes a test state its own
+    /// precondition instead of assuming the last one left things tidy, and reports the damage at the
+    /// point it is found rather than wherever it happens to cause a failure.
+    /// </summary>
+    protected async Task VerifyPreconditionsAsync()
+    {
+        if (SheetManager == null)
+        {
+            return;
+        }
+
+        var repaired = await _fixture.VerifyAndRepairAsync(GigSheetHelpers.GetSheetNames());
+
+        if (repaired.Count > 0)
+        {
+            // Console, not Debug.WriteLine: Debug.WriteLine is [Conditional("DEBUG")] and CI builds
+            // Release, so every diagnostic written that way is absent from the one run anybody reads
+            // after the fact.
+            Console.WriteLine(
+                $"WARNING: repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
+                "An earlier test removed them without restoring them - see #130.");
+        }
+
+        // Reported, not repaired: fixing a column means regenerating the sheet and discarding its
+        // rows, which is too destructive to do on the strength of a comparison that has not yet been
+        // watched in anger.
+        var drift = await _fixture.DetectColumnDriftAsync(GigSheetHelpers.GetSheetNames());
+
+        if (drift.Count > 0)
+        {
+            Console.WriteLine(
+                $"WARNING: {drift.Count} sheet(s) have drifted columns before this test ran: {string.Join(" | ", drift)}. " +
+                "An earlier test changed them without restoring them - see #130.");
+        }
+    }
 
     #region Test Data Generation
     
@@ -76,6 +121,48 @@ public abstract class IntegrationTestBase
         return DemoHelpers.GenerateDemoData(start, end);
     }
     
+    /// <summary>
+    /// Tags every row a test writes so it can find its own again and ignore everybody else's.
+    ///
+    /// Was a timestamp at second resolution, which is not unique: two tests starting within the same
+    /// second share an id, and the marker lookups use Contains, so one test would assert over another
+    /// test's rows. Uniqueness is the whole job here, so it comes from a Guid.
+    /// </summary>
+    protected static string GenerateTestRunId() => Guid.NewGuid().ToString("N")[..8];
+
+    protected static SheetEntity CreateTestData(string testRunId, int shifts, int tripsPerShift, int expenses)
+    {
+        var testData = CreateSimpleTestData(shifts, tripsPerShift, expenses);
+        var baseDate = DateTime.Today;
+        
+        // Tag all data with test run ID
+        foreach (var shift in testData.Sheets.Shifts)
+        {
+            shift.Service = $"Test_{testRunId}";
+            shift.Date = baseDate.AddDays(-testData.Sheets.Shifts.IndexOf(shift)).ToString(CellFormatPatterns.Date);
+        }
+        
+        foreach (var trip in testData.Sheets.Trips)
+        {
+            trip.Service = $"Test_{testRunId}";
+            // Integer division is intentional here: it buckets every tripsPerShift trips onto the
+            // same day offset (0, 0, 0, -1, -1, -1, ...), mirroring how CreateSimpleTestData groups
+            // trips under shifts. Casting to double would break the bucketing.
+#pragma warning disable S2184
+            trip.Date = baseDate.AddDays(-testData.Sheets.Trips.IndexOf(trip) / tripsPerShift).ToString(CellFormatPatterns.Date);
+#pragma warning restore S2184
+        }
+        
+        foreach (var expense in testData.Sheets.Expenses)
+        {
+            expense.Description = $"Test_{testRunId}_expense";
+            expense.Date = baseDate.AddDays(-testData.Sheets.Expenses.IndexOf(expense)).ToString(CellFormatPatterns.Date);
+        }
+        
+        return testData;
+    }
+
+
     #endregion
 
     #region Operations
@@ -274,7 +361,7 @@ public abstract class IntegrationTestBase
 
     #region Utilities
 
-    private static bool IsExpectedError(string message) =>
+    protected static bool IsExpectedError(string message) =>
         message.Contains("not supported") ||  // Expected when sheet doesn't support certain operations
         message.Contains("already exists") ||  // Expected when trying to create existing sheets
         message.Contains("header issue") ||    // Expected when headers don't match exactly
