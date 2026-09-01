@@ -42,6 +42,17 @@ public static class TestConfigurationHelpers
         return _configuration!["spreadsheets:test:gig"] ?? string.Empty;
     }
 
+    /// <summary>
+    /// Separate spreadsheet for the load tier, so bulk writes cannot disturb the state the contract
+    /// and workflow tests read. Returns empty rather than falling back to the shared Gig spreadsheet
+    /// - silently borrowing it is exactly what the split exists to prevent.
+    /// </summary>
+    public static string GetGigLoadSpreadsheet()
+    {
+        GetConfiguration();
+        return _configuration!["spreadsheets:test:gigload"] ?? string.Empty;
+    }
+
     public static string GetStockSpreadsheet()
     {
         GetConfiguration();

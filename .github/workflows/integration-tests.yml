@@ -115,7 +115,7 @@ jobs:
 
         for project in RaptorSheets.Core.Tests RaptorSheets.Gig.Tests RaptorSheets.Stock.Tests RaptorSheets.Job.Tests RaptorSheets.Home.Tests; do
           echo "::group::$project"
-          if dotnet test "$project/$project.csproj"                --no-build --configuration Release                --filter "FullyQualifiedName~Integration"                --logger trx                --verbosity normal; then
+          if dotnet test "$project/$project.csproj"                --no-build --configuration Release                --filter "FullyQualifiedName~Integration&FullyQualifiedName!~Integration.Load"                --logger trx                --verbosity normal; then
             echo "$project: passed"
           else
             echo "::warning::$project failed"

@@ -1,3 +1,4 @@
+using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Gig.Entities;
@@ -5,12 +6,13 @@ using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Gig.Tests.Integration;
+using RaptorSheets.Test.Common.Fixtures;
 
 namespace RaptorSheets.Gig.Tests.Integration.Base;
 
 /// <summary>
 /// Base class for integration tests with modular, reusable operations. Gets its manager from the
-/// shared <see cref="GigCleanSlateFixture"/> (null when credentials are absent), which has already
+/// clean-slate fixture it is given (null when credentials are absent), which has already
 /// deleted/recreated every sheet before this collection's tests run.
 /// </summary>
 public abstract class IntegrationTestBase
@@ -18,7 +20,7 @@ public abstract class IntegrationTestBase
     protected readonly SheetManager? SheetManager;
     protected readonly List<string> TestSheets;
 
-    protected IntegrationTestBase(GigCleanSlateFixture fixture)
+    protected IntegrationTestBase(CleanSlateSheetFixture<SheetEntity, SheetManager> fixture)
     {
         TestSheets = [
             SheetsConfig.SheetNames.Shifts,
@@ -76,6 +78,41 @@ public abstract class IntegrationTestBase
         return DemoHelpers.GenerateDemoData(start, end);
     }
     
+    protected static string GenerateTestRunId() => DateTimeOffset.UtcNow.ToString("HHmmss");
+
+    protected static SheetEntity CreateTestData(string testRunId, int shifts, int tripsPerShift, int expenses)
+    {
+        var testData = CreateSimpleTestData(shifts, tripsPerShift, expenses);
+        var baseDate = DateTime.Today;
+        
+        // Tag all data with test run ID
+        foreach (var shift in testData.Sheets.Shifts)
+        {
+            shift.Service = $"Test_{testRunId}";
+            shift.Date = baseDate.AddDays(-testData.Sheets.Shifts.IndexOf(shift)).ToString(CellFormatPatterns.Date);
+        }
+        
+        foreach (var trip in testData.Sheets.Trips)
+        {
+            trip.Service = $"Test_{testRunId}";
+            // Integer division is intentional here: it buckets every tripsPerShift trips onto the
+            // same day offset (0, 0, 0, -1, -1, -1, ...), mirroring how CreateSimpleTestData groups
+            // trips under shifts. Casting to double would break the bucketing.
+#pragma warning disable S2184
+            trip.Date = baseDate.AddDays(-testData.Sheets.Trips.IndexOf(trip) / tripsPerShift).ToString(CellFormatPatterns.Date);
+#pragma warning restore S2184
+        }
+        
+        foreach (var expense in testData.Sheets.Expenses)
+        {
+            expense.Description = $"Test_{testRunId}_expense";
+            expense.Date = baseDate.AddDays(-testData.Sheets.Expenses.IndexOf(expense)).ToString(CellFormatPatterns.Date);
+        }
+        
+        return testData;
+    }
+
+
     #endregion
 
     #region Operations
@@ -274,7 +311,7 @@ public abstract class IntegrationTestBase
 
     #region Utilities
 
-    private static bool IsExpectedError(string message) =>
+    protected static bool IsExpectedError(string message) =>
         message.Contains("not supported") ||  // Expected when sheet doesn't support certain operations
         message.Contains("already exists") ||  // Expected when trying to create existing sheets
         message.Contains("header issue") ||    // Expected when headers don't match exactly
