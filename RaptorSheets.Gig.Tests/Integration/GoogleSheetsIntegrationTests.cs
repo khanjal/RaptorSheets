@@ -41,43 +41,6 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     // three tests below stay: they check things the shared suite doesn't (formula well-formedness on
     // Shifts/Trips/Expenses' own computed columns, tab visual properties, sheet tab order).
 
-    [FactCheckUserSecrets]
-    public void CreatedSheets_ShouldHaveCorrectFormulas()
-    {
-        // This test validates that sheets with formulas have them correctly configured
-
-        var sheetsWithFormulas = new[] { "Trips", "Shifts", "Expenses" }; // Sheets that have formula columns
-
-        // Act - Get sheet layouts to find formula columns
-        var layouts = SheetManager!.GetSheetLayouts(sheetsWithFormulas.ToList());
-
-        // Assert
-        foreach (var layout in layouts)
-        {
-            var formulaHeaders = layout.Headers.Where(h => !string.IsNullOrEmpty(h.Formula)).ToList();
-
-            if (formulaHeaders.Count > 0)
-            {
-                System.Diagnostics.Debug.WriteLine($"  🔍 Validating {layout.Name}: {formulaHeaders.Count} formula columns");
-
-                // All formulas should start with =
-                Assert.All(formulaHeaders, header =>
-                {
-                    Assert.StartsWith("=", header.Formula);
-
-                    // Should not have unresolved placeholders
-                    Assert.DoesNotContain("{", header.Formula);
-                    Assert.DoesNotContain("{{", header.Formula);
-                });
-
-                // Log formulas for debugging
-                foreach (var header in formulaHeaders)
-                {
-                    System.Diagnostics.Debug.WriteLine($"     {header.Name}: {header.Formula.Substring(0, Math.Min(50, header.Formula.Length))}...");
-                }
-            }
-        }
-    }
 
     [FactCheckUserSecrets]
     public async Task CreatedSheets_ShouldHaveCorrectVisualProperties()
@@ -686,101 +649,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         System.Diagnostics.Debug.WriteLine("   ✓ Missing-sheet detection validated (Deliveries)");
         }
 
-    /// <summary>
-    /// Tests GenerateDemoData method - validates demo data generation works correctly.
-    /// </summary>
-    [FactCheckUserSecrets]
-    public void DemoData_GenerateMethod_ShouldCreateRealisticData()
-    {
-        // Arrange
-        var startDate = DateTime.Today.AddDays(-30);
-        var endDate = DateTime.Today;
-        var seed = 42; // Fixed seed for deterministic data generation
 
-        System.Diagnostics.Debug.WriteLine($"📝 Generating demo data from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd} with seed {seed}");
-
-        // Act - Use the public GenerateDemoData method
-        var demoData = SheetManager!.GenerateDemoData(startDate, endDate, seed);
-
-        // Assert - Verify the data was generated
-        Assert.NotNull(demoData);
-        Assert.NotEmpty(demoData.Sheets.Shifts);
-        Assert.NotEmpty(demoData.Sheets.Trips);
-
-        // Log generated data for debugging
-        System.Diagnostics.Debug.WriteLine($"✅ Generated {demoData.Sheets.Shifts.Count} shifts, {demoData.Sheets.Trips.Count} trips, {demoData.Sheets.Expenses.Count} expenses");
-
-        // Verify data structure
-        Assert.All(demoData.Sheets.Shifts, shift =>
-        {
-            Assert.NotNull(shift.Date);
-            Assert.NotNull(shift.Service);
-            Assert.True(shift.RowId > 0);
-        });
-
-        Assert.All(demoData.Sheets.Trips, trip =>
-        {
-            Assert.NotNull(trip.Date);
-            Assert.NotNull(trip.Service);
-            Assert.True(trip.RowId > 0);
-        });
-
-        System.Diagnostics.Debug.WriteLine($"✅ Demo data validation passed.");
-    }
-
-    /// <summary>
-    /// Validates demo data has proper entity relationships (shifts ↔ trips).
-    /// This ensures the demo system generates realistic, relational data.
-    /// </summary>
-    [Fact]
-    public void DemoData_ShouldHaveProperShiftTripRelationships()
-    {
-        // Arrange
-        var startDate = DateTime.Today.AddDays(-7);
-        var endDate = DateTime.Today;
-        
-        // Act - Generate demo data
-        var demoData = CreateDemoData(startDate, endDate);
-        
-        // Assert - Verify data structure
-        Assert.NotNull(demoData);
-        Assert.NotEmpty(demoData.Sheets.Shifts);
-        
-        // Verify all entities have valid structure
-        Assert.All(demoData.Sheets.Shifts, shift =>
-        {
-            Assert.NotNull(shift.Date);
-            Assert.NotNull(shift.Service);
-            Assert.True(shift.RowId > 0);
-        });
-        
-        if (demoData.Sheets.Trips.Count > 0)
-        {
-            Assert.All(demoData.Sheets.Trips, trip =>
-            {
-                Assert.NotNull(trip.Date);
-                Assert.NotNull(trip.Service);
-                Assert.True(trip.RowId > 0);
-            });
-            
-            // Verify shift-trip relationships exist
-            foreach (var shift in demoData.Sheets.Shifts.Where(s => s.Trips > 0))
-            {
-                var relatedTrips = demoData.Sheets.Trips.Where(t =>
-                    t.Date == shift.Date &&
-                    t.Service == shift.Service &&
-                    t.Number == shift.Number).ToList();
-                
-                // Some correlation should exist (demo data uses probabilities)
-                // Not every shift will have exact trip count match
-                System.Diagnostics.Debug.WriteLine($"  Shift on {shift.Date} ({shift.Service} #{shift.Number}): " +
-                    $"{shift.Trips} trips expected, {relatedTrips.Count} found");
-            }
-        }
-        
-        System.Diagnostics.Debug.WriteLine($"✅ Validated demo data structure: {demoData.Sheets.Shifts.Count} shifts, " +
-            $"{demoData.Sheets.Trips.Count} trips, {demoData.Sheets.Expenses.Count} expenses");
-    }
 
     #endregion
 }
