@@ -83,9 +83,24 @@ public class GigPlumbingTests : SheetPlumbingTestsBase<SheetEntity, SheetManager
 
         if (repaired.Count > 0)
         {
-            System.Diagnostics.Debug.WriteLine(
-                $"⚠️  Repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
+            // Console, not Debug.WriteLine: Debug.WriteLine is [Conditional("DEBUG")] and CI builds
+            // Release, so every diagnostic written that way is absent from the one run anybody reads
+            // after the fact.
+            Console.WriteLine(
+                $"WARNING: repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
                 "An earlier test removed them without restoring them - see #130.");
+        }
+
+        // Reported, not repaired: fixing a column means regenerating the sheet and discarding its
+        // rows, which is too destructive to do on the strength of a comparison that has not yet been
+        // watched in anger.
+        var drift = await _fixture.DetectColumnDriftAsync(GigSheetHelpers.GetSheetNames());
+
+        if (drift.Count > 0)
+        {
+            Console.WriteLine(
+                $"WARNING: {drift.Count} sheet(s) have drifted columns before this test ran: {string.Join(" | ", drift)}. " +
+                "An earlier test changed them without restoring them - see #130.");
         }
     }
 
