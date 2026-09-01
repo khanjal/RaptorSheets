@@ -264,7 +264,9 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             t.Service?.Contains($"Test_{testRunId}") == true).ToList();
         
         Assert.Single(dailyShifts);
-        Assert.True(dailyTrips.Count >= 2, $"Should have at least 2 daily trips, found {dailyTrips.Count}");
+        // Derived from what this test inserted rather than a floor, so it fails on a lost row and on
+        // a duplicated one. "At least 2" reported success for either.
+        Assert.Equal(testData.Sheets.Trips.Count, dailyTrips.Count);
         
         var workflowShift = dailyShifts[0];
         Assert.NotNull(workflowShift.Start);
@@ -309,9 +311,10 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         var expenseCategories = ourExpenses.Select(e => e.Category).Distinct().ToList();
         
-        Assert.True(ourExpenses.Count >= 2, $"Should have at least 2 expenses, found {ourExpenses.Count}");
-        Assert.True(expenseCategories.Count >= 2, 
-            $"Should have multiple expense categories, found {expenseCategories.Count}");
+        Assert.Equal(testData.Sheets.Expenses.Count, ourExpenses.Count);
+        Assert.Equal(
+            testData.Sheets.Expenses.Select(e => e.Category).Distinct().OrderBy(c => c),
+            expenseCategories.OrderBy(c => c));
     }
 
     #endregion
@@ -331,8 +334,11 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {shifts.Count} shifts");
         
-        Assert.True(shifts.Count >= expectedData.Sheets.Shifts.Count - 1, 
-            $"Should find ~{expectedData.Sheets.Shifts.Count} shifts, found {shifts.Count}");
+        // Exact, not a tolerance. These rows are scoped to this run's own marker, so the count is
+        // knowable - and ">= expected - 1" passed whether a row went missing or an extra one appeared,
+        // which is how a write landing in the wrong place (#133) or duplicating a record (#134) could
+        // run through this suite untouched.
+        Assert.Equal(expectedData.Sheets.Shifts.Count, shifts.Count);
         
         return shifts;
     }
@@ -344,8 +350,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {trips.Count} trips");
         
-        Assert.True(trips.Count >= expectedData.Sheets.Trips.Count - 2, 
-            $"Should find ~{expectedData.Sheets.Trips.Count} trips, found {trips.Count}");
+        Assert.Equal(expectedData.Sheets.Trips.Count, trips.Count);
         
         return trips;
     }
@@ -356,9 +361,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
             e.Description?.Contains($"Test_{testRunId}") == true).ToList();
         
         System.Diagnostics.Debug.WriteLine($"   ✓ Found {expenses.Count} expenses");
-        
-        Assert.True(expenses.Count >= expectedData.Sheets.Expenses.Count - 1, 
-            $"Should find ~{expectedData.Sheets.Expenses.Count} expenses, found {expenses.Count}");
+        Assert.Equal(expectedData.Sheets.Expenses.Count, expenses.Count);
         
         return expenses;
     }

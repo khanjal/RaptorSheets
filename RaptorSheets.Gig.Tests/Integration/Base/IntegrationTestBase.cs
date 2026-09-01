@@ -78,7 +78,14 @@ public abstract class IntegrationTestBase
         return DemoHelpers.GenerateDemoData(start, end);
     }
     
-    protected static string GenerateTestRunId() => DateTimeOffset.UtcNow.ToString("HHmmss");
+    /// <summary>
+    /// Tags every row a test writes so it can find its own again and ignore everybody else's.
+    ///
+    /// Was a timestamp at second resolution, which is not unique: two tests starting within the same
+    /// second share an id, and the marker lookups use Contains, so one test would assert over another
+    /// test's rows. Uniqueness is the whole job here, so it comes from a Guid.
+    /// </summary>
+    protected static string GenerateTestRunId() => Guid.NewGuid().ToString("N")[..8];
 
     protected static SheetEntity CreateTestData(string testRunId, int shifts, int tripsPerShift, int expenses)
     {
