@@ -1,5 +1,6 @@
 using RaptorSheets.Core.Services;
 using RaptorSheets.Gig.Constants;
+using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Managers;
 using RaptorSheets.Gig.Tests.Data.Attributes;
@@ -61,49 +62,132 @@ public class GigPlumbingTests : SheetPlumbingTestsBase<SheetEntity, SheetManager
     // [FactCheckUserSecrets] on the concrete method for discovery/skip - the attribute type is
     // domain-specific and can't live on the shared abstract base). The actual assertions live in the
     // base class method each one calls.
+
+    /// <summary>
+    /// These are the destructive scenarios - they delete sheets, drop columns and reorder them - so
+    /// they are both the most likely to leave damage and the most likely to inherit it. The clean
+    /// slate runs once per collection, so a test that fails before restoring what it removed hands
+    /// the wreckage to everything after it (#130).
+    ///
+    /// Checking here means a test states its own precondition instead of trusting the previous one,
+    /// and damage is named where it is found rather than wherever it eventually causes a failure.
+    /// </summary>
+    private async Task VerifyPreconditionsAsync()
+    {
+        if (_fixture.Manager == null)
+        {
+            return;
+        }
+
+        var repaired = await _fixture.VerifyAndRepairAsync(GigSheetHelpers.GetSheetNames());
+
+        if (repaired.Count > 0)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"⚠️  Repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
+                "An earlier test removed them without restoring them - see #130.");
+        }
+    }
+
 #pragma warning disable S2699
 
     [FactCheckUserSecrets]
-    public override Task CreateAllSheets_ThenReadStructure_HasExpectedHeaders() => base.CreateAllSheets_ThenReadStructure_HasExpectedHeaders();
+    public override async Task CreateAllSheets_ThenReadStructure_HasExpectedHeaders()
+    {
+        await VerifyPreconditionsAsync();
+        await base.CreateAllSheets_ThenReadStructure_HasExpectedHeaders();
+    }
 
     [FactCheckUserSecrets]
-    public override Task ReapplyFormatting_OnPopulatedColumn_PreservesExistingValues() => base.ReapplyFormatting_OnPopulatedColumn_PreservesExistingValues();
+    public override async Task ReapplyFormatting_OnPopulatedColumn_PreservesExistingValues()
+    {
+        await VerifyPreconditionsAsync();
+        await base.ReapplyFormatting_OnPopulatedColumn_PreservesExistingValues();
+    }
 
     [FactCheckUserSecrets]
-    public override Task DeleteDependentSheet_LeavesInputSheetIntact_ThenRecreatesIt() => base.DeleteDependentSheet_LeavesInputSheetIntact_ThenRecreatesIt();
+    public override async Task DeleteDependentSheet_LeavesInputSheetIntact_ThenRecreatesIt()
+    {
+        await VerifyPreconditionsAsync();
+        await base.DeleteDependentSheet_LeavesInputSheetIntact_ThenRecreatesIt();
+    }
 
     [FactCheckUserSecrets]
-    public override Task DeleteInputSheet_ThenRecreate_DependentFormulaStillComputes() => base.DeleteInputSheet_ThenRecreate_DependentFormulaStillComputes();
+    public override async Task DeleteInputSheet_ThenRecreate_DependentFormulaStillComputes()
+    {
+        await VerifyPreconditionsAsync();
+        await base.DeleteInputSheet_ThenRecreate_DependentFormulaStillComputes();
+    }
 
     [FactCheckUserSecrets]
-    public override Task DeleteAllSheets_ThenCreateAllSheets_UsesTempSheetSafetyNet() => base.DeleteAllSheets_ThenCreateAllSheets_UsesTempSheetSafetyNet();
+    public override async Task DeleteAllSheets_ThenCreateAllSheets_UsesTempSheetSafetyNet()
+    {
+        await VerifyPreconditionsAsync();
+        await base.DeleteAllSheets_ThenCreateAllSheets_UsesTempSheetSafetyNet();
+    }
 
     [FactCheckUserSecrets]
-    public override Task MissingColumn_OnDependentSheet_SelfHealRestoresFormula() => base.MissingColumn_OnDependentSheet_SelfHealRestoresFormula();
+    public override async Task MissingColumn_OnDependentSheet_SelfHealRestoresFormula()
+    {
+        await VerifyPreconditionsAsync();
+        await base.MissingColumn_OnDependentSheet_SelfHealRestoresFormula();
+    }
 
     [FactCheckUserSecrets]
-    public override Task MissingColumn_OnInputSheet_RestoresStructureButNotData() => base.MissingColumn_OnInputSheet_RestoresStructureButNotData();
+    public override async Task MissingColumn_OnInputSheet_RestoresStructureButNotData()
+    {
+        await VerifyPreconditionsAsync();
+        await base.MissingColumn_OnInputSheet_RestoresStructureButNotData();
+    }
 
     [FactCheckUserSecrets]
-    public override Task MultipleMissingColumns_OnDependentSheet_RestoresAllAtCorrectPositions() => base.MultipleMissingColumns_OnDependentSheet_RestoresAllAtCorrectPositions();
+    public override async Task MultipleMissingColumns_OnDependentSheet_RestoresAllAtCorrectPositions()
+    {
+        await VerifyPreconditionsAsync();
+        await base.MultipleMissingColumns_OnDependentSheet_RestoresAllAtCorrectPositions();
+    }
 
     [FactCheckUserSecrets]
-    public override Task ColumnsReordered_ReadsAndWritesStayCorrect_LibraryDoesNotAutoCorrectOrder() => base.ColumnsReordered_ReadsAndWritesStayCorrect_LibraryDoesNotAutoCorrectOrder();
+    public override async Task ColumnsReordered_ReadsAndWritesStayCorrect_LibraryDoesNotAutoCorrectOrder()
+    {
+        await VerifyPreconditionsAsync();
+        await base.ColumnsReordered_ReadsAndWritesStayCorrect_LibraryDoesNotAutoCorrectOrder();
+    }
 
     [FactCheckUserSecrets]
-    public override Task ExtraUnexpectedColumn_IsFlaggedNotRemoved_KnownColumnsUnaffected() => base.ExtraUnexpectedColumn_IsFlaggedNotRemoved_KnownColumnsUnaffected();
+    public override async Task ExtraUnexpectedColumn_IsFlaggedNotRemoved_KnownColumnsUnaffected()
+    {
+        await VerifyPreconditionsAsync();
+        await base.ExtraUnexpectedColumn_IsFlaggedNotRemoved_KnownColumnsUnaffected();
+    }
 
     [FactCheckUserSecrets]
-    public override Task GetLiveSheetStructure_ReturnsConfiguredHeaders() => base.GetLiveSheetStructure_ReturnsConfiguredHeaders();
+    public override async Task GetLiveSheetStructure_ReturnsConfiguredHeaders()
+    {
+        await VerifyPreconditionsAsync();
+        await base.GetLiveSheetStructure_ReturnsConfiguredHeaders();
+    }
 
     [FactCheckUserSecrets]
-    public override Task GetLiveSheetRawValues_ReturnsPositionalRows() => base.GetLiveSheetRawValues_ReturnsPositionalRows();
+    public override async Task GetLiveSheetRawValues_ReturnsPositionalRows()
+    {
+        await VerifyPreconditionsAsync();
+        await base.GetLiveSheetRawValues_ReturnsPositionalRows();
+    }
 
     [FactCheckUserSecrets]
-    public override Task GetSheetProperties_And_GetAllSheetTabNames_ReturnCurrentMetadata() => base.GetSheetProperties_And_GetAllSheetTabNames_ReturnCurrentMetadata();
+    public override async Task GetSheetProperties_And_GetAllSheetTabNames_ReturnCurrentMetadata()
+    {
+        await VerifyPreconditionsAsync();
+        await base.GetSheetProperties_And_GetAllSheetTabNames_ReturnCurrentMetadata();
+    }
 
     [FactCheckUserSecrets]
-    public override Task GetSpreadsheetTitle_ReturnsConfiguredTitle() => base.GetSpreadsheetTitle_ReturnsConfiguredTitle();
+    public override async Task GetSpreadsheetTitle_ReturnsConfiguredTitle()
+    {
+        await VerifyPreconditionsAsync();
+        await base.GetSpreadsheetTitle_ReturnsConfiguredTitle();
+    }
 
 #pragma warning restore S2699
 }

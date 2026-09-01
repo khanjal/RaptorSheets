@@ -73,6 +73,43 @@ public class CleanSlateSheetFixture<TEntity, TManager> : IAsyncLifetime
     }
 
     /// <summary>
+    /// Checks that the spreadsheet still has the tabs the domain expects, and recreates any that are
+    /// missing. Opt-in: a test class calls it before its own work.
+    ///
+    /// The reset above runs once per collection, so a test that deletes a sheet and fails before
+    /// restoring it leaves every later test reading a spreadsheet that no longer matches the
+    /// canonical layout - which is why a failure here usually surfaced two or three tests away from
+    /// its cause (#130). The common case costs one metadata read and repairs nothing.
+    ///
+    /// The point is as much diagnostic as corrective: it turns "an unrelated test fails later" into
+    /// a named warning at the moment the damage is found. It checks tab presence only, not column
+    /// drift, which needs grid data and is the more expensive half.
+    /// </summary>
+    /// <returns>The sheets it had to recreate - empty when the spreadsheet was already intact.</returns>
+    public async Task<IReadOnlyList<string>> VerifyAndRepairAsync(IReadOnlyList<string> expectedSheets, CancellationToken cancellationToken = default)
+    {
+        if (Manager == null)
+        {
+            return [];
+        }
+
+        var present = await Manager.GetAllSheetTabNames(cancellationToken);
+        var missing = expectedSheets
+            .Where(name => !present.Any(tab => string.Equals(tab, name, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+        if (missing.Count == 0)
+        {
+            return [];
+        }
+
+        await Manager.CreateSheets(missing, cancellationToken);
+        await Task.Delay(2000, cancellationToken); // allow creation + cross-sheet formulas to settle
+
+        return missing;
+    }
+
+    /// <summary>
     /// Extension point for domain-specific post-setup work (e.g. Stock captures a batch-data
     /// snapshot here for its MapFromRangeData tests to consume without an extra live read).
     /// </summary>

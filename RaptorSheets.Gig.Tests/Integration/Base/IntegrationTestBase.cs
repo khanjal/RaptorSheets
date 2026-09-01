@@ -18,6 +18,7 @@ namespace RaptorSheets.Gig.Tests.Integration.Base;
 public abstract class IntegrationTestBase
 {
     protected readonly SheetManager? SheetManager;
+    private readonly CleanSlateSheetFixture<SheetEntity, SheetManager> _fixture;
     protected readonly List<string> TestSheets;
 
     protected IntegrationTestBase(CleanSlateSheetFixture<SheetEntity, SheetManager> fixture)
@@ -29,6 +30,7 @@ public abstract class IntegrationTestBase
         ];
 
         SheetManager = fixture.Manager;
+        _fixture = fixture;
     }
 
     #region Skip Helpers
@@ -42,6 +44,32 @@ public abstract class IntegrationTestBase
     }
 
     #endregion
+
+    /// <summary>
+    /// Confirms the canonical sheets are still present before a test relies on them, recreating any
+    /// a previous test removed and did not restore.
+    ///
+    /// The clean slate runs once per collection, so damage from one test is inherited by every test
+    /// after it - the order-dependent failures in #130. Calling this makes a test state its own
+    /// precondition instead of assuming the last one left things tidy, and reports the damage at the
+    /// point it is found rather than wherever it happens to cause a failure.
+    /// </summary>
+    protected async Task VerifyPreconditionsAsync()
+    {
+        if (SheetManager == null)
+        {
+            return;
+        }
+
+        var repaired = await _fixture.VerifyAndRepairAsync(GigSheetHelpers.GetSheetNames());
+
+        if (repaired.Count > 0)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"⚠️  Repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
+                "An earlier test removed them without restoring them - see #130.");
+        }
+    }
 
     #region Test Data Generation
     

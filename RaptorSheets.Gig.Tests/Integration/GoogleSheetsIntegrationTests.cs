@@ -45,6 +45,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task CreatedSheets_ShouldHaveCorrectVisualProperties()
     {
+        await VerifyPreconditionsAsync();
         // This test validates that sheets have correct colors, protection, etc.
         
         // Act - Get spreadsheet info to check visual properties
@@ -90,6 +91,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task CreatedSheets_ShouldBeInCorrectOrder()
     {
+        await VerifyPreconditionsAsync();
         // This test validates that sheets in TestSheets are created in the correct order
         // as defined by the constants declaration in SheetsConfig.SheetNames
         
@@ -141,6 +143,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task FullWorkflow_InsertReadUpdate_ShouldSucceedWithConsistentData()
     {
+        await VerifyPreconditionsAsync();
         // Arrange
         var testRunId = GenerateTestRunId();
         System.Diagnostics.Debug.WriteLine($"🚀 Starting orchestrated workflow test: {testRunId}");
@@ -212,6 +215,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task Workflow_DailyOperation_ShouldRecordShiftWithTrips()
     {
+        await VerifyPreconditionsAsync();
         // Arrange - Simulates daily workflow: start shift, record trips, end shift
         var testRunId = GenerateTestRunId();
         
@@ -277,6 +281,7 @@ public class GoogleSheetsIntegrationTests : IntegrationTestBase
     [FactCheckUserSecrets]
     public async Task Workflow_ExpenseTracking_ShouldRecordMultipleCategories()
     {
+        await VerifyPreconditionsAsync();
         // Arrange - Simulates expense tracking workflow
         var testRunId = GenerateTestRunId();
         
