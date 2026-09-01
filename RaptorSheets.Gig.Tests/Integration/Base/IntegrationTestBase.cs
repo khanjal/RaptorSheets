@@ -61,7 +61,7 @@ public abstract class IntegrationTestBase
             return;
         }
 
-        var repaired = await _fixture.VerifyAndRepairAsync(GigSheetHelpers.GetSheetNames());
+        var (repaired, drift) = await _fixture.VerifyPreconditionsAsync(GigSheetHelpers.GetSheetNames());
 
         if (repaired.Count > 0)
         {
@@ -72,11 +72,6 @@ public abstract class IntegrationTestBase
                 $"WARNING: repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
                 "An earlier test removed them without restoring them - see #130.");
         }
-
-        // Reported, not repaired: fixing a column means regenerating the sheet and discarding its
-        // rows, which is too destructive to do on the strength of a comparison that has not yet been
-        // watched in anger.
-        var drift = await _fixture.DetectColumnDriftAsync(GigSheetHelpers.GetSheetNames());
 
         if (drift.Count > 0)
         {
