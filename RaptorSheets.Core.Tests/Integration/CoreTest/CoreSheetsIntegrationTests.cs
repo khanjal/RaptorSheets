@@ -30,10 +30,12 @@ namespace RaptorSheets.Core.Tests.Integration.CoreTest;
 public class CoreSheetsIntegrationTests
 {
     private readonly CoreTestManager? Manager;
+    private readonly CoreCleanSlateFixture _fixture;
 
     public CoreSheetsIntegrationTests(CoreCleanSlateFixture fixture)
     {
         Manager = fixture.Manager;
+        _fixture = fixture;
     }
 
     private void SkipIfNoCredentials()
@@ -41,6 +43,37 @@ public class CoreSheetsIntegrationTests
         if (Manager == null)
         {
             Assert.Fail("Google Sheets credentials not available. Configure user secrets to run integration tests.");
+        }
+    }
+
+    /// <summary>
+    /// See <see cref="CorePlumbingTests"/>'s copy of this method for why it exists (#130): the clean
+    /// slate runs once per collection, so a test that leaves damage behind hands it to every test
+    /// after it. These tests only read, but they still trust the sheet's shape - a categorical
+    /// aggregation like <see cref="Summary_Total_HasFormulaReferencingItems"/> silently reports
+    /// nothing useful against a Summary sheet an earlier plumbing test left mid-repair.
+    /// </summary>
+    private async Task VerifyPreconditionsAsync()
+    {
+        if (Manager == null)
+        {
+            return;
+        }
+
+        var (repaired, drift) = await _fixture.VerifyPreconditionsAsync(CoreTestManager.GetSheetNames());
+
+        if (repaired.Count > 0)
+        {
+            Console.WriteLine(
+                $"WARNING: repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
+                "An earlier test removed them without restoring them - see #130.");
+        }
+
+        if (drift.Count > 0)
+        {
+            Console.WriteLine(
+                $"WARNING: {drift.Count} sheet(s) have drifted columns before this test ran: {string.Join(" | ", drift)}. " +
+                "An earlier test changed them without restoring them - see #130.");
         }
     }
 
@@ -59,6 +92,7 @@ public class CoreSheetsIntegrationTests
     public async Task Summary_Total_HasFormulaReferencingItems()
     {
         SkipIfNoCredentials();
+        await VerifyPreconditionsAsync();
 
         var structures = await Manager!.GetAllLiveSheetStructures();
 
@@ -72,6 +106,7 @@ public class CoreSheetsIntegrationTests
     public async Task ChangeSheetData_ThenGetSheets_WriteThenReadRoundTrips_AndSummaryComputes()
     {
         SkipIfNoCredentials();
+        await VerifyPreconditionsAsync();
 
         // "RoundTripCheck" is deliberately not one of CoreTestDataSeeder's category pool - this test
         // asserts an EXACT Summary total, which the fixture's randomized seed data (also aggregated
@@ -113,6 +148,9 @@ public class CoreSheetsIntegrationTests
     public async Task SeededDataset_ReadsBackCorrectly_AndSummaryAggregatesAcrossManyCategories()
     {
         SkipIfNoCredentials();
+        // Deliberately before readStart below - this checks and repairs sheet shape, not the read
+        // whose wall-clock budget this test enforces.
+        await VerifyPreconditionsAsync();
 
         var readStart = DateTime.UtcNow;
         var readResult = await Manager!.GetSheets([CoreTestSheetNames.Items, CoreTestSheetNames.Summary]);
