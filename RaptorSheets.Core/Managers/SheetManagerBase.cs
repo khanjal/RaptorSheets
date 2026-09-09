@@ -696,6 +696,21 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     /// <param name="sheetNames">Sheet names to fetch (provider/tab names, not domain enum values).</param>
     public async Task<TEntity> GetSheets(List<string> sheetNames, CancellationToken cancellationToken = default)
     {
+        return await GetSheetsAsync(sheetNames, autoHeal: true, cancellationToken);
+    }
+
+    /// <summary>
+    /// Values-only "get sheets" orchestration, shared by both the plain <see cref="GetSheets(List{string}, CancellationToken)"/>
+    /// entry point and the structure-aware overload's <c>includeStructure: false</c> path, now that
+    /// both need to thread an <paramref name="autoHeal"/> flag through to <see cref="AutoHealMissingColumnsAsync(BatchGetValuesByDataFilterResponse, Spreadsheet?, List{MessageEntity}, CancellationToken)"/>.
+    /// See #113: with write-capable credentials this method was inserting "missing" columns into the
+    /// live spreadsheet as a side effect of what looks like a read-only call, with no way to opt out.
+    /// Missing-*sheet* self-heal (<see cref="TryRestoreMissingSheetsAsync"/>) is intentionally
+    /// unaffected - #113 is scoped to column healing, and a caller asking to read a sheet that does
+    /// not exist at all still needs it created to read anything back.
+    /// </summary>
+    private async Task<TEntity> GetSheetsAsync(List<string> sheetNames, bool autoHeal, CancellationToken cancellationToken)
+    {
         var data = new TEntity();
         var messages = new List<MessageEntity>();
         var stringSheetList = string.Join(", ", sheetNames);
@@ -746,7 +761,10 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
 
         data = _registry.MapData(response) ?? new TEntity();
 
-        await AutoHealMissingColumnsAsync(response, spreadsheetInfo, messages, cancellationToken);
+        if (autoHeal)
+        {
+            await AutoHealMissingColumnsAsync(response, spreadsheetInfo, messages, cancellationToken);
+        }
 
         if (spreadsheetInfo != null)
         {
@@ -767,9 +785,21 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     /// </summary>
     public async Task<TEntity> GetSheets(List<string> sheetNames, bool includeStructure, CancellationToken cancellationToken = default)
     {
+        return await GetSheets(sheetNames, includeStructure, autoHeal: true, cancellationToken);
+    }
+
+    /// <summary>
+    /// Same as the overload above, with an explicit opt-out from automatic missing-column self-heal
+    /// (see #113). <paramref name="autoHeal"/> defaults to true so every existing caller - source and
+    /// binary - is unaffected; pass false for a guaranteed-read-only call regardless of whether the
+    /// configured credentials happen to have write access. Only column healing is gated: a sheet that
+    /// does not exist at all is still (re)created, since there would otherwise be nothing to read.
+    /// </summary>
+    public async Task<TEntity> GetSheets(List<string> sheetNames, bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default)
+    {
         if (!includeStructure)
         {
-            return await GetSheets(sheetNames, cancellationToken);
+            return await GetSheetsAsync(sheetNames, autoHeal, cancellationToken);
         }
 
         var data = new TEntity();
@@ -809,7 +839,10 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         data = _registry.MapData(spreadsheetInfo);
         data.Structures = SheetStructureHelper.ParseSheetStructures(spreadsheetInfo, sheetNames);
 
-        await AutoHealMissingColumnsAsync(spreadsheetInfo, messages, cancellationToken);
+        if (autoHeal)
+        {
+            await AutoHealMissingColumnsAsync(spreadsheetInfo, messages, cancellationToken);
+        }
 
         data.Messages.AddRange(messages);
 
@@ -922,6 +955,12 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         return await GetSheets(new List<string>(_canonicalSheetNames), includeStructure, cancellationToken);
     }
 
+    /// <inheritdoc cref="GetSheets(List{string}, bool, bool, CancellationToken)"/>
+    public async Task<TEntity> GetAllSheets(bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default)
+    {
+        return await GetSheets(new List<string>(_canonicalSheetNames), includeStructure, autoHeal, cancellationToken);
+    }
+
     /// <summary>
     /// Fetches a single named sheet, or an error entity if the name isn't one of this domain's
     /// canonical sheets. Every domain manager previously re-implemented this identically.
@@ -949,6 +988,19 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         }
 
         return await GetSheets([sheet], includeStructure, cancellationToken);
+    }
+
+    /// <inheritdoc cref="GetSheets(List{string}, bool, bool, CancellationToken)"/>
+    public async Task<TEntity> GetSheet(string sheet, bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default)
+    {
+        var sheetExists = _canonicalSheetNames.Any(name => string.Equals(name, sheet, StringComparison.OrdinalIgnoreCase));
+
+        if (!sheetExists)
+        {
+            return new TEntity { Messages = [MessageHelpers.CreateErrorMessage($"Sheet {sheet.ToUpperInvariant()} does not exist", MessageType.GET_SHEETS)] };
+        }
+
+        return await GetSheets([sheet], includeStructure, autoHeal, cancellationToken);
     }
 
     // Google.Apis.Sheets.v4 types are Core's own implementation detail, not part of the public
