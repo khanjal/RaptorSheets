@@ -39,40 +39,12 @@ public abstract class IntegrationTestBase
     }
 
     /// <summary>
-    /// The clean slate runs once per collection, so a test that fails before restoring what it
-    /// removed hands the wreckage to everything after it (#130). Checking here means a test states
-    /// its own precondition instead of trusting the previous one, and damage is named where it is
-    /// found rather than wherever it eventually causes a failure.
-    ///
-    /// Mirrors Gig's and Core's adoption of this - Job was left opt-in when
-    /// CleanSlateSheetFixture first gained the capability.
+    /// Each live test states its own precondition rather than trusting whatever the previous
+    /// one left behind (#130). The check and its warning reporting live on
+    /// CleanSlateSheetFixture.VerifyAndReportPreconditionsAsync, shared by all five domains.
     /// </summary>
-    protected async Task VerifyPreconditionsAsync()
-    {
-        if (SheetManager == null)
-        {
-            return;
-        }
-
-        var (repaired, drift) = await _fixture.VerifyPreconditionsAsync(JobSheetHelpers.GetSheetNames());
-
-        if (repaired.Count > 0)
-        {
-            // Console, not Debug.WriteLine: Debug.WriteLine is [Conditional("DEBUG")] and CI builds
-            // Release, so every diagnostic written that way is absent from the one run anybody reads
-            // after the fact.
-            Console.WriteLine(
-                $"WARNING: repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
-                "An earlier test removed them without restoring them - see #130.");
-        }
-
-        if (drift.Count > 0)
-        {
-            Console.WriteLine(
-                $"WARNING: {drift.Count} sheet(s) have drifted columns before this test ran: {string.Join(" | ", drift)}. " +
-                "An earlier test changed them without restoring them - see #130.");
-        }
-    }
+    protected Task VerifyPreconditionsAsync()
+        => _fixture.VerifyAndReportPreconditionsAsync(JobSheetHelpers.GetSheetNames());
 
     protected void SkipIfNoCredentials()
     {

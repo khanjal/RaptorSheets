@@ -64,40 +64,12 @@ public class GigPlumbingTests : SheetPlumbingTestsBase<SheetEntity, SheetManager
     // base class method each one calls.
 
     /// <summary>
-    /// These are the destructive scenarios - they delete sheets, drop columns and reorder them - so
-    /// they are both the most likely to leave damage and the most likely to inherit it. The clean
-    /// slate runs once per collection, so a test that fails before restoring what it removed hands
-    /// the wreckage to everything after it (#130).
-    ///
-    /// Checking here means a test states its own precondition instead of trusting the previous one,
-    /// and damage is named where it is found rather than wherever it eventually causes a failure.
+    /// Each live test states its own precondition rather than trusting whatever the previous
+    /// one left behind (#130). The check and its warning reporting live on
+    /// CleanSlateSheetFixture.VerifyAndReportPreconditionsAsync, shared by all five domains.
     /// </summary>
-    private async Task VerifyPreconditionsAsync()
-    {
-        if (_fixture.Manager == null)
-        {
-            return;
-        }
-
-        var (repaired, drift) = await _fixture.VerifyPreconditionsAsync(GigSheetHelpers.GetSheetNames());
-
-        if (repaired.Count > 0)
-        {
-            // Console, not Debug.WriteLine: Debug.WriteLine is [Conditional("DEBUG")] and CI builds
-            // Release, so every diagnostic written that way is absent from the one run anybody reads
-            // after the fact.
-            Console.WriteLine(
-                $"WARNING: repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
-                "An earlier test removed them without restoring them - see #130.");
-        }
-
-        if (drift.Count > 0)
-        {
-            Console.WriteLine(
-                $"WARNING: {drift.Count} sheet(s) have drifted columns before this test ran: {string.Join(" | ", drift)}. " +
-                "An earlier test changed them without restoring them - see #130.");
-        }
-    }
+    private Task VerifyPreconditionsAsync()
+        => _fixture.VerifyAndReportPreconditionsAsync(GigSheetHelpers.GetSheetNames());
 
 #pragma warning disable S2699
 
