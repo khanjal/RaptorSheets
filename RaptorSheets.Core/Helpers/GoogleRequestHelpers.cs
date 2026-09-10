@@ -592,12 +592,13 @@ public static class GoogleRequestHelpers
     /// </param>
     public static Request GenerateUpdateCellsRequest(int sheetId, int rowIndex, IList<RowData> rows, int startColumnIndex = 0, string? fields = null)
     {
-        // Indexes are 1 less than rowIds
+        // Indexes are 1 less than rowIds. The range spans rows.Count rows from rowIndex so a caller
+        // can write a contiguous block in one request; a single row behaves exactly as before.
         var range = new GridRange
         {
             SheetId = sheetId,
             StartRowIndex = rowIndex,
-            EndRowIndex = rowIndex + 1,
+            EndRowIndex = rowIndex + rows.Count,
             StartColumnIndex = startColumnIndex,
             EndColumnIndex = startColumnIndex + rows.Max(r => r.Values?.Count ?? 0),
         };
@@ -815,14 +816,16 @@ public static class GoogleRequestHelpers
     ///
     /// The append/update split is keyed off <see cref="Property.MAX_ROW_VALUE"/> - the sheet's
     /// *actual* last populated row (<see cref="SheetPropertyHelper.FindLastRowWithData"/>) - not
-    /// <see cref="Property.MAX_ROW"/> (the grid's row *capacity*, typically ~1000 by default).
-    /// <see cref="GenerateAppendCells"/> always lands right after the real data extent regardless of
-    /// RowId, so using the capacity as the threshold let a row classified as "update" (RowId within
-    /// capacity but past the real data) land on the exact same physical row an append in the same
-    /// batch was about to write - both requests go in one batch, append first then update, so the
-    /// update silently clobbered what append just wrote (GitHub issue #101, found stress-testing a
-    /// ~1,000-row write against a sheet with far fewer real rows). Keying off the actual data extent
-    /// instead means a row can only be "update" when something genuinely already exists there.
+    /// <see cref="Property.MAX_ROW"/> (the grid's row *capacity*, typically ~1000 by default). Using
+    /// the capacity as the threshold let a row classified as "update" (RowId within capacity but past
+    /// the real data) land on the exact same physical row an append in the same batch was about to
+    /// write, so the update silently clobbered what append just wrote (GitHub issue #101, found
+    /// stress-testing a ~1,000-row write against a sheet with far fewer real rows). Keying off the
+    /// actual data extent instead means a row can only be "update" when something genuinely already
+    /// exists there.
+    ///
+    /// Both paths write at explicit row indices. Appended rows go in one contiguous block starting
+    /// immediately after MAX_ROW_VALUE, growing the grid first if the block would overrun it.
     /// </summary>
     public static IEnumerable<Request> CreateUpdateCellRequests<T>(List<T> entities, PropertyEntity? sheetProperties, Func<List<T>, IList<object>, IList<RowData>> mapToRowData)
         where T : SheetRowEntityBase
@@ -836,6 +839,7 @@ public static class GoogleRequestHelpers
 
         var headers = sheetProperties.Attributes[Property.HEADERS.GetDescription()]?.Split(",").Cast<object>().ToList();
         var maxRowValue = int.Parse(sheetProperties.Attributes.GetValueOrDefault(Property.MAX_ROW_VALUE.GetDescription(), "0") ?? "0");
+        var maxRow = int.Parse(sheetProperties.Attributes.GetValueOrDefault(Property.MAX_ROW.GetDescription(), "0") ?? "0");
 
         if (headers?.Count == 0)
         {
@@ -849,8 +853,27 @@ public static class GoogleRequestHelpers
         var appendEntities = entities.Where(x => x.RowId > maxRowValue).OrderBy(x => x.RowId).ToList();
         if (appendEntities.Count > 0)
         {
+            // Grow the grid first when the block would run past the sheet's row capacity. AppendCells
+            // used to do this implicitly; writing at explicit indices means asking for the rows.
+            var lastRowNeeded = maxRowValue + appendEntities.Count;
+            if (maxRow > 0 && lastRowNeeded > maxRow)
+            {
+                requests.Add(GenerateAppendDimension(sheetId, lastRowNeeded - maxRow));
+            }
+
+            // Written at an explicit index rather than via AppendCells, which places rows after the
+            // last row Google considers to hold data. Those two disagree on a freshly created sheet:
+            // a header ARRAYFORMULA spanning an open-ended range (A1:A) emits "" into every row of
+            // the default 1000-row grid, and an empty string is a value to Google while
+            // SheetPropertyHelper.FindLastRowWithData correctly ignores it. So the library read the
+            // extent as row 1 and Google read it as row 1000, and appended data landed at row 1001.
+            //
+            // Keying the split off MAX_ROW_VALUE (GH #101) is right, and this keeps it: the fix there
+            // was to stop update rows colliding with an append landing independently of RowId. Giving
+            // both paths explicit indices in the same coordinate system removes that disagreement at
+            // the source instead of balancing two definitions of "last row" against each other.
             var appendData = mapToRowData(appendEntities, headers!);
-            requests.Add(GenerateAppendCells(sheetId, appendData));
+            requests.Add(GenerateUpdateCellsRequest(sheetId, maxRowValue, appendData));
         }
 
         var updateEntities = entities.Where(x => x.RowId <= maxRowValue).ToList();
