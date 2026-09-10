@@ -93,12 +93,15 @@ public static class GenericSheetMapper<T> where T : class, new()
         var reportedIssues = new List<MappingIssue>();
         var headers = new Dictionary<int, string>();
 
-        // Filter out empty rows
-        values = values?.Where(x => x.Count > 0 && !string.IsNullOrEmpty(x[0]?.ToString())).ToList() ?? new List<IList<object>>();
-
         var rowId = 0;
 
-        foreach (var row in values)
+        // Blank rows are skipped but still counted, so RowId stays the row's *physical* position in
+        // the sheet. Filtering them out before numbering made RowId a position in the non-empty
+        // sequence instead - which reads fine, but writes are positional
+        // (GenerateUpdateCellsRequest(sheetId, entity.RowId - 1, ...)), so on a sheet with any gap the
+        // two sides disagreed and editing a row wrote to a different physical row than the one it was
+        // read from, duplicating the record rather than updating it. See #134.
+        foreach (var row in values ?? new List<IList<object>>())
         {
             rowId++;
 
@@ -106,6 +109,11 @@ public static class GenericSheetMapper<T> where T : class, new()
             if (rowId == 1)
             {
                 headers = HeaderHelpers.ParserHeader(row);
+                continue;
+            }
+
+            if (row.Count == 0 || string.IsNullOrEmpty(row[0]?.ToString()))
+            {
                 continue;
             }
 
