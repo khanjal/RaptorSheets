@@ -75,71 +75,37 @@ public class CleanSlateSheetFixture<TEntity, TManager> : IAsyncLifetime
     }
 
     /// <summary>
-    /// Checks that the spreadsheet still has the tabs the domain expects, and recreates any that are
-    /// missing. Opt-in: a test class calls it before its own work.
+    /// One precondition check covering both failure modes: tabs an earlier test removed, and columns
+    /// an earlier test changed. Missing tabs are recreated; drift is reported only.
     ///
-    /// The reset above runs once per collection, so a test that deletes a sheet and fails before
-    /// restoring it leaves every later test reading a spreadsheet that no longer matches the
-    /// canonical layout - which is why a failure here usually surfaced two or three tests away from
-    /// its cause (#130). The common case costs one metadata read and repairs nothing.
+    /// Deliberately a single API call. The first version made two - GetAllSheetTabNames plus
+    /// GetSheetProperties - and adding two live reads before each of Core's fourteen plumbing tests
+    /// destabilised that suite: it went from passing twice in a row to failing once per run, on a
+    /// different test each time. The diagnostic was costing more reliability than it bought.
+    /// GetSheetProperties already returns both an id (empty when the tab is absent) and the header
+    /// row, so one call answers both questions.
     ///
-    /// The point is as much diagnostic as corrective: it turns "an unrelated test fails later" into
-    /// a named warning at the moment the damage is found. It checks tab presence only, not column
-    /// drift, which needs grid data and is the more expensive half.
+    /// Drift is reported rather than repaired: fixing a column means regenerating the sheet and
+    /// discarding its rows, and a false positive would then destroy data on every run.
     /// </summary>
-    /// <returns>The sheets it had to recreate - empty when the spreadsheet was already intact.</returns>
-    public async Task<IReadOnlyList<string>> VerifyAndRepairAsync(IReadOnlyList<string> expectedSheets, CancellationToken cancellationToken = default)
+    /// <returns>Sheets recreated, and a description of any that drifted.</returns>
+    public async Task<(IReadOnlyList<string> Repaired, IReadOnlyList<string> Drifted)> VerifyPreconditionsAsync(
+        IReadOnlyList<string> expectedSheets, CancellationToken cancellationToken = default)
     {
         if (Manager == null)
         {
-            return [];
+            return ([], []);
         }
 
-        var present = await Manager.GetAllSheetTabNames(cancellationToken);
-        var missing = expectedSheets
-            .Where(name => !present.Any(tab => string.Equals(tab, name, StringComparison.OrdinalIgnoreCase)))
-            .ToList();
-
-        if (missing.Count == 0)
-        {
-            return [];
-        }
-
-        await Manager.CreateSheets(missing, cancellationToken);
-        await Task.Delay(2000, cancellationToken); // allow creation + cross-sheet formulas to settle
-
-        return missing;
-    }
-
-    /// <summary>
-    /// Reports sheets whose header row no longer matches the domain's canonical layout - a column
-    /// added, removed or reordered by an earlier test and not put back.
-    ///
-    /// Separate from <see cref="VerifyAndRepairAsync"/> because it deliberately does not repair.
-    /// Regenerating a sheet to fix a column would discard its rows, and a false positive would then
-    /// destroy data on every run; reporting names the damage without betting the spreadsheet on the
-    /// comparison being right. Promote it to a repair once it has been observed behaving.
-    ///
-    /// Costs one batched read of every sheet's header row.
-    /// </summary>
-    /// <returns>One entry per drifted sheet, describing the difference.</returns>
-    public async Task<IReadOnlyList<string>> DetectColumnDriftAsync(IReadOnlyList<string> expectedSheets, CancellationToken cancellationToken = default)
-    {
-        if (Manager == null)
-        {
-            return [];
-        }
-
-        var drift = new List<string>();
         var properties = await Manager.GetSheetProperties([.. expectedSheets], cancellationToken);
 
-        foreach (var property in properties)
+        var missing = properties.Where(p => string.IsNullOrEmpty(p.Id)).Select(p => p.Name).ToList();
+        var drifted = new List<string>();
+
+        foreach (var property in properties.Where(p => !string.IsNullOrEmpty(p.Id)))
         {
             var layout = Manager.GetSheetLayout(property.Name);
-
-            // No layout means the name is not canonical; a missing id means the tab is absent, which
-            // is VerifyAndRepairAsync's job rather than this one's.
-            if (layout == null || string.IsNullOrEmpty(property.Id))
+            if (layout == null)
             {
                 continue;
             }
@@ -164,10 +130,16 @@ public class CleanSlateSheetFixture<TEntity, TManager> : IAsyncLifetime
                     absent.Count > 0 ? "missing: " + string.Join(", ", absent) : null
                 }.Where(x => x != null));
 
-            drift.Add($"{property.Name} ({detail})");
+            drifted.Add($"{property.Name} ({detail})");
         }
 
-        return drift;
+        if (missing.Count > 0)
+        {
+            await Manager.CreateSheets(missing, cancellationToken);
+            await Task.Delay(2000, cancellationToken); // allow creation + cross-sheet formulas to settle
+        }
+
+        return (missing, drifted);
     }
 
     /// <summary>
