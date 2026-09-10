@@ -26,6 +26,15 @@ public static class StockSheetHelpers
     }
 
     /// <summary>
+    /// The canonical sheet names for this domain, in the order the enum declares them.
+    /// Single source of truth for both SheetManager's construction and any caller that needs to
+    /// name every sheet (e.g. the integration fixture's precondition check) - Job and Home expose
+    /// the same thing via their own SheetHelpers.
+    /// </summary>
+    public static List<string> GetSheetNames()
+        => [.. Enum.GetValues<SheetName>().Select(e => e.GetDescription())];
+
+    /// <summary>
     /// The shared registry backing this domain's header/row-mapping/missing-column orchestration.
     /// Exposed so <see cref="RaptorSheets.Core.Managers.SheetManagerBase"/>'s generic
     /// GetSheetsCoreAsync/AutoHealMissingColumnsAsync can operate on it directly.
