@@ -1,8 +1,8 @@
 using RaptorSheets.Gig.Constants;
 
-namespace RaptorSheets.Gig.Tests.Integration.Sheets;
+namespace RaptorSheets.Gig.Tests.Unit.Sheets;
 
-public class SheetOrder_GetAllSheetNames_Tests
+public class SheetOrderTests
 {
     [Fact]
     public void GetAllSheetNames_ReturnsExpectedOrder()

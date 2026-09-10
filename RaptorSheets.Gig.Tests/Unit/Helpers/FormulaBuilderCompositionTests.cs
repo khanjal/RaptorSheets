@@ -3,12 +3,12 @@ using RaptorSheets.Core.Helpers;
 using RaptorSheets.Gig.Helpers;
 using RaptorSheets.Gig.Sheets;
 
-namespace RaptorSheets.Gig.Tests.Integration.Helpers;
+namespace RaptorSheets.Gig.Tests.Unit.Helpers;
 
 /// <summary>
 /// Integration tests to verify formula builders work correctly with actual mappers
 /// </summary>
-public class FormulaBuilderIntegrationTests
+public class FormulaBuilderCompositionTests
 {
     [Fact]
     public void GoogleFormulaBuilder_WithActualMapperData_ShouldGenerateValidFormulas()

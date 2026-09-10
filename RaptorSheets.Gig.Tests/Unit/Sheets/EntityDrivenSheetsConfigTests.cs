@@ -4,13 +4,13 @@ using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Sheets;
 
-namespace RaptorSheets.Gig.Tests.Integration.Sheets;
+namespace RaptorSheets.Gig.Tests.Unit.Sheets;
 
 /// <summary>
 /// Integration tests demonstrating the complete entity-driven sheet configuration workflow.
 /// Shows how SheetsConfig now generates headers directly from entity ColumnAttribute attributes.
 /// </summary>
-public class EntityDrivenSheetsConfigIntegrationTests
+public class EntityDrivenSheetsConfigTests
 {
     [Fact]
     public void SheetsConfig_AddressSheet_GeneratesHeadersFromEntity()

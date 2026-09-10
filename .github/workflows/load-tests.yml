@@ -1,0 +1,98 @@
+# Load tier. Split out of integration-tests.yml deliberately.
+#
+# These write bulk data and assert wall-clock budgets. Inside the shared integration suite they were
+# the main source of its unreliability twice over: every other test read state they had changed, and
+# a timing assertion against a live API on a shared runner reports load, not correctness.
+#
+# Isolated here they own their spreadsheet, so they are free to be destructive and to assert
+# absolutes. They never gate a merge - not on a PR, and not on a release.
+name: Load Tests
+
+concurrency:
+  # Same reasoning as the integration suite: one spreadsheet, one service account, so two runs would
+  # fight each other.
+  group: load-tests
+  cancel-in-progress: false
+
+on:
+  schedule:
+    # Weekly rather than nightly. These are slow and their signal changes rarely; running them every
+    # night mostly generates noise to scroll past.
+    - cron: '0 7 * * 0'
+  workflow_dispatch:
+
+jobs:
+  load:
+    name: Bulk Write Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Check load test config
+      shell: bash
+      env:
+        spreadsheets__test__gigload: ${{ secrets.GIG_LOAD_SPREADSHEET_ID }}
+        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+      run: |
+        # A skip is not a failure, so an unset secret would remove the whole tier while the run still
+        # reported green - the exact failure this repo already had (#124). Say so out loud.
+        missing=0
+        for name in spreadsheets__test__gigload google_credentials__private_key_id \
+                    google_credentials__private_key google_credentials__client_email \
+                    google_credentials__client_id; do
+          if [ -z "${!name}" ]; then
+            echo "::warning::$name is empty - the load tests that need it will skip."
+            missing=$((missing + 1))
+          else
+            echo "present: $name"
+          fi
+        done
+        if [ "$missing" -gt 0 ]; then
+          echo "::warning::$missing of 5 load-test settings are missing; this run proves nothing."
+        fi
+
+    - name: Run load tests
+      shell: bash
+      env:
+        spreadsheets__test__gigload: ${{ secrets.GIG_LOAD_SPREADSHEET_ID }}
+        google_credentials__private_key_id: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY_ID }}
+        google_credentials__private_key: ${{ secrets.GOOGLE_CREDENTIALS_PRIVATE_KEY }}
+        google_credentials__client_email: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_EMAIL }}
+        google_credentials__client_id: ${{ secrets.GOOGLE_CREDENTIALS_CLIENT_ID }}
+      run: |
+        dotnet test RaptorSheets.Gig.Tests/RaptorSheets.Gig.Tests.csproj \
+          --no-build --configuration Release \
+          --filter "FullyQualifiedName~Integration.Load" \
+          --logger trx --verbosity normal
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: load-test-results
+        path: '**/TestResults/*.trx'
+        retention-days: 7

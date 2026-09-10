@@ -4,13 +4,13 @@ using RaptorSheets.Gig.Constants;
 using RaptorSheets.Gig.Entities;
 using RaptorSheets.Gig.Sheets;
 
-namespace RaptorSheets.Gig.Tests.Integration.Sheets;
+namespace RaptorSheets.Gig.Tests.Unit.Sheets;
 
 /// <summary>
 /// Integration tests for the new ColumnAttribute system using AddressMapper as an example.
 /// These tests verify the complete workflow from entity attributes to sheet configuration.
 /// </summary>
-public class EntityColumnOrderIntegrationTests
+public class EntityColumnOrderTests
 {
     [Fact]
     public void AddressSheet_GetSheet_AppliesEntityDrivenOrdering()
