@@ -33,6 +33,7 @@ public class StockSheetsIntegrationTests : IntegrationTestBase
     public async Task Environment_ShouldHaveSeededHoldings()
     {
         SkipIfNoCredentials();
+        await VerifyPreconditionsAsync();
 
         var readBack = await SheetManager!.GetSheets(TestSheets);
 

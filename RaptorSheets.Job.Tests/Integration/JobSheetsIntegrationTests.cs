@@ -28,6 +28,7 @@ public class JobSheetsIntegrationTests : IntegrationTestBase
     public async Task WriteThenRead_Applications_And_Interviews_RoundTrips()
     {
         SkipIfNoCredentials();
+        await VerifyPreconditionsAsync();
 
         var data = new SheetEntity();
         data.Sheets.Applications.Add(new ApplicationEntity
@@ -81,6 +82,7 @@ public class JobSheetsIntegrationTests : IntegrationTestBase
     public async Task SetupDemo_CreatesSheetsAndPopulatesData()
     {
         SkipIfNoCredentials();
+        await VerifyPreconditionsAsync();
 
         var result = await SheetManager!.SetupDemo(seed: 42);
 

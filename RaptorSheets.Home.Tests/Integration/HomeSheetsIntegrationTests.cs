@@ -30,6 +30,7 @@ public class HomeSheetsIntegrationTests : IntegrationTestBase
     {
         // Arrange
         SkipIfNoCredentials();
+        await VerifyPreconditionsAsync();
 
         var data = BuildTestData();
 
@@ -65,6 +66,7 @@ public class HomeSheetsIntegrationTests : IntegrationTestBase
     public async Task SetupDemo_CreatesSheetsAndPopulatesData()
     {
         SkipIfNoCredentials();
+        await VerifyPreconditionsAsync();
 
         var result = await SheetManager!.SetupDemo(seed: 42);
 

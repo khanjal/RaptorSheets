@@ -33,8 +33,7 @@ public interface ISheetManager : ISheetManager<SheetEntity>
 
 public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 {
-    private static List<string> CanonicalSheetNames()
-        => Enum.GetValues<SheetName>().Select(e => e.GetDescription()).ToList();
+    private static List<string> CanonicalSheetNames() => StockSheetHelpers.GetSheetNames();
 
     public SheetManager(IGoogleSheetService googleSheetService, ILogger? logger = null)
         : base(googleSheetService, StockSheetHelpers.Registry, CanonicalSheetNames(), logger)

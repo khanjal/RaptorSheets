@@ -3,8 +3,11 @@ using RaptorSheets.Core.Enums;
 using RaptorSheets.Core.Extensions;
 using RaptorSheets.Home.Constants;
 using RaptorSheets.Home.Entities;
+using RaptorSheets.Home.Helpers;
 using RaptorSheets.Home.Managers;
 using RaptorSheets.Home.Tests.Integration;
+
+using RaptorSheets.Test.Common.Fixtures;
 
 namespace RaptorSheets.Home.Tests.Integration.Base;
 
@@ -17,6 +20,7 @@ namespace RaptorSheets.Home.Tests.Integration.Base;
 public abstract class IntegrationTestBase
 {
     protected readonly SheetManager? SheetManager;
+    private readonly CleanSlateSheetFixture<SheetEntity, SheetManager> _fixture;
     protected readonly List<string> TestSheets;
 
     protected IntegrationTestBase(HomeCleanSlateFixture fixture)
@@ -29,6 +33,43 @@ public abstract class IntegrationTestBase
         ];
 
         SheetManager = fixture.Manager;
+        _fixture = fixture;
+    }
+
+    /// <summary>
+    /// The clean slate runs once per collection, so a test that fails before restoring what it
+    /// removed hands the wreckage to everything after it (#130). Checking here means a test states
+    /// its own precondition instead of trusting the previous one, and damage is named where it is
+    /// found rather than wherever it eventually causes a failure.
+    ///
+    /// Mirrors Gig's and Core's adoption of this - Home was left opt-in when
+    /// CleanSlateSheetFixture first gained the capability.
+    /// </summary>
+    protected async Task VerifyPreconditionsAsync()
+    {
+        if (SheetManager == null)
+        {
+            return;
+        }
+
+        var (repaired, drift) = await _fixture.VerifyPreconditionsAsync(HomeSheetHelpers.GetSheetNames());
+
+        if (repaired.Count > 0)
+        {
+            // Console, not Debug.WriteLine: Debug.WriteLine is [Conditional("DEBUG")] and CI builds
+            // Release, so every diagnostic written that way is absent from the one run anybody reads
+            // after the fact.
+            Console.WriteLine(
+                $"WARNING: repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
+                "An earlier test removed them without restoring them - see #130.");
+        }
+
+        if (drift.Count > 0)
+        {
+            Console.WriteLine(
+                $"WARNING: {drift.Count} sheet(s) have drifted columns before this test ran: {string.Join(" | ", drift)}. " +
+                "An earlier test changed them without restoring them - see #130.");
+        }
     }
 
     protected void SkipIfNoCredentials()
