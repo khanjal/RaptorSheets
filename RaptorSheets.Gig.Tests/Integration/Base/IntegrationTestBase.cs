@@ -46,40 +46,12 @@ public abstract class IntegrationTestBase
     #endregion
 
     /// <summary>
-    /// Confirms the canonical sheets are still present before a test relies on them, recreating any
-    /// a previous test removed and did not restore.
-    ///
-    /// The clean slate runs once per collection, so damage from one test is inherited by every test
-    /// after it - the order-dependent failures in #130. Calling this makes a test state its own
-    /// precondition instead of assuming the last one left things tidy, and reports the damage at the
-    /// point it is found rather than wherever it happens to cause a failure.
+    /// Each live test states its own precondition rather than trusting whatever the previous
+    /// one left behind (#130). The check and its warning reporting live on
+    /// CleanSlateSheetFixture.VerifyAndReportPreconditionsAsync, shared by all five domains.
     /// </summary>
-    protected async Task VerifyPreconditionsAsync()
-    {
-        if (SheetManager == null)
-        {
-            return;
-        }
-
-        var (repaired, drift) = await _fixture.VerifyPreconditionsAsync(GigSheetHelpers.GetSheetNames());
-
-        if (repaired.Count > 0)
-        {
-            // Console, not Debug.WriteLine: Debug.WriteLine is [Conditional("DEBUG")] and CI builds
-            // Release, so every diagnostic written that way is absent from the one run anybody reads
-            // after the fact.
-            Console.WriteLine(
-                $"WARNING: repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
-                "An earlier test removed them without restoring them - see #130.");
-        }
-
-        if (drift.Count > 0)
-        {
-            Console.WriteLine(
-                $"WARNING: {drift.Count} sheet(s) have drifted columns before this test ran: {string.Join(" | ", drift)}. " +
-                "An earlier test changed them without restoring them - see #130.");
-        }
-    }
+    protected Task VerifyPreconditionsAsync()
+        => _fixture.VerifyAndReportPreconditionsAsync(GigSheetHelpers.GetSheetNames());
 
     #region Test Data Generation
     

@@ -143,6 +143,42 @@ public class CleanSlateSheetFixture<TEntity, TManager> : IAsyncLifetime
     }
 
     /// <summary>
+    /// <see cref="VerifyPreconditionsAsync"/>, plus the warning reporting every live test wants with
+    /// it. Each of the five domains had its own byte-identical copy of this reporting before it was
+    /// pulled up here.
+    ///
+    /// Why every live test calls this at all: the clean slate runs once per collection, so a test
+    /// that fails before restoring what it removed hands the wreckage to everything after it (#130).
+    /// Checking per test means each states its own precondition instead of trusting the previous one,
+    /// and damage is named where it is found rather than wherever it eventually causes a failure.
+    ///
+    /// No null-manager guard is needed by callers: <see cref="VerifyPreconditionsAsync"/> already
+    /// returns empty for both lists when credentials are absent, so this reports nothing.
+    /// </summary>
+    public async Task VerifyAndReportPreconditionsAsync(
+        IReadOnlyList<string> expectedSheets, CancellationToken cancellationToken = default)
+    {
+        var (repaired, drifted) = await VerifyPreconditionsAsync(expectedSheets, cancellationToken);
+
+        if (repaired.Count > 0)
+        {
+            // Console, not Debug.WriteLine: Debug.WriteLine is [Conditional("DEBUG")] and CI builds
+            // Release, so every diagnostic written that way is absent from the one run anybody reads
+            // after the fact.
+            Console.WriteLine(
+                $"WARNING: repaired {repaired.Count} sheet(s) missing before this test ran: {string.Join(", ", repaired)}. " +
+                "An earlier test removed them without restoring them - see #130.");
+        }
+
+        if (drifted.Count > 0)
+        {
+            Console.WriteLine(
+                $"WARNING: {drifted.Count} sheet(s) have drifted columns before this test ran: {string.Join(" | ", drifted)}. " +
+                "An earlier test changed them without restoring them - see #130.");
+        }
+    }
+
+    /// <summary>
     /// Extension point for domain-specific post-setup work (e.g. Stock captures a batch-data
     /// snapshot here for its MapFromRangeData tests to consume without an extra live read).
     /// </summary>
