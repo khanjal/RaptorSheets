@@ -219,3 +219,54 @@ jobs:
         echo "**Package:** ${{ needs.detect_package.outputs.package }}" >> $GITHUB_STEP_SUMMARY
         echo "**Version:** ${{ needs.detect_package.outputs.version }}" >> $GITHUB_STEP_SUMMARY
         echo "**Status:** ✅ Successfully published to NuGet" >> $GITHUB_STEP_SUMMARY
+
+  # A milestone here is titled for the release tag (core/v5.1.0), so the tag finds it by exact
+  # title - that is the whole reason the per-package naming matches the tags rather than being
+  # plain version numbers. It is closed only when nothing in it is still open; otherwise the run
+  # warns and leaves it, because a milestone with open work is a release whose notes are not
+  # finished. continue-on-error keeps a milestone hiccup from turning a published release red, and
+  # a manual dispatch has no tag to match against, so it is skipped entirely.
+  close_milestone:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      # Milestones live under the issues scope. Declaring any permissions block zeroes every
+      # unlisted scope, and this job needs nothing else - it never checks out the repo.
+      issues: write
+    steps:
+    - name: Close the release's milestone
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG: ${{ github.event.release.tag_name }}
+      run: |
+        # detect_package accepts both core/v5.1.0 and core/5.1.0 as tags, so try the other
+        # spelling too rather than reporting "no milestone" for a tag that only differs by the v.
+        ALT="$TAG"
+        case "$TAG" in
+          */v*) ALT="${TAG%%/*}/${TAG#*/v}" ;;
+          */*)  ALT="${TAG%%/*}/v${TAG#*/}" ;;
+        esac
+
+        MILESTONE=$(gh api "repos/$GITHUB_REPOSITORY/milestones?state=open&per_page=100" \
+          | jq -r --arg t "$TAG" --arg a "$ALT" \
+              '.[] | select(.title == $t or .title == $a) | "\(.number) \(.open_issues) \(.title)"' \
+          | head -1)
+
+        if [ -z "$MILESTONE" ]; then
+          echo "No open milestone titled '$TAG' (or '$ALT'); nothing to close."
+          exit 0
+        fi
+
+        NUMBER=$(echo "$MILESTONE" | cut -d' ' -f1)
+        OPEN=$(echo "$MILESTONE" | cut -d' ' -f2)
+        TITLE=$(echo "$MILESTONE" | cut -d' ' -f3)
+
+        if [ "$OPEN" != "0" ]; then
+          echo "::warning::Milestone $TITLE still has $OPEN open issue(s) or PR(s), so it was left open."
+          exit 0
+        fi
+
+        gh api -X PATCH "repos/$GITHUB_REPOSITORY/milestones/$NUMBER" -f state=closed
+        echo "Closed milestone $TITLE (number $NUMBER)."
