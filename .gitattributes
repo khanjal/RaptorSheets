@@ -1,0 +1,9 @@
+# Shell scripts must keep LF endings. This machine has core.autocrlf=true, so without this a
+# fresh Windows clone checks scripts/*.sh out with CRLF and bash dies on the carriage returns
+# ("$'\r': command not found") - on a GitHub runner too, for anything that shells out to one.
+*.sh text eol=lf
+
+# Workflow and action YAML is read by the runner, never by Windows tooling; keep it LF for the
+# same reason, so a script embedded in a `run:` block is not handed CRLF.
+*.yml text eol=lf
+*.yaml text eol=lf
