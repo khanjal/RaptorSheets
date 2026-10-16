@@ -69,20 +69,34 @@ exit 0
 GH
 chmod +x "$work/bin/gh"
 
-default_milestones='[
-  {"number":1,"title":"core/v5.1.0","open_issues":4},
-  {"number":2,"title":"core/v5.2.0","open_issues":3},
-  {"number":6,"title":"stock/v1.0.0","open_issues":0}
-]'
+# The sample tags, named rather than repeated: every case and every expectation below derives
+# from these, so the fixtures and the strings they are asserted against cannot drift apart, and
+# changing the sample version is a one-line edit.
+tag_core="core/v5.1.0"
+tag_core_no_v="core/5.1.0"
+tag_core_next="core/v5.2.0"
+tag_stock="stock/v1.0.0"
 
-both_spellings='[
-  {"number":9,"title":"core/5.1.0","open_issues":7},
-  {"number":1,"title":"core/v5.1.0","open_issues":0}
-]'
+milestone_json() {
+  local number="$1" title="$2" open="$3"
+  printf '{"number":%s,"title":"%s","open_issues":%s}' "$number" "$title" "$open"
+  return 0
+}
 
-v_spelling_only='[
-  {"number":1,"title":"core/v5.1.0","open_issues":0}
-]'
+default_milestones="[
+  $(milestone_json 1 "$tag_core" 4),
+  $(milestone_json 2 "$tag_core_next" 3),
+  $(milestone_json 6 "$tag_stock" 0)
+]"
+
+both_spellings="[
+  $(milestone_json 9 "$tag_core_no_v" 7),
+  $(milestone_json 1 "$tag_core" 0)
+]"
+
+v_spelling_only="[
+  $(milestone_json 1 "$tag_core" 0)
+]"
 
 failures=0
 cases=0
@@ -128,16 +142,16 @@ assert_case() {
 }
 
 assert_case "work still open leaves the milestone open" \
-  "core/v5.1.0" "$default_milestones" 0 \
-  "::warning::Milestone core/v5.1.0 still has 4 open"
+  "$tag_core" "$default_milestones" 0 \
+  "::warning::Milestone $tag_core still has 4 open"
 
 assert_case "nothing open closes the milestone" \
-  "stock/v1.0.0" "$default_milestones" 0 \
-  "Closed milestone stock/v1.0.0"
+  "$tag_stock" "$default_milestones" 0 \
+  "Closed milestone $tag_stock"
 
 assert_case "a tag without the v finds the v spelling" \
-  "core/5.1.0" "$v_spelling_only" 0 \
-  "Closed milestone core/v5.1.0"
+  "$tag_core_no_v" "$v_spelling_only" 0 \
+  "Closed milestone $tag_core"
 
 assert_case "a tag with no slash matches nothing" \
   "v5.1.0" "$default_milestones" 0 \
@@ -148,27 +162,27 @@ assert_case "an absent milestone is a no-op" \
   "No open milestone titled 'gig/v9.9.9'"
 
 assert_case "both spellings present: the exact title is the one closed" \
-  "core/v5.1.0" "$both_spellings" 0 \
-  "Closed milestone core/v5.1.0"
+  "$tag_core" "$both_spellings" 0 \
+  "Closed milestone $tag_core"
 
 assert_case "both spellings present: the exact title is the one read for open work" \
-  "core/5.1.0" "$both_spellings" 0 \
+  "$tag_core_no_v" "$both_spellings" 0 \
   "still has 7 open"
 
 assert_case "a prerelease tag matches nothing" \
-  "core/v5.1.0-beta.1" "$default_milestones" 0 \
-  "No open milestone titled 'core/v5.1.0-beta.1'"
+  "$tag_core-beta.1" "$default_milestones" 0 \
+  "No open milestone titled '$tag_core-beta.1'"
 
 assert_case "a failed read warns instead of reporting nothing to close" \
-  "core/v5.1.0" "$default_milestones" 0 \
+  "$tag_core" "$default_milestones" 0 \
   "::warning::Could not read the milestone list" 1 0
 
 assert_case "a failed close names the milestone instead of dying silently" \
-  "stock/v1.0.0" "$default_milestones" 1 \
-  "::error::Could not close milestone stock/v1.0.0" 0 1
+  "$tag_stock" "$default_milestones" 1 \
+  "::error::Could not close milestone $tag_stock" 0 1
 
 assert_case "a body that is not an array is reported" \
-  "core/v5.1.0" '{"message":"Not Found"}' 1 \
+  "$tag_core" '{"message":"Not Found"}' 1 \
   "::error::The milestone list came back in an unexpected shape"
 
 echo
