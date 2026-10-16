@@ -98,6 +98,17 @@ v_spelling_only="[
   $(milestone_json 1 "$tag_core" 0)
 ]"
 
+# Refuse to run unless the fake is the `gh` the script will find. Without this the test can reach
+# the real API: on 2026-10-16 a sibling harness put its fake on PATH as a Windows path, the
+# drive-letter colon split it into two directories, the real `gh` won, and the script closed a live
+# milestone. Nothing here is allowed to be one PATH mistake away from writing to GitHub.
+resolved_gh=$(PATH="$work/bin:$PATH" bash -c 'command -v gh' || true)
+if [[ "$resolved_gh" != "$work/bin/gh" ]]; then
+  echo "FAIL: the fake gh is not what the script would run (found '${resolved_gh:-nothing}',"
+  echo "      expected '$work/bin/gh'); refusing to run rather than risk the real API."
+  exit 1
+fi
+
 failures=0
 cases=0
 
