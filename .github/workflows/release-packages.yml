@@ -249,10 +249,15 @@ jobs:
         persist-credentials: false
 
     - name: Close the release's milestone
-      # Explicitly `bash`, which Actions runs as `bash --noprofile --norc -eo pipefail {0}`, rather
-      # than the `bash -e {0}` a step with no `shell:` gets. That applies to the one-line wrapper
-      # below; `bash <file>` then starts a fresh shell with no options, so close-milestone.sh sets
-      # `-eo pipefail` itself. Both are needed, and neither covers the other.
+      # Explicitly `bash`, which Actions runs as `bash --noprofile --norc -eo pipefail {0}` rather
+      # than the `bash -e {0}` a step with no `shell:` gets.
+      #
+      # Inert as the step stands: it governs the one-line wrapper below, whose exit status is the
+      # inner shell's either way, and `bash <file>` starts a fresh shell that inherits neither flag
+      # (`SHELLOPTS` is not exported). close-milestone.sh therefore sets `-eo pipefail` itself, and
+      # that is what actually governs the logic. Kept so that a multi-line `run:` added here later
+      # starts strict, instead of silently getting `bash -e` with no pipefail - which is the hole
+      # this line was added to close in the first place.
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}

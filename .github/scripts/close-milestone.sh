@@ -107,17 +107,17 @@ close_milestone() {
 
 # Only when run as a script, so sourcing this file defines the functions and runs nothing.
 #
-# The flags are set here rather than inherited, because there are two shells now and neither
-# passes its options to the other: the step's `shell: bash` gives Actions' `bash --noprofile
-# --norc -eo pipefail` to the one-line `bash <file>` wrapper, and `bash <file>` then starts a fresh
-# shell with no options at all. So the file carries `-eo pipefail` itself, which is what the step
-# had when this logic was a `run:` block.
+# The flags are set here because they cannot be inherited. The step's `shell: bash` gives Actions'
+# `bash --noprofile --norc -eo pipefail` to the one-line `bash <file>` wrapper, and `bash <file>`
+# then starts a fresh shell with no options at all: `SHELLOPTS` is not exported, and the wrapper's
+# own `-e` and pipefail are inert on a single command whose status is this script's anyway. So
+# these two flags govern the logic, and nothing upstream does.
 #
-# `-e` is load-bearing here: find_milestone passes jq's status up, and `-e` is what turns that into
-# an abort rather than an empty lookup reported as "nothing to close". pipefail is not - every
-# pipeline below is `echo | tool`, and `echo` into a pipe does not fail - so no case can observe
-# it. It is here so that the next pipeline someone adds cannot reopen the hole 339e72e closed, and
-# so the script and the step it runs in agree.
+# `-e` is load-bearing: find_milestone passes jq's status up, and `-e` is what turns that into an
+# abort rather than an empty lookup reported as "nothing to close". pipefail is not, today - real
+# jq always drains stdin, so no payload can make `echo | jq` fail at the echo. It is here because
+# the step had it, and so the pipeline someone adds next cannot reopen the hole that the step's
+# `shell: bash` was added to close.
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   set -eo pipefail
   close_milestone "${1:-${TAG:-}}"
