@@ -237,6 +237,13 @@ jobs:
       issues: write
     steps:
     - name: Close the release's milestone
+      # Explicitly `bash`, which Actions runs as `bash --noprofile --norc -eo pipefail {0}`. The
+      # default shell for a `run:` block is `bash -e {0}` - no pipefail - so without this line a
+      # pipeline here fails only if its LAST command fails. That is precisely the hole that let an
+      # earlier version of this job read a failed `gh api | jq | head` as "no milestone found" and
+      # report success having closed nothing. The read is split out now, but pipefail means the
+      # next pipeline someone adds cannot reopen the hole.
+      shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
         TAG: ${{ github.event.release.tag_name }}

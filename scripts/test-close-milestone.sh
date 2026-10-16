@@ -42,6 +42,16 @@ step = next(step for step in steps if step.get("name") == wanted)
 # workflow is what puts them there. Nothing else here would notice `release.name` substituted for
 # `release.tag_name` - the tests set TAG themselves - so the wiring is asserted rather than
 # assumed.
+# The step sets `shell: bash`, which Actions runs as `bash --noprofile --norc -eo pipefail {0}`.
+# The cases invoke the script with `-eo pipefail` to match, so if the step ever loses this the
+# harness would be running under stricter rules than the job - a silent divergence of exactly the
+# kind these assertions exist to prevent.
+if step.get("shell") != "bash":
+    sys.exit(
+        "the step's shell is %r, expected 'bash' (the harness runs with -eo pipefail to match)"
+        % (step.get("shell"),)
+    )
+
 expected_env = {
     "GH_TOKEN": "${{ github.token }}",
     "TAG": "${{ github.event.release.tag_name }}",
@@ -148,8 +158,10 @@ assert_case() {
   cases=$((cases + 1))
   : > "$log"
 
-  # `bash -e` is how Actions invokes a `run:` block when the step sets no `shell:`, so the script
-  # is exercised under the same abort-on-error semantics it has in the job.
+  # `-eo pipefail` is what Actions gives a step that sets `shell: bash`, which this one does (and
+  # extract.py asserts). Not the bare `bash -e` of a step with no `shell:`: that omits pipefail,
+  # and a harness without it would pass a pipeline whose earlier command fails while the job
+  # aborted on it.
   actual=$(PATH="$work/bin:$PATH" \
     TAG="$tag" \
     GITHUB_REPOSITORY="khanjal/RaptorSheets" \
@@ -158,7 +170,7 @@ assert_case() {
     fake_milestones="$payload" \
     fake_get_fails="$get_fails" \
     fake_patch_fails="$patch_fails" \
-    bash -e "$work/close-milestone.sh" 2>&1)
+    bash -eo pipefail "$work/close-milestone.sh" 2>&1)
   rc=$?
 
   if [[ "$expect_rc" == "nonzero" ]]; then
