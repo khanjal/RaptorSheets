@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: How a pull request in this repository (khanjal/RaptorSheets, a .NET 8 Google Sheets library published to NuGet) gets reviewed before it merges — a model review before it opens and another of the finished PR before merge, never by the model that wrote the code and never in the session that wrote it (usually Sonnet, then Fable); then Copilot once, last, on the code that will actually merge; the milestone named for the release tag that every PR and issue belongs in; all three comment surfaces; the PR's own SonarCloud issues read from the API rather than the green tick; and the live-sheet suite that does not gate the PR and therefore has to be read on purpose. Use this whenever opening a PR here, whenever about to merge one, and whenever asked to check, triage or review the open PRs — including from a cloud session, which has no local memory of any of this.
+description: How a pull request in this repository (khanjal/RaptorSheets, a .NET 8 Google Sheets library published to NuGet) gets reviewed before it merges — a model review before it opens and another of the finished PR before merge, never by the model that wrote the code and never in the session that wrote it (usually Sonnet, then Fable); then Copilot once, last, on the code that will actually merge; the milestone named for the release tag that every PR goes in, and that an issue gets once it is scheduled for a release; all three comment surfaces; the PR's own SonarCloud issues read from the API rather than the green tick; and the live-sheet suite that does not gate the PR and therefore has to be read on purpose. Use this whenever opening a PR here, whenever about to merge one, and whenever asked to check, triage or review the open PRs — including from a cloud session, which has no local memory of any of this.
 ---
 
 # Reviewing a pull request before it merges
@@ -120,9 +120,11 @@ Two rules make the per-package naming work:
 
 - **A cross-cutting PR picks the package that ships it first**, usually Core, since GitHub allows a
   PR only one milestone. Name the other packages it goes out in in the description instead.
-- **Work that ships in no package** — test suites, CI, tooling, docs — goes in whichever release
-  milestone is open when it lands. A milestone then reads as everything that happened in that cycle,
-  not only what the package contains.
+- **Work that ships in no package** — test suites, CI, tooling, docs — goes in the **next Core
+  release**: the open `core/*` milestone with the lowest version, `core/v5.1.0` today. Several
+  milestones are open at once, so "whichever one is open" picks nothing; Core is what every package
+  rebuilds against, so its next release is the honest home. A milestone then reads as everything
+  that happened in that cycle, not only what the package contains.
 
 `gh pr create` takes `--milestone <title>`. Afterwards:
 
@@ -135,6 +137,11 @@ gh api repos/khanjal/RaptorSheets/milestones --jq '.[] | "\(.number) \(.title) o
 An issue gets the milestone of the release it is scheduled for. One nobody has committed to a
 release is better left out than parked in a version that will not hold it — and when the next
 version's work is being chosen, the milestone is the list to fill, not the label.
+
+`release-packages.yml` closes a milestone when its release publishes, but **only when nothing in it
+is still open** — `open_issues` counts open PRs too, so one unmerged PR or one unfinished issue
+holds the milestone open and the run says so in a warning. Before tagging a release, move the
+stragglers to the next milestone rather than leaving the one being released half-finished.
 
 ## 3. Tests: the gating job is unit-only
 
@@ -205,13 +212,15 @@ Only once the final review's fixes are pushed and CI and Sonar are green on them
 otherwise be mergeable — so Copilot sees the code that will actually merge. And only once per PR:
 each review spends from a monthly allowance, and once that is gone a request gets nothing at all. Do
 not request it at open, nor again after the fixes it prompts. Run the timeline query below before
-requesting: a `copilot-pull-request-reviewer` line already there, on a PR opened before this rule,
-means its one request is spent.
+requesting: a `Copilot` line already there, on a PR opened before this rule, means its one request
+is spent.
 
-**Copilot has not been seen reviewing a PR in this repo.** Recent PRs here show no reviewers at
-all — only the SonarQube Cloud bot comments. So expect step 8 to be the normal case until the
-reviewer is actually wired up, and do not write "Copilot: reviewed" on a checklist because the
-request returned success.
+**Copilot does review PRs here, when it is asked.** Verified 2026-10-15: #99, #104, #105 and #107
+all got substantive reviews, and so did #109 and #133 later. The PRs with no reviewer are the ones
+where nobody requested one — #120, #136, #139, #141 and #142 have an empty `review_requested`
+timeline. A missing Copilot review here means a missing request, not a reviewer that was never
+wired up. Do not write "Copilot: reviewed" on a checklist because the request returned success,
+though — read the review body first (step 7).
 
 Copilot still matters after two model reviews: both models come from the same vendor, and Copilot
 does not. It is the one reviewer whose blind spots are not correlated with the author's.
@@ -231,8 +240,12 @@ arrives. The mutation's return value proves nothing either way. Check the timeli
 gh api repos/khanjal/RaptorSheets/issues/<n>/timeline --jq '.[] | select(.event=="review_requested") | .requested_reviewer.login'
 ```
 
-Empty means no request landed. If it will not register, ask the user to add Copilot from the
-GitHub UI.
+**That query prints `Copilot`, not `copilot-pull-request-reviewer`** —
+`copilot-pull-request-reviewer[bot]` is the login on the review itself, in
+`pulls/<n>/reviews`. Grepping the timeline for the bot's name finds nothing even on a PR where the
+request landed, and requesting again on that false negative spends a second review from the
+allowance, which is the exact double-spend this ordering exists to avoid. Empty output means no
+request landed. If it will not register, ask the user to add Copilot from the GitHub UI.
 
 ## 7. Read what came back
 
@@ -261,9 +274,11 @@ model review.
 
 ## 8. When Copilot could not review: steps 1 and 5 are the review of record
 
-If the quota is gone, or the request would not register at all — the normal case here today — or
-nothing came back within the hour, the two model reviews are what the PR merges on. Do not wait for
-the allowance to reset. Say so on the PR, rather than calling it reviewed as if Copilot had done it.
+If the quota is gone, or the request would not register at all, or nothing came back within the
+hour, the two model reviews are what the PR merges on. Do not wait for the allowance to reset. Say
+so on the PR, rather than calling it reviewed as if Copilot had done it. Check the timeline first,
+though: an empty `review_requested` means the request never went out, and that is a step 6 to run,
+not a quota to work around.
 
 ## 9. Merge
 

@@ -241,6 +241,16 @@ jobs:
         GH_TOKEN: ${{ github.token }}
         TAG: ${{ github.event.release.tag_name }}
       run: |
+        # The read is checked on its own rather than piped straight into jq. Piped, the exit status
+        # belongs to the last command in the pipeline, so a 403, a 5xx or a rate limit would leave
+        # the variable empty and the script would report "no milestone found" and go green having
+        # closed nothing - a broken closer that stays invisible until someone notices a milestone
+        # is still open months later.
+        if ! MILESTONES=$(gh api "repos/$GITHUB_REPOSITORY/milestones?state=open&per_page=100"); then
+          echo "::warning::Could not read the milestone list, so $TAG's milestone was left open."
+          exit 0
+        fi
+
         # detect_package accepts both core/v5.1.0 and core/5.1.0 as tags, so try the other
         # spelling too rather than reporting "no milestone" for a tag that only differs by the v.
         ALT="$TAG"
@@ -249,10 +259,19 @@ jobs:
           */*)  ALT="${TAG%%/*}/v${TAG#*/}" ;;
         esac
 
-        MILESTONE=$(gh api "repos/$GITHUB_REPOSITORY/milestones?state=open&per_page=100" \
-          | jq -r --arg t "$TAG" --arg a "$ALT" \
-              '.[] | select(.title == $t or .title == $a) | "\(.number) \(.open_issues) \(.title)"' \
-          | head -1)
+        # Exact title first, the other spelling only if that found nothing: if both spellings ever
+        # exist as separate milestones, the one the tag actually names is the one to close. jq takes
+        # the first match itself rather than `| head -1`, which can leave jq writing into a closed
+        # pipe when more than one matches.
+        find_milestone() {
+          echo "$MILESTONES" | jq -r --arg t "$1" \
+            '[.[] | select(.title == $t)][0] | select(. != null) | "\(.number) \(.open_issues) \(.title)"'
+        }
+
+        MILESTONE=$(find_milestone "$TAG")
+        if [ -z "$MILESTONE" ] && [ "$ALT" != "$TAG" ]; then
+          MILESTONE=$(find_milestone "$ALT")
+        fi
 
         if [ -z "$MILESTONE" ]; then
           echo "No open milestone titled '$TAG' (or '$ALT'); nothing to close."
