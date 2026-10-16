@@ -20,12 +20,18 @@ Note: When calling LLM APIs, configure a sensible `max_tokens` budget and prefer
 
 ## Limiting Copilot Runs
 
-To reduce unexpected GitHub AI Credits and Actions minutes consumption, we limit Copilot Code Review runs:
+Each Copilot code review spends from a monthly allowance, and once it is gone a request returns
+nothing at all. So a PR gets **one** review, requested **last** — after both model reviews and
+once CI and Sonar are green on their fixes — so the one review it has is of the code that will
+actually merge. `.claude/skills/pr-review/SKILL.md` step 6 has the request itself; step 7 has how
+to tell a quota-exhausted review from a clean one, which look alike.
 
-- Copilot runs should be gated behind a label (`copilot-review`) or manually triggered.
-- A sample workflow `/.github/workflows/copilot-control.yml` is included to demonstrate labeling and `workflow_dispatch` gating.
-- If you need a run, add the `copilot-review` label to the PR or use the "Run workflow" button in Actions.
-- Keep PR diffs small and use path filters to avoid unnecessary runs.
+- Do not request Copilot at open, and do not request it again after the fixes its review prompts.
+- Keep PR diffs small, which makes the one review worth more.
+
+The label gate this section used to describe (`copilot-review`, plus a sample
+`.github/workflows/copilot-control.yml`) never existed: there is no such label in the repo and no
+such workflow has ever been committed. Requesting once, last, is the control.
 
 
 The RaptorSheets system manages Google Sheets through a layered architecture that separates concerns between configuration, data modeling, and business logic. The system handles complex spreadsheets with automated formulas, cross-sheet references, and **optional** column and sheet ordering.
