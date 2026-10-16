@@ -36,9 +36,25 @@ import yaml
 workflow_path, out_path = sys.argv[1], sys.argv[2]
 steps = yaml.safe_load(open(workflow_path))["jobs"]["close_milestone"]["steps"]
 wanted = "Close the release's milestone"
-run = next(step["run"] for step in steps if step.get("name") == wanted)
+step = next(step for step in steps if step.get("name") == wanted)
+
+# The script is only half the job: it reads TAG and GH_TOKEN out of the environment, and the
+# workflow is what puts them there. Nothing else here would notice `release.name` substituted for
+# `release.tag_name` - the tests set TAG themselves - so the wiring is asserted rather than
+# assumed.
+expected_env = {
+    "GH_TOKEN": "${{ github.token }}",
+    "TAG": "${{ github.event.release.tag_name }}",
+}
+actual_env = step.get("env") or {}
+for key, expected in expected_env.items():
+    if actual_env.get(key) != expected:
+        sys.exit(
+            "the step's env.%s is %r, expected %r" % (key, actual_env.get(key), expected)
+        )
+
 with open(out_path, "w", newline="\n") as handle:
-    handle.write(run)
+    handle.write(step["run"])
 PY
 
 if ! python "$work/extract.py" "$workflow" "$work/close-milestone.sh"; then
@@ -51,12 +67,21 @@ fi
 cat > "$work/bin/gh" <<'GH'
 #!/usr/bin/env bash
 set -u
+
+# Record what the script actually asked for. Without this the fake is blind to its own arguments,
+# and a PATCH aimed at the wrong milestone, or carrying state=open, or a GET that stopped asking
+# for open milestones, all look identical from outside - each one passed every case before.
+printf '%s\n' "$*" >> "${gh_log:?gh_log must be set}"
+
 for arg in "$@"; do
   if [[ "$arg" == "PATCH" ]]; then
     if [[ "${fake_patch_fails:-0}" == "1" ]]; then
       echo "fake gh: the PATCH was refused" >&2
       exit 1
     fi
+    # The real call prints the updated milestone, so printing one here makes a script that forgets
+    # to discard it leak JSON into the job log where a case can see it.
+    printf '{"number":0,"state":"closed","title":"fake"}\n'
     exit 0
   fi
 done
@@ -112,13 +137,16 @@ fi
 failures=0
 cases=0
 
-# assert_case <name> <tag> <payload> <expected rc> <expected text> [get_fails] [patch_fails]
+# assert_case <name> <tag> <payload> <expected rc, or "nonzero"> <expected text> \
+#             [get_fails] [patch_fails] [expected gh call] [text that must NOT appear]
 assert_case() {
   local name="$1" tag="$2" payload="$3" expect_rc="$4" expect_text="$5"
   local get_fails="${6:-0}" patch_fails="${7:-0}"
-  local actual rc
+  local expect_call="${8:-}" reject_text="${9:-}"
+  local actual rc log="$work/gh.log"
 
   cases=$((cases + 1))
+  : > "$log"
 
   # `bash -e` is how Actions invokes a `run:` block when the step sets no `shell:`, so the script
   # is exercised under the same abort-on-error semantics it has in the job.
@@ -126,13 +154,22 @@ assert_case() {
     TAG="$tag" \
     GITHUB_REPOSITORY="khanjal/RaptorSheets" \
     GH_TOKEN="not-a-real-token" \
+    gh_log="$log" \
     fake_milestones="$payload" \
     fake_get_fails="$get_fails" \
     fake_patch_fails="$patch_fails" \
     bash -e "$work/close-milestone.sh" 2>&1)
   rc=$?
 
-  if [[ "$rc" != "$expect_rc" ]]; then
+  if [[ "$expect_rc" == "nonzero" ]]; then
+    if [[ "$rc" == "0" ]]; then
+      echo "FAIL  $name"
+      echo "      expected a non-zero exit, got 0"
+      echo "      output: $actual"
+      failures=$((failures + 1))
+      return 0
+    fi
+  elif [[ "$rc" != "$expect_rc" ]]; then
     echo "FAIL  $name"
     echo "      expected exit $expect_rc, got $rc"
     echo "      output: $actual"
@@ -148,6 +185,32 @@ assert_case() {
     return 0
   fi
 
+  if [[ -n "$reject_text" ]] && [[ "$actual" == *"$reject_text"* ]]; then
+    echo "FAIL  $name"
+    echo "      the output should not have contained: $reject_text"
+    echo "      actual output:                        $actual"
+    failures=$((failures + 1))
+    return 0
+  fi
+
+  # Every case: the lookup must ask the API for the open milestones, a page at a time big enough
+  # to hold them. A GET that stops saying state=open would read closed milestones as candidates.
+  if ! grep -qF -- 'milestones?state=open&per_page=100' "$log"; then
+    echo "FAIL  $name"
+    echo "      the script did not GET milestones?state=open&per_page=100"
+    echo "      calls made: $(tr '\n' '|' < "$log")"
+    failures=$((failures + 1))
+    return 0
+  fi
+
+  if [[ -n "$expect_call" ]] && ! grep -qF -- "$expect_call" "$log"; then
+    echo "FAIL  $name"
+    echo "      expected the script to call: $expect_call"
+    echo "      calls made:                  $(tr '\n' '|' < "$log")"
+    failures=$((failures + 1))
+    return 0
+  fi
+
   echo "ok    $name"
   return 0
 }
@@ -156,9 +219,14 @@ assert_case "work still open leaves the milestone open" \
   "$tag_core" "$default_milestones" 0 \
   "::warning::Milestone $tag_core still has 4 open"
 
-assert_case "nothing open closes the milestone" \
+# The only case that reaches the write, so it is the one that pins what the write says: milestone 6
+# is the stock/v1.0.0 fixture, and `state=closed` is the whole point. It also pins that the script
+# discards the PATCH's response body, which the fake prints.
+assert_case "nothing open closes the milestone, by number and with state=closed" \
   "$tag_stock" "$default_milestones" 0 \
-  "Closed milestone $tag_stock"
+  "Closed milestone $tag_stock" 0 0 \
+  "-X PATCH repos/khanjal/RaptorSheets/milestones/6 -f state=closed" \
+  '{"number":0'
 
 assert_case "a tag without the v finds the v spelling" \
   "$tag_core_no_v" "$v_spelling_only" 0 \
@@ -195,6 +263,15 @@ assert_case "a failed close names the milestone instead of dying silently" \
 assert_case "a body that is not an array is reported" \
   "$tag_core" '{"message":"Not Found"}' 1 \
   "::error::The milestone list came back in an unexpected shape"
+
+# An array of the wrong shape clears the type check above and then breaks jq inside the lookup.
+# What matters is that the failure is not swallowed: the exit must be non-zero and the run must
+# not claim there was nothing to close. Pinned as a property rather than as jq's exit code, which
+# is jq's business - but it is what stops a future `return 0` in find_milestone from hiding this.
+assert_case "an array of the wrong shape fails instead of reporting nothing to close" \
+  "$tag_core" '[7]' nonzero \
+  "" 0 0 "" \
+  "nothing to close"
 
 echo
 if [[ "$failures" != "0" ]]; then
