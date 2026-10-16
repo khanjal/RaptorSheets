@@ -23,11 +23,11 @@ Note: When calling LLM APIs, configure a sensible `max_tokens` budget and prefer
 Each Copilot code review spends from a monthly allowance, and once it is gone a request returns
 nothing at all. So a PR gets **one** review, requested **last** — after both model reviews and
 once CI and Sonar are green on their fixes — so the one review it has is of the code that will
-actually merge. `.claude/skills/pr-review/SKILL.md` step 6 has the request itself and how to tell
-a quota-exhausted review from a clean one.
+actually merge. `.claude/skills/pr-review/SKILL.md` step 6 has the request itself; step 7 has how
+to tell a quota-exhausted review from a clean one, which look alike.
 
 - Do not request Copilot at open, and do not request it again after the fixes its review prompts.
-- Keep PR diffs small and use path filters to avoid unnecessary runs.
+- Keep PR diffs small, which makes the one review worth more.
 
 The label gate this section used to describe (`copilot-review`, plus a sample
 `.github/workflows/copilot-control.yml`) never existed: there is no such label in the repo and no

@@ -24,7 +24,9 @@ who wrote the code, the first review, the final review, Copilot, findings handle
 Sonar at zero. "Written by" is what step 1's table is read off, so a session picking up somebody
 else's PR does not have to guess — if it is blank, read the commits' `Co-Authored-By` trailers. Tick
 each box as it is done, with the model and the commit it reviewed, so anyone reading the PR can see
-what is still owed. A PR is not ready to merge with a box unticked.
+what is still owed. A PR is not ready to merge with a box left unticked and unexplained — the one
+exception is a box that cannot apply, such as Sonar on a fork PR (step 4), which says so on the
+line instead of being ticked.
 
 `gh pr create --body` does **not** apply the template — GitHub only uses it for PRs opened in
 the web UI — so paste the checklist into the body yourself, and add it to any open PR that
@@ -282,7 +284,8 @@ not a quota to work around.
 
 ## 9. Merge
 
-- Every box in the PR's Reviews checklist is ticked.
+- Every box in the PR's Reviews checklist is ticked, or says why it cannot be — a fork PR's Sonar
+  box (step 4) is the only case that arises today.
 - Any review that came back has been read on all three surfaces (step 7) and each finding fixed
   or answered.
 - The final review in step 5 has run on the latest commit, or on one the later commits only fixed

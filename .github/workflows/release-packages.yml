@@ -251,6 +251,15 @@ jobs:
           exit 0
         fi
 
+        # A body that is not an array would otherwise kill the script at the first jq call with
+        # nothing but a non-zero status: `set -e` (the default shell here is `bash -e`) aborts on
+        # the failed command substitution, and the job's only trace is a red tick with no message.
+        # Say what happened instead.
+        if ! echo "$MILESTONES" | jq -e 'type == "array"' >/dev/null 2>&1; then
+          echo "::error::The milestone list came back in an unexpected shape, so $TAG's milestone was left open."
+          exit 1
+        fi
+
         # detect_package accepts both core/v5.1.0 and core/5.1.0 as tags, so try the other
         # spelling too rather than reporting "no milestone" for a tag that only differs by the v.
         ALT="$TAG"
@@ -287,5 +296,12 @@ jobs:
           exit 0
         fi
 
-        gh api -X PATCH "repos/$GITHUB_REPOSITORY/milestones/$NUMBER" -f state=closed
+        # The write gets the same treatment as the read above. Left bare, a transient 5xx on the
+        # PATCH killed the script through `set -e` with no output at all: the release stayed green
+        # (continue-on-error), the milestone stayed open, and the only trace was a red job with
+        # nothing in it naming which milestone or why.
+        if ! gh api -X PATCH "repos/$GITHUB_REPOSITORY/milestones/$NUMBER" -f state=closed >/dev/null; then
+          echo "::error::Could not close milestone $TITLE (number $NUMBER), so it was left open."
+          exit 1
+        fi
         echo "Closed milestone $TITLE (number $NUMBER)."
