@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 #
-# Tests the close_milestone job in .github/workflows/release-packages.yml by running the job's OWN
-# script against a fake `gh`. The script is extracted from the workflow every run, found by step
-# name, so there is no second copy of the logic to drift out of step with the one that ships.
+# Tests .github/scripts/close-milestone.sh - the script the close_milestone job in
+# .github/workflows/release-packages.yml runs - against a fake `gh`. It runs that file directly, so
+# there is no second copy of the logic to drift out of step with the one that ships. (It used to
+# lift the script back out of the job's `run:` block, which worked, but left the file SonarCloud
+# lints and the file a release runs still not being the same file: Sonar analyses files, so it
+# cannot see inside YAML.)
 #
 #   bash scripts/test-close-milestone.sh        # prints ok/FAIL per case, exits 1 if any failed
 #
@@ -11,12 +14,66 @@
 # logic would do and left a human to eyeball it, which meant it could not fail; every case here
 # asserts an expected exit status and an expected line of output.
 #
-# Requires bash, jq and python with PyYAML, all of which this repo already depends on elsewhere.
+# Requires bash and jq, both of which this repo already depends on elsewhere.
 set -u
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 repo_root=$(cd "$script_dir/.." && pwd)
+target="$repo_root/.github/scripts/close-milestone.sh"
 workflow="$repo_root/.github/workflows/release-packages.yml"
+
+if [[ ! -f "$target" ]]; then
+  echo "FAIL: $target does not exist"
+  exit 1
+fi
+
+# The script is only half the job. Extraction used to prove the two agreed for free - whatever the
+# step ran was what the cases ran - and running the file directly costs that, so the wiring is
+# asserted here instead. The greps are anchored to whole lines, because a loose match is satisfied
+# by the path sitting in a comment: `run: echo hi # bash .github/scripts/close-milestone.sh` would
+# otherwise pass.
+if ! grep -Eq '^[[:space:]]*run: bash [.]github/scripts/close-milestone[.]sh "[$]TAG"$' "$workflow"; then
+  echo "FAIL: the close_milestone step no longer runs .github/scripts/close-milestone.sh"
+  exit 1
+fi
+
+# TAG and GH_TOKEN come from the workflow, not from the script: the cases set TAG themselves, so
+# nothing else here would notice `release.name` substituted for `release.tag_name`, and without the
+# token every `gh` call fails and the job degrades to warning it could not read the list.
+if ! grep -Eq 'TAG: [$][{][{] github[.]event[.]release[.]tag_name [}][}]$' "$workflow"; then
+  echo "FAIL: the close_milestone step no longer passes github.event.release.tag_name as TAG"
+  exit 1
+fi
+
+if ! grep -Eq 'GH_TOKEN: [$][{][{] github[.]token [}][}]$' "$workflow"; then
+  echo "FAIL: the close_milestone step no longer passes github.token as GH_TOKEN"
+  exit 1
+fi
+
+# The job must still clone, since the script it runs is a file in the repo. Losing the checkout is
+# the quietest break of the lot: `bash <missing file>` exits 127, continue-on-error absorbs it, the
+# release goes green and the milestone stays open. The slice runs to end-of-file because
+# close_milestone is the last job; a job added after it would weaken this rather than break it.
+if ! sed -n '/^  close_milestone:/,$p' "$workflow" | grep -q 'uses: actions/checkout@v4'; then
+  echo "FAIL: the close_milestone job no longer checks out the repo, so the script will not exist"
+  exit 1
+fi
+
+# `-eo pipefail` used to reach the logic from the step, which sets `shell: bash`. It no longer
+# can - `bash <file>` starts a fresh shell with no options - so the script carries the flags and
+# the step keeps the shell for its wrapper line. Both are asserted because neither is observable
+# from a case: `-e` is covered behaviourally by the wrong-shape payload below, but every pipeline
+# in the script is `echo | tool`, and `echo` into a pipe does not fail, so nothing can make
+# pipefail matter. These two greps are all that stand behind it.
+if ! grep -Eq '^[[:space:]]*shell: bash$' "$workflow"; then
+  echo "FAIL: the close_milestone step no longer sets shell: bash"
+  exit 1
+fi
+
+if ! grep -q 'set -eo pipefail' "$target"; then
+  echo "FAIL: $target no longer sets -eo pipefail, which it cannot inherit from the step"
+  exit 1
+fi
 
 work=$(mktemp -d)
 cleanup() {
@@ -26,51 +83,6 @@ cleanup() {
 trap cleanup EXIT
 
 mkdir -p "$work/bin"
-
-# Pull the step's `run:` block straight out of the workflow. Found by step name rather than by
-# index, so reordering the job's steps cannot leave this quietly testing the wrong one.
-cat > "$work/extract.py" <<'PY'
-import sys
-import yaml
-
-workflow_path, out_path = sys.argv[1], sys.argv[2]
-steps = yaml.safe_load(open(workflow_path))["jobs"]["close_milestone"]["steps"]
-wanted = "Close the release's milestone"
-step = next(step for step in steps if step.get("name") == wanted)
-
-# The script is only half the job: it reads TAG and GH_TOKEN out of the environment, and the
-# workflow is what puts them there. Nothing else here would notice `release.name` substituted for
-# `release.tag_name` - the tests set TAG themselves - so the wiring is asserted rather than
-# assumed.
-# The step sets `shell: bash`, which Actions runs as `bash --noprofile --norc -eo pipefail {0}`.
-# The cases invoke the script with `-eo pipefail` to match, so if the step ever loses this the
-# harness would be running under stricter rules than the job - a silent divergence of exactly the
-# kind these assertions exist to prevent.
-if step.get("shell") != "bash":
-    sys.exit(
-        "the step's shell is %r, expected 'bash' (the harness runs with -eo pipefail to match)"
-        % (step.get("shell"),)
-    )
-
-expected_env = {
-    "GH_TOKEN": "${{ github.token }}",
-    "TAG": "${{ github.event.release.tag_name }}",
-}
-actual_env = step.get("env") or {}
-for key, expected in expected_env.items():
-    if actual_env.get(key) != expected:
-        sys.exit(
-            "the step's env.%s is %r, expected %r" % (key, actual_env.get(key), expected)
-        )
-
-with open(out_path, "w", newline="\n") as handle:
-    handle.write(step["run"])
-PY
-
-if ! python "$work/extract.py" "$workflow" "$work/close-milestone.sh"; then
-  echo "FAIL: could not extract the close_milestone step out of $workflow"
-  exit 1
-fi
 
 # Stands in for the real `gh api`: a GET prints $fake_milestones, a PATCH prints nothing, and
 # either can be made to fail. Nothing here reaches the network or needs a token.
@@ -158,10 +170,10 @@ assert_case() {
   cases=$((cases + 1))
   : > "$log"
 
-  # `-eo pipefail` is what Actions gives a step that sets `shell: bash`, which this one does (and
-  # extract.py asserts). Not the bare `bash -e` of a step with no `shell:`: that omits pipefail,
-  # and a harness without it would pass a pipeline whose earlier command fails while the job
-  # aborted on it.
+  # Bare `bash <file>`, exactly as the step invokes it - deliberately no flags. The step's
+  # `shell: bash` applies to its one-line wrapper, not to this shell, so the script is responsible
+  # for its own `-eo pipefail`. Passing flags here would mask that: the script could lose `set -e`
+  # and every case below would still pass.
   actual=$(PATH="$work/bin:$PATH" \
     TAG="$tag" \
     GITHUB_REPOSITORY="khanjal/RaptorSheets" \
@@ -170,7 +182,7 @@ assert_case() {
     fake_milestones="$payload" \
     fake_get_fails="$get_fails" \
     fake_patch_fails="$patch_fails" \
-    bash -eo pipefail "$work/close-milestone.sh" 2>&1)
+    bash "$target" 2>&1)
   rc=$?
 
   if [[ "$expect_rc" == "nonzero" ]]; then
@@ -244,9 +256,13 @@ assert_case "a tag without the v finds the v spelling" \
   "$tag_core_no_v" "$v_spelling_only" 0 \
   "Closed milestone $tag_core"
 
+# The whole message, not just the prefix, because the "(or '...')" half is the only thing that pins
+# alt_spelling's default arm. Inline, `ALT` was pre-assigned to `$TAG` and the `case` only
+# overwrote it, so a missing default arm was harmless; as a function that returns the spelling,
+# dropping it makes alt empty and this case report "(or '')".
 assert_case "a tag with no slash matches nothing" \
   "v5.1.0" "$default_milestones" 0 \
-  "No open milestone titled 'v5.1.0'"
+  "No open milestone titled 'v5.1.0' (or 'v5.1.0'); nothing to close."
 
 assert_case "an absent milestone is a no-op" \
   "gig/v9.9.9" "$default_milestones" 0 \

@@ -232,83 +232,33 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     permissions:
-      # Milestones live under the issues scope. Declaring any permissions block zeroes every
-      # unlisted scope, and this job needs nothing else - it never checks out the repo.
+      # Milestones live under the issues scope.
       issues: write
+      # Declaring any permissions block zeroes every unlisted scope. `contents` was once left out
+      # here because the lookup was inline in the step and the job never touched the repo; it now
+      # runs .github/scripts/close-milestone.sh - one file, which SonarCloud can lint and the test
+      # can run directly, rather than a `run:` block the test had to lift back out of this YAML -
+      # so the job has to clone to reach it, and checkout 403s without this.
+      contents: read
     steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        # Nothing here runs git after the clone, and the next step already holds a token with
+        # issues: write - no reason to leave a second one behind in .git/config.
+        persist-credentials: false
+
     - name: Close the release's milestone
-      # Explicitly `bash`, which Actions runs as `bash --noprofile --norc -eo pipefail {0}`. The
-      # default shell for a `run:` block is `bash -e {0}` - no pipefail - so without this line a
-      # pipeline here fails only if its LAST command fails. That is precisely the hole that let an
-      # earlier version of this job read a failed `gh api | jq | head` as "no milestone found" and
-      # report success having closed nothing. The read is split out now, but pipefail means the
-      # next pipeline someone adds cannot reopen the hole.
+      # Explicitly `bash`, which Actions runs as `bash --noprofile --norc -eo pipefail {0}`, rather
+      # than the `bash -e {0}` a step with no `shell:` gets. That applies to the one-line wrapper
+      # below; `bash <file>` then starts a fresh shell with no options, so close-milestone.sh sets
+      # `-eo pipefail` itself. Both are needed, and neither covers the other.
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
         TAG: ${{ github.event.release.tag_name }}
-      run: |
-        # The read is checked on its own rather than piped straight into jq. Piped, the exit status
-        # belongs to the last command in the pipeline, so a 403, a 5xx or a rate limit would leave
-        # the variable empty and the script would report "no milestone found" and go green having
-        # closed nothing - a broken closer that stays invisible until someone notices a milestone
-        # is still open months later.
-        if ! MILESTONES=$(gh api "repos/$GITHUB_REPOSITORY/milestones?state=open&per_page=100"); then
-          echo "::warning::Could not read the milestone list, so $TAG's milestone was left open."
-          exit 0
-        fi
-
-        # A body that is not an array would otherwise kill the script at the first jq call with
-        # nothing but a non-zero status: `set -e` (the default shell here is `bash -e`) aborts on
-        # the failed command substitution, and the job's only trace is a red tick with no message.
-        # Say what happened instead.
-        if ! echo "$MILESTONES" | jq -e 'type == "array"' >/dev/null 2>&1; then
-          echo "::error::The milestone list came back in an unexpected shape, so $TAG's milestone was left open."
-          exit 1
-        fi
-
-        # detect_package accepts both core/v5.1.0 and core/5.1.0 as tags, so try the other
-        # spelling too rather than reporting "no milestone" for a tag that only differs by the v.
-        ALT="$TAG"
-        case "$TAG" in
-          */v*) ALT="${TAG%%/*}/${TAG#*/v}" ;;
-          */*)  ALT="${TAG%%/*}/v${TAG#*/}" ;;
-        esac
-
-        # Exact title first, the other spelling only if that found nothing: if both spellings ever
-        # exist as separate milestones, the one the tag actually names is the one to close. jq takes
-        # the first match itself rather than `| head -1`, which can leave jq writing into a closed
-        # pipe when more than one matches.
-        find_milestone() {
-          echo "$MILESTONES" | jq -r --arg t "$1" \
-            '[.[] | select(.title == $t)][0] | select(. != null) | "\(.number) \(.open_issues) \(.title)"'
-        }
-
-        MILESTONE=$(find_milestone "$TAG")
-        if [ -z "$MILESTONE" ] && [ "$ALT" != "$TAG" ]; then
-          MILESTONE=$(find_milestone "$ALT")
-        fi
-
-        if [ -z "$MILESTONE" ]; then
-          echo "No open milestone titled '$TAG' (or '$ALT'); nothing to close."
-          exit 0
-        fi
-
-        NUMBER=$(echo "$MILESTONE" | cut -d' ' -f1)
-        OPEN=$(echo "$MILESTONE" | cut -d' ' -f2)
-        TITLE=$(echo "$MILESTONE" | cut -d' ' -f3)
-
-        if [ "$OPEN" != "0" ]; then
-          echo "::warning::Milestone $TITLE still has $OPEN open issue(s) or PR(s), so it was left open."
-          exit 0
-        fi
-
-        # The write gets the same treatment as the read above. Left bare, a transient 5xx on the
-        # PATCH killed the script through `set -e` with no output at all: the release stayed green
-        # (continue-on-error), the milestone stayed open, and the only trace was a red job with
-        # nothing in it naming which milestone or why.
-        if ! gh api -X PATCH "repos/$GITHUB_REPOSITORY/milestones/$NUMBER" -f state=closed >/dev/null; then
-          echo "::error::Could not close milestone $TITLE (number $NUMBER), so it was left open."
-          exit 1
-        fi
-        echo "Closed milestone $TITLE (number $NUMBER)."
+      # Through `bash` rather than directly, so the step does not depend on the file's execute bit
+      # surviving a Windows checkout, where core.fileMode is false. The bit is committed 100755
+      # anyway; a release failing on a lost mode bit is exactly the invisible breakage this job
+      # exists to avoid.
+      run: bash .github/scripts/close-milestone.sh "$TAG"
