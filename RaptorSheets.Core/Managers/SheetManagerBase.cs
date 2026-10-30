@@ -312,7 +312,8 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     /// <summary>
     /// Attempts to compute desired positions for requested sheets and adds index update requests
     /// to <paramref name="batchUpdateSpreadsheetRequest"/> so created sheets are placed in the
-    /// expected order. Non-fatal: any failure is logged and creation proceeds without ordering.
+    /// expected order. Non-fatal: any failure is logged and creation proceeds without ordering -
+    /// except caller cancellation, which is rethrown.
     /// </summary>
     private async Task TryApplyInsertionOrderingAsync(BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest, List<string> sheets, Dictionary<string, int>? existingIndexMap, Spreadsheet? spreadsheetInfo, CancellationToken cancellationToken = default)
     {

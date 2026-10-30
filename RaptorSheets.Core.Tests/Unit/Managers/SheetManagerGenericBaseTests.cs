@@ -632,12 +632,8 @@ public class SheetManagerGenericBaseTests
     // The non-fatal catch blocks above turn failures into messages, but a caller cancelling its own
     // token must see the cancellation, not an error message or a silently-continued operation.
 
-    private static CancellationToken CancelledToken()
-    {
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-        return cts.Token;
-    }
+    // Not disposed: the token must stay usable for anything that registers on it mid-test.
+    private static CancellationToken CancelledToken() => new CancellationToken(canceled: true);
 
     [Fact]
     public async Task DeleteSheets_WhenCallerCancels_ThrowsInsteadOfReturningErrorMessage()

@@ -28,9 +28,8 @@ public class GoogleSheetServiceCancellationTests
         wrapper.Setup(w => w.GetSpreadsheet(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
             .Returns(async (List<string> _, CancellationToken ct) =>
             {
-                cts.Cancel();
+                await cts.CancelAsync();
                 ct.ThrowIfCancellationRequested();
-                await Task.CompletedTask;
                 return new Spreadsheet();
             });
         var logger = new Mock<ILogger>();
@@ -45,7 +44,7 @@ public class GoogleSheetServiceCancellationTests
     public async Task GetSheetInfoResult_WhenCallerCancels_RethrowsInsteadOfReturningFailure()
     {
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
         var wrapper = new Mock<ISheetServiceWrapper>();
         wrapper.Setup(w => w.GetSpreadsheet(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new OperationCanceledException(cts.Token));
@@ -60,11 +59,11 @@ public class GoogleSheetServiceCancellationTests
         using var cts = new CancellationTokenSource();
         var wrapper = new Mock<ISheetServiceWrapper>();
         wrapper.Setup(w => w.GetSpreadsheet(It.IsAny<List<string>>(), cts.Token))
-            .Returns((List<string> _, CancellationToken ct) =>
+            .Returns(async (List<string> _, CancellationToken ct) =>
             {
-                cts.Cancel();
+                await cts.CancelAsync();
                 ct.ThrowIfCancellationRequested();
-                return Task.FromResult(new Spreadsheet());
+                return new Spreadsheet();
             });
         wrapper.Setup(w => w.GetSpreadsheet(It.IsAny<List<string>>(), CancellationToken.None))
             .ReturnsAsync(new Spreadsheet());
@@ -80,33 +79,18 @@ public class GoogleSheetServiceCancellationTests
     [Fact]
     public async Task GetSheetInfo_WhenCallerCancelsWhileWaitingForGate_DoesNotReleaseASlotItNeverHeld()
     {
-        var current = 0;
-        var max = 0;
         var wrapper = new Mock<ISheetServiceWrapper>();
         wrapper.Setup(w => w.GetSpreadsheet(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
-            .Returns(async () =>
-            {
-                var now = Interlocked.Increment(ref current);
-                InterlockedMax(ref max, now);
-                await Task.Delay(50);
-                Interlocked.Decrement(ref current);
-                return new Spreadsheet();
-            });
+            .ReturnsAsync(new Spreadsheet());
         var service = new GoogleSheetService(wrapper.Object, null, new GoogleConcurrencyOptions { MaxConcurrentRequests = 1 });
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
+
+        // The gate is created full, so releasing a slot the cancelled wait never took would throw
+        // SemaphoreFullException from the finally - surfacing here instead of the cancellation.
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.GetSheetInfo(cts.Token));
-
-        // An over-release would raise the gate to two, letting these overlap.
-        await Task.WhenAll(Enumerable.Range(0, 3).Select(_ => service.GetSheetInfo()));
-        Assert.Equal(1, max);
-    }
-
-    private static void InterlockedMax(ref int target, int value)
-    {
-        int seen;
-        while (value > (seen = Volatile.Read(ref target)) && Interlocked.CompareExchange(ref target, value, seen) != seen) { }
+        Assert.NotNull(await service.GetSheetInfo());
     }
 
     [Fact]
