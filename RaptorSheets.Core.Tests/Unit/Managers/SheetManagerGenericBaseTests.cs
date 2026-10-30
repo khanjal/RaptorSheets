@@ -667,6 +667,24 @@ public class SheetManagerGenericBaseTests
     }
 
     [Fact]
+    public async Task CreateSheets_WhenCallerCancelsDuringInsertionOrdering_ThrowsInsteadOfCreatingUnordered()
+    {
+        // The first metadata fetch comes back empty, so ordering falls back to its own silent
+        // fetch - cancelling that one must propagate through both ordering catch blocks.
+        var token = CancelledToken();
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.SetupSequence(s => s.GetSheetInfo(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Spreadsheet?)null)
+            .ThrowsAsync(new OperationCanceledException(token));
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => manager.CreateSheets([SheetName], token));
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<CancellationToken>()), Times.Exactly(2));
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task GetSheets_WhenCallerCancelsDuringSelfHeal_ThrowsInsteadOfReturningFailure()
     {
         var token = CancelledToken();
