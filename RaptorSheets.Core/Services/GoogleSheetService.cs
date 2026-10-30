@@ -71,7 +71,8 @@ public class GoogleSheetService : IGoogleSheetService
 
     /// <summary>
     /// Runs a call against the underlying wrapper, converting any exception into a classified
-    /// <see cref="GoogleApiFailure"/> instead of letting it propagate. Every public method below is a
+    /// <see cref="GoogleApiFailure"/> instead of letting it propagate - except cancellation via
+    /// <paramref name="cancellationToken"/>, which is rethrown. Every public method below is a
     /// thin wrapper around this, so the try/catch/log shape only exists once. When a concurrency gate
     /// is configured, caps how many calls run at once by making the rest wait here first.
     /// </summary>
@@ -86,6 +87,12 @@ public class GoogleSheetService : IGoogleSheetService
         {
             var response = await call();
             return GoogleApiResult<T>.Ok(response);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller asked to stop - that's not an API failure, so don't log or classify it.
+            // A cancellation the caller didn't ask for (e.g. an HTTP timeout) still falls through below.
+            throw;
         }
         catch (Exception ex)
         {
