@@ -39,10 +39,24 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     /// data - no second round trip. Defaults to false so existing callers are unaffected.
     /// </summary>
     Task<TEntity> GetSheet(string sheet, bool includeStructure, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Same as the overloads above, but when <paramref name="autoHeal"/> is false missing columns are
+    /// reported in Messages instead of being inserted. Only column healing is gated: a sheet that
+    /// doesn't exist at all is still (re)created, since there would otherwise be nothing to read.
+    /// Every other overload behaves as if <paramref name="autoHeal"/> were true.
+    /// </summary>
+    Task<TEntity> GetSheet(string sheet, bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default);
     Task<TEntity> GetAllSheets(CancellationToken cancellationToken = default);
     Task<TEntity> GetAllSheets(bool includeStructure, CancellationToken cancellationToken = default);
+
+    /// <inheritdoc cref="GetSheet(string, bool, bool, CancellationToken)"/>
+    Task<TEntity> GetAllSheets(bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default);
     Task<TEntity> GetSheets(List<string> sheets, CancellationToken cancellationToken = default);
     Task<TEntity> GetSheets(List<string> sheets, bool includeStructure, CancellationToken cancellationToken = default);
+
+    /// <inheritdoc cref="GetSheet(string, bool, bool, CancellationToken)"/>
+    Task<TEntity> GetSheets(List<string> sheets, bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default);
 
     // Metadata & Properties
     Task<List<PropertyEntity>> GetAllSheetProperties(CancellationToken cancellationToken = default);
@@ -59,6 +73,32 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     SheetModel? GetSheetLayout(string sheet);
     List<SheetModel> GetSheetLayouts(List<string> sheets);
     Task<TEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Re-writes the header row of each given sheet from its canonical layout, fixing cross-sheet
+    /// formulas that went stale after another sheet's headers changed - see
+    /// <see cref="SheetManagerBase{TEntity}.RefreshHeaderFormulasAsync(IEnumerable{string}, CancellationToken)"/>.
+    /// </summary>
+    Task RefreshHeaderFormulasAsync(IEnumerable<string> sheetNames, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Refreshes the header formulas of every sheet that depends on any of
+    /// <paramref name="changedSheetNames"/> - see
+    /// <see cref="SheetManagerBase{TEntity}.RefreshDependentSheetsAsync(IEnumerable{string}, CancellationToken)"/>.
+    /// </summary>
+    Task RefreshDependentSheetsAsync(IEnumerable<string> changedSheetNames, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Finds columns present on the live sheet whose header formula has drifted from canonical.
+    /// Opt-in and read-only; pass the result to <see cref="ReapplyColumnFormulas"/> to fix them.
+    /// </summary>
+    Task<List<ColumnInsertionInfo>> DetectBrokenColumnsAsync(string sheet, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rewrites just the header cell of each column in <paramref name="brokenColumns"/> with its
+    /// canonical formula; data rows beneath are never touched.
+    /// </summary>
+    Task<TEntity> ReapplyColumnFormulas(string sheet, List<ColumnInsertionInfo> brokenColumns, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Re-applies formatting from a sheet's canonical SheetModel onto the live sheet - see

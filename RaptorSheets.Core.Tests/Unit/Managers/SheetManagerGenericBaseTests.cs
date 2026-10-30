@@ -1079,6 +1079,61 @@ public class SheetManagerGenericBaseTests
         Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
     }
 
+    // Declares ISheetManager<TestEntity> the way every domain's SheetManager does, so these calls go
+    // through the interface - where a consumer resolving the manager from DI would make them.
+    private sealed class InterfaceTestManager : SheetManagerBase<TestEntity>, ISheetManager<TestEntity>
+    {
+        public InterfaceTestManager(IGoogleSheetService service, SheetRegistry<TestEntity> registry, List<string> canonical)
+            : base(service, registry, canonical) { }
+
+        public Task<TestEntity> ChangeSheetData(List<string> sheets, TestEntity sheetEntity, CancellationToken cancellationToken = default)
+            => Task.FromResult(new TestEntity());
+
+        protected override Task<TestEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap, CancellationToken cancellationToken = default)
+            => Task.FromResult(new TestEntity());
+    }
+
+    private static (Mock<IGoogleSheetService> Service, List<BatchUpdateSpreadsheetRequest> Captured) BuildRefreshService()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((BaseSheetName, 10), (DependentSheetName, 42));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        var captured = new List<BatchUpdateSpreadsheetRequest>();
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured.Add(r))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        return (mockService, captured);
+    }
+
+    [Fact]
+    public async Task RefreshHeaderFormulasAsync_ThroughInterface_FetchesItsOwnMetadataAndSendsOneBatch()
+    {
+        var (mockService, captured) = BuildRefreshService();
+        ISheetManager<TestEntity> manager = new InterfaceTestManager(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
+
+        await manager.RefreshHeaderFormulasAsync([BaseSheetName, DependentSheetName]);
+
+        var request = Assert.Single(captured);
+        Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 10);
+        Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
+    }
+
+    [Fact]
+    public async Task RefreshDependentSheetsAsync_ThroughInterface_RefreshesOnlyTheDependent()
+    {
+        var (mockService, captured) = BuildRefreshService();
+        ISheetManager<TestEntity> manager = new InterfaceTestManager(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
+
+        await manager.RefreshDependentSheetsAsync([BaseSheetName]);
+
+        var request = Assert.Single(captured);
+        Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
+        Assert.DoesNotContain(request.Requests, r => r.UpdateCells?.Range.SheetId == 10);
+    }
+
     [Fact]
     public async Task RefreshHeaderFormulasAsync_SkipsSheetsNotYetCreatedOrUnregistered()
     {
