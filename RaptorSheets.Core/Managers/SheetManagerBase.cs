@@ -294,6 +294,10 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
                 }
             }
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch
         {
             // Warn but proceed with creation
@@ -321,6 +325,10 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
 
             ApplyTargetIndices(batchUpdateSpreadsheetRequest, targetIndexMap);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             // Non-fatal - proceed without ordering if we couldn't compute it
@@ -333,6 +341,10 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         try
         {
             return await _googleSheetService.GetSheetInfo(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {
@@ -494,6 +506,10 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
             {
                 await ExecuteSplitDeleteAsync(existingSheetsToDelete, protectedSheets, tempSheetName, entity, cancellationToken);
             }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -933,6 +949,10 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
             var createdReturn = new TEntity();
             createdReturn.Messages.Add(info);
             return (createdReturn, spreadsheetInfo);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {

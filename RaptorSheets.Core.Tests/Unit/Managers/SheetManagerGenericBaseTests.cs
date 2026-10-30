@@ -629,6 +629,74 @@ public class SheetManagerGenericBaseTests
         Assert.Contains(result.Messages, m => m.Message.Contains("Error deleting sheets") && m.Message.Contains("boom"));
     }
 
+    // The non-fatal catch blocks above turn failures into messages, but a caller cancelling its own
+    // token must see the cancellation, not an error message or a silently-continued operation.
+
+    private static CancellationToken CancelledToken()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        return cts.Token;
+    }
+
+    [Fact]
+    public async Task DeleteSheets_WhenCallerCancels_ThrowsInsteadOfReturningErrorMessage()
+    {
+        var token = CancelledToken();
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ThrowsAsync(new OperationCanceledException(token));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ThrowsAsync(new OperationCanceledException(token));
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => manager.DeleteSheets([SheetName], token));
+    }
+
+    [Fact]
+    public async Task CreateAllSheets_WhenCallerCancels_ThrowsInsteadOfProceedingWithCreation()
+    {
+        var token = CancelledToken();
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ThrowsAsync(new OperationCanceledException(token));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ThrowsAsync(new OperationCanceledException(token));
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => manager.CreateAllSheets(token));
+        mockService.Verify(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetSheets_WhenCallerCancelsDuringSelfHeal_ThrowsInsteadOfReturningFailure()
+    {
+        var token = CancelledToken();
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService
+            .Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Failed(new GoogleApiFailure { Reason = GoogleApiFailureReason.Unknown, Message = "test failure" }));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ThrowsAsync(new OperationCanceledException(token));
+
+        var manager = BuildManager(mockService.Object);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => manager.GetSheets([SheetName], token));
+        Assert.Equal(0, manager.CreateMissingCalls);
+    }
+
+    [Fact]
+    public async Task DeleteSheets_WhenServiceThrowsCancellationTheCallerDidNotRequest_ReturnsErrorMessage()
+    {
+        // e.g. an HTTP timeout surfacing as TaskCanceledException - still a failure, not a caller cancel.
+        var mockService = new Mock<IGoogleSheetService>();
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ThrowsAsync(new TaskCanceledException("timed out"));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ThrowsAsync(new TaskCanceledException("timed out"));
+
+        var manager = BuildGeneratingManager(mockService.Object);
+
+        var result = await manager.DeleteSheets([SheetName]);
+
+        Assert.Contains(result.Messages, m => m.Message.Contains("Error deleting sheets") && m.Message.Contains("timed out"));
+    }
+
     // #102: Google 500s deleting 2+ protected sheets in one batch (reproduced 5/5 live against
     // Stock's Accounts/Tickers). DeleteSheets splits into separate batch calls once 2+ of the
     // sheets being deleted are protected; 0 or 1 protected sheet keeps the single-batch path above
