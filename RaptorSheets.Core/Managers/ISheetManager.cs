@@ -1,6 +1,7 @@
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
+using System.Runtime.CompilerServices;
 
 namespace RaptorSheets.Core.Managers;
 
@@ -46,17 +47,20 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     /// doesn't exist at all is still (re)created, since there would otherwise be nothing to read.
     /// Every other overload behaves as if <paramref name="autoHeal"/> were true.
     /// </summary>
-    Task<TEntity> GetSheet(string sheet, bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default);
+    Task<TEntity> GetSheet(string sheet, bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default)
+        => AsBase().GetSheet(sheet, includeStructure, autoHeal, cancellationToken);
     Task<TEntity> GetAllSheets(CancellationToken cancellationToken = default);
     Task<TEntity> GetAllSheets(bool includeStructure, CancellationToken cancellationToken = default);
 
     /// <inheritdoc cref="GetSheet(string, bool, bool, CancellationToken)"/>
-    Task<TEntity> GetAllSheets(bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default);
+    Task<TEntity> GetAllSheets(bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default)
+        => AsBase().GetAllSheets(includeStructure, autoHeal, cancellationToken);
     Task<TEntity> GetSheets(List<string> sheets, CancellationToken cancellationToken = default);
     Task<TEntity> GetSheets(List<string> sheets, bool includeStructure, CancellationToken cancellationToken = default);
 
     /// <inheritdoc cref="GetSheet(string, bool, bool, CancellationToken)"/>
-    Task<TEntity> GetSheets(List<string> sheets, bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default);
+    Task<TEntity> GetSheets(List<string> sheets, bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default)
+        => AsBase().GetSheets(sheets, includeStructure, autoHeal, cancellationToken);
 
     // Metadata & Properties
     Task<List<PropertyEntity>> GetAllSheetProperties(CancellationToken cancellationToken = default);
@@ -79,26 +83,32 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     /// formulas that went stale after another sheet's headers changed - see
     /// <see cref="SheetManagerBase{TEntity}.RefreshHeaderFormulasAsync(IEnumerable{string}, CancellationToken)"/>.
     /// </summary>
-    Task RefreshHeaderFormulasAsync(IEnumerable<string> sheetNames, CancellationToken cancellationToken = default);
+    Task RefreshHeaderFormulasAsync(IEnumerable<string> sheetNames, CancellationToken cancellationToken = default)
+        => AsBase().RefreshHeaderFormulasAsync(sheetNames, cancellationToken);
 
     /// <summary>
     /// Refreshes the header formulas of every sheet that depends on any of
     /// <paramref name="changedSheetNames"/> - see
     /// <see cref="SheetManagerBase{TEntity}.RefreshDependentSheetsAsync(IEnumerable{string}, CancellationToken)"/>.
     /// </summary>
-    Task RefreshDependentSheetsAsync(IEnumerable<string> changedSheetNames, CancellationToken cancellationToken = default);
+    Task RefreshDependentSheetsAsync(IEnumerable<string> changedSheetNames, CancellationToken cancellationToken = default)
+        => AsBase().RefreshDependentSheetsAsync(changedSheetNames, cancellationToken);
 
     /// <summary>
     /// Finds columns present on the live sheet whose header formula has drifted from canonical.
     /// Opt-in and read-only; pass the result to <see cref="ReapplyColumnFormulas"/> to fix them.
+    /// Missing columns and validation drift aren't checked, and an empty list also comes back for an
+    /// unregistered sheet or a failed live read - it means "nothing to reapply", not "verified healthy".
     /// </summary>
-    Task<List<ColumnInsertionInfo>> DetectBrokenColumnsAsync(string sheet, CancellationToken cancellationToken = default);
+    Task<List<ColumnInsertionInfo>> DetectBrokenColumnsAsync(string sheet, CancellationToken cancellationToken = default)
+        => AsBase().DetectBrokenColumnsAsync(sheet, cancellationToken);
 
     /// <summary>
     /// Rewrites just the header cell of each column in <paramref name="brokenColumns"/> with its
     /// canonical formula; data rows beneath are never touched.
     /// </summary>
-    Task<TEntity> ReapplyColumnFormulas(string sheet, List<ColumnInsertionInfo> brokenColumns, CancellationToken cancellationToken = default);
+    Task<TEntity> ReapplyColumnFormulas(string sheet, List<ColumnInsertionInfo> brokenColumns, CancellationToken cancellationToken = default)
+        => AsBase().ReapplyColumnFormulas(sheet, brokenColumns, cancellationToken);
 
     /// <summary>
     /// Re-applies formatting from a sheet's canonical SheetModel onto the live sheet - see
@@ -137,4 +147,13 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     /// <summary>Same as the single-sheet overload, but for multiple live sheets in one batched call -
     /// keyed by sheet name (case-insensitive).</summary>
     Task<Dictionary<string, List<List<string?>>>> GetLiveSheetsRawValues(List<string> sheets, int maxRows = 200, CancellationToken cancellationToken = default);
+
+    // Members added after 5.0 carry a default body that forwards to SheetManagerBase. Each domain
+    // package bundles its own copy of Core, so an app can pair a domain manager compiled against an
+    // older Core with a newer Core.dll; without these bodies that manager fails to load with a
+    // TypeLoadException. Anything compiled against this version binds to the base methods directly
+    // and never reaches these.
+    private SheetManagerBase<TEntity> AsBase([CallerMemberName] string member = "")
+        => this as SheetManagerBase<TEntity>
+           ?? throw new NotSupportedException($"{GetType().Name} implements ISheetManager<{typeof(TEntity).Name}> without deriving from SheetManagerBase<{typeof(TEntity).Name}>, so it must implement {member} itself.");
 }

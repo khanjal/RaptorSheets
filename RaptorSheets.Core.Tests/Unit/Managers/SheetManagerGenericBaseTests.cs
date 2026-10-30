@@ -21,7 +21,8 @@ namespace RaptorSheets.Core.Tests.Unit.Managers;
 /// </summary>
 public class SheetManagerGenericBaseTests
 {
-    private sealed class TestEntity : ISheetEntity
+    // Public only so Castle can proxy SheetManagerBase<TestEntity> for the default-body tests.
+    public sealed class TestEntity : ISheetEntity
     {
         public PropertyEntity Properties { get; set; } = new();
         public List<MessageEntity> Messages { get; set; } = [];
@@ -1119,6 +1120,56 @@ public class SheetManagerGenericBaseTests
         var request = Assert.Single(captured);
         Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 10);
         Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // A domain manager compiled against an older Core has no stub for interface members added since,
+    // so the runtime falls back to the interface's default body. A Moq class proxy reproduces that:
+    // it implements ISheetManager<TestEntity> at runtime without the compiler binding each member to
+    // the base method, so these calls really do go through the default bodies.
+    private static ISheetManager<TestEntity> BuildDefaultBodyManager(IGoogleSheetService service)
+    {
+        var mock = new Mock<SheetManagerBase<TestEntity>>(service, BuildRegistryWithDependency(), new List<string> { BaseSheetName, DependentSheetName }, null!) { CallBase = true };
+        return mock.As<ISheetManager<TestEntity>>().Object;
+    }
+
+    public static TheoryData<string> MembersAddedAfterV5 => new()
+    {
+        "GetSheet", "GetAllSheets", "GetSheets", "RefreshHeaderFormulasAsync",
+        "RefreshDependentSheetsAsync", "DetectBrokenColumnsAsync", "ReapplyColumnFormulas",
+    };
+
+    [Theory]
+    [MemberData(nameof(MembersAddedAfterV5))]
+    public void MembersAddedAfterV5_HaveADefaultBody_SoOlderDomainBinariesStillLoad(string name)
+    {
+        var added = typeof(ISheetManager<TestEntity>).GetMethods()
+            .Where(m => m.Name == name && (name is not ("GetSheet" or "GetAllSheets" or "GetSheets") || m.GetParameters().Any(p => p.Name == "autoHeal")))
+            .ToList();
+
+        Assert.NotEmpty(added);
+        Assert.All(added, m => Assert.False(m.IsAbstract, $"{m} has no default body"));
+    }
+
+    [Fact]
+    public async Task RefreshDependentSheetsAsync_ThroughDefaultBody_ForwardsToTheBase()
+    {
+        var (mockService, captured) = BuildRefreshService();
+        var manager = BuildDefaultBodyManager(mockService.Object);
+
+        await manager.RefreshDependentSheetsAsync([BaseSheetName]);
+
+        var request = Assert.Single(captured);
+        Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
+    }
+
+    [Fact]
+    public async Task DefaultBody_OnAnImplementationNotDerivedFromTheBase_ThrowsNamingTheMember()
+    {
+        var manager = new Mock<ISheetManager<TestEntity>> { CallBase = true }.Object;
+
+        var ex = await Assert.ThrowsAsync<NotSupportedException>(() => manager.DetectBrokenColumnsAsync(SheetName));
+        Assert.Contains(nameof(ISheetManager<TestEntity>.DetectBrokenColumnsAsync), ex.Message);
     }
 
     [Fact]
