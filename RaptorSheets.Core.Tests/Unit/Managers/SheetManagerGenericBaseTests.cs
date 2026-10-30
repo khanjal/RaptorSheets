@@ -1133,22 +1133,50 @@ public class SheetManagerGenericBaseTests
         return mock.As<ISheetManager<TestEntity>>().Object;
     }
 
-    public static TheoryData<string> MembersAddedAfterV5 => new()
-    {
-        "GetSheet", "GetAllSheets", "GetSheets", "RefreshHeaderFormulasAsync",
-        "RefreshDependentSheetsAsync", "DetectBrokenColumnsAsync", "ReapplyColumnFormulas",
-    };
+    // ISheetManager<T>'s surface in the last published packages (core/v5.0.2, gig/v5.0.7) - the only
+    // members allowed to be abstract. Everything added since must have a default body, or a domain
+    // binary built against that Core fails to load against this one. Don't add to this list.
+    private static readonly HashSet<string> s_publishedSurface =
+    [
+        "ChangeSheetData(sheets,sheetEntity,cancellationToken)",
+        "CreateAllSheets(cancellationToken)",
+        "CreateSheets(sheets,cancellationToken)",
+        "DeleteAllSheets(cancellationToken)",
+        "DeleteSheets(sheets,cancellationToken)",
+        "GetSheet(sheet,cancellationToken)",
+        "GetSheet(sheet,includeStructure,cancellationToken)",
+        "GetAllSheets(cancellationToken)",
+        "GetAllSheets(includeStructure,cancellationToken)",
+        "GetSheets(sheets,cancellationToken)",
+        "GetSheets(sheets,includeStructure,cancellationToken)",
+        "GetAllSheetProperties(cancellationToken)",
+        "GetSheetProperties(sheets,cancellationToken)",
+        "GetAllSheetTabNames(cancellationToken)",
+        "GetSpreadsheetTitle(cancellationToken)",
+        "GetSheetLayout(sheet)",
+        "GetSheetLayouts(sheets)",
+        "InsertMissingColumns(missingColumns,cancellationToken)",
+        "ReapplyFormatting(sheet,options,cancellationToken)",
+        "ReapplyFormatting(sheets,options,cancellationToken)",
+        "GetLiveSheetStructure(sheet,cancellationToken)",
+        "GetLiveSheetStructures(sheets,cancellationToken)",
+        "GetAllLiveSheetStructures(cancellationToken)",
+        "GetLiveSheetRawValues(sheet,maxRows,cancellationToken)",
+        "GetLiveSheetsRawValues(sheets,maxRows,cancellationToken)",
+    ];
 
-    [Theory]
-    [MemberData(nameof(MembersAddedAfterV5))]
-    public void MembersAddedAfterV5_HaveADefaultBody_SoOlderDomainBinariesStillLoad(string name)
-    {
-        var added = typeof(ISheetManager<TestEntity>).GetMethods()
-            .Where(m => m.Name == name && (name is not ("GetSheet" or "GetAllSheets" or "GetSheets") || m.GetParameters().Any(p => p.Name == "autoHeal")))
-            .ToList();
+    private static string SignatureOf(System.Reflection.MethodInfo m)
+        => $"{m.Name}({string.Join(",", m.GetParameters().Select(p => p.Name))})";
 
-        Assert.NotEmpty(added);
-        Assert.All(added, m => Assert.False(m.IsAbstract, $"{m} has no default body"));
+    [Fact]
+    public void EveryMemberAddedSinceThePublishedPackages_HasADefaultBody_SoOlderDomainBinariesStillLoad()
+    {
+        var methods = typeof(ISheetManager<TestEntity>).GetMethods();
+        var signatures = methods.Select(SignatureOf).ToHashSet();
+
+        Assert.Empty(s_publishedSurface.Except(signatures)); // the baseline itself is spelled right
+        Assert.All(methods.Where(m => !s_publishedSurface.Contains(SignatureOf(m))),
+            m => Assert.False(m.IsAbstract, $"{SignatureOf(m)} was added after the published packages but has no default body"));
     }
 
     [Fact]

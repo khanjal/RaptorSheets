@@ -27,7 +27,8 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     /// created the spreadsheet itself and therefore knows that tab is untouched - nothing here
     /// checks it for data.
     /// </summary>
-    Task<TEntity> CreateAllSheets(bool removeDefaultSheet, CancellationToken cancellationToken = default);
+    Task<TEntity> CreateAllSheets(bool removeDefaultSheet, CancellationToken cancellationToken = default)
+        => AsBase().CreateAllSheets(removeDefaultSheet, cancellationToken);
     Task<TEntity> CreateSheets(List<string> sheets, CancellationToken cancellationToken = default);
     Task<TEntity> DeleteAllSheets(CancellationToken cancellationToken = default);
     Task<TEntity> DeleteSheets(List<string> sheets, CancellationToken cancellationToken = default);
@@ -148,12 +149,16 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     /// keyed by sheet name (case-insensitive).</summary>
     Task<Dictionary<string, List<List<string?>>>> GetLiveSheetsRawValues(List<string> sheets, int maxRows = 200, CancellationToken cancellationToken = default);
 
-    // Members added after 5.0 carry a default body that forwards to SheetManagerBase. Each domain
-    // package bundles its own copy of Core, so an app can pair a domain manager compiled against an
-    // older Core with a newer Core.dll; without these bodies that manager fails to load with a
-    // TypeLoadException. Anything compiled against this version binds to the base methods directly
-    // and never reaches these.
+    // Every member added since the last published packages (core/v5.0.2, gig/v5.0.7) carries a
+    // default body that forwards to SheetManagerBase. Each domain package bundles its own copy of
+    // Core, so an app can pair a domain manager compiled against an older Core with a newer Core.dll.
+    // SheetManagerBase's methods aren't virtual, so without a default body for every such member that
+    // manager fails to load with a TypeLoadException - one missing body is enough. Anything compiled
+    // against this version binds to the base methods directly and never reaches these.
+    // S3215 (interface cast to a concrete type) is the point here: the base is the implementation.
+#pragma warning disable S3215
     private SheetManagerBase<TEntity> AsBase([CallerMemberName] string member = "")
         => this as SheetManagerBase<TEntity>
-           ?? throw new NotSupportedException($"{GetType().Name} implements ISheetManager<{typeof(TEntity).Name}> without deriving from SheetManagerBase<{typeof(TEntity).Name}>, so it must implement {member} itself.");
+           ?? throw new NotSupportedException($"{GetType().Name} implements ISheetManager<{typeof(TEntity).Name}> without deriving from SheetManagerBase<{typeof(TEntity).Name}>, so it must implement every overload of {member} itself.");
+#pragma warning restore S3215
 }
