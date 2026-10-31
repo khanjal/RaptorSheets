@@ -1287,6 +1287,16 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     }
 
     /// <summary>
+    /// <see cref="ISheetManager{TEntity}"/>'s Google-type-free form of the overload above: always
+    /// fetches its own metadata. Exists for the same arity reason as
+    /// <see cref="CreateSheets(List{string}, CancellationToken)"/>.
+    /// </summary>
+    public async Task RefreshHeaderFormulasAsync(IEnumerable<string> sheetNames, CancellationToken cancellationToken)
+    {
+        await RefreshHeaderFormulasAsync(sheetNames, null, cancellationToken);
+    }
+
+    /// <summary>
     /// Builds the same <see cref="Request"/>s <see cref="RefreshHeaderFormulasAsync"/> would send on
     /// its own, without sending them - so a caller that's already assembling a
     /// <see cref="BatchUpdateSpreadsheetRequest"/> (<see cref="CreateSheets"/>,
@@ -1370,7 +1380,7 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
     /// after self-healing a missing sheet, auto-healing missing columns, and explicit sheet
     /// creation; also safe to call directly (e.g. after manually fixing a sheet) as the general
     /// replacement for reapplying every dependent sheet by hand. Zero-cost no-op for sheets with no
-    /// dependents. See <see cref="RefreshHeaderFormulasAsync"/> for the optional
+    /// dependents. See <see cref="RefreshHeaderFormulasAsync(IEnumerable{string}, Spreadsheet?, CancellationToken)"/> for the optional
     /// <paramref name="spreadsheetInfo"/> reuse parameter.
     /// </summary>
     public async Task RefreshDependentSheetsAsync(IEnumerable<string> changedSheetNames, Spreadsheet? spreadsheetInfo = null, CancellationToken cancellationToken = default)
@@ -1383,6 +1393,16 @@ public abstract class SheetManagerBase<TEntity> : SheetManagerBase
         }
 
         await _googleSheetService.BatchUpdateSpreadsheet(new BatchUpdateSpreadsheetRequest { Requests = requests }, cancellationToken);
+    }
+
+    /// <summary>
+    /// <see cref="ISheetManager{TEntity}"/>'s Google-type-free form of the overload above: always
+    /// fetches its own metadata. Exists for the same arity reason as
+    /// <see cref="CreateSheets(List{string}, CancellationToken)"/>.
+    /// </summary>
+    public async Task RefreshDependentSheetsAsync(IEnumerable<string> changedSheetNames, CancellationToken cancellationToken)
+    {
+        await RefreshDependentSheetsAsync(changedSheetNames, null, cancellationToken);
     }
 
     /// <summary>

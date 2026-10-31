@@ -1,6 +1,7 @@
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Models;
 using RaptorSheets.Core.Models.Google;
+using System.Runtime.CompilerServices;
 
 namespace RaptorSheets.Core.Managers;
 
@@ -26,7 +27,8 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     /// created the spreadsheet itself and therefore knows that tab is untouched - nothing here
     /// checks it for data.
     /// </summary>
-    Task<TEntity> CreateAllSheets(bool removeDefaultSheet, CancellationToken cancellationToken = default);
+    Task<TEntity> CreateAllSheets(bool removeDefaultSheet, CancellationToken cancellationToken = default)
+        => AsBase().CreateAllSheets(removeDefaultSheet, cancellationToken);
     Task<TEntity> CreateSheets(List<string> sheets, CancellationToken cancellationToken = default);
     Task<TEntity> DeleteAllSheets(CancellationToken cancellationToken = default);
     Task<TEntity> DeleteSheets(List<string> sheets, CancellationToken cancellationToken = default);
@@ -39,10 +41,27 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     /// data - no second round trip. Defaults to false so existing callers are unaffected.
     /// </summary>
     Task<TEntity> GetSheet(string sheet, bool includeStructure, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Same as the overloads above, but when <paramref name="autoHeal"/> is false missing columns are
+    /// reported in Messages instead of being inserted. Only column healing is gated: a sheet that
+    /// doesn't exist at all is still (re)created, since there would otherwise be nothing to read.
+    /// Every other overload behaves as if <paramref name="autoHeal"/> were true.
+    /// </summary>
+    Task<TEntity> GetSheet(string sheet, bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default)
+        => AsBase().GetSheet(sheet, includeStructure, autoHeal, cancellationToken);
     Task<TEntity> GetAllSheets(CancellationToken cancellationToken = default);
     Task<TEntity> GetAllSheets(bool includeStructure, CancellationToken cancellationToken = default);
+
+    /// <inheritdoc cref="GetSheet(string, bool, bool, CancellationToken)"/>
+    Task<TEntity> GetAllSheets(bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default)
+        => AsBase().GetAllSheets(includeStructure, autoHeal, cancellationToken);
     Task<TEntity> GetSheets(List<string> sheets, CancellationToken cancellationToken = default);
     Task<TEntity> GetSheets(List<string> sheets, bool includeStructure, CancellationToken cancellationToken = default);
+
+    /// <inheritdoc cref="GetSheet(string, bool, bool, CancellationToken)"/>
+    Task<TEntity> GetSheets(List<string> sheets, bool includeStructure, bool autoHeal, CancellationToken cancellationToken = default)
+        => AsBase().GetSheets(sheets, includeStructure, autoHeal, cancellationToken);
 
     // Metadata & Properties
     Task<List<PropertyEntity>> GetAllSheetProperties(CancellationToken cancellationToken = default);
@@ -59,6 +78,38 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     SheetModel? GetSheetLayout(string sheet);
     List<SheetModel> GetSheetLayouts(List<string> sheets);
     Task<TEntity> InsertMissingColumns(Dictionary<string, List<ColumnInsertionInfo>> missingColumns, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Re-writes the header row of each given sheet from its canonical layout, fixing cross-sheet
+    /// formulas that went stale after another sheet's headers changed - see
+    /// <see cref="SheetManagerBase{TEntity}.RefreshHeaderFormulasAsync(IEnumerable{string}, CancellationToken)"/>.
+    /// </summary>
+    Task RefreshHeaderFormulasAsync(IEnumerable<string> sheetNames, CancellationToken cancellationToken = default)
+        => AsBase().RefreshHeaderFormulasAsync(sheetNames, cancellationToken);
+
+    /// <summary>
+    /// Refreshes the header formulas of every sheet that depends on any of
+    /// <paramref name="changedSheetNames"/> - see
+    /// <see cref="SheetManagerBase{TEntity}.RefreshDependentSheetsAsync(IEnumerable{string}, CancellationToken)"/>.
+    /// </summary>
+    Task RefreshDependentSheetsAsync(IEnumerable<string> changedSheetNames, CancellationToken cancellationToken = default)
+        => AsBase().RefreshDependentSheetsAsync(changedSheetNames, cancellationToken);
+
+    /// <summary>
+    /// Finds columns present on the live sheet whose header formula has drifted from canonical.
+    /// Opt-in and read-only; pass the result to <see cref="ReapplyColumnFormulas"/> to fix them.
+    /// Missing columns and validation drift aren't checked, and an empty list also comes back for an
+    /// unregistered sheet or a failed live read - it means "nothing to reapply", not "verified healthy".
+    /// </summary>
+    Task<List<ColumnInsertionInfo>> DetectBrokenColumnsAsync(string sheet, CancellationToken cancellationToken = default)
+        => AsBase().DetectBrokenColumnsAsync(sheet, cancellationToken);
+
+    /// <summary>
+    /// Rewrites just the header cell of each column in <paramref name="brokenColumns"/> with its
+    /// canonical formula; data rows beneath are never touched.
+    /// </summary>
+    Task<TEntity> ReapplyColumnFormulas(string sheet, List<ColumnInsertionInfo> brokenColumns, CancellationToken cancellationToken = default)
+        => AsBase().ReapplyColumnFormulas(sheet, brokenColumns, cancellationToken);
 
     /// <summary>
     /// Re-applies formatting from a sheet's canonical SheetModel onto the live sheet - see
@@ -97,4 +148,17 @@ public interface ISheetManager<TEntity> where TEntity : class, ISheetEntity, new
     /// <summary>Same as the single-sheet overload, but for multiple live sheets in one batched call -
     /// keyed by sheet name (case-insensitive).</summary>
     Task<Dictionary<string, List<List<string?>>>> GetLiveSheetsRawValues(List<string> sheets, int maxRows = 200, CancellationToken cancellationToken = default);
+
+    // Every member added since the last published packages (core/v5.0.2, gig/v5.0.7) carries a
+    // default body that forwards to SheetManagerBase. Each domain package bundles its own copy of
+    // Core, so an app can pair a domain manager compiled against an older Core with a newer Core.dll.
+    // SheetManagerBase's methods aren't virtual, so without a default body for every such member that
+    // manager fails to load with a TypeLoadException - one missing body is enough. Anything compiled
+    // against this version binds to the base methods directly and never reaches these.
+    // S3215 (interface cast to a concrete type) is the point here: the base is the implementation.
+#pragma warning disable S3215
+    private SheetManagerBase<TEntity> AsBase([CallerMemberName] string member = "")
+        => this as SheetManagerBase<TEntity>
+           ?? throw new NotSupportedException($"{GetType().Name} implements ISheetManager<{typeof(TEntity).Name}> without deriving from SheetManagerBase<{typeof(TEntity).Name}>, so it must implement every overload of {member} itself.");
+#pragma warning restore S3215
 }

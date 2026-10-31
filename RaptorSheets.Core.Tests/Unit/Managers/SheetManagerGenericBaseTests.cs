@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Moq.Protected;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
@@ -21,7 +22,8 @@ namespace RaptorSheets.Core.Tests.Unit.Managers;
 /// </summary>
 public class SheetManagerGenericBaseTests
 {
-    private sealed class TestEntity : ISheetEntity
+    // Public only so Castle can proxy SheetManagerBase<TestEntity> for the default-body tests.
+    public sealed class TestEntity : ISheetEntity
     {
         public PropertyEntity Properties { get; set; } = new();
         public List<MessageEntity> Messages { get; set; } = [];
@@ -1077,6 +1079,179 @@ public class SheetManagerGenericBaseTests
         var request = Assert.Single(captured);
         Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 10);
         Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
+    }
+
+    // Declares ISheetManager<TestEntity> the way every domain's SheetManager does, so these calls go
+    // through the interface - where a consumer resolving the manager from DI would make them.
+    private sealed class InterfaceTestManager : SheetManagerBase<TestEntity>, ISheetManager<TestEntity>
+    {
+        public InterfaceTestManager(IGoogleSheetService service, SheetRegistry<TestEntity> registry, List<string> canonical)
+            : base(service, registry, canonical) { }
+
+        public Task<TestEntity> ChangeSheetData(List<string> sheets, TestEntity sheetEntity, CancellationToken cancellationToken = default)
+            => Task.FromResult(new TestEntity());
+
+        protected override Task<TestEntity> CreateMissingSheetsAsync(Dictionary<string, int> missingIndexMap, CancellationToken cancellationToken = default)
+            => Task.FromResult(new TestEntity());
+    }
+
+    private static (Mock<IGoogleSheetService> Service, List<BatchUpdateSpreadsheetRequest> Captured) BuildRefreshService()
+    {
+        var mockService = new Mock<IGoogleSheetService>();
+        var spreadsheet = SpreadsheetWith((BaseSheetName, 10), (DependentSheetName, 42));
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+        mockService.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
+
+        var captured = new List<BatchUpdateSpreadsheetRequest>();
+        mockService.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<BatchUpdateSpreadsheetRequest, CancellationToken>((r, _) => captured.Add(r))
+            .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
+
+        return (mockService, captured);
+    }
+
+    [Fact]
+    public async Task RefreshHeaderFormulasAsync_ThroughInterface_FetchesItsOwnMetadataAndSendsOneBatch()
+    {
+        var (mockService, captured) = BuildRefreshService();
+        ISheetManager<TestEntity> manager = new InterfaceTestManager(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
+
+        await manager.RefreshHeaderFormulasAsync([BaseSheetName, DependentSheetName]);
+
+        var request = Assert.Single(captured);
+        Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 10);
+        Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
+        mockService.Verify(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // A domain manager compiled against an older Core has no stub for interface members added since,
+    // so the runtime falls back to the interface's default body. A Moq class proxy reproduces that:
+    // it implements ISheetManager<TestEntity> at runtime without the compiler binding each member to
+    // the base method, so these calls really do go through the default bodies.
+    private static ISheetManager<TestEntity> BuildDefaultBodyManager(IGoogleSheetService service)
+    {
+        var mock = new Mock<SheetManagerBase<TestEntity>>(service, BuildRegistryWithDependency(), new List<string> { BaseSheetName, DependentSheetName }, null!) { CallBase = true };
+        // The domain hook a real manager overrides; the base's own version throws by design.
+        mock.Protected().Setup<BatchUpdateSpreadsheetRequest>("GenerateSheetsRequest", ItExpr.IsAny<List<string>>())
+            .Returns(new BatchUpdateSpreadsheetRequest { Requests = new List<Request>() });
+        return mock.As<ISheetManager<TestEntity>>().Object;
+    }
+
+    // ISheetManager<T>'s surface in the last published packages (core/v5.0.2, gig/v5.0.7) - the only
+    // members allowed to be abstract. Everything added since must have a default body, or a domain
+    // binary built against that Core fails to load against this one. Don't add to this list.
+    private static readonly HashSet<string> s_publishedSurface =
+    [
+        "ChangeSheetData(sheets,sheetEntity,cancellationToken)",
+        "CreateAllSheets(cancellationToken)",
+        "CreateSheets(sheets,cancellationToken)",
+        "DeleteAllSheets(cancellationToken)",
+        "DeleteSheets(sheets,cancellationToken)",
+        "GetSheet(sheet,cancellationToken)",
+        "GetSheet(sheet,includeStructure,cancellationToken)",
+        "GetAllSheets(cancellationToken)",
+        "GetAllSheets(includeStructure,cancellationToken)",
+        "GetSheets(sheets,cancellationToken)",
+        "GetSheets(sheets,includeStructure,cancellationToken)",
+        "GetAllSheetProperties(cancellationToken)",
+        "GetSheetProperties(sheets,cancellationToken)",
+        "GetAllSheetTabNames(cancellationToken)",
+        "GetSpreadsheetTitle(cancellationToken)",
+        "GetSheetLayout(sheet)",
+        "GetSheetLayouts(sheets)",
+        "InsertMissingColumns(missingColumns,cancellationToken)",
+        "ReapplyFormatting(sheet,options,cancellationToken)",
+        "ReapplyFormatting(sheets,options,cancellationToken)",
+        "GetLiveSheetStructure(sheet,cancellationToken)",
+        "GetLiveSheetStructures(sheets,cancellationToken)",
+        "GetAllLiveSheetStructures(cancellationToken)",
+        "GetLiveSheetRawValues(sheet,maxRows,cancellationToken)",
+        "GetLiveSheetsRawValues(sheets,maxRows,cancellationToken)",
+    ];
+
+    private static string SignatureOf(System.Reflection.MethodInfo m)
+        => $"{m.Name}({string.Join(",", m.GetParameters().Select(p => p.Name))})";
+
+    [Fact]
+    public void EveryMemberAddedSinceThePublishedPackages_HasADefaultBody_SoOlderDomainBinariesStillLoad()
+    {
+        var methods = typeof(ISheetManager<TestEntity>).GetMethods();
+        var signatures = methods.Select(SignatureOf).ToHashSet();
+
+        Assert.Empty(s_publishedSurface.Except(signatures)); // the baseline itself is spelled right
+        Assert.All(methods.Where(m => !s_publishedSurface.Contains(SignatureOf(m))),
+            m => Assert.False(m.IsAbstract, $"{SignatureOf(m)} was added after the published packages but has no default body"));
+    }
+
+    [Fact]
+    public async Task RefreshDependentSheetsAsync_ThroughDefaultBody_ForwardsToTheBase()
+    {
+        var (mockService, captured) = BuildRefreshService();
+        var manager = BuildDefaultBodyManager(mockService.Object);
+
+        await manager.RefreshDependentSheetsAsync([BaseSheetName]);
+
+        var request = Assert.Single(captured);
+        Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
+    }
+
+    // Each remaining default body, called the way an older domain binary would. Reaching the base at
+    // all is the point - a broken forward throws NotSupportedException or recurses into itself.
+    public static TheoryData<string> DefaultBodyMembers =>
+    [
+        "CreateAllSheets(removeDefaultSheet)",
+        "GetSheet(autoHeal)",
+        "GetAllSheets(autoHeal)",
+        "GetSheets(autoHeal)",
+        "RefreshHeaderFormulasAsync",
+        "ReapplyColumnFormulas",
+    ];
+
+    [Theory]
+    [MemberData(nameof(DefaultBodyMembers))]
+    public async Task DefaultBody_ForwardsToTheBase(string member)
+    {
+        var (mockService, _) = BuildRefreshService();
+        mockService.Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(new BatchGetValuesByDataFilterResponse { ValueRanges = new List<MatchedValueRange>() }));
+        var manager = BuildDefaultBodyManager(mockService.Object);
+
+        Task call = member switch
+        {
+            "CreateAllSheets(removeDefaultSheet)" => manager.CreateAllSheets(removeDefaultSheet: true),
+            "GetSheet(autoHeal)" => manager.GetSheet(BaseSheetName, includeStructure: false, autoHeal: false),
+            "GetAllSheets(autoHeal)" => manager.GetAllSheets(includeStructure: false, autoHeal: false),
+            "GetSheets(autoHeal)" => manager.GetSheets([BaseSheetName], includeStructure: false, autoHeal: false),
+            "RefreshHeaderFormulasAsync" => manager.RefreshHeaderFormulasAsync([BaseSheetName]),
+            "ReapplyColumnFormulas" => manager.ReapplyColumnFormulas(BaseSheetName, []),
+            _ => throw new ArgumentOutOfRangeException(nameof(member), member, null),
+        };
+        await call;
+
+        Assert.True(mockService.Invocations.Count > 0 || member == "ReapplyColumnFormulas",
+            $"{member} returned without reaching SheetManagerBase");
+    }
+
+    [Fact]
+    public async Task DefaultBody_OnAnImplementationNotDerivedFromTheBase_ThrowsNamingTheMember()
+    {
+        var manager = new Mock<ISheetManager<TestEntity>> { CallBase = true }.Object;
+
+        var ex = await Assert.ThrowsAsync<NotSupportedException>(() => manager.DetectBrokenColumnsAsync(SheetName));
+        Assert.Contains(nameof(ISheetManager<TestEntity>.DetectBrokenColumnsAsync), ex.Message);
+    }
+
+    [Fact]
+    public async Task RefreshDependentSheetsAsync_ThroughInterface_RefreshesOnlyTheDependent()
+    {
+        var (mockService, captured) = BuildRefreshService();
+        ISheetManager<TestEntity> manager = new InterfaceTestManager(mockService.Object, BuildRegistryWithDependency(), [BaseSheetName, DependentSheetName]);
+
+        await manager.RefreshDependentSheetsAsync([BaseSheetName]);
+
+        var request = Assert.Single(captured);
+        Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
+        Assert.DoesNotContain(request.Requests, r => r.UpdateCells?.Range.SheetId == 10);
     }
 
     [Fact]
