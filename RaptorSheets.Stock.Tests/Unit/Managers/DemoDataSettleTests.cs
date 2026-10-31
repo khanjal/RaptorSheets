@@ -19,28 +19,26 @@ public class DemoDataSettleTests
 {
     private static readonly string Tickers = SheetName.TICKERS.GetDescription();
     private static readonly string Stocks = SheetName.STOCKS.GetDescription();
+    private static readonly List<string> Polled = [Tickers, Stocks];
 
-    private static BatchGetValuesByDataFilterResponse Values(params string[] dataCells) => new()
+    private static MatchedValueRange Sheet(string name, IList<object> header, params IList<object>[] dataRows) => new()
+    {
+        DataFilters = new List<DataFilter> { new() { A1Range = name } },
+        ValueRange = new ValueRange { Values = new List<IList<object>> { header }.Concat(dataRows).ToList() }
+    };
+
+    // Both polled sheets, Stocks clean, Tickers' one data row holding the given cells.
+    private static BatchGetValuesByDataFilterResponse Values(params string[] tickerCells) => new()
     {
         ValueRanges = new List<MatchedValueRange>
         {
-            new()
-            {
-                DataFilters = new List<DataFilter> { new() { A1Range = Tickers } },
-                ValueRange = new ValueRange
-                {
-                    Values = new List<IList<object>>
-                    {
-                        new List<object> { "Ticker", "Current Price" },
-                        new List<object>(dataCells),
-                    }
-                }
-            }
+            Sheet(Tickers, new List<object> { "Ticker", "Current Price" }, new List<object>(tickerCells)),
+            Sheet(Stocks, new List<object> { "Ticker", "Shares" }, new List<object> { "AAPL", "3" }),
         }
     };
 
-    private static GoogleApiResult<BatchGetValuesByDataFilterResponse> Ok(params string[] dataCells)
-        => GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(Values(dataCells));
+    private static GoogleApiResult<BatchGetValuesByDataFilterResponse> Ok(params string[] tickerCells)
+        => GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(Values(tickerCells));
 
     private static readonly GoogleApiResult<BatchGetValuesByDataFilterResponse> Clean = Ok("AAPL", "190.12");
     private static readonly GoogleApiResult<BatchGetValuesByDataFilterResponse> Latched = Ok("AAPL", "#N/A");
@@ -56,14 +54,19 @@ public class DemoDataSettleTests
 
     private sealed class Harness
     {
-        public FakeClock Clock { get; } = new();
+        private readonly Queue<GoogleApiResult<BatchGetValuesByDataFilterResponse>> _polls;
+        private int? _writesBeforeSettle;
 
         public Mock<IGoogleSheetService> Service { get; } = new();
+        public FakeClock Clock { get; } = new();
         public List<TimeSpan> Delays { get; } = [];
+        public TimeSpan ReadLatency { get; set; }
         public SheetManager Manager { get; }
 
+        // Each poll returns the next result given; the last one repeats once they run out.
         public Harness(params GoogleApiResult<BatchGetValuesByDataFilterResponse>[] polls)
         {
+            _polls = new Queue<GoogleApiResult<BatchGetValuesByDataFilterResponse>>(polls);
             var spreadsheet = new Spreadsheet
             {
                 Sheets = new List<Sheet>
@@ -76,20 +79,16 @@ public class DemoDataSettleTests
             Service.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
             Service.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
-
-            var sequence = Service.SetupSequence(s => s.GetBatchDataResult(
-                It.Is<List<string>>(l => l.Contains(Tickers) && l.Contains(Stocks)), It.IsAny<string>(), It.IsAny<CancellationToken>()));
-            foreach (var poll in polls)
-            {
-                sequence = sequence.ReturnsAsync(poll);
-            }
+            Service.Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback(() => Clock.Now += ReadLatency)
+                .ReturnsAsync(() => _polls.Count > 1 ? _polls.Dequeue() : _polls.Peek());
 
             Manager = new SheetManager(Service.Object)
             {
                 Delay = (delay, _) =>
                 {
                     // The write is done by the first wait; anything after it belongs to the settle loop.
-                    _metadataFetchesByWrite ??= MetadataFetches();
+                    _writesBeforeSettle ??= Writes();
                     Delays.Add(delay);
                     Clock.Now += delay;
                     return Task.CompletedTask;
@@ -98,16 +97,12 @@ public class DemoDataSettleTests
             };
         }
 
-        private int? _metadataFetchesByWrite;
+        private int Writes() => Service.Invocations.Count(i => i.Method.Name == nameof(IGoogleSheetService.BatchUpdateSpreadsheet));
 
         public int Polls => Service.Invocations.Count(i => i.Method.Name == nameof(IGoogleSheetService.GetBatchDataResult));
 
-        // Each RefreshHeaderFormulasAsync fetches its own metadata by range list - as does the write
-        // itself, which is why only the fetches after it count.
-        private int MetadataFetches() => Service.Invocations.Count(i =>
-            i.Method.Name == nameof(IGoogleSheetService.GetSheetInfo) && i.Arguments.Count == 2);
-
-        public int Refreshes => MetadataFetches() - (_metadataFetchesByWrite ?? 0);
+        // Every write after the demo data itself is a header-formula refresh.
+        public int Refreshes => Writes() - (_writesBeforeSettle ?? Writes());
     }
 
     private static bool IsWarning(MessageEntity message) => message.Level == MessageLevel.WARNING.GetDescription();
@@ -127,14 +122,15 @@ public class DemoDataSettleTests
     }
 
     [Fact]
-    public async Task PopulateDemoData_StillLatched_RefreshesAgainThenStopsWhenClean()
+    public async Task PopulateDemoData_StillLatched_RefreshesAgainTwoPollsLaterThenStopsWhenClean()
     {
-        var harness = new Harness(Latched, Latched, Clean);
+        var harness = new Harness(Latched, Latched, Latched, Latched, Clean);
 
         var result = await harness.Manager.PopulateDemoData(seed: 42);
 
-        Assert.Equal(2, harness.Refreshes);
-        Assert.Equal(3, harness.Polls);
+        // First refresh, then one after each pair of latched polls - not one per poll.
+        Assert.Equal(3, harness.Refreshes);
+        Assert.Equal(5, harness.Polls);
         Assert.DoesNotContain(result.Messages, IsWarning);
     }
 
@@ -162,46 +158,67 @@ public class DemoDataSettleTests
     }
 
     [Fact]
-    public async Task PopulateDemoData_NeverSettles_GivesUpWithinTheBoundAndWarns()
+    public async Task PopulateDemoData_NeverSettles_GivesUpWithinTheBudgetAndWarns()
     {
-        var harness = new Harness(Enumerable.Repeat(Latched, 20).ToArray());
+        var harness = new Harness(Latched);
 
         var result = await harness.Manager.PopulateDemoData(seed: 42);
 
-        var pollsThatFit = (int)((SheetManager.SettleBudget - SheetManager.SettleFirstRefreshDelay) / SheetManager.SettlePollInterval);
-        Assert.Equal(pollsThatFit, harness.Polls);
-        Assert.True(harness.Delays.Aggregate(TimeSpan.Zero, (a, b) => a + b) <= TimeSpan.FromSeconds(20),
-            "the settle wait must stay well inside the ~30s API Gateway ceiling");
-        Assert.Contains(result.Messages, m => IsWarning(m) && m.Message.Contains("#N/A"));
+        // 3s + 2.5s x6 = 18s; a seventh wait would end past the 18s budget.
+        Assert.Equal(6, harness.Polls);
+        // Refreshes at 3s, after polls 2 and 4 - none after poll 6, since no poll could follow it.
+        Assert.Equal(3, harness.Refreshes);
+        Assert.True(harness.Clock.Now <= SheetManager.SettleBudget);
+        Assert.Contains(result.Messages, m => IsWarning(m) && m.Message.Contains("formula error"));
     }
 
     [Fact]
     public async Task PopulateDemoData_SlowCallsWhileThrottled_StopsAtTheTimeBudgetNotThePollCount()
     {
-        var harness = new Harness();
         // Retry backoff under throttling makes every read take seconds of its own.
-        var slowRead = TimeSpan.FromSeconds(4);
-        harness.Service.Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .Callback(() => harness.Clock.Now += slowRead)
-            .ReturnsAsync(Loading);
+        var harness = new Harness(Loading) { ReadLatency = TimeSpan.FromSeconds(4) };
 
         var result = await harness.Manager.PopulateDemoData(seed: 42);
 
-        Assert.Equal(2, harness.Polls); // 3s + (2.5s wait + 4s read) x2 = 16s; a third wait would end past 15s
-        Assert.True(harness.Clock.Now <= SheetManager.SettleBudget + slowRead,
-            $"settle ran {harness.Clock.Now.TotalSeconds}s - past the budget by more than one in-flight read");
-        Assert.Contains(result.Messages, IsWarning);
+        Assert.Equal(2, harness.Polls); // 3s + (2.5s wait + 4s read) x2 = 16s; a third wait would end past 18s
+        Assert.True(harness.Clock.Now <= SheetManager.SettleBudget + harness.ReadLatency,
+            $"settle ran {harness.Clock.Now.TotalSeconds}s - past the budget by more than the one in-flight read");
+        Assert.Contains(result.Messages, m => IsWarning(m) && m.Message.Contains("loading"));
     }
 
     [Fact]
-    public async Task PopulateDemoData_WhenCallerCancels_StopsWaiting()
+    public async Task PopulateDemoData_WhenTheWriteFails_DoesNotWaitForAnything()
+    {
+        var harness = new Harness(Clean);
+        harness.Service.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BatchUpdateSpreadsheetResponse?)null);
+
+        var result = await harness.Manager.PopulateDemoData(seed: 42);
+
+        Assert.Contains(result.Messages, m => m.Level == MessageLevel.ERROR.GetDescription());
+        Assert.Empty(harness.Delays);
+        Assert.Equal(0, harness.Polls);
+    }
+
+    [Fact]
+    public async Task PopulateDemoData_WhenCallerCancelsMidPolling_StopsWithoutAnotherRefresh()
     {
         var harness = new Harness(Latched);
         using var cts = new CancellationTokenSource();
-        harness.Manager.Delay = async (_, ct) => { await cts.CancelAsync(); ct.ThrowIfCancellationRequested(); };
+        var waits = 0;
+        harness.Manager.Delay = async (_, ct) =>
+        {
+            // Let the first refresh and two latched polls through, then cancel during the next wait.
+            if (++waits == 4)
+            {
+                await cts.CancelAsync();
+            }
+            ct.ThrowIfCancellationRequested();
+        };
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => harness.Manager.PopulateDemoData(seed: 42, cts.Token));
-        Assert.Equal(0, harness.Polls);
+
+        Assert.Equal(2, harness.Polls);
     }
 
     [Theory]
@@ -213,20 +230,48 @@ public class DemoDataSettleTests
     public void GetSettleState_ClassifiesDataCells(string cell, string expected)
     {
         // The state enum is internal, so it travels by name - a public test can't take it as a parameter.
-        Assert.Equal(expected, SheetManager.GetSettleState(Values("AAPL", cell)).ToString());
+        Assert.Equal(expected, SheetManager.GetSettleState(Values("AAPL", cell), Polled).ToString());
     }
 
     [Fact]
-    public void GetSettleState_ErrorBeatsLoading_AndIgnoresTheHeaderRow()
+    public void GetSettleState_ErrorBeatsLoading()
     {
-        var response = Values("Loading...", "#N/A");
-        response.ValueRanges[0].ValueRange.Values[0] = new List<object> { "#Header", "Loading" };
-        Assert.Equal(SheetManager.SettleState.Latched, SheetManager.GetSettleState(response));
+        Assert.Equal(SheetManager.SettleState.Latched, SheetManager.GetSettleState(Values("Loading...", "#N/A"), Polled));
+    }
 
-        var headerOnlyErrors = Values("AAPL", "1");
-        headerOnlyErrors.ValueRanges[0].ValueRange.Values[0] = new List<object> { "#Header", "Loading" };
-        Assert.Equal(SheetManager.SettleState.Settled, SheetManager.GetSettleState(headerOnlyErrors));
+    [Fact]
+    public void GetSettleState_AnErrorInTheHeaderRow_IsLatched()
+    {
+        // A whole-column ARRAYFORMULA that fails outright shows its error where its title would be,
+        // leaving the data rows beneath it blank rather than erroring.
+        var response = Values("AAPL", "");
+        response.ValueRanges[0].ValueRange.Values[0] = new List<object> { "Ticker", "#N/A" };
 
-        Assert.Equal(SheetManager.SettleState.Settled, SheetManager.GetSettleState(null));
+        Assert.Equal(SheetManager.SettleState.Latched, SheetManager.GetSettleState(response, Polled));
+    }
+
+    [Fact]
+    public void GetSettleState_ASheetWithNoDataRowsYet_IsPending()
+    {
+        var response = new BatchGetValuesByDataFilterResponse
+        {
+            ValueRanges = new List<MatchedValueRange>
+            {
+                Sheet(Tickers, new List<object> { "Ticker", "Current Price" }),
+                Sheet(Stocks, new List<object> { "Ticker", "Shares" }, new List<object> { "AAPL", "3" }),
+            }
+        };
+
+        Assert.Equal(SheetManager.SettleState.Pending, SheetManager.GetSettleState(response, Polled));
+    }
+
+    [Fact]
+    public void GetSettleState_AMissingSheetOrNoResponse_IsPending()
+    {
+        var response = Values("AAPL", "190.12");
+        response.ValueRanges.RemoveAt(1);
+
+        Assert.Equal(SheetManager.SettleState.Pending, SheetManager.GetSettleState(response, Polled));
+        Assert.Equal(SheetManager.SettleState.Pending, SheetManager.GetSettleState(null, Polled));
     }
 }

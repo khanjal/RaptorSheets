@@ -115,17 +115,26 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
     /// Writes generated demo holdings into the Stocks sheet. Accounts/Tickers reference sheets and
     /// every financial column (Name, AverageCost, CostTotal, CurrentPrice, ...) are auto-populated
     /// by their own formulas, so only the Stocks sheet needs to be written. Returns once those
-    /// formulas have settled, or with a warning in Messages if they hadn't by the time limit.
+    /// formulas have settled, or with a warning in Messages if that couldn't be confirmed in time.
     /// </summary>
     public async Task<SheetEntity> PopulateDemoData(int? seed = null, CancellationToken cancellationToken = default)
     {
+        var started = Clock.GetTimestamp();
         var demoData = GenerateDemoData(seed);
         await ChangeSheetData([SheetName.STOCKS.GetDescription()], demoData, cancellationToken);
 
-        if (!await SettleDemoFormulasAsync(cancellationToken))
+        // Nothing was written, so there's nothing to settle - the write's own error says why.
+        if (demoData.Messages.Exists(m => m.Level == MessageLevel.ERROR.GetDescription()))
         {
+            return demoData;
+        }
+
+        var lastState = await SettleDemoFormulasAsync(started, cancellationToken);
+        if (lastState != SettleState.Settled)
+        {
+            var seen = lastState == SettleState.Latched ? "some still showed a formula error" : "they hadn't finished loading or couldn't be read";
             demoData.Messages.Add(MessageHelpers.CreateWarningMessage(
-                "Demo data written, but some GOOGLEFINANCE-driven cells still showed #N/A or Loading... - they may need a manual refresh",
+                $"Demo data written, but its GOOGLEFINANCE-driven cells couldn't be confirmed settled within {SettleBudget.TotalSeconds:0}s ({seen}) - they may need a manual refresh",
                 MessageType.ADD_DATA));
         }
 
@@ -139,12 +148,15 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
     // refresh cleared every one of them within a second. So: wait briefly, refresh, then poll
     // until clean, refreshing again if a refresh came too early and the errors re-latched.
     // Verified live, the common case now returns ~7s after the write instead of a fixed ~21s.
-    // Each call can itself take seconds when Google is throttling (retry backoff), so the loop is
-    // bounded by wall-clock time, not a poll count: no new poll starts once its wait would end past
-    // SettleBudget, keeping the whole call inside the ~30s API Gateway ceiling callers run behind.
+    //
+    // Callers run behind a ~30s API Gateway ceiling, and under throttling a single call can spend
+    // seconds in retry backoff, so the loop is bounded by wall-clock time from the start of
+    // PopulateDemoData (the write included), not by a poll count: nothing new - poll or refresh -
+    // starts once its wait would end past SettleBudget. What can still overrun it is the one call
+    // already in flight at that moment.
     internal static readonly TimeSpan SettleFirstRefreshDelay = TimeSpan.FromSeconds(3);
     internal static readonly TimeSpan SettlePollInterval = TimeSpan.FromSeconds(2.5);
-    internal static readonly TimeSpan SettleBudget = TimeSpan.FromSeconds(15);
+    internal static readonly TimeSpan SettleBudget = TimeSpan.FromSeconds(18);
     internal const int SettlePollsBeforeRefreshingAgain = 2;
 
     /// <summary>Test seams: let unit tests run the settle loop without really sleeping.</summary>
@@ -153,61 +165,77 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
 
     internal enum SettleState { Settled, Pending, Latched }
 
-    private async Task<bool> SettleDemoFormulasAsync(CancellationToken cancellationToken)
+    private async Task<SettleState> SettleDemoFormulasAsync(long started, CancellationToken cancellationToken)
     {
         var sheetNames = new List<string> { SheetName.TICKERS.GetDescription(), SheetName.STOCKS.GetDescription() };
-        var started = Clock.GetTimestamp();
+        bool Fits(TimeSpan wait) => Clock.GetElapsedTime(started) + wait <= SettleBudget;
 
         await Delay(SettleFirstRefreshDelay, cancellationToken);
-        await RefreshHeaderFormulasAsync(sheetNames, cancellationToken: cancellationToken);
 
+        // Sheet ids don't change between refreshes, so fetch the metadata once rather than per refresh.
+        var spreadsheetInfo = await _googleSheetService.GetSheetInfo(sheetNames, cancellationToken);
+        await RefreshHeaderFormulasAsync(sheetNames, spreadsheetInfo, cancellationToken);
+
+        var state = SettleState.Pending;
         var pollsSinceRefresh = 0;
-        while (Clock.GetElapsedTime(started) + SettlePollInterval <= SettleBudget)
+        while (Fits(SettlePollInterval))
         {
             await Delay(SettlePollInterval, cancellationToken);
             var result = await _googleSheetService.GetBatchDataResult(sheetNames, cancellationToken: cancellationToken);
 
             // A failed read tells us nothing either way - keep waiting rather than refreshing blind.
-            var state = result.Success ? GetSettleState(result.Value) : SettleState.Pending;
+            state = result.Success ? GetSettleState(result.Value, sheetNames) : SettleState.Pending;
             if (state == SettleState.Settled)
             {
-                return true;
+                return state;
             }
 
             pollsSinceRefresh++;
-            if (state == SettleState.Latched && pollsSinceRefresh >= SettlePollsBeforeRefreshingAgain)
+
+            // A refresh only helps if there's still time to poll after it and see the result.
+            if (state == SettleState.Latched && pollsSinceRefresh >= SettlePollsBeforeRefreshingAgain && Fits(SettlePollInterval * 2))
             {
-                await RefreshHeaderFormulasAsync(sheetNames, cancellationToken: cancellationToken);
+                await RefreshHeaderFormulasAsync(sheetNames, spreadsheetInfo, cancellationToken);
                 pollsSinceRefresh = 0;
             }
         }
 
-        return false;
+        return state;
     }
 
     /// <summary>
-    /// Latched if any data cell shows a formula error (#N/A, #REF!, ...), Pending if any still
-    /// reads "Loading...", otherwise Settled. Row 0 is the header row and is skipped.
+    /// Latched if any cell shows a formula error (#N/A, #REF!, ...) - including the header row,
+    /// where a whole-column ARRAYFORMULA that failed outright shows its error instead of its title.
+    /// Pending if any cell still reads "Loading...", or if any of <paramref name="sheetNames"/> came
+    /// back missing or with no data rows yet (Tickers is itself a SORT/UNIQUE pull from Stocks, so
+    /// it starts out empty). Otherwise Settled.
     /// </summary>
-    internal static SettleState GetSettleState(BatchGetValuesByDataFilterResponse? response)
+    internal static SettleState GetSettleState(BatchGetValuesByDataFilterResponse? response, IEnumerable<string> sheetNames)
     {
+        var valueRanges = response?.ValueRanges ?? [];
         var state = SettleState.Settled;
-        foreach (var valueRange in response?.ValueRanges ?? [])
-        {
-            foreach (var row in (valueRange.ValueRange?.Values ?? []).Skip(1))
-            {
-                foreach (var cell in row)
-                {
-                    var value = cell?.ToString() ?? "";
-                    if (value.StartsWith('#'))
-                    {
-                        return SettleState.Latched;
-                    }
 
-                    if (value.StartsWith("Loading", StringComparison.OrdinalIgnoreCase))
-                    {
-                        state = SettleState.Pending;
-                    }
+        foreach (var sheetName in sheetNames)
+        {
+            var rows = valueRanges
+                .FirstOrDefault(v => v.DataFilters?.Any(f => string.Equals(f.A1Range, sheetName, StringComparison.OrdinalIgnoreCase)) == true)
+                ?.ValueRange?.Values;
+            if (rows == null || !rows.Skip(1).Any(row => row.Any(cell => !string.IsNullOrWhiteSpace(cell?.ToString()))))
+            {
+                state = SettleState.Pending;
+                continue;
+            }
+
+            foreach (var value in rows.SelectMany(row => row).Select(cell => cell?.ToString() ?? ""))
+            {
+                if (value.StartsWith('#'))
+                {
+                    return SettleState.Latched;
+                }
+
+                if (value.StartsWith("Loading", StringComparison.OrdinalIgnoreCase))
+                {
+                    state = SettleState.Pending;
                 }
             }
         }
