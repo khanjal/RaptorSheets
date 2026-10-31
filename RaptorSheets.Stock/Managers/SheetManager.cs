@@ -132,9 +132,13 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
         var lastState = await SettleDemoFormulasAsync(started, cancellationToken);
         if (lastState != SettleState.Settled)
         {
-            var seen = lastState == SettleState.Latched ? "some still showed a formula error" : "they hadn't finished loading or couldn't be read";
+            // Not "refresh and it'll be fine": a GOOGLEFINANCE field can be #N/A for good, such as
+            // P/E for a company with negative earnings, and no refresh fixes that.
+            var seen = lastState == SettleState.Latched
+                ? "some still showed a formula error - a refresh may clear it, or GOOGLEFINANCE may have no value for that ticker"
+                : "they hadn't finished loading or couldn't be read";
             demoData.Messages.Add(MessageHelpers.CreateWarningMessage(
-                $"Demo data written, but its GOOGLEFINANCE-driven cells couldn't be confirmed settled within {SettleBudget.TotalSeconds:0}s ({seen}) - they may need a manual refresh",
+                $"Demo data written, but its GOOGLEFINANCE-driven cells couldn't be confirmed settled within {SettleBudget.TotalSeconds:0}s ({seen})",
                 MessageType.ADD_DATA));
         }
 
@@ -170,10 +174,17 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
         var sheetNames = new List<string> { SheetName.TICKERS.GetDescription(), SheetName.STOCKS.GetDescription() };
         bool Fits(TimeSpan wait) => Clock.GetElapsedTime(started) + wait <= SettleBudget;
 
+        // A slow write (retry backoff under throttling) can leave no room to refresh and then check.
+        if (!Fits(SettleFirstRefreshDelay + SettlePollInterval))
+        {
+            return SettleState.Pending;
+        }
+
         await Delay(SettleFirstRefreshDelay, cancellationToken);
 
-        // Sheet ids don't change between refreshes, so fetch the metadata once rather than per refresh.
-        var spreadsheetInfo = await _googleSheetService.GetSheetInfo(sheetNames, cancellationToken);
+        // Refreshing only needs sheet ids, which don't change between refreshes - so fetch them once,
+        // and without ranges: passing ranges makes Google return both sheets' full grid data.
+        var spreadsheetInfo = await _googleSheetService.GetSheetInfo(cancellationToken);
         await RefreshHeaderFormulasAsync(sheetNames, spreadsheetInfo, cancellationToken);
 
         var state = SettleState.Pending;

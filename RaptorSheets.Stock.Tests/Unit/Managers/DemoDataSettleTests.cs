@@ -61,6 +61,7 @@ public class DemoDataSettleTests
         public FakeClock Clock { get; } = new();
         public List<TimeSpan> Delays { get; } = [];
         public TimeSpan ReadLatency { get; set; }
+        public TimeSpan WriteLatency { get; set; }
         public SheetManager Manager { get; }
 
         // Each poll returns the next result given; the last one repeats once they run out.
@@ -78,6 +79,7 @@ public class DemoDataSettleTests
             Service.Setup(s => s.GetSheetInfo(It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
             Service.Setup(s => s.GetSheetInfo(It.IsAny<List<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(spreadsheet);
             Service.Setup(s => s.BatchUpdateSpreadsheet(It.IsAny<BatchUpdateSpreadsheetRequest>(), It.IsAny<CancellationToken>()))
+                .Callback(() => Clock.Now += WriteLatency)
                 .ReturnsAsync(new BatchUpdateSpreadsheetResponse { Replies = new List<Response>() });
             Service.Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback(() => Clock.Now += ReadLatency)
@@ -184,6 +186,43 @@ public class DemoDataSettleTests
         Assert.True(harness.Clock.Now <= SheetManager.SettleBudget + harness.ReadLatency,
             $"settle ran {harness.Clock.Now.TotalSeconds}s - past the budget by more than the one in-flight read");
         Assert.Contains(result.Messages, m => IsWarning(m) && m.Message.Contains("loading"));
+    }
+
+    [Fact]
+    public async Task PopulateDemoData_SlowWrite_CountsAgainstTheBudget()
+    {
+        // The budget runs from the top of PopulateDemoData, so time the write spent is time the
+        // settle loop no longer has.
+        var harness = new Harness(Latched) { WriteLatency = TimeSpan.FromSeconds(5) };
+
+        await harness.Manager.PopulateDemoData(seed: 42);
+
+        // write 5s, wait 3s, refresh 5s = 13s; two 2.5s polls fit, a third would end past 18s.
+        Assert.Equal(2, harness.Polls);
+    }
+
+    [Fact]
+    public async Task PopulateDemoData_WriteTooSlowToLeaveRoom_SkipsTheSettleAndWarns()
+    {
+        var harness = new Harness(Clean) { WriteLatency = TimeSpan.FromSeconds(13) };
+
+        var result = await harness.Manager.PopulateDemoData(seed: 42);
+
+        Assert.Empty(harness.Delays);
+        Assert.Equal(0, harness.Polls);
+        Assert.Contains(result.Messages, IsWarning);
+    }
+
+    [Fact]
+    public async Task PopulateDemoData_FetchesSheetIdsWithoutGridData()
+    {
+        var harness = new Harness(Clean);
+
+        await harness.Manager.PopulateDemoData(seed: 42);
+
+        // The ranges overload makes Google return every cell of both sheets; ids need none of that.
+        // (The write itself only ever asks about Stocks.)
+        harness.Service.Verify(s => s.GetSheetInfo(It.Is<List<string>>(l => l.Contains(Tickers)), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
