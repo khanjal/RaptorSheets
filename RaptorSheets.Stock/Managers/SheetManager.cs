@@ -114,30 +114,105 @@ public class SheetManager : SheetManagerBase<SheetEntity>, ISheetManager
     /// <summary>
     /// Writes generated demo holdings into the Stocks sheet. Accounts/Tickers reference sheets and
     /// every financial column (Name, AverageCost, CostTotal, CurrentPrice, ...) are auto-populated
-    /// by their own formulas, so only the Stocks sheet needs to be written.
+    /// by their own formulas, so only the Stocks sheet needs to be written. Returns once those
+    /// formulas have settled, or with a warning in Messages if they hadn't by the time limit.
     /// </summary>
     public async Task<SheetEntity> PopulateDemoData(int? seed = null, CancellationToken cancellationToken = default)
     {
         var demoData = GenerateDemoData(seed);
         await ChangeSheetData([SheetName.STOCKS.GetDescription()], demoData, cancellationToken);
 
-        // Inserting new tickers triggers Tickers' GOOGLEFINANCE-driven columns to recompute at the
-        // same moment Stocks' own formulas (which read from Tickers) re-evaluate. GOOGLEFINANCE
-        // resolves asynchronously, so both sheets can latch onto a transient #N/A mid-flight and
-        // never self-recover on their own - Tickers' own MaxHigh/MinLow (a GOOGLEFINANCE historical
-        // daily-range call, evaluated once per ticker via MAP/LAMBDA) is the slowest to settle, so a
-        // single short delay isn't reliably enough. Re-apply both sheets' header formulas (inherited
-        // from SheetManagerBase) twice, with increasing delays, to force a clean re-evaluation
-        // against settled data.
-        var sheetNames = new[] { SheetName.TICKERS.GetDescription(), SheetName.STOCKS.GetDescription() };
-
-        await Task.Delay(5000, cancellationToken);
-        await RefreshHeaderFormulasAsync(sheetNames, cancellationToken: cancellationToken);
-
-        await Task.Delay(15000, cancellationToken);
-        await RefreshHeaderFormulasAsync(sheetNames, cancellationToken: cancellationToken);
+        if (!await SettleDemoFormulasAsync(cancellationToken))
+        {
+            demoData.Messages.Add(MessageHelpers.CreateWarningMessage(
+                "Demo data written, but some GOOGLEFINANCE-driven cells still showed #N/A or Loading... - they may need a manual refresh",
+                MessageType.ADD_DATA));
+        }
 
         return demoData;
+    }
+
+    // Inserting new tickers makes Tickers' GOOGLEFINANCE columns recompute at the same moment
+    // Stocks' own formulas (which read from Tickers) re-evaluate. GOOGLEFINANCE resolves
+    // asynchronously, so cells on both sheets latch onto a transient #N/A and never recover on
+    // their own - verified live: untouched, they were still #N/A 30s later; one header-formula
+    // refresh cleared every one of them within a second. So: wait briefly, refresh, then poll
+    // until clean, refreshing again if a refresh came too early and the errors re-latched.
+    // Verified live, the common case now returns ~7s after the write instead of a fixed ~21s.
+    // Each call can itself take seconds when Google is throttling (retry backoff), so the loop is
+    // bounded by wall-clock time, not a poll count: no new poll starts once its wait would end past
+    // SettleBudget, keeping the whole call inside the ~30s API Gateway ceiling callers run behind.
+    internal static readonly TimeSpan SettleFirstRefreshDelay = TimeSpan.FromSeconds(3);
+    internal static readonly TimeSpan SettlePollInterval = TimeSpan.FromSeconds(2.5);
+    internal static readonly TimeSpan SettleBudget = TimeSpan.FromSeconds(15);
+    internal const int SettlePollsBeforeRefreshingAgain = 2;
+
+    /// <summary>Test seams: let unit tests run the settle loop without really sleeping.</summary>
+    internal Func<TimeSpan, CancellationToken, Task> Delay { get; set; } = Task.Delay;
+    internal TimeProvider Clock { get; set; } = TimeProvider.System;
+
+    internal enum SettleState { Settled, Pending, Latched }
+
+    private async Task<bool> SettleDemoFormulasAsync(CancellationToken cancellationToken)
+    {
+        var sheetNames = new List<string> { SheetName.TICKERS.GetDescription(), SheetName.STOCKS.GetDescription() };
+        var started = Clock.GetTimestamp();
+
+        await Delay(SettleFirstRefreshDelay, cancellationToken);
+        await RefreshHeaderFormulasAsync(sheetNames, cancellationToken: cancellationToken);
+
+        var pollsSinceRefresh = 0;
+        while (Clock.GetElapsedTime(started) + SettlePollInterval <= SettleBudget)
+        {
+            await Delay(SettlePollInterval, cancellationToken);
+            var result = await _googleSheetService.GetBatchDataResult(sheetNames, cancellationToken: cancellationToken);
+
+            // A failed read tells us nothing either way - keep waiting rather than refreshing blind.
+            var state = result.Success ? GetSettleState(result.Value) : SettleState.Pending;
+            if (state == SettleState.Settled)
+            {
+                return true;
+            }
+
+            pollsSinceRefresh++;
+            if (state == SettleState.Latched && pollsSinceRefresh >= SettlePollsBeforeRefreshingAgain)
+            {
+                await RefreshHeaderFormulasAsync(sheetNames, cancellationToken: cancellationToken);
+                pollsSinceRefresh = 0;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Latched if any data cell shows a formula error (#N/A, #REF!, ...), Pending if any still
+    /// reads "Loading...", otherwise Settled. Row 0 is the header row and is skipped.
+    /// </summary>
+    internal static SettleState GetSettleState(BatchGetValuesByDataFilterResponse? response)
+    {
+        var state = SettleState.Settled;
+        foreach (var valueRange in response?.ValueRanges ?? [])
+        {
+            foreach (var row in (valueRange.ValueRange?.Values ?? []).Skip(1))
+            {
+                foreach (var cell in row)
+                {
+                    var value = cell?.ToString() ?? "";
+                    if (value.StartsWith('#'))
+                    {
+                        return SettleState.Latched;
+                    }
+
+                    if (value.StartsWith("Loading", StringComparison.OrdinalIgnoreCase))
+                    {
+                        state = SettleState.Pending;
+                    }
+                }
+            }
+        }
+
+        return state;
     }
 
     /// <summary>
