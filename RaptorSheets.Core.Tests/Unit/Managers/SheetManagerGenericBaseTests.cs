@@ -1,6 +1,7 @@
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Moq.Protected;
 using RaptorSheets.Core.Constants;
 using RaptorSheets.Core.Entities;
 using RaptorSheets.Core.Enums;
@@ -1130,6 +1131,9 @@ public class SheetManagerGenericBaseTests
     private static ISheetManager<TestEntity> BuildDefaultBodyManager(IGoogleSheetService service)
     {
         var mock = new Mock<SheetManagerBase<TestEntity>>(service, BuildRegistryWithDependency(), new List<string> { BaseSheetName, DependentSheetName }, null!) { CallBase = true };
+        // The domain hook a real manager overrides; the base's own version throws by design.
+        mock.Protected().Setup<BatchUpdateSpreadsheetRequest>("GenerateSheetsRequest", ItExpr.IsAny<List<string>>())
+            .Returns(new BatchUpdateSpreadsheetRequest { Requests = new List<Request>() });
         return mock.As<ISheetManager<TestEntity>>().Object;
     }
 
@@ -1189,6 +1193,43 @@ public class SheetManagerGenericBaseTests
 
         var request = Assert.Single(captured);
         Assert.Contains(request.Requests, r => r.UpdateCells?.Range.SheetId == 42);
+    }
+
+    // Each remaining default body, called the way an older domain binary would. Reaching the base at
+    // all is the point - a broken forward throws NotSupportedException or recurses into itself.
+    public static TheoryData<string> DefaultBodyMembers =>
+    [
+        "CreateAllSheets(removeDefaultSheet)",
+        "GetSheet(autoHeal)",
+        "GetAllSheets(autoHeal)",
+        "GetSheets(autoHeal)",
+        "RefreshHeaderFormulasAsync",
+        "ReapplyColumnFormulas",
+    ];
+
+    [Theory]
+    [MemberData(nameof(DefaultBodyMembers))]
+    public async Task DefaultBody_ForwardsToTheBase(string member)
+    {
+        var (mockService, _) = BuildRefreshService();
+        mockService.Setup(s => s.GetBatchDataResult(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GoogleApiResult<BatchGetValuesByDataFilterResponse>.Ok(new BatchGetValuesByDataFilterResponse { ValueRanges = new List<MatchedValueRange>() }));
+        var manager = BuildDefaultBodyManager(mockService.Object);
+
+        Task call = member switch
+        {
+            "CreateAllSheets(removeDefaultSheet)" => manager.CreateAllSheets(removeDefaultSheet: true),
+            "GetSheet(autoHeal)" => manager.GetSheet(BaseSheetName, includeStructure: false, autoHeal: false),
+            "GetAllSheets(autoHeal)" => manager.GetAllSheets(includeStructure: false, autoHeal: false),
+            "GetSheets(autoHeal)" => manager.GetSheets([BaseSheetName], includeStructure: false, autoHeal: false),
+            "RefreshHeaderFormulasAsync" => manager.RefreshHeaderFormulasAsync([BaseSheetName]),
+            "ReapplyColumnFormulas" => manager.ReapplyColumnFormulas(BaseSheetName, []),
+            _ => throw new ArgumentOutOfRangeException(nameof(member), member, null),
+        };
+        await call;
+
+        Assert.True(mockService.Invocations.Count > 0 || member == "ReapplyColumnFormulas",
+            $"{member} returned without reaching SheetManagerBase");
     }
 
     [Fact]
