@@ -21,10 +21,13 @@
 alt_spelling() {
   local tag="$1"
 
+  # printf rather than echo: a slashless tag that happens to be an echo option (`-n`, `-e`) would
+  # be swallowed, and the "nothing to close" line would then name an empty alternative instead of
+  # the tag. Unrealistic as a release tag, but printf costs nothing and makes the function total.
   case "$tag" in
-    */v*) echo "${tag%%/*}/${tag#*/v}" ;;
-    */*)  echo "${tag%%/*}/v${tag#*/}" ;;
-    *)    echo "$tag" ;;
+    */v*) printf '%s\n' "${tag%%/*}/${tag#*/v}" ;;
+    */*)  printf '%s\n' "${tag%%/*}/v${tag#*/}" ;;
+    *)    printf '%s\n' "$tag" ;;
   esac
 
   return 0

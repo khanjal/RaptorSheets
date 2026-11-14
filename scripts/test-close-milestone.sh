@@ -55,8 +55,9 @@ workflow_path = sys.argv[1]
 job = yaml.safe_load(open(workflow_path))["jobs"]["close_milestone"]
 problems = []
 
-# The job's own settings. `contents: read` is what lets the checkout clone at all; without it
-# checkout 403s, the script is never there, and continue-on-error hides the whole thing.
+# The job's own settings. `contents: read` is what keeps the checkout working if this repository
+# ever goes private; drop it then and the script is never cloned, and continue-on-error hides the
+# whole thing.
 if job.get("permissions") != {"issues": "write", "contents": "read"}:
     problems.append(
         "permissions are %r, expected issues: write (milestones) and contents: read (checkout)"
@@ -94,17 +95,36 @@ elif checkout > runner:
     problems.append("the checkout is step %d but the script runs at step %d - it has to be cloned "
                     "first" % (checkout + 1, runner + 1))
 
+# Both steps are pinned key for key, not just on the keys we care about. Checking only `uses` and
+# `persist-credentials` left a row of one-line mutations passing: `path: src` or a `ref:` on the
+# checkout clones somewhere else or at the wrong commit, `if: false` on either step skips it, and
+# `working-directory:` on the runner moves it away from the script. Every one of those ends the
+# same way - `bash` cannot find the file, exit 127, continue-on-error swallows it, release green
+# and the milestone still open. An unexpected key is therefore a failure until someone reads it.
 if checkout is not None:
+    expected_checkout_keys = {"name", "uses", "with"}
+    actual_checkout_keys = set(steps[checkout])
+    if actual_checkout_keys != expected_checkout_keys:
+        problems.append("the checkout step's keys are %r, expected %r"
+                        % (sorted(actual_checkout_keys), sorted(expected_checkout_keys)))
+
     with_block = steps[checkout].get("with") or {}
-    if with_block.get("persist-credentials") is not False:
+    if with_block != {"persist-credentials": False}:
         problems.append(
-            "the checkout's persist-credentials is %r, expected False - nothing runs git after the "
-            "clone and the next step already holds a token"
-            % (with_block.get("persist-credentials"),)
+            "the checkout's `with` is %r, expected exactly {'persist-credentials': False} - "
+            "nothing runs git after the clone and the next step already holds a token, and any "
+            "other key here (path, ref) moves what gets cloned"
+            % (with_block,)
         )
 
 if runner is not None:
     step = steps[runner]
+
+    expected_runner_keys = {"name", "shell", "env", "run"}
+    actual_runner_keys = set(step)
+    if actual_runner_keys != expected_runner_keys:
+        problems.append("the runner step's keys are %r, expected %r"
+                        % (sorted(actual_runner_keys), sorted(expected_runner_keys)))
 
     expected_run = 'bash .github/scripts/close-milestone.sh "$TAG"'
     if (step.get("run") or "").strip() != expected_run:
@@ -388,21 +408,27 @@ assert_case "an array of the wrong shape fails instead of reporting nothing to c
 # The job passes the tag as an argument - `bash .github/scripts/close-milestone.sh "$TAG"` - while
 # every case above hands it over through the environment. Both work, because the script reads
 # `${1:-${TAG:-}}`, but that leaves the path the job actually takes unexercised: the script could
-# stop reading $1 and every case would still pass while a release quietly closed nothing. Run with
-# TAG unset so only the argument can be the source.
+# stop reading $1 and every case would still pass while a release quietly closed nothing.
+#
+# `env -u TAG` rather than simply not setting it: whoever runs this test may have TAG exported in
+# their own shell, and an inherited one would satisfy the script through the fallback and make
+# this case pass without $1 ever being read.
 cases=$((cases + 1))
 : > "$work/gh.log"
-arg_output=$(PATH="$work/bin:$PATH" \
+arg_output=$(env -u TAG \
+  PATH="$work/bin:$PATH" \
   GITHUB_REPOSITORY="$fake_repo" \
   GH_TOKEN="not-a-real-token" \
   gh_log="$work/gh.log" \
   fake_milestones="$default_milestones" \
   bash "$target" "$tag_stock" 2>&1)
+arg_rc=$?
 
-if [[ "$arg_output" == *"Closed milestone $tag_stock"* ]]; then
+if [[ "$arg_rc" == "0" ]] && [[ "$arg_output" == *"Closed milestone $tag_stock"* ]]; then
   echo "ok    the tag can come from \$1, which is how the job passes it"
 else
   echo "FAIL  the tag was passed as \$1, the way the job passes it, and was not used"
+  echo "      exit: $arg_rc (expected 0)"
   echo "      output: $arg_output"
   failures=$((failures + 1))
 fi

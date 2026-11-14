@@ -238,7 +238,10 @@ jobs:
       # here because the lookup was inline in the step and the job never touched the repo; it now
       # runs .github/scripts/close-milestone.sh - one file, which SonarCloud can lint and the test
       # can run directly, rather than a `run:` block the test had to lift back out of this YAML -
-      # so the job has to clone to reach it, and checkout 403s without this.
+      # so the job has to clone to reach it. Granted explicitly rather than leaning on this
+      # repository being public: if it ever goes private, a clone with no contents scope stops
+      # working, and the failure mode is the silent one - no script, exit 127, absorbed by
+      # continue-on-error, release green and the milestone still open.
       contents: read
     steps:
     - name: Checkout
